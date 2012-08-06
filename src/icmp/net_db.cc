@@ -307,7 +307,7 @@ netdbSendPing(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
         x = (net_db_name *) hash_lookup(host_table, hostname);
 
         if (x == NULL) {
-            debugs(38, 1, "netdbSendPing: net_db_name list bug: " << hostname << " not found");
+            debugs(38, DBG_IMPORTANT, "netdbSendPing: net_db_name list bug: " << hostname << " not found");
             xfree(hostname);
             return;
         }
@@ -482,7 +482,7 @@ netdbSaveState(void *foo)
     lf = logfileOpen(Config.netdbFilename, 4096, 0);
 
     if (NULL == lf) {
-        debugs(50, 1, "netdbSaveState: " << Config.netdbFilename << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "netdbSaveState: " << Config.netdbFilename << ": " << xstrerror());
         return;
     }
 
@@ -514,7 +514,7 @@ netdbSaveState(void *foo)
 
     logfileClose(lf);
     getCurrentTime();
-    debugs(38, 1, "NETDB state saved; " <<
+    debugs(38, DBG_IMPORTANT, "NETDB state saved; " <<
            count << " entries, " <<
            tvSubMsec(start, current_time) << " msec" );
     eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
@@ -637,7 +637,7 @@ netdbReloadState(void)
 
     xfree(buf);
     getCurrentTime();
-    debugs(38, 1, "NETDB state reloaded; " <<
+    debugs(38, DBG_IMPORTANT, "NETDB state reloaded; " <<
            count << " entries, " <<
            tvSubMsec(start, current_time) << " msec" );
 }
@@ -799,7 +799,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
                 break;
 
             default:
-                debugs(38, 1, "netdbExchangeHandleReply: corrupt data, aborting");
+                debugs(38, DBG_IMPORTANT, "netdbExchangeHandleReply: corrupt data, aborting");
                 netdbExchangeDone(ex);
                 return;
             }
@@ -1318,7 +1318,7 @@ netdbExchangeStart(void *data)
     ex->r = HttpRequest::CreateFromUrl(uri);
 
     if (NULL == ex->r) {
-        debugs(38, 1, "netdbExchangeStart: Bad URI " << uri);
+        debugs(38, DBG_IMPORTANT, "netdbExchangeStart: Bad URI " << uri);
         return;
     }
 

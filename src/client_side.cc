@@ -802,10 +802,10 @@ ConnStateData::~ConnStateData()
     debugs(33, 3, HERE << clientConnection);
 
     if (isOpen())
-        debugs(33, 1, "BUG: ConnStateData did not close " << clientConnection);
+        debugs(33, DBG_IMPORTANT, "BUG: ConnStateData did not close " << clientConnection);
 
     if (!flags.swanSang)
-        debugs(33, 1, "BUG: ConnStateData was not destroyed properly; " << clientConnection);
+        debugs(33, DBG_IMPORTANT, "BUG: ConnStateData was not destroyed properly; " << clientConnection);
 
     cbdataReferenceDone(port);
 
@@ -1200,7 +1200,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
             return 0;		/* entity has no etag to compare with! */
 
         if (spec.tag.weak || rep_tag.weak) {
-            debugs(33, 1, "clientIfRangeMatch: Weak ETags are not allowed in If-Range: " << spec.tag.str << " ? " << rep_tag.str);
+            debugs(33, DBG_IMPORTANT, "clientIfRangeMatch: Weak ETags are not allowed in If-Range: " << spec.tag.str << " ? " << rep_tag.str);
             return 0;		/* must use strong validator for sub-range requests */
         }
 
@@ -2206,7 +2206,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
     if (*method_p == METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
-        debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
+        debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
         hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
         return parseHttpRequestAbort(csd, "error:unsupported-request-method");
     }
@@ -3275,7 +3275,7 @@ connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
         static int reported = 0;
 
         if (!reported) {
-            debugs(33, 1, "Notice: httpd_accel_no_pmtu_disc not supported on your platform");
+            debugs(33, DBG_IMPORTANT, "Notice: httpd_accel_no_pmtu_disc not supported on your platform");
             reported = 1;
         }
 #endif
@@ -3459,12 +3459,12 @@ clientNegotiateSSL(int fd, void *data)
             }
 
         case SSL_ERROR_ZERO_RETURN:
-            debugs(83, 1, "clientNegotiateSSL: Error negotiating SSL connection on FD " << fd << ": Closed by client");
+            debugs(83, DBG_IMPORTANT, "clientNegotiateSSL: Error negotiating SSL connection on FD " << fd << ": Closed by client");
             comm_close(fd);
             return;
 
         default:
-            debugs(83, 1, "clientNegotiateSSL: Error negotiating SSL connection on FD " <<
+            debugs(83, DBG_IMPORTANT, "clientNegotiateSSL: Error negotiating SSL connection on FD " <<
                    fd << ": " << ERR_error_string(ERR_get_error(), NULL) <<
                    " (" << ssl_error << "/" << ret << ")");
             comm_close(fd);
@@ -3678,7 +3678,7 @@ void
 ConnStateData::sslCrtdHandleReply(const char * reply)
 {
     if (!reply) {
-        debugs(1, 1, HERE << "\"ssl_crtd\" helper return <NULL> reply");
+        debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper return <NULL> reply");
     } else {
         Ssl::CrtdMessage reply_message;
         if (reply_message.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK) {
@@ -3865,7 +3865,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     // If generated ssl context = NULL, try to use static ssl context.
     if (!sslContext) {
         if (!port->staticSslContext) {
-            debugs(83, 1, "Closing SSL " << clientConnection->remote << " as lacking SSL context");
+            debugs(83, DBG_IMPORTANT, "Closing SSL " << clientConnection->remote << " as lacking SSL context");
             clientConnection->close();
             return;
         } else {
@@ -3991,8 +3991,8 @@ clientHttpConnectionsOpen(void)
 
     for (s = Config.Sockaddr.http; s; s = s->next) {
         if (MAXTCPLISTENPORTS == NHttpSockets) {
-            debugs(1, 1, "WARNING: You have too many 'http_port' lines.");
-            debugs(1, 1, "         The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
+            debugs(1, DBG_IMPORTANT, "WARNING: You have too many 'http_port' lines.");
+            debugs(1, DBG_IMPORTANT, "         The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
             continue;
         }
 
@@ -4040,13 +4040,13 @@ clientHttpsConnectionsOpen(void)
 
     for (s = Config.Sockaddr.https; s; s = s->next) {
         if (MAXTCPLISTENPORTS == NHttpSockets) {
-            debugs(1, 1, "Ignoring 'https_port' lines exceeding the limit.");
-            debugs(1, 1, "The limit is " << MAXTCPLISTENPORTS << " HTTPS ports.");
+            debugs(1, DBG_IMPORTANT, "Ignoring 'https_port' lines exceeding the limit.");
+            debugs(1, DBG_IMPORTANT, "The limit is " << MAXTCPLISTENPORTS << " HTTPS ports.");
             continue;
         }
 
         if (!s->staticSslContext) {
-            debugs(1, 1, "Ignoring https_port " << s->s <<
+            debugs(1, DBG_IMPORTANT, "Ignoring https_port " << s->s <<
                    " due to SSL initialization failure.");
             continue;
         }
@@ -4101,7 +4101,7 @@ clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNot
     // TCP: setup a job to handle accept() with subscribed handler
     AsyncJob::Start(new Comm::TcpAcceptor(s->listenConn, FdNote(portTypeNote), sub));
 
-    debugs(1, 1, "Accepting " <<
+    debugs(1, DBG_IMPORTANT, "Accepting " <<
            (s->intercepted ? "NAT intercepted " : "") <<
            (s->spoof_client_ip ? "TPROXY spoofing " : "") <<
            (s->sslBump ? "SSL bumped " : "") <<
@@ -4129,7 +4129,7 @@ clientHttpConnectionsClose(void)
 {
     for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
         if (s->listenConn != NULL) {
-            debugs(1, 1, "Closing HTTP port " << s->listenConn->local);
+            debugs(1, DBG_IMPORTANT, "Closing HTTP port " << s->listenConn->local);
             s->listenConn->close();
             s->listenConn = NULL;
         }
@@ -4138,7 +4138,7 @@ clientHttpConnectionsClose(void)
 #if USE_SSL
     for (AnyP::PortCfg *s = Config.Sockaddr.https; s; s = s->next) {
         if (s->listenConn != NULL) {
-            debugs(1, 1, "Closing HTTPS port " << s->listenConn->local);
+            debugs(1, DBG_IMPORTANT, "Closing HTTPS port " << s->listenConn->local);
             s->listenConn->close();
             s->listenConn = NULL;
         }
@@ -4167,7 +4167,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
     if (!has_vary || !entry->mem_obj->vary_headers) {
         if (vary) {
             /* Oops... something odd is going on here.. */
-            debugs(33, 1, "varyEvaluateMatch: Oops. Not a Vary object on second attempt, '" <<
+            debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary object on second attempt, '" <<
                    entry->mem_obj->url << "' '" << vary << "'");
             safe_free(request->vary_headers);
             return VARY_CANCEL;
@@ -4209,7 +4209,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
             /* Oops.. we have already been here and still haven't
              * found the requested variant. Bail out
              */
-            debugs(33, 1, "varyEvaluateMatch: Oops. Not a Vary match on second attempt, '" <<
+            debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary match on second attempt, '" <<
                    entry->mem_obj->url << "' '" << vary << "'");
             return VARY_CANCEL;
         }

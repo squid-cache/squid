@@ -387,7 +387,7 @@ snmpHandleUdp(int sock, void *not_used)
         xfree(snmp_rq->outbuf);
         xfree(snmp_rq);
     } else {
-        debugs(49, 1, "snmpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
+        debugs(49, DBG_IMPORTANT, "snmpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
     }
 }
 

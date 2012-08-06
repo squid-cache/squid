@@ -493,7 +493,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     assert(http->logType == LOG_TCP_HIT);
 
     if (strcmp(e->mem_obj->url, urlCanonical(r)) != 0) {
-        debugs(33, 1, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
+        debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
         processMiss();
         return;
     }
@@ -524,7 +524,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     case VARY_CANCEL:
         /* varyEvaluateMatch found a object loop. Process as miss */
-        debugs(88, 1, "clientProcessHit: Vary object loop!");
+        debugs(88, DBG_IMPORTANT, "clientProcessHit: Vary object loop!");
         processMiss();
         return;
     }
@@ -1120,18 +1120,18 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 {
 #if SIZEOF_INT64_T == 4
     if (http->out.size > 0x7FFF0000) {
-        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent out.size counter overflow");
-        debugs(88, 1, "\tclient " << http->getConn()->peer);
-        debugs(88, 1, "\treceived " << http->out.size << " bytes");
-        debugs(88, 1, "\tURI " << http->log_uri);
+        debugs(88, DBG_IMPORTANT, "WARNING: closing FD " << fd << " to prevent out.size counter overflow");
+        debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
+        debugs(88, DBG_IMPORTANT, "\treceived " << http->out.size << " bytes");
+        debugs(88, DBG_IMPORTANT, "\tURI " << http->log_uri);
         return 1;
     }
 
     if (http->out.offset > 0x7FFF0000) {
-        debugs(88, 1, "WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
-        debugs(88, 1, "\tclient " << http->getConn()->peer);
-        debugs(88, 1, "\treceived " << http->out.size << " bytes, offset " << http->out.offset);
-        debugs(88, 1, "\tURI " << http->log_uri);
+        debugs(88, DBG_IMPORTANT, "WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
+        debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
+        debugs(88, DBG_IMPORTANT, "\treceived " << http->out.size << " bytes, offset " << http->out.offset);
+        debugs(88, DBG_IMPORTANT, "\tURI " << http->log_uri);
         return 1;
     }
 

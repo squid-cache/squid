@@ -236,8 +236,8 @@ SignalEngine::checkEvents(int timeout)
 void
 SignalEngine::doShutdown(time_t wait)
 {
-    debugs(1, 1, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
-    debugs(1, 1, "Waiting " << wait << " seconds for active connections to finish");
+    debugs(1, DBG_IMPORTANT, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
+    debugs(1, DBG_IMPORTANT, "Waiting " << wait << " seconds for active connections to finish");
 
     shutting_down = 1;
 
@@ -724,7 +724,7 @@ serverConnectionsClose(void)
 static void
 mainReconfigureStart(void)
 {
-    debugs(1, 1, "Reconfiguring Squid Cache (version " << version_string << ")...");
+    debugs(1, DBG_IMPORTANT, "Reconfiguring Squid Cache (version " << version_string << ")...");
     reconfiguring = 1;
 
     // Initiate asynchronous closing sequence
@@ -927,7 +927,7 @@ mainSetCwd(void)
         if (0 == strcmp("none", Config.coredump_dir)) {
             (void) 0;
         } else if (chdir(Config.coredump_dir) == 0) {
-            debugs(0, 1, "Set Current Directory to " << Config.coredump_dir);
+            debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
             return;
         } else {
             debugs(50, 0, "chdir: " << Config.coredump_dir << ": " << xstrerror());
@@ -936,7 +936,7 @@ mainSetCwd(void)
 
     /* If we don't have coredump_dir or couldn't cd there, report current dir */
     if (getcwd(pathbuf, MAXPATHLEN)) {
-        debugs(0, 1, "Current Directory is " << pathbuf);
+        debugs(0, DBG_IMPORTANT, "Current Directory is " << pathbuf);
     } else {
         debugs(50, 0, "WARNING: Can't find current directory, getcwd: " << xstrerror());
     }
@@ -984,19 +984,19 @@ mainInitialize(void)
         debugs(1, 0, "Running on " << WIN32_OS_string);
 #endif
 
-    debugs(1, 1, "Process ID " << getpid());
+    debugs(1, DBG_IMPORTANT, "Process ID " << getpid());
 
-    debugs(1, 1, "Process Roles:" << ProcessRoles());
+    debugs(1, DBG_IMPORTANT, "Process Roles:" << ProcessRoles());
 
     setSystemLimits();
-    debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
+    debugs(1, DBG_IMPORTANT, "With " << Squid_MaxFD << " file descriptors available");
 
 #if _SQUID_MSWIN_
 
-    debugs(1, 1, "With " << _getmaxstdio() << " CRT stdio descriptors available");
+    debugs(1, DBG_IMPORTANT, "With " << _getmaxstdio() << " CRT stdio descriptors available");
 
     if (WIN32_Socks_initialized)
-        debugs(1, 1, "Windows sockets initialized");
+        debugs(1, DBG_IMPORTANT, "Windows sockets initialized");
 
     if (WIN32_OS_version > _WIN_OS_WINNT) {
         WIN32_IpAddrChangeMonitorInit();
@@ -1516,7 +1516,7 @@ sendSignal(void)
     debug_log = stderr;
 
     if (strcmp(Config.pidFilename, "none") == 0) {
-        debugs(0, 1, "No pid_filename specified. Trusting you know what you are doing.");
+        debugs(0, DBG_IMPORTANT, "No pid_filename specified. Trusting you know what you are doing.");
     }
 
     pid = readPidFile();
@@ -1822,7 +1822,7 @@ SquidShutdown()
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif
 
-    debugs(1, 1, "Shutting down...");
+    debugs(1, DBG_IMPORTANT, "Shutting down...");
     dnsShutdown();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
@@ -1936,7 +1936,7 @@ SquidShutdown()
         }
     }
 
-    debugs(1, 1, "Squid Cache (Version " << version_string << "): Exiting normally.");
+    debugs(1, DBG_IMPORTANT, "Squid Cache (Version " << version_string << "): Exiting normally.");
 
     /*
      * DPW 2006-10-23

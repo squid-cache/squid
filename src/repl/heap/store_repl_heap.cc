@@ -320,7 +320,7 @@ createRemovalPolicy_heap(wordlist * args)
         keytype = args->key;
         args = args->next;
     } else {
-        debugs(81, 1, "createRemovalPolicy_heap: No key type specified. Using LRU");
+        debugs(81, DBG_IMPORTANT, "createRemovalPolicy_heap: No key type specified. Using LRU");
         keytype = "LRU";
     }
 

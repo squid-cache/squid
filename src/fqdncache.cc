@@ -353,7 +353,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     f->flags.negcached = 1;
 
     if (inbuf == NULL) {
-        debugs(35, 1, "fqdncacheParse: Got <NULL> reply in response to '" << name << "'");
+        debugs(35, DBG_IMPORTANT, "fqdncacheParse: Got <NULL> reply in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -363,7 +363,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     token = strtok(buf, w_space);
 
     if (NULL == token) {
-        debugs(35, 1, "fqdncacheParse: Got <NULL>, expecting '$name' in response to '" << name << "'");
+        debugs(35, DBG_IMPORTANT, "fqdncacheParse: Got <NULL>, expecting '$name' in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -376,7 +376,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     }
 
     if (0 != strcmp(token, "$name")) {
-        debugs(35, 1, "fqdncacheParse: Got '" << inbuf << "', expecting '$name' in response to '" << name << "'");
+        debugs(35, DBG_IMPORTANT, "fqdncacheParse: Got '" << inbuf << "', expecting '$name' in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -384,7 +384,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     token = strtok(NULL, w_space);
 
     if (NULL == token) {
-        debugs(35, 1, "fqdncacheParse: Got '" << inbuf << "', expecting TTL in response to '" << name << "'");
+        debugs(35, DBG_IMPORTANT, "fqdncacheParse: Got '" << inbuf << "', expecting TTL in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -394,7 +394,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
     token = strtok(NULL, w_space);
 
     if (NULL == token) {
-        debugs(35, 1, "fqdncacheParse: Got '" << inbuf << "', expecting hostname in response to '" << name << "'");
+        debugs(35, DBG_IMPORTANT, "fqdncacheParse: Got '" << inbuf << "', expecting hostname in response to '" << name << "'");
         f->error_message = xstrdup("Internal Error");
         return -1;
     }
@@ -468,7 +468,7 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
     }
 
     if (f->name_count == 0) {
-        debugs(35, 1, "fqdncacheParse: No PTR record for '" << name << "'");
+        debugs(35, DBG_IMPORTANT, "fqdncacheParse: No PTR record for '" << name << "'");
         return 0;
     }
 
@@ -846,7 +846,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
         if (1 == fce->flags.fromhosts) {
             fqdncacheUnlockEntry(fce);
         } else if (fce->locks > 0) {
-            debugs(35, 1, "fqdncacheAddEntryFromHosts: can't add static entry for locked address '" << addr << "'");
+            debugs(35, DBG_IMPORTANT, "fqdncacheAddEntryFromHosts: can't add static entry for locked address '" << addr << "'");
             return;
         } else {
             fqdncacheRelease(fce);

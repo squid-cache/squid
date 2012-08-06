@@ -1032,7 +1032,7 @@ Ip::Address::GetInAddr(struct in_addr &buf) const
     // default:
     // non-compatible IPv6 Pure Address
 
-    debugs(14,1, HERE << "Ip::Address::GetInAddr : Cannot convert non-IPv4 to IPv4. IPA=" << *this);
+    debugs(14, DBG_IMPORTANT, HERE << "Ip::Address::GetInAddr : Cannot convert non-IPv4 to IPv4. IPA=" << *this);
     memset(&buf,0xFFFFFFFF,sizeof(struct in_addr));
     assert(false);
     return false;

@@ -323,7 +323,7 @@ StoreEntry::storeClientType() const
 
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         /* I don't think we should be adding clients to aborted entries */
-        debugs(20, 1, "storeClientType: adding to ENTRY_ABORTED entry");
+        debugs(20, DBG_IMPORTANT, "storeClientType: adding to ENTRY_ABORTED entry");
         return STORE_MEM_CLIENT;
     }
 
@@ -572,7 +572,7 @@ StoreEntry::unlock()
     }
 
     if (EBIT_TEST(flags, KEY_PRIVATE))
-        debugs(20, 1, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
+        debugs(20, DBG_IMPORTANT, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
 
     Store::Root().handleIdleEntry(*this); // may delete us
     return 0;
@@ -709,7 +709,7 @@ StoreEntry::setPublicKey()
 #if MORE_DEBUG_OUTPUT
 
     if (EBIT_TEST(flags, RELEASE_REQUEST))
-        debugs(20, 1, "assertion failed: RELEASE key " << key << ", url " << mem_obj->url);
+        debugs(20, DBG_IMPORTANT, "assertion failed: RELEASE key " << key << ", url " << mem_obj->url);
 
 #endif
 
@@ -1131,7 +1131,7 @@ StoreEntry::abort()
      */
     if (mem_obj->abort.callback) {
         if (!cbdataReferenceValid(mem_obj->abort.data))
-            debugs(20,1,HERE << "queueing event when abort.data is not valid");
+            debugs(20, DBG_IMPORTANT,HERE << "queueing event when abort.data is not valid");
         eventAdd("mem_obj->abort.callback",
                  mem_obj->abort.callback,
                  mem_obj->abort.data,
@@ -1320,7 +1320,7 @@ storeLateRelease(void *unused)
 
         if (e == NULL) {
             /* done! */
-            debugs(20, 1, "storeLateRelease: released " << n << " objects");
+            debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
             return;
         }
 
@@ -1763,7 +1763,7 @@ storeReplAdd(const char *type, REMOVALPOLICYCREATE * create)
     /* find the number of currently known repl types */
     for (i = 0; storerepl_list && storerepl_list[i].typestr; ++i) {
         if (strcmp(storerepl_list[i].typestr, type) == 0) {
-            debugs(20, 1, "WARNING: Trying to load store replacement policy " << type << " twice.");
+            debugs(20, DBG_IMPORTANT, "WARNING: Trying to load store replacement policy " << type << " twice.");
             return;
         }
     }
@@ -1791,9 +1791,9 @@ createRemovalPolicy(RemovalPolicySettings * settings)
             return r->create(settings->args);
     }
 
-    debugs(20, 1, "ERROR: Unknown policy " << settings->type);
-    debugs(20, 1, "ERROR: Be sure to have set cache_replacement_policy");
-    debugs(20, 1, "ERROR:   and memory_replacement_policy in squid.conf!");
+    debugs(20, DBG_IMPORTANT, "ERROR: Unknown policy " << settings->type);
+    debugs(20, DBG_IMPORTANT, "ERROR: Be sure to have set cache_replacement_policy");
+    debugs(20, DBG_IMPORTANT, "ERROR:   and memory_replacement_policy in squid.conf!");
     fatalf("ERROR: Unknown policy %s\n", settings->type);
     return NULL;                /* NOTREACHED */
 }

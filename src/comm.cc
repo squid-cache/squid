@@ -385,7 +385,7 @@ comm_local_port(int fd)
     temp.InitAddrInfo(addr);
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
-        debugs(50, 1, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
         temp.FreeAddrInfo(addr);
         return 0;
     }
@@ -475,7 +475,7 @@ comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
     if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
-        debugs(50, 1, "comm_open: setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerror());
     }
 #else
     debugs(50, 0, "WARNING: comm_open: setsockopt(IPV6_V6ONLY) not supported on this platform");
@@ -661,7 +661,7 @@ comm_apply_flags(int new_socket,
 
     if ( (flags & COMM_DOBIND) || addr.GetPort() > 0 || !addr.IsAnyAddr() ) {
         if ( !(flags & COMM_DOBIND) && addr.IsAnyAddr() )
-            debugs(5,1,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
+            debugs(5, DBG_IMPORTANT,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
         if ( addr.IsNoAddr() )
             debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
 
@@ -915,9 +915,9 @@ comm_connect_addr(int sock, const Ip::Address &address)
     F->remote_port = address.GetPort(); /* remote_port is HS */
 
     if (status == COMM_OK) {
-        debugs(5, 10, "comm_connect_addr: FD " << sock << " connected to " << address);
+        debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connected to " << address);
     } else if (status == COMM_INPROGRESS) {
-        debugs(5, 10, "comm_connect_addr: FD " << sock << " connection pending");
+        debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connection pending");
     }
 
     return status;
@@ -1192,7 +1192,7 @@ comm_udp_sendto(int fd,
     if (ECONNREFUSED != errno)
 #endif
 
-        debugs(50, 1, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
 
     return COMM_ERROR;
 }
@@ -1288,19 +1288,19 @@ commSetReuseAddr(int fd)
     int on = 1;
 
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0)
-        debugs(50, 1, "commSetReuseAddr: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetReuseAddr: FD " << fd << ": " << xstrerror());
 }
 
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
-        debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
     if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0)
-        debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
 #ifdef TCP_WINDOW_CLAMP
     if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0)
-        debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
 #endif
 }
 
@@ -1401,7 +1401,7 @@ commSetTcpNoDelay(int fd)
     int on = 1;
 
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
-        debugs(50, 1, "commSetTcpNoDelay: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpNoDelay: FD " << fd << ": " << xstrerror());
 
     fd_table[fd].flags.nodelay = 1;
 }
@@ -1416,23 +1416,23 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
     if (timeout && interval) {
         int count = (timeout + interval - 1) / interval;
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
-            debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+            debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPIDLE
     if (idle) {
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
-            debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+            debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPINTVL
     if (interval) {
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
-            debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+            debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0)
-        debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+        debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
 }
 
 void

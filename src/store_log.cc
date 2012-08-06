@@ -71,7 +71,7 @@ storeLog(int tag, const StoreEntry * e)
     ++storeLogTagsCounts[tag];
     if (mem != NULL) {
         if (mem->log_url == NULL) {
-            debugs(20, 1, "storeLog: NULL log_url for " << mem->url);
+            debugs(20, DBG_IMPORTANT, "storeLog: NULL log_url for " << mem->url);
             mem->dump();
             mem->log_url = xstrdup(mem->url);
         }
@@ -150,7 +150,7 @@ storeLogOpen(void)
     storeLogRegisterWithCacheManager();
 
     if (Config.Log.store == NULL || strcmp(Config.Log.store, "none") == 0) {
-        debugs(20, 1, "Store logging disabled");
+        debugs(20, DBG_IMPORTANT, "Store logging disabled");
         return;
     }
 

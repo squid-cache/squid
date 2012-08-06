@@ -146,7 +146,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
              shm_offset);
 
     if (x < 0) {
-        debugs(79, 1, "storeDiskdSend UNLINK: " << xstrerror());
+        debugs(79, DBG_IMPORTANT, "storeDiskdSend UNLINK: " << xstrerror());
         ::unlink(buf);		/* XXX EWW! */
         //        shm.put (shm_offset);
     }
@@ -393,7 +393,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     M->seq_no = ++seq_no;
 
     if (M->seq_no < last_seq_no)
-        debugs(79, 1, "WARNING: sequencing out of order");
+        debugs(79, DBG_IMPORTANT, "WARNING: sequencing out of order");
 
     x = msgsnd(smsgid, M, diomsg::msg_snd_rcv_sz, IPC_NOWAIT);
 
@@ -403,7 +403,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
         ++diskd_stats.sent_count;
         ++away;
     } else {
-        debugs(79, 1, "storeDiskdSend: msgsnd: " << xstrerror());
+        debugs(79, DBG_IMPORTANT, "storeDiskdSend: msgsnd: " << xstrerror());
         cbdataReferenceDone(M->callback_data);
         assert(++send_errors < 100);
         if (shm_offset > -1)
@@ -466,13 +466,13 @@ DiskdIOStrategy::optionQ1Parse(const char *name, const char *value, int isaRecon
         * will cause an assertion in storeDiskdShmGet().
         */
         /* TODO: have DiskdIO hold a link to the swapdir, to allow detailed reporting again */
-        debugs(3, 1, "WARNING: cannot increase cache_dir Q1 value while Squid is running.");
+        debugs(3, DBG_IMPORTANT, "WARNING: cannot increase cache_dir Q1 value while Squid is running.");
         magic1 = old_magic1;
         return true;
     }
 
     if (old_magic1 != magic1)
-        debugs(3, 1, "cache_dir new Q1 value '" << magic1 << "'");
+        debugs(3, DBG_IMPORTANT, "cache_dir new Q1 value '" << magic1 << "'");
 
     return true;
 }
@@ -498,13 +498,13 @@ DiskdIOStrategy::optionQ2Parse(const char *name, const char *value, int isaRecon
 
     if (old_magic2 < magic2) {
         /* See comments in Q1 function above */
-        debugs(3, 1, "WARNING: cannot increase cache_dir Q2 value while Squid is running.");
+        debugs(3, DBG_IMPORTANT, "WARNING: cannot increase cache_dir Q2 value while Squid is running.");
         magic2 = old_magic2;
         return true;
     }
 
     if (old_magic2 != magic2)
-        debugs(3, 1, "cache_dir new Q2 value '" << magic2 << "'");
+        debugs(3, DBG_IMPORTANT, "cache_dir new Q2 value '" << magic2 << "'");
 
     return true;
 }
@@ -526,7 +526,7 @@ DiskdIOStrategy::sync()
 
     while (away > 0) {
         if (squid_curtime > lastmsg) {
-            debugs(47, 1, "storeDiskdDirSync: " << away << " messages away");
+            debugs(47, DBG_IMPORTANT, "storeDiskdDirSync: " << away << " messages away");
             lastmsg = squid_curtime;
         }
 
@@ -570,7 +570,7 @@ DiskdIOStrategy::callback()
         if (x < 0)
             break;
         else if (x != diomsg::msg_snd_rcv_sz) {
-            debugs(47, 1, "storeDiskdDirCallback: msgget returns " << x);
+            debugs(47, DBG_IMPORTANT, "storeDiskdDirCallback: msgget returns " << x);
             break;
         }
 

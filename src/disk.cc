@@ -254,7 +254,7 @@ diskHandleWrite(int fd, void *notused)
     if (len < 0) {
         if (!ignoreErrno(errno)) {
             status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            debugs(50, 1, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerror());
 
             /*
              * If there is no write callback, then this file is
@@ -299,7 +299,7 @@ diskHandleWrite(int fd, void *notused)
         q->buf_offset += len;
 
         if (q->buf_offset > q->len)
-            debugs(50, 1, "diskHandleWriteComplete: q->buf_offset > q->len (" <<
+            debugs(50, DBG_IMPORTANT, "diskHandleWriteComplete: q->buf_offset > q->len (" <<
                    q << "," << (int) q->buf_offset << ", " << q->len << ", " <<
                    len << " FD " << fd << ")");
 
@@ -464,7 +464,7 @@ diskHandleRead(int fd, void *data)
             return;
         }
 
-        debugs(50, 1, "diskHandleRead: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "diskHandleRead: FD " << fd << ": " << xstrerror());
         len = 0;
         rc = DISK_ERROR;
     } else if (len == 0) {
@@ -510,7 +510,7 @@ safeunlink(const char *s, int quiet)
     ++ statCounter.syscalls.disk.unlinks;
 
     if (unlink(s) < 0 && !quiet)
-        debugs(50, 1, "safeunlink: Couldn't delete " << s << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "safeunlink: Couldn't delete " << s << ": " << xstrerror());
 }
 
 /*

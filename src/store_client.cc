@@ -412,7 +412,7 @@ store_client::startSwapin()
 
         return;
     } else {
-        debugs(90, 1, "WARNING: Averted multiple fd operation (1)");
+        debugs(90, DBG_IMPORTANT, "WARNING: Averted multiple fd operation (1)");
         flags.store_copying = 0;
         return;
     }
@@ -571,7 +571,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
 
     if (!aBuilder.isBufferSane()) {
         /* oops, bad disk file? */
-        debugs(90, 1, "WARNING: swapfile header inconsistent with available data");
+        debugs(90, DBG_IMPORTANT, "WARNING: swapfile header inconsistent with available data");
         fail();
         return;
     }
@@ -579,7 +579,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     tlv *tlv_list = aBuilder.createStoreMeta ();
 
     if (tlv_list == NULL) {
-        debugs(90, 1, "WARNING: failed to unpack meta data");
+        debugs(90, DBG_IMPORTANT, "WARNING: failed to unpack meta data");
         fail();
         return;
     }

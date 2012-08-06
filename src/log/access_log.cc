@@ -362,7 +362,7 @@ accessLogInit(void)
         if (mcast_miss_fd < 0)
             fatal("Cannot open Multicast Miss Stream Socket");
 
-        debugs(46, 1, "Multicast Miss Stream Socket opened on FD " << mcast_miss_fd);
+        debugs(46, DBG_IMPORTANT, "Multicast Miss Stream Socket opened on FD " << mcast_miss_fd);
 
         mcastSetTtl(mcast_miss_fd, Config.mcast_miss.ttl);
 

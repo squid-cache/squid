@@ -124,7 +124,7 @@ Icmp6::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, 1, "pinger: ICMPv6 socket opened");
+    debugs(42, DBG_IMPORTANT, "pinger: ICMPv6 socket opened");
 
     return icmp_sock;
 }
@@ -197,7 +197,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
                S->ai_addrlen);
 
     if (x < 0) {
-        debugs(42, 1, HERE << "Error sending to ICMPv6 packet to " << to << ". ERR: " << xstrerror());
+        debugs(42, DBG_IMPORTANT, HERE << "Error sending to ICMPv6 packet to " << to << ". ERR: " << xstrerror());
     }
     debugs(42,9, HERE << "x=" << x);
 

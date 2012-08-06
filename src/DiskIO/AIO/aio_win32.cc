@@ -100,7 +100,7 @@ int aio_read(struct aiocb *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81,1, "aio_read: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_read: GetLastError=" << errno  );
         return -1;
     }
 
@@ -152,7 +152,7 @@ int aio_read64(struct aiocb64 *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81, 1, "aio_read: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_read: GetLastError=" << errno  );
         return -1;
     }
 
@@ -212,7 +212,7 @@ int aio_write(struct aiocb *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81, 1, "aio_write: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_write: GetLastError=" << errno  );
         return -1;
     }
 
@@ -264,7 +264,7 @@ int aio_write64(struct aiocb64 *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81, 1, "aio_write: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_write: GetLastError=" << errno  );
         return -1;
     }
 

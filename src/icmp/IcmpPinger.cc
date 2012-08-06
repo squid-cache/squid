@@ -142,7 +142,7 @@ IcmpPinger::Open(void)
     }
 
     getCurrentTime();
-    debugs(42, 1, "pinger: Squid socket opened");
+    debugs(42, DBG_IMPORTANT, "pinger: Squid socket opened");
 
     /* windows uses a socket stream as a dual-direction channel */
     socket_to_squid = icmp_sock;
@@ -185,7 +185,7 @@ IcmpPinger::Recv(void)
     n = recv(socket_from_squid, &pecho, sizeof(pecho), 0);
 
     if (n < 0) {
-        debugs(42, 1, "Pinger exiting.");
+        debugs(42, DBG_IMPORTANT, "Pinger exiting.");
         Close();
         exit(1);
     }
@@ -223,7 +223,7 @@ IcmpPinger::Recv(void)
                        pecho.payload,
                        pecho.psize);
     } else {
-        debugs(42, 1, HERE << " IP has unknown Type. " << pecho.to );
+        debugs(42, DBG_IMPORTANT, HERE << " IP has unknown Type. " << pecho.to );
     }
 }
 

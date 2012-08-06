@@ -303,12 +303,12 @@ ACL::checklistMatches(ACLChecklist *checklist)
     int rv;
 
     if (!checklist->hasRequest() && requiresRequest()) {
-        debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
+        debugs(28, DBG_IMPORTANT, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
         return 0;
     }
 
     if (!checklist->hasReply() && requiresReply()) {
-        debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
+        debugs(28, DBG_IMPORTANT, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
         return 0;
     }
 

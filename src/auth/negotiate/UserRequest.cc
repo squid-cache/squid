@@ -203,7 +203,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
         break;
 
     case Auth::Pending:
-        debugs(29, 1, HERE << "need to ask helper");
+        debugs(29, DBG_IMPORTANT, HERE << "need to ask helper");
         break;
 
     case Auth::Handshake:

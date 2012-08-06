@@ -137,7 +137,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
 
     c = (ClientInfo *) hash_lookup(client_table, key);
     if (c==NULL) {
-        debugs(77,1,"Client db does not contain information for given IP address "<<(const char*)key);
+        debugs(77, DBG_IMPORTANT,"Client db does not contain information for given IP address "<<(const char*)key);
         return NULL;
     }
     return c;

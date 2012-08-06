@@ -316,7 +316,7 @@ Comm::DoSelect(int msec)
 
         default:
             /* Bad! -- adrian */
-            debugs(5, 1, "comm_select: kevent returned " << ke[i].filter << "!");
+            debugs(5, DBG_IMPORTANT, "comm_select: kevent returned " << ke[i].filter << "!");
             break;
         }
     }

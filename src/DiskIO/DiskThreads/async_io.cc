@@ -110,7 +110,7 @@ aioCancel(int fd)
             AIOCB *callback = ctrlp->done_handler;
             void *cbdata;
             ctrlp->done_handler = NULL;
-            debugs(32, 1, "this be aioCancel. Danger ahead!");
+            debugs(32, DBG_IMPORTANT, "this be aioCancel. Danger ahead!");
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata))
                 callback(fd, cbdata, NULL, -2, -2);
