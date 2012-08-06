@@ -308,6 +308,12 @@ Ipc::StoreMapSlot::set(const StoreEntry &from)
 Ipc::StoreMap::Shared::Shared(const int aLimit, const size_t anExtrasSize):
         limit(aLimit), extrasSize(anExtrasSize), count(0)
 {
+    slots=new Slot[limit];
+}
+
+Ipc::StoreMap::Shared::~Shared()
+{
+    delete[] slots;
 }
 
 size_t
