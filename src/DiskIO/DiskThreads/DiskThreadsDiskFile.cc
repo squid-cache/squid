@@ -185,7 +185,7 @@ DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int err
 
     if (errflag || fd < 0) {
         errno = errflag;
-        debugs(79, 0, "DiskThreadsDiskFile::openDone: " << xstrerror());
+        debugs(79, DBG_CRITICAL, "DiskThreadsDiskFile::openDone: " << xstrerror());
         debugs(79, DBG_IMPORTANT, "\t" << path_);
         errorOccured = true;
     } else {
@@ -231,7 +231,7 @@ DiskThreadsDiskFile::close()
         ioRequestor->closeCompleted();
         return;
     } else {
-        debugs(79,0,HERE << "DiskThreadsDiskFile::close: " <<
+        debugs(79, DBG_CRITICAL, HERE << "DiskThreadsDiskFile::close: " <<
                "did NOT close because ioInProgress() is true.  now what?");
     }
 }

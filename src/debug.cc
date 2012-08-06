@@ -561,7 +561,7 @@ debugLogKid(void)
 void
 xassert(const char *msg, const char *file, int line)
 {
-    debugs(0, 0, "assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
+    debugs(0, DBG_CRITICAL, "assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
 
     if (!shutting_down)
         abort();
@@ -670,7 +670,7 @@ ctx_enter(const char *descr)
         Ctx_Descrs[Ctx_Current_Level] = descr;
 
     if (Ctx_Current_Level == Ctx_Warn_Level) {
-        debugs(0, 0, "# ctx: suspiciously deep (" << Ctx_Warn_Level << ") nesting:");
+        debugs(0, DBG_CRITICAL, "# ctx: suspiciously deep (" << Ctx_Warn_Level << ") nesting:");
         Ctx_Warn_Level *= 2;
     }
 

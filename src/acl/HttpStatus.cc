@@ -76,9 +76,9 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
         char bufb[8];
         a->toStr(bufa, sizeof(bufa));
         b->toStr(bufb, sizeof(bufb));
-        debugs(28, 0, "WARNING: '" << bufa << "' is a subrange of '" << bufb << "'");
-        debugs(28, 0, "WARNING: because of this '" << bufa << "' is ignored to keep splay tree searching predictable");
-        debugs(28, 0, "WARNING: You should probably remove '" << bufb << "' from the ACL named '" << AclMatchedName << "'");
+        debugs(28, DBG_CRITICAL, "WARNING: '" << bufa << "' is a subrange of '" << bufb << "'");
+        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << bufa << "' is ignored to keep splay tree searching predictable");
+        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << bufb << "' from the ACL named '" << AclMatchedName << "'");
     }
 
     return ret;

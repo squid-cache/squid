@@ -220,7 +220,7 @@ StoreEntry::swapOut()
 #if SIZEOF_OFF_T <= 4
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
-        debugs(20, 0, "WARNING: preventing off_t overflow for " << url());
+        debugs(20, DBG_CRITICAL, "WARNING: preventing off_t overflow for " << url());
         abort();
         return;
     }

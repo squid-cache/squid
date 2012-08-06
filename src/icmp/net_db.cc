@@ -1024,7 +1024,7 @@ netdbDump(StoreEntry * sentry)
     }
 
     if (i != memInUse(MEM_NETDBENTRY))
-        debugs(38, 0, "WARNING: netdb_addrs count off, found " << i <<
+        debugs(38, DBG_CRITICAL, "WARNING: netdb_addrs count off, found " << i <<
                ", expected " << memInUse(MEM_NETDBENTRY));
 
     qsort((char *) list,

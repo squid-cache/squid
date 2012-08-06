@@ -667,7 +667,7 @@ Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param
     } else if (strcasecmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
     } else {
-        debugs(29, 0, "unrecognised digest auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "unrecognised digest auth scheme parameter '" << param_str << "'");
     }
 }
 

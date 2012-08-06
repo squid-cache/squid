@@ -428,7 +428,7 @@ sigusr2_handle(int sig)
 
 #if !HAVE_SIGACTION
     if (signal(sig, sigusr2_handle) == SIG_ERR)	/* reinstall */
-        debugs(50, 0, "signal: sig=" << sig << " func=sigusr2_handle: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "signal: sig=" << sig << " func=sigusr2_handle: " << xstrerror());
 
 #endif
 }
@@ -698,7 +698,7 @@ leave_suid(void)
 #endif
 
         if (setgid(Config2.effectiveGroupID) < 0)
-            debugs(50, 0, "ALERT: setgid: " << xstrerror());
+            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerror());
 
     }
 
@@ -714,10 +714,10 @@ leave_suid(void)
     if (!Config.effectiveGroup) {
 
         if (setgid(Config2.effectiveGroupID) < 0)
-            debugs(50, 0, "ALERT: setgid: " << xstrerror());
+            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerror());
 
         if (initgroups(Config.effectiveUser, Config2.effectiveGroupID) < 0) {
-            debugs(50, 0, "ALERT: initgroups: unable to set groups for User " <<
+            debugs(50, DBG_CRITICAL, "ALERT: initgroups: unable to set groups for User " <<
                    Config.effectiveUser << " and Group " <<
                    (unsigned) Config2.effectiveGroupID << "");
         }
@@ -726,17 +726,17 @@ leave_suid(void)
 #if HAVE_SETRESUID
 
     if (setresuid(Config2.effectiveUserID, Config2.effectiveUserID, 0) < 0)
-        debugs(50, 0, "ALERT: setresuid: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ALERT: setresuid: " << xstrerror());
 
 #elif HAVE_SETEUID
 
     if (seteuid(Config2.effectiveUserID) < 0)
-        debugs(50, 0, "ALERT: seteuid: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ALERT: seteuid: " << xstrerror());
 
 #else
 
     if (setuid(Config2.effectiveUserID) < 0)
-        debugs(50, 0, "ALERT: setuid: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ALERT: setuid: " << xstrerror());
 
 #endif
 
@@ -911,7 +911,7 @@ writePidFile(void)
     leave_suid();
 
     if (fd < 0) {
-        debugs(50, 0, "" << f << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "" << f << ": " << xstrerror());
         debug_trap("Could not write pid file");
         return;
     }

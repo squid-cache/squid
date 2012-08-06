@@ -1436,7 +1436,7 @@ statAvgTick(void *notused)
         int i = (int) statPctileSvc(0.5, 20, PCTILE_HTTP);
 
         if (Config.warnings.high_rptm < i)
-            debugs(18, 0, "WARNING: Median response time is " << i << " milliseconds");
+            debugs(18, DBG_CRITICAL, "WARNING: Median response time is " << i << " milliseconds");
     }
 
     if (Config.warnings.high_pf) {
@@ -1447,7 +1447,7 @@ statAvgTick(void *notused)
             i /= (int) dt;
 
             if (Config.warnings.high_pf < i)
-                debugs(18, 0, "WARNING: Page faults occuring at " << i << "/sec");
+                debugs(18, DBG_CRITICAL, "WARNING: Page faults occuring at " << i << "/sec");
         }
     }
 
@@ -1467,7 +1467,7 @@ statAvgTick(void *notused)
 #endif
 
         if (Config.warnings.high_memory < i)
-            debugs(18, 0, "WARNING: Memory usage at " << ((unsigned long int)(i >> 20)) << " MB");
+            debugs(18, DBG_CRITICAL, "WARNING: Memory usage at " << ((unsigned long int)(i >> 20)) << " MB");
     }
 }
 

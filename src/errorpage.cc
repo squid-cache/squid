@@ -1002,7 +1002,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         /* for backward compat we make %s show the full URL. Drop this in some future release. */
         if (building_deny_info_url) {
             p = request ? urlCanonical(request) : url;
-            debugs(0,0, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
+            debugs(0, DBG_CRITICAL, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
         } else
             p = visible_appname_string;
         break;

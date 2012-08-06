@@ -46,7 +46,7 @@ void ClientDelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) cons
 void ClientDelayConfig::parsePoolCount()
 {
     if (pools.size()) {
-        debugs(3, 0, "parse_client_delay_pool_count: multiple client_delay_pools lines, aborting all previous client_delay_pools config");
+        debugs(3, DBG_CRITICAL, "parse_client_delay_pool_count: multiple client_delay_pools lines, aborting all previous client_delay_pools config");
         clean();
     }
     unsigned short pools_;
@@ -62,7 +62,7 @@ void ClientDelayConfig::parsePoolRates()
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > pools.size()) {
-        debugs(3, 0, "parse_client_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << pools.size());
+        debugs(3, DBG_CRITICAL, "parse_client_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << pools.size());
         return;
     }
 
@@ -79,7 +79,7 @@ void ClientDelayConfig::parsePoolAccess(ConfigParser &parser)
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > pools.size()) {
-        debugs(3, 0, "parse_client_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << pools.size());
+        debugs(3, DBG_CRITICAL, "parse_client_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << pools.size());
         return;
     }
 

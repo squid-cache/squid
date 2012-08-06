@@ -79,7 +79,7 @@ Icmp4::Open(void)
     icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
     if (icmp_sock < 0) {
-        debugs(50, 0, HERE << " icmp_sock: " << xstrerror());
+        debugs(50, DBG_CRITICAL, HERE << " icmp_sock: " << xstrerror());
         return -1;
     }
 
@@ -172,7 +172,7 @@ Icmp4::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42, 0, HERE << "No socket! Recv() should not be called.");
+        debugs(42, DBG_CRITICAL, HERE << "No socket! Recv() should not be called.");
         return;
     }
 

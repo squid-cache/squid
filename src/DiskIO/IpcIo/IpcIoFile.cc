@@ -788,7 +788,7 @@ void
 IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 {
     if (ipcIo.command != IpcIo::cmdRead && ipcIo.command != IpcIo::cmdWrite) {
-        debugs(0,0, HERE << "disker" << KidIdentifier <<
+        debugs(0, DBG_CRITICAL, HERE << "disker" << KidIdentifier <<
                " should not receive " << ipcIo.command <<
                " ipcIo" << workerId << '.' << ipcIo.requestId);
         return;
@@ -830,7 +830,7 @@ DiskerOpen(const String &path, int flags, mode_t mode)
 
     if (TheFile < 0) {
         const int xerrno = errno;
-        debugs(47,0, HERE << "rock db error opening " << path << ": " <<
+        debugs(47, DBG_CRITICAL, HERE << "rock db error opening " << path << ": " <<
                xstrerr(xerrno));
         return false;
     }

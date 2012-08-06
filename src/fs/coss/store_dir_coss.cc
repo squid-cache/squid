@@ -648,7 +648,7 @@ storeCossDirOpenTmpSwapLog(CossSwapDir * sd, int *clean_flag, int *zero_flag)
     fp = fopen(swaplog_path, "rb");
 
     if (fp == NULL) {
-        debugs(50, 0, "" << swaplog_path << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "" << swaplog_path << ": " << xstrerror());
         fatal("Failed to open swap log for reading");
     }
 
@@ -782,8 +782,8 @@ CossCleanLog::write(StoreEntry const &e)
 
     if (outbuf_offset + ss > CLEAN_BUF_SZ) {
         if (FD_WRITE_METHOD(fd, outbuf, outbuf_offset) < 0) {
-            debugs(50, 0, "storeCossDirWriteCleanLogs: " << newLog << ": write: " << xstrerror());
-            debugs(50, 0, "storeCossDirWriteCleanLogs: Current swap logfile not replaced.");
+            debugs(50, DBG_CRITICAL, "storeCossDirWriteCleanLogs: " << newLog << ": write: " << xstrerror());
+            debugs(50, DBG_CRITICAL, "storeCossDirWriteCleanLogs: Current swap logfile not replaced.");
             file_close(fd);
             fd = -1;
             unlink(newLog);
@@ -808,8 +808,8 @@ CossSwapDir::writeCleanDone()
         return;
 
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
-        debugs(50, 0, "storeCossDirWriteCleanLogs: " << state->newLog << ": write: " << xstrerror());
-        debugs(50, 0, "storeCossDirWriteCleanLogs: Current swap logfile not replaced.");
+        debugs(50, DBG_CRITICAL, "storeCossDirWriteCleanLogs: " << state->newLog << ": write: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "storeCossDirWriteCleanLogs: Current swap logfile not replaced.");
         file_close(state->fd);
         state->fd = -1;
         ::unlink(state->newLog);
@@ -1027,9 +1027,9 @@ CossSwapDir::parse(int anIndex, char *aPath)
     const uint64_t max_offset = (uint64_t)SwapFilenMax << blksz_bits;
 
     if (maxSize() > max_offset) {
-        debugs(47, 0, "COSS block-size = " << (1<<blksz_bits) << " bytes");
-        debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
-        debugs(47, 0, "COSS cache_dir size = " << (maxSize() >> 10) << " KB");
+        debugs(47, DBG_CRITICAL, "COSS block-size = " << (1<<blksz_bits) << " bytes");
+        debugs(47, DBG_CRITICAL, "COSS largest file offset = " << (max_offset >> 10) << " KB");
+        debugs(47, DBG_CRITICAL, "COSS cache_dir size = " << (maxSize() >> 10) << " KB");
         fatal("COSS cache_dir size exceeds largest offset\n");
     }
 }
@@ -1098,7 +1098,7 @@ CossSwapDir::optionBlockSizeParse(const char *option, const char *value, int rec
         return true;
 
     if (reconfiguring) {
-        debugs(47, 0, "WARNING: cannot change COSS block-size while Squid is running");
+        debugs(47, DBG_CRITICAL, "WARNING: cannot change COSS block-size while Squid is running");
         return false;
     }
 

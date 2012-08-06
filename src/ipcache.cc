@@ -186,12 +186,12 @@ static void
 ipcacheRelease(ipcache_entry * i, bool dofree)
 {
     if (!i) {
-        debugs(14, 0, "ipcacheRelease: Releasing entry with i=<NULL>");
+        debugs(14, DBG_CRITICAL, "ipcacheRelease: Releasing entry with i=<NULL>");
         return;
     }
 
     if (!i || !i->hash.key) {
-        debugs(14, 0, "ipcacheRelease: Releasing entry without hash link!");
+        debugs(14, DBG_CRITICAL, "ipcacheRelease: Releasing entry without hash link!");
         return;
     }
 
@@ -805,12 +805,12 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     char buf[MAX_IPSTRLEN];
 
     if (!sentry) {
-        debugs(14, 0, HERE << "CRITICAL: sentry is NULL!");
+        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: sentry is NULL!");
         return;
     }
 
     if (!i) {
-        debugs(14, 0, HERE << "CRITICAL: ipcache_entry is NULL!");
+        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: ipcache_entry is NULL!");
         storeAppendPrintf(sentry, "CRITICAL ERROR\n");
         return;
     }

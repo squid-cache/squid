@@ -537,7 +537,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else if (!parse_line(tmp_line)) {
-                debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
+                debugs(3, DBG_CRITICAL, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
                 ++err_count;
             }
         }
@@ -633,7 +633,7 @@ configDoConfigure(void)
 
 #if SIZEOF_OFF_T <= 4
     if (Config.Store.maxObjectSize > 0x7FFF0000) {
-        debugs(3, 0, "WARNING: This Squid binary can not handle files larger than 2GB. Limiting maximum_object_size to just below 2GB");
+        debugs(3, DBG_CRITICAL, "WARNING: This Squid binary can not handle files larger than 2GB. Limiting maximum_object_size to just below 2GB");
         Config.Store.maxObjectSize = 0x7FFF0000;
     }
 #endif
@@ -642,7 +642,7 @@ configDoConfigure(void)
         (void) 0;
     else if (Store::Root().maxSize() < Config.memMaxSize)
         /* This is bogus. folk with NULL caches will want this */
-        debugs(3, 0, "WARNING cache_mem is larger than total disk cache space!");
+        debugs(3, DBG_CRITICAL, "WARNING cache_mem is larger than total disk cache space!");
 
     if (Config.Announce.period > 0) {
         Config.onoff.announce = 1;
@@ -987,7 +987,7 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
     if (0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" <<
+        debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
     else if ((m = parseTimeUnits(token, allowMsec)) == 0)
@@ -1064,7 +1064,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
     if (0.0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" <<
+        debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
     else if ((m = parseBytesUnits(token)) == 0) {
@@ -1109,7 +1109,7 @@ parseBytesLine(size_t * bptr, const char *units)
     if (0.0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" <<
+        debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
     else if ((m = parseBytesUnits(token)) == 0) {
@@ -1154,7 +1154,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
     if (0.0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" <<
+        debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
     else if ((m = parseBytesUnits(token)) == 0) {
@@ -1699,8 +1699,8 @@ parse_http_header_access(HeaderManglers **pm)
     char *t = NULL;
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(3, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, 0, "parse_http_header_access: missing header name.");
+        debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(3, DBG_CRITICAL, "parse_http_header_access: missing header name.");
         return;
     }
 
@@ -1735,8 +1735,8 @@ parse_http_header_replace(HeaderManglers **pm)
     char *t = NULL;
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(3, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, 0, "parse_http_header_replace: missing header name.");
+        debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(3, DBG_CRITICAL, "parse_http_header_replace: missing header name.");
         return;
     }
 
@@ -1880,7 +1880,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
             sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
 
             if (strcmp(sd->type(), StoreFileSystem::FileSystems().items[fs]->type()) != 0) {
-                debugs(3, 0, "ERROR: Can't change type of existing cache_dir " <<
+                debugs(3, DBG_CRITICAL, "ERROR: Can't change type of existing cache_dir " <<
                        sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
                 return;
             }
@@ -2283,7 +2283,7 @@ parse_peer(peer ** head)
         } else if (strcmp(token, "connection-auth=auto") == 0) {
             p->connection_auth = 2;
         } else {
-            debugs(3, 0, "parse_peer: token='" << token << "'");
+            debugs(3, DBG_CRITICAL, "parse_peer: token='" << token << "'");
             self_destruct();
         }
     }
@@ -2391,7 +2391,7 @@ parse_cachemgrpasswd(cachemgr_passwd ** head)
                 if (strcmp(w->key, u->key))
                     continue;
 
-                debugs(0, 0, "WARNING: action '" << u->key << "' (line " << config_lineno << ") already has a password");
+                debugs(0, DBG_CRITICAL, "WARNING: action '" << u->key << "' (line " << config_lineno << ") already has a password");
             }
         }
     }
@@ -2468,7 +2468,7 @@ parse_peer_access(void)
         self_destruct();
 
     if ((p = peerFindByName(host)) == NULL) {
-        debugs(15, 0, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
+        debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;
     }
 
@@ -2490,7 +2490,7 @@ parse_hostdomain(void)
         peer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
-            debugs(15, 0, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
+            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
             continue;
         }
 
@@ -2528,7 +2528,7 @@ parse_hostdomaintype(void)
         peer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
-            debugs(15, 0, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
+            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
             return;
         }
 
@@ -2792,14 +2792,14 @@ parse_refreshpattern(refresh_t ** head)
 #endif
 
         } else
-            debugs(22, 0, "refreshAddToList: Unknown option '" << pattern << "': " << token);
+            debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
         char errbuf[256];
         regerror(errcode, &comp, errbuf, sizeof errbuf);
-        debugs(22, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, 0, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
+        debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
         return;
     }
 
@@ -3372,7 +3372,7 @@ parseNeighborType(const char *s)
     if (!strcasecmp(s, "multicast"))
         return PEER_MULTICAST;
 
-    debugs(15, 0, "WARNING: Unknown neighbor type: " << s);
+    debugs(15, DBG_CRITICAL, "WARNING: Unknown neighbor type: " << s);
 
     return PEER_SIBLING;
 }
@@ -4005,7 +4005,7 @@ parse_access_log(customlog ** logs)
         cl->type = Log::Format::CLF_CUSTOM;
         cl->logFormat = lf;
     } else if (strcmp(logdef_name, "auto") == 0) {
-        debugs(0,0, "WARNING: Log format 'auto' no longer exists. Using 'squid' instead.");
+        debugs(0, DBG_CRITICAL, "WARNING: Log format 'auto' no longer exists. Using 'squid' instead.");
         cl->type = Log::Format::CLF_SQUID;
     } else if (strcmp(logdef_name, "squid") == 0) {
         cl->type = Log::Format::CLF_SQUID;
@@ -4022,7 +4022,7 @@ parse_access_log(customlog ** logs)
     } else if (strcmp(logdef_name, "referrer") == 0) {
         cl->type = Log::Format::CLF_REFERER;
     } else {
-        debugs(3, 0, "Log format '" << logdef_name << "' is not defined");
+        debugs(3, DBG_CRITICAL, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
         return;
     }
@@ -4254,7 +4254,7 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const Adaptation::I
 static void
 parse_icap_class_type()
 {
-    debugs(93, 0, "WARNING: 'icap_class' is depricated. " <<
+    debugs(93, DBG_CRITICAL, "WARNING: 'icap_class' is depricated. " <<
            "Use 'adaptation_service_set' instead");
     Adaptation::Config::ParseServiceSet();
 }
@@ -4262,7 +4262,7 @@ parse_icap_class_type()
 static void
 parse_icap_access_type()
 {
-    debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
+    debugs(93, DBG_CRITICAL, "WARNING: 'icap_access' is depricated. " <<
            "Use 'adaptation_access' instead");
     Adaptation::Config::ParseAccess(LegacyParser);
 }
@@ -4304,7 +4304,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
         return;
 
     if (strcmp(token,"in") != 0) {
-        debugs(3, 0, "expecting 'in' on'"  << config_input_line << "'");
+        debugs(3, DBG_CRITICAL, "expecting 'in' on'"  << config_input_line << "'");
         self_destruct();
     }
 
@@ -4319,7 +4319,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     if (0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL) {
-        debugs(3, 0, "No time-units on '" << config_input_line << "'");
+        debugs(3, DBG_CRITICAL, "No time-units on '" << config_input_line << "'");
         self_destruct();
     } else if ((m = parseTimeUnits(token, false)) == 0)
         self_destruct();

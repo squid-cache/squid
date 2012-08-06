@@ -59,7 +59,7 @@ HelperChildConfig::parseConfig()
         } else if (strncmp(token, "idle=", 5) == 0) {
             n_idle = atoi(token + 5);
             if (n_idle < 1) {
-                debugs(0,0,"WARNING OVERIDE: Using idle=0 for helpers causes request failures. Overiding to use idle=1 instead.");
+                debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Using idle=0 for helpers causes request failures. Overiding to use idle=1 instead.");
                 n_idle = 1;
             }
         } else if (strncmp(token, "concurrency=", 12) == 0) {
@@ -72,12 +72,12 @@ HelperChildConfig::parseConfig()
     /* simple sanity. */
 
     if (n_startup > n_max) {
-        debugs(0,0,"WARNING OVERIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
+        debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
         n_startup = n_max;
     }
 
     if (n_idle > n_max) {
-        debugs(0,0,"WARNING OVERIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
+        debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
         n_idle = n_max;
     }
 }

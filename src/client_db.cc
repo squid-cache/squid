@@ -255,12 +255,12 @@ clientdbCutoffDenied(const Ip::Address &addr)
     if (p < 95.0)
         return 0;
 
-    debugs(1, 0, "WARNING: Probable misconfigured neighbor at " << key);
+    debugs(1, DBG_CRITICAL, "WARNING: Probable misconfigured neighbor at " << key);
 
-    debugs(1, 0, "WARNING: " << ND << " of the last " << NR <<
+    debugs(1, DBG_CRITICAL, "WARNING: " << ND << " of the last " << NR <<
            " ICP replies are DENIED");
 
-    debugs(1, 0, "WARNING: No replies will be sent for the next " <<
+    debugs(1, DBG_CRITICAL, "WARNING: No replies will be sent for the next " <<
            CUTOFF_SECONDS << " seconds");
 
     c->cutoff.time = squid_curtime;
