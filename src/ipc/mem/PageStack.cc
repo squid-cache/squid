@@ -23,6 +23,12 @@ Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapac
     // initially, all pages are free
     for (Offset i = 0; i < theSize; ++i)
         theItems[i] = i + 1; // skip page number zero to keep numbers positive
+    theItems=new Item[theSize];
+}
+
+Ipc::Mem::PageStack::~PageStack()
+{
+    delete[] theItems;
 }
 
 /*
