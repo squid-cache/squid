@@ -255,7 +255,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
     /* we shouldn't ever ask for absent offsets */
 
     if (nodes.size() == 0) {
-        debugs(19, 1, "mem_hdr::copy: No data to read");
+        debugs(19, DBG_IMPORTANT, "mem_hdr::copy: No data to read");
         debugDump();
         assert (0);
         return 0;
@@ -268,7 +268,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
     mem_node *p = getBlockContainingLocation(target.offset);
 
     if (!p) {
-        debugs(19, 1, "memCopy: could not find start of " << target.range() <<
+        debugs(19, DBG_IMPORTANT, "memCopy: could not find start of " << target.range() <<
                " in memory.");
         debugDump();
         fatal("Squid has attempted to read data from memory that is not present. This is an indication of of (pre-3.0) code that hasn't been updated to deal with sparse objects in memory. Squid should coredump.allowing to review the cause. Immediately preceeding this message is a dump of the available data in the format [start,end). The [ means from the value, the ) means up to the value. I.e. [1,5) means that there are 4 bytes of data, at offsets 1,2,3,4.\n");
@@ -424,8 +424,8 @@ mem_hdr::NodeCompare(mem_node * const &left, mem_node * const &right)
 void
 mem_hdr::dump() const
 {
-    debugs(20, 1, "mem_hdr: " << (void *)this << " nodes.start() " << nodes.start());
-    debugs(20, 1, "mem_hdr: " << (void *)this << " nodes.finish() " << nodes.finish());
+    debugs(20, DBG_IMPORTANT, "mem_hdr: " << (void *)this << " nodes.start() " << nodes.start());
+    debugs(20, DBG_IMPORTANT, "mem_hdr: " << (void *)this << " nodes.finish() " << nodes.finish());
 }
 
 size_t

@@ -187,10 +187,10 @@ MmappedFile::write(WriteRequest *aRequest)
     const ssize_t written =
         pwrite(fd, aRequest->buf, aRequest->len, aRequest->offset);
     if (written < 0) {
-        debugs(79,1, HERE << "error: " << xstrerr(errno));
+        debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(errno));
         error_ = true;
     } else if (static_cast<size_t>(written) != aRequest->len) {
-        debugs(79,1, HERE << "problem: " << written << " < " << aRequest->len);
+        debugs(79, DBG_IMPORTANT, HERE << "problem: " << written << " < " << aRequest->len);
         error_ = true;
     }
 

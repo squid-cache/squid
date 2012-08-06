@@ -184,7 +184,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
 
     case STREAM_FAILED:
-        debugs(86, 1, "ESI subrequest failed transfer");
+        debugs(86, DBG_IMPORTANT, "ESI subrequest failed transfer");
         esiStream->include->includeFail (esiStream);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -379,7 +379,7 @@ ESIInclude::ESIInclude (esiTreeParentPtr aParent, int attrcount, char const **at
                 flags.onerrorcontinue = 1;
             } else {
                 /* ignore mistyped attributes */
-                debugs(86, 1, "invalid value for onerror='" << attr[i+1] << "'");
+                debugs(86, DBG_IMPORTANT, "invalid value for onerror='" << attr[i+1] << "'");
             }
         } else {
             /* ignore mistyped attributes. TODO:? error on these for user feedback - config parameter needed
@@ -407,7 +407,7 @@ ESIInclude::start()
     } else {
         alt = NULL;
 
-        debugs(86, 1, "ESIIncludeNew: esi:include with no src attributes");
+        debugs(86, DBG_IMPORTANT, "ESIIncludeNew: esi:include with no src attributes");
 
         flags.failed = 1;
     }

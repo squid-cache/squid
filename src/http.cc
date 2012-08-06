@@ -609,7 +609,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
 
         if (Config.onoff.detect_broken_server_pconns
                 && reply->bodySize(request->method) == -1 && !flags.chunked) {
-            debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
+            debugs(11, DBG_IMPORTANT, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
         }
@@ -1682,7 +1682,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
                 const char *url = entry ? entry->url() : urlCanonical(request);
-                debugs(11, 1, "Warning: likely forwarding loop with " << url);
+                debugs(11, DBG_IMPORTANT, "Warning: likely forwarding loop with " << url);
             }
         }
 
@@ -2257,7 +2257,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
         // XXX: we should check this condition in other callbacks then!
         // TODO: Check whether this can actually happen: We should unsubscribe
         // as a body consumer when the above condition(s) are detected.
-        debugs(11, 1, HERE << "Transaction aborted while reading HTTP body");
+        debugs(11, DBG_IMPORTANT, HERE << "Transaction aborted while reading HTTP body");
         return;
     }
 
@@ -2268,7 +2268,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
 
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
-            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
+            debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
                 serverConnection->close();

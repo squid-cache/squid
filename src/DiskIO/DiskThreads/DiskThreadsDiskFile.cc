@@ -186,7 +186,7 @@ DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int err
     if (errflag || fd < 0) {
         errno = errflag;
         debugs(79, 0, "DiskThreadsDiskFile::openDone: " << xstrerror());
-        debugs(79, 1, "\t" << path_);
+        debugs(79, DBG_IMPORTANT, "\t" << path_);
         errorOccured = true;
     } else {
         ++store_open_disk_fd;

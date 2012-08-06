@@ -442,7 +442,7 @@ void
 peerAlive(peer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, 1, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
     }
@@ -681,7 +681,7 @@ neighborsUdpPing(HttpRequest * request,
             /* log it once at the threshold */
 
             if (p->stats.logged_state == PEER_ALIVE) {
-                debugs(15, 1, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
                 p->stats.logged_state = PEER_DEAD;
             }
         }
@@ -942,7 +942,7 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     ++ np->icp.counts[opcode];
 
     if (isPowTen(++np->stats.ignored_replies))
-        debugs(15, 1, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << np->host);
+        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << np->host);
 }
 
 /* ignoreMulticastReply
@@ -1026,7 +1026,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 
     if (entry->lock_count == 0) {
         // TODO: many entries are unlocked; why is this reported at level 1?
-        debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
+        debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
     }
@@ -1063,10 +1063,10 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         }
     } else if (opcode == ICP_SECHO) {
         if (p) {
-            debugs(15, 1, "Ignoring SECHO from neighbor " << p->host);
+            debugs(15, DBG_IMPORTANT, "Ignoring SECHO from neighbor " << p->host);
             neighborCountIgnored(p);
         } else {
-            debugs(15, 1, "Unsolicited SECHO from " << from);
+            debugs(15, DBG_IMPORTANT, "Unsolicited SECHO from " << from);
         }
     } else if (opcode == ICP_DENIED) {
         if (p == NULL) {
@@ -1194,10 +1194,10 @@ peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
     int j;
 
     if (p->n_addresses == 0) {
-        debugs(15, 1, "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
+        debugs(15, DBG_IMPORTANT, "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
 
         if (p->type == PEER_MULTICAST)
-            debugs(15, 1, "    Multicast TTL = " << p->mcast.ttl);
+            debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);
     }
 
     p->n_addresses = 0;
@@ -1270,7 +1270,7 @@ peerConnectFailedSilent(peer * p)
     -- p->tcp_up;
 
     if (!p->tcp_up) {
-        debugs(15, 1, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+        debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
         p->stats.logged_state = PEER_DEAD;
     }
 }
@@ -1278,7 +1278,7 @@ peerConnectFailedSilent(peer * p)
 void
 peerConnectFailed(peer *p)
 {
-    debugs(15, 1, "TCP connection to " << p->host << "/" << p->http_port << " failed");
+    debugs(15, DBG_IMPORTANT, "TCP connection to " << p->host << "/" << p->http_port << " failed");
     peerConnectFailedSilent(p);
 }
 
@@ -1412,7 +1412,7 @@ peerCountMcastPeersDone(void *data)
         peer *p = (peer *)psstate->callback_data;
         p->mcast.flags.counting = 0;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
-        debugs(15, 1, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
+        debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
                p->mcast.avg_n_members <<" average, RTT " << p->stats.rtt);
         p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
@@ -1730,7 +1730,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Addres
 
     if (e->lock_count == 0) {
         // TODO: many entries are unlocked; why is this reported at level 1?
-        debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
+        debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
     }

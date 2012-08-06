@@ -252,7 +252,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, fd_table[fd].read_data);
             } else {
-                debugs(5, 1, "comm_select_incoming: FD " << fd << " NULL read handler");
+                debugs(5, DBG_IMPORTANT, "comm_select_incoming: FD " << fd << " NULL read handler");
             }
         }
 
@@ -262,7 +262,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
                 commUpdateWriteBits(fd, NULL);
                 hdl(fd, fd_table[fd].write_data);
             } else {
-                debugs(5, 1, "comm_select_incoming: FD " << fd << " NULL write handler");
+                debugs(5, DBG_IMPORTANT, "comm_select_incoming: FD " << fd << " NULL write handler");
             }
         }
     }

@@ -454,7 +454,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             llen = left;
         }
         if (gopherState->len + llen >= TEMP_BUF_SIZE) {
-            debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
+            debugs(10, DBG_IMPORTANT, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
             llen = TEMP_BUF_SIZE - gopherState->len - 1;
         }
         if (!lpos) {
@@ -796,7 +796,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
     }
 
     if (flag != COMM_OK) {
-        debugs(50, 1, "gopherReadReply: error reading: " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "gopherReadReply: error reading: " << xstrerror());
 
         if (ignoreErrno(xerrno)) {
             AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",

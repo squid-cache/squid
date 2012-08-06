@@ -510,7 +510,7 @@ CossSwapDir::sync()
         t = (CossMemBuf *)m->data;
 
         if (t->flags.writing) {
-            debugs(79, 1, "WARNING: sleeping for 5 seconds in storeCossSync()");
+            debugs(79, DBG_IMPORTANT, "WARNING: sleeping for 5 seconds in storeCossSync()");
             sleep(5);		/* XXX EEEWWW! */
         }
 

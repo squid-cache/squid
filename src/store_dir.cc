@@ -101,10 +101,10 @@ StoreController::init()
 
     if (0 == strcasecmp(Config.store_dir_select_algorithm, "round-robin")) {
         storeDirSelectSwapDir = storeDirSelectSwapDirRoundRobin;
-        debugs(47, 1, "Using Round Robin store dir selection");
+        debugs(47, DBG_IMPORTANT, "Using Round Robin store dir selection");
     } else {
         storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
-        debugs(47, 1, "Using Least Load store dir selection");
+        debugs(47, DBG_IMPORTANT, "Using Least Load store dir selection");
     }
 }
 
@@ -408,7 +408,7 @@ SwapDir::diskFull()
 
     max_size = currentSize();
 
-    debugs(20, 1, "WARNING: Shrinking cache_dir #" << index << " to " << currentSize() / 1024.0 << " KB");
+    debugs(20, DBG_IMPORTANT, "WARNING: Shrinking cache_dir #" << index << " to " << currentSize() / 1024.0 << " KB");
 }
 
 void
@@ -447,12 +447,12 @@ storeDirWriteCleanLogs(int reopen)
     int notdone = 1;
 
     if (StoreController::store_dirs_rebuilding) {
-        debugs(20, 1, "Not currently OK to rewrite swap log.");
-        debugs(20, 1, "storeDirWriteCleanLogs: Operation aborted.");
+        debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
+        debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
         return 0;
     }
 
-    debugs(20, 1, "storeDirWriteCleanLogs: Starting...");
+    debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Starting...");
     getCurrentTime();
     start = current_time;
 
@@ -460,7 +460,7 @@ storeDirWriteCleanLogs(int reopen)
         sd = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
         if (sd->writeCleanStart() < 0) {
-            debugs(20, 1, "log.clean.start() failed for dir #" << sd->index);
+            debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd->index);
             continue;
         }
     }
@@ -493,7 +493,7 @@ storeDirWriteCleanLogs(int reopen)
 
             if ((++n & 0xFFFF) == 0) {
                 getCurrentTime();
-                debugs(20, 1, "  " << std::setw(7) << n  <<
+                debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << n  <<
                        " entries written so far.");
             }
         }
@@ -510,8 +510,8 @@ storeDirWriteCleanLogs(int reopen)
 
     dt = tvSubDsec(start, current_time);
 
-    debugs(20, 1, "  Finished.  Wrote " << n << " entries.");
-    debugs(20, 1, "  Took "<< std::setw(3)<< std::setprecision(2) << dt <<
+    debugs(20, DBG_IMPORTANT, "  Finished.  Wrote " << n << " entries.");
+    debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt <<
            " seconds ("<< std::setw(6) << ((double) n / (dt > 0.0 ? dt : 1.0)) << " entries/sec).");
 
 
@@ -572,7 +572,7 @@ storeDirGetBlkSize(const char *path, int *blksize)
     struct statvfs sfs;
 
     if (statvfs(path, &sfs)) {
-        debugs(50, 1, "" << path << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
         *blksize = 2048;
         return 1;
     }
@@ -583,7 +583,7 @@ storeDirGetBlkSize(const char *path, int *blksize)
     struct statfs sfs;
 
     if (statfs(path, &sfs)) {
-        debugs(50, 1, "" << path << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
         *blksize = 2048;
         return 1;
     }
@@ -611,7 +611,7 @@ storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, 
     struct statvfs sfs;
 
     if (statvfs(path, &sfs)) {
-        debugs(50, 1, "" << path << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
         return 1;
     }
 
@@ -624,7 +624,7 @@ storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, 
     struct statfs sfs;
 
     if (statfs(path, &sfs)) {
-        debugs(50, 1, "" << path << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
         return 1;
     }
 
@@ -935,17 +935,17 @@ StoreHashIndex::init()
     /* this is very bogus, its specific to the any Store maintaining an
      * in-core index, not global */
     size_t buckets = (Store::Root().maxSize() + Config.memMaxSize) / Config.Store.avgObjectSize;
-    debugs(20, 1, "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
+    debugs(20, DBG_IMPORTANT, "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
            " + " << ( Config.memMaxSize >> 10) << " KB, estimated " << buckets << " objects");
     buckets /= Config.Store.objectsPerBucket;
-    debugs(20, 1, "Target number of buckets: " << buckets);
+    debugs(20, DBG_IMPORTANT, "Target number of buckets: " << buckets);
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
     store_hash_buckets = storeKeyHashBuckets(buckets);
-    debugs(20, 1, "Using " << store_hash_buckets << " Store buckets");
-    debugs(20, 1, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
+    debugs(20, DBG_IMPORTANT, "Using " << store_hash_buckets << " Store buckets");
+    debugs(20, DBG_IMPORTANT, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
            (Config.memShared ? " [shared]" : ""));
-    debugs(20, 1, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
+    debugs(20, DBG_IMPORTANT, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
     store_table = hash_create(storeKeyHashCmp,
                               store_hash_buckets, storeKeyHashHash);

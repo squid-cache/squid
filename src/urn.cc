@@ -156,7 +156,7 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
     if (rtt_ret)
         *rtt_ret = min_rtt;
 
-    debugs(52, 1, "urnFindMinRtt: Returning '" <<
+    debugs(52, DBG_IMPORTANT, "urnFindMinRtt: Returning '" <<
            (min_u ? min_u->url : "NONE") << "' RTT " <<
            min_rtt  );
 
@@ -360,7 +360,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     k = headersEnd(buf, urnState->reqofs);
 
     if (0 == k) {
-        debugs(52, 1, "urnHandleReply: didn't find end-of-headers for " << e->url()  );
+        debugs(52, DBG_IMPORTANT, "urnHandleReply: didn't find end-of-headers for " << e->url()  );
         urnHandleReplyError(urnState, urlres_e);
         return;
     }

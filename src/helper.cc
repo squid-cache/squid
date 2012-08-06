@@ -172,10 +172,10 @@ helperOpenServers(helper * hlp)
     /* figure out how many new child are actually needed. */
     int need_new = hlp->childs.needNew();
 
-    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
+    debugs(84, DBG_IMPORTANT, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
 
     if (need_new < 1) {
-        debugs(84, 1, "helperOpenServers: No '" << shortname << "' processes needed.");
+        debugs(84, DBG_IMPORTANT, "helperOpenServers: No '" << shortname << "' processes needed.");
     }
 
     procname = (char *)xmalloc(strlen(shortname) + 3);
@@ -208,7 +208,7 @@ helperOpenServers(helper * hlp)
                         &hIpc);
 
         if (pid < 0) {
-            debugs(84, 1, "WARNING: Cannot run '" << progname << "' process.");
+            debugs(84, DBG_IMPORTANT, "WARNING: Cannot run '" << progname << "' process.");
             continue;
         }
 
@@ -290,10 +290,10 @@ helperStatefulOpenServers(statefulhelper * hlp)
     /* figure out haw mant new helpers are needed. */
     int need_new = hlp->childs.needNew();
 
-    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
+    debugs(84, DBG_IMPORTANT, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
 
     if (need_new < 1) {
-        debugs(84, 1, "helperStatefulOpenServers: No '" << shortname << "' processes needed.");
+        debugs(84, DBG_IMPORTANT, "helperStatefulOpenServers: No '" << shortname << "' processes needed.");
     }
 
     char *procname = (char *)xmalloc(strlen(shortname) + 3);
@@ -328,7 +328,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
                               &hIpc);
 
         if (pid < 0) {
-            debugs(84, 1, "WARNING: Cannot run '" << progname << "' process.");
+            debugs(84, DBG_IMPORTANT, "WARNING: Cannot run '" << progname << "' process.");
             continue;
         }
 
@@ -725,12 +725,12 @@ helperServerFree(helper_server *srv)
         debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
-            debugs(80, 1, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
+            debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
             if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
                 fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
 
-            debugs(80, 1, "Starting new helpers");
+            debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperOpenServers(hlp);
         }
     }
@@ -786,12 +786,12 @@ helperStatefulServerFree(helper_stateful_server *srv)
         debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
-            debugs(80, 1, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
+            debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
             if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
                 fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
 
-            debugs(80, 1, "Starting new helpers");
+            debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperStatefulOpenServers(hlp);
         }
     }
@@ -845,7 +845,7 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
 
         helperRequestFree(r);
     } else {
-        debugs(84, 1, "helperHandleRead: unexpected reply on channel " <<
+        debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected reply on channel " <<
                request_number << " from " << hlp->id_name << " #" << srv->index + 1 <<
                " '" << srv->rbuf << "'");
     }
@@ -890,7 +890,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
     if (!srv->stats.pending) {
         /* someone spoke without being spoken to */
-        debugs(84, 1, "helperHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected read from " <<
                hlp->id_name << " #" << srv->index + 1 << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
@@ -980,7 +980,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
 
     if (r == NULL) {
         /* someone spoke without being spoken to */
-        debugs(84, 1, "helperStatefulHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "helperStatefulHandleRead: unexpected read from " <<
                hlp->id_name << " #" << srv->index + 1 << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
@@ -1000,7 +1000,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         if (r && cbdataReferenceValid(r->data)) {
             r->callback(r->data, srv, srv->rbuf);
         } else {
-            debugs(84, 1, "StatefulHandleRead: no callback data registered");
+            debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
         }
 
@@ -1262,7 +1262,7 @@ helperDispatch(helper_server * srv, helper_request * r)
     unsigned int slot;
 
     if (!cbdataReferenceValid(r->data)) {
-        debugs(84, 1, "helperDispatch: invalid callback data");
+        debugs(84, DBG_IMPORTANT, "helperDispatch: invalid callback data");
         helperRequestFree(r);
         return;
     }
@@ -1317,7 +1317,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     statefulhelper *hlp = srv->parent;
 
     if (!cbdataReferenceValid(r->data)) {
-        debugs(84, 1, "helperStatefulDispatch: invalid callback data");
+        debugs(84, DBG_IMPORTANT, "helperStatefulDispatch: invalid callback data");
         helperStatefulRequestFree(r);
         helperStatefulReleaseServer(srv);
         return;

@@ -621,7 +621,7 @@ icpHandleUdp(int sock, void *data)
             if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
 #endif
 
-                debugs(50, 1, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
+                debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
 
             break;
         }
@@ -652,7 +652,7 @@ icpHandleUdp(int sock, void *data)
         else if (icp_version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);
         else
-            debugs(12, 1, "WARNING: Unused ICP version " << icp_version <<
+            debugs(12, DBG_IMPORTANT, "WARNING: Unused ICP version " << icp_version <<
                    " received from " << from);
     }
 }

@@ -231,7 +231,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (type == IPC_TCP_SOCKET) {
         if (listen(crfd, 1) < 0) {
-            debugs(54, 1, "ipcCreate: listen FD " << crfd << ": " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "ipcCreate: listen FD " << crfd << ": " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -242,7 +242,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     logsFlush();
 
     if ((pid = fork()) < 0) {
-        debugs(54, 1, "ipcCreate: fork: " << xstrerror());
+        debugs(54, DBG_IMPORTANT, "ipcCreate: fork: " << xstrerror());
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 

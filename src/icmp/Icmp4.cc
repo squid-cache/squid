@@ -84,7 +84,7 @@ Icmp4::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, 1, "pinger: ICMP socket opened.");
+    debugs(42, DBG_IMPORTANT, "pinger: ICMP socket opened.");
 
     return icmp_sock;
 }
@@ -152,7 +152,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
                S->ai_addrlen);
 
     if (x < 0) {
-        debugs(42, 1, HERE << "Error sending to ICMP packet to " << to << ". ERR: " << xstrerror());
+        debugs(42, DBG_IMPORTANT, HERE << "Error sending to ICMP packet to " << to << ". ERR: " << xstrerror());
     }
 
     Log(to, ' ', NULL, 0, 0);

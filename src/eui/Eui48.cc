@@ -224,14 +224,14 @@ Eui::Eui48::lookup(const Ip::Address &c)
     ifc.ifc_buf = (char *)ifbuffer;
 
     if (ioctl(tmpSocket, SIOCGIFCONF, &ifc) < 0) {
-        debugs(28, 1, "Attempt to retrieve interface list failed: " << xstrerror());
+        debugs(28, DBG_IMPORTANT, "Attempt to retrieve interface list failed: " << xstrerror());
         clear();
         close(tmpSocket);
         return false;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
-        debugs(28, 1, "Interface list too long - " << ifc.ifc_len);
+        debugs(28, DBG_IMPORTANT, "Interface list too long - " << ifc.ifc_len);
         clear();
         close(tmpSocket);
         return false;
@@ -277,7 +277,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
             else if (ENODEV == errno)
                 (void) 0;
             else
-                debugs(28, 1, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerror());
+                debugs(28, DBG_IMPORTANT, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerror());
 
             continue;
         }

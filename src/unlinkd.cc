@@ -124,11 +124,11 @@ unlinkdUnlink(const char *path)
     bytes_written = write(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
-        debugs(2, 1, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
+        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
         safeunlink(path, 0);
         return;
     } else if (bytes_written != l) {
-        debugs(2, 1, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << bytes_written << " of " << l << " bytes");
+        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << bytes_written << " of " << l << " bytes");
         safeunlink(path, 0);
         return;
     }
@@ -149,7 +149,7 @@ unlinkdClose(void)
 {
 
     if (unlinkd_wfd > -1) {
-        debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
+        debugs(2, DBG_IMPORTANT, "Closing unlinkd pipe on FD " << unlinkd_wfd);
         shutdown(unlinkd_wfd, SD_BOTH);
         comm_close(unlinkd_wfd);
 
@@ -164,7 +164,7 @@ unlinkdClose(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(2, 1, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
+            debugs(2, DBG_IMPORTANT, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
         }
 
         CloseHandle(hIpc);
@@ -176,7 +176,7 @@ unlinkdClose(void)
     if (unlinkd_wfd < 0)
         return;
 
-    debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
+    debugs(2, DBG_IMPORTANT, "Closing unlinkd pipe on FD " << unlinkd_wfd);
 
     file_close(unlinkd_wfd);
 
@@ -259,7 +259,7 @@ unlinkdInit(void)
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
         commUnsetNonBlocking(unlinkd_wfd);
 
-    debugs(2, 1, "Unlinkd pipe opened on FD " << unlinkd_wfd);
+    debugs(2, DBG_IMPORTANT, "Unlinkd pipe opened on FD " << unlinkd_wfd);
 
 #if _SQUID_MSWIN_
 

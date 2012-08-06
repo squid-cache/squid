@@ -425,7 +425,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     int err_count = 0;
     int is_pipe = 0;
 
-    debugs(3, 1, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    debugs(3, DBG_IMPORTANT, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
     if (depth > 16) {
         fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
         return 1;
@@ -744,7 +744,7 @@ configDoConfigure(void)
             if (!R->flags.override_expire)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'override-expire' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -753,7 +753,7 @@ configDoConfigure(void)
             if (!R->flags.override_lastmod)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'override-lastmod' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -762,7 +762,7 @@ configDoConfigure(void)
             if (!R->flags.reload_into_ims)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'reload-into-ims' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'reload-into-ims' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -771,7 +771,7 @@ configDoConfigure(void)
             if (!R->flags.ignore_reload)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'ignore-reload' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-reload' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -780,7 +780,7 @@ configDoConfigure(void)
             if (!R->flags.ignore_no_cache)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'ignore-no-cache' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-no-cache' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -789,7 +789,7 @@ configDoConfigure(void)
             if (!R->flags.ignore_no_store)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'ignore-no-store' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-no-store' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -797,7 +797,7 @@ configDoConfigure(void)
         for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_must_revalidate)
                 continue;
-            debugs(22, 1, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
             break;
         }
 
@@ -805,7 +805,7 @@ configDoConfigure(void)
             if (!R->flags.ignore_private)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'ignore-private' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-private' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -814,7 +814,7 @@ configDoConfigure(void)
             if (!R->flags.ignore_auth)
                 continue;
 
-            debugs(22, 1, "WARNING: use of 'ignore-auth' in 'refresh_pattern' violates HTTP");
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-auth' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -826,7 +826,7 @@ configDoConfigure(void)
 #else
 
     if (!Config.onoff.via)
-        debugs(22, 1, "WARNING: HTTP requires the use of Via");
+        debugs(22, DBG_IMPORTANT, "WARNING: HTTP requires the use of Via");
 
 #endif
 
@@ -893,13 +893,13 @@ configDoConfigure(void)
     HttpRequestMethod::Configure(Config);
 #if USE_SSL
 
-    debugs(3, 1, "Initializing https proxy context");
+    debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
     for (peer *p = Config.peers; p != NULL; p = p->next) {
         if (p->use_ssl) {
-            debugs(3, 1, "Initializing cache_peer " << p->name << " SSL context");
+            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
             p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
         }
     }
@@ -908,12 +908,12 @@ configDoConfigure(void)
         if (!s->sslBump)
             continue;
 
-        debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
+        debugs(3, DBG_IMPORTANT, "Initializing http_port " << s->s << " SSL context");
         s->configureSslServerContext();
     }
 
     for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
-        debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
+        debugs(3, DBG_IMPORTANT, "Initializing https_port " << s->s << " SSL context");
         s->configureSslServerContext();
     }
 
@@ -1029,7 +1029,7 @@ parseTimeUnits(const char *unit, bool allowMsec)
     if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
         return static_cast<uint64_t>(86400 * 1000 * 365.2522 * 10);
 
-    debugs(3, 1, "parseTimeUnits: unknown time unit '" << unit << "'");
+    debugs(3, DBG_IMPORTANT, "parseTimeUnits: unknown time unit '" << unit << "'");
 
     return 0;
 }

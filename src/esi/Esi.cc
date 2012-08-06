@@ -989,7 +989,7 @@ ESIContext::addStackElement (ESIElement::Pointer element)
     debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
     if (!parserState.top()->addElement(element)) {
-        debugs(86, 1, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
+        debugs(86, DBG_IMPORTANT, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
         flags.error = 1;
     } else {
         /* added ok, push onto the stack */
@@ -1241,7 +1241,7 @@ ESIContext::addLiteral (const char *s, int len)
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
     if (!parserState.top()->addElement(element)) {
-        debugs(86, 1, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
+        debugs(86, DBG_IMPORTANT, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
         flags.error = 1;
     }
 }
@@ -1749,7 +1749,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiAttempt*>(element.getRaw())) {
         if (attempt.getRaw()) {
-            debugs(86, 1, "esiTryAdd: Failed for " << this << " - try allready has an attempt node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try allready has an attempt node (section 3.4)");
             return false;
         }
 
@@ -1759,7 +1759,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiExcept*>(element.getRaw())) {
         if (except.getRaw()) {
-            debugs(86, 1, "esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
             return false;
         }
 
@@ -1767,7 +1767,7 @@ esiTry::addElement(ESIElement::Pointer element)
         return true;
     }
 
-    debugs(86, 1, "esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
+    debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
     return false;
 }
 
@@ -2346,7 +2346,7 @@ esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESI
             /* ignore mistyped attributes.
              * TODO:? error on these for user feedback - config parameter needed
              */
-            debugs(86, 1, "Found misttyped attribute on ESI When clause");
+            debugs(86, DBG_IMPORTANT, "Found misttyped attribute on ESI When clause");
         }
     }
 

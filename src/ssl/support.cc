@@ -125,12 +125,12 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
         break;
 
     default:
-        debugs(83, 1, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
+        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
         return NULL;
     }
 
     if (rsa == NULL) {
-        debugs(83, 1, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
+        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
         return NULL;
     }
 
@@ -138,7 +138,7 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
         if (do_debug(83, 5))
             PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
 
-        debugs(83, 1, "Generated ephemeral RSA key of length " << keylen);
+        debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }
 
     return rsa;
@@ -1017,7 +1017,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     }
 
     if (certfile) {
-        debugs(83, 1, "Using certificate in " << certfile);
+        debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
 
         if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
             ssl_error = ERR_get_error();
@@ -1025,7 +1025,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
                    certfile, ERR_error_string(ssl_error, NULL));
         }
 
-        debugs(83, 1, "Using private key in " << keyfile);
+        debugs(83, DBG_IMPORTANT, "Using private key in " << keyfile);
         ssl_ask_password(sslContext, keyfile);
 
         if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
@@ -1150,7 +1150,7 @@ ssl_get_attribute(X509_NAME * name, const char *attribute_name)
     nid = OBJ_txt2nid((char *) attribute_name);
 
     if (nid == 0) {
-        debugs(83, 1, "WARNING: Unknown SSL attribute name '" << attribute_name << "'");
+        debugs(83, DBG_IMPORTANT, "WARNING: Unknown SSL attribute name '" << attribute_name << "'");
         return NULL;
     }
 

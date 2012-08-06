@@ -223,7 +223,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (type == IPC_TCP_SOCKET) {
         if (listen(crfd, 1) < 0) {
-            debugs(54, 1, "ipcCreate: listen FD " << crfd << ": " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "ipcCreate: listen FD " << crfd << ": " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -250,7 +250,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     thread = _beginthreadex(NULL, 0, ipc_thread_1, &params, 0, NULL);
 
     if (thread == 0) {
-        debugs(54, 1, "ipcCreate: _beginthread: " << xstrerror());
+        debugs(54, DBG_IMPORTANT, "ipcCreate: _beginthread: " << xstrerror());
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 

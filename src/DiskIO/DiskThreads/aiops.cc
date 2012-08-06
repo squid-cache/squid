@@ -527,7 +527,7 @@ squidaio_queue_request(squidaio_request_t * request)
         if (++filter >= filter_limit) {
             filter_limit += filter;
             filter = 0;
-            debugs(43, 1, "squidaio_queue_request: WARNING - Queue congestion");
+            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Queue congestion");
         }
     }
 
@@ -550,10 +550,10 @@ squidaio_queue_request(squidaio_request_t * request)
 
         if (squid_curtime >= (last_warn + 15) &&
                 squid_curtime >= (high_start + 5)) {
-            debugs(43, 1, "squidaio_queue_request: WARNING - Disk I/O overloading");
+            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Disk I/O overloading");
 
             if (squid_curtime >= (high_start + 15))
-                debugs(43, 1, "squidaio_queue_request: Queue Length: current=" <<
+                debugs(43, DBG_IMPORTANT, "squidaio_queue_request: Queue Length: current=" <<
                        request_queue_len << ", high=" << queue_high <<
                        ", low=" << queue_low << ", duration=" <<
                        (long int) (squid_curtime - high_start));

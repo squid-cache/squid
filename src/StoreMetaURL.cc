@@ -47,8 +47,8 @@ StoreMetaURL::checkConsistency(StoreEntry *e) const
         return true;
 
     if (strcasecmp(e->mem_obj->url, (char *)value)) {
-        debugs(20, 1, "storeClientReadHeader: URL mismatch");
-        debugs(20, 1, "\t{" << (char *) value << "} != {" << e->mem_obj->url << "}");
+        debugs(20, DBG_IMPORTANT, "storeClientReadHeader: URL mismatch");
+        debugs(20, DBG_IMPORTANT, "\t{" << (char *) value << "} != {" << e->mem_obj->url << "}");
         return false;
     }
 

@@ -457,10 +457,10 @@ WIN32_IpAddrChangeMonitor(LPVOID lpParam)
     while (1) {
         Result = NotifyAddrChange(NULL, NULL);
         if (Result != NO_ERROR) {
-            debugs(1, 1, "NotifyAddrChange error " << Result);
+            debugs(1, DBG_IMPORTANT, "NotifyAddrChange error " << Result);
             return 1;
         }
-        debugs(1, 1, "Notification of IP address change received, requesting Squid reconfiguration ...");
+        debugs(1, DBG_IMPORTANT, "Notification of IP address change received, requesting Squid reconfiguration ...");
         reconfigure(SIGHUP);
     }
     return 0;
@@ -478,7 +478,7 @@ WIN32_IpAddrChangeMonitorInit()
         if (NotifyAddrChange_thread == NULL) {
             status = GetLastError();
             NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
-            debugs(1, 1, "Failed to start IP monitor thread.");
+            debugs(1, DBG_IMPORTANT, "Failed to start IP monitor thread.");
         } else
             debugs(1, 2, "Starting IP monitor thread [" << threadID << "] ...");
     }
@@ -628,10 +628,10 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, 1, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
         }
 
-        debugs(1, 1, "Leaving Squid service");
+        debugs(1, DBG_IMPORTANT, "Leaving Squid service");
         return;
 
     case _WIN_SQUID_SERVICE_CONTROL_INTERROGATE:
@@ -639,7 +639,7 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, 1, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
         }
 
         break;
@@ -666,14 +666,14 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, 1, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
         }
 
-        debugs(1, 1, "Leaving Squid service");
+        debugs(1, DBG_IMPORTANT, "Leaving Squid service");
         break;
 
     default:
-        debugs(1, 1, "Unrecognized opcode " << Opcode);
+        debugs(1, DBG_IMPORTANT, "Unrecognized opcode " << Opcode);
     }
 
     return;
