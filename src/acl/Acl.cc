@@ -99,13 +99,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(28, 0, "aclParseAclLine: missing ACL name.");
+        debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
     }
 
     if (strlen(t) >= ACL_NAME_SZ) {
-        debugs(28, 0, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
+        debugs(28, DBG_CRITICAL, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
                "' too long, max " << ACL_NAME_SZ - 1 << " characters supported");
         parser.destruct();
         return;
@@ -116,7 +116,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     const char *theType;
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
-        debugs(28, 0, "aclParseAclLine: missing ACL type.");
+        debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
     }
@@ -160,7 +160,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {
-            debugs(28, 0, "aclParseAclLine: ACL '" << A->name << "' already exists with different type.");
+            debugs(28, DBG_CRITICAL, "aclParseAclLine: ACL '" << A->name << "' already exists with different type.");
             parser.destruct();
             return;
         }
@@ -187,7 +187,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
 
     if (A->empty()) {
-        debugs(28, 0, "Warning: empty ACL: " << A->cfgline);
+        debugs(28, DBG_CRITICAL, "Warning: empty ACL: " << A->cfgline);
     }
 
     if (!A->valid()) {

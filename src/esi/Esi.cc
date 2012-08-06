@@ -1199,13 +1199,13 @@ ESIContext::parserComment (const char *s)
         if (!tempParser->parse("<div>", 5,0) ||
                 !tempParser->parse(s + 3, strlen(s) - 3, 0) ||
                 !tempParser->parse("</div>",6,1)) {
-            debugs(86, 0, "ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
+            debugs(86, DBG_CRITICAL, "ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
             setError();
             char tempstr[1024];
             snprintf(tempstr, 1023, "ESIContext::parserComment: Parse error at line %ld:\n%s\n",
                      tempParser->lineNumber(),
                      tempParser->errorString());
-            debugs(86, 0, "" << tempstr << "");
+            debugs(86, DBG_CRITICAL, "" << tempstr << "");
 
             setErrorMessage(tempstr);
         }
@@ -1219,7 +1219,7 @@ ESIContext::parserComment (const char *s)
         len = strlen (s);
 
         if (len > sizeof (localbuf) - 9) {
-            debugs(86, 0, "ESIContext::parserComment: Truncating long comment");
+            debugs(86, DBG_CRITICAL, "ESIContext::parserComment: Truncating long comment");
             len = sizeof (localbuf) - 9;
         }
 
@@ -1267,7 +1267,7 @@ ESIContext::parseOneBuffer()
         snprintf (tempstr, 1023, "esiProcess: Parse error at line %ld:\n%s\n",
                   parserState.theParser->lineNumber(),
                   parserState.theParser->errorString());
-        debugs(86, 0, "" << tempstr << "");
+        debugs(86, DBG_CRITICAL, "" << tempstr << "");
 
         setErrorMessage(tempstr);
 
@@ -1383,7 +1383,7 @@ ESIContext::process ()
             break;
 
         case ESI_PROCESS_FAILED:
-            debugs(86, 0, "esiProcess: tree Processed FAILED");
+            debugs(86, DBG_CRITICAL, "esiProcess: tree Processed FAILED");
             setError();
 
             setErrorMessage("esiProcess: ESI template Processing failed.");
@@ -1787,12 +1787,12 @@ esiTry::process (int dovars)
     assert (this);
 
     if (!attempt.getRaw()) {
-        debugs(86, 0, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
+        debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
     if (!except.getRaw()) {
-        debugs(86, 0, "esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
+        debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
@@ -2057,13 +2057,13 @@ esiChoose::addElement(ESIElement::Pointer element)
 
     /* Some elements require specific parents */
     if (!(dynamic_cast<esiWhen*>(element.getRaw()) || dynamic_cast<esiOtherwise*>(element.getRaw()))) {
-        debugs(86, 0, "esiChooseAdd: invalid child node for esi:choose (section 3.3)");
+        debugs(86, DBG_CRITICAL, "esiChooseAdd: invalid child node for esi:choose (section 3.3)");
         return false;
     }
 
     if (dynamic_cast<esiOtherwise*>(element.getRaw())) {
         if (otherwise.getRaw()) {
-            debugs(86, 0, "esiChooseAdd: only one otherwise node allowed for esi:choose (section 3.3)");
+            debugs(86, DBG_CRITICAL, "esiChooseAdd: only one otherwise node allowed for esi:choose (section 3.3)");
             return false;
         }
 

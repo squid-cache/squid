@@ -178,9 +178,9 @@ ACLTimeData::parse()
                     break;
 
                 default:
-                    debugs(28, 0, "" << cfg_filename << " line " << config_lineno <<
+                    debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno <<
                            ": " << config_input_line);
-                    debugs(28, 0, "aclParseTimeSpec: Bad Day '" << *t << "'" );
+                    debugs(28, DBG_CRITICAL, "aclParseTimeSpec: Bad Day '" << *t << "'" );
                     break;
                 }
             }
@@ -188,7 +188,7 @@ ACLTimeData::parse()
             /* assume its time-of-day spec */
 
             if ((sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) || (!((h1 >= 0 && h1 < 24) && ((h2 >= 0 && h2 < 24) || (h2 == 24 && m2 == 0)) && (m1 >= 0 && m1 < 60) && (m2 >= 0 && m2 < 60)))) {
-                debugs(28, 0, "aclParseTimeSpec: Bad time range '" << t << "'");
+                debugs(28, DBG_CRITICAL, "aclParseTimeSpec: Bad time range '" << t << "'");
                 self_destruct();
 
                 if (q != this)
@@ -211,7 +211,7 @@ ACLTimeData::parse()
             parsed_weekbits = 0;
 
             if (q->start > q->stop) {
-                debugs(28, 0, "aclParseTimeSpec: Reversed time range");
+                debugs(28, DBG_CRITICAL, "aclParseTimeSpec: Reversed time range");
                 self_destruct();
 
                 if (q != this)

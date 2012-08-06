@@ -341,7 +341,7 @@ parse_externalAclHelper(external_acl ** list)
             a->negative_ttl = atoi(token + 13);
         } else if (strncmp(token, "children=", 9) == 0) {
             a->children.n_max = atoi(token + 9);
-            debugs(0, 0, "WARNING: external_acl_type option children=N has been deprecated in favor of children-max=N and children-startup=N");
+            debugs(0, DBG_CRITICAL, "WARNING: external_acl_type option children=N has been deprecated in favor of children-max=N and children-startup=N");
         } else if (strncmp(token, "children-max=", 13) == 0) {
             a->children.n_max = atoi(token + 13);
         } else if (strncmp(token, "children-startup=", 17) == 0) {
@@ -367,11 +367,11 @@ parse_externalAclHelper(external_acl ** list)
                       bind to IPv4/v6 localhost port. */
         } else if (strcmp(token, "ipv4") == 0) {
             if ( !a->local_addr.SetIPv4() ) {
-                debugs(3, 0, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
+                debugs(3, DBG_CRITICAL, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
             }
         } else if (strcmp(token, "ipv6") == 0) {
             if (!Ip::EnableIpv6)
-                debugs(3, 0, "WARNING: --enable-ipv6 required for external ACL helpers to use IPv6: " << a->name );
+                debugs(3, DBG_CRITICAL, "WARNING: --enable-ipv6 required for external ACL helpers to use IPv6: " << a->name );
             // else nothing to do.
         } else {
             break;
@@ -478,7 +478,7 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%%") == 0)
             format->type = _external_acl_format::EXT_ACL_PERCENT;
         else {
-            debugs(0,0, "ERROR: Unknown Format token " << token);
+            debugs(0, DBG_CRITICAL, "ERROR: Unknown Format token " << token);
             self_destruct();
         }
 
@@ -717,12 +717,12 @@ ACLExternal::valid () const
 #if USE_AUTH
     if (data->def->require_auth) {
         if (authenticateSchemeCount() == 0) {
-            debugs(28, 0, "Can't use proxy auth because no authentication schemes were compiled.");
+            debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes were compiled.");
             return false;
         }
 
         if (authenticateActiveSchemeCount() == 0) {
-            debugs(28, 0, "Can't use proxy auth because no authentication schemes are fully configured.");
+            debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes are fully configured.");
             return false;
         }
     }

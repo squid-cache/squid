@@ -409,7 +409,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     /* These ports are filtered in the default squid.conf, but
      * maybe someone wants them hardcoded... */
     if (port == 7 || port == 9 || port == 19) {
-        debugs(23, 0, "urlParse: Deny access to port " << port);
+        debugs(23, DBG_CRITICAL, "urlParse: Deny access to port " << port);
         return NULL;
     }
 #endif

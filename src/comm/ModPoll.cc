@@ -441,7 +441,7 @@ Comm::DoSelect(int msec)
             if (ignoreErrno(errno))
                 continue;
 
-            debugs(5, 0, "comm_poll: poll failure: " << xstrerror());
+            debugs(5, DBG_CRITICAL, "comm_poll: poll failure: " << xstrerror());
 
             assert(errno != EINVAL);
 
@@ -539,19 +539,19 @@ Comm::DoSelect(int msec)
 
             if (revents & POLLNVAL) {
                 AsyncCall::Pointer ch;
-                debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
-                debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type]);
-                debugs(5, 0, "--> " << F->desc);
-                debugs(5, 0, "tmout:" << F->timeoutHandler << "read:" <<
+                debugs(5, DBG_CRITICAL, "WARNING: FD " << fd << " has handlers, but it's invalid.");
+                debugs(5, DBG_CRITICAL, "FD " << fd << " is a " << fdTypeStr[F->type]);
+                debugs(5, DBG_CRITICAL, "--> " << F->desc);
+                debugs(5, DBG_CRITICAL, "tmout:" << F->timeoutHandler << "read:" <<
                        F->read_handler << " write:" << F->write_handler);
 
                 for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
-                    debugs(5, 0, " close handler: " << ch);
+                    debugs(5, DBG_CRITICAL, " close handler: " << ch);
 
                 if (F->closeHandler != NULL) {
                     commCallCloseHandlers(fd);
                 } else if (F->timeoutHandler != NULL) {
-                    debugs(5, 0, "comm_poll: Calling Timeout Handler");
+                    debugs(5, DBG_CRITICAL, "comm_poll: Calling Timeout Handler");
                     ScheduleCallHere(F->timeoutHandler);
                 }
 

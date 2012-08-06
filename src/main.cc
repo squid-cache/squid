@@ -910,10 +910,10 @@ setEffectiveUser(void)
 #endif
 
     if (geteuid() == 0) {
-        debugs(0, 0, "Squid is not safe to run as root!  If you must");
-        debugs(0, 0, "start Squid as root, then you must configure");
-        debugs(0, 0, "it to run as a non-priveledged user with the");
-        debugs(0, 0, "'cache_effective_user' option in the config file.");
+        debugs(0, DBG_CRITICAL, "Squid is not safe to run as root!  If you must");
+        debugs(0, DBG_CRITICAL, "start Squid as root, then you must configure");
+        debugs(0, DBG_CRITICAL, "it to run as a non-priveledged user with the");
+        debugs(0, DBG_CRITICAL, "'cache_effective_user' option in the config file.");
         fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }
 }
@@ -930,7 +930,7 @@ mainSetCwd(void)
             debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
             return;
         } else {
-            debugs(50, 0, "chdir: " << Config.coredump_dir << ": " << xstrerror());
+            debugs(50, DBG_CRITICAL, "chdir: " << Config.coredump_dir << ": " << xstrerror());
         }
     }
 
@@ -938,7 +938,7 @@ mainSetCwd(void)
     if (getcwd(pathbuf, MAXPATHLEN)) {
         debugs(0, DBG_IMPORTANT, "Current Directory is " << pathbuf);
     } else {
-        debugs(50, 0, "WARNING: Can't find current directory, getcwd: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "WARNING: Can't find current directory, getcwd: " << xstrerror());
     }
 }
 
@@ -974,14 +974,14 @@ mainInitialize(void)
 
 #endif
 
-    debugs(1, 0, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
+    debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
 
 #if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
-        debugs(1, 0, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
-        debugs(1, 0, "Service command line is: " << WIN32_Service_Command_Line);
+        debugs(1, DBG_CRITICAL, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
+        debugs(1, DBG_CRITICAL, "Service command line is: " << WIN32_Service_Command_Line);
     } else
-        debugs(1, 0, "Running on " << WIN32_OS_string);
+        debugs(1, DBG_CRITICAL, "Running on " << WIN32_OS_string);
 #endif
 
     debugs(1, DBG_IMPORTANT, "Process ID " << getpid());
@@ -1428,7 +1428,7 @@ SquidMain(int argc, char **argv)
         }
 
         setEffectiveUser();
-        debugs(0, 0, "Creating Swap Directories");
+        debugs(0, DBG_CRITICAL, "Creating Swap Directories");
         Store::Root().create();
 
         return 0;
@@ -1628,7 +1628,7 @@ checkRunningPid(void)
     if (kill(pid, 0) < 0)
         return 0;
 
-    debugs(0, 0, "Squid is already running!  Process ID " <<  pid);
+    debugs(0, DBG_CRITICAL, "Squid is already running!  Process ID " <<  pid);
 
     return 1;
 }
@@ -1919,7 +1919,7 @@ SquidShutdown()
 
     xmalloc_find_leaks();
 
-    debugs(1, 0, "Memory used after shutdown: " << xmalloc_total);
+    debugs(1, DBG_CRITICAL, "Memory used after shutdown: " << xmalloc_total);
 
 #endif
 #if MEM_GEN_TRACE

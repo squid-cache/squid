@@ -459,7 +459,7 @@ Comm::DoSelect(int msec)
             if (ignoreErrno(errno))
                 break;
 
-            debugs(5, 0, "comm_select: select failure: " << xstrerror());
+            debugs(5, DBG_CRITICAL, "comm_select: select failure: " << xstrerror());
 
             examine_select(&readfds, &writefds);
 
@@ -728,7 +728,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
     fde *F = NULL;
 
     struct stat sb;
-    debugs(5, 0, "examine_select: Examining open file descriptors...");
+    debugs(5, DBG_CRITICAL, "examine_select: Examining open file descriptors...");
 
     for (fd = 0; fd < Squid_MaxFD; ++fd) {
         FD_ZERO(&read_x);
@@ -751,18 +751,18 @@ examine_select(fd_set * readfds, fd_set * writefds)
         }
 
         F = &fd_table[fd];
-        debugs(5, 0, "FD " << fd << ": " << xstrerror());
-        debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
-        debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
-        debugs(5, 0, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);
+        debugs(5, DBG_CRITICAL, "FD " << fd << ": " << xstrerror());
+        debugs(5, DBG_CRITICAL, "WARNING: FD " << fd << " has handlers, but it's invalid.");
+        debugs(5, DBG_CRITICAL, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
+        debugs(5, DBG_CRITICAL, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);
 
         for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
-            debugs(5, 0, " close handler: " << ch);
+            debugs(5, DBG_CRITICAL, " close handler: " << ch);
 
         if (F->closeHandler != NULL) {
             commCallCloseHandlers(fd);
         } else if (F->timeoutHandler != NULL) {
-            debugs(5, 0, "examine_select: Calling Timeout Handler");
+            debugs(5, DBG_CRITICAL, "examine_select: Calling Timeout Handler");
             ScheduleCallHere(F->timeoutHandler);
         }
 

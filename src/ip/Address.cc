@@ -353,7 +353,7 @@ Ip::Address::GetReverseString(char buf[MAX_IPSTRLEN], int show_type) const
         return GetReverseString6(buf, m_SocketAddr.sin6_addr);
     }
 
-    debugs(14,0, "Unable to convert '" << NtoA(buf,MAX_IPSTRLEN) << "' to the rDNS type requested.");
+    debugs(14, DBG_CRITICAL, "Unable to convert '" << NtoA(buf,MAX_IPSTRLEN) << "' to the rDNS type requested.");
 
     buf[0] = '\0';
 
@@ -858,7 +858,7 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
         GetInAddr(tmp);
         inet_ntop(AF_INET, &tmp, buf, blen);
     } else {
-        debugs(14,0,"WARNING: Corrupt IP Address details OR required to display in unknown format (" <<
+        debugs(14, DBG_CRITICAL, "WARNING: Corrupt IP Address details OR required to display in unknown format (" <<
                force << "). accepted={" << AF_UNSPEC << "," << AF_INET << "," << AF_INET6 << "}");
         fprintf(stderr,"WARNING: Corrupt IP Address details OR required to display in unknown format (%d). accepted={%d,%d,%d} ",
                 force, AF_UNSPEC, AF_INET, AF_INET6);

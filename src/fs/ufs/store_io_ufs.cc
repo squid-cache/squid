@@ -140,7 +140,7 @@ void
 UFSStoreState::openDone()
 {
     if (closing)
-        debugs(0,0,HERE << "already closing in openDone()!?");
+        debugs(0, DBG_CRITICAL, HERE << "already closing in openDone()!?");
 
     if (theFile->error()) {
         tryClosing();

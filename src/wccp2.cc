@@ -2124,7 +2124,7 @@ parse_wccp2_service(void *v)
 
     /* Snarf the type */
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(80, 0, "wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
+        debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
         self_destruct();
     }
 
@@ -2133,7 +2133,7 @@ parse_wccp2_service(void *v)
     } else if (strcmp(t, "dynamic") == 0) {
         service = WCCP2_SERVICE_DYNAMIC;
     } else {
-        debugs(80, 0, "wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
+        debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
         self_destruct();
     }
 

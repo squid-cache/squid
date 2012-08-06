@@ -258,14 +258,14 @@ idnsAddNameserver(const char *buf)
     Ip::Address A;
 
     if (!(A = buf)) {
-        debugs(78, 0, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
+        debugs(78, DBG_CRITICAL, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
         return;
     }
 
     if (A.IsAnyAddr()) {
-        debugs(78, 0, "WARNING: Squid does not accept " << A << " in DNS server specifications.");
+        debugs(78, DBG_CRITICAL, "WARNING: Squid does not accept " << A << " in DNS server specifications.");
         A.SetLocalhost();
-        debugs(78, 0, "Will be using " << A << " instead, assuming you meant that DNS is running on the same machine");
+        debugs(78, DBG_CRITICAL, "Will be using " << A << " instead, assuming you meant that DNS is running on the same machine");
     }
 
     if (!Ip::EnableIpv6 && !A.SetIPv4()) {

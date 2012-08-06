@@ -342,7 +342,7 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
            "'");
 
     if (clientBeginRequest(METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ)) {
-        debugs(86, 0, "starting new ESI subrequest failed");
+        debugs(86, DBG_CRITICAL, "starting new ESI subrequest failed");
     }
 
     tempheaders.clean();

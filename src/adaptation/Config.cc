@@ -219,7 +219,7 @@ Adaptation::Config::finalize()
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
         const ServiceConfigPointer cfg = *i;
         if (FindService(cfg->key) != NULL) {
-            debugs(93,0, "ERROR: Duplicate adaptation service name: " <<
+            debugs(93, DBG_CRITICAL, "ERROR: Duplicate adaptation service name: " <<
                    cfg->key);
             continue; // TODO: make fatal
         }

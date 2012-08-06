@@ -1025,13 +1025,13 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     if (cblock.ver.required > cblock.ver.current ||
             cblock.mask_size <= 0 || cblock.capacity <= 0 ||
             cblock.bits_per_entry <= 0 || cblock.hash_func_count <= 0) {
-        debugs(72, 0, "" << host << " digest cblock is corrupted.");
+        debugs(72, DBG_CRITICAL, "" << host << " digest cblock is corrupted.");
         return 0;
     }
 
     /* check consistency further */
     if ((size_t)cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
-        debugs(72, 0, host << " digest cblock is corrupted " <<
+        debugs(72, DBG_CRITICAL, host << " digest cblock is corrupted " <<
                "(mask size mismatch: " << cblock.mask_size << " ? " <<
                cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)
                << ").");
@@ -1040,7 +1040,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 
     /* there are some things we cannot do yet */
     if (cblock.hash_func_count != CacheDigestHashFuncCount) {
-        debugs(72, 0, "" << host << " digest: unsupported #hash functions: " <<
+        debugs(72, DBG_CRITICAL, "" << host << " digest: unsupported #hash functions: " <<
                cblock.hash_func_count << " ? " << CacheDigestHashFuncCount << ".");
         return 0;
     }
@@ -1080,7 +1080,7 @@ peerDigestUseful(const PeerDigest * pd)
     const int bit_util = cacheDigestBitUtil(pd->cd);
 
     if (bit_util > 65) {
-        debugs(72, 0, "Warning: " << pd->host <<
+        debugs(72, DBG_CRITICAL, "Warning: " << pd->host <<
                " peer digest has too many bits on (" << bit_util << "%%).");
 
         return 0;

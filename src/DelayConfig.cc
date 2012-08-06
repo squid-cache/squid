@@ -65,7 +65,7 @@ DelayConfig::parsePoolClass()
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
-        debugs(3, 0, "parse_delay_pool_class: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
+        debugs(3, DBG_CRITICAL, "parse_delay_pool_class: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
         return;
     }
 
@@ -73,7 +73,7 @@ DelayConfig::parsePoolClass()
     ConfigParser::ParseUShort(&delay_class_);
 
     if (delay_class_ < 1 || delay_class_ > 5) {
-        debugs(3, 0, "parse_delay_pool_class: Ignoring pool " << pool << " class " << delay_class_ << " not in 1 .. 5");
+        debugs(3, DBG_CRITICAL, "parse_delay_pool_class: Ignoring pool " << pool << " class " << delay_class_ << " not in 1 .. 5");
         return;
     }
 
@@ -89,14 +89,14 @@ DelayConfig::parsePoolRates()
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
-        debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
+        debugs(3, DBG_CRITICAL, "parse_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
         return;
     }
 
     --pool;
 
     if (!DelayPools::delay_data[pool].theComposite().getRaw()) {
-        debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool + 1 << " attempt to set rates with class not set");
+        debugs(3, DBG_CRITICAL, "parse_delay_pool_rates: Ignoring pool " << pool + 1 << " attempt to set rates with class not set");
         return;
     }
 
@@ -111,7 +111,7 @@ DelayConfig::parsePoolAccess(ConfigParser &parser)
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
-        debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
+        debugs(3, DBG_CRITICAL, "parse_delay_pool_rates: Ignoring pool " << pool << " not in 1 .. " << DelayPools::pools());
         return;
     }
 

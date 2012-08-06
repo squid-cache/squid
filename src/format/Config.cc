@@ -39,5 +39,5 @@ Format::FmtConfig::registerTokens(const String &nsName, TokenTableEntry const *t
     if (tokenArray != NULL)
         tokens.push_back(TokenNamespace(nsName, tokenArray));
     else
-        debugs(0,0, "BUG: format tokens for '" << nsName << "' missing!");
+        debugs(0, DBG_CRITICAL, "BUG: format tokens for '" << nsName << "' missing!");
 }

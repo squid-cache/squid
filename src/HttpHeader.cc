@@ -456,7 +456,7 @@ HttpHeader::clean()
             /* tmp hack to try to avoid coredumps */
 
             if (e->id < 0 || e->id >= HDR_ENUM_END) {
-                debugs(55, 0, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
+                debugs(55, DBG_CRITICAL, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
             } else {
                 HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
                 /* yes, this deletion leaves us in an inconsistent state */

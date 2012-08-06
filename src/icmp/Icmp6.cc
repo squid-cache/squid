@@ -119,7 +119,7 @@ Icmp6::Open(void)
     icmp_sock = socket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
     if (icmp_sock < 0) {
-        debugs(50, 0, HERE << " icmp_sock: " << xstrerror());
+        debugs(50, DBG_CRITICAL, HERE << " icmp_sock: " << xstrerror());
         return -1;
     }
 
@@ -220,7 +220,7 @@ Icmp6::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42,0, HERE << "dropping ICMPv6 read. No socket!?");
+        debugs(42, DBG_CRITICAL, HERE << "dropping ICMPv6 read. No socket!?");
         return;
     }
 
@@ -271,7 +271,7 @@ Icmp6::Recv(void)
         ip = (struct ip6_hdr *) pkt;
         pkt += sizeof(ip6_hdr);
 
-    debugs(42,0, HERE << "ip6_nxt=" << ip->ip6_nxt <<
+    debugs(42, DBG_CRITICAL, HERE << "ip6_nxt=" << ip->ip6_nxt <<
     		", ip6_plen=" << ip->ip6_plen <<
     		", ip6_hlim=" << ip->ip6_hlim <<
     		", ip6_hops=" << ip->ip6_hops	<<
