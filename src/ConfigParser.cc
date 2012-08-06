@@ -71,7 +71,7 @@ ConfigParser::strtokFile(void)
                 *t = '\0';
 
                 if ((wordFile = fopen(fn, "r")) == NULL) {
-                    debugs(28, 0, "strtokFile: " << fn << " not found");
+                    debugs(28, DBG_CRITICAL, "strtokFile: " << fn << " not found");
                     return (NULL);
                 }
 

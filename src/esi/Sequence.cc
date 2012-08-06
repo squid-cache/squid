@@ -164,7 +164,7 @@ esiSequence::addElement (ESIElement::Pointer element)
 
     if (dynamic_cast<esiAttempt*>(element.getRaw()) ||
             dynamic_cast<esiExcept*>(element.getRaw())) {
-        debugs(86, 0, "esiSequenceAdd: misparented Attempt or Except element (section 3.4)");
+        debugs(86, DBG_CRITICAL, "esiSequenceAdd: misparented Attempt or Except element (section 3.4)");
         return false;
     }
 

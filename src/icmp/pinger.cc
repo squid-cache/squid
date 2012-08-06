@@ -150,30 +150,30 @@ main(int argc, char *argv[])
 
     _db_init(NULL, debug_args);
 
-    debugs(42, 0, "pinger: Initialising ICMP pinger ...");
+    debugs(42, DBG_CRITICAL, "pinger: Initialising ICMP pinger ...");
 
     icmp4_worker = icmp4.Open();
     if (icmp4_worker < 0) {
-        debugs(42, 0, "pinger: Unable to start ICMP pinger.");
+        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMP pinger.");
     }
     max_fd = max(max_fd, icmp4_worker);
 
 #if USE_IPV6
     icmp6_worker = icmp6.Open();
     if (icmp6_worker <0 ) {
-        debugs(42, 0, "pinger: Unable to start ICMPv6 pinger.");
+        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMPv6 pinger.");
     }
     max_fd = max(max_fd, icmp6_worker);
 #endif
 
     /** abort if neither worker could open a socket. */
     if (icmp4_worker < 0 && icmp6_worker < 0) {
-        debugs(42, 0, "FATAL: pinger: Unable to open any ICMP sockets.");
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: Unable to open any ICMP sockets.");
         exit(1);
     }
 
     if ( (squid_link = control.Open()) < 0) {
-        debugs(42, 0, "FATAL: pinger: Unable to setup Pinger control sockets.");
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: Unable to setup Pinger control sockets.");
         icmp4.Close();
         icmp6.Close();
         exit(1); // fatal error if the control channel fails.
@@ -201,7 +201,7 @@ main(int argc, char *argv[])
         getCurrentTime();
 
         if (x < 0) {
-            debugs(42, 0, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerror());
+            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerror());
             control.Close();
             exit(1);
         }
@@ -219,7 +219,7 @@ main(int argc, char *argv[])
 
         if (PINGER_TIMEOUT + last_check_time < squid_curtime) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
-                debugs(42, 0, "pinger: Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
+                debugs(42, DBG_CRITICAL, "pinger: Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
                 control.Close();
                 exit(1);
             }

@@ -300,7 +300,7 @@ clientReplyContext::processExpired()
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
-        debugs(88, 0, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
+        debugs(88, DBG_CRITICAL, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
     {
         /* start counting the length from 0 */
@@ -623,8 +623,8 @@ clientReplyContext::processMiss()
      */
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
-            debugs(88, 0, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, 0, "\tlog_type = " << Format::log_tags[http->logType]);
+            debugs(88, DBG_CRITICAL, "clientProcessMiss: miss on a special object (" << url << ").");
+            debugs(88, DBG_CRITICAL, "\tlog_type = " << Format::log_tags[http->logType]);
             http->storeEntry()->dump(1);
         }
 

@@ -1073,8 +1073,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             neighborIgnoreNonPeer(from, opcode);
         } else if (p->stats.pings_acked > 100) {
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
-                debugs(15, 0, "95%% of replies from '" << p->host << "' are UDP_DENIED");
-                debugs(15, 0, "Disabling '" << p->host << "', please check your configuration.");
+                debugs(15, DBG_CRITICAL, "95%% of replies from '" << p->host << "' are UDP_DENIED");
+                debugs(15, DBG_CRITICAL, "Disabling '" << p->host << "', please check your configuration.");
                 neighborRemove(p);
                 p = NULL;
             } else {
@@ -1084,7 +1084,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     } else if (opcode == ICP_MISS_NOFETCH) {
         mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
     } else {
-        debugs(15, 0, "neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
+        debugs(15, DBG_CRITICAL, "neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
     }
 }
 
@@ -1203,12 +1203,12 @@ peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
     p->n_addresses = 0;
 
     if (ia == NULL) {
-        debugs(0, 0, "WARNING: DNS lookup for '" << p->host << "' failed!");
+        debugs(0, DBG_CRITICAL, "WARNING: DNS lookup for '" << p->host << "' failed!");
         return;
     }
 
     if ((int) ia->count < 1) {
-        debugs(0, 0, "WARNING: No IP address found for '" << p->host << "'!");
+        debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << p->host << "'!");
         return;
     }
 

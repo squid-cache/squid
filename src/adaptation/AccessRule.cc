@@ -39,7 +39,7 @@ Adaptation::AccessRule::finalize()
     }
 
     if (!group()) {
-        debugs(93,0, "ERROR: Unknown adaptation service or group name: '" <<
+        debugs(93, DBG_CRITICAL, "ERROR: Unknown adaptation service or group name: '" <<
                groupId << "'"); // TODO: fail on failures
     }
 }

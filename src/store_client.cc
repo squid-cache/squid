@@ -498,7 +498,7 @@ store_client::readBody(const char *buf, ssize_t len)
         HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 
         if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, 0, "Could not parse headers from on disk object");
+            debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }

@@ -150,7 +150,7 @@ icpHandleIcpV3(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, 0, "icpHandleIcpV3: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV3: UNKNOWN OPCODE: " << header.opcode << " from " << from);
         break;
     }
 }

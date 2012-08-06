@@ -223,7 +223,7 @@ BlockingFile::writeDone(int rvfd, int errflag, size_t len)
     writeRequest = NULL;
 
     if (errflag) {
-        debugs(79, 0, "storeUfsWriteDone: got failure (" << errflag << ")");
+        debugs(79, DBG_CRITICAL, "storeUfsWriteDone: got failure (" << errflag << ")");
         doClose();
         ioRequestor->writeCompleted (DISK_ERROR,0, result);
         return;

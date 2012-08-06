@@ -88,7 +88,7 @@ ACLRandom::parse()
         int a = xatoi(bufa);
         int b = xatoi(bufb);
         if (a == 0 || b == 0) {
-            debugs(28, 0, "aclParseRandomData: Bad Pattern: '" << t << "'");
+            debugs(28, DBG_CRITICAL, "aclParseRandomData: Bad Pattern: '" << t << "'");
             self_destruct();
         } else
             data = a / (double)(a+b);
@@ -96,14 +96,14 @@ ACLRandom::parse()
         int a = xatoi(bufa);
         int b = xatoi(bufb);
         if (a == 0 || b == 0) {
-            debugs(28, 0, "aclParseRandomData: Bad Pattern: '" << t << "'");
+            debugs(28, DBG_CRITICAL, "aclParseRandomData: Bad Pattern: '" << t << "'");
             self_destruct();
         } else
             data = (double) a / (double) b;
     } else if (sscanf(t, "0.%[0-9]", bufa) == 1) {
         data = atof(t);
     } else {
-        debugs(28, 0, "aclParseRandomData: Bad Pattern: '" << t << "'");
+        debugs(28, DBG_CRITICAL, "aclParseRandomData: Bad Pattern: '" << t << "'");
         self_destruct();
     }
 

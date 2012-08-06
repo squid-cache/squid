@@ -115,14 +115,14 @@ aclParseArpData(const char *t)
     debugs(28, 5, "aclParseArpData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
-        debugs(28, 0, "aclParseArpData: Bad ethernet address: '" << t << "'");
+        debugs(28, DBG_CRITICAL, "aclParseArpData: Bad ethernet address: '" << t << "'");
         safe_free(q);
         return NULL;
     }
 
     if (!q->decode(buf)) {
-        debugs(28, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, 0, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
+        debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
         safe_free(q);
         return NULL;
     }

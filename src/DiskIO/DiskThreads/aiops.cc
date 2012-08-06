@@ -566,10 +566,10 @@ squidaio_queue_request(squidaio_request_t * request)
 
     /* Warn if seriously overloaded */
     if (request_queue_len > RIDICULOUS_LENGTH) {
-        debugs(43, 0, "squidaio_queue_request: Async request queue growing uncontrollably!");
-        debugs(43, 0, "squidaio_queue_request: Syncing pending I/O operations.. (blocking)");
+        debugs(43, DBG_CRITICAL, "squidaio_queue_request: Async request queue growing uncontrollably!");
+        debugs(43, DBG_CRITICAL, "squidaio_queue_request: Syncing pending I/O operations.. (blocking)");
         squidaio_sync();
-        debugs(43, 0, "squidaio_queue_request: Synced");
+        debugs(43, DBG_CRITICAL, "squidaio_queue_request: Synced");
     }
 }				/* squidaio_queue_request */
 

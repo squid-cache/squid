@@ -561,7 +561,7 @@ peerGetSomeNeighbor(ps_state * ps)
                                                &ps->ping.timeout);
 
             if (ps->ping.n_sent == 0)
-                debugs(44, 0, "WARNING: neighborsUdpPing returned 0");
+                debugs(44, DBG_CRITICAL, "WARNING: neighborsUdpPing returned 0");
             debugs(44, 3, "peerSelect: " << ps->ping.n_replies_expected <<
                    " ICP replies expected, RTT " << ps->ping.timeout <<
                    " msec");

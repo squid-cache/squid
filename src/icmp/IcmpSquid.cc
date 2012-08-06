@@ -294,7 +294,7 @@ IcmpSquid::Close(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(37, 0, HERE << "WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
+            debugs(37, DBG_CRITICAL, HERE << "WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
         }
 
         CloseHandle(hIpc);

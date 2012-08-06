@@ -61,7 +61,7 @@ mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanot
     int i;
 
     if (ia == NULL) {
-        debugs(7, 0, "comm_join_mcast_groups: Unknown host");
+        debugs(7, DBG_CRITICAL, "comm_join_mcast_groups: Unknown host");
         return;
     }
 

@@ -277,7 +277,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         return;
 
     if (hlp->childs.concurrency)
-        debugs(84, 0, "ERROR: concurrency= is not yet supported for stateful helpers ('" << hlp->cmdline << "')");
+        debugs(84, DBG_CRITICAL, "ERROR: concurrency= is not yet supported for stateful helpers ('" << hlp->cmdline << "')");
 
     char *progname = hlp->cmdline->key;
 
@@ -680,7 +680,7 @@ helper::~helper()
     /* note, don't free id_name, it probably points to static memory */
 
     if (queue.head)
-        debugs(84, 0, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
+        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
 }
 
 /* ====================================================================== */
@@ -783,7 +783,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
     if (!srv->flags.shutdown) {
         assert( hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
+        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
@@ -1058,7 +1058,7 @@ Enqueue(helper * hlp, helper_request * r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, 0, "Starting new " << hlp->id_name << " helpers...");
+        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
         helperOpenServers(hlp);
         return;
     }
@@ -1074,9 +1074,9 @@ Enqueue(helper * hlp, helper_request * r)
 
     hlp->last_queue_warn = squid_curtime;
 
-    debugs(84, 0, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
-    debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
-    debugs(84, 0, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
+    debugs(84, DBG_CRITICAL, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
+    debugs(84, DBG_CRITICAL, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
+    debugs(84, DBG_CRITICAL, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 
     if (hlp->stats.queue_size > (int)hlp->childs.n_running * 2)
         fatalf("Too many queued %s requests", hlp->id_name);
@@ -1091,7 +1091,7 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
-        debugs(84, 0, "Starting new " << hlp->id_name << " helpers...");
+        debugs(84, DBG_CRITICAL, "Starting new " << hlp->id_name << " helpers...");
         helperStatefulOpenServers(hlp);
         return;
     }
@@ -1110,9 +1110,9 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 
     hlp->last_queue_warn = squid_curtime;
 
-    debugs(84, 0, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
-    debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
-    debugs(84, 0, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
+    debugs(84, DBG_CRITICAL, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
+    debugs(84, DBG_CRITICAL, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
+    debugs(84, DBG_CRITICAL, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 }
 
 static helper_request *
@@ -1240,7 +1240,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t l
 
     if (flag != COMM_OK) {
         /* Helper server has crashed */
-        debugs(84, 0, "helperDispatch: Helper " << srv->parent->id_name << " #" << srv->index + 1 << " has crashed");
+        debugs(84, DBG_CRITICAL, "helperDispatch: Helper " << srv->parent->id_name << " #" << srv->index + 1 << " has crashed");
         return;
     }
 

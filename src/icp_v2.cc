@@ -506,8 +506,8 @@ void
 _icp_common_t::handleReply(char *buf, Ip::Address &from)
 {
     if (neighbors_do_private_keys && reqnum == 0) {
-        debugs(12, 0, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
-        debugs(12, 0, "icpHandleIcpV2: Disabling use of private keys");
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Disabling use of private keys");
         neighbors_do_private_keys = 0;
     }
 
@@ -562,7 +562,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, 0, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
 
         break;
     }

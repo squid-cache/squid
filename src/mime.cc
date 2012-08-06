@@ -433,12 +433,12 @@ MimeIcon::created (StoreEntry *newEntry)
     fd = file_open(path, O_RDONLY | O_BINARY);
 
     if (fd < 0) {
-        debugs(25, 0, "mimeLoadIconFile: " << path << ": " << xstrerror());
+        debugs(25, DBG_CRITICAL, "mimeLoadIconFile: " << path << ": " << xstrerror());
         return;
     }
 
     if (fstat(fd, &sb) < 0) {
-        debugs(25, 0, "mimeLoadIconFile: FD " << fd << ": fstat: " << xstrerror());
+        debugs(25, DBG_CRITICAL, "mimeLoadIconFile: FD " << fd << ": fstat: " << xstrerror());
         file_close(fd);
         return;
     }
