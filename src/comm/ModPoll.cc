@@ -259,7 +259,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
                 fd_table[fd].read_handler = NULL;
                 hdl(fd, fd_table[fd].read_data);
             } else if (pfds[i].events & POLLRDNORM)
-                debugs(5, 1, "comm_poll_incoming: FD " << fd << " NULL read handler");
+                debugs(5, DBG_IMPORTANT, "comm_poll_incoming: FD " << fd << " NULL read handler");
         }
 
         if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
@@ -267,7 +267,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
                 fd_table[fd].write_handler = NULL;
                 hdl(fd, fd_table[fd].write_data);
             } else if (pfds[i].events & POLLWRNORM)
-                debugs(5, 1, "comm_poll_incoming: FD " << fd << " NULL write_handler");
+                debugs(5, DBG_IMPORTANT, "comm_poll_incoming: FD " << fd << " NULL write_handler");
         }
     }
 

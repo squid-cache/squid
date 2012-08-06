@@ -1076,7 +1076,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, 1, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 
@@ -1984,7 +1984,7 @@ statByteHitRatio(int minutes)
     cd = CountHist[0].cd.kbytes_recv.kb - CountHist[minutes].cd.kbytes_recv.kb;
 
     if (s < cd)
-        debugs(18, 1, "STRANGE: srv_kbytes=" << s << ", cd_kbytes=" << cd);
+        debugs(18, DBG_IMPORTANT, "STRANGE: srv_kbytes=" << s << ", cd_kbytes=" << cd);
 
     s -= cd;
 

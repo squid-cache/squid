@@ -162,7 +162,7 @@ wccpConnectionOpen(void)
 
     Comm::SetSelect(theWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
 
-    debugs(80, 1, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
+    debugs(80, DBG_IMPORTANT, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
 
 
     // Sadly WCCP only does IPv4
@@ -186,7 +186,7 @@ void
 wccpConnectionClose(void)
 {
     if (theWccpConnection > -1) {
-        debugs(80, 1, "FD " << theWccpConnection << " Closing WCCPv1 socket");
+        debugs(80, DBG_IMPORTANT, "FD " << theWccpConnection << " Closing WCCPv1 socket");
         comm_close(theWccpConnection);
         theWccpConnection = -1;
     }
@@ -237,7 +237,7 @@ wccpHandleUdp(int sock, void *not_used)
         return;
 
     if (ntohl(wccp_i_see_you.number) > WCCP_ACTIVE_CACHES) {
-        debugs(80, 1, "Ignoring WCCP_I_SEE_YOU from " <<
+        debugs(80, DBG_IMPORTANT, "Ignoring WCCP_I_SEE_YOU from " <<
                from << " with number of caches set to " <<
                (int) ntohl(wccp_i_see_you.number));
 

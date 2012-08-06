@@ -93,7 +93,7 @@ peerSelectStateFree(ps_state * psstate)
     }
 
     if (psstate->acl_checklist) {
-        debugs(44, 1, "calling aclChecklistFree() from peerSelectStateFree");
+        debugs(44, DBG_IMPORTANT, "calling aclChecklistFree() from peerSelectStateFree");
         delete (psstate->acl_checklist);
     }
 
@@ -899,7 +899,7 @@ peerHandlePingReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *pingd
 #endif
 
     else
-        debugs(44, 1, "peerHandlePingReply: unknown protocol " << proto);
+        debugs(44, DBG_IMPORTANT, "peerHandlePingReply: unknown protocol " << proto);
 }
 
 static void

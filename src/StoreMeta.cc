@@ -205,7 +205,7 @@ StoreMeta::checkConsistency(StoreEntry *e) const
         break;
 
     default:
-        debugs(20, 1, "WARNING: got unused STORE_META type " << getType());
+        debugs(20, DBG_IMPORTANT, "WARNING: got unused STORE_META type " << getType());
         break;
     }
 

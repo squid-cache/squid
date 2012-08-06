@@ -548,7 +548,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
     char *nulpos;
     if ((nulpos = (char*)memchr(header_start, '\0', header_end - header_start))) {
-        debugs(55, 1, "WARNING: HTTP header contains NULL characters {" <<
+        debugs(55, DBG_IMPORTANT, "WARNING: HTTP header contains NULL characters {" <<
                getStringPrefix(header_start, nulpos) << "}\nNULL\n{" << getStringPrefix(nulpos+1, header_end));
         goto reset;
     }
@@ -580,7 +580,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                             cr_only = false;
                     }
                     if (cr_only) {
-                        debugs(55, 1, "WARNING: Rejecting HTTP request with a CR+ "
+                        debugs(55, DBG_IMPORTANT, "WARNING: Rejecting HTTP request with a CR+ "
                                "header field to prevent request smuggling attacks: {" <<
                                getStringPrefix(header_start, header_end) << "}");
                         goto reset;
@@ -590,7 +590,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
-                debugs(55, 1, "WARNING: suspicious CR characters in HTTP header {" <<
+                debugs(55, DBG_IMPORTANT, "WARNING: suspicious CR characters in HTTP header {" <<
                        getStringPrefix(field_start, field_end) << "}");
 
                 if (Config.onoff.relaxed_header_parser) {
@@ -605,7 +605,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             }
 
             if (this_line + 1 == field_end && this_line > field_start) {
-                debugs(55, 1, "WARNING: Blank continuation line in HTTP header {" <<
+                debugs(55, DBG_IMPORTANT, "WARNING: Blank continuation line in HTTP header {" <<
                        getStringPrefix(header_start, header_end) << "}");
                 goto reset;
             }
@@ -613,7 +613,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
         if (field_start == field_end) {
             if (field_ptr < header_end) {
-                debugs(55, 1, "WARNING: unparseable HTTP header field near {" <<
+                debugs(55, DBG_IMPORTANT, "WARNING: unparseable HTTP header field near {" <<
                        getStringPrefix(field_start, header_end) << "}");
                 goto reset;
             }
@@ -622,7 +622,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         }
 
         if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
-            debugs(55, 1, "WARNING: unparseable HTTP header field {" <<
+            debugs(55, DBG_IMPORTANT, "WARNING: unparseable HTTP header field {" <<
                    getStringPrefix(field_start, field_end) << "}");
             debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
                    " in {" << getStringPrefix(header_start, header_end) << "}");
@@ -646,11 +646,11 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 }
 
                 if (!httpHeaderParseOffset(e->value.termedBuf(), &l1)) {
-                    debugs(55, 1, "WARNING: Unparseable content-length '" << e->value << "'");
+                    debugs(55, DBG_IMPORTANT, "WARNING: Unparseable content-length '" << e->value << "'");
                     delete e;
                     continue;
                 } else if (!httpHeaderParseOffset(e2->value.termedBuf(), &l2)) {
-                    debugs(55, 1, "WARNING: Unparseable content-length '" << e2->value << "'");
+                    debugs(55, DBG_IMPORTANT, "WARNING: Unparseable content-length '" << e2->value << "'");
                     delById(e2->id);
                 } else if (l1 > l2) {
                     delById(e2->id);
@@ -1544,7 +1544,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 1, "WARNING: ignoring header name of " << name_len << " bytes");
+        debugs(55, DBG_IMPORTANT, "WARNING: ignoring header name of " << name_len << " bytes");
         return NULL;
     }
 
@@ -1590,7 +1590,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 1, "WARNING: ignoring '" << name << "' header of " << (field_end - value_start) << " bytes");
+        debugs(55, DBG_IMPORTANT, "WARNING: ignoring '" << name << "' header of " << (field_end - value_start) << " bytes");
 
         if (id == HDR_OTHER)
             name.clean();

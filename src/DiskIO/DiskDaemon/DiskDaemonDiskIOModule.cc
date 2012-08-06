@@ -67,7 +67,7 @@ DiskDaemonDiskIOModule::init()
      * the debug log is configured and we'll get the message on
      * stderr when doing things like 'squid -k reconfigure'
      */
-    debugs(47, 1, "diskd started");
+    debugs(47, DBG_IMPORTANT, "diskd started");
 #endif
     initialised = true;
 

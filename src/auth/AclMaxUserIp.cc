@@ -79,7 +79,7 @@ void
 ACLMaxUserIP::parse()
 {
     if (maximum) {
-        debugs(28, 1, "Attempting to alter already set User max IP acl");
+        debugs(28, DBG_IMPORTANT, "Attempting to alter already set User max IP acl");
         return;
     }
 
@@ -123,7 +123,7 @@ ACLMaxUserIP::match(Auth::UserRequest::Pointer auth_user_request, Ip::Address co
     if (authenticateAuthUserRequestIPCount(auth_user_request) <= maximum)
         return 0;
 
-    debugs(28, 1, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
+    debugs(28, DBG_IMPORTANT, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
 
     /* this is a match */
     if (flags.strict) {

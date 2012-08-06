@@ -276,7 +276,7 @@ mimeInit(char *filename)
         return;
 
     if ((fp = fopen(filename, "r")) == NULL) {
-        debugs(25, 1, "mimeInit: " << filename << ": " << xstrerror());
+        debugs(25, DBG_IMPORTANT, "mimeInit: " << filename << ": " << xstrerror());
         return;
     }
 
@@ -302,27 +302,27 @@ mimeInit(char *filename)
         xstrncpy(chopbuf, buf, BUFSIZ);
 
         if ((pattern = strtok(chopbuf, w_space)) == NULL) {
-            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((type = strtok(NULL, w_space)) == NULL) {
-            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((icon = strtok(NULL, w_space)) == NULL) {
-            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((encoding = strtok(NULL, w_space)) == NULL) {
-            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
         if ((mode = strtok(NULL, w_space)) == NULL) {
-            debugs(25, 1, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
             continue;
         }
 
@@ -335,11 +335,11 @@ mimeInit(char *filename)
             else if (!strcmp(option, "+view"))
                 view_option = 1;
             else
-                debugs(25, 1, "mimeInit: unknown option: '" << buf << "' (" << option << ")");
+                debugs(25, DBG_IMPORTANT, "mimeInit: unknown option: '" << buf << "' (" << option << ")");
         }
 
         if (regcomp(&re, pattern, re_flags) != 0) {
-            debugs(25, 1, "mimeInit: regcomp error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "mimeInit: regcomp error: '" << buf << "'");
             continue;
         }
 
@@ -376,7 +376,7 @@ mimeInit(char *filename)
     for (m = MimeTable; m != NULL; m = m->next)
         m->theIcon.load();
 
-    debugs(25, 1, "Loaded Icons.");
+    debugs(25, DBG_IMPORTANT, "Loaded Icons.");
 }
 
 void

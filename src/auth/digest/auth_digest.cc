@@ -322,7 +322,7 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     if (nonce->references > 0) {
         -- nonce->references;
     } else {
-        debugs(29, 1, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
+        debugs(29, DBG_IMPORTANT, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
     }
 
     debugs(29, 9, "authDigestNonceUnlink: nonce '" << nonce << "' now at '" << nonce->references << "'.");

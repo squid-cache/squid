@@ -642,7 +642,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     /* Make sure the security type matches what we expect */
 
     if (ntohl(ws->security_option) != srv->wccp2_security_type) {
-        debugs(80, 1, "wccp2_check_security: received packet has the wrong security option");
+        debugs(80, DBG_IMPORTANT, "wccp2_check_security: received packet has the wrong security option");
         return 0;
     }
 
@@ -651,7 +651,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     }
 
     if (srv->wccp2_security_type != WCCP2_MD5_SECURITY) {
-        debugs(80, 1, "wccp2_check_security: invalid security option");
+        debugs(80, DBG_IMPORTANT, "wccp2_check_security: invalid security option");
         return 0;
     }
 
@@ -1015,8 +1015,8 @@ wccp2ConnectionOpen(void)
 #endif
     Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
-    debugs(80, 1, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");
-    debugs(80, 1, "Initialising all WCCPv2 lists");
+    debugs(80, DBG_IMPORTANT, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");
+    debugs(80, DBG_IMPORTANT, "Initialising all WCCPv2 lists");
 
     /* Initialise all routers on all services */
     memset(&null, 0, sizeof(null));
@@ -1079,7 +1079,7 @@ wccp2ConnectionClose(void)
     }
 
     if (theWccp2Connection > -1) {
-        debugs(80, 1, "FD " << theWccp2Connection << " Closing WCCPv2 socket");
+        debugs(80, DBG_IMPORTANT, "FD " << theWccp2Connection << " Closing WCCPv2 socket");
         comm_close(theWccp2Connection);
         theWccp2Connection = -1;
     }
@@ -1204,7 +1204,7 @@ wccp2HandleUdp(int sock, void *not_used)
     offset = 0;
 
     if (data_length > len) {
-        debugs(80, 1, "ERROR: Malformed WCCPv2 packet claiming it's bigger than received data");
+        debugs(80, DBG_IMPORTANT, "ERROR: Malformed WCCPv2 packet claiming it's bigger than received data");
         return;
     }
 
@@ -1220,7 +1220,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_SECURITY_INFO:
 
             if (security_info != NULL) {
-                debugs(80, 1, "Duplicate security definition");
+                debugs(80, DBG_IMPORTANT, "Duplicate security definition");
                 return;
             }
 
@@ -1230,7 +1230,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_SERVICE_INFO:
 
             if (service_info != NULL) {
-                debugs(80, 1, "Duplicate service_info definition");
+                debugs(80, DBG_IMPORTANT, "Duplicate service_info definition");
                 return;
             }
 
@@ -1240,7 +1240,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_ROUTER_ID_INFO:
 
             if (router_identity_info != NULL) {
-                debugs(80, 1, "Duplicate router_identity_info definition");
+                debugs(80, DBG_IMPORTANT, "Duplicate router_identity_info definition");
                 return;
             }
 
@@ -1250,7 +1250,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_RTR_VIEW_INFO:
 
             if (router_view_header != NULL) {
-                debugs(80, 1, "Duplicate router_view definition");
+                debugs(80, DBG_IMPORTANT, "Duplicate router_view definition");
                 return;
             }
 
@@ -1260,7 +1260,7 @@ wccp2HandleUdp(int sock, void *not_used)
         case WCCP2_CAPABILITY_INFO:
 
             if (router_capability_header != NULL) {
-                debugs(80, 1, "Duplicate router_capability definition");
+                debugs(80, DBG_IMPORTANT, "Duplicate router_capability definition");
                 return;
             }
 
@@ -1274,20 +1274,20 @@ wccp2HandleUdp(int sock, void *not_used)
             break;
 
         default:
-            debugs(80, 1, "Unknown record type in WCCPv2 Packet (" << ntohs(header->type) << ").");
+            debugs(80, DBG_IMPORTANT, "Unknown record type in WCCPv2 Packet (" << ntohs(header->type) << ").");
         }
 
         offset += sizeof(struct wccp2_item_header_t);
         offset += ntohs(header->length);
 
         if (offset > data_length) {
-            debugs(80, 1, "Error: WCCPv2 packet tried to tell us there is data beyond the end of the packet");
+            debugs(80, DBG_IMPORTANT, "Error: WCCPv2 packet tried to tell us there is data beyond the end of the packet");
             return;
         }
     }
 
     if ((security_info == NULL) || (service_info == NULL) || (router_identity_info == NULL) || (router_view_header == NULL)) {
-        debugs(80, 1, "Incomplete WCCPv2 Packet");
+        debugs(80, DBG_IMPORTANT, "Incomplete WCCPv2 Packet");
         return;
     }
 
@@ -1305,17 +1305,17 @@ wccp2HandleUdp(int sock, void *not_used)
     }
 
     if (service_list_ptr == NULL) {
-        debugs(80, 1, "WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
+        debugs(80, DBG_IMPORTANT, "WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
         return;
     }
 
     if (ntohl(security_info->security_option) != ntohl(service_list_ptr->security_info->security_option)) {
-        debugs(80, 1, "Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
+        debugs(80, DBG_IMPORTANT, "Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
         return;
     }
 
     if (!wccp2_check_security(service_list_ptr, (char *) security_info, (char *) &wccp2_i_see_you, len)) {
-        debugs(80, 1, "Received WCCPv2 Packet failed authentication");
+        debugs(80, DBG_IMPORTANT, "Received WCCPv2 Packet failed authentication");
         return;
     }
 
@@ -1326,7 +1326,7 @@ wccp2HandleUdp(int sock, void *not_used)
     }
 
     if (router_list_ptr->next == NULL) {
-        debugs(80, 1, "WCCPv2 Packet received from unknown router");
+        debugs(80, DBG_IMPORTANT, "WCCPv2 Packet received from unknown router");
         return;
     }
 
@@ -1342,7 +1342,7 @@ wccp2HandleUdp(int sock, void *not_used)
     /* TODO: check return/forwarding methods */
     if (router_capability_header == NULL) {
         if ((Config.Wccp2.return_method != WCCP2_PACKET_RETURN_METHOD_GRE) || (Config.Wccp2.forwarding_method != WCCP2_FORWARDING_METHOD_GRE)) {
-            debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
+            debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
             wccp2ConnectionClose();
             return;
         }
@@ -1359,7 +1359,7 @@ wccp2HandleUdp(int sock, void *not_used)
             case WCCP2_CAPABILITY_FORWARDING_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.forwarding_method)) {
-                    debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
+                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1369,7 +1369,7 @@ wccp2HandleUdp(int sock, void *not_used)
             case WCCP2_CAPABILITY_ASSIGNMENT_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.assignment_method)) {
-                    debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< Config.Wccp2.assignment_method);
+                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< Config.Wccp2.assignment_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1379,7 +1379,7 @@ wccp2HandleUdp(int sock, void *not_used)
             case WCCP2_CAPABILITY_RETURN_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.return_method)) {
-                    debugs(80, 1, "wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
+                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1391,7 +1391,7 @@ wccp2HandleUdp(int sock, void *not_used)
                 break; // ignore silently for now
 
             default:
-                debugs(80, 1, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
+                debugs(80, DBG_IMPORTANT, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
             }
 
             router_capability_element = (struct wccp2_capability_element_t *) (((char *) router_capability_element) + sizeof(struct wccp2_item_header_t) + ntohs(router_capability_element->capability_length));
@@ -1551,7 +1551,7 @@ wccp2HereIam(void *voidnotused)
     debugs(80, 6, "wccp2HereIam: Called");
 
     if (wccp2_connected == 0) {
-        debugs(80, 1, "wccp2HereIam: wccp2 socket closed.  Shutting down WCCP2");
+        debugs(80, DBG_IMPORTANT, "wccp2HereIam: wccp2 socket closed.  Shutting down WCCP2");
         return;
     }
 
@@ -2118,7 +2118,7 @@ parse_wccp2_service(void *v)
     char wccp_password[WCCP2_PASSWORD_LEN + 1];
 
     if (wccp2_connected == 1) {
-        debugs(80, 1, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
+        debugs(80, DBG_IMPORTANT, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
         return;
     }
 
@@ -2302,7 +2302,7 @@ parse_wccp2_service_info(void *v)
     int priority = -1;
 
     if (wccp2_connected == 1) {
-        debugs(80, 1, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
+        debugs(80, DBG_IMPORTANT, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
         return;
     }
 

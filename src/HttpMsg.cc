@@ -164,7 +164,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
 
     // TODO: move to httpReplyParseStep()
     if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize)) {
-        debugs(58, 1, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
+        debugs(58, DBG_IMPORTANT, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
         *error = HTTP_HEADER_TOO_LARGE;
         return false;
     }
@@ -196,7 +196,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) near '" << buf->content() << "'");
 
     if (hdr_sz != (int)hdr_len) {
-        debugs(58, 1, "internal HttpMsg::parse vs. headersEnd error: " <<
+        debugs(58, DBG_IMPORTANT, "internal HttpMsg::parse vs. headersEnd error: " <<
                hdr_sz << " != " << hdr_len);
         hdr_sz = (int)hdr_len; // because old http.cc code used hdr_len
     }

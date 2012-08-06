@@ -634,7 +634,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
         assert (fetch->entry->getReply()->sline.status != 0);
 
         if (fetch->entry->getReply()->sline.status != HTTP_OK) {
-            debugs(72, 1, "peerDigestSwapInHeaders: " << fetch->pd->host <<
+            debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
                    " status " << fetch->entry->getReply()->sline.status <<
                    " got cached!");
 
@@ -882,7 +882,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
     pd->stats.recv.msgs += fetch->recv.msg;
 
     if (err) {
-        debugs(72, 1, "" << (pcb_valid ? "temporary " : "" ) << "disabling (" << pd->req_result << ") digest from " << host);
+        debugs(72, DBG_IMPORTANT, "" << (pcb_valid ? "temporary " : "" ) << "disabling (" << pd->req_result << ") digest from " << host);
 
         if (pd->cd) {
             cacheDigestDestroy(pd->cd);
@@ -1007,14 +1007,14 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     /* check version requirements (both ways) */
 
     if (cblock.ver.required > CacheDigestVer.current) {
-        debugs(72, 1, "" << host << " digest requires version " <<
+        debugs(72, DBG_IMPORTANT, "" << host << " digest requires version " <<
                cblock.ver.required << "; have: " << CacheDigestVer.current);
 
         return 0;
     }
 
     if (cblock.ver.current < CacheDigestVer.required) {
-        debugs(72, 1, "" << host << " digest is version " <<
+        debugs(72, DBG_IMPORTANT, "" << host << " digest is version " <<
                cblock.ver.current << "; we require: " <<
                CacheDigestVer.required);
 

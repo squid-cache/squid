@@ -177,7 +177,7 @@ void
 FwdState::completed()
 {
     if (flags.forward_completed == 1) {
-        debugs(17, 1, HERE << "FwdState::completed called on a completed request! Bad!");
+        debugs(17, DBG_IMPORTANT, HERE << "FwdState::completed called on a completed request! Bad!");
         return;
     }
 
@@ -652,7 +652,7 @@ FwdState::negotiateSSL(int fd)
         case SSL_ERROR_SSL:
         case SSL_ERROR_SYSCALL:
             ssl_lib_error = ERR_get_error();
-            debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd <<
+            debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd <<
                    ": " << ERR_error_string(ssl_lib_error, NULL) << " (" << ssl_error <<
                    "/" << ret << "/" << errno << ")");
 
@@ -759,7 +759,7 @@ FwdState::initiateSSL()
     assert(sslContext);
 
     if ((ssl = SSL_new(sslContext)) == NULL) {
-        debugs(83, 1, "fwdInitiateSSL: Error allocating handle: " << ERR_error_string(ERR_get_error(), NULL)  );
+        debugs(83, DBG_IMPORTANT, "fwdInitiateSSL: Error allocating handle: " << ERR_error_string(ERR_get_error(), NULL)  );
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         // TODO: create Ssl::ErrorDetail with OpenSSL-supplied error code
         fail(anErr);

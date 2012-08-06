@@ -21,7 +21,7 @@ void Adaptation::Icap::History::start(const char *context)
 void Adaptation::Icap::History::stop(const char *context)
 {
     if (!concurrencyLevel) {
-        debugs(93,1, HERE << "Internal error: poor history accounting " << this);
+        debugs(93, DBG_IMPORTANT, HERE << "Internal error: poor history accounting " << this);
         return;
     }
 

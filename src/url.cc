@@ -232,7 +232,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
         /* terminate so it doesn't overflow other buffers */
         *(url + (MAX_URL >> 1)) = '\0';
-        debugs(23, 1, "urlParse: URL too large (" << l << " bytes)");
+        debugs(23, DBG_IMPORTANT, "urlParse: URL too large (" << l << " bytes)");
         return NULL;
     }
     if (method == METHOD_CONNECT) {
@@ -382,7 +382,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     debugs(23, 3, "urlParse: Split URL '" << url << "' into proto='" << proto << "', host='" << host << "', port='" << port << "', path='" << urlpath << "'");
 
     if (Config.onoff.check_hostnames && strspn(host, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(host)) {
-        debugs(23, 1, "urlParse: Illegal character in hostname '" << host << "'");
+        debugs(23, DBG_IMPORTANT, "urlParse: Illegal character in hostname '" << host << "'");
         return NULL;
     }
 
@@ -396,7 +396,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
     /* reject duplicate or leading dots */
     if (strstr(host, "..") || *host == '.') {
-        debugs(23, 1, "urlParse: Illegal hostname '" << host << "'");
+        debugs(23, DBG_IMPORTANT, "urlParse: Illegal hostname '" << host << "'");
         return NULL;
     }
 

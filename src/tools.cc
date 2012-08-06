@@ -785,7 +785,7 @@ no_suid(void)
     setuid(0);
 
     if (setuid(uid) < 0)
-        debugs(50, 1, "no_suid: setuid: " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "no_suid: setuid: " << xstrerror());
 
     restoreCapabilities(0);
 
@@ -1177,7 +1177,7 @@ parseEtcHosts(void)
     fp = fopen(Config.etcHostsPath, "r");
 
     if (fp == NULL) {
-        debugs(1, 1, "parseEtcHosts: " << Config.etcHostsPath << ": " << xstrerror());
+        debugs(1, DBG_IMPORTANT, "parseEtcHosts: " << Config.etcHostsPath << ": " << xstrerror());
         return;
     }
 
