@@ -120,7 +120,6 @@ public:
     clientStreamNode *ourNode;	/* This will go away if/when this file gets refactored some more */
 
 private:
-    CBDATA_CLASS(clientReplyContext);
     clientStreamNode *getNextNode() const;
     void makeThisHead();
     bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;
@@ -153,6 +152,8 @@ private:
     StoreEntry *old_entry;
     store_client *old_sc;	/* ... for entry to be validated */
     bool deleting;
+
+    CBDATA_CLASS(clientReplyContext);
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
