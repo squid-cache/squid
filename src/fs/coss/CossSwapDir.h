@@ -136,13 +136,14 @@ public:
     virtual StoreEntry *currentItem();
 
 private:
-    CBDATA_CLASS2(StoreSearchCoss);
     RefCount<CossSwapDir> sd;
     void (*callback)(void *cbdata);
     void *cbdata;
     bool _done;
     dlink_node * current;
     dlink_node * next_;
+
+    CBDATA_CLASS2(StoreSearchCoss);
 };
 
 #endif

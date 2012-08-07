@@ -74,7 +74,6 @@ private:
     bool errorOccured;
     DiskdIOStrategy *IO;
     RefCount<IORequestor> ioRequestor;
-    CBDATA_CLASS(DiskdFile);
     void openDone(diomsg *);
     void createDone (diomsg *);
     void readDone (diomsg *);
@@ -86,6 +85,8 @@ private:
     void ioAway();
     void ioCompleted();
     size_t inProgressIOs;
+
+    CBDATA_CLASS(DiskdFile);
 };
 
 #endif

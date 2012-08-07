@@ -149,7 +149,6 @@ public:
     bool cachedASTInUse;
 
 private:
-    CBDATA_CLASS(ESIContext);
     void fail ();
     void freeResources();
     void fixupOutboundTail();
@@ -168,6 +167,8 @@ private:
     virtual void parserDefault (const char *s, int len);
     virtual void parserComment (const char *s);
     bool processing;
+
+    CBDATA_CLASS(ESIContext);
 };
 
 #endif /* SQUID_ESICONTEXT_H */
