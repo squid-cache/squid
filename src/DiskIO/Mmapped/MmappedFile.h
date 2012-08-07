@@ -26,8 +26,6 @@ public:
     virtual bool ioInProgress() const;
 
 private:
-    CBDATA_CLASS(MmappedFile);
-
     char const *path_;
     RefCount<IORequestor> ioRequestor;
     //RefCount<ReadRequest> readRequest;
@@ -41,6 +39,8 @@ private:
     bool error_;
 
     void doClose();
+
+    CBDATA_CLASS(MmappedFile);
 };
 
 #endif /* SQUID_MMAPPEDFILE_H */

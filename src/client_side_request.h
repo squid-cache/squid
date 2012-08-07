@@ -148,7 +148,6 @@ public:
 #endif
 
 private:
-    CBDATA_CLASS(ClientHttpRequest);
     int64_t maxReplyBodySize_;
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
@@ -200,6 +199,9 @@ private:
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;
 #endif
+
+private:
+    CBDATA_CLASS(ClientHttpRequest);
 };
 
 /* client http based routines */

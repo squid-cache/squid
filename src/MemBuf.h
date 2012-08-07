@@ -134,8 +134,6 @@ private:
 
     void grow(mb_size_t min_cap);
 
-    CBDATA_CLASS2(MemBuf);
-
 public:
     /**
      \deprecated use space*() and content*() methods to access safely instead.
@@ -167,6 +165,9 @@ public:
 
     unsigned valid:1;		/* to be used for debugging only! */
 #endif
+
+private:
+    CBDATA_CLASS2(MemBuf);
 };
 
 #if _USE_INLINE_

@@ -71,7 +71,6 @@ public:
     virtual bool ioInProgress() const;
 
 private:
-    CBDATA_CLASS(AIODiskFile);
     void error(bool const &);
     int fd;
     String path;
@@ -79,6 +78,7 @@ private:
     RefCount<IORequestor> ioRequestor;
     bool closed;
     bool error_;
+    CBDATA_CLASS(AIODiskFile);
 };
 
 #endif /* USE_DISKIO_AIO */

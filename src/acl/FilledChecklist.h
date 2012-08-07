@@ -73,18 +73,16 @@ public:
     ExternalACLEntry *extacl_entry;
 
 private:
-    CBDATA_CLASS(ACLFilledChecklist);
-
     ConnStateData * conn_;          /**< hack for ident and NTLM */
     int fd_;                        /**< may be available when conn_ is not */
     bool destinationDomainChecked_;
     bool sourceDomainChecked_;
-
-private:
     /// not implemented; will cause link failures if used
     ACLFilledChecklist(const ACLFilledChecklist &);
     /// not implemented; will cause link failures if used
     ACLFilledChecklist &operator=(const ACLFilledChecklist &);
+
+    CBDATA_CLASS(ACLFilledChecklist);
 };
 
 /// convenience and safety wrapper for dynamic_cast<ACLFilledChecklist*>
