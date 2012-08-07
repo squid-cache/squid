@@ -285,10 +285,11 @@ protected:
     char *read_buf;
 
 private:
-    CBDATA_CLASS(UFSStoreState);
     void openDone();
     void freePending();
     void doWrite();
+
+    CBDATA_CLASS(UFSStoreState);
 };
 
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read);
@@ -327,12 +328,13 @@ public:
     RemovalPolicyWalker *walker;
 
 private:
-    CBDATA_CLASS2(StoreSearchUFS);
     /// \bug (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
     StoreEntry * current;
     bool _done;
+
+    CBDATA_CLASS2(StoreSearchUFS);
 };
 
 
@@ -402,7 +404,6 @@ public:
     struct _store_rebuild_data counts;
 
 private:
-    CBDATA_CLASS2(RebuildState);
     void rebuildFromDirectory();
     void rebuildFromSwapLog();
     void rebuildStep();
@@ -416,6 +417,8 @@ private:
     /// \bug (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
+
+    CBDATA_CLASS2(RebuildState);
 };
 
 #if _USE_INLINE_
