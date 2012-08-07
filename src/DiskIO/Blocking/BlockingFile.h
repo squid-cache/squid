@@ -62,7 +62,6 @@ public:
 private:
     static DRCB ReadDone;
     static DWCB WriteDone;
-    CBDATA_CLASS(BlockingFile);
     int fd;
     bool closed;
     void error (bool const &);
@@ -74,6 +73,8 @@ private:
     void doClose();
     void readDone(int fd, const char *buf, int len, int errflag);
     void writeDone(int fd, int errflag, size_t len);
+
+    CBDATA_CLASS(BlockingFile);
 };
 
 #endif /* SQUID_BLOCKINGFILE_H */
