@@ -147,7 +147,6 @@ protected:
     void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
 
 private:
-    CBDATA_CLASS(ClientSocketContext);
     void prepareReply(HttpReply * rep);
     void packChunk(const StoreIOBuffer &bodyData, MemBuf &mb);
     void packRange(StoreIOBuffer const &, MemBuf * mb);
@@ -159,6 +158,8 @@ private:
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
+
+    CBDATA_CLASS(ClientSocketContext);
 };
 
 
@@ -380,7 +381,6 @@ private:
     HttpParser parser_;
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
-    CBDATA_CLASS2(ConnStateData);
 
 #if USE_SSL
     bool switchedToHttps_;
@@ -401,6 +401,8 @@ private:
 
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
+
+    CBDATA_CLASS2(ConnStateData);
 };
 
 /* convenience class while splitting up body handling */
