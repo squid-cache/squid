@@ -1726,7 +1726,7 @@ AC_SUBST(OPT_DEFAULT_HOSTS)
 dnl Select auth schemes modules to build
 AC_ARG_ENABLE(auth,
   AS_HELP_STRING([--enable-auth="list of auth scheme modules"],[Build support for the list of authentication schemes.
-                  The default is to build support for the Basic scheme.
+                  The default is to auto-detect build support for all schemes.
                   See src/auth for a list of available modules, or
                   Programmers Guide section authentication schemes
                   for details on how to build your custom auth scheme
