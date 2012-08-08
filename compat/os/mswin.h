@@ -90,7 +90,12 @@ typedef unsigned long ino_t;
 #define fileno _fileno
 #define fstat _fstati64
 #endif
+#if !defined(_SQUID_MINGW_) // MinGW defines these properly
+SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
+SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
+#define truncate WIN32_truncate
+#endif
 #define getcwd _getcwd
 #define getpid _getpid
 #define getrusage WIN32_getrusage
@@ -115,7 +120,6 @@ typedef unsigned long ino_t;
 #define strncasecmp _strnicmp
 #define tempnam _tempnam
 #endif
-#define truncate WIN32_truncate
 #define umask _umask
 #define unlink _unlink
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
