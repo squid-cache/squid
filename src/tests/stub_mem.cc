@@ -60,10 +60,5 @@ memFreeBufFunc(size_t size)
     return cxx_xfree;
 }
 
-void *
-memAllocate(mem_type type)
-STUB_RETVAL(NULL)
-
-void
-memFree(void *p, int type)
-STUB
+void * memAllocate(mem_type type) STUB_RETVAL(NULL)
+void memFree(void *p, int type) STUB
