@@ -115,13 +115,11 @@ SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int wha
 /* win32lib.c */
 #if _SQUID_MSWIN_
 SQUIDCEXTERN int chroot (const char *);
-SQUIDCEXTERN int ftruncate(int, off_t);
 #if !HAVE_GETTIMEOFDAY
 SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
 #endif
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
-SQUIDCEXTERN int truncate(const char *, off_t);
 SQUIDCEXTERN struct passwd *getpwnam(char *);
 SQUIDCEXTERN struct group *getgrnam(char *);
 SQUIDCEXTERN uid_t geteuid(void);
