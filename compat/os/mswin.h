@@ -97,7 +97,7 @@ typedef unsigned long ino_t;
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #define lseek _lseeki64
 #define memccpy _memccpy
-#define mkdir(p) _mkdir(p)
+#define mkdir(p,F) _mkdir((p))
 #define mktemp _mktemp
 #endif
 #define pclose _pclose
