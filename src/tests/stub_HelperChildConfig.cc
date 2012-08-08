@@ -2,6 +2,9 @@
 #include "HelperChildConfig.h"
 #include "globals.h"
 
+#define STUB_API "stub_HelperChildconfig.cc"
+#include "tests/STUB.h"
+
 #include <string.h>
 
 HelperChildConfig::HelperChildConfig(const unsigned int m):
@@ -26,9 +29,4 @@ HelperChildConfig::needNew() const
     return (n_max - n_active);
 }
 
-void
-HelperChildConfig::parseConfig()
-{
-    fprintf(stderr, "HelperChildConfig::parseConfig not implemented.");
-    exit(1);
-}
+void HelperChildConfig::parseConfig() STUB

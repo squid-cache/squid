@@ -1,6 +1,9 @@
 /*
  * A stub implementation of the Debug.h API.
  * For use by test binaries which do not need the full context debugging
+ *
+ * Note: it doesn't use the STUB API as the functions defined here must
+ * not abort the unit test.
  */
 #include "squid.h"
 #include "Debug.h"
