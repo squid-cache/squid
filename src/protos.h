@@ -234,13 +234,12 @@ SQUIDCEXTERN void httpHeaderCleanModule(void);
 /* store report about current header usage and other stats */
 void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
-SQUIDCEXTERN int httpReqHdrManglersConfigured();
 
 #if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
-SQUIDCEXTERN void snmpConnectionOpen(void);
-SQUIDCEXTERN void snmpConnectionClose(void);
+SQUIDCEXTERN void snmpOpenPorts(void);
+SQUIDCEXTERN void snmpClosePorts(void);
 SQUIDCEXTERN const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 
 SQUIDCEXTERN void addr2oid(Ip::Address &addr, oid *Dest);

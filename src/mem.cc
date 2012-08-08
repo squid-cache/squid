@@ -162,9 +162,9 @@ Mem::Stats(StoreEntry * sentry)
         long int leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
         stream << "Valgrind Report:\n";
         stream << "Type\tAmount\n";
-        debugs(13, 1, "Asking valgrind for memleaks");
+        debugs(13, DBG_IMPORTANT, "Asking valgrind for memleaks");
         VALGRIND_DO_LEAK_CHECK;
-        debugs(13, 1, "Getting valgrind statistics");
+        debugs(13, DBG_IMPORTANT, "Getting valgrind statistics");
         VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
         stream << "Leaked\t" << leaked << "\n";
         stream << "Dubious\t" << dubious << "\n";
@@ -389,7 +389,7 @@ memConfigure(void)
         new_pool_limit = Config.MemPools.limit;
     else {
         if (Config.MemPools.limit == 0)
-            debugs(13, 1, "memory_pools_limit 0 has been chagned to memory_pools_limit none. Please update your config");
+            debugs(13, DBG_IMPORTANT, "memory_pools_limit 0 has been chagned to memory_pools_limit none. Please update your config");
         new_pool_limit = -1;
     }
 
@@ -401,7 +401,7 @@ memConfigure(void)
      * stderr when doing things like 'squid -k reconfigure'
      */
     if (MemPools::GetInstance().idleLimit() > new_pool_limit)
-        debugs(13, 1, "Shrinking idle mem pools to "<< std::setprecision(3) << toMB(new_pool_limit) << " MB");
+        debugs(13, DBG_IMPORTANT, "Shrinking idle mem pools to "<< std::setprecision(3) << toMB(new_pool_limit) << " MB");
 #endif
 
     MemPools::GetInstance().setIdleLimit(new_pool_limit);
@@ -467,7 +467,7 @@ Mem::Init(void)
         StrPools[i].pool->zeroOnPush(false);
 
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
-            debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
+            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
 
     MemIsInitialized = true;
@@ -764,10 +764,13 @@ Mem::Report(std::ostream &stream)
         if (!mp_stats.pool)	/* pool destroyed */
             continue;
 
-        if (mp_stats.pool->getMeter().gb_allocated.count > 0)	/* this pool has been used */
-            sortme[npools++] = mp_stats;
-        else
+        if (mp_stats.pool->getMeter().gb_allocated.count > 0) {
+            /* this pool has been used */
+            sortme[npools] = mp_stats;
+            ++npools;
+        } else {
             ++not_used;
+        }
     }
 
     memPoolIterateDone(&iter);

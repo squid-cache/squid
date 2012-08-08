@@ -93,7 +93,7 @@ Valid_Group(char *UserName, char *Group)
      */
     if (nStatus == NERR_Success) {
         if ((pTmpBuf = pBuf) != NULL) {
-            for (i = 0; i < dwEntriesRead; i++) {
+            for (i = 0; i < dwEntriesRead; ++i) {
                 if (pTmpBuf == NULL) {
                     result = FALSE;
                     break;
@@ -102,8 +102,8 @@ Valid_Group(char *UserName, char *Group)
                     result = TRUE;
                     break;
                 }
-                pTmpBuf++;
-                dwTotalCount++;
+                ++pTmpBuf;
+                ++dwTotalCount;
             }
         }
     } else
@@ -136,7 +136,7 @@ Valid_User(char *UserName, char *Password, char *Group)
     errormsg = NTV_SERVER_ERROR_MSG;
     strncpy(NTDomain, UserName, sizeof(NTDomain));
 
-    for (i=0; i < strlen(NTV_VALID_DOMAIN_SEPARATOR); i++) {
+    for (i=0; i < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++i) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[i])) != NULL)
             break;
     }

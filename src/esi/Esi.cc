@@ -989,11 +989,12 @@ ESIContext::addStackElement (ESIElement::Pointer element)
     debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
     if (!parserState.top()->addElement(element)) {
-        debugs(86, 1, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
+        debugs(86, DBG_IMPORTANT, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
         flags.error = 1;
     } else {
         /* added ok, push onto the stack */
-        parserState.stack[parserState.stackdepth++] = element;
+        parserState.stack[parserState.stackdepth] = element;
+        ++parserState.stackdepth;
     }
 }
 
@@ -1024,12 +1025,15 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
         position = localbuf + strlen (localbuf);
 
         for (i = 0; i < specifiedattcount && attr[i]; i += 2) {
-            *position++ = ' ';
+            *position = ' ';
+            ++position;
             /* TODO: handle thisNode gracefully */
             assert (xstrncpy (position, attr[i], sizeof(localbuf) + (position - localbuf)));
             position += strlen (position);
-            *position++ = '=';
-            *position++ = '\"';
+            *position = '=';
+            ++position;
+            *position = '\"';
+            ++position;
             const char *chPtr = attr[i + 1];
             char ch;
             while ((ch = *chPtr++) != '\0') {
@@ -1037,14 +1041,17 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
                     assert( xstrncpy(position, "&quot;", sizeof(localbuf) + (position-localbuf)) );
                     position += 6;
                 } else {
-                    *(position++) = ch;
+                    *position = ch;
+                    ++position;
                 }
             }
             position += strlen (position);
-            *position++ = '\"';
+            *position = '\"';
+            ++position;
         }
 
-        *position++ = '>';
+        *position = '>';
+        ++position;
         *position = '\0';
 
         addLiteral (localbuf, position - localbuf);
@@ -1134,7 +1141,8 @@ ESIContext::end(const char *el)
         localbuf[1] = '/';
         assert (xstrncpy (&localbuf[2], el, sizeof(localbuf) - 3));
         position = localbuf + strlen (localbuf);
-        *position++ = '>';
+        *position = '>';
+        ++position;
         *position = '\0';
         addLiteral (localbuf, position - localbuf);
         break;
@@ -1191,13 +1199,13 @@ ESIContext::parserComment (const char *s)
         if (!tempParser->parse("<div>", 5,0) ||
                 !tempParser->parse(s + 3, strlen(s) - 3, 0) ||
                 !tempParser->parse("</div>",6,1)) {
-            debugs(86, 0, "ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
+            debugs(86, DBG_CRITICAL, "ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
             setError();
             char tempstr[1024];
             snprintf(tempstr, 1023, "ESIContext::parserComment: Parse error at line %ld:\n%s\n",
                      tempParser->lineNumber(),
                      tempParser->errorString());
-            debugs(86, 0, "" << tempstr << "");
+            debugs(86, DBG_CRITICAL, "" << tempstr << "");
 
             setErrorMessage(tempstr);
         }
@@ -1211,7 +1219,7 @@ ESIContext::parserComment (const char *s)
         len = strlen (s);
 
         if (len > sizeof (localbuf) - 9) {
-            debugs(86, 0, "ESIContext::parserComment: Truncating long comment");
+            debugs(86, DBG_CRITICAL, "ESIContext::parserComment: Truncating long comment");
             len = sizeof (localbuf) - 9;
         }
 
@@ -1233,7 +1241,7 @@ ESIContext::addLiteral (const char *s, int len)
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
     if (!parserState.top()->addElement(element)) {
-        debugs(86, 1, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
+        debugs(86, DBG_IMPORTANT, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
         flags.error = 1;
     }
 }
@@ -1259,7 +1267,7 @@ ESIContext::parseOneBuffer()
         snprintf (tempstr, 1023, "esiProcess: Parse error at line %ld:\n%s\n",
                   parserState.theParser->lineNumber(),
                   parserState.theParser->errorString());
-        debugs(86, 0, "" << tempstr << "");
+        debugs(86, DBG_CRITICAL, "" << tempstr << "");
 
         setErrorMessage(tempstr);
 
@@ -1283,7 +1291,8 @@ ESIContext::parse()
     if (!parserState.stackdepth) {
         debugs(86, 5, "empty parser stack, inserting the top level node");
         assert (tree.getRaw());
-        parserState.stack[parserState.stackdepth++] = tree;
+        parserState.stack[parserState.stackdepth] = tree;
+        ++parserState.stackdepth;
     }
 
     if (rep && !parserState.inited())
@@ -1374,7 +1383,7 @@ ESIContext::process ()
             break;
 
         case ESI_PROCESS_FAILED:
-            debugs(86, 0, "esiProcess: tree Processed FAILED");
+            debugs(86, DBG_CRITICAL, "esiProcess: tree Processed FAILED");
             setError();
 
             setErrorMessage("esiProcess: ESI template Processing failed.");
@@ -1740,7 +1749,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiAttempt*>(element.getRaw())) {
         if (attempt.getRaw()) {
-            debugs(86, 1, "esiTryAdd: Failed for " << this << " - try allready has an attempt node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try allready has an attempt node (section 3.4)");
             return false;
         }
 
@@ -1750,7 +1759,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiExcept*>(element.getRaw())) {
         if (except.getRaw()) {
-            debugs(86, 1, "esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
             return false;
         }
 
@@ -1758,7 +1767,7 @@ esiTry::addElement(ESIElement::Pointer element)
         return true;
     }
 
-    debugs(86, 1, "esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
+    debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
     return false;
 }
 
@@ -1778,12 +1787,12 @@ esiTry::process (int dovars)
     assert (this);
 
     if (!attempt.getRaw()) {
-        debugs(86, 0, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
+        debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
     if (!except.getRaw()) {
-        debugs(86, 0, "esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
+        debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
@@ -2048,13 +2057,13 @@ esiChoose::addElement(ESIElement::Pointer element)
 
     /* Some elements require specific parents */
     if (!(dynamic_cast<esiWhen*>(element.getRaw()) || dynamic_cast<esiOtherwise*>(element.getRaw()))) {
-        debugs(86, 0, "esiChooseAdd: invalid child node for esi:choose (section 3.3)");
+        debugs(86, DBG_CRITICAL, "esiChooseAdd: invalid child node for esi:choose (section 3.3)");
         return false;
     }
 
     if (dynamic_cast<esiOtherwise*>(element.getRaw())) {
         if (otherwise.getRaw()) {
-            debugs(86, 0, "esiChooseAdd: only one otherwise node allowed for esi:choose (section 3.3)");
+            debugs(86, DBG_CRITICAL, "esiChooseAdd: only one otherwise node allowed for esi:choose (section 3.3)");
             return false;
         }
 
@@ -2337,7 +2346,7 @@ esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESI
             /* ignore mistyped attributes.
              * TODO:? error on these for user feedback - config parameter needed
              */
-            debugs(86, 1, "Found misttyped attribute on ESI When clause");
+            debugs(86, DBG_IMPORTANT, "Found misttyped attribute on ESI When clause");
         }
     }
 

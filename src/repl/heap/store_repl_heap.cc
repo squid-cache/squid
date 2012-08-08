@@ -320,7 +320,7 @@ createRemovalPolicy_heap(wordlist * args)
         keytype = args->key;
         args = args->next;
     } else {
-        debugs(81, 1, "createRemovalPolicy_heap: No key type specified. Using LRU");
+        debugs(81, DBG_IMPORTANT, "createRemovalPolicy_heap: No key type specified. Using LRU");
         keytype = "LRU";
     }
 
@@ -331,7 +331,7 @@ createRemovalPolicy_heap(wordlist * args)
     else if (!strcmp(keytype, "LRU"))
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     else {
-        debugs(81, 0, "createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
+        debugs(81, DBG_CRITICAL, "createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     }
 

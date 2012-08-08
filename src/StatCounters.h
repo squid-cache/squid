@@ -144,9 +144,9 @@ public:
     double cputime;
 
     struct timeval timestamp;
-    StatHist comm_icp_incoming;
+    StatHist comm_udp_incoming;
     StatHist comm_dns_incoming;
-    StatHist comm_http_incoming;
+    StatHist comm_tcp_incoming;
     StatHist select_fds_hist;
 
     struct {

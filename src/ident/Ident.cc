@@ -31,11 +31,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_IDENT
-
+#include "squid-old.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -68,6 +67,7 @@ typedef struct _IdentStateData {
 
 // TODO: make these all a series of Async job calls. They are self-contained callbacks now.
 static IOCB ReadReply;
+static IOCB WriteFeedback;
 static CLCB Close;
 static CTCB Timeout;
 static CNCB ConnectDone;
@@ -154,14 +154,27 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
     mb.Printf("%d, %d\r\n",
               conn->remote.GetPort(),
               conn->local.GetPort());
-    AsyncCall::Pointer nil;
-    Comm::Write(conn, &mb, nil);
+    AsyncCall::Pointer writeCall = commCbCall(5,4, "Ident::WriteFeedback",
+                                   CommIoCbPtrFun(Ident::WriteFeedback, state));
+    Comm::Write(conn, &mb, writeCall);
     AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
                                   CommIoCbPtrFun(Ident::ReadReply, state));
     comm_read(conn, state->buf, IDENT_BUFSIZE, readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "Ident::Timeout",
                                      CommTimeoutCbPtrFun(Ident::Timeout, state));
     commSetConnTimeout(conn, Ident::TheConfig.timeout, timeoutCall);
+}
+
+void
+Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+{
+    debugs(30, 5, HERE << conn << ": Wrote IDENT request " << len << " bytes.");
+
+    // TODO handle write errors better. retry or abort?
+    if (flag != COMM_OK) {
+        debugs(30, 2, HERE << conn << " err-flags=" << flag << " IDENT write error: " << xstrerr(xerrno));
+        conn->close();
+    }
 }
 
 void
@@ -251,6 +264,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     state->conn = conn->copyDetails();
     // NP: use random port for secure outbound to IDENT_PORT
     state->conn->local.SetPort(0);
+    state->conn->remote.SetPort(IDENT_PORT);
 
     ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);

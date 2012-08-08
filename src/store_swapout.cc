@@ -198,7 +198,7 @@ StoreEntry::swapOut()
 
     const bool weAreOrMayBeSwappingOut = swappingOut() || mayStartSwapOut();
 
-    trimMemory(weAreOrMayBeSwappingOut);
+    Store::Root().maybeTrimMemory(*this, weAreOrMayBeSwappingOut);
 
     if (!weAreOrMayBeSwappingOut)
         return; // nothing else to do
@@ -220,7 +220,7 @@ StoreEntry::swapOut()
 #if SIZEOF_OFF_T <= 4
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
-        debugs(20, 0, "WARNING: preventing off_t overflow for " << url());
+        debugs(20, DBG_CRITICAL, "WARNING: preventing off_t overflow for " << url());
         abort();
         return;
     }
@@ -364,6 +364,7 @@ StoreEntry::mayStartSwapOut()
 
     // must be checked in the caller
     assert(!EBIT_TEST(flags, ENTRY_ABORTED));
+    assert(!swappingOut());
 
     if (!Config.cacheSwap.n_configured)
         return false;
@@ -383,11 +384,11 @@ StoreEntry::mayStartSwapOut()
         return true;
     }
 
-    // if we are swapping out already, do not repeat same checks
-    if (swap_status != SWAPOUT_NONE) {
-        debugs(20, 3,  HERE << " already started");
-        decision = MemObject::SwapOut::swPossible;
-        return true;
+    // if we swapped out already, do not start over
+    if (swap_status == SWAPOUT_DONE) {
+        debugs(20, 3,  HERE << "already did");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
     }
 
     if (!checkCachable()) {

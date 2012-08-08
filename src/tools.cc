@@ -36,11 +36,12 @@
 #include "base/Subscription.h"
 #include "compat/initgroups.h"
 #include "fde.h"
+#include "htcp.h"
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "MemBuf.h"
-#include "ProtoPort.h"
+#include "anyp/PortCfg.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "ipc/Kids.h"
@@ -92,19 +93,16 @@ SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 void
 releaseServerSockets(void)
 {
-    int i;
-    /* Release the main ports as early as possible */
+    // Release the main ports as early as possible
 
     // clear both http_port and https_port lists.
-    for (i = 0; i < NHttpSockets; i++) {
-        if (HttpSockets[i] >= 0)
-            close(HttpSockets[i]);
-    }
+    clientHttpConnectionsClose();
 
     // clear icp_port's
-    icpConnectionClose();
+    icpClosePorts();
 
     // XXX: Why not the HTCP, SNMP, DNS ports as well?
+    // XXX: why does this differ from main closeServerConnections() anyway ?
 }
 
 static char *
@@ -182,7 +180,7 @@ dumpMallocStats(void)
 
     mp = mallinfo();
 
-    fprintf(debug_log, "Memory usage for "APP_SHORTNAME" via mallinfo():\n");
+    fprintf(debug_log, "Memory usage for " APP_SHORTNAME " via mallinfo():\n");
 
     fprintf(debug_log, "\ttotal space in arena:  %6ld KB\n",
             (long)mp.arena >> 10);
@@ -470,7 +468,7 @@ sigusr2_handle(int sig)
 
 #if !HAVE_SIGACTION
     if (signal(sig, sigusr2_handle) == SIG_ERR)	/* reinstall */
-        debugs(50, 0, "signal: sig=" << sig << " func=sigusr2_handle: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "signal: sig=" << sig << " func=sigusr2_handle: " << xstrerror());
 
 #endif
 }
@@ -740,7 +738,7 @@ leave_suid(void)
 #endif
 
         if (setgid(Config2.effectiveGroupID) < 0)
-            debugs(50, 0, "ALERT: setgid: " << xstrerror());
+            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerror());
 
     }
 
@@ -756,10 +754,10 @@ leave_suid(void)
     if (!Config.effectiveGroup) {
 
         if (setgid(Config2.effectiveGroupID) < 0)
-            debugs(50, 0, "ALERT: setgid: " << xstrerror());
+            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerror());
 
         if (initgroups(Config.effectiveUser, Config2.effectiveGroupID) < 0) {
-            debugs(50, 0, "ALERT: initgroups: unable to set groups for User " <<
+            debugs(50, DBG_CRITICAL, "ALERT: initgroups: unable to set groups for User " <<
                    Config.effectiveUser << " and Group " <<
                    (unsigned) Config2.effectiveGroupID << "");
         }
@@ -768,17 +766,17 @@ leave_suid(void)
 #if HAVE_SETRESUID
 
     if (setresuid(Config2.effectiveUserID, Config2.effectiveUserID, 0) < 0)
-        debugs(50, 0, "ALERT: setresuid: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ALERT: setresuid: " << xstrerror());
 
 #elif HAVE_SETEUID
 
     if (seteuid(Config2.effectiveUserID) < 0)
-        debugs(50, 0, "ALERT: seteuid: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ALERT: seteuid: " << xstrerror());
 
 #else
 
     if (setuid(Config2.effectiveUserID) < 0)
-        debugs(50, 0, "ALERT: setuid: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ALERT: setuid: " << xstrerror());
 
 #endif
 
@@ -827,7 +825,7 @@ no_suid(void)
     setuid(0);
 
     if (setuid(uid) < 0)
-        debugs(50, 1, "no_suid: setuid: " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "no_suid: setuid: " << xstrerror());
 
     restoreCapabilities(0);
 
@@ -953,7 +951,7 @@ writePidFile(void)
     leave_suid();
 
     if (fd < 0) {
-        debugs(50, 0, "" << f << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "" << f << ": " << xstrerror());
         debug_trap("Could not write pid file");
         return;
     }
@@ -1219,7 +1217,7 @@ parseEtcHosts(void)
     fp = fopen(Config.etcHostsPath, "r");
 
     if (fp == NULL) {
-        debugs(1, 1, "parseEtcHosts: " << Config.etcHostsPath << ": " << xstrerror());
+        debugs(1, DBG_IMPORTANT, "parseEtcHosts: " << Config.etcHostsPath << ": " << xstrerror());
         return;
     }
 
@@ -1298,7 +1296,7 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-    http_port_list *p = NULL;
+    AnyP::PortCfg *p = NULL;
     if ((p = Config.Sockaddr.http)) {
         // skip any special interception ports
         while (p && (p->intercepted || p->spoof_client_ip))
@@ -1355,12 +1353,12 @@ strwordquote(MemBuf * mb, const char *str)
 
         case '\n':
             mb->append("\\n", 2);
-            str++;
+            ++str;
             break;
 
         case '\r':
             mb->append("\\r", 2);
-            str++;
+            ++str;
             break;
 
         case '\0':
@@ -1369,7 +1367,7 @@ strwordquote(MemBuf * mb, const char *str)
         default:
             mb->append("\\", 1);
             mb->append(str, 1);
-            str++;
+            ++str;
             break;
         }
     }
@@ -1405,9 +1403,11 @@ restoreCapabilities(int keep)
         int ncaps = 0;
         int rc = 0;
         cap_value_t cap_list[10];
-        cap_list[ncaps++] = CAP_NET_BIND_SERVICE;
+        cap_list[ncaps] = CAP_NET_BIND_SERVICE;
+        ++ncaps;
         if (Ip::Interceptor.TransparentActive() || Ip::Qos::TheConfig.isHitNfmarkActive() || Ip::Qos::TheConfig.isAclNfmarkActive()) {
-            cap_list[ncaps++] = CAP_NET_ADMIN;
+            cap_list[ncaps] = CAP_NET_ADMIN;
+            ++ncaps;
         }
 
         cap_clear_flag(caps, CAP_EFFECTIVE);

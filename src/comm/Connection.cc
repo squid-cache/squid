@@ -27,8 +27,8 @@ static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, 0, "BUG: Orphan Comm::Connection: " << *this);
-        debugs(5, 0, "NOTE: " << ++lost_conn << " Orphans since last started.");
+        debugs(5, DBG_CRITICAL, "BUG: Orphan Comm::Connection: " << *this);
+        debugs(5, DBG_CRITICAL, "NOTE: " << ++lost_conn << " Orphans since last started.");
         close();
     }
 
@@ -61,8 +61,8 @@ Comm::Connection::close()
     if (isOpen()) {
         comm_close(fd);
         fd = -1;
-        if (getPeer())
-            getPeer()->stats.conn_open--;
+        if (peer *p=getPeer())
+            -- p->stats.conn_open;
     }
 }
 

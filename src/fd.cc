@@ -97,7 +97,7 @@ fdUpdateBiggest(int fd, int opening)
     assert(!opening);
 
     while (Biggest_FD >= 0 && !fd_table[Biggest_FD].flags.open)
-        Biggest_FD--;
+        --Biggest_FD;
 }
 
 void
@@ -118,7 +118,7 @@ fd_close(int fd)
     Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
-    Number_FD--;
+    --Number_FD;
     *F = fde();
 }
 
@@ -213,7 +213,7 @@ fd_open(int fd, unsigned int type, const char *desc)
     F = &fd_table[fd];
 
     if (F->flags.open) {
-        debugs(51, 1, "WARNING: Closing open FD " << std::setw(4) << fd);
+        debugs(51, DBG_IMPORTANT, "WARNING: Closing open FD " << std::setw(4) << fd);
         fd_close(fd);
     }
 
@@ -267,7 +267,7 @@ fd_open(int fd, unsigned int type, const char *desc)
     if (desc)
         xstrncpy(F->desc, desc, FD_DESC_SZ);
 
-    Number_FD++;
+    ++Number_FD;
 }
 
 void
@@ -299,7 +299,7 @@ fdDumpOpen(void)
     int i;
     fde *F;
 
-    for (i = 0; i < Squid_MaxFD; i++) {
+    for (i = 0; i < Squid_MaxFD; ++i) {
         F = &fd_table[i];
 
         if (!F->flags.open)
@@ -308,7 +308,7 @@ fdDumpOpen(void)
         if (i == fileno(debug_log))
             continue;
 
-        debugs(51, 1, "Open FD "<< std::left<< std::setw(10) <<
+        debugs(51, DBG_IMPORTANT, "Open FD "<< std::left<< std::setw(10) <<
                (F->bytes_read && F->bytes_written ? "READ/WRITE" :
                 F->bytes_read ? "READING" : F->bytes_written ? "WRITING" :
                 "UNSTARTED")  <<
@@ -362,13 +362,13 @@ fdAdjustReserved(void)
 
     if (newReserve > x) {
         /* perhaps this should be fatal()? -DW */
-        debugs(51, 0, "WARNING: This machine has a serious shortage of filedescriptors.");
+        debugs(51, DBG_CRITICAL, "WARNING: This machine has a serious shortage of filedescriptors.");
         newReserve = x;
     }
 
     if (Squid_MaxFD - newReserve < min(256, Squid_MaxFD / 2))
         fatalf("Too few filedescriptors available in the system (%d usable of %d).\n", Squid_MaxFD - newReserve, Squid_MaxFD);
 
-    debugs(51, 0, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve << " due to failures");
+    debugs(51, DBG_CRITICAL, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve << " due to failures");
     RESERVED_FD = newReserve;
 }

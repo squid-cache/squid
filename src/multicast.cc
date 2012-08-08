@@ -46,7 +46,7 @@ mcastSetTtl(int fd, int mcast_ttl)
     char ttl = (char) mcast_ttl;
 
     if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, 1) < 0)
-        debugs(50, 1, "comm_set_mcast_ttl: FD " << fd << ", TTL: " << mcast_ttl << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_set_mcast_ttl: FD " << fd << ", TTL: " << mcast_ttl << ": " << xstrerror());
 
 #endif
 
@@ -61,11 +61,11 @@ mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanot
     int i;
 
     if (ia == NULL) {
-        debugs(7, 0, "comm_join_mcast_groups: Unknown host");
+        debugs(7, DBG_CRITICAL, "comm_join_mcast_groups: Unknown host");
         return;
     }
 
-    for (i = 0; i < (int) ia->count; i++) {
+    for (i = 0; i < (int) ia->count; ++i) {
         debugs(7, 9, "Listening for ICP requests on " << ia->in_addrs[i] );
 
         if ( ! ia->in_addrs[i].IsIPv4() ) {

@@ -79,7 +79,7 @@ Auth::Negotiate::UserRequest::module_direction()
 }
 
 void
-Auth::Negotiate::UserRequest::module_start(RH * handler, void *data)
+Auth::Negotiate::UserRequest::module_start(AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -91,7 +91,7 @@ Auth::Negotiate::UserRequest::module_start(RH * handler, void *data)
 
     if (static_cast<Auth::Negotiate::Config*>(Auth::Config::Find("negotiate"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Negotiate authentication program configured.");
-        handler(data, NULL);
+        handler(data);
         return;
     }
 
@@ -179,13 +179,13 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
 
     if (blob) {
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (!xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
     }
 
     switch (user()->credentials()) {
@@ -203,7 +203,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
         break;
 
     case Auth::Pending:
-        debugs(29, 1, HERE << "need to ask helper");
+        debugs(29, DBG_IMPORTANT, HERE << "need to ask helper");
         break;
 
     case Auth::Handshake:
@@ -270,7 +270,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     blob = strchr(reply, ' ');
 
     if (blob) {
-        blob++;
+        ++blob;
         arg = strchr(blob + 1, ' ');
     } else {
         arg = NULL;
@@ -278,8 +278,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
 
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
-        if (arg)
-            *arg++ = '\0';
+        if (arg) {
+            *arg = '\0';
+            ++arg;
+        }
         safe_free(lm_request->server_blob);
         lm_request->request->flags.must_keepalive = 1;
         if (lm_request->request->flags.proxy_keepalive) {
@@ -294,8 +296,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
         /* we're finished, release the helper */
 
-        if (arg)
-            *arg++ = '\0';
+        if (arg) {
+            *arg = '\0';
+            ++arg;
+        }
 
         auth_user_request->user()->username(arg);
         auth_user_request->denyMessage("Login successful");
@@ -334,8 +338,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
         /* authentication failure (wrong password, etc.) */
 
-        if (arg)
-            *arg++ = '\0';
+        if (arg) {
+            *arg = '\0';
+            ++arg;
+        }
 
         auth_user_request->denyMessage(arg);
         auth_user_request->user()->credentials(Auth::Failed);
@@ -360,7 +366,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     }
 
     lm_request->request = NULL;
-    r->handler(r->data, NULL);
+    r->handler(r->data);
     delete r;
 }
 

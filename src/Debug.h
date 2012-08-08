@@ -73,6 +73,8 @@ extern void ctx_exit(Ctx ctx);
 /* levels 2-8 are still being discussed amongst the developers */
 #define DBG_DATA	9	/**< output is a large data dump only necessary for advanced debugging */
 
+#define DBG_PARSE_NOTE(x) (opt_parse_cfg_only?0:(x)) /**< output is always to be displayed on '-k parse' but at level-x normally. */
+
 class Debug
 {
 

@@ -61,6 +61,7 @@
 #include "fde.h"
 #include "Store.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 
 #if HAVE_SYS_EVENT_H
 #include <sys/event.h>
@@ -147,7 +148,7 @@ kq_update_events(int fd, short filter, PF * handler)
 
             kqoff = 0;
         } else {
-            kqoff++;
+            ++kqoff;
         }
     }
 }
@@ -281,7 +282,7 @@ Comm::DoSelect(int msec)
     if (num == 0)
         return COMM_OK;		/* No error.. */
 
-    for (i = 0; i < num; i++) {
+    for (i = 0; i < num; ++i) {
         int fd = (int) ke[i].ident;
         PF *hdl = NULL;
         fde *F = &fd_table[fd];
@@ -315,7 +316,7 @@ Comm::DoSelect(int msec)
 
         default:
             /* Bad! -- adrian */
-            debugs(5, 1, "comm_select: kevent returned " << ke[i].filter << "!");
+            debugs(5, DBG_IMPORTANT, "comm_select: kevent returned " << ke[i].filter << "!");
             break;
         }
     }

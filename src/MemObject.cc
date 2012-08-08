@@ -171,16 +171,16 @@ MemObject::dump() const
     data_hdr.dump();
 #if 0
     /* do we want this one? */
-    debugs(20, 1, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
+    debugs(20, DBG_IMPORTANT, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
 #endif
 
-    debugs(20, 1, "MemObject->start_ping: " << start_ping.tv_sec  << "."<< std::setfill('0') << std::setw(6) << start_ping.tv_usec);
-    debugs(20, 1, "MemObject->inmem_hi: " << data_hdr.endOffset());
-    debugs(20, 1, "MemObject->inmem_lo: " << inmem_lo);
-    debugs(20, 1, "MemObject->nclients: " << nclients);
-    debugs(20, 1, "MemObject->reply: " << _reply);
-    debugs(20, 1, "MemObject->request: " << request);
-    debugs(20, 1, "MemObject->log_url: " << log_url << " " << checkNullString(log_url));
+    debugs(20, DBG_IMPORTANT, "MemObject->start_ping: " << start_ping.tv_sec  << "."<< std::setfill('0') << std::setw(6) << start_ping.tv_usec);
+    debugs(20, DBG_IMPORTANT, "MemObject->inmem_hi: " << data_hdr.endOffset());
+    debugs(20, DBG_IMPORTANT, "MemObject->inmem_lo: " << inmem_lo);
+    debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
+    debugs(20, DBG_IMPORTANT, "MemObject->reply: " << _reply);
+    debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
+    debugs(20, DBG_IMPORTANT, "MemObject->log_url: " << log_url << " " << checkNullString(log_url));
 }
 
 HttpReply const *
@@ -211,7 +211,8 @@ struct StoreClientStats : public unary_function<store_client, void> {
     StoreClientStats(MemBuf *anEntry):where(anEntry),index(0) {}
 
     void operator()(store_client const &x) {
-        x.dumpStats(where, index++);
+        x.dumpStats(where, index);
+        ++index;
     }
 
     MemBuf *where;
@@ -225,13 +226,13 @@ MemObject::stat(MemBuf * mb) const
                RequestMethodStr(method), log_url);
     if (vary_headers)
         mb->Printf("\tvary_headers: %s\n", vary_headers);
-    mb->Printf("\tinmem_lo: %"PRId64"\n", inmem_lo);
-    mb->Printf("\tinmem_hi: %"PRId64"\n", data_hdr.endOffset());
-    mb->Printf("\tswapout: %"PRId64" bytes queued\n",
+    mb->Printf("\tinmem_lo: %" PRId64 "\n", inmem_lo);
+    mb->Printf("\tinmem_hi: %" PRId64 "\n", data_hdr.endOffset());
+    mb->Printf("\tswapout: %" PRId64 " bytes queued\n",
                swapout.queue_offset);
 
     if (swapout.sio.getRaw())
-        mb->Printf("\tswapout: %"PRId64" bytes written\n",
+        mb->Printf("\tswapout: %" PRId64 " bytes written\n",
                    (int64_t) swapout.sio->offset());
 
     StoreClientStats statsVisitor(mb);
@@ -415,16 +416,17 @@ MemObject::isContiguous() const
 }
 
 int
-MemObject::mostBytesWanted(int max) const
+MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
 {
 #if USE_DELAY_POOLS
-    /* identify delay id with largest allowance */
-    DelayId largestAllowance = mostBytesAllowed ();
-    return largestAllowance.bytesWanted(0, max);
-#else
+    if (!ignoreDelayPools) {
+        /* identify delay id with largest allowance */
+        DelayId largestAllowance = mostBytesAllowed ();
+        return largestAllowance.bytesWanted(0, max);
+    }
+#endif
 
     return max;
-#endif
 }
 
 void
@@ -475,10 +477,6 @@ MemObject::mostBytesAllowed() const
             continue;
 
 #endif
-
-        if (sc->getType() != STORE_MEM_CLIENT)
-            /* reading off disk */
-            continue;
 
         j = sc->delayId.bytesWanted(0, sc->copyInto.length);
 

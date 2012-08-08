@@ -257,9 +257,4 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #define PRINTF_FORMAT_ARG3
 #endif
 
-/* NULL is not always provided. */
-#ifndef NULL
-#define NULL ((void *)0)
-#endif
-
 #endif /* _SQUID_COMPAT_SHARED_H */

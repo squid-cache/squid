@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.17 release notes</title>
+<title>Squid 3.1.20 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.18
+The Squid Team are pleased to announce the release of Squid-3.1.20
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -31,12 +31,14 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
+	<item>eCAP library version 0.2.0 and later are not supported. See eCAP section below for details.
+	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
+		Some attempts have been made to port for 3.1, but the unreliability of NAT handling in 3.1 makes this unsafe.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
 
 <itemize>
-	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
 	<item>OpenSSL 1.0.0 support is incomplete.
@@ -64,7 +66,7 @@ The most important of these new features are:
 	<item>eCAP Adaptation Module support
 	<item>ICAP Bypass and Retry enhancements
 	<item>ICY streaming protocol support
-	<item>Dynamic SSL Certificate Generation (3.1.12.1 and later)
+	<item>Dynamic SSL Certificate Generation (3.1.13 and later)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -318,6 +320,9 @@ reduce the number of warnings by blocking some embedded content.
   a c-icap server wrapper. This enables faster processing.
 
 <p>Currently known and available eCAP modules are listed in the wiki feature page on eCAP.
+
+<p><em>Known Issue:</em> libecap version 0.0.3 (exactly) is required to build this series
+  of Squid. Other versions of libecap contain significant interface differences.
 
 
 <sect1>ICAP Bypass and Retry enhancements
@@ -1108,13 +1113,12 @@ NOCOMMENT_START
 
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
-           Please be aware of some limits to these options. These options only affet the transport protocol used
+           Please be aware of some limits to these options. These options only affect the transport protocol used
 	   to send data to and from the helpers. Squid in IPv6-mode may still send %SRC addresses in IPv4 or IPv6
 	   format, so all helpers will need to be checked and converted to cope with such information cleanly.
         <verb>
-          ipv4 / ipv6   IP-mode used to communicate to this helper.
-                        For compatability with older configurations and helpers
-                        the default is 'ipv4'.
+          ipv4 / ipv6   IP protocol used to communicate with this helper.
+                        The default is to auto-detect IPv6 and use it when available.
         </verb>
 	<p>New header input format specifiers. To seperate Request and Reply headers when both passed back.
 	<verb>

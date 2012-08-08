@@ -171,9 +171,13 @@ AIO_WIN32_SOURCES =
 endif
 
 if USE_AIOPS_WIN32
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 else
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 endif
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a \
@@ -260,8 +264,6 @@ squid_SOURCES = \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	CacheDigest.cc \
 	cache_manager.cc \
 	CacheManager.h \
@@ -284,7 +286,6 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
-	CommIO.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
 	CommRead.h \
@@ -362,6 +363,7 @@ squid_SOURCES = \
 	HttpHeader.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -522,9 +524,7 @@ EXTRA_squid_SOURCES = \
 	$(SNMP_ALL_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_ALL_SOURCE) \
-	$(LOADABLE_MODULES_SOURCES) \
-	DiskIO/DiskThreads/aiops.cc \
-	DiskIO/DiskThreads/aiops_win32.cc
+	$(LOADABLE_MODULES_SOURCES)
 
 noinst_HEADERS = \
 	client_side_request.cci \
@@ -638,7 +638,9 @@ unlinkd_LDADD = \
 
 ## dnsserver is a standalone helper. Do not link to any internal libraries
 dnsserver_SOURCES = dnsserver.cc
-dnsserver_LDADD = $(COMPAT_LIB)
+dnsserver_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 recv_announce_SOURCES = recv-announce.cc
 
@@ -651,7 +653,7 @@ recv_announce_SOURCES = recv-announce.cc
 ## ACLProxyAuth.cc wants ACLRegexData
 ## cache_cf.cc wants $(AUTH_LIBS)
 ## cache_cf.cc wants Swapdir
-## cache_cf.cc wants ProtoPort
+## cache_cf.cc wants AnyP::PortCfg
 ## client_side wants client_db
 ## client_db wants SNMP_SOURCE
 ## snmp_core wants ACLStringData
@@ -765,6 +767,8 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
+include $(srcdir)/tests/Stub.list
+
 EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
@@ -775,7 +779,7 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	mk-string-arrays.awk \
 	repl_modules.sh \
-	tests/STUB.h \
+	$(STUB_SOURCE) \
 	mib.txt \
 	mime.conf.default
 
@@ -834,6 +838,12 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
+
+EXTRA_libDiskThreads_a_SOURCES = \
+	DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/aiops_win32.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc
 nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
@@ -943,6 +953,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_SSL_DB_DIR[@]%$(DEFAULT_SSL_DB_DIR)%g" \
 	-e "s%[@]DEFAULT_ICON_DIR[@]%$(DEFAULT_ICON_DIR)%g" \
 	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
+	-e "s%[@]DEFAULT_ERROR_DIR[@]%$(DEFAULT_ERROR_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
@@ -1082,10 +1093,13 @@ tests_testHttpReply_SOURCES=\
 	SquidString.h \
 	SquidTime.h \
 	String.cc \
+	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libformat.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1093,25 +1107,32 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
+	tests/stub_HttpRequest.cc \
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/testMain.cc \
 	time.cc \
+	url.cc \
+	URLScheme.cc \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
+	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
+	anyp/libanyp.la \
 	ip/libip.la \
 	base/libbase.la \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
+	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
@@ -1130,6 +1151,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	filemap.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
@@ -1147,6 +1169,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	Packer.cc \
 	Parsing.cc \
 	SquidMath.cc \
+	StatCounters.cc \
 	StatCounters.h \
 	StatHist.h \
 	tests/stub_StatHist.cc \
@@ -1173,17 +1196,26 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_errorpage.cc \
 	tests/stub_fd.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_ipc_TypedMsgHdr.cc \
+	tests/stub_libcomm.cc \
+	tests/stub_libformat.cc \
+	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
+	tests/stub_pconn.cc \
+	tests/stub_Port.cc \
 	tests/stub_store.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
 	tests/stub_tools.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_UdsOp.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
@@ -1209,6 +1241,8 @@ tests_testACLMaxUserIP_LDADD= \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
+	ipc/libipc.la \
+	mgr/libmgr.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1219,8 +1253,8 @@ tests_testACLMaxUserIP_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
-tests_testACLMaxUserIP_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
+##tests_testACLMaxUserIP_DEPENDENCIES = \
+##	$(SQUID_CPPUNIT_LA)
 
 ## a demonstration test that does nothing but shows the salient points
 ## involved in writing tests.
@@ -1261,8 +1295,6 @@ tests_testCacheManager_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -1432,8 +1464,6 @@ tests_testCacheManager_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
-#	tests/stub_CommIO.cc \
-#	tests/stub_comm.cc
 tests_testDiskIO_SOURCES = \
 	CacheDigest.cc \
 	cbdata.cc \
@@ -1513,6 +1543,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
@@ -1541,7 +1572,6 @@ nodist_tests_testDiskIO_SOURCES= \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
-	anyp/libanyp.la \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
@@ -1553,6 +1583,7 @@ tests_testDiskIO_LDADD = \
 	$(AUTH_LIBS) \
 	libsquid.la \
 	comm/libcomm.la \
+	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
@@ -1672,8 +1703,6 @@ tests_testEvent_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	redirect.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -1866,8 +1895,6 @@ tests_testEventLoop_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	RemovalPolicy.cc \
 	redirect.cc \
 	refresh.cc \
@@ -1971,8 +1998,6 @@ tests_test_http_range_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	cache_manager.cc \
 	CacheDigest.cc \
 	carp.cc \
@@ -2212,8 +2237,6 @@ tests_testHttpRequest_SOURCES = \
 	cache_manager.cc \
 	cache_cf.cc \
 	debug.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -2449,6 +2472,7 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	tests/stub_libformat.cc \
 	HttpBody.h \
 	HttpBody.cc \
 	tests/stub_HttpReply.cc \
@@ -2502,6 +2526,7 @@ tests_testStore_LDADD= \
 	mgr/libmgr.la \
 	ipc/libipc.la \
 	anyp/libanyp.la \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2583,6 +2608,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_Port.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_internal.cc \
+	tests/stub_libformat.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
@@ -2690,13 +2716,13 @@ tests_testUfs_LDADD = \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
 	acl/libacls.la \
-	anyp/libanyp.la \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	ipc/libipc.la \
 	$(SSL_LIBS) \
 	comm/libcomm.la \
+	anyp/libanyp.la \
 	base/libbase.la \
 	ip/libip.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -2786,6 +2812,7 @@ tests_testRock_SOURCES = \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
@@ -2809,9 +2836,9 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.h \
 	$(TESTSOURCES)
 tests_testRock_LDADD = \
-	anyp/libanyp.la \
 	libsquid.la \
 	comm/libcomm.la \
+	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(AUTH_LIBS) \
@@ -2983,7 +3010,6 @@ tests_testNull_SOURCES = \
 	tests/testMain.cc \
 	tests/testNull.h \
 	tests/stub_internal.cc \
-	tests/stub_CommIO.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
@@ -3193,8 +3219,6 @@ tests_testURL_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	redirect.cc \
 	refresh.cc \
 	RemovalPolicy.cc \

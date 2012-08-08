@@ -24,6 +24,7 @@ typedef enum {
     HTTP_NOT_MODIFIED = 304,
     HTTP_USE_PROXY = 305,
     HTTP_TEMPORARY_REDIRECT = 307,
+    HTTP_PERMANENT_REDIRECT = 308,
     HTTP_BAD_REQUEST = 400,
     HTTP_UNAUTHORIZED = 401,
     HTTP_PAYMENT_REQUIRED = 402,
@@ -45,6 +46,9 @@ typedef enum {
     HTTP_UNPROCESSABLE_ENTITY = 422,    /**< RFC2518 section 10.3 */
     HTTP_LOCKED = 423,                  /**< RFC2518 section 10.4 */
     HTTP_FAILED_DEPENDENCY = 424,       /**< RFC2518 section 10.5 */
+    HTTP_PRECONDITION_REQUIRED = 428,   /**< RFC6585 */
+    HTTP_TOO_MANY_REQUESTS = 429,       /**< RFC6585 */
+    HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE = 431, /**< RFC6585 */
     HTTP_INTERNAL_SERVER_ERROR = 500,
     HTTP_NOT_IMPLEMENTED = 501,
     HTTP_BAD_GATEWAY = 502,
@@ -52,6 +56,7 @@ typedef enum {
     HTTP_GATEWAY_TIMEOUT = 504,
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
     HTTP_INSUFFICIENT_STORAGE = 507,    /**< RFC2518 section 10.6 */
+    HTTP_NETWORK_AUTHENTICATION_REQUIRED = 511, /**< RFC6585 */
 
     // The 6xx codes below are for internal use only: Bad requests result
     // in HTTP_BAD_REQUEST; bad responses in HTTP_GATEWAY_TIMEOUT.

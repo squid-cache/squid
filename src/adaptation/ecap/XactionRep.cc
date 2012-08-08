@@ -144,6 +144,9 @@ Adaptation::Ecap::XactionRep::usernameValue() const
     if (request->auth_user_request != NULL) {
         if (char const *name = request->auth_user_request->username())
             return libecap::Area::FromTempBuffer(name, strlen(name));
+        else if (request->extacl_user.defined() && request->extacl_user.size())
+            return libecap::Area::FromTempBuffer(request->extacl_user.rawBuf(),
+                                                 request->extacl_user.size());
     }
 #endif
     return libecap::Area();
@@ -199,8 +202,8 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
 
     typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
     for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-        const char *v;
-        if (v = (*i)->match(request, reply)) {
+        const char *v = (*i)->match(request, reply);
+        if (v) {
             const libecap::Name name((*i)->name.termedBuf());
             const libecap::Area value = libecap::Area::FromTempString(v);
             visitor.visit(name, value);

@@ -41,13 +41,14 @@
 #include "SquidTime.h"
 
 void
-Log::Format::SquidReferer(AccessLogEntry *al, Logfile *logfile)
+Log::Format::SquidReferer(const AccessLogEntry::Pointer &al, Logfile *logfile)
 {
-    const char *referer = al->request->header.getStr(HDR_REFERER);
+    const char *referer = NULL;
+    if (al->request)
+        referer = al->request->header.getStr(HDR_REFERER);
 
-    // do not log unless there is something to be displayed
     if (!referer || *referer == '\0')
-        return;
+        referer = "-";
 
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);

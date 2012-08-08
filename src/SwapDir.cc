@@ -244,8 +244,10 @@ SwapDir::parseOptions(int isaReconfig)
     while ((name = strtok(NULL, w_space)) != NULL) {
         value = strchr(name, '=');
 
-        if (value)
-            *value++ = '\0';	/* cut on = */
+        if (value) {
+            *value = '\0';	/* cut on = */
+            ++value;
+        }
 
         debugs(3,2, "SwapDir::parseOptions: parsing store option '" << name << "'='" << (value ? value : "") << "'");
 
@@ -264,7 +266,7 @@ SwapDir::parseOptions(int isaReconfig)
 
     if (isaReconfig) {
         if (old_read_only != flags.read_only) {
-            debugs(3, 1, "Cache dir '" << path << "' now " << (flags.read_only ? "No-Store" : "Read-Write"));
+            debugs(3, DBG_IMPORTANT, "Cache dir '" << path << "' now " << (flags.read_only ? "No-Store" : "Read-Write"));
         }
     }
 }
@@ -342,10 +344,10 @@ void
 SwapDir::optionObjectSizeDump(StoreEntry * e) const
 {
     if (min_objsize != 0)
-        storeAppendPrintf(e, " min-size=%"PRId64, min_objsize);
+        storeAppendPrintf(e, " min-size=%" PRId64, min_objsize);
 
     if (max_objsize != -1)
-        storeAppendPrintf(e, " max-size=%"PRId64, max_objsize);
+        storeAppendPrintf(e, " max-size=%" PRId64, max_objsize);
 }
 
 // some SwapDirs may maintain their indexes and be able to lookup an entry key

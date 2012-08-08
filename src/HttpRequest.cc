@@ -35,6 +35,7 @@
  */
 
 #include "squid-old.h"
+#include "AccessLogEntry.h"
 #include "DnsLookupDetails.h"
 #include "HttpRequest.h"
 #include "HttpHdrCc.h"
@@ -262,6 +263,7 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
+
     return true;
 }
 
@@ -312,12 +314,12 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
         end = ver - 1;
 
         while (xisspace(*end)) // find prev non-space
-            end--;
+            --end;
 
-        end++;                 // back to space
+        ++end;                 // back to space
 
         if (2 != sscanf(ver + 5, "%d.%d", &http_ver.major, &http_ver.minor)) {
-            debugs(73, 1, "parseRequestLine: Invalid HTTP identifier.");
+            debugs(73, DBG_IMPORTANT, "parseRequestLine: Invalid HTTP identifier.");
             return false;
         }
     } else {
@@ -528,6 +530,14 @@ HttpRequest::detailError(err_type aType, int aDetail)
         errDetail = aDetail;
 }
 
+void
+HttpRequest::clearError()
+{
+    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
+    errType = ERR_NONE;
+    errDetail = ERR_DETAIL_NONE;
+}
+
 const char *HttpRequest::packableURI(bool full_uri) const
 {
     if (full_uri)
@@ -605,6 +615,13 @@ HttpRequest::CreateFromUrl(char * url)
 bool
 HttpRequest::cacheable() const
 {
+    // Intercepted request with Host: header which cannot be trusted.
+    // Because it failed verification, or someone bypassed the security tests
+    // we cannot cache the reponse for sharing between clients.
+    // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
+    if (!flags.hostVerified && (flags.intercepted || flags.spoof_client_ip))
+        return false;
+
     if (protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 

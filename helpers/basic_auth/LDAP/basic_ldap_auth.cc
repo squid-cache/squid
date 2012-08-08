@@ -267,7 +267,7 @@ open_ldap_connection(const char *ldapServer, int port)
                         sslpath);
                 exit(1);
             } else {
-                sslinit++;
+                ++sslinit;
             }
             if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
                 fprintf(stderr, "\nUnable to connect to SSL LDAP server: %s port:%d\n",
@@ -332,7 +332,7 @@ validUsername(const char *user)
             if (p[0] != ' ')
                 return 0;
         }
-        p++;
+        ++p;
     }
     /* Trailing whitespace? */
     if (xisspace(p[0]))
@@ -368,14 +368,14 @@ main(int argc, char **argv)
                 value = argv[1] + 2;
             } else if (argc > 2) {
                 value = argv[2];
-                argv++;
-                argc--;
+                ++argv;
+                --argc;
             } else
                 value = "";
             break;
         }
-        argv++;
-        argc--;
+        ++argv;
+        --argc;
         switch (option) {
         case 'H':
 #if !HAS_URI_SUPPORT
@@ -513,8 +513,8 @@ main(int argc, char **argv)
         } else {
             ldapServer = xstrdup(value);
         }
-        argc--;
-        argv++;
+        --argc;
+        ++argv;
     }
     if (!ldapServer)
         ldapServer = xstrdup("localhost");
@@ -623,15 +623,19 @@ ldap_escape_value(char *escaped, int size, const char *src)
             n += 3;
             size -= 3;
             if (size > 0) {
-                *escaped++ = '\\';
-                snprintf(escaped, 3, "%02x", (unsigned char) *src++);
+                *escaped = '\\';
+                ++escaped;
+                snprintf(escaped, 3, "%02x", (unsigned char) *src);
+                ++src;
                 escaped += 2;
             }
             break;
         default:
-            *escaped++ = *src++;
-            n++;
-            size--;
+            *escaped = *src;
+            ++escaped;
+            ++src;
+            ++n;
+            --size;
         }
     }
     *escaped = '\0';

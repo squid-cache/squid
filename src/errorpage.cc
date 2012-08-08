@@ -142,7 +142,7 @@ static IOCB errorSendComplete;
 class ErrorPageFile: public TemplateFile
 {
 public:
-    ErrorPageFile(const char *name): TemplateFile(name) { textBuf.init();}
+    ErrorPageFile(const char *name, const err_type code): TemplateFile(name,code) { textBuf.init();}
 
     /// The template text data read from disk
     const char *text() { return textBuf.content(); }
@@ -195,7 +195,7 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            ErrorPageFile  errTmpl(err_type_str[i]);
+            ErrorPageFile errTmpl(err_type_str[i], i);
             error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
         } else {
             /** \par
@@ -210,7 +210,7 @@ errorInitialize(void)
 
             if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
-                ErrorPageFile  errTmpl(pg);
+                ErrorPageFile errTmpl(pg, ERR_MAX);
                 error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
             }
         }
@@ -220,7 +220,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        ErrorPageFile  tmpl("StylesSheet");
+        ErrorPageFile tmpl("StylesSheet", ERR_MAX);
         tmpl.loadFromFile(Config.errorStylesheet);
         error_stylesheet.Printf("%s",tmpl.text());
     }
@@ -236,7 +236,7 @@ errorClean(void)
     if (error_text) {
         int i;
 
-        for (i = ERR_NONE + 1; i < error_page_count; i++)
+        for (i = ERR_NONE + 1; i < error_page_count; ++i)
             safe_free(error_text[i]);
 
         safe_free(error_text);
@@ -258,14 +258,14 @@ errorFindHardText(err_type type)
 {
     int i;
 
-    for (i = 0; i < error_hard_text_count; i++)
+    for (i = 0; i < error_hard_text_count; ++i)
         if (error_hard_text[i].type == type)
             return error_hard_text[i].text;
 
     return NULL;
 }
 
-TemplateFile::TemplateFile(const char *name): silent(false), wasLoaded(false), templateName(name)
+TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
 {
     assert(name);
 }
@@ -287,7 +287,7 @@ TemplateFile::loadDefault()
     /** test error_default_language location */
     if (!loaded() && Config.errorDefaultLanguage) {
         if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
-            debugs(1, DBG_CRITICAL, "Unable to load default error language files. Reset to backups.");
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
@@ -299,7 +299,7 @@ TemplateFile::loadDefault()
 
     /* giving up if failed */
     if (!loaded()) {
-        debugs(1, DBG_CRITICAL, "WARNING: failed to find or read error text file " << templateName);
+        debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         parse("Internal Error: Missing Template ", 33, '\0');
         parse(templateName.termedBuf(), templateName.size(), '\0');
     }
@@ -346,7 +346,7 @@ TemplateFile::loadFromFile(const char *path)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if (!silent)
+        if (!silent && templateCode < TCP_RESET)
             debugs(4, DBG_CRITICAL, HERE << "'" << path << "': " << xstrerror());
         wasLoaded = false;
         return wasLoaded;
@@ -378,11 +378,14 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 
         if (!pos) {
             /* skip any initial whitespace. */
-            while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
+            while (pos < hdr.size() && xisspace(hdr[pos]))
+                ++pos;
         } else {
             // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
-            while (pos < hdr.size() && hdr[pos] != ',') pos++;
-            if (hdr[pos] == ',') pos++;
+            while (pos < hdr.size() && hdr[pos] != ',')
+                ++pos;
+            if (hdr[pos] == ',')
+                ++pos;
         }
 
         /*
@@ -407,11 +410,12 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
                 if (*dt != '-' && *dt != '*' && (*dt < 'a' || *dt > 'z') )
                     invalid_byte = true;
                 else
-                    dt++; // move to next destination byte.
+                    ++dt; // move to next destination byte.
             }
-            pos++;
+            ++pos;
         }
-        *dt++ = '\0'; // nul-terminated the filename content string before system use.
+        *dt = '\0'; // nul-terminated the filename content string before system use.
+        ++dt;
 
         debugs(4, 9, HERE << "STATE: dt='" << dt << "', lang='" << lang << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
 
@@ -519,12 +523,12 @@ errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 static int
 errorPageId(const char *page_name)
 {
-    for (int i = 0; i < ERR_MAX; i++) {
+    for (int i = 0; i < ERR_MAX; ++i) {
         if (strcmp(err_type_str[i], page_name) == 0)
             return i;
     }
 
-    for (size_t j = 0; j < ErrorDynamicPages.size(); j++) {
+    for (size_t j = 0; j < ErrorDynamicPages.size(); ++j) {
         if (strcmp(ErrorDynamicPages.items[j]->page_name, page_name) == 0)
             return j + ERR_MAX;
     }
@@ -579,10 +583,11 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
         callback(NULL),
         callback_data(NULL),
         request_hdrs(NULL),
-        err_msg(NULL)
+        err_msg(NULL),
 #if USE_SSL
-        , detail(NULL)
+        detail(NULL),
 #endif
+        detailCode(ERR_DETAIL_NONE)
 {
     memset(&flags, 0, sizeof(flags));
     memset(&ftp, 0, sizeof(ftp));
@@ -593,7 +598,6 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
     if (req != NULL) {
         request = HTTPMSGLOCK(req);
         src_addr = req->client_addr;
-        request->detailError(type, ERR_DETAIL_NONE);
     }
 }
 
@@ -644,13 +648,6 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
     HttpReply *rep;
     debugs(4, 3, HERE << conn << ", err=" << err);
     assert(Comm::IsConnOpen(conn));
-    /*
-     * ugh, this is how we make sure error codes get back to
-     * the client side for logging and error tracking.
-     */
-
-    if (err->request)
-        err->request->detailError(err->type, err->xerrno);
 
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
@@ -974,6 +971,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'R':
         if (building_deny_info_url) {
             p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
+            no_urlescape = 1;
             break;
         }
         if (NULL != request) {
@@ -991,7 +989,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
                       AnyP::ProtocolType_str[request->http_ver.protocol],
                       request->http_ver.major, request->http_ver.minor);
             packerToMemInit(&pck, &mb);
-            request->header.packInto(&pck);
+            request->header.packInto(&pck, true); //hide authorization data
             packerClean(&pck);
         } else if (request_hdrs) {
             p = request_hdrs;
@@ -1004,7 +1002,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         /* for backward compat we make %s show the full URL. Drop this in some future release. */
         if (building_deny_info_url) {
             p = request ? urlCanonical(request) : url;
-            debugs(0,0, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
+            debugs(0, DBG_CRITICAL, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
         } else
             p = visible_appname_string;
         break;
@@ -1220,6 +1218,22 @@ ErrorState::BuildHttpReply()
         /* do not memBufClean() or delete the content, it was absorbed by httpBody */
     }
 
+    // Make sure error codes get back to the client side for logging and
+    // error tracking.
+    if (request) {
+        int edc = ERR_DETAIL_NONE; // error detail code
+#if USE_SSL
+        if (detail)
+            edc = detail->errorNo();
+        else
+#endif
+            if (detailCode)
+                edc = detailCode;
+            else
+                edc = xerrno;
+        request->detailError(type, edc);
+    }
+
     return rep;
 }
 
@@ -1231,7 +1245,7 @@ ErrorState::BuildContent()
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
 #if USE_ERR_LOCALES
-    ErrorPageFile  *localeTmpl = NULL;
+    ErrorPageFile *localeTmpl = NULL;
 
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
@@ -1241,7 +1255,7 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        localeTmpl = new ErrorPageFile(err_type_str[page_id]);
+        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
         if (localeTmpl->loadFor(request)) {
             m = localeTmpl->text();
             assert(localeTmpl->language());

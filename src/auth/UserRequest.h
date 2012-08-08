@@ -66,6 +66,9 @@ public:
     time_t ip_expiretime;
 };
 
+// TODO: make auth schedule AsyncCalls?
+typedef void AUTHCB(void*);
+
 namespace Auth
 {
 
@@ -156,7 +159,7 @@ public:
      * \param handler	Handler to process the callback when its run
      * \param data	CBDATA for handler
      */
-    virtual void module_start(RH *handler, void *data) = 0;
+    virtual void module_start(AUTHCB *handler, void *data) = 0;
 
     // User credentials object this UserRequest is managing
     virtual User::Pointer user() {return _auth_user;}
@@ -186,7 +189,7 @@ public:
     /// Add the appropriate [Proxy-]Authenticate header to the given reply
     static void addReplyAuthHeader(HttpReply * rep, UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
-    void start( RH * handler, void *data);
+    void start(AUTHCB *handler, void *data);
     char const * denyMessage(char const * const default_message = NULL);
 
     /** Possibly overrideable in future */

@@ -219,14 +219,14 @@ Adaptation::Config::finalize()
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
         const ServiceConfigPointer cfg = *i;
         if (FindService(cfg->key) != NULL) {
-            debugs(93,0, "ERROR: Duplicate adaptation service name: " <<
+            debugs(93, DBG_CRITICAL, "ERROR: Duplicate adaptation service name: " <<
                    cfg->key);
             continue; // TODO: make fatal
         }
         ServicePointer s = createService(cfg);
         if (s != NULL) {
             AllServices().push_back(s);
-            created++;
+            ++created;
         }
     }
 
@@ -253,7 +253,7 @@ void
 Adaptation::Config::Finalize(bool enabled)
 {
     Enabled = enabled;
-    debugs(93,1, "Adaptation support is " << (Enabled ? "on" : "off."));
+    debugs(93, DBG_IMPORTANT, "Adaptation support is " << (Enabled ? "on" : "off."));
 
     FinalizeEach(AllServices(), "message adaptation services");
     FinalizeEach(AllGroups(), "message adaptation service groups");
@@ -285,7 +285,7 @@ Adaptation::Config::ParseMetaHeader(ConfigParser &parser)
     ConfigParser::ParseQuotedString(&value);
 
     // TODO: Find a way to move this check to ICAP
-    for (int i = 0; warnFor[i] != NULL; i++) {
+    for (int i = 0; warnFor[i] != NULL; ++i) {
         if (name.caseCmp(warnFor[i]) == 0) {
             fatalf("%s:%d: meta name \"%s\" is a reserved ICAP header name",
                    cfg_filename, config_lineno, name.termedBuf());

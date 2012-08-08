@@ -310,7 +310,7 @@ cbdataInternalAlloc(cbdata_type type)
     c->valid = 1;
     c->locks = 0;
     c->cookie = (long) c ^ cbdata::Cookie;
-    cbdataCount++;
+    ++cbdataCount;
 #if USE_CBDATA_DEBUG
 
     c->file = file;
@@ -319,6 +319,8 @@ cbdataInternalAlloc(cbdata_type type)
     c->addHistory("Alloc", file, line);
     dlinkAdd(c, &c->link, &cbdataEntries);
     debugs(45, 3, "cbdataAlloc: " << p << " " << file << ":" << line);
+#else
+    debugs(45, 9, "cbdataAlloc: " << p);
 #endif
 
     return p;
@@ -358,7 +360,7 @@ cbdataInternalFree(void *p)
         return NULL;
     }
 
-    cbdataCount--;
+    --cbdataCount;
     debugs(45, 9, "cbdataFree: Freeing " << p);
 #if USE_CBDATA_DEBUG
 
@@ -421,7 +423,7 @@ cbdataInternalLock(const void *p)
 
     assert(c->locks < INT_MAX);
 
-    c->locks++;
+    ++ c->locks;
 }
 
 void
@@ -460,12 +462,12 @@ cbdataInternalUnlock(const void *p)
 
     assert(c->locks > 0);
 
-    c->locks--;
+    -- c->locks;
 
     if (c->valid || c->locks)
         return;
 
-    cbdataCount--;
+    --cbdataCount;
 
     debugs(45, 9, "cbdataUnlock: Freeing " << p);
 
@@ -583,7 +585,7 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
 
-    for (int i = 1; i < cbdata_types; i++) {
+    for (int i = 1; i < cbdata_types; ++i) {
         MemAllocator *pool = cbdata_index[i].pool;
 
         if (pool) {

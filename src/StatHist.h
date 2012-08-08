@@ -57,7 +57,7 @@ public:
      */
     StatHist();
     StatHist(const StatHist&); //not needed
-    ~StatHist();
+    ~StatHist() { clear(); };
 
     typedef uint64_t bins_type;
 
@@ -130,15 +130,18 @@ StatHist::operator =(const StatHist & src)
 {
     if (this==&src) //handle self-assignment
         return *this;
-    xfree(bins); // xfree can handle NULL pointers, no need to check
-    capacity_=src.capacity_;
-    bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
+    if (capacity_ != src.capacity_) {
+        xfree(bins); // xfree can handle NULL pointers, no need to check
+        capacity_=src.capacity_;
+        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
+    }
     min_=src.min_;
     max_=src.max_;
     scale_=src.scale_;
     val_in=src.val_in;
     val_out=src.val_out;
-    memcpy(bins,src.bins,capacity_*sizeof(*bins));
+    if (bins != NULL)
+        memcpy(bins,src.bins,capacity_*sizeof(*bins));
     return *this;
 }
 
@@ -148,12 +151,12 @@ StatHist::StatHist() :
         scale_(1.0), val_in(NULL), val_out(NULL)
 {}
 
-inline
-StatHist::~StatHist()
+inline void
+StatHist::clear()
 {
-    xfree(bins); //can handle case of bins being NULL
+    xfree(bins); // can handle case of bins being NULL
     bins=NULL;
-    capacity_=0; //mark as destructed, may be needed for troubleshooting
+    capacity_=0; // mark as destructed, may be needed for troubleshooting
 }
 
 #endif /* STATHIST_H_ */

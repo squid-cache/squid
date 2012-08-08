@@ -79,12 +79,12 @@ Icmp4::Open(void)
     icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
     if (icmp_sock < 0) {
-        debugs(50, 0, HERE << " icmp_sock: " << xstrerror());
+        debugs(50, DBG_CRITICAL, HERE << " icmp_sock: " << xstrerror());
         return -1;
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, 1, "pinger: ICMP socket opened.");
+    debugs(42, DBG_IMPORTANT, "pinger: ICMP socket opened.");
 
     return icmp_sock;
 }
@@ -117,7 +117,8 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp->icmp_code = 0;
     icmp->icmp_cksum = 0;
     icmp->icmp_id = icmp_ident;
-    icmp->icmp_seq = (unsigned short) icmp_pkts_sent++;
+    icmp->icmp_seq = (unsigned short) icmp_pkts_sent;
+    ++icmp_pkts_sent;
 
     // Construct ICMP packet data content
     echo = (icmpEchoData *) (icmp + 1);
@@ -151,7 +152,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
                S->ai_addrlen);
 
     if (x < 0) {
-        debugs(42, 1, HERE << "Error sending to ICMP packet to " << to << ". ERR: " << xstrerror());
+        debugs(42, DBG_IMPORTANT, HERE << "Error sending to ICMP packet to " << to << ". ERR: " << xstrerror());
     }
 
     Log(to, ' ', NULL, 0, 0);
@@ -171,7 +172,7 @@ Icmp4::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42, 0, HERE << "No socket! Recv() should not be called.");
+        debugs(42, DBG_CRITICAL, HERE << "No socket! Recv() should not be called.");
         return;
     }
 

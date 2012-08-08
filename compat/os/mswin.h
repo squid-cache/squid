@@ -110,12 +110,12 @@ typedef unsigned long ino_t;
 #define fileno _fileno
 #define fstat _fstati64
 #endif /* _MSC_VER */
-#if 0
+#if !defined(_SQUID_MINGW_) // MinGW defines these properly
+SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
-#if !_SQUID_MINGW_
-extern int WIN32_ftruncate(int fd, off_t size);
+SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
+#define truncate WIN32_truncate
 #endif
-#endif /* 0 */
 #define getcwd _getcwd
 #define getpid _getpid
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -913,5 +913,8 @@ void syslog(int priority, const char *fmt, ...);
 
 /* prototypes */
 void WIN32_maperror(unsigned long WIN32_oserrno);
+
+#include "compat/strsep.h"
+
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWIN_H */

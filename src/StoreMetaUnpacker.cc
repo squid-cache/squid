@@ -92,7 +92,8 @@ StoreMetaUnpacker::StoreMetaUnpacker (char const *aBuffer, ssize_t aLen, int *an
 void
 StoreMetaUnpacker::getType()
 {
-    type = buf[position++];
+    type = buf[position];
+    ++position;
 }
 
 void
@@ -109,8 +110,8 @@ StoreMetaUnpacker::doOneEntry()
     getLength();
 
     if (position + length > *hdr_len) {
-        debugs(20, 0, "storeSwapMetaUnpack: overflow!");
-        debugs(20, 0, "\ttype=" << type << ", length=" << length << ", *hdr_len=" << *hdr_len << ", offset=" << position);
+        debugs(20, DBG_CRITICAL, "storeSwapMetaUnpack: overflow!");
+        debugs(20, DBG_CRITICAL, "\ttype=" << type << ", length=" << length << ", *hdr_len=" << *hdr_len << ", offset=" << position);
         return false;
     }
 

@@ -53,7 +53,7 @@ rotate(const char *path, int rotate_count)
 #endif
     /* Rotate numbers 0 through N up one */
     for (i = rotate_count; i > 1;) {
-        i--;
+        --i;
         snprintf(from, MAXPATHLEN, "%s.%d", path, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", path, i);
 #if _SQUID_OS2_ || _SQUID_WINDOWS_

@@ -35,34 +35,14 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "comm/UdpOpenDialer.h"
 #include "compat/strsep.h"
-#include "ipc/StartListening.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"
 
-
-/// dials snmpConnectionOpened call
-class SnmpListeningStartedDialer: public CallDialer,
-        public Ipc::StartListeningCb
-{
-public:
-    typedef void (*Handler)(const Comm::ConnectionPointer &conn, int errNo);
-    SnmpListeningStartedDialer(Handler aHandler): handler(aHandler) {}
-
-    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
-
-    virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(conn, errNo); }
-
-public:
-    Handler handler;
-};
-
-
 static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);
-
 
 mib_tree_entry *mib_tree_head;
 mib_tree_entry *mib_tree_last;
@@ -288,7 +268,7 @@ snmpInit(void)
 }
 
 void
-snmpConnectionOpen(void)
+snmpOpenPorts(void)
 {
     debugs(49, 5, "snmpConnectionOpen: Called");
 
@@ -309,7 +289,7 @@ snmpConnectionOpen(void)
     }
 
     AsyncCall::Pointer call = asyncCall(49, 2, "snmpIncomingConnectionOpened",
-                                        SnmpListeningStartedDialer(&snmpPortOpened));
+                                        Comm::UdpOpenDialer(&snmpPortOpened));
     Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
     if (!Config.Addrs.snmp_outgoing.IsNoAddr()) {
@@ -326,7 +306,7 @@ snmpConnectionOpen(void)
             snmpOutgoingConn->local.SetIPv4();
         }
         AsyncCall::Pointer call = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                            SnmpListeningStartedDialer(&snmpPortOpened));
+                                            Comm::UdpOpenDialer(&snmpPortOpened));
         Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, call);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
@@ -351,7 +331,7 @@ snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo)
 }
 
 void
-snmpConnectionClose(void)
+snmpClosePorts(void)
 {
     if (Comm::IsConnOpen(snmpIncomingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
@@ -408,7 +388,7 @@ snmpHandleUdp(int sock, void *not_used)
         xfree(snmp_rq->outbuf);
         xfree(snmp_rq);
     } else {
-        debugs(49, 1, "snmpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
+        debugs(49, DBG_IMPORTANT, "snmpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
     }
 }
 
@@ -518,7 +498,7 @@ snmpAgentResponse(struct snmp_pdu *PDU) {
                 oid *NextOidName = NULL;
                 snint NextOidNameLen = 0;
 
-                index++;
+                ++index;
 
                 if (get_next)
                     ParseFn = snmpTreeNext(VarPtr->name, VarPtr->name_length, &NextOidName, &NextOidNameLen);
@@ -589,11 +569,11 @@ snmpTreeGet(oid * Current, snint CurrentLen)
     mibTreeEntry = mib_tree_head;
 
     if (Current[count] == mibTreeEntry->name[count]) {
-        count++;
+        ++count;
 
         while ((mibTreeEntry) && (count < CurrentLen) && (!mibTreeEntry->parsefunction)) {
             mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
-            count++;
+            ++count;
         }
     }
 
@@ -615,13 +595,13 @@ snmpAggrType(oid* Current, snint CurrentLen)
     int count = 0;
 
     if (Current[count] == mibTreeEntry->name[count]) {
-        count++;
+        ++count;
 
         while (mibTreeEntry != NULL && count < CurrentLen) {
             mibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
             if (mibTreeEntry != NULL)
                 type = mibTreeEntry->aggrType;
-            count++;
+            ++count;
         }
     }
 
@@ -643,7 +623,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     mibTreeEntry = mib_tree_head;
 
     if (Current[count] == mibTreeEntry->name[count]) {
-        count++;
+        ++count;
 
         while ((mibTreeEntry) && (count < CurrentLen) && (!mibTreeEntry->parsefunction)) {
             mib_tree_entry *nextmibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
@@ -653,7 +633,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
             else
                 mibTreeEntry = nextmibTreeEntry;
 
-            count++;
+            ++count;
         }
         debugs(49, 5, "snmpTreeNext: Recursed down to requested object");
     } else {
@@ -675,17 +655,17 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     }
 
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
-        count--;
+        --count;
         nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
         if (nextoid) {
             debugs(49, 5, "snmpTreeNext: Next OID found for sibling" << nextoid );
             mibTreeEntry = nextoid;
-            count++;
+            ++count;
         } else {
             debugs(49, 5, "snmpTreeNext: Attempting to recurse up for next object");
 
             while (!nextoid) {
-                count--;
+                --count;
 
                 if (mibTreeEntry->parent->parent) {
                     nextoid = mibTreeEntry->parent;
@@ -749,7 +729,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         identifier = name[*len - 1];
 
         while ((loop < TIME_INDEX_LEN) && (identifier != index[loop]))
-            loop++;
+            ++loop;
 
         if (loop < (TIME_INDEX_LEN - 1)) {
             instance = (oid *)xmalloc(sizeof(name) * (*len));
@@ -786,7 +766,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         int no = name[current->len] ;
         int i;
         // Note: This works because the Config.peers keeps its index according to its position.
-        for ( i=0 ; peers && (i < no) ; peers = peers->next , i++ ) ;
+        for ( i=0 ; peers && (i < no) ; peers = peers->next , ++i ) ;
 
         if (peers) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
@@ -883,7 +863,7 @@ snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current)
             next = current->leaves[count];
         }
 
-        count++;
+        ++count;
     }
 
     /* Exactly the sibling on right */
@@ -910,7 +890,7 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
             next = current->leaves[count];
         }
 
-        count++;
+        ++count;
     }
 
     return (next);
@@ -923,7 +903,7 @@ snmpAddNodeChild(mib_tree_entry *entry, mib_tree_entry *child)
     entry->leaves = (mib_tree_entry **)xrealloc(entry->leaves, sizeof(mib_tree_entry *) * (entry->children + 1));
     entry->leaves[entry->children] = child;
     entry->leaves[entry->children]->parent = entry;
-    entry->children++;
+    ++ entry->children;
 }
 
 mib_tree_entry *
@@ -952,7 +932,7 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
     while (r < namelen) {
 
         /* Find the child node which matches this */
-        for (i = 0; i < e->children && e->leaves[i]->name[r] != name[r]; i++) ; // seek-loop
+        for (i = 0; i < e->children && e->leaves[i]->name[r] != name[r]; ++i) ; // seek-loop
 
         /* Are we pointing to that node? */
         if (i >= e->children)
@@ -961,7 +941,7 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
 
         /* Skip to that node! */
         e = e->leaves[i];
-        r++;
+        ++r;
     }
 
     xfree(name);
@@ -983,7 +963,7 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
     while ( (p = strsep(&s_, delim)) != NULL) {
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
         (*name)[*nl] = atoi(p);
-        (*nl)++;
+        ++(*nl);
     }
 
     xfree(s);
@@ -1051,7 +1031,7 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
     if (children > 0) {
         entry->leaves = (mib_tree_entry **)xmalloc(sizeof(mib_tree_entry *) * children);
 
-        for (loop = 0; loop < children; loop++) {
+        for (loop = 0; loop < children; ++loop) {
             entry->leaves[loop] = va_arg(args, mib_tree_entry *);
             entry->leaves[loop]->parent = entry;
         }
@@ -1075,7 +1055,7 @@ snmpCreateOid(int length,...)
     new_oid = (oid *)xmalloc(sizeof(oid) * length);
 
     if (length > 0) {
-        for (loop = 0; loop < length; loop++) {
+        for (loop = 0; loop < length; ++loop) {
             new_oid[loop] = va_arg(args, int);
         }
     }
@@ -1094,7 +1074,7 @@ snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf)
     if (outbuf.isNull())
         outbuf.init(16, MAX_IPSTRLEN);
 
-    for (x = 0; x < Len; x++) {
+    for (x = 0; x < Len; ++x) {
         size_t bytes = snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
         outbuf.append(mbuf, bytes);
     }
@@ -1132,9 +1112,10 @@ addr2oid(Ip::Address &addr, oid * Dest)
         addr.GetInAddr(i6addr);
         cp = (u_char *) &i6addr;
     }
-    for ( i=0 ; i < size ; i++) {
+    for ( i=0 ; i < size ; ++i) {
         // OID's are in network order
-        Dest[i] = *cp++;
+        Dest[i] = *cp;
+        ++cp;
     }
     MemBuf tmp;
     debugs(49, 7, "addr2oid: Dest : " << snmpDebugOid(Dest, size, tmp));
@@ -1159,7 +1140,7 @@ oid2addr(oid * id, Ip::Address &addr, u_int size)
         cp = (u_char *) &(i6addr);
     MemBuf tmp;
     debugs(49, 7, "oid2addr: id : " << snmpDebugOid(id, size, tmp) );
-    for (i=0 ; i<size; i++) {
+    for (i=0 ; i<size; ++i) {
         cp[i] = id[i];
     }
     if ( size == sizeof(struct in_addr) )
@@ -1180,7 +1161,7 @@ public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     static ACLSNMPCommunityStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
+    /* Not private to prevent brain dead g++ warnings about
      * private constructors with no friends */
     ACLSNMPCommunityStrategy(ACLSNMPCommunityStrategy const &);
 

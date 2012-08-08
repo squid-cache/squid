@@ -49,7 +49,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     int ret;
     const char *patharg;
 
-    debugs(50, 1, "Logfile: opening log " << path);
+    debugs(50, DBG_IMPORTANT, "Logfile: opening log " << path);
     CBDATA_INIT_TYPE(Logfile);
 
     Logfile *lf = cbdataAlloc(Logfile);
@@ -82,7 +82,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
         if (fatal_flag)
             fatalf("logfileOpen: %s: couldn't open!\n", path);
         else
-            debugs(50, 1, "logfileOpen: " << path << ": couldn't open!");
+            debugs(50, DBG_IMPORTANT, "logfileOpen: " << path << ": couldn't open!");
         lf->f_close(lf);
         cbdataFree(lf);
         return NULL;
@@ -100,7 +100,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 void
 logfileClose(Logfile * lf)
 {
-    debugs(50, 1, "Logfile: closing log " << lf->path);
+    debugs(50, DBG_IMPORTANT, "Logfile: closing log " << lf->path);
     lf->f_flush(lf);
     lf->f_close(lf);
     cbdataFree(lf);
@@ -109,7 +109,7 @@ logfileClose(Logfile * lf)
 void
 logfileRotate(Logfile * lf)
 {
-    debugs(50, 1, "logfileRotate: " << lf->path);
+    debugs(50, DBG_IMPORTANT, "logfileRotate: " << lf->path);
     lf->f_rotate(lf);
 }
 
@@ -151,7 +151,7 @@ void
 logfileLineEnd(Logfile * lf)
 {
     lf->f_lineend(lf);
-    lf->sequence_number++;
+    ++ lf->sequence_number;
 }
 
 void

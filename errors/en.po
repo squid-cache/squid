@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-20 11:40+1300\n"
-"PO-Revision-Date: 2011-06-16 14:55+0200\n"
+"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"PO-Revision-Date: 2012-02-24 15:36+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.6\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -56,9 +56,8 @@ msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
-#, fuzzy
 msgid "%ssl_error_descr: %ssl_lib_error"
-msgstr "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_lib_error"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
@@ -143,6 +142,10 @@ msgstr ""
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+msgid "All configured parent caches may be currently unreachable."
+msgstr "All configured parent caches may be currently unreachable."
+
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
@@ -163,6 +166,14 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
 msgstr "An Illegal response was received from the ICAP server."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
+msgstr ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
 msgid ""
@@ -231,9 +242,8 @@ msgid "Certificate chain too long"
 msgstr "Certificate chain too long"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
-#, fuzzy
 msgid "Certificate does not match domainname"
-msgstr "Certificate is not yet valid"
+msgstr "Certificate does not match domainname"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
 msgid "Certificate has expired"
@@ -294,6 +304,7 @@ msgstr "Directory: <a href=\"%U\">%U</a>/"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -342,6 +353,7 @@ msgstr "ERROR: FTP upload failed"
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONFLICT_HOST+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
 #: templates/ERR_ESI+html.head.title:4
@@ -451,7 +463,8 @@ msgstr "Gateway Proxy Failure"
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -496,7 +509,7 @@ msgstr ""
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
 msgid "Handshake with SSL server failed"
-msgstr ""
+msgstr "Handshake with SSL server failed"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -606,14 +619,12 @@ msgstr ""
 "cache log for more detailed error messages."
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
-#, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself."
 msgstr ""
-"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">change</a> your default password."
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you have "
+"difficulties authenticating yourself."
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
@@ -694,6 +705,8 @@ msgstr "Socket Failure"
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "Some aspect of the requested URL is incorrect."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:30
 #: templates/ERR_INVALID_REQ+html.body.div.p:26
 #: templates/ERR_INVALID_URL+html.body.div.p:28
@@ -780,6 +793,20 @@ msgstr ""
 msgid "The ICAP server is not reachable."
 msgstr "The ICAP server is not reachable."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+msgstr ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+"The domain may have moved very recently. Trying again will resolve that."
+
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -789,6 +816,7 @@ msgstr "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -837,6 +865,7 @@ msgstr "The request or reply is too large."
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -884,6 +913,14 @@ msgstr "The server responded with:"
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
 msgstr "The system returned: <i>%E</i>"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
 msgid ""
@@ -966,6 +1003,14 @@ msgstr ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+msgstr ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
 msgstr "This means:"
@@ -997,22 +1042,20 @@ msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
 msgstr ""
+"This proxy limits your time online with a quota. Your time budget is now "
+"empty but will be refilled when the configured time period starts again."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 msgstr ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
-msgstr ""
+msgstr "Time Quota Exceeded."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
@@ -1034,6 +1077,10 @@ msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+msgid "URI Host Conflict"
+msgstr "URI Host Conflict"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
@@ -1128,7 +1175,8 @@ msgstr ""
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
@@ -1183,6 +1231,19 @@ msgstr "Zero Sized Reply"
 
 #~ msgid "Parent Directory"
 #~ msgstr "Parent Directory"
+
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
+msgstr ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "While trying to PUT the following URL: <a href=\"%U\">%U</a>"

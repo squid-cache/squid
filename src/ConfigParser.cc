@@ -66,12 +66,12 @@ ConfigParser::strtokFile(void)
                 fn = ++t;
 
                 while (*t && *t != '\"' && *t != '\'')
-                    t++;
+                    ++t;
 
                 *t = '\0';
 
                 if ((wordFile = fopen(fn, "r")) == NULL) {
-                    debugs(28, 0, "strtokFile: " << fn << " not found");
+                    debugs(28, DBG_CRITICAL, "strtokFile: " << fn << " not found");
                     return (NULL);
                 }
 
@@ -116,15 +116,15 @@ ConfigParser::strtokFile(void)
 }
 
 void
-ConfigParser::ParseQuotedString(char **var)
+ConfigParser::ParseQuotedString(char **var, bool *wasQuoted)
 {
     String sVar;
-    ParseQuotedString(&sVar);
+    ParseQuotedString(&sVar, wasQuoted);
     *var = xstrdup(sVar.termedBuf());
 }
 
 void
-ConfigParser::ParseQuotedString(String *var)
+ConfigParser::ParseQuotedString(String *var, bool *wasQuoted)
 {
     // Get all of the remaining string
     char *token = strtok(NULL, "");
@@ -134,8 +134,11 @@ ConfigParser::ParseQuotedString(String *var)
     if (*token != '"') {
         token = strtok(token, w_space);
         var->reset(token);
+        if (wasQuoted)
+            *wasQuoted = false;
         return;
-    }
+    } else if (wasQuoted)
+        *wasQuoted = true;
 
     char  *s = token + 1;
     /* scan until the end of the quoted string, unescaping " and \  */
@@ -144,7 +147,7 @@ ConfigParser::ParseQuotedString(String *var)
             const char * next = s+1; // may point to 0
             memmove(s, next, strlen(next) + 1);
         }
-        s++;
+        ++s;
     }
 
     if (*s != '"') {
@@ -164,7 +167,7 @@ ConfigParser::QuoteString(String &var)
     const char *s = var.termedBuf();
     bool  needQuote = false;
 
-    for (const char *l = s; !needQuote &&  *l != '\0'; l++  )
+    for (const char *l = s; !needQuote &&  *l != '\0'; ++l  )
         needQuote = !isalnum(*l);
 
     if (!needQuote)
@@ -172,7 +175,7 @@ ConfigParser::QuoteString(String &var)
 
     quotedStr.clean();
     quotedStr.append('"');
-    for (; *s != '\0'; s++) {
+    for (; *s != '\0'; ++s) {
         if (*s == '"' || *s == '\\')
             quotedStr.append('\\');
         quotedStr.append(*s);

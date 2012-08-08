@@ -159,7 +159,7 @@ WIN32_create_key(void)
         }
 
         hKey = hKeyNext;
-        index++;
+        ++index;
     }
 
     if (keys[index] == NULL) {
@@ -267,7 +267,7 @@ static void WIN32_build_argv(char *cmd)
         /* Ignore spaces */
 
         if (xisspace(*cmd)) {
-            cmd++;
+            ++cmd;
             continue;
         }
 
@@ -275,7 +275,7 @@ static void WIN32_build_argv(char *cmd)
         word = cmd;
 
         while (*cmd) {
-            cmd++;		/* Skip over this character */
+            ++cmd;		/* Skip over this character */
 
             if (xisspace(*cmd))	/* End of argument if space */
                 break;
@@ -456,10 +456,10 @@ WIN32_IpAddrChangeMonitor(LPVOID lpParam)
     while (1) {
         Result = NotifyAddrChange(NULL, NULL);
         if (Result != NO_ERROR) {
-            debugs(1, 1, "NotifyAddrChange error " << Result);
+            debugs(1, DBG_IMPORTANT, "NotifyAddrChange error " << Result);
             return 1;
         }
-        debugs(1, 1, "Notification of IP address change received, requesting Squid reconfiguration ...");
+        debugs(1, DBG_IMPORTANT, "Notification of IP address change received, requesting Squid reconfiguration ...");
         reconfigure(SIGHUP);
     }
     return 0;
@@ -477,7 +477,7 @@ WIN32_IpAddrChangeMonitorInit()
         if (NotifyAddrChange_thread == NULL) {
             status = GetLastError();
             NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
-            debugs(1, 1, "Failed to start IP monitor thread.");
+            debugs(1, DBG_IMPORTANT, "Failed to start IP monitor thread.");
         } else
             debugs(1, 2, "Starting IP monitor thread [" << threadID << "] ...");
     }
@@ -601,7 +601,7 @@ void
 WIN32_svcstatusupdate(DWORD svcstate, DWORD WaitHint)
 {
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
-        svcStatus.dwCheckPoint++;
+        ++svcStatus.dwCheckPoint;
         svcStatus.dwWaitHint = WaitHint;
         svcStatus.dwCurrentState = svcstate;
         SetServiceStatus(svcHandle, &svcStatus);
@@ -627,10 +627,10 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, 1, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
         }
 
-        debugs(1, 1, "Leaving Squid service");
+        debugs(1, DBG_IMPORTANT, "Leaving Squid service");
         return;
 
     case _WIN_SQUID_SERVICE_CONTROL_INTERROGATE:
@@ -638,7 +638,7 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, 1, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
         }
 
         break;
@@ -665,14 +665,14 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, 1, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
         }
 
-        debugs(1, 1, "Leaving Squid service");
+        debugs(1, DBG_IMPORTANT, "Leaving Squid service");
         break;
 
     default:
-        debugs(1, 1, "Unrecognized opcode " << Opcode);
+        debugs(1, DBG_IMPORTANT, "Unrecognized opcode " << Opcode);
     }
 
     return;
@@ -986,7 +986,7 @@ static int Win32SockInit(void)
     int optlen = sizeof(opt);
 
     if (s_iInitCount > 0) {
-        s_iInitCount++;
+        ++s_iInitCount;
         return (0);
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
@@ -1025,7 +1025,7 @@ static int Win32SockInit(void)
     }
 
     WIN32_Socks_initialized = 1;
-    s_iInitCount++;
+    ++s_iInitCount;
     return (s_iInitCount);
 }
 

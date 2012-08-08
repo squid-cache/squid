@@ -190,7 +190,7 @@ fileIteratorAdvance(FileIterator * fi)
         const time_t last_time = fi->inner_time;
         fi->inner_time = -1;
         res = fi->reader(fi);
-        fi->line_count++;
+        ++ fi->line_count;
 
         if (fi->inner_time < 0)
             fi->inner_time = last_time;
@@ -198,14 +198,14 @@ fileIteratorAdvance(FileIterator * fi)
             fi->inner_time += fi->time_offset;
 
         if (res == frError)
-            fi->bad_line_count++;
+            ++ fi->bad_line_count;
         else if (res == frEof) {
             fprintf(stderr, "exhausted %s (%d entries) at %s",
                     fi->fname, fi->line_count, ctime(&fi->inner_time));
             fi->inner_time = -1;
         } else if (fi->inner_time < last_time) {
             assert(last_time >= 0);
-            fi->time_warp_count++;
+            ++ fi->time_warp_count;
             fi->inner_time = last_time;
         }
 
@@ -332,18 +332,18 @@ cacheQueryPeer(Cache * cache, const cache_key * key)
     const int peer_has_it = hash_lookup(cache->peer->hash, key) != NULL;
     const int we_think_we_have_it = cacheDigestTest(cache->digest, key);
 
-    cache->qstats.query_count++;
+    ++ cache->qstats.query_count;
 
     if (peer_has_it) {
         if (we_think_we_have_it)
-            cache->qstats.true_hit_count++;
+            ++ cache->qstats.true_hit_count;
         else
-            cache->qstats.false_miss_count++;
+            ++ cache->qstats.false_miss_count;
     } else {
         if (we_think_we_have_it)
-            cache->qstats.false_hit_count++;
+            ++ cache->qstats.false_hit_count;
         else
-            cache->qstats.true_miss_count++;
+            ++ cache->qstats.true_miss_count;
     }
 }
 
@@ -383,7 +383,7 @@ static void
 cacheFetch(Cache * cache, const RawAccessLogEntry * e)
 {
     assert(e);
-    cache->req_count++;
+    ++ cache->req_count;
 
     if (e->use_icp)
         cacheQueryPeer(cache, e->key);
@@ -465,9 +465,9 @@ accessLogReader(FileIterator * fi)
     }
 
     while (*url)
-        url--;
+        --url;
 
-    url++;
+    ++url;
 
     *hier = '\0';
 
@@ -505,7 +505,7 @@ cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)
     CacheEntry *olde = (CacheEntry *) hash_lookup(cache->hash, s->key);
 
     if (!olde) {
-        cache->bad_del_count++;
+        ++ cache->bad_del_count;
     } else {
         assert(cache->count);
         hash_remove_link(cache->hash, (hash_link *) olde);
@@ -515,7 +515,7 @@ cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)
 
         cacheEntryDestroy(olde);
 
-        cache->count--;
+        -- cache->count;
     }
 }
 
@@ -525,11 +525,11 @@ cacheStore(Cache * cache, storeSwapLogData * s, int update_digest)
     CacheEntry *olde = (CacheEntry *) hash_lookup(cache->hash, s->key);
 
     if (olde) {
-        cache->bad_add_count++;
+        ++ cache->bad_add_count;
     } else {
         CacheEntry *e = cacheEntryCreate(s);
         hash_join(cache->hash, (hash_link *)&e->key);
-        cache->count++;
+        ++ cache->count;
 
         if (update_digest)
             cacheDigestAdd(cache->digest, e->key);
@@ -642,7 +642,7 @@ main(int argc, char *argv[])
                     next_time = fis[i]->inner_time;
                 }
 
-                active_fi_count++;
+                ++active_fi_count;
             }
         }
 

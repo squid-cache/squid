@@ -1,6 +1,13 @@
 /*
  * Compatibility-layer for CMSG_
  */
+#ifndef SQUID_COMPAT_CMSG_H
+#define SQUID_COMPAT_CMSG_H
+
+// cmsg.h is found through sys/socket.h
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
 
 #ifndef CMSG_H_
 #define CMSG_H_
@@ -35,10 +42,10 @@ struct cmsghdr{
              & ~(sizeof (size_t) - 1))
 #endif
 
-#ifndef CMSG_SPACE
 # define CMSG_SPACE(len) (CMSG_ALIGN (len) \
              + CMSG_ALIGN (sizeof (struct cmsghdr)))
-#endif
+#undef HAVE_CONSTANT_CMSG_SPACE
+#define HAVE_CONSTANT_CMSG_SPACE 1
 
 #ifndef CMSG_LEN
 # define CMSG_LEN(len)   (CMSG_ALIGN (sizeof (struct cmsghdr)) + (len))
@@ -90,3 +97,16 @@ struct sockaddr_un {
 #endif
 
 #endif /* CMSG_H_ */
+
+// CMSG_SPACE is not constant on some systems (in particular Max OS X),
+// provide a replacement that can be used at build time in that case
+// NP: this must go below our replacement definitions.
+
+#if HAVE_CONSTANT_CMSG_SPACE
+#define SQUID_CMSG_SPACE CMSG_SPACE
+#else
+// add 16 bytes for header and data alignment
+#define SQUID_CMSG_SPACE(len) (sizeof(struct cmsghdr) + (len) + 16)
+#endif
+
+#endif /* SQUID_COMPAT_CMSG_H */

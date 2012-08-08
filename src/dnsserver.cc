@@ -194,8 +194,10 @@ lookup(const char *buf)
     const bool isDomain = (getaddrinfo(buf,NULL,&hints,&AI) != 0);
 
     // reset for real lookup
-    freeaddrinfo(AI);
-    AI = NULL;
+    if (AI != NULL) {
+        freeaddrinfo(AI);
+        AI = NULL;
+    }
 
     // resolve the address/name
     memset(&hints, '\0', sizeof(struct addrinfo));
@@ -263,7 +265,7 @@ lookup(const char *buf)
                     continue;
                 }
                 printf(" %s", ntoabuf);
-                i++;
+                ++i;
                 aiptr = aiptr->ai_next;
             }
 
@@ -331,7 +333,8 @@ lookup(const char *buf)
         printf("$fail A system error occured looking up Domain/IP '%s': %s.\n", buf, gai_strerror(res));
     }
 
-    freeaddrinfo(AI);
+    if (AI != NULL)
+        freeaddrinfo(AI);
 }
 
 /**
@@ -425,14 +428,15 @@ squid_res_setservers(int reset)
         if (_SQUID_RES_NSADDR_COUNT == MAXNS) {
             fprintf(stderr, "Too many -s options, only %d are allowed\n", MAXNS);
         } else {
-            _SQUID_RES_NSADDR_COUNT++;
+            ++ _SQUID_RES_NSADDR_COUNT;
             memcpy(&_SQUID_RES_NSADDR6_LIST(_SQUID_RES_NSADDR6_COUNT++), &((struct sockaddr_in6*)AI->ai_addr)->sin6_addr, sizeof(struct in6_addr));
         }
 #else
         fprintf(stderr, "IPv6 nameservers not supported on this resolver\n");
 #endif
     }
-    freeaddrinfo(AI);
+    if (AI != NULL)
+        freeaddrinfo(AI);
 
 #else /* !HAVE_RES_INIT || !defined(_SQUID_RES_NSADDR_LIST) */
 

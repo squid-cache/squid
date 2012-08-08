@@ -40,6 +40,7 @@
 #include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "anyp/PortCfg.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -61,7 +62,6 @@
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "MemObject.h"
-#include "ProtoPort.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
 #include "Store.h"
@@ -113,19 +113,37 @@ clientReplyContext::setReplyToError(
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
 
-    if (status == HTTP_NOT_IMPLEMENTED && http->request)
-        /* prevent confusion over whether we default to persistent or not */
-        http->request->flags.proxy_keepalive = 0;
-
-    http->al.http.code = errstate->httpStatus;
-
-    createStoreEntry(method, request_flags());
 #if USE_AUTH
     errstate->auth_user_request = auth_user_request;
 #endif
+    setReplyToError(method, errstate);
+}
+
+void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorState *errstate)
+{
+    if (errstate->httpStatus == HTTP_NOT_IMPLEMENTED && http->request)
+        /* prevent confusion over whether we default to persistent or not */
+        http->request->flags.proxy_keepalive = 0;
+
+    http->al->http.code = errstate->httpStatus;
+
+    createStoreEntry(method, request_flags());
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
+}
+
+void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
+{
+    entry->lock(); // removeClientStoreReference() unlocks
+    sc = storeClientListAdd(entry, this);
+#if USE_DELAY_POOLS
+    sc->setDelayId(DelayId::DelayClient(http));
+#endif
+    reqofs = 0;
+    reqsize = 0;
+    flags.storelogiccomplete = 1;
+    http->storeEntry(entry);
 }
 
 void
@@ -277,12 +295,12 @@ clientReplyContext::processExpired()
      * this clientReplyContext does
      */
     Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
-    FwdState::fwdStart(conn, http->storeEntry(), http->request);
+    FwdState::Start(conn, http->storeEntry(), http->request, http->al);
 
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
-        debugs(88, 0, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
+        debugs(88, DBG_CRITICAL, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
     {
         /* start counting the length from 0 */
@@ -475,7 +493,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     assert(http->logType == LOG_TCP_HIT);
 
     if (strcmp(e->mem_obj->url, urlCanonical(r)) != 0) {
-        debugs(33, 1, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
+        debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
         processMiss();
         return;
     }
@@ -506,7 +524,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     case VARY_CANCEL:
         /* varyEvaluateMatch found a object loop. Process as miss */
-        debugs(88, 1, "clientProcessHit: Vary object loop!");
+        debugs(88, DBG_IMPORTANT, "clientProcessHit: Vary object loop!");
         processMiss();
         return;
     }
@@ -605,8 +623,8 @@ clientReplyContext::processMiss()
      */
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
-            debugs(88, 0, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, 0, "\tlog_type = " << Format::log_tags[http->logType]);
+            debugs(88, DBG_CRITICAL, "clientProcessMiss: miss on a special object (" << url << ").");
+            debugs(88, DBG_CRITICAL, "\tlog_type = " << Format::log_tags[http->logType]);
             http->storeEntry()->dump(1);
         }
 
@@ -633,7 +651,7 @@ clientReplyContext::processMiss()
     /// Deny loops for accelerator and interceptor. TODO: deny in all modes?
     if (r->flags.loopdetect &&
             (http->flags.accel || http->flags.intercepted)) {
-        http->al.http.code = HTTP_FORBIDDEN;
+        http->al->http.code = HTTP_FORBIDDEN;
         err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         createStoreEntry(r->method, request_flags());
         errorAppendEntry(http->storeEntry(), err);
@@ -646,11 +664,7 @@ clientReplyContext::processMiss()
 
         if (http->redirect.status) {
             HttpReply *rep = new HttpReply;
-#if LOG_TCP_REDIRECTS
-
             http->logType = LOG_TCP_REDIRECT;
-#endif
-
             http->storeEntry()->releaseRequest();
             rep->redirect(http->redirect.status, http->redirect.location);
             http->storeEntry()->replaceHttpReply(rep);
@@ -666,7 +680,7 @@ clientReplyContext::processMiss()
 
         /** Start forwarding to get the new object from network */
         Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
-        FwdState::fwdStart(conn, http->storeEntry(), r);
+        FwdState::Start(conn, http->storeEntry(), r, http->al);
     }
 }
 
@@ -681,7 +695,7 @@ clientReplyContext::processOnlyIfCachedMiss()
 {
     debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
            RequestMethodStr(http->request->method) << " " << http->uri << "'");
-    http->al.http.code = HTTP_GATEWAY_TIMEOUT;
+    http->al->http.code = HTTP_GATEWAY_TIMEOUT;
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
                                        http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
@@ -1106,18 +1120,18 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 {
 #if SIZEOF_INT64_T == 4
     if (http->out.size > 0x7FFF0000) {
-        debugs(88, 1, "WARNING: closing FD " << fd << " to prevent out.size counter overflow");
-        debugs(88, 1, "\tclient " << http->getConn()->peer);
-        debugs(88, 1, "\treceived " << http->out.size << " bytes");
-        debugs(88, 1, "\tURI " << http->log_uri);
+        debugs(88, DBG_IMPORTANT, "WARNING: closing FD " << fd << " to prevent out.size counter overflow");
+        debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
+        debugs(88, DBG_IMPORTANT, "\treceived " << http->out.size << " bytes");
+        debugs(88, DBG_IMPORTANT, "\tURI " << http->log_uri);
         return 1;
     }
 
     if (http->out.offset > 0x7FFF0000) {
-        debugs(88, 1, "WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
-        debugs(88, 1, "\tclient " << http->getConn()->peer);
-        debugs(88, 1, "\treceived " << http->out.size << " bytes, offset " << http->out.offset);
-        debugs(88, 1, "\tURI " << http->log_uri);
+        debugs(88, DBG_IMPORTANT, "WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
+        debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
+        debugs(88, DBG_IMPORTANT, "\treceived " << http->out.size << " bytes, offset " << http->out.offset);
+        debugs(88, DBG_IMPORTANT, "\tURI " << http->log_uri);
         return 1;
     }
 
@@ -1438,6 +1452,7 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
+                                     reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
                                      (request->http_ver >= HttpVersion(1, 1));
 
     /* Check whether we should send keep-alive */
@@ -1458,6 +1473,10 @@ clientReplyContext::buildReplyHeader()
         request->flags.proxy_keepalive = 0;
     } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
+        request->flags.proxy_keepalive = 0;
+    } else if (request->flags.sslBumped && !reply->persistent()) {
+        // We do not really have to close, but we pretend we are a tunnel.
+        debugs(88, 3, "clientBuildReplyHeader: bumped reply forces close");
         request->flags.proxy_keepalive = 0;
     }
 
@@ -1611,9 +1630,9 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (http->redirect.status) {
         /** \li If redirection status is True force this to be a MISS */
-        debugs(85, 3, "clientProcessRequest2: redirectStatus forced StoreEntry to NULL -  MISS");
+        debugs(85, 3, HERE << "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses)");
         http->storeEntry(NULL);
-        http->logType = LOG_TCP_MISS;
+        http->logType = LOG_TCP_REDIRECT;
         doGetMoreData();
         return;
     }
@@ -2125,9 +2144,9 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         size_t k;
 
         if ((k = headersEnd(buf, reqofs))) {
-            safe_free(http->al.headers.reply);
-            http->al.headers.reply = (char *)xcalloc(k + 1, 1);
-            xstrncpy(http->al.headers.reply, buf, k);
+            safe_free(http->al->headers.reply);
+            http->al->headers.reply = (char *)xcalloc(k + 1, 1);
+            xstrncpy(http->al->headers.reply, buf, k);
         }
     }
 

@@ -35,15 +35,16 @@
 #if USE_SELECT
 
 #include "squid-old.h"
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "fde.h"
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
-#include "fde.h"
 
 static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 
@@ -58,8 +59,8 @@ static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 
 /* STATIC */
 static int examine_select(fd_set *, fd_set *);
-static int fdIsHttp(int fd);
-static int fdIsIcp(int fd);
+static int fdIsTcpListener(int fd);
+static int fdIsUdpListener(int fd);
 static int fdIsDns(int fd);
 static OBJH commIncomingStats;
 static int comm_check_incoming_select_handlers(int nfds, int *fds);
@@ -83,13 +84,13 @@ static int nwritefds;
  * of incoming ICP, then we need to check these sockets more than
  * if we just have HTTP.
  *
- * The variables 'incoming_icp_interval' and 'incoming_http_interval'
+ * The variables 'incoming_udp_interval' and 'incoming_tcp_interval'
  * determine how many normal I/O events to process before checking
  * incoming sockets again.  Note we store the incoming_interval
  * multipled by a factor of (2^INCOMING_FACTOR) to have some
  * pseudo-floating point precision.
  *
- * The variable 'icp_io_events' and 'http_io_events' counts how many normal
+ * The variable 'udp_io_events' and 'tcp_io_events' counts how many normal
  * I/O events have been processed since the last check on the incoming
  * sockets.  When io_events > incoming_interval, its time to check incoming
  * sockets.
@@ -103,7 +104,7 @@ static int nwritefds;
  *
  *  incoming_interval = incoming_interval + target_average - number_of_events_processed
  *
- * There are separate incoming_interval counters for both HTTP and ICP events
+ * There are separate incoming_interval counters for DNS, UDP and TCP events
  *
  * You can see the current values of the incoming_interval's, as well as
  * a histogram of 'incoming_events' by asking the cache manager
@@ -125,15 +126,15 @@ static int nwritefds;
 #define MAX_INCOMING_INTEGER 256
 #define INCOMING_FACTOR 5
 #define MAX_INCOMING_INTERVAL (MAX_INCOMING_INTEGER << INCOMING_FACTOR)
-static int icp_io_events = 0;
+static int udp_io_events = 0;
 static int dns_io_events = 0;
-static int http_io_events = 0;
-static int incoming_icp_interval = 16 << INCOMING_FACTOR;
+static int tcp_io_events = 0;
+static int incoming_udp_interval = 16 << INCOMING_FACTOR;
 static int incoming_dns_interval = 16 << INCOMING_FACTOR;
-static int incoming_http_interval = 16 << INCOMING_FACTOR;
-#define commCheckICPIncoming (++icp_io_events > (incoming_icp_interval>> INCOMING_FACTOR))
-#define commCheckDNSIncoming (++dns_io_events > (incoming_dns_interval>> INCOMING_FACTOR))
-#define commCheckHTTPIncoming (++http_io_events > (incoming_http_interval>> INCOMING_FACTOR))
+static int incoming_tcp_interval = 16 << INCOMING_FACTOR;
+#define commCheckUdpIncoming (++udp_io_events > (incoming_udp_interval>> INCOMING_FACTOR))
+#define commCheckDnsIncoming (++dns_io_events > (incoming_dns_interval>> INCOMING_FACTOR))
+#define commCheckTcpIncoming (++tcp_io_events > (incoming_tcp_interval>> INCOMING_FACTOR))
 
 void
 Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
@@ -167,7 +168,7 @@ Comm::ResetSelect(int fd)
 }
 
 static int
-fdIsIcp(int fd)
+fdIsUdpListener(int fd)
 {
     if (icpIncomingConn != NULL && fd == icpIncomingConn->fd)
         return 1;
@@ -191,12 +192,10 @@ fdIsDns(int fd)
 }
 
 static int
-fdIsHttp(int fd)
+fdIsTcpListener(int fd)
 {
-    int j;
-
-    for (j = 0; j < NHttpSockets; j++) {
-        if (fd == HttpSockets[j])
+    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+        if (s->listenConn != NULL && s->listenConn->fd == fd)
             return 1;
     }
 
@@ -216,7 +215,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
     FD_ZERO(&write_mask);
     incoming_sockets_accepted = 0;
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i < nfds; ++i) {
         fd = fds[i];
 
         if (fd_table[fd].read_handler) {
@@ -239,12 +238,12 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     getCurrentTime();
 
-    statCounter.syscalls.selects++;
+    ++ statCounter.syscalls.selects;
 
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
         return incoming_sockets_accepted;
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i < nfds; ++i) {
         fd = fds[i];
 
         if (FD_ISSET(fd, &read_mask)) {
@@ -253,7 +252,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, fd_table[fd].read_data);
             } else {
-                debugs(5, 1, "comm_select_incoming: FD " << fd << " NULL read handler");
+                debugs(5, DBG_IMPORTANT, "comm_select_incoming: FD " << fd << " NULL read handler");
             }
         }
 
@@ -263,7 +262,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
                 commUpdateWriteBits(fd, NULL);
                 hdl(fd, fd_table[fd].write_data);
             } else {
-                debugs(5, 1, "comm_select_incoming: FD " << fd << " NULL write handler");
+                debugs(5, DBG_IMPORTANT, "comm_select_incoming: FD " << fd << " NULL write handler");
             }
         }
     }
@@ -272,67 +271,72 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 }
 
 static void
-comm_select_icp_incoming(void)
+comm_select_udp_incoming(void)
 {
     int nfds = 0;
     int fds[2];
     int nevents;
-    icp_io_events = 0;
+    udp_io_events = 0;
 
-    if (Comm::IsConnOpen(icpIncomingConn))
-        fds[nfds++] = icpIncomingConn->fd;
+    if (Comm::IsConnOpen(icpIncomingConn)) {
+        fds[nfds] = icpIncomingConn->fd;
+        ++nfds;
+    }
 
-    if (Comm::IsConnOpen(icpOutgoingConn) && icpIncomingConn != icpOutgoingConn)
-        fds[nfds++] = icpOutgoingConn->fd;
+    if (Comm::IsConnOpen(icpOutgoingConn) && icpIncomingConn != icpOutgoingConn) {
+        fds[nfds] = icpOutgoingConn->fd;
+        ++nfds;
+    }
 
     if (nfds == 0)
         return;
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
 
-    incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
+    incoming_udp_interval += Config.comm_incoming.udp.average - nevents;
 
-    if (incoming_icp_interval < 0)
-        incoming_icp_interval = 0;
+    if (incoming_udp_interval < 0)
+        incoming_udp_interval = 0;
 
-    if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
-        incoming_icp_interval = MAX_INCOMING_INTERVAL;
+    if (incoming_udp_interval > MAX_INCOMING_INTERVAL)
+        incoming_udp_interval = MAX_INCOMING_INTERVAL;
 
-    if (nevents > INCOMING_ICP_MAX)
-        nevents = INCOMING_ICP_MAX;
+    if (nevents > INCOMING_UDP_MAX)
+        nevents = INCOMING_UDP_MAX;
 
-    statCounter.comm_icp_incoming.count(nevents);
+    statCounter.comm_udp_incoming.count(nevents);
 }
 
 static void
-comm_select_http_incoming(void)
+comm_select_tcp_incoming(void)
 {
     int nfds = 0;
-    int fds[MAXHTTPPORTS];
-    int j;
+    int fds[MAXTCPLISTENPORTS];
     int nevents;
-    http_io_events = 0;
+    tcp_io_events = 0;
 
-    for (j = 0; j < NHttpSockets; j++) {
-        if (HttpSockets[j] < 0)
-            continue;
+    // XXX: only poll sockets that won't be deferred. But how do we identify them?
 
-        fds[nfds++] = HttpSockets[j];
+    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+        if (Comm::IsConnOpen(s->listenConn)) {
+            fds[nfds] = s->listenConn->fd;
+            ++nfds;
+        }
     }
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
-    incoming_http_interval += Config.comm_incoming.http_average - nevents;
+    incoming_tcp_interval += Config.comm_incoming.tcp.average - nevents;
 
-    if (incoming_http_interval < 0)
-        incoming_http_interval = 0;
+    if (incoming_tcp_interval < 0)
+        incoming_tcp_interval = 0;
 
-    if (incoming_http_interval > MAX_INCOMING_INTERVAL)
-        incoming_http_interval = MAX_INCOMING_INTERVAL;
+    if (incoming_tcp_interval > MAX_INCOMING_INTERVAL)
+        incoming_tcp_interval = MAX_INCOMING_INTERVAL;
 
-    if (nevents > INCOMING_HTTP_MAX)
-        nevents = INCOMING_HTTP_MAX;
+    if (nevents > INCOMING_TCP_MAX)
+        nevents = INCOMING_TCP_MAX;
 
-    statCounter.comm_http_incoming.count(nevents);
+    statCounter.comm_tcp_incoming.count(nevents);
 }
 
 #define DEBUG_FDBITS 0
@@ -349,8 +353,7 @@ Comm::DoSelect(int msec)
     int maxfd;
     int num;
     int pending;
-    int callicp = 0, callhttp = 0;
-    int calldns = 0;
+    int calldns = 0, calludp = 0, calltcp = 0;
     int maxindex;
     unsigned int k;
     int j;
@@ -372,16 +375,16 @@ Comm::DoSelect(int msec)
         getCurrentTime();
         start = current_dtime;
 
-        if (commCheckICPIncoming)
-            comm_select_icp_incoming();
+        if (commCheckUdpIncoming)
+            comm_select_udp_incoming();
 
-        if (commCheckDNSIncoming)
+        if (commCheckDnsIncoming)
             comm_select_dns_incoming();
 
-        if (commCheckHTTPIncoming)
-            comm_select_http_incoming();
+        if (commCheckTcpIncoming)
+            comm_select_tcp_incoming();
 
-        callicp = calldns = callhttp = 0;
+        calldns = calludp = calltcp = 0;
 
         maxfd = Biggest_FD + 1;
 
@@ -400,11 +403,11 @@ Comm::DoSelect(int msec)
 
         fdsp = (fd_mask *) & readfds;
 
-        for (j = 0; j < maxindex; j++) {
+        for (j = 0; j < maxindex; ++j) {
             if ((tmask = fdsp[j]) == 0)
                 continue;	/* no bits here */
 
-            for (k = 0; k < FD_MASK_BITS; k++) {
+            for (k = 0; k < FD_MASK_BITS; ++k) {
                 if (!EBIT_TEST(tmask, k))
                     continue;
 
@@ -413,13 +416,13 @@ Comm::DoSelect(int msec)
 
                 if (FD_ISSET(fd, &readfds) && fd_table[fd].flags.read_pending) {
                     FD_SET(fd, &pendingfds);
-                    pending++;
+                    ++pending;
                 }
             }
         }
 
 #if DEBUG_FDBITS
-        for (i = 0; i < maxfd; i++) {
+        for (i = 0; i < maxfd; ++i) {
             /* Check each open socket for a handler. */
 
             if (fd_table[i].read_handler) {
@@ -446,9 +449,9 @@ Comm::DoSelect(int msec)
         for (;;) {
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
-            statCounter.syscalls.selects++;
+            ++ statCounter.syscalls.selects;
             num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
-            ++statCounter.select_loops;
+            ++ statCounter.select_loops;
 
             if (num >= 0 || pending > 0)
                 break;
@@ -456,7 +459,7 @@ Comm::DoSelect(int msec)
             if (ignoreErrno(errno))
                 break;
 
-            debugs(5, 0, "comm_select: select failure: " << xstrerror());
+            debugs(5, DBG_CRITICAL, "comm_select: select failure: " << xstrerror());
 
             examine_select(&readfds, &writefds);
 
@@ -484,11 +487,11 @@ Comm::DoSelect(int msec)
 
         maxindex = howmany(maxfd, FD_MASK_BITS);
 
-        for (j = 0; j < maxindex; j++) {
+        for (j = 0; j < maxindex; ++j) {
             if ((tmask = (fdsp[j] | pfdsp[j])) == 0)
                 continue;	/* no bits here */
 
-            for (k = 0; k < FD_MASK_BITS; k++) {
+            for (k = 0; k < FD_MASK_BITS; ++k) {
                 if (tmask == 0)
                     break;	/* no more bits left */
 
@@ -508,8 +511,8 @@ Comm::DoSelect(int msec)
 
 #endif
 
-                if (fdIsIcp(fd)) {
-                    callicp = 1;
+                if (fdIsUdpListener(fd)) {
+                    calludp = 1;
                     continue;
                 }
 
@@ -518,8 +521,8 @@ Comm::DoSelect(int msec)
                     continue;
                 }
 
-                if (fdIsHttp(fd)) {
-                    callhttp = 1;
+                if (fdIsTcpListener(fd)) {
+                    calltcp = 1;
                     continue;
                 }
 
@@ -533,27 +536,27 @@ Comm::DoSelect(int msec)
                     F->flags.read_pending = 0;
                     commUpdateReadBits(fd, NULL);
                     hdl(fd, F->read_data);
-                    statCounter.select_fds++;
+                    ++ statCounter.select_fds;
 
-                    if (commCheckICPIncoming)
-                        comm_select_icp_incoming();
+                    if (commCheckUdpIncoming)
+                        comm_select_udp_incoming();
 
-                    if (commCheckDNSIncoming)
+                    if (commCheckDnsIncoming)
                         comm_select_dns_incoming();
 
-                    if (commCheckHTTPIncoming)
-                        comm_select_http_incoming();
+                    if (commCheckTcpIncoming)
+                        comm_select_tcp_incoming();
                 }
             }
         }
 
         fdsp = (fd_mask *) & writefds;
 
-        for (j = 0; j < maxindex; j++) {
+        for (j = 0; j < maxindex; ++j) {
             if ((tmask = fdsp[j]) == 0)
                 continue;	/* no bits here */
 
-            for (k = 0; k < FD_MASK_BITS; k++) {
+            for (k = 0; k < FD_MASK_BITS; ++k) {
                 if (tmask == 0)
                     break;	/* no more bits left */
 
@@ -573,8 +576,8 @@ Comm::DoSelect(int msec)
 
 #endif
 
-                if (fdIsIcp(fd)) {
-                    callicp = 1;
+                if (fdIsUdpListener(fd)) {
+                    calludp = 1;
                     continue;
                 }
 
@@ -583,8 +586,8 @@ Comm::DoSelect(int msec)
                     continue;
                 }
 
-                if (fdIsHttp(fd)) {
-                    callhttp = 1;
+                if (fdIsTcpListener(fd)) {
+                    calltcp = 1;
                     continue;
                 }
 
@@ -595,28 +598,28 @@ Comm::DoSelect(int msec)
                     F->write_handler = NULL;
                     commUpdateWriteBits(fd, NULL);
                     hdl(fd, F->write_data);
-                    statCounter.select_fds++;
+                    ++ statCounter.select_fds;
 
-                    if (commCheckICPIncoming)
-                        comm_select_icp_incoming();
+                    if (commCheckUdpIncoming)
+                        comm_select_udp_incoming();
 
-                    if (commCheckDNSIncoming)
+                    if (commCheckDnsIncoming)
                         comm_select_dns_incoming();
 
-                    if (commCheckHTTPIncoming)
-                        comm_select_http_incoming();
+                    if (commCheckTcpIncoming)
+                        comm_select_tcp_incoming();
                 }
             }
         }
 
-        if (callicp)
-            comm_select_icp_incoming();
+        if (calludp)
+            comm_select_udp_incoming();
 
         if (calldns)
             comm_select_dns_incoming();
 
-        if (callhttp)
-            comm_select_http_incoming();
+        if (calltcp)
+            comm_select_tcp_incoming();
 
         getCurrentTime();
 
@@ -640,21 +643,25 @@ comm_select_dns_incoming(void)
     if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
 
-    if (DnsSocketA >= 0)
-        fds[nfds++] = DnsSocketA;
+    if (DnsSocketA >= 0) {
+        fds[nfds] = DnsSocketA;
+        ++nfds;
+    }
 
-    if (DnsSocketB >= 0)
-        fds[nfds++] = DnsSocketB;
+    if (DnsSocketB >= 0) {
+        fds[nfds] = DnsSocketB;
+        ++nfds;
+    }
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
 
     if (nevents < 0)
         return;
 
-    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
+    incoming_dns_interval += Config.comm_incoming.dns.average - nevents;
 
-    if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
-        incoming_dns_interval = Config.comm_incoming.dns_min_poll;
+    if (incoming_dns_interval < Config.comm_incoming.dns.min_poll)
+        incoming_dns_interval = Config.comm_incoming.dns.min_poll;
 
     if (incoming_dns_interval > MAX_INCOMING_INTERVAL)
         incoming_dns_interval = MAX_INCOMING_INTERVAL;
@@ -701,9 +708,9 @@ examine_select(fd_set * readfds, fd_set * writefds)
     fde *F = NULL;
 
     struct stat sb;
-    debugs(5, 0, "examine_select: Examining open file descriptors...");
+    debugs(5, DBG_CRITICAL, "examine_select: Examining open file descriptors...");
 
-    for (fd = 0; fd < Squid_MaxFD; fd++) {
+    for (fd = 0; fd < Squid_MaxFD; ++fd) {
         FD_ZERO(&read_x);
         FD_ZERO(&write_x);
         tv.tv_sec = tv.tv_usec = 0;
@@ -715,7 +722,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
         else
             continue;
 
-        statCounter.syscalls.selects++;
+        ++ statCounter.syscalls.selects;
         errno = 0;
 
         if (!fstat(fd, &sb)) {
@@ -724,18 +731,18 @@ examine_select(fd_set * readfds, fd_set * writefds)
         }
 
         F = &fd_table[fd];
-        debugs(5, 0, "FD " << fd << ": " << xstrerror());
-        debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
-        debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
-        debugs(5, 0, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);
+        debugs(5, DBG_CRITICAL, "FD " << fd << ": " << xstrerror());
+        debugs(5, DBG_CRITICAL, "WARNING: FD " << fd << " has handlers, but it's invalid.");
+        debugs(5, DBG_CRITICAL, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
+        debugs(5, DBG_CRITICAL, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);
 
         for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
-            debugs(5, 0, " close handler: " << ch);
+            debugs(5, DBG_CRITICAL, " close handler: " << ch);
 
         if (F->closeHandler != NULL) {
             commCallCloseHandlers(fd);
         } else if (F->timeoutHandler != NULL) {
-            debugs(5, 0, "examine_select: Calling Timeout Handler");
+            debugs(5, DBG_CRITICAL, "examine_select: Calling Timeout Handler");
             ScheduleCallHere(F->timeoutHandler);
         }
 
@@ -754,20 +761,20 @@ examine_select(fd_set * readfds, fd_set * writefds)
 static void
 commIncomingStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
-                      incoming_icp_interval >> INCOMING_FACTOR);
+    storeAppendPrintf(sentry, "Current incoming_udp_interval: %d\n",
+                      incoming_udp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",
                       incoming_dns_interval >> INCOMING_FACTOR);
-    storeAppendPrintf(sentry, "Current incoming_http_interval: %d\n",
-                      incoming_http_interval >> INCOMING_FACTOR);
+    storeAppendPrintf(sentry, "Current incoming_tcp_interval: %d\n",
+                      incoming_tcp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "Histogram of events per incoming socket type\n");
-    storeAppendPrintf(sentry, "ICP Messages handled per comm_select_icp_incoming() call:\n");
-    statCounter.comm_icp_incoming.dump(sentry, statHistIntDumper);
+    storeAppendPrintf(sentry, "ICP Messages handled per comm_select_udp_incoming() call:\n");
+    statCounter.comm_udp_incoming.dump(sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "DNS Messages handled per comm_select_dns_incoming() call:\n");
     statCounter.comm_dns_incoming.dump(sentry, statHistIntDumper);
-    storeAppendPrintf(sentry, "HTTP Messages handled per comm_select_http_incoming() call:\n");
-    statCounter.comm_http_incoming.dump(sentry, statHistIntDumper);
+    storeAppendPrintf(sentry, "HTTP Messages handled per comm_select_tcp_incoming() call:\n");
+    statCounter.comm_tcp_incoming.dump(sentry, statHistIntDumper);
 }
 
 void
@@ -775,10 +782,10 @@ commUpdateReadBits(int fd, PF * handler)
 {
     if (handler && !FD_ISSET(fd, &global_readfds)) {
         FD_SET(fd, &global_readfds);
-        nreadfds++;
+        ++nreadfds;
     } else if (!handler && FD_ISSET(fd, &global_readfds)) {
         FD_CLR(fd, &global_readfds);
-        nreadfds--;
+        --nreadfds;
     }
 }
 
@@ -787,10 +794,10 @@ commUpdateWriteBits(int fd, PF * handler)
 {
     if (handler && !FD_ISSET(fd, &global_writefds)) {
         FD_SET(fd, &global_writefds);
-        nwritefds++;
+        ++nwritefds;
     } else if (!handler && FD_ISSET(fd, &global_writefds)) {
         FD_CLR(fd, &global_writefds);
-        nwritefds--;
+        --nwritefds;
     }
 }
 

@@ -170,15 +170,19 @@ ldap_escape_value(char *escaped, int size, const char *src)
             n += 3;
             size -= 3;
             if (size > 0) {
-                *escaped++ = '\\';
-                snprintf(escaped, 3, "%02x", (int) *src++);
+                *escaped = '\\';
+                ++escaped;
+                snprintf(escaped, 3, "%02x", (int) *src);
+                ++src;
                 escaped += 2;
             }
             break;
         default:
-            *escaped++ = *src++;
-            n++;
-            size--;
+            *escaped = *src;
+            ++escaped;
+            ++src;
+            ++n;
+            --size;
         }
     }
     *escaped = '\0';
@@ -226,7 +230,7 @@ retrysrch:
                     ldap_msgfree(res);
                     /* try to connect to the LDAP server agin, maybe my persisten conexion failed. */
                     if (!retry) {
-                        retry++;
+                        ++retry;
                         ldap_unbind(ld);
                         ld = NULL;
                         ldapconnect();
@@ -267,7 +271,7 @@ retrydnattr:
                     password = *value;
                     break;
                 }
-                value++;
+                ++value;
             }
             debug("password: %s\n", password);
             if (password)
@@ -279,7 +283,7 @@ retrydnattr:
             fprintf(stderr, PROGRAM_NAME " WARNING, LDAP error '%s'\n", ldap_err2string(rc));
             /* try to connect to the LDAP server agin, maybe my persisten conexion failed. */
             if (!retry) {
-                retry++;
+                ++retry;
                 ldap_unbind(ld);
                 ld = NULL;
                 ldapconnect();
@@ -330,7 +334,7 @@ ldapconnect(void)
                             sslpath);
                     exit(1);
                 } else {
-                    sslinit++;
+                    ++sslinit;
                 }
                 if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
                     fprintf(stderr, "\nUnable to connect to SSL LDAP server: %s port:%d\n",
@@ -408,14 +412,14 @@ LDAPArguments(int argc, char **argv)
                 value = argv[1] + 2;
             } else if (argc > 2) {
                 value = argv[2];
-                argv++;
-                argc--;
+                ++argv;
+                --argc;
             } else
                 value = "";
             break;
         }
-        argv++;
-        argc--;
+        ++argv;
+        --argc;
         switch (option) {
         case 'H':
 #if !HAS_URI_SUPPORT
@@ -559,8 +563,8 @@ LDAPArguments(int argc, char **argv)
         } else {
             ldapServer = xstrdup(value);
         }
-        argc--;
-        argv++;
+        --argc;
+        ++argv;
     }
 
     if (!ldapServer)

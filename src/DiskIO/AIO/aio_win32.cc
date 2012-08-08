@@ -101,7 +101,7 @@ int aio_read(struct aiocb *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81,1, "aio_read: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_read: GetLastError=" << errno  );
         return -1;
     }
 
@@ -153,7 +153,7 @@ int aio_read64(struct aiocb64 *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81, 1, "aio_read: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_read: GetLastError=" << errno  );
         return -1;
     }
 
@@ -213,7 +213,7 @@ int aio_write(struct aiocb *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81, 1, "aio_write: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_write: GetLastError=" << errno  );
         return -1;
     }
 
@@ -265,7 +265,7 @@ int aio_write64(struct aiocb64 *aiocbp)
     /* Test to see if the I/O was queued successfully. */
     if (!IoOperationStatus) {
         errno = GetLastError();
-        debugs(81, 1, "aio_write: GetLastError=" << errno  );
+        debugs(81, DBG_IMPORTANT, "aio_write: GetLastError=" << errno  );
         return -1;
     }
 
@@ -320,7 +320,7 @@ int aio_open(const char *path, int mode)
                            FILE_FLAG_OVERLAPPED,	/* file attributes         */
                            NULL			            /* handle to template file */
                           )) != INVALID_HANDLE_VALUE) {
-        statCounter.syscalls.disk.opens++;
+        ++ statCounter.syscalls.disk.opens;
         fd = _open_osfhandle((long) hndl, 0);
         commSetCloseOnExec(fd);
         fd_open(fd, FD_FILE, path);
@@ -337,7 +337,7 @@ void aio_close(int fd)
 {
     CloseHandle((HANDLE)_get_osfhandle(fd));
     fd_close(fd);
-    statCounter.syscalls.disk.closes++;
+    ++ statCounter.syscalls.disk.closes;
 }
 
 

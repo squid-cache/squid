@@ -104,6 +104,8 @@ public:
                                uint32_t refcount,
                                uint16_t flags,
                                int clean);
+    /// Undo the effects of UFSSwapDir::addDiskRestore().
+    void undoAddDiskRestore(StoreEntry *e);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();
     virtual ConfigOption *getOptionTree() const;
@@ -283,10 +285,11 @@ protected:
     char *read_buf;
 
 private:
-    CBDATA_CLASS(UFSStoreState);
     void openDone();
     void freePending();
     void doWrite();
+
+    CBDATA_CLASS(UFSStoreState);
 };
 
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read);
@@ -325,12 +328,13 @@ public:
     RemovalPolicyWalker *walker;
 
 private:
-    CBDATA_CLASS2(StoreSearchUFS);
     /// \bug (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
     StoreEntry * current;
     bool _done;
+
+    CBDATA_CLASS2(StoreSearchUFS);
 };
 
 
@@ -372,18 +376,6 @@ public:
     RebuildState(RefCount<UFSSwapDir> sd);
     ~RebuildState();
 
-    /** \todo Iterator API - garh, wrong place */
-    /**
-     * callback the client when a new StoreEntry is available
-     * or an error occurs
-     */
-    virtual void next(void (callback)(void *cbdata), void *cbdata);
-
-    /**
-     \retval true if a new StoreEntry is immediately available
-     \retval false if a new StoreEntry is NOT immediately available
-     */
-    virtual bool next();
     virtual bool error() const;
     virtual bool isDone() const;
     virtual StoreEntry *currentItem();
@@ -392,7 +384,6 @@ public:
     int n_read;
     /*    FILE *log;*/
     UFSSwapLogParser *LogParser;
-    int speed;
     int curlvl1;
     int curlvl2;
 
@@ -413,10 +404,10 @@ public:
     struct _store_rebuild_data counts;
 
 private:
-    CBDATA_CLASS2(RebuildState);
     void rebuildFromDirectory();
     void rebuildFromSwapLog();
     void rebuildStep();
+    void undoAdd();
     int getNextFile(sfileno *, int *size);
     StoreEntry *currentEntry() const;
     void currentEntry(StoreEntry *);
@@ -426,6 +417,8 @@ private:
     /// \bug (callback) should be hidden behind a proper human readable name
     void (callback)(void *cbdata);
     void *cbdata;
+
+    CBDATA_CLASS2(RebuildState);
 };
 
 #if _USE_INLINE_

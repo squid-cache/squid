@@ -168,6 +168,8 @@ public:
 
     /// record error detail in the virgin request if possible
     virtual void detailError(int errDetail);
+    // Icap::Xaction API
+    virtual void clearError();
 
 private:
     virtual void start();

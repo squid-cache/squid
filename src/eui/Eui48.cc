@@ -123,7 +123,7 @@ Eui::Eui48::decode(const char *asc)
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
 
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
-        debugs(28, 0, "Decode EUI-48: Invalid ethernet address '" << asc << "'");
+        debugs(28, DBG_CRITICAL, "Decode EUI-48: Invalid ethernet address '" << asc << "'");
         clear();
         return false;		/* This is not valid address */
     }
@@ -153,9 +153,7 @@ Eui::Eui48::encode(char *buf, const int len)
 bool
 Eui::Eui48::lookup(const Ip::Address &c)
 {
-    struct arpreq arpReq;
 #if !_SQUID_WINDOWS_
-    struct sockaddr_in *sa = NULL;
 #endif /* !_SQUID_WINDOWS_ */
 
     Ip::Address ipAddr = c;
@@ -187,9 +185,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     /*
      * Set up structures for ARP lookup with blank interface name
      */
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    sa = (sockaddr_in*)&arpReq.arp_pa;
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -220,14 +219,14 @@ Eui::Eui48::lookup(const Ip::Address &c)
     ifc.ifc_buf = (char *)ifbuffer;
 
     if (ioctl(tmpSocket, SIOCGIFCONF, &ifc) < 0) {
-        debugs(28, 1, "Attempt to retrieve interface list failed: " << xstrerror());
+        debugs(28, DBG_IMPORTANT, "Attempt to retrieve interface list failed: " << xstrerror());
         clear();
         close(tmpSocket);
         return false;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
-        debugs(28, 1, "Interface list too long - " << ifc.ifc_len);
+        debugs(28, DBG_IMPORTANT, "Interface list too long - " << ifc.ifc_len);
         clear();
         close(tmpSocket);
         return false;
@@ -273,7 +272,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
             else if (ENODEV == errno)
                 (void) 0;
             else
-                debugs(28, 1, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerror());
+                debugs(28, DBG_IMPORTANT, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerror());
 
             continue;
         }
@@ -311,10 +310,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
 
     /* Set up structures for ARP lookup with blank interface name */
-
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    sa = (sockaddr_in*)&arpReq.arp_pa;
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -363,10 +362,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     /*
     * Set up structures for ARP lookup with blank interface name
     */
-
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    sa = (struct sockaddr_in*) &arpReq.arp_pa;
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -383,19 +382,19 @@ Eui::Eui48::lookup(const Ip::Address &c)
     mib[5] = RTF_LLINFO;
 
     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-        debugs(28, 0, "Can't estimate ARP table size!");
+        debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
         clear();
         return false;
     }
 
     if ((buf = (char *)xmalloc(needed)) == NULL) {
-        debugs(28, 0, "Can't allocate temporary ARP table!");
+        debugs(28, DBG_CRITICAL, "Can't allocate temporary ARP table!");
         clear();
         return false;
     }
 
     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-        debugs(28, 0, "Can't retrieve ARP table!");
+        debugs(28, DBG_CRITICAL, "Can't retrieve ARP table!");
         xfree(buf);
         clear();
         return false;
@@ -455,32 +454,33 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     DWORD            i;
 
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
     /* Get size of Windows ARP table */
     if (GetIpNetTable(NetTable, &ipNetTableLen, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
-        debugs(28, 0, "Can't estimate ARP table size!");
+        debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
         clear();
         return false;
     }
 
     /* Allocate space for ARP table and assign pointers */
     if ((NetTable = (PMIB_IPNETTABLE)xmalloc(ipNetTableLen)) == NULL) {
-        debugs(28, 0, "Can't allocate temporary ARP table!");
+        debugs(28, DBG_CRITICAL, "Can't allocate temporary ARP table!");
         clear();
         return false;
     }
 
     /* Get actual ARP table */
     if ((dwNetTable = GetIpNetTable(NetTable, &ipNetTableLen, FALSE)) != NO_ERROR) {
-        debugs(28, 0, "Can't retrieve ARP table!");
+        debugs(28, DBG_CRITICAL, "Can't retrieve ARP table!");
         xfree(NetTable);
         clear();
         return false;
     }
 
     /* Find MAC address from net table */
-    for (i = 0 ; i < NetTable->dwNumEntries ; i++) {
+    for (i = 0 ; i < NetTable->dwNumEntries ; ++i) {
         in_addr a;
         a.s_addr = NetTable->table[i].dwAddr;
         if (c == a && (NetTable->table[i].dwType > 2)) {
@@ -511,7 +511,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
 #else
 
-    debugs(28, 0, "ERROR: ARP / MAC / EUI-* operations not supported on this operating system.");
+    debugs(28, DBG_CRITICAL, "ERROR: ARP / MAC / EUI-* operations not supported on this operating system.");
 
 #endif
     /*

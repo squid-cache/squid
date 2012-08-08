@@ -86,7 +86,7 @@ public:
     virtual void write (StoreIOBuffer);
     virtual _SQUID_INLINE_ bool isEmpty() const;
     virtual bool isAccepting() const;
-    virtual size_t bytesWanted(Range<size_t> const) const;
+    virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
@@ -240,7 +240,7 @@ public:
 
     bool isEmpty () const {return true;}
 
-    virtual size_t bytesWanted(Range<size_t> const aRange) const { assert (aRange.size()); return aRange.end - 1;}
+    virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const { return aRange.end; }
 
     void operator delete(void *address);
     void complete() {}
@@ -350,6 +350,11 @@ public:
     // because test cases use non-StoreController derivatives as Root
     /// called when the entry is no longer needed by any transaction
     virtual void handleIdleEntry(StoreEntry &e) {}
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // because test cases use non-StoreController derivatives as Root
+    /// called to get rid of no longer needed entry data in RAM, if any
+    virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable) {}
 
 private:
     static RefCount<Store> CurrentRoot;

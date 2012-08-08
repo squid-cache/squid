@@ -99,7 +99,6 @@ public:
     StoreIOBuffer copyInto;
 
 private:
-    CBDATA_CLASS(store_client);
     void fileRead();
     void scheduleDiskRead();
     void scheduleMemRead();
@@ -122,6 +121,9 @@ public:
         STCB *callback_handler;
         void *callback_data;
     } _callback;
+
+private:
+    CBDATA_CLASS(store_client);
 };
 
 SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);

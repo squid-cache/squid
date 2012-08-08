@@ -82,7 +82,7 @@ MmappedFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         debugs(79,3, HERE << "open error: " << xstrerror());
         error_ = true;
     } else {
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         debugs(79,3, HERE << "FD " << fd);
 
         // setup mapping boundaries
@@ -110,7 +110,7 @@ void MmappedFile::doClose()
     if (fd >= 0) {
         file_close(fd);
         fd = -1;
-        store_open_disk_fd--;
+        --store_open_disk_fd;
     }
 }
 
@@ -189,10 +189,10 @@ MmappedFile::write(WriteRequest *aRequest)
     const ssize_t written =
         pwrite(fd, aRequest->buf, aRequest->len, aRequest->offset);
     if (written < 0) {
-        debugs(79,1, HERE << "error: " << xstrerr(errno));
+        debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(errno));
         error_ = true;
     } else if (static_cast<size_t>(written) != aRequest->len) {
-        debugs(79,1, HERE << "problem: " << written << " < " << aRequest->len);
+        debugs(79, DBG_IMPORTANT, HERE << "problem: " << written << " < " << aRequest->len);
         error_ = true;
     }
 

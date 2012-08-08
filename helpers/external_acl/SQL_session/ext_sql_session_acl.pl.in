@@ -1,0 +1,177 @@
+#!@PERL@
+use strict;
+use DBI;
+use Getopt::Long;
+use Pod::Usage;
+$|=1;
+
+=pod
+
+=head1 NAME
+
+ext_sql_session_acl.pl - SQL Database session lookup helper for Squid
+
+=cut
+
+my $dsn = "DBI:mysql:database=squid";
+my $db_user = undef;
+my $db_passwd = undef;
+my $db_table = "passwd";
+my $db_uidcol = "id";
+my $db_usercol = "''";
+my $db_tagcol = "''";
+my $db_cond = "enabled = 1";
+my $persist = 0;
+my $debug = 0;
+
+=pod
+
+=head1 SYNOPSIS
+
+ext_sql_session_acl [options]
+
+=head1 DESCRIPTION
+
+Validates an HTTP requests access authorization with a session database.
+
+Taking an identity token to be validated (as determined by the external_acl_type format)
+it returns a username or tag associated with the identity token passed in.
+
+Common forms of identifiers are IP address, EUI (MAC) address, passwords, or UUID tokens.
+
+This program uses Squid concurrency support.
+
+=over 8
+
+=item	B<--dsn>
+
+Database DSN. Default "DBI:mysql:database=squid"
+
+=item	B<--user>
+
+Database User
+
+=item	B<--password>
+
+Database password
+
+=item	B<--table>
+
+Database table. Default "passwd".
+
+=item	B<--uidcol>
+
+Unique Session Identifier column. Default "id".
+
+=item	B<--usercol>
+
+External ACL user= result column.
+
+=item	B<--tagcol>
+
+External ACL tag= result column.
+
+=item	B<--cond>
+
+Condition, defaults to enabled=1. Specify 1 or "" for no condition
+
+=item	B<--persist>
+
+Keep a persistent database connection open between queries. 
+
+=item	B<--debug>
+
+Print Debug output traces to stderr.
+
+=back
+
+=cut
+
+GetOptions(
+	'dsn=s' => \$dsn,
+	'user=s' => \$db_user,
+	'password=s' => \$db_passwd,
+	'table=s' => \$db_table,
+	'uidcol=s' => \$db_uidcol,
+	'usercol=s' => \$db_usercol,
+	'tagcol=s' => \$db_tagcol,
+	'cond=s' => \$db_cond,
+	'persist' => \$persist,
+	'debug' => \$debug,
+	);
+
+my ($_dbh, $_sth);
+
+sub close_db()
+{
+    return if !defined($_dbh);
+    undef $_sth;
+    $_dbh->disconnect();
+    undef $_dbh;
+}
+
+sub open_db()
+{
+    return $_sth if defined $_sth;
+    $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
+    if (!defined $_dbh) {
+    	warn ("Could not connect to $dsn\n");
+	return undef;
+    }
+    $_sth = $_dbh->prepare("SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
+                           ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+
+    print(stderr "Query: SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
+                           ($db_cond ne "" ? " AND $db_cond" : "")) if ($debug);
+
+    return $_sth;
+}
+
+sub query_db($) {
+    my $uid = @_[0];
+    my ($sth) = open_db() || return undef;
+    print(stderr "UID queried: '".$uid."'\n") if ($debug);
+    if (!$sth->execute($uid)) {
+	close_db();
+	open_db() || return undef;
+	$sth->execute($uid) || return undef;;
+    }
+    return $sth;
+}
+my $status;
+
+while (<>) {
+    my $string = $_;
+    $string =~ m/^(\d+)\s(.*)$/;
+    my ($cid, $uid) = ($1, $2);
+
+    $status = "ERR";
+    $cid =~ s/%(..)/pack("H*", $1)/ge;
+    $uid =~ s/%(..)/pack("H*", $2)/ge;
+
+    print(stderr "Received: Channel=".$cid.", UID='".$uid."'\n") if ($debug);
+
+    $status = $cid . " ERR database error";
+    my $sth = query_db($uid) || next;
+    print(stderr "Rows: ". $sth->rows()."\n") if ($debug);
+    $status = $cid . " ERR unknown UID '".$uid."'";
+    my $row = $sth->fetchrow_hashref() || next;
+    $status = $cid . " OK" . ($row->{'user'} ne "" ? " user=" . $row->{'user'} : "" ) . ($row->{'tag'} ne "" ? " tag=" . $row->{'tag'} : "" );
+    $sth->finish();
+} continue {
+    close_db() if (!$persist);
+    print $status . "\n";
+}
+
+=pod
+
+=head1 COPYRIGHT
+
+Copyright (C) 2012 Amos Jeffries <amosjeffries@squid-cache.org>
+Based on original work in DB_auth by Henrik Nordstrom <henrik@henriknordstrom.net>
+With assistance of Nishant Sharma <codemarauder@gmail.com>
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at your opinion) any
+later version.
+
+=cut

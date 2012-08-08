@@ -116,7 +116,7 @@ public:
     log_type logType;
 
     struct timeval start_time;
-    AccessLogEntry al;
+    AccessLogEntry::Pointer al; ///< access.log entry
 
     struct {
         unsigned int accel:1;
@@ -148,21 +148,22 @@ public:
 #endif
 
 private:
-    CBDATA_CLASS(ClientHttpRequest);
     int64_t maxReplyBodySize_;
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
     ConnStateData * conn_;
 
 #if USE_SSL
-    /// whether the request needs to be bumped
-    enum { needUnknown,  needConfirmed,  needNot } sslBumpNeed;
+    /// whether (and how) the request needs to be bumped
+    Ssl::BumpMode sslBumpNeed_;
 
 public:
-    /// return true if the request needs to be bumped
-    bool sslBumpNeeded() const;
+    /// returns raw sslBump mode value
+    Ssl::BumpMode sslBumpNeed() const { return sslBumpNeed_; }
+    /// returns true if and only if the request needs to be bumped
+    bool sslBumpNeeded() const { return sslBumpNeed_ == Ssl::bumpServerFirst || sslBumpNeed_ == Ssl::bumpClientFirst; }
     /// set the sslBumpNeeded state
-    void sslBumpNeeded(bool isNeeded);
+    void sslBumpNeed(Ssl::BumpMode mode);
     void sslBumpStart();
     void sslBumpEstablish(comm_err_t errflag);
 #endif
@@ -198,6 +199,9 @@ private:
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;
 #endif
+
+private:
+    CBDATA_CLASS(ClientHttpRequest);
 };
 
 /* client http based routines */

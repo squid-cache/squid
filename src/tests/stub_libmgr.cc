@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "comm/Connection.h"
 
 #define STUB_API "lmgr/libmgr.la"
 #include "tests/STUB.h"
@@ -64,7 +65,7 @@ void Mgr::OfflineToggleAction::dump(StoreEntry *entry) STUB
 
 void Mgr::RegisterBasics() STUB
 
-#include "CountersAction.h"
+#include "mgr/CountersAction.h"
 //Mgr::CountersActionData::CountersActionData() STUB
 Mgr::CountersActionData& Mgr::CountersActionData::operator +=(const Mgr::CountersActionData& stats) STUB_RETVAL(*this)
 

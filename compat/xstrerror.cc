@@ -83,7 +83,7 @@ xstrerr(int error)
 
 #if _SQUID_WINDOWS_
     // Description of WSAGetLastError()
-    for (size_t i = 0; i < sizeof(_wsaerrtext) / sizeof(struct _wsaerrtext); i++) {
+    for (size_t i = 0; i < sizeof(_wsaerrtext) / sizeof(struct _wsaerrtext); ++i) {
         if (_wsaerrtext[i].err == error) {
             // small optimization, save using a temporary buffer and two copies...
             snprintf(xstrerror_buf, BUFSIZ, "(%d) %s, %s", error, _wsaerrtext[i].errconst, _wsaerrtext[i].errdesc);

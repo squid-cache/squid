@@ -3,7 +3,7 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
+#include "anyp/PortCfg.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "SquidTime.h"
@@ -28,15 +28,13 @@ void Ssl::Helper::Init()
 {
     assert(ssl_crtd == NULL);
 
-    bool useSslBump = false;
-    for (http_port_list *s = ::Config.Sockaddr.http; s; s = s->next) {
-        if (s->sslBump) {
-            useSslBump = true;
-            break;
-        }
-    }
-
-    if (!useSslBump)
+    // we need to start ssl_crtd only if some port(s) need to bump SSL
+    bool found = false;
+    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; !found && s; s = s->next)
+        found = s->sslBump;
+    for (AnyP::PortCfg *s = ::Config.Sockaddr.https; !found && s; s = s->next)
+        found = s->sslBump;
+    if (!found)
         return;
 
     ssl_crtd = new helper("ssl_crtd");
@@ -95,7 +93,7 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
             first_warn = squid_curtime;
         if (squid_curtime - first_warn > 3 * 60)
             fatal("SSL servers not responding for 3 minutes");
-        debugs(34, 1, HERE << "Queue overload, rejecting");
+        debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
         callback(data, (char *)"error 45 Temporary network problem, please retry later");
         return;
     }

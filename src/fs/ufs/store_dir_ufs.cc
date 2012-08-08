@@ -318,7 +318,7 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     int x;
     storeAppendPrintf(&sentry, "First level subdirectories: %d\n", l1);
     storeAppendPrintf(&sentry, "Second level subdirectories: %d\n", l2);
-    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", maxSize() >> 10);
+    storeAppendPrintf(&sentry, "Maximum Size: %" PRIu64 " KB\n", maxSize() >> 10);
     storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSize() / 1024.0);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
                       Math::doublePercent(currentSize(), maxSize()));
@@ -395,7 +395,7 @@ UFSSwapDir::maintain()
         if (!e)
             break;		/* no more objects */
 
-        removed++;
+        ++removed;
 
         e->release();
     }
@@ -509,7 +509,6 @@ UFSSwapDir::createDirectory(const char *aPath, int should_exist)
         } else {
             fatalf("Swap directory %s is not a directory.", aPath);
         }
-
     } else if (0 == mkdir(aPath, 0755)) {
         debugs(47, (should_exist ? 1 : 3), aPath << " created");
         created = 1;
@@ -551,7 +550,7 @@ UFSSwapDir::verifyCacheDirs()
     if (!pathIsDirectory(path))
         return true;
 
-    for (int j = 0; j < l1; j++) {
+    for (int j = 0; j < l1; ++j) {
         char const *aPath = swapSubDir(j);
 
         if (!pathIsDirectory(aPath))
@@ -566,7 +565,7 @@ UFSSwapDir::createSwapSubDirs()
 {
     LOCAL_ARRAY(char, name, MAXPATHLEN);
 
-    for (int i = 0; i < l1; i++) {
+    for (int i = 0; i < l1; ++i) {
         snprintf(name, MAXPATHLEN, "%s/%02X", path, i);
 
         int should_exist;
@@ -578,7 +577,7 @@ UFSSwapDir::createSwapSubDirs()
 
         debugs(47, 1, "Making directories in " << name);
 
-        for (int k = 0; k < l2; k++) {
+        for (int k = 0; k < l2; ++k) {
             snprintf(name, MAXPATHLEN, "%s/%02X/%02X", path, i, k);
             createDirectory(name, should_exist);
         }
@@ -603,7 +602,7 @@ UFSSwapDir::logFile(char const *ext) const
         while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
             pathtmp[strlen(pathtmp) - 1] = '\0';
 
-        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
+        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; ++pathtmp2);
         snprintf(lpath, MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
 
         if (strncmp(lpath, Config.Log.swap, MAXPATHLEN - 64) == 0) {
@@ -723,6 +722,19 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
 }
 
 void
+UFSSwapDir::undoAddDiskRestore(StoreEntry *e)
+{
+    debugs(47, 5, HERE << *e);
+    replacementRemove(e); // checks swap_dirn so do it before we invalidate it
+    // Do not unlink the file as it might be used by a subsequent entry.
+    mapBitReset(e->swap_filen);
+    e->swap_filen = -1;
+    e->swap_dirn = -1;
+    cur_size -= fs.blksize * sizeInBlocks(e->swap_file_sz);
+    --n_disk_objects;
+}
+
+void
 UFSSwapDir::rebuild()
 {
     ++StoreController::store_dirs_rebuilding;
@@ -753,13 +765,6 @@ UFSSwapDir::closeTmpSwapLog()
     safe_free(new_path);
     swaplog_fd = fd;
     debugs(47, 3, "Cache Dir #" << index << " log opened on FD " << fd);
-}
-
-static void
-FreeHeader(void *address)
-{
-    StoreSwapLogHeader *anObject = static_cast <StoreSwapLogHeader *>(address);
-    delete anObject;
 }
 
 FILE *
@@ -800,9 +805,15 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     swaplog_fd = fd;
 
     {
-        StoreSwapLogHeader *header = new StoreSwapLogHeader;
-        file_write(swaplog_fd, -1, header, sizeof(*header),
-                   NULL, NULL, FreeHeader);
+        const StoreSwapLogHeader header;
+        MemBuf buf;
+        buf.init(header.record_size, header.record_size);
+        buf.append(reinterpret_cast<const char*>(&header), sizeof(header));
+        // Pad to keep in sync with UFSSwapDir::writeCleanStart().
+        memset(buf.space(), 0, header.gapSize());
+        buf.appended(header.gapSize());
+        file_write(swaplog_fd, -1, buf.content(), buf.contentSize(),
+                   NULL, NULL, buf.freeFunc());
     }
 
     /* open a read-only stream of the old log */
@@ -888,6 +899,8 @@ UFSSwapDir::writeCleanStart()
     state->outbuf_offset = 0;
     /*copy the header */
     memcpy(state->outbuf, &header, sizeof(StoreSwapLogHeader));
+    // Leave a gap to keep in sync with UFSSwapDir::openTmpSwapLog().
+    memset(state->outbuf + sizeof(StoreSwapLogHeader), 0, header.gapSize());
     state->outbuf_offset += header.record_size;
 
     state->walker = repl->WalkInit(repl);
@@ -937,6 +950,7 @@ UFSCleanLog::write(StoreEntry const &e)
     s.refcount = e.refcount;
     s.flags = e.flags;
     memcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    s.finalize();
     memcpy(outbuf + outbuf_offset, &s, ss);
     outbuf_offset += ss;
     /* buffered write */
@@ -1045,6 +1059,7 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     s->refcount = e.refcount;
     s->flags = e.flags;
     memcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    s->finalize();
     file_write(swaplog_fd,
                -1,
                s,
@@ -1116,7 +1131,8 @@ UFSSwapDir::DirClean(int swap_index)
                 if (UFSSwapDir::FilenoBelongsHere(fn, D0, D1, D2))
                     continue;
 
-        files[k++] = swapfileno;
+        files[k] = swapfileno;
+        ++k;
     }
 
     closedir(dir_pointer);
@@ -1129,7 +1145,7 @@ UFSSwapDir::DirClean(int swap_index)
     if (k > 10)
         k = 10;
 
-    for (n = 0; n < k; n++) {
+    for (n = 0; n < k; ++n) {
         debugs(36, 3, "storeDirClean: Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
         snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
         safeunlink(p2, 0);
@@ -1161,7 +1177,7 @@ UFSSwapDir::CleanEvent(void *unused)
          */
         UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
 
-        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; i++) {
+        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; ++i) {
             /* This is bogus, the controller should just clean each instance once */
             sd = dynamic_cast <SwapDir *>(INDEXSD(i));
 
@@ -1172,7 +1188,8 @@ UFSSwapDir::CleanEvent(void *unused)
 
             assert (usd);
 
-            UFSDirToGlobalDirMapping[n++] = i;
+            UFSDirToGlobalDirMapping[n] = i;
+            ++n;
 
             j += (usd->l1 * usd->l2);
         }
@@ -1189,7 +1206,7 @@ UFSSwapDir::CleanEvent(void *unused)
     /* if the rebuild is finished, start cleaning directories. */
     if (0 == StoreController::store_dirs_rebuilding) {
         n = DirClean(swap_index);
-        swap_index++;
+        ++swap_index;
     }
 
     eventAdd("storeDirClean", CleanEvent, NULL,
@@ -1289,7 +1306,7 @@ UFSSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeUfsUnlink: dirno " << index  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED)) {
+    if (e.swap_status == SWAPOUT_DONE) {
         cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
         --n_disk_objects;
     }
@@ -1331,7 +1348,7 @@ UFSSwapDir::replacementRemove(StoreEntry * e)
 void
 UFSSwapDir::dump(StoreEntry & entry) const
 {
-    storeAppendPrintf(&entry, " %"PRIu64" %d %d", maxSize() >> 20, l1, l2);
+    storeAppendPrintf(&entry, " %" PRIu64 " %d %d", maxSize() >> 20, l1, l2);
     dumpOptions(&entry);
 }
 

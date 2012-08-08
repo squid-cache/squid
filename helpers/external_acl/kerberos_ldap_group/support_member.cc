@@ -62,7 +62,7 @@ check_memberof(struct main_args *margs, char *user, char *domain)
                     debug((char *) "%s| %s: INFO: User %s is member of group@domain %s@%s\n", LogTime(), PROGRAM, user, gr->group, gr->domain);
                 else
                     log((char *) "%s| %s: INFO: User %s is member of group@domain %s@%s\n", LogTime(), PROGRAM, user, gr->group, gr->domain);
-                found++;
+                ++found;
                 break;
             } else {
                 if (debug_enabled)
@@ -90,7 +90,7 @@ check_memberof(struct main_args *margs, char *user, char *domain)
                     debug((char *) "%s| %s: INFO: User %s is member of group@domain %s@%s\n", LogTime(), PROGRAM, user, gr->group, gr->domain);
                 else
                     log((char *) "%s| %s: INFO: User %s is member of group@domain %s@%s\n", LogTime(), PROGRAM, user, gr->group, gr->domain);
-                found++;
+                ++found;
                 break;
             } else {
                 if (debug_enabled)
@@ -118,7 +118,7 @@ check_memberof(struct main_args *margs, char *user, char *domain)
                     debug((char *) "%s| %s: INFO: User %s is member of group@domain %s@%s\n", LogTime(), PROGRAM, user, gr->group, gr->domain ? gr->domain : "NULL");
                 else
                     log((char *) "%s| %s: INFO: User %s is member of group@domain %s@%s\n", LogTime(), PROGRAM, user, gr->group, gr->domain ? gr->domain : "NULL");
-                found++;
+                ++found;
                 break;
             } else {
                 if (debug_enabled)

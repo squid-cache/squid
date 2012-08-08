@@ -1249,7 +1249,7 @@ void Adaptation::Icap::ModXact::swanSong()
     Adaptation::Icap::Xaction::swanSong();
 }
 
-void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
+void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
@@ -1313,7 +1313,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         packerClean(&p);
         mb.clean();
     }
-    prepareLogWithRequestDetails(request_, &al);
+    prepareLogWithRequestDetails(request_, alep);
     Xaction::finalizeLogInfo();
 }
 
@@ -1332,6 +1332,8 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     if (!TheConfig.reuse_connections)
         buf.Printf("Connection: close\r\n");
 
+    const HttpRequest *request = &virginRequest();
+
     // we must forward "Proxy-Authenticate" and "Proxy-Authorization"
     // as ICAP headers.
     if (virgin.header->header.has(HDR_PROXY_AUTHENTICATE)) {
@@ -1342,9 +1344,13 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     if (virgin.header->header.has(HDR_PROXY_AUTHORIZATION)) {
         String vh=virgin.header->header.getByName("Proxy-Authorization");
         buf.Printf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
+    } else if (request->extacl_user.defined() && request->extacl_user.size() && request->extacl_passwd.defined() && request->extacl_passwd.size()) {
+        char loginbuf[256];
+        snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
+                 SQUIDSTRINGPRINT(request->extacl_user),
+                 SQUIDSTRINGPRINT(request->extacl_passwd));
+        buf.Printf("Proxy-Authorization: Basic %s\r\n", old_base64_encode(loginbuf));
     }
-
-    const HttpRequest *request = &virginRequest();
 
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
@@ -1488,6 +1494,9 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
             const char *value = TheConfig.client_username_encode ? old_base64_encode(name) : name;
             buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
         }
+    } else if (request->extacl_user.defined() && request->extacl_user.size()) {
+        const char *value = TheConfig.client_username_encode ? old_base64_encode(request->extacl_user.termedBuf()) : request->extacl_user.termedBuf();
+        buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
     }
 #endif
 }
@@ -1912,6 +1921,17 @@ void Adaptation::Icap::ModXact::detailError(int errDetail)
 
     if (request)
         request->detailError(ERR_ICAP_FAILURE, errDetail);
+}
+
+void Adaptation::Icap::ModXact::clearError()
+{
+    HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
+    // if no adapted request, update virgin (and inherit its properties later)
+    if (!request)
+        request = const_cast<HttpRequest*>(&virginRequest());
+
+    if (request)
+        request->clearError();
 }
 
 /* Adaptation::Icap::ModXactLauncher */

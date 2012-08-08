@@ -7,8 +7,6 @@ EXTRA_PROGRAMS = \
 	ssl_crtd
 
 EXTRA_DIST = \
-	stub_libsslsquid.cc \
-	stub_libsslutil.cc \
 	ssl_crtd.8
 
 if USE_SSL_CRTD
@@ -21,6 +19,7 @@ SSL_CRTD =
 SSL_CRTD_SOURCE =
 endif
 
+## SSL stuff used by main Squid but not by ssl_crtd
 libsslsquid_la_SOURCES = \
 	context_storage.cc \
 	context_storage.h \
@@ -30,20 +29,24 @@ libsslsquid_la_SOURCES = \
 	ErrorDetail.h \
 	ErrorDetailManager.cc \
 	ErrorDetailManager.h \
+	ServerBump.cc \
+	ServerBump.h \
 	support.cc \
-	support.h
+	support.h \
+	\
+	$(SSL_CRTD_SOURCE)
 
+## SSL stuff used by main Squid and ssl_crtd
 libsslutil_la_SOURCES = \
 	gadgets.cc \
 	gadgets.h \
 	crtd_message.cc \
-	crtd_message.h \
-	$(SSL_CRTD_SOURCE)
+	crtd_message.h
 
 libexec_PROGRAMS = \
 	$(SSL_CRTD)
 
 if USE_SSL_CRTD
 ssl_crtd_SOURCES = ssl_crtd.cc certificate_db.cc certificate_db.h
-ssl_crtd_LDADD = $(SSLLIB) -lsslutil $(COMPAT_LIB)
+ssl_crtd_LDADD = libsslutil.la $(SSLLIB) $(COMPAT_LIB)
 endif

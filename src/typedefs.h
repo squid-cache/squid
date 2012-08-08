@@ -91,6 +91,12 @@ typedef struct _link_list link_list;
 
 typedef struct _customlog customlog;
 
+#if USE_SSL
+typedef struct _sslproxy_cert_sign sslproxy_cert_sign;
+
+typedef struct _sslproxy_cert_adapt sslproxy_cert_adapt;
+#endif
+
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 
@@ -137,7 +143,7 @@ typedef void HLPCB(void *, char *buf);
 typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
-typedef void IDNSCB(void *, rfc1035_rr *, int, const char *);
+typedef void IDNSCB(void *, const rfc1035_rr *, int, const char *);
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;

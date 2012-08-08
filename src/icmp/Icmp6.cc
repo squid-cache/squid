@@ -119,12 +119,12 @@ Icmp6::Open(void)
     icmp_sock = socket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
     if (icmp_sock < 0) {
-        debugs(50, 0, HERE << " icmp_sock: " << xstrerror());
+        debugs(50, DBG_CRITICAL, HERE << " icmp_sock: " << xstrerror());
         return -1;
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, 1, "pinger: ICMPv6 socket opened");
+    debugs(42, DBG_IMPORTANT, "pinger: ICMPv6 socket opened");
 
     return icmp_sock;
 }
@@ -158,7 +158,8 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp->icmp6_code = 0;
     icmp->icmp6_cksum = 0;
     icmp->icmp6_id = icmp_ident;
-    icmp->icmp6_seq = (unsigned short) icmp_pkts_sent++;
+    icmp->icmp6_seq = (unsigned short) icmp_pkts_sent;
+    ++icmp_pkts_sent;
 
     icmp6_pktsize = sizeof(struct icmp6_hdr);
 
@@ -196,7 +197,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
                S->ai_addrlen);
 
     if (x < 0) {
-        debugs(42, 1, HERE << "Error sending to ICMPv6 packet to " << to << ". ERR: " << xstrerror());
+        debugs(42, DBG_IMPORTANT, HERE << "Error sending to ICMPv6 packet to " << to << ". ERR: " << xstrerror());
     }
     debugs(42,9, HERE << "x=" << x);
 
@@ -219,7 +220,7 @@ Icmp6::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42,0, HERE << "dropping ICMPv6 read. No socket!?");
+        debugs(42, DBG_CRITICAL, HERE << "dropping ICMPv6 read. No socket!?");
         return;
     }
 
@@ -270,7 +271,7 @@ Icmp6::Recv(void)
         ip = (struct ip6_hdr *) pkt;
         pkt += sizeof(ip6_hdr);
 
-    debugs(42,0, HERE << "ip6_nxt=" << ip->ip6_nxt <<
+    debugs(42, DBG_CRITICAL, HERE << "ip6_nxt=" << ip->ip6_nxt <<
     		", ip6_plen=" << ip->ip6_plen <<
     		", ip6_hlim=" << ip->ip6_hlim <<
     		", ip6_hops=" << ip->ip6_hops	<<

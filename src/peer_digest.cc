@@ -634,7 +634,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
         assert (fetch->entry->getReply()->sline.status != 0);
 
         if (fetch->entry->getReply()->sline.status != HTTP_OK) {
-            debugs(72, 1, "peerDigestSwapInHeaders: " << fetch->pd->host <<
+            debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
                    " status " << fetch->entry->getReply()->sline.status <<
                    " got cached!");
 
@@ -882,7 +882,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
     pd->stats.recv.msgs += fetch->recv.msg;
 
     if (err) {
-        debugs(72, 1, "" << (pcb_valid ? "temporary " : "" ) << "disabling (" << pd->req_result << ") digest from " << host);
+        debugs(72, DBG_IMPORTANT, "" << (pcb_valid ? "temporary " : "" ) << "disabling (" << pd->req_result << ") digest from " << host);
 
         if (pd->cd) {
             cacheDigestDestroy(pd->cd);
@@ -1007,14 +1007,14 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     /* check version requirements (both ways) */
 
     if (cblock.ver.required > CacheDigestVer.current) {
-        debugs(72, 1, "" << host << " digest requires version " <<
+        debugs(72, DBG_IMPORTANT, "" << host << " digest requires version " <<
                cblock.ver.required << "; have: " << CacheDigestVer.current);
 
         return 0;
     }
 
     if (cblock.ver.current < CacheDigestVer.required) {
-        debugs(72, 1, "" << host << " digest is version " <<
+        debugs(72, DBG_IMPORTANT, "" << host << " digest is version " <<
                cblock.ver.current << "; we require: " <<
                CacheDigestVer.required);
 
@@ -1025,13 +1025,13 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     if (cblock.ver.required > cblock.ver.current ||
             cblock.mask_size <= 0 || cblock.capacity <= 0 ||
             cblock.bits_per_entry <= 0 || cblock.hash_func_count <= 0) {
-        debugs(72, 0, "" << host << " digest cblock is corrupted.");
+        debugs(72, DBG_CRITICAL, "" << host << " digest cblock is corrupted.");
         return 0;
     }
 
     /* check consistency further */
     if ((size_t)cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
-        debugs(72, 0, host << " digest cblock is corrupted " <<
+        debugs(72, DBG_CRITICAL, host << " digest cblock is corrupted " <<
                "(mask size mismatch: " << cblock.mask_size << " ? " <<
                cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)
                << ").");
@@ -1040,7 +1040,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 
     /* there are some things we cannot do yet */
     if (cblock.hash_func_count != CacheDigestHashFuncCount) {
-        debugs(72, 0, "" << host << " digest: unsupported #hash functions: " <<
+        debugs(72, DBG_CRITICAL, "" << host << " digest: unsupported #hash functions: " <<
                cblock.hash_func_count << " ? " << CacheDigestHashFuncCount << ".");
         return 0;
     }
@@ -1080,7 +1080,7 @@ peerDigestUseful(const PeerDigest * pd)
     const int bit_util = cacheDigestBitUtil(pd->cd);
 
     if (bit_util > 65) {
-        debugs(72, 0, "Warning: " << pd->host <<
+        debugs(72, DBG_CRITICAL, "Warning: " << pd->host <<
                " peer digest has too many bits on (" << bit_util << "%%).");
 
         return 0;

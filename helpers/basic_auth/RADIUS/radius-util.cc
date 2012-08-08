@@ -79,17 +79,17 @@ static int good_ipaddr(char *addr)
     digit_count = 0;
     while (*addr != '\0' && *addr != ' ') {
         if (*addr == '.') {
-            dot_count++;
+            ++dot_count;
             digit_count = 0;
         } else if (!isdigit(*addr)) {
             dot_count = 5;
         } else {
-            digit_count++;
+            ++digit_count;
             if (digit_count > 3) {
                 dot_count = 5;
             }
         }
-        addr++;
+        ++addr;
     }
     if (dot_count != 3) {
         return(-1);
@@ -112,7 +112,7 @@ static uint32_t ipstr2long(char *ip_str)
     int	cur_byte;
 
     ipaddr = (uint32_t)0;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 4; ++i) {
         ptr = buf;
         count = 0;
         *ptr = '\0';
@@ -120,8 +120,10 @@ static uint32_t ipstr2long(char *ip_str)
             if (!isdigit(*ip_str)) {
                 return((uint32_t)0);
             }
-            *ptr++ = *ip_str++;
-            count++;
+            *ptr = *ip_str;
+            ++ptr;
+            ++ip_str;
+            ++count;
         }
         if (count >= 4 || count == 0) {
             return((uint32_t)0);
@@ -131,7 +133,7 @@ static uint32_t ipstr2long(char *ip_str)
         if (cur_byte < 0 || cur_byte > 255) {
             return((uint32_t)0);
         }
-        ip_str++;
+        ++ip_str;
         ipaddr = ipaddr << 8 | (uint32_t)cur_byte;
     }
     return(ipaddr);

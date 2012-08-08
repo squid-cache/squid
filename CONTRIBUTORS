@@ -1,6 +1,6 @@
 Special thanks go to people who have volunteered their time, effort,
 and ideas to make this software available.
-    
+
     Adam Ciarcinski
     Adrian Chadd <adrian@squid-cache.org>
     Alex Rousskov <rousskov@measurement-factory.com>
@@ -9,6 +9,7 @@ and ideas to make this software available.
     Alexey Veselovsky <alexey.veselovsky@eykontech.com>
     Alin Nastac <mrness@gentoo.org>
     Alter <alter@alter.org.ua>
+    Amos Jeffries <amosjeffries@squid-cache.org>
     Amos Jeffries <squid3@treenet.co.nz>
     Andreas Lamprecht <Andreas.Lamprecht@siemens.at>
     Andres Kroonmaa <andre@ml.ee>
@@ -74,7 +75,9 @@ and ideas to make this software available.
     Graham Keeling <graham@equiinet.com>
     Guido Serassio <serassio@squid-cache.org>
     Hasso Tepper <hasso@estpak.ee>
+    Henrik Nordstr?m <henrik@hlaptop.localdomain>
     Henrik Nordstrom <henrik@henriknordstrom.net>
+    Henrik Nordstrom <hno@squid-cache.org>
     Hide Nagaoka <hide@cc.meisei-u.ac.jp>
     Ian Castle <ian.castle@coldcomfortfarm.net>
     Ian Turner <vectro@pipeline.com>
@@ -149,7 +152,7 @@ and ideas to make this software available.
     Philip Allison <philip.allison@smoothwall.net>
     Philippe Lantin <plantin@cobaltgroup.com>
     Pierangelo Masarati <ando@sys-net.it>
-    Pierre-Louis BRENAC <brenacp@esiee.fr>
+    Pierre-Louis Brenac <brenacp@esiee.fr>
     Przemek Czerkas <pczerkas@mgmnet.pl>
     Rafael Martinez Torres <rmartine@fdi.ucm.es>
     Rafal Ramocki <maniac@sistbg.net>
@@ -162,7 +165,7 @@ and ideas to make this software available.
     Richard Huveneers <Richard.Huveneers@hekkihek.hacom.nl>
     Robert Collins <robertc@robertcollins.net>
     Robert Forster
-    Rodrigo Campos (rodrigo@geekbunker.org)
+    Rodrigo Campos <rodrigo@geekbunker.org>
     Ron Gomes <rrg@ny.ubs.com>
     Russell Street <r.street@auckland.ac.nz>
     Russell Vincent <vincent@ucthpx.uct.ac.za>
@@ -185,9 +188,10 @@ and ideas to make this software available.
     Tony Lorimer <tlorimer@au.mdis.com>
     Unknown - NetBSD Project
     Vincent Regnard
-    Vitaliy Matytsyn (main) <vm@if.bank.gov.ua>
+    Vitaliy Matytsyn <vm@if.bank.gov.ua>
     Wesha <wesha@iname.com>
     Wojtek Sylwestrzak <W.Sylwestrzak@icm.edu.pl>
     Wolfgang Nothdurft <wolfgang@linogate.de>
+    benno@jeamland.net
     fancyrabbit <fancyrabbit@gmail.com>
     vollkommen <vollkommen@gmx.net>

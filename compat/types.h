@@ -123,7 +123,7 @@
 #endif
 
 #ifndef PRIuSIZE
-// TODO: check for support of %zu and use where possible
+// NP: configure checks for support of %zu and defines where possible
 #if SIZEOF_SIZE_T == 4 && _SQUID_MINGW_
 #define PRIuSIZE "I32u"
 #elif SIZEOF_SIZE_T == 4

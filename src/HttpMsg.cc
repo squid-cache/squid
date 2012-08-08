@@ -76,7 +76,7 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
         assert(**blk_end == '\n');
 
         while (*(*blk_end - 1) == '\r')
-            (*blk_end)--;
+            --(*blk_end);
 
         assert(*(*blk_end - 1) == '\n');
 
@@ -102,11 +102,11 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
 
     *blk_end = *blk_start;
 
-    for (nnl = 0; nnl == 0; (*parse_start)++) {
+    for (nnl = 0; nnl == 0; ++(*parse_start)) {
         if (**parse_start == '\r')
             (void) 0;
         else if (**parse_start == '\n')
-            nnl++;
+            ++nnl;
         else
             break;
     }
@@ -128,10 +128,10 @@ httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char
     *blk_end = *blk_start + slen;
 
     while (**blk_end == '\r')   /* CR */
-        (*blk_end)++;
+        ++(*blk_end);
 
     if (**blk_end == '\n')      /* LF */
-        (*blk_end)++;
+        ++(*blk_end);
 
     *parse_start = *blk_end;
 
@@ -164,7 +164,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
 
     // TODO: move to httpReplyParseStep()
     if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize)) {
-        debugs(58, 1, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
+        debugs(58, DBG_IMPORTANT, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
         *error = HTTP_HEADER_TOO_LARGE;
         return false;
     }
@@ -196,7 +196,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) near '" << buf->content() << "'");
 
     if (hdr_sz != (int)hdr_len) {
-        debugs(58, 1, "internal HttpMsg::parse vs. headersEnd error: " <<
+        debugs(58, DBG_IMPORTANT, "internal HttpMsg::parse vs. headersEnd error: " <<
                hdr_sz << " != " << hdr_len);
         hdr_sz = (int)hdr_len; // because old http.cc code used hdr_len
     }
@@ -360,7 +360,7 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
 HttpMsg *
 HttpMsg::_lock()
 {
-    lock_count++;
+    ++lock_count;
     return this;
 }
 

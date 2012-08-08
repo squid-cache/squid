@@ -243,7 +243,8 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     }
     memcpy(domain, tmp.str, tmp.l);
     user = domain + tmp.l;
-    *user++ = '\0';
+    *user = '\0';
+    ++user;
 
     /*      debug("fetching user name\n"); */
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->user, auth->flags);
@@ -411,7 +412,7 @@ process_options(int argc, char *argv[])
         exit(1);
     /* Okay, now begin filling controllers up */
     /* we can avoid memcpy-ing, and just reuse argv[] */
-    for (j = optind; j < argc; j++) {
+    for (j = optind; j < argc; ++j) {
         char *d, *c;
         /* d will not be freed in case of non-error. Since we don't reconfigure,
          * it's going to live as long as the process anyways */
@@ -429,7 +430,8 @@ process_options(int argc, char *argv[])
             free(d);
             continue;
         }
-        *c++ = '\0';
+        *c= '\0';
+        ++c;
         new_dc = (dc *) malloc(sizeof(dc));
         if (!new_dc) {
             fprintf(stderr, "Malloc error while parsing DC options\n");
@@ -439,7 +441,7 @@ process_options(int argc, char *argv[])
         /* capitalize */
         uc(c);
         uc(d);
-        numcontrollers++;
+        ++numcontrollers;
         new_dc->domain = d;
         new_dc->controller = c;
         new_dc->dead = 0;
@@ -468,7 +470,7 @@ obtain_challenge()
 {
     int j = 0;
     const char *ch = NULL;
-    for (j = 0; j < numcontrollers; j++) {
+    for (j = 0; j < numcontrollers; ++j) {
         debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
               current_dc->domain, current_dc->controller, j + 1);
         if (current_dc->dead != 0) {
@@ -698,7 +700,7 @@ main(int argc, char *argv[])
         debug("load balancing. Selected controller #%d\n", n);
         while (n > 0) {
             current_dc = current_dc->next;
-            n--;
+            --n;
         }
     }
     while (1) {

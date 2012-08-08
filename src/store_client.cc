@@ -190,7 +190,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
 {
     cmp_offset = 0;
     flags.disk_io_pending = 0;
-    entry->refcount++;
+    ++ entry->refcount;
 
     if (getType() == STORE_DISK_CLIENT)
         /* assert we'll be able to get the data we want */
@@ -412,7 +412,7 @@ store_client::startSwapin()
 
         return;
     } else {
-        debugs(90, 1, "WARNING: Averted multiple fd operation (1)");
+        debugs(90, DBG_IMPORTANT, "WARNING: Averted multiple fd operation (1)");
         flags.store_copying = 0;
         return;
     }
@@ -498,7 +498,7 @@ store_client::readBody(const char *buf, ssize_t len)
         HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 
         if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, 0, "Could not parse headers from on disk object");
+            debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }
@@ -571,7 +571,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
 
     if (!aBuilder.isBufferSane()) {
         /* oops, bad disk file? */
-        debugs(90, 1, "WARNING: swapfile header inconsistent with available data");
+        debugs(90, DBG_IMPORTANT, "WARNING: swapfile header inconsistent with available data");
         fail();
         return;
     }
@@ -579,7 +579,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     tlv *tlv_list = aBuilder.createStoreMeta ();
 
     if (tlv_list == NULL) {
-        debugs(90, 1, "WARNING: failed to unpack meta data");
+        debugs(90, DBG_IMPORTANT, "WARNING: failed to unpack meta data");
         fail();
         return;
     }
@@ -701,7 +701,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     }
 
     dlinkDelete(&sc->node, &mem->clients);
-    mem->nclients--;
+    -- mem->nclients;
 
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
         e->swapOut();
@@ -709,7 +709,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (sc->swapin_sio != NULL) {
         storeClose(sc->swapin_sio, StoreIOState::readerDone);
         sc->swapin_sio = NULL;
-        statCounter.swap.ins++;
+        ++statCounter.swap.ins;
     }
 
     if (sc->_callback.pending()) {
@@ -758,7 +758,8 @@ StoreEntry::invokeHandlers()
     for (node = mem_obj->clients.head; node; node = nx) {
         sc = (store_client *)node->data;
         nx = node->next;
-        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i++  );
+        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i  );
+        ++i;
 
         if (!sc->_callback.pending())
             continue;
@@ -876,7 +877,7 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
 
     output->Printf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
 
-    output->Printf("\t\tcopy_offset: %"PRId64"\n",
+    output->Printf("\t\tcopy_offset: %" PRId64 "\n",
                    copyInto.offset);
 
     output->Printf("\t\tcopy_size: %d\n",

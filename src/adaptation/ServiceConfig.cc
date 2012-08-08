@@ -155,7 +155,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     // AYJ: most of this is duplicate of urlParse() in src/url.cc
 
     if (!value || !*value) {
-        debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<
                "empty adaptation service URI");
         return false;
     }
@@ -187,7 +187,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
         if ((t = strchr(s, ']')) == NULL)
             return false;
 
-        s++;
+        ++s;
         len = t - s;
         if ((e = strchr(t, ':')) != NULL) {
             have_port = true;
@@ -212,7 +212,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
 
     port = -1;
     if (have_port) {
-        s++;
+        ++s;
 
         if ((e = strchr(s, '/')) != NULL) {
             char *t;
@@ -235,12 +235,12 @@ Adaptation::ServiceConfig::grokUri(const char *value)
 
     // if no port, the caller may use service_configConfigs or supply the default if neeeded
 
-    s++;
+    ++s;
     e = strchr(s, '\0');
     len = e - s;
 
     if (len > 1024) {
-        debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<
                "long resource name (>1024), probably wrong");
     }
 
@@ -257,7 +257,7 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
     else if (!strcmp(value, "1") || !strcmp(value, "on"))
         var = true;
     else {
-        debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<
                "wrong value for boolean " << name << "; " <<
                "'0', '1', 'on', or 'off' expected but got: " << value);
         return false;

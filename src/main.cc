@@ -235,8 +235,8 @@ SignalEngine::checkEvents(int timeout)
 void
 SignalEngine::doShutdown(time_t wait)
 {
-    debugs(1, 1, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
-    debugs(1, 1, "Waiting " << wait << " seconds for active connections to finish");
+    debugs(1, DBG_IMPORTANT, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
+    debugs(1, DBG_IMPORTANT, "Waiting " << wait << " seconds for active connections to finish");
 
     shutting_down = 1;
 
@@ -660,13 +660,12 @@ serverConnectionsOpen(void)
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
-        icpConnectionsOpen();
+        icpOpenPorts();
 #if USE_HTCP
-
-        htcpInit();
+        htcpOpenPorts();
 #endif
 #if SQUID_SNMP
-        snmpConnectionOpen();
+        snmpOpenPorts();
 #endif
 
         clientdbInit();
@@ -703,13 +702,12 @@ serverConnectionsClose(void)
         clientHttpConnectionsClose();
         icpConnectionShutdown();
 #if USE_HTCP
-
         htcpSocketShutdown();
 #endif
 
         icmpEngine.Close();
 #if SQUID_SNMP
-        snmpConnectionClose();
+        snmpClosePorts();
 #endif
 
         asnFreeMemory();
@@ -719,15 +717,14 @@ serverConnectionsClose(void)
 static void
 mainReconfigureStart(void)
 {
-    debugs(1, 1, "Reconfiguring Squid Cache (version " << version_string << ")...");
+    debugs(1, DBG_IMPORTANT, "Reconfiguring Squid Cache (version " << version_string << ")...");
     reconfiguring = 1;
 
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
-    icpConnectionClose();
+    icpClosePorts();
 #if USE_HTCP
-
-    htcpSocketClose();
+    htcpClosePorts();
 #endif
     dnsShutdown();
 #if USE_SSL_CRTD
@@ -861,8 +858,6 @@ mainReconfigureFinish(void *)
 
     writePidFile();		/* write PID file */
 
-    debugs(1, 1, "Ready to serve requests.");
-
     reconfiguring = 0;
 }
 
@@ -908,10 +903,10 @@ setEffectiveUser(void)
 #endif
 
     if (geteuid() == 0) {
-        debugs(0, 0, "Squid is not safe to run as root!  If you must");
-        debugs(0, 0, "start Squid as root, then you must configure");
-        debugs(0, 0, "it to run as a non-priveledged user with the");
-        debugs(0, 0, "'cache_effective_user' option in the config file.");
+        debugs(0, DBG_CRITICAL, "Squid is not safe to run as root!  If you must");
+        debugs(0, DBG_CRITICAL, "start Squid as root, then you must configure");
+        debugs(0, DBG_CRITICAL, "it to run as a non-priveledged user with the");
+        debugs(0, DBG_CRITICAL, "'cache_effective_user' option in the config file.");
         fatal("Don't run Squid as root, set 'cache_effective_user'!");
     }
 }
@@ -925,18 +920,18 @@ mainSetCwd(void)
         if (0 == strcmp("none", Config.coredump_dir)) {
             (void) 0;
         } else if (chdir(Config.coredump_dir) == 0) {
-            debugs(0, 1, "Set Current Directory to " << Config.coredump_dir);
+            debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
             return;
         } else {
-            debugs(50, 0, "chdir: " << Config.coredump_dir << ": " << xstrerror());
+            debugs(50, DBG_CRITICAL, "chdir: " << Config.coredump_dir << ": " << xstrerror());
         }
     }
 
     /* If we don't have coredump_dir or couldn't cd there, report current dir */
     if (getcwd(pathbuf, MAXPATHLEN)) {
-        debugs(0, 1, "Current Directory is " << pathbuf);
+        debugs(0, DBG_IMPORTANT, "Current Directory is " << pathbuf);
     } else {
-        debugs(50, 0, "WARNING: Can't find current directory, getcwd: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "WARNING: Can't find current directory, getcwd: " << xstrerror());
     }
 }
 
@@ -972,29 +967,29 @@ mainInitialize(void)
 
 #endif
 
-    debugs(1, 0, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
+    debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
 
 #if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
-        debugs(1, 0, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
-        debugs(1, 0, "Service command line is: " << WIN32_Service_Command_Line);
+        debugs(1, DBG_CRITICAL, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
+        debugs(1, DBG_CRITICAL, "Service command line is: " << WIN32_Service_Command_Line);
     } else
-        debugs(1, 0, "Running on " << WIN32_OS_string);
+        debugs(1, DBG_CRITICAL, "Running on " << WIN32_OS_string);
 #endif
 
-    debugs(1, 1, "Process ID " << getpid());
+    debugs(1, DBG_IMPORTANT, "Process ID " << getpid());
 
-    debugs(1, 1, "Process Roles:" << ProcessRoles());
+    debugs(1, DBG_IMPORTANT, "Process Roles:" << ProcessRoles());
 
     setSystemLimits();
-    debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
+    debugs(1, DBG_IMPORTANT, "With " << Squid_MaxFD << " file descriptors available");
 
 #if _SQUID_WINDOWS_
 
-    debugs(1, 1, "With " << _getmaxstdio() << " CRT stdio descriptors available");
+    debugs(1, DBG_IMPORTANT, "With " << _getmaxstdio() << " CRT stdio descriptors available");
 
     if (WIN32_Socks_initialized)
-        debugs(1, 1, "Windows sockets initialized");
+        debugs(1, DBG_IMPORTANT, "Windows sockets initialized");
 
     if (WIN32_OS_version > _WIN_OS_WINNT) {
         WIN32_IpAddrChangeMonitorInit();
@@ -1163,8 +1158,6 @@ mainInitialize(void)
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
-
-    debugs(1, 1, "Ready to serve requests.");
 
     if (!configured_once) {
         eventAdd("storeMaintain", Store::Maintain, NULL, 1.0, 1);
@@ -1412,6 +1405,7 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
+    ActivateRegistered(rrFinalizeConfig);
     ActivateRegistered(rrClaimMemoryNeeds);
     ActivateRegistered(rrAfterConfig);
     enter_suid();
@@ -1427,7 +1421,7 @@ SquidMain(int argc, char **argv)
         }
 
         setEffectiveUser();
-        debugs(0, 0, "Creating Swap Directories");
+        debugs(0, DBG_CRITICAL, "Creating Swap Directories");
         Store::Root().create();
 
         return 0;
@@ -1515,7 +1509,7 @@ sendSignal(void)
     debug_log = stderr;
 
     if (strcmp(Config.pidFilename, "none") == 0) {
-        debugs(0, 1, "No pid_filename specified. Trusting you know what you are doing.");
+        debugs(0, DBG_IMPORTANT, "No pid_filename specified. Trusting you know what you are doing.");
     }
 
     pid = readPidFile();
@@ -1627,7 +1621,7 @@ checkRunningPid(void)
     if (kill(pid, 0) < 0)
         return 0;
 
-    debugs(0, 0, "Squid is already running!  Process ID " <<  pid);
+    debugs(0, DBG_CRITICAL, "Squid is already running!  Process ID " <<  pid);
 
     return 1;
 }
@@ -1783,6 +1777,7 @@ watch_child(char *argv[])
             leave_suid();
             DeactivateRegistered(rrAfterConfig);
             DeactivateRegistered(rrClaimMemoryNeeds);
+            DeactivateRegistered(rrFinalizeConfig);
             enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
@@ -1820,20 +1815,19 @@ SquidShutdown()
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif
 
-    debugs(1, 1, "Shutting down...");
+    debugs(1, DBG_IMPORTANT, "Shutting down...");
     dnsShutdown();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
     redirectShutdown();
     externalAclShutdown();
-    icpConnectionClose();
+    icpClosePorts();
 #if USE_HTCP
-
-    htcpSocketClose();
+    htcpClosePorts();
 #endif
 #if SQUID_SNMP
-    snmpConnectionClose();
+    snmpClosePorts();
 #endif
 #if USE_WCCP
 
@@ -1879,6 +1873,7 @@ SquidShutdown()
     DiskIOModule::FreeAllModules();
     DeactivateRegistered(rrAfterConfig);
     DeactivateRegistered(rrClaimMemoryNeeds);
+    DeactivateRegistered(rrFinalizeConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
@@ -1904,6 +1899,9 @@ SquidShutdown()
     }
 
 #endif
+    // clear StoreController
+    Store::Root(NULL);
+
     fdDumpOpen();
 
     comm_exit();
@@ -1914,7 +1912,7 @@ SquidShutdown()
 
     xmalloc_find_leaks();
 
-    debugs(1, 0, "Memory used after shutdown: " << xmalloc_total);
+    debugs(1, DBG_CRITICAL, "Memory used after shutdown: " << xmalloc_total);
 
 #endif
 #if MEM_GEN_TRACE
@@ -1931,7 +1929,7 @@ SquidShutdown()
         }
     }
 
-    debugs(1, 1, "Squid Cache (Version " << version_string << "): Exiting normally.");
+    debugs(1, DBG_IMPORTANT, "Squid Cache (Version " << version_string << "): Exiting normally.");
 
     /*
      * DPW 2006-10-23

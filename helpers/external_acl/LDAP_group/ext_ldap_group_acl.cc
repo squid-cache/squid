@@ -251,14 +251,14 @@ main(int argc, char **argv)
                 value = argv[1] + 2;
             } else if (argc > 2) {
                 value = argv[2];
-                argv++;
-                argc--;
+                ++argv;
+                --argc;
             } else
                 value = "";
             break;
         }
-        argv++;
-        argc--;
+        ++argv;
+        --argc;
         switch (option) {
         case 'H':
 #if !HAS_URI_SUPPORT
@@ -405,8 +405,8 @@ main(int argc, char **argv)
         } else {
             ldapServer = xstrdup(value);
         }
-        argc--;
-        argv++;
+        --argc;
+        ++argv;
     }
 
     if (!ldapServer)
@@ -528,7 +528,7 @@ recover:
                             fprintf(stderr, "FATAL: Unable to initialise SSL with cert path %s\n", sslpath);
                             exit(1);
                         } else {
-                            sslinit++;
+                            ++sslinit;
                         }
                         if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
                             fprintf(stderr, "FATAL: Unable to connect to SSL LDAP server: %s port:%d\n",
@@ -631,15 +631,19 @@ ldap_escape_value(char *escaped, int size, const char *src)
             n += 3;
             size -= 3;
             if (size > 0) {
-                *escaped++ = '\\';
-                snprintf(escaped, 3, "%02x", (unsigned char) *src++);
+                *escaped = '\\';
+                ++escaped;
+                snprintf(escaped, 3, "%02x", (unsigned char) *src);
+                ++src;
                 escaped += 2;
             }
             break;
         default:
-            *escaped++ = *src++;
-            n++;
-            size--;
+            *escaped = *src;
+            ++escaped;
+            ++src;
+            ++n;
+            --size;
         }
     }
     *escaped = '\0';
@@ -653,18 +657,18 @@ build_filter(char *filter, int size, const char *templ, const char *user, const 
     while (*templ && size > 0) {
         switch (*templ) {
         case '%':
-            templ++;
+            ++templ;
             switch (*templ) {
             case 'u':
             case 'v':
-                templ++;
+                ++templ;
                 n = ldap_escape_value(filter, size, user);
                 size -= n;
                 filter += n;
                 break;
             case 'g':
             case 'a':
-                templ++;
+                ++templ;
                 n = ldap_escape_value(filter, size, group);
                 size -= n;
                 filter += n;
@@ -676,15 +680,19 @@ build_filter(char *filter, int size, const char *templ, const char *user, const 
             }
             break;
         case '\\':
-            templ++;
+            ++templ;
             if (*templ) {
-                *filter++ = *templ++;
-                size--;
+                *filter = *templ;
+                ++filter;
+                ++templ;
+                --size;
             }
             break;
         default:
-            *filter++ = *templ++;
-            size--;
+            *filter = *templ;
+            ++filter;
+            ++templ;
+            --size;
             break;
         }
     }

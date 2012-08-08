@@ -38,7 +38,7 @@
 
 #include "rfc2181.h"
 
-/* for ERROR_BUF_SZ, BUFSIZ, MAXHTTPPORTS */
+/* for ERROR_BUF_SZ, BUFSIZ */
 #include "defines.h"
 
 /* for iostats */
@@ -78,9 +78,7 @@ extern "C" {
     extern int Biggest_FD;		/* -1 */
     extern int Number_FD;		/* 0 */
     extern int Opening_FD;		/* 0 */
-    extern int HttpSockets[MAXHTTPPORTS];
     extern int NDnsServersAlloc;	/* 0 */
-    extern int NHttpSockets;	/* 0 */
     extern int RESERVED_FD;
     extern int Squid_MaxFD;		/* SQUID_MAXFD */
     extern int config_lineno;	/* 0 */
@@ -154,6 +152,8 @@ extern "C" {
     extern int ssl_ctx_ex_index_dont_verify_domain; /* -1 */
     extern int ssl_ex_index_cert_error_check;	/* -1 */
     extern int ssl_ex_index_ssl_error_detail;      /* -1 */
+    extern int ssl_ex_index_ssl_peeked_cert;      /* -1 */
+    extern int ssl_ex_index_ssl_errors;   /* -1 */
 
     extern const char *external_acl_message;      /* NULL */
     extern int opt_send_signal;	/* -1 */

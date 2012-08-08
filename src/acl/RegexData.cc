@@ -235,14 +235,20 @@ compileOptimisedREs(relist **curlist, wordlist * wl)
             }
         } else if (RElen + largeREindex + 3 < BUFSIZ-1) {
             debugs(28, 2, "compileOptimisedREs: adding RE '" << wl->key << "'");
-            if (largeREindex > 0)
-                largeRE[largeREindex++] = '|';
-            largeRE[largeREindex++] = '(';
-            for (char * t = wl->key; *t != '\0'; t++)
-                largeRE[largeREindex++] = *t;
-            largeRE[largeREindex++] = ')';
+            if (largeREindex > 0) {
+                largeRE[largeREindex] = '|';
+                ++largeREindex;
+            }
+            largeRE[largeREindex] = '(';
+            ++largeREindex;
+            for (char * t = wl->key; *t != '\0'; ++t) {
+                largeRE[largeREindex] = *t;
+                ++largeREindex;
+            }
+            largeRE[largeREindex] = ')';
+            ++largeREindex;
             largeRE[largeREindex] = '\0';
-            numREs++;
+            ++numREs;
         } else {
             debugs(28, 2, "compileOptimisedREs: buffer full, generating new optimised RE..." );
             newlistp = compileRE( newlistp, largeRE, flags );

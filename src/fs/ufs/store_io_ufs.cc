@@ -140,7 +140,7 @@ void
 UFSStoreState::openDone()
 {
     if (closing)
-        debugs(0,0,HERE << "already closing in openDone()!?");
+        debugs(0, DBG_CRITICAL, HERE << "already closing in openDone()!?");
 
     if (theFile->error()) {
         tryClosing();
@@ -238,8 +238,8 @@ UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_fu
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
 
     if (theFile->error()) {
-        debugs(79,1,HERE << "avoid write on theFile with error");
-        debugs(79,1,HERE << "calling free_func for " << (void*) buf);
+        debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
+        debugs(79, DBG_IMPORTANT,HERE << "calling free_func for " << (void*) buf);
         free_func((void*)buf);
         return;
     }
@@ -270,7 +270,7 @@ UFSStoreState::doWrite()
     }
 
     if (theFile->error()) {
-        debugs(79,1,HERE << "avoid write on theFile with error");
+        debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
         debugs(79,3,HERE << "calling free_func for " << (void*) q->buf);
         /*
          * DPW 2006-05-24

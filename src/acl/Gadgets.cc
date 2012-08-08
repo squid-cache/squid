@@ -120,8 +120,8 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     /* first expect a page name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(28, 0, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, 0, "aclParseDenyInfoLine: missing 'error page' parameter.");
+        debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: missing 'error page' parameter.");
         return;
     }
 
@@ -140,8 +140,8 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     }
 
     if (A->acl_list == NULL) {
-        debugs(28, 0, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, 0, "aclParseDenyInfoLine: deny_info line contains no ACL's, skipping");
+        debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: deny_info line contains no ACL's, skipping");
         memFree(A, MEM_ACL_DENY_INFO_LIST);
         return;
     }
@@ -163,8 +163,8 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     /* first expect either 'allow' or 'deny' */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(28, 0, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, 0, "aclParseAccessLine: missing 'allow' or 'deny'.");
+        debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "aclParseAccessLine: missing 'allow' or 'deny'.");
         return;
     }
 
@@ -175,8 +175,8 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     else if (!strcmp(t, "deny"))
         A->allow = ACCESS_DENIED;
     else {
-        debugs(28, 0, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, 0, "aclParseAccessLine: expecting 'allow' or 'deny', got '" << t << "'.");
+        debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "aclParseAccessLine: expecting 'allow' or 'deny', got '" << t << "'.");
         delete A;
         return;
     }
@@ -184,8 +184,8 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     aclParseAclList(parser, &A->aclList);
 
     if (A->aclList == NULL) {
-        debugs(28, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, 0, "aclParseAccessLine: Access line contains no ACL's, skipping");
+        debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "aclParseAccessLine: Access line contains no ACL's, skipping");
         delete A;
         return;
     }
@@ -214,14 +214,14 @@ aclParseAclList(ConfigParser &parser, ACLList ** head)
 
         if (*t == '!') {
             L->negated (true);
-            t++;
+            ++t;
         }
 
         debugs(28, 3, "aclParseAclList: looking for ACL name '" << t << "'");
         a = ACL::FindByName(t);
 
         if (a == NULL) {
-            debugs(28, 0, "aclParseAclList: ACL name '" << t << "' not found.");
+            debugs(28, DBG_CRITICAL, "aclParseAclList: ACL name '" << t << "' not found.");
             delete L;
             parser.destruct();
             continue;

@@ -672,7 +672,7 @@ void
 DelayPools::pools(unsigned short newPools)
 {
     if (pools()) {
-        debugs(3, 0, "parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config");
+        debugs(3, DBG_CRITICAL, "parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config");
         FreePools();
     }
 
@@ -743,7 +743,7 @@ VectorPool::stats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "\t\tCurrent:");
 
-    for (unsigned int i = 0; i < buckets.size(); i++) {
+    for (unsigned int i = 0; i < buckets.size(); ++i) {
         storeAppendPrintf(sentry, " %d:", buckets.key_map[i]);
         buckets.values[i].stats(sentry);
     }

@@ -111,6 +111,12 @@ DOC_START
 	Remove this line. The HTTP/1.1 feature is now fully supported by default.
 DOC_END
 
+NAME: dns_v4_fallback
+TYPE: obsolete
+DOC_START
+	Remove this line.
+DOC_END
+
 NAME: ftp_list_width
 TYPE: obsolete
 DOC_START
@@ -557,9 +563,8 @@ DOC_START
 			cached entry should be initiated without needing to
 			wait for a new reply. (default is for no grace period)
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
-	  ipv4 / ipv6	IP-mode used to communicate to this helper.
-			For compatability with older configurations and helpers
-			the default is currently 'ipv4'.
+	  ipv4 / ipv6	IP protocol used to communicate with this helper.
+			The default is to auto-detect IPv6 and use it when available.
 
 	FORMAT specifications
 
@@ -642,6 +647,13 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.aclList
+IF USE_SSL
+DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
+DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
+DEFAULT: ssl::certDomainMismatch ssl_error SQUID_X509_V_ERR_DOMAIN_MISMATCH
+DEFAULT: ssl::certUntrusted ssl_error X509_V_ERR_INVALID_CA X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY X509_V_ERR_CERT_UNTRUSTED
+DEFAULT: ssl::certSelfSigned ssl_error X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
+ENDIF
 DEFAULT: all src all
 DEFAULT: manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
@@ -865,6 +877,29 @@ DOC_START
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
+
+IF USE_SSL
+	acl aclname ssl_error errorname
+	  # match against SSL certificate validation error [fast]
+	  #
+	  # For valid error names see in @DEFAULT_ERROR_DIR@/templates/error-details.txt
+	  # template file.
+	  #
+	  # The following can be used as shortcuts for certificate properties:
+	  #  [ssl::]certHasExpired: the "not after" field is in the past
+	  #  [ssl::]certNotYetValid: the "not before" field is in the future
+	  #  [ssl::]certUntrusted: The certificate issuer is not to be trusted.
+	  #  [ssl::]certSelfSigned: The certificate is self signed.
+	  #  [ssl::]certDomainMismatch: The certificate CN domain does not
+	  #         match the name the name of the host we are connecting to.
+	  #
+	  # The ssl::certHasExpired, ssl::certNotYetValid, ssl::certDomainMismatch,
+	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
+	  # predefined ACLs, just like the 'all' ACL.
+	  #
+	  # NOTE: The ssl_error ACL is only supported with sslproxy_cert_error,
+	  # sslproxy_cert_sign, and sslproxy_cert_adapt options.
+ENDIF
 
 	Examples:
 		acl macaddress arp 09:00:2b:23:45:67
@@ -1274,7 +1309,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: http_port ascii_port
-TYPE: http_port_list
+TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.http
 DOC_START
@@ -1311,14 +1346,14 @@ DOC_START
 
 	   accel	Accelerator / reverse proxy mode
 
-	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
+	   ssl-bump	For each CONNECT request allowed by ssl_bump ACLs,
 			establish secure connection with the client and with
-			the server, decrypt HTTP messages as they pass through
+			the server, decrypt HTTPS messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
 			The ssl_bump option is required to fully enable
-			the SslBump feature.
+			bumping of CONNECT requests.
 
 	Omitting the mode flag causes default forward proxy mode to be used.
 
@@ -1381,8 +1416,7 @@ DOC_START
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
 			certificates. If set to zero, caching is disabled. The
-			default value is 4MB. An average XXX-bit certificate
-			consumes about XXX bytes of RAM.
+			default value is 4MB.
 
 	TLS / SSL Options:
 
@@ -1397,7 +1431,9 @@ DOC_START
 			    1	automatic (default)
 			    2	SSLv2 only
 			    3	SSLv3 only
-			    4	TLSv1 only
+			    4	TLSv1.0 only
+			    5	TLSv1.1 only
+			    6	TLSv1.2 only
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
@@ -1407,9 +1443,11 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
+			    NO_SSLv2    Disallow the use of SSLv2
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 			    ALL       Enable various bug workarounds
@@ -1505,7 +1543,7 @@ DOC_END
 
 NAME: https_port
 IFDEF: USE_SSL
-TYPE: https_port_list
+TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
@@ -1519,6 +1557,117 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
+
+	Modes:
+
+	   accel	Accelerator / reverse proxy mode
+
+	   intercept	Support for IP-Layer interception of
+			outgoing requests without browser settings.
+			NP: disables authentication and IPv6 on the port.
+
+	   tproxy	Support Linux TPROXY for spoofing outgoing
+			connections using the client IP address.
+			NP: disables authentication and maybe IPv6 on the port.
+
+	   ssl-bump	For each intercepted connection allowed by ssl_bump
+			ACLs, establish a secure connection with the client and with
+			the server, decrypt HTTPS messages as they pass through
+			Squid, and treat them as unencrypted HTTP messages,
+			becoming the man-in-the-middle.
+
+			An "ssl_bump server-first" match is required to
+			fully enable bumping of intercepted SSL	connections.
+
+			Requires tproxy or intercept.
+
+	Omitting the mode flag causes default forward proxy mode to be used.
+
+
+	See http_port for a list of generic options
+
+
+	SSL Options:
+
+	   cert=	Path to SSL certificate (PEM format).
+
+	   key=		Path to SSL private key file (PEM format)
+			if not specified, the certificate file is
+			assumed to be a combined certificate and
+			key file.
+
+	   version=	The version of SSL/TLS supported
+			    1	automatic (default)
+			    2	SSLv2 only
+			    3	SSLv3 only
+			    4	TLSv1 only
+
+	   cipher=	Colon separated list of supported ciphers.
+
+	   options=	Various SSL engine options. The most important
+			being:
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			    SINGLE_DH_USE Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
+			documentation for a complete list of options.
+
+	   clientca=	File containing the list of CAs to use when
+			requesting a client certificate.
+
+	   cafile=	File containing additional CA certificates to
+			use when verifying client certificates. If unset
+			clientca will be used.
+
+	   capath=	Directory containing additional CA certificates
+			and CRL lists to use when verifying client certificates.
+
+	   crlfile=	File of additional CRL lists to use when verifying
+			the client certificate, in addition to CRLs stored in
+			the capath. Implies VERIFY_CRL flag below.
+
+	   dhparams=	File containing DH parameters for temporary/ephemeral
+			DH key exchanges.
+
+	   sslflags=	Various flags modifying the use of SSL:
+			    DELAYED_AUTH
+				Don't request client certificates
+				immediately, but wait until acl processing
+				requires a certificate (not yet implemented).
+			    NO_DEFAULT_CA
+				Don't use the default CA lists built in
+				to OpenSSL.
+			    NO_SESSION_REUSE
+				Don't allow for session reuse. Each connection
+				will result in a new SSL session.
+			    VERIFY_CRL
+				Verify CRL lists when accepting client
+				certificates.
+			    VERIFY_CRL_ALL
+				Verify CRL lists for all certificates in the
+				client certificate chain.
+
+	   sslcontext=	SSL session ID context identifier.
+
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped SSL requests.When
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is CA certificate life time of generated
+			certificate equals lifetime of CA certificate. If
+			generated certificate is selfsigned lifetime is three
+			years.
+			This option is enabled by default when SslBump is used.
+			See the sslBump option above for more information.
+
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB.
 
 	See http_port for a list of available options.
 DOC_END
@@ -1737,43 +1886,51 @@ LOC: Config.onoff.hostStrictVerify
 DOC_START
 	Regardless of this option setting, when dealing with intercepted
 	traffic, Squid always verifies that the destination IP address matches
-	the Host header domain or IP (called 'authority form URL'). Squid
-	responds with an HTTP 409 (Conflict) error page and logs a security
-	warning if there is no match.
-	
-	When set to ON, Squid verifies that the destination IP address matches
-	the Host header for forward-proxy and reverse-proxy traffic as well. For
-	those traffic types, Squid also enables the following checks, comparing
-	the corresponding Host header and Request-URI components:
-	
-	 * The host names (domain or IP) must be identical,
-	   but valueless or missing Host header disables all checks.
-	   For the two host names to match, both must be either IP or FQDN.
-	
-	 * Port numbers must be identical,
-	   but if a port is missing, the scheme-default port is assumed.
+	the Host header domain or IP (called 'authority form URL').
 	
 	This enforcement is performed to satisfy a MUST-level requirement in
 	RFC 2616 section 14.23: "The Host field value MUST represent the naming
 	authority of the origin server or gateway given by the original URL".
-DOC_END
-
-NAME: client_dst_passthru
-TYPE: onoff
-DEFAULT: on
-LOC: Config.onoff.client_dst_passthru
-DOC_START
-	With NAT or TPROXY intercepted traffic Squid may pass the request
-	directly to the original client destination IP or seek a faster
-	source.
 	
-	This option (on by default) prevents cache_peer and alternative DNS
-	entries being used on intercepted traffic. Both of which lead to
-	the security vulnerability outlined below.
+	When set to ON:
+		Squid always responds with an HTTP 409 (Conflict) error
+		page and logs a security warning if there is no match.
 	
-	SECURITY WARNING:
+		Squid verifies that the destination IP address matches
+		the Host header for forward-proxy and reverse-proxy traffic
+		as well. For those traffic types, Squid also enables the
+		following checks, comparing the corresponding Host header
+		and Request-URI components:
 	
-	This directive should only be disabled if cache_peer are required.
+		 * The host names (domain or IP) must be identical,
+		   but valueless or missing Host header disables all checks.
+		   For the two host names to match, both must be either IP
+		   or FQDN.
+	
+		 * Port numbers must be identical, but if a port is missing
+		   the scheme-default port is assumed.
+	
+	
+	When set to OFF (the default):
+		Squid allows suspicious requests to continue but logs a
+		security warning and blocks caching of the response.
+	
+		 * Forward-proxy traffic is not checked at all.
+	
+		 * Reverse-proxy traffic is not checked at all.
+	
+		 * Intercepted traffic which passes verification is handled
+		   normally.
+	
+		 * Intercepted requests which fail verification are sent
+		   to the client original destination instead of DIRECT.
+		   This overrides 'client_dst_passthru off'.
+	
+		For now suspicious intercepted CONNECT requests are always
+		responded to with an HTTP 409 (Conflict) error page.
+	
+	
+	SECURITY NOTE:
 	
 	As described in CVE-2009-0801 when the Host: header alone is used
 	to determine the destination of a request it becomes trivial for
@@ -1785,7 +1942,32 @@ DOC_START
 	sandbox only verifies that the applet tries to contact the same IP
 	as from where it was loaded at the IP level. The Host: header may
 	be different from the connected IP and approved origin.
+	
+DOC_END
 
+NAME: client_dst_passthru
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.client_dst_passthru
+DOC_START
+	With NAT or TPROXY intercepted traffic Squid may pass the request
+	directly to the original client destination IP or seek a faster
+	source using the HTTP Host header.
+	
+	Using Host to locate alternative servers can provide faster
+	connectivity with a range of failure recovery options.
+	But can also lead to connectivity trouble when the client and
+	server are attempting stateful interactions unaware of the proxy.
+	
+	This option (on by default) prevents alternative DNS entries being
+	located to send intercepted traffic DIRECT to an origin server.
+	The clients original destination IP and port will be used instead.
+	
+	Regardless of this option setting, when dealing with intercepted
+	traffic Squid will verify the Host: header and any traffic which
+	fails Host verification will be treated as if this option were ON.
+	
+	see host_verify_strict for details on the verification process.
 DOC_END
 
 COMMENT_START
@@ -1838,6 +2020,15 @@ LOC: Config.ssl_client.version
 TYPE: int
 DOC_START
 	SSL version level to use when proxying https:// URLs
+
+	The versions of SSL/TLS supported:
+
+	    1	automatic (default)
+	    2	SSLv2 only
+	    3	SSLv3 only
+	    4	TLSv1.0 only
+	    5	TLSv1.1 only
+	    6	TLSv1.2 only
 DOC_END
 
 NAME: sslproxy_options
@@ -1850,9 +2041,11 @@ DOC_START
 	
 	The most important being:
 
-	    NO_SSLv2  Disallow the use of SSLv2
-	    NO_SSLv3  Disallow the use of SSLv3
-	    NO_TLSv1  Disallow the use of TLSv1
+	    NO_SSLv2    Disallow the use of SSLv2
+	    NO_SSLv3    Disallow the use of SSLv3
+	    NO_TLSv1    Disallow the use of TLSv1.0
+	    NO_TLSv1_1  Disallow the use of TLSv1.1
+	    NO_TLSv1_2  Disallow the use of TLSv1.2
 	    SINGLE_DH_USE
 		      Always create a new key when using temporary/ephemeral
 		      DH key exchanges
@@ -1901,32 +2094,60 @@ DOC_END
 
 NAME: ssl_bump
 IFDEF: USE_SSL
-TYPE: acl_access
+TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
 DEFAULT: none
 DOC_START
-	This ACL controls which CONNECT requests to an http_port
-	marked with an sslBump flag are actually "bumped". Please 
-	see the sslBump flag of an http_port option for more details
-	about decoding proxied SSL connections.
+	This option is consulted when a CONNECT request is received on
+	an http_port (or a new connection is intercepted at an
+	https_port), provided that port was configured with an ssl-bump
+	flag. The subsequent data on the connection is either treated as
+	HTTPS and decrypted OR tunneled at TCP level without decryption,
+	depending on the first bumping "mode" which ACLs match.
 
-	By default, no requests are bumped.
+	ssl_bump <mode> [!]acl ...
 
-	See also: http_port ssl-bump
-   
+	The following bumping modes are supported:
+
+	    client-first
+		Allow bumping of the connection. Establish a secure connection
+		with the client first, then connect to the server. This old mode
+		does not allow Squid to mimic server SSL certificate and does
+		not work with intercepted SSL connections.
+
+	    server-first
+		Allow bumping of the connection. Establish a secure connection
+		with the server first, then establish a secure connection with
+		the client, using a mimicked server certificate. Works with both
+		CONNECT requests and intercepted SSL connections.
+
+	    none
+		Become a TCP tunnel without decoding the connection.
+		Works with both CONNECT requests and intercepted SSL
+		connections. This is the default behavior when no
+		ssl_bump option is given or no ssl_bump ACLs match.
+
+	By default, no connections are bumped.
+
+	The first matching ssl_bump option wins. If no ACLs match, the
+	connection is not bumped. Unlike most allow/deny ACL lists, ssl_bump
+	does not have an implicit "negate the last given option" rule. You
+	must make that rule explicit if you convert old ssl_bump allow/deny
+	rules that rely on such an implicit rule.
+
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
+	See also: http_port ssl-bump, https_port ssl-bump
 
-	# Example: Bump all requests except those originating from localhost and 
-	# those going to webax.com or example.com sites.
 
-	acl localhost src 127.0.0.1/32
-	acl broken_sites dstdomain .webax.com
+	# Example: Bump all requests except those originating from
+	# localhost and those going to example.com.
+
 	acl broken_sites dstdomain .example.com
-	ssl_bump deny localhost
-	ssl_bump deny broken_sites
-	ssl_bump allow all
+	ssl_bump none localhost
+	ssl_bump none broken_sites
+	ssl_bump server-first all
 DOC_END
 
 NAME: sslproxy_flags
@@ -1951,11 +2172,11 @@ DOC_START
 	Use this ACL to bypass server certificate validation errors.
 
 	For example, the following lines will bypass all validation errors
-	when talking to servers located at 172.16.0.0/16. All other
+	when talking to servers for example.com. All other
 	validation errors will result in ERR_SECURE_CONNECT_FAIL error.
 
-		acl BrokenServersAtTrustedIP dst 172.16.0.0/16
-		sslproxy_cert_error allow BrokenServersAtTrustedIP
+		acl BrokenButTrustedServers dstdomain example.com
+		sslproxy_cert_error allow BrokenButTrustedServers
 		sslproxy_cert_error deny all
 
 	This clause only supports fast acl types.
@@ -1970,6 +2191,89 @@ DOC_START
 	See also: sslproxy_flags and DONT_VERIFY_PEER.
 
 	Default setting:  sslproxy_cert_error deny all
+DOC_END
+
+NAME: sslproxy_cert_sign
+IFDEF: USE_SSL
+DEFAULT: none
+POSTSCRIPTUM: signUntrusted ssl::certUntrusted
+POSTSCRIPTUM: signSelf ssl::certSelfSigned
+POSTSCRIPTUM: signTrusted all
+TYPE: sslproxy_cert_sign
+LOC: Config.ssl_client.cert_sign
+DOC_START
+
+        sslproxy_cert_sign <signing algorithm> acl ...
+
+        The following certificate signing algorithms are supported:
+	   signTrusted
+		Sign using the configured CA certificate which is usually
+		placed in and trusted by end-user browsers. This is the
+		default for trusted origin server certificates.
+	   signUntrusted
+		Sign to guarantee an X509_V_ERR_CERT_UNTRUSTED browser error.
+		This is the default for untrusted origin server certificates
+		that are not self-signed (see ssl::certUntrusted).
+	   signSelf
+		Sign using a self-signed certificate with the right CN to
+		generate a X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT error in the
+		browser. This is the default for self-signed origin server
+		certificates (see ssl::certSelfSigned).
+
+	This clause only supports fast acl types.
+
+	When sslproxy_cert_sign acl(s) match, Squid uses the corresponding
+	signing algorithm to generate the certificate and ignores all
+	subsequent sslproxy_cert_sign options (the first match wins). If no
+	acl(s) match, the default signing algorithm is determined by errors
+	detected when obtaining and validating the origin server certificate.
+
+	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
+	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
+	CONNECT request that carries a domain name. In all other cases (CONNECT
+	to an IP address or an intercepted SSL connection), Squid cannot detect
+	the domain mismatch at certificate generation time when
+	bump-server-first is used.
+DOC_END
+
+NAME: sslproxy_cert_adapt 
+IFDEF: USE_SSL
+DEFAULT: none
+TYPE: sslproxy_cert_adapt
+LOC: Config.ssl_client.cert_adapt
+DOC_START
+	
+	sslproxy_cert_adapt <adaptation algorithm> acl ...
+
+	The following certificate adaptation algorithms are supported:
+	   setValidAfter
+		Sets the "Not After" property to the "Not After" property of
+		the CA certificate used to sign generated certificates.
+	   setValidBefore
+		Sets the "Not Before" property to the "Not Before" property of
+		the CA certificate used to sign generated certificates.
+	   setCommonName or setCommonName{CN}
+		Sets Subject.CN property to the host name specified as a 
+		CN parameter or, if no explicit CN parameter was specified,
+		extracted from the CONNECT request. It is a misconfiguration
+		to use setCommonName without an explicit parameter for
+		intercepted or tproxied SSL connections.
+		
+	This clause only supports fast acl types.
+
+	Squid first groups sslproxy_cert_adapt options by adaptation algorithm.
+	Within a group, when sslproxy_cert_adapt acl(s) match, Squid uses the
+	corresponding adaptation algorithm to generate the certificate and
+	ignores all subsequent sslproxy_cert_adapt options in that algorithm's
+	group (i.e., the first match wins within each algorithm group). If no
+	acl(s) match, the default mimicking action takes place.
+
+	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
+	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
+	CONNECT request that carries a domain name. In all other cases (CONNECT
+	to an IP address or an intercepted SSL connection), Squid cannot detect
+	the domain mismatch at certificate generation time when
+	bump-server-first is used.
 DOC_END
 
 NAME: sslpassword_program
@@ -2303,21 +2607,25 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|2|3|4
+	sslversion=1|2|3|4|5|6
 			The SSL version to use when connecting to this peer
 				1 = automatic (default)
 				2 = SSL v2 only
 				3 = SSL v3 only
-				4 = TLS v1 only
+				4 = TLS v1.0 only
+				5 = TLS v1.1 only
+				6 = TLS v1.2 only
 	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
 	
 	ssloptions=... 	Specify various SSL implementation options:
 
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
+			    NO_SSLv2    Disallow the use of SSLv2
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
@@ -3044,6 +3352,24 @@ DOC_START
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 
+	SSL-related format codes:
+
+		ssl::bump_mode	SslBump decision for the transaction:
+
+				For CONNECT requests that initiated bumping of
+				a connection and for any request received on
+				an already bumped connection, Squid logs the
+				corresponding SslBump mode ("server-first" or
+				"client-first"). See the ssl_bump option for
+				more information about these modes.
+
+				A "none" token is logged for requests that
+				triggered "ssl_bump" ACL evaluation matching
+				either a "none" rule or no rules at all.
+
+				In all other cases, a single dash ("-") is
+				logged.
+
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 
@@ -3081,6 +3407,20 @@ DOC_START
 	You can prefix adapt::*_trs format codes with adaptation
 	service name in curly braces to record response time(s) specific
 	to that service. For example: %{my_service}adapt::sum_trs
+
+	If SSL is enabled, the following formating codes become available:
+
+		%ssl::>cert_subject The Subject field of the received client
+				SSL certificate or a dash ('-') if Squid has
+				received an invalid/malformed certificate or
+				no certificate at all. Consider encoding the
+				logged value because Subject often has spaces.
+
+		%ssl::>cert_issuer The Issuer field of the received client
+				SSL certificate or a dash ('-') if Squid has
+				received an invalid/malformed certificate or
+				no certificate at all. Consider encoding the
+				logged value because Issuer often has spaces.
 
 	The default formats available (which do not need re-defining) are:
 
@@ -4345,7 +4685,7 @@ DOC_END
 
 NAME: request_header_access
 IFDEF: USE_HTTP_VIOLATIONS
-TYPE: http_header_access[]
+TYPE: http_header_access
 LOC: Config.request_header_access
 DEFAULT: none
 DOC_START
@@ -4357,16 +4697,30 @@ DOC_START
 
 	This option replaces the old 'anonymize_headers' and the
 	older 'http_anonymizer' option with something that is much
-	more configurable. This new method creates a list of ACLs
-	for each header, allowing you very fine-tuned header
-	mangling.
+	more configurable. A list of ACLs for each header name allows
+	removal of specific header fields under specific conditions.
 
-	This option only applies to request headers, i.e., from the
-	client to the server.
+	This option only applies to outgoing HTTP request headers (i.e.,
+	headers sent by Squid to the next HTTP hop such as a cache peer
+	or an origin server). The option has no effect during cache hit
+	detection. The equivalent adaptation vectoring point in ICAP
+	terminology is post-cache REQMOD.
 
-	You can only specify known headers for the header name.
-	Other headers are reclassified as 'Other'. You can also
-	refer to all the headers with 'All'.
+	The option is applied to individual outgoing request header
+	fields. For each request header field F, Squid uses the first
+	qualifying sets of request_header_access rules:
+
+	    1. Rules with header_name equal to F's name.
+	    2. Rules with header_name 'Other', provided F's name is not
+	       on the hard-coded list of commonly used HTTP header names.
+	    3. Rules with header_name 'All'.
+
+	Within that qualifying rule set, rule ACLs are checked as usual.
+	If ACLs of an "allow" rule match, the header field is allowed to
+	go through as is. If ACLs of a "deny" rule match, the header is
+	removed and request_header_replace is then checked to identify
+	if the removed header has a replacement. If no rules within the
+	set have matching ACLs, the header field is left as is.
 
 	For example, to achieve the same behavior as the old
 	'http_anonymizer standard' option, you should use:
@@ -4417,7 +4771,7 @@ DOC_END
 
 NAME: reply_header_access
 IFDEF: USE_HTTP_VIOLATIONS
-TYPE: http_header_access[]
+TYPE: http_header_access
 LOC: Config.reply_header_access
 DEFAULT: none
 DOC_START
@@ -4431,17 +4785,8 @@ DOC_START
 	server to the client.
 
 	This is the same as request_header_access, but in the other
-	direction.
-
-	This option replaces the old 'anonymize_headers' and the
-	older 'http_anonymizer' option with something that is much
-	more configurable. This new method creates a list of ACLs
-	for each header, allowing you very fine-tuned header
-	mangling.
-
-	You can only specify known headers for the header name.
-	Other headers are reclassified as 'Other'. You can also
-	refer to all the headers with 'All'.
+	direction. Please see request_header_access for detailed
+	documentation.
 
 	For example, to achieve the same behavior as the old
 	'http_anonymizer standard' option, you should use:
@@ -4492,7 +4837,7 @@ DOC_END
 
 NAME: request_header_replace header_replace
 IFDEF: USE_HTTP_VIOLATIONS
-TYPE: http_header_replace[]
+TYPE: http_header_replace
 LOC: Config.request_header_access
 DEFAULT: none
 DOC_START
@@ -4511,7 +4856,7 @@ DOC_END
 
 NAME: reply_header_replace
 IFDEF: USE_HTTP_VIOLATIONS
-TYPE: http_header_replace[]
+TYPE: http_header_replace
 LOC: Config.reply_header_access
 DEFAULT: none
 DOC_START
@@ -4525,6 +4870,47 @@ DOC_START
         This only applies to reply headers, not request headers.
 
         By default, headers are removed if denied.
+DOC_END
+
+NAME: request_header_add
+TYPE: HeaderWithAclList
+LOC: Config.request_header_add
+DEFAULT: none
+DOC_START
+	Usage:   request_header_add field-name field-value acl1 [acl2] ...
+	Example: request_header_add X-Client-CA "CA=%ssl::>cert_issuer" all
+
+	This option adds header fields to outgoing HTTP requests (i.e.,
+	request headers sent by Squid to the next HTTP hop such as a
+	cache peer or an origin server). The option has no effect during
+	cache hit detection. The equivalent adaptation vectoring point
+	in ICAP terminology is post-cache REQMOD.
+
+	Field-name is a token specifying an HTTP header name. If a
+	standard HTTP header name is used, Squid does not check whether
+	the new header conflicts with any existing headers or violates
+	HTTP rules. If the request to be modified already contains a
+	field with the same name, the old field is preserved but the
+	header field values are not merged.
+
+	Field-value is either a token or a quoted string. If quoted
+	string format is used, then the surrounding quotes are removed
+	while escape sequences and %macros are processed.
+
+	In theory, all of the logformat codes can be used as %macros.
+	However, unlike logging (which happens at the very end of
+	transaction lifetime), the transaction may not yet have enough
+	information to expand a macro when the new header value is needed.
+	And some information may already be available to Squid but not yet
+	committed where the macro expansion code can access it (report
+	such instances!). The macro will be expanded into a single dash
+	('-') in such cases. Not all macros have been tested.
+
+	One or more Squid ACLs may be specified to restrict header
+	injection to matching requests. As always in squid.conf, all
+	ACLs in an option ACL list must be satisfied for the insertion
+	to happen. The request_header_add option supports fast ACLs
+	only.
 DOC_END
 
 NAME: relaxed_header_parser
@@ -4617,7 +5003,7 @@ TYPE: time_t
 LOC: Config.Timeout.request
 DEFAULT: 5 minutes
 DOC_START
-	How long to wait for an HTTP request after initial
+	How long to wait for complete HTTP request headers after initial
 	connection establishment.
 DOC_END
 
@@ -6279,40 +6665,60 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
-NAME: incoming_icp_average
+NAME: incoming_udp_average incoming_icp_average
 TYPE: int
 DEFAULT: 6
-LOC: Config.comm_incoming.icp_average
-DOC_NONE
+LOC: Config.comm_incoming.udp.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: incoming_http_average
+NAME: incoming_tcp_average  incoming_http_average
 TYPE: int
 DEFAULT: 4
-LOC: Config.comm_incoming.http_average
-DOC_NONE
+LOC: Config.comm_incoming.tcp.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
 NAME: incoming_dns_average
 TYPE: int
 DEFAULT: 4
-LOC: Config.comm_incoming.dns_average
-DOC_NONE
+LOC: Config.comm_incoming.dns.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: min_icp_poll_cnt
+NAME: min_udp_poll_cnt min_icp_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.icp_min_poll
-DOC_NONE
+LOC: Config.comm_incoming.udp.min_poll
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
 NAME: min_dns_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.dns_min_poll
-DOC_NONE
+LOC: Config.comm_incoming.dns.min_poll
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: min_http_poll_cnt
+NAME: min_tcp_poll_cnt min_http_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.http_min_poll
+LOC: Config.comm_incoming.tcp.min_poll
 DOC_START
 	Heavy voodoo here.  I can't even believe you are reading this.
 	Are you crazy?  Don't even think about adjusting these unless

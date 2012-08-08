@@ -88,6 +88,8 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
+//Declared in HttpHeaderTools.cc
+void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
         lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
@@ -412,6 +414,7 @@ HttpStateData::cacheableReply()
     case HTTP_MULTIPLE_CHOICES:
 
     case HTTP_MOVED_PERMANENTLY:
+    case HTTP_PERMANENT_REDIRECT:
 
     case HTTP_GONE:
         /*
@@ -598,15 +601,15 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
 {
     if (flags.keepalive)
         if (_peer)
-            _peer->stats.n_keepalives_sent++;
+            ++ _peer->stats.n_keepalives_sent;
 
     if (reply->keep_alive) {
         if (_peer)
-            _peer->stats.n_keepalives_recv++;
+            ++ _peer->stats.n_keepalives_recv;
 
         if (Config.onoff.detect_broken_server_pconns
                 && reply->bodySize(request->method) == -1 && !flags.chunked) {
-            debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
+            debugs(11, DBG_IMPORTANT, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
         }
@@ -744,7 +747,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest(), NULL);
         ch.reply = HTTPMSGLOCK(reply);
-        if (!ch.fastCheck()) { // TODO: support slow lookups?
+        if (ch.fastCheck() != ACCESS_ALLOWED) { // TODO: support slow lookups?
             debugs(11, 3, HERE << "ignoring denied 1xx");
             proceedAfter1xx();
             return;
@@ -1066,7 +1069,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        // TODO: should we call abortTransaction() here?
+        abortTransaction("store entry aborted while reading reply");
         return;
     }
 
@@ -1098,12 +1101,12 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
         kb_incr(&(statCounter.server.all.kbytes_in), len);
         kb_incr(&(statCounter.server.http.kbytes_in), len);
-        IOStats.Http.reads++;
+        ++ IOStats.Http.reads;
 
-        for (clen = len - 1, bin = 0; clen; bin++)
+        for (clen = len - 1, bin = 0; clen; ++bin)
             clen >>= 1;
 
-        IOStats.Http.read_hist[bin]++;
+        ++ IOStats.Http.read_hist[bin];
 
         // update peer response time stats (%<pt)
         const timeval &sent = request->hier.peer_http_request_sent;
@@ -1116,24 +1119,10 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * doing so breaks HTTP/0.9 replies beginning with witespace, and in addition
      * the response splitting countermeasures is extremely likely to trigger on this,
      * not allowing connection reuse in the first place.
+     *
+     * 2012-02-10: which RFC? not 2068 or 2616,
+     *     tolerance there is all about whitespace between requests and header tokens.
      */
-#if DONT_DO_THIS
-    if (!flags.headers_parsed && len > 0 && fd_table[serverConnection->fd].uses > 1) {
-        /* Skip whitespace between replies */
-
-        while (len > 0 && xisspace(*buf))
-            memmove(buf, buf + 1, len--);
-
-        if (len == 0) {
-            /* Continue to read... */
-            /* Timeout NOT increased. This whitespace was from previous reply */
-            flags.do_next_read = 1;
-            maybeReadVirginBody();
-            return;
-        }
-    }
-
-#endif
 
     if (len == 0) { // reached EOF?
         eof = 1;
@@ -1359,12 +1348,9 @@ HttpStateData::processReplyBody()
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        /*
-         * The above writeReplyBody() call could ABORT this entry,
-         * in that case, the server FD should already be closed.
-         * there's nothing for us to do.
-         */
-        (void) 0;
+        // The above writeReplyBody() call may have aborted the store entry.
+        abortTransaction("store entry aborted while storing reply");
+        return;
     } else
         switch (persistentConnStatus()) {
         case INCOMPLETE_MSG: {
@@ -1622,6 +1608,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
 void
 HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
+                                      const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
                                       const http_state_flags flags)
 {
@@ -1695,7 +1682,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
                 const char *url = entry ? entry->url() : urlCanonical(request);
-                debugs(11, 1, "Warning: likely forwarding loop with " << url);
+                debugs(11, DBG_IMPORTANT, "Warning: likely forwarding loop with " << url);
             }
         }
 
@@ -1797,6 +1784,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* Now mangle the headers. */
     if (Config2.onoff.mangle_request_headers)
         httpHdrMangleList(hdr_out, request, ROR_REQUEST);
+
+    if (Config.request_header_add && !Config.request_header_add->empty())
+        httpHdrAdd(hdr_out, request, al, *Config.request_header_add);
 
     strConnection.clean();
 }
@@ -2019,7 +2009,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(request, entry, &hdr, flags);
+        httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connection_auth)
             request->flags.auth_sent = 1;
@@ -2183,8 +2173,8 @@ HttpStateData::start()
         return;
     }
 
-    statCounter.server.all.requests++;
-    statCounter.server.http.requests++;
+    ++ statCounter.server.all.requests;
+    ++ statCounter.server.http.requests;
 
     /*
      * We used to set the read timeout here, but not any more.
@@ -2204,7 +2194,7 @@ HttpStateData::finishingBrokenPost()
     }
 
     ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest(), NULL);
-    if (!ch.fastCheck()) {
+    if (ch.fastCheck() != ACCESS_ALLOWED) {
         debugs(11, 5, HERE << "didn't match brokenPosts");
         return false;
     }
@@ -2267,7 +2257,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
         // XXX: we should check this condition in other callbacks then!
         // TODO: Check whether this can actually happen: We should unsubscribe
         // as a body consumer when the above condition(s) are detected.
-        debugs(11, 1, HERE << "Transaction aborted while reading HTTP body");
+        debugs(11, DBG_IMPORTANT, HERE << "Transaction aborted while reading HTTP body");
         return;
     }
 
@@ -2278,7 +2268,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
 
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
-            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
+            debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
                 serverConnection->close();
@@ -2302,7 +2292,7 @@ HttpStateData::handleRequestBodyProducerAborted()
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
         ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
-        err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
+        err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
         fwd->fail(err);
     }
 

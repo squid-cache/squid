@@ -115,7 +115,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     x = comm_udp_send(icmp_sock, (char *)&pecho, slen, 0);
 
     if (x < 0) {
-        debugs(37, 1, HERE << "send: " << xstrerror());
+        debugs(37, DBG_IMPORTANT, HERE << "send: " << xstrerror());
 
         /** \li  If the send results in ECONNREFUSED or EPIPE errors from helper, will cleanly shutdown the module. */
         /** \todo This should try restarting the helper a few times?? before giving up? */
@@ -125,7 +125,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         }
         /** All other send errors are ignored. */
     } else if (x != slen) {
-        debugs(37, 1, HERE << "Wrote " << x << " of " << slen << " bytes");
+        debugs(37, DBG_IMPORTANT, HERE << "Wrote " << x << " of " << slen << " bytes");
     }
 }
 
@@ -153,7 +153,7 @@ IcmpSquid::Recv()
                       0);
 
     if (n < 0 && EAGAIN != errno) {
-        debugs(37, 1, HERE << "recv: " << xstrerror());
+        debugs(37, DBG_IMPORTANT, HERE << "recv: " << xstrerror());
 
         if (errno == ECONNREFUSED)
             Close();
@@ -190,7 +190,7 @@ IcmpSquid::Recv()
         break;
 
     default:
-        debugs(37, 1, HERE << "Bad opcode: " << preply.opcode << " from " << F);
+        debugs(37, DBG_IMPORTANT, HERE << "Bad opcode: " << preply.opcode << " from " << F);
         break;
     }
 }
@@ -252,7 +252,7 @@ IcmpSquid::Open(void)
 
     commUnsetFdTimeout(icmp_sock);
 
-    debugs(37, 1, HERE << "Pinger socket opened on FD " << icmp_sock);
+    debugs(37, DBG_IMPORTANT, HERE << "Pinger socket opened on FD " << icmp_sock);
 
     /* Tests the pinger immediately using localhost */
     if (Ip::EnableIpv6)
@@ -279,7 +279,7 @@ IcmpSquid::Close(void)
     if (icmp_sock < 0)
         return;
 
-    debugs(37, 1, HERE << "Closing Pinger socket on FD " << icmp_sock);
+    debugs(37, DBG_IMPORTANT, HERE << "Closing Pinger socket on FD " << icmp_sock);
 
 #if _SQUID_WINDOWS_
 
@@ -294,7 +294,7 @@ IcmpSquid::Close(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(37, 0, HERE << "WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
+            debugs(37, DBG_CRITICAL, HERE << "WARNING: (pinger," << pid << ") didn't exit in 12 seconds");
         }
 
         CloseHandle(hIpc);

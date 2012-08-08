@@ -98,7 +98,7 @@ Comm::HandleWrite(int fd, void *data)
             /* we wrote data - drain them from bucket */
             clientInfo->bucketSize -= len;
             if (clientInfo->bucketSize < 0.0) {
-                debugs(5,1, HERE << "drained too much"); // should not happen
+                debugs(5, DBG_IMPORTANT, HERE << "drained too much"); // should not happen
                 clientInfo->bucketSize = 0;
             }
         }

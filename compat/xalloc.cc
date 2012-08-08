@@ -28,7 +28,7 @@ XMS_DBG_INDEX(int sz)
 static void
 stat_init(void)
 {
-    for (int i = 0; i <= XMS_DBG_MAXINDEX; i++)
+    for (int i = 0; i <= XMS_DBG_MAXINDEX; ++i)
         malloc_sizes[i] = malloc_histo[i] = 0;
 
     dbg_stat_init = 1;
@@ -78,7 +78,7 @@ xcalloc(size_t n, size_t sz)
     if (p == NULL) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xcalloc: Unable to allocate %"PRIuSIZE" blocks of %"PRIuSIZE" bytes!\n", n, sz);
+            snprintf(msg, 128, "xcalloc: Unable to allocate %" PRIuSIZE " blocks of %" PRIuSIZE " bytes!\n", n, sz);
             failure_notify(msg);
         } else {
             perror("xcalloc");

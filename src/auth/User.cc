@@ -111,7 +111,7 @@ Auth::User::absorb(Auth::User::Pointer from)
             dlinkDelete(&new_ipdata->node, &(from->ip_list));
             cbdataFree(new_ipdata);
             /* catch incipient underflow */
-            from->ipcount--;
+            -- from->ipcount;
         } else {
             /* add to our list. replace if already present. */
             AuthUserIP *ipdata = static_cast<AuthUserIP *>(ip_list.head->data);
@@ -131,7 +131,7 @@ Auth::User::absorb(Auth::User::Pointer from)
                     cbdataFree(ipdata);
                     /* catch incipient underflow */
                     assert(ipcount);
-                    ipcount--;
+                    -- ipcount;
                 }
 
                 ipdata = tempnode;
@@ -140,10 +140,10 @@ Auth::User::absorb(Auth::User::Pointer from)
             if (!found) {
                 /* This ip is not in the seen list. Add it. */
                 dlinkAddTail(&new_ipdata->node, &ipdata->node, &ip_list);
-                ipcount++;
+                ++ipcount;
                 /* remove from the source list */
                 dlinkDelete(&new_ipdata->node, &(from->ip_list));
-                from->ipcount--;
+                ++from->ipcount;
             }
         }
     }
@@ -257,7 +257,7 @@ Auth::User::clearIp()
         cbdataFree(ipdata);
         /* catch incipient underflow */
         assert(ipcount);
-        ipcount--;
+        -- ipcount;
         ipdata = tempnode;
     }
 
@@ -279,7 +279,7 @@ Auth::User::removeIp(Ip::Address ipaddr)
             cbdataFree(ipdata);
             /* catch incipient underflow */
             assert(ipcount);
-            ipcount--;
+            -- ipcount;
             return;
         }
 
@@ -316,7 +316,7 @@ Auth::User::addIp(Ip::Address ipaddr)
             cbdataFree(ipdata);
             /* catch incipient underflow */
             assert(ipcount);
-            ipcount--;
+            -- ipcount;
         }
 
         ipdata = tempnode;
@@ -334,7 +334,7 @@ Auth::User::addIp(Ip::Address ipaddr)
 
     dlinkAddTail(ipdata, &ipdata->node, &ip_list);
 
-    ipcount++;
+    ++ipcount;
 
     debugs(29, 2, HERE << "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }

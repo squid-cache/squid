@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-18 18:28+1200\n"
-"PO-Revision-Date: 2011-11-09 23:58+0200\n"
+"POT-Creation-Date: 2012-02-06 18:42+1400\n"
+"PO-Revision-Date: 2012-02-24 15:49+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -140,7 +140,7 @@ msgstr "- Can handle PAM requests"
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:38
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:244
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:24
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:31
 #: helpers/basic_auth/PAM/basic_pam_auth.8:41
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:61
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:19
@@ -152,7 +152,7 @@ msgstr "- Can handle PAM requests"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:134
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:211
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:52
-#: helpers/external_acl/session/ext_session_acl.8:50
+#: helpers/external_acl/session/ext_session_acl.8:74
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:58
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:36
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:36
@@ -197,7 +197,7 @@ msgstr ""
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:65
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:300
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:32
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:45
 #: helpers/basic_auth/PAM/basic_pam_auth.8:80
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:85
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:75
@@ -209,7 +209,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:220
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:232
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:157
-#: helpers/external_acl/session/ext_session_acl.8:67
+#: helpers/external_acl/session/ext_session_acl.8:97
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:216
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:68
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:86
@@ -243,7 +243,7 @@ msgstr "Based on original code by"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:75
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:34
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:47
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:93
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:80
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:134
@@ -263,7 +263,7 @@ msgstr "This manual was written by"
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:308
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:39
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:52
 #: helpers/basic_auth/PAM/basic_pam_auth.8:84
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:95
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:83
@@ -275,7 +275,7 @@ msgstr "This manual was written by"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:227
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:245
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:172
-#: helpers/external_acl/session/ext_session_acl.8:71
+#: helpers/external_acl/session/ext_session_acl.8:102
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:220
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:75
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:93
@@ -298,7 +298,7 @@ msgstr "COPYRIGHT"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:229
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:247
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:174
-#: helpers/external_acl/session/ext_session_acl.8:73
+#: helpers/external_acl/session/ext_session_acl.8:104
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:222
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:77
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:95
@@ -321,7 +321,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:231
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:249
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:176
-#: helpers/external_acl/session/ext_session_acl.8:75
+#: helpers/external_acl/session/ext_session_acl.8:106
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:224
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:79
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:97
@@ -337,7 +337,7 @@ msgstr ""
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:82
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:313
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:52
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:65
 #: helpers/basic_auth/PAM/basic_pam_auth.8:92
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:100
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:88
@@ -349,7 +349,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:232
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:250
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:177
-#: helpers/external_acl/session/ext_session_acl.8:76
+#: helpers/external_acl/session/ext_session_acl.8:107
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:225
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:80
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:98
@@ -362,7 +362,7 @@ msgstr "QUESTIONS"
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:316
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:55
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:68
 #: helpers/basic_auth/PAM/basic_pam_auth.8:95
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:103
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:91
@@ -374,7 +374,7 @@ msgstr "QUESTIONS"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:235
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:253
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:180
-#: helpers/external_acl/session/ext_session_acl.8:79
+#: helpers/external_acl/session/ext_session_acl.8:110
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:228
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:83
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:101
@@ -390,7 +390,7 @@ msgstr ""
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:87
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:321
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:57
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:70
 #: helpers/basic_auth/PAM/basic_pam_auth.8:97
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:108
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:93
@@ -402,7 +402,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:237
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:258
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:182
-#: helpers/external_acl/session/ext_session_acl.8:81
+#: helpers/external_acl/session/ext_session_acl.8:112
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:230
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:85
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:103
@@ -415,7 +415,7 @@ msgstr "REPORTING BUGS"
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:90
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:324
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:60
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:73
 #: helpers/basic_auth/PAM/basic_pam_auth.8:100
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:111
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:96
@@ -427,7 +427,7 @@ msgstr "REPORTING BUGS"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:240
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:261
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:185
-#: helpers/external_acl/session/ext_session_acl.8:84
+#: helpers/external_acl/session/ext_session_acl.8:115
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:233
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:88
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:106
@@ -444,7 +444,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:92
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:326
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:62
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:75
 #: helpers/basic_auth/PAM/basic_pam_auth.8:102
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:113
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:98
@@ -456,7 +456,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:242
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:263
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:187
-#: helpers/external_acl/session/ext_session_acl.8:86
+#: helpers/external_acl/session/ext_session_acl.8:117
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:235
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:90
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:108
@@ -468,7 +468,7 @@ msgstr "Report bugs or bug fixes using http://bugs.squid-cache.org/"
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:95
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:329
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:65
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:78
 #: helpers/basic_auth/PAM/basic_pam_auth.8:105
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:116
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:101
@@ -480,7 +480,7 @@ msgstr "Report bugs or bug fixes using http://bugs.squid-cache.org/"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:245
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:266
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:190
-#: helpers/external_acl/session/ext_session_acl.8:89
+#: helpers/external_acl/session/ext_session_acl.8:120
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:238
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:93
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:111
@@ -496,7 +496,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:98
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:332
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:68
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:81
 #: helpers/basic_auth/PAM/basic_pam_auth.8:108
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:119
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:104
@@ -508,7 +508,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:248
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:269
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:193
-#: helpers/external_acl/session/ext_session_acl.8:92
+#: helpers/external_acl/session/ext_session_acl.8:123
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:241
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:96
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:114
@@ -522,7 +522,7 @@ msgstr ""
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:100
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:334
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:70
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:83
 #: helpers/basic_auth/PAM/basic_pam_auth.8:110
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:121
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:106
@@ -534,7 +534,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:250
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:271
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:195
-#: helpers/external_acl/session/ext_session_acl.8:94
+#: helpers/external_acl/session/ext_session_acl.8:125
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:243
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:101
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:116
@@ -547,7 +547,7 @@ msgstr "SEE ALSO"
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:114
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:344
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:76
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:89
 #: helpers/basic_auth/PAM/basic_pam_auth.8:121
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:128
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:117
@@ -559,7 +559,7 @@ msgstr "SEE ALSO"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:264
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:282
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:200
-#: helpers/external_acl/session/ext_session_acl.8:99
+#: helpers/external_acl/session/ext_session_acl.8:130
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:248
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:108
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:127
@@ -570,7 +570,7 @@ msgstr "The Squid FAQ wiki"
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:117
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:347
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:79
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:92
 #: helpers/basic_auth/PAM/basic_pam_auth.8:124
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:131
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:120
@@ -582,7 +582,7 @@ msgstr "The Squid FAQ wiki"
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:267
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:285
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:203
-#: helpers/external_acl/session/ext_session_acl.8:102
+#: helpers/external_acl/session/ext_session_acl.8:133
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:251
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:111
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:130
@@ -689,7 +689,7 @@ msgstr ""
 
 #. type: SH
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:62
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:20
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:27
 #: helpers/basic_auth/PAM/basic_pam_auth.8:21
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:31
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:34
@@ -700,7 +700,7 @@ msgstr ""
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:65
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:49
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:27
-#: helpers/external_acl/session/ext_session_acl.8:26
+#: helpers/external_acl/session/ext_session_acl.8:34
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:24
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:19
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:19
@@ -1104,7 +1104,16 @@ msgid "This password file can be manipulated using B<htpasswd.>"
 msgstr "This password file can be manipulated using B<htpasswd.>"
 
 #. type: Plain text
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:23
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:26
+msgid ""
+"This authenticator accepts: * MD5 - with optional salt and magic strings * "
+"DES - for passwords 8 characters or less in length"
+msgstr ""
+"This authenticator accepts: * MD5 - with optional salt and magic strings * "
+"DES - for passwords 8 characters or less in length"
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:30
 msgid ""
 "The only parameter is the password file.  It must have permissions to be "
 "read by the user that Squid is running as."
@@ -1113,19 +1122,40 @@ msgstr ""
 "read by the user that Squid is running as."
 
 #. type: Plain text
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:31
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:38
 msgid ""
 "B<basic_ncsa_auth> must have access to the password file to be executed."
 msgstr ""
 "B<basic_ncsa_auth> must have access to the password file to be executed."
 
+#. type: SH
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:39
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:163
+#: helpers/external_acl/unix_group/ext_unix_group_acl.8:62
+#, no-wrap
+msgid "KNOWN ISSUES"
+msgstr "KNOWN ISSUES"
+
 #. type: Plain text
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:37
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:44
+msgid ""
+"DES functionality (used by htpasswd by default) silently truncates passwords "
+"to 8 characters.  Allowing login with password values shorter than the one "
+"desired.  This authenticator will reject login with long passwords when "
+"using DES."
+msgstr ""
+"DES functionality (used by htpasswd by default) silently truncates passwords "
+"to 8 characters.  Allowing login with password values shorter than the one "
+"desired.  This authenticator will reject login with long passwords when "
+"using DES."
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:50
 msgid "Based on original documentation by"
 msgstr "Based on original documentation by"
 
 #. type: Plain text
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:45
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:58
 msgid ""
 "This file is distributed in the hope that it will be useful, but WITHOUT ANY "
 "WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS "
@@ -1138,7 +1168,7 @@ msgstr ""
 "details."
 
 #. type: Plain text
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:51
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:64
 msgid ""
 "You should have received a copy of the GNU General Public License along with "
 "this file; if not, write to the Free Software Foundation, Inc., 59 Temple "
@@ -1251,7 +1281,7 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:82
-#: helpers/external_acl/session/ext_session_acl.8:69
+#: helpers/external_acl/session/ext_session_acl.8:99
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:218
 msgid "This program and documentation was written by"
 msgstr "This program and documentation was written by"
@@ -1421,7 +1451,6 @@ msgstr ""
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:9
 #: helpers/digest_auth/file/digest_file_auth.8:9
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:9
-#: helpers/external_acl/session/ext_session_acl.8:9
 #: helpers/external_acl/time_quota/ext_time_quota_acl.8:9
 msgid "Version 1.0"
 msgstr "Version 1.0"
@@ -1564,12 +1593,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:33
-#| msgid ""
-#| "Usage is simple. It accepts a username and password on standard input and "
-#| "will return OK if the username/password is valid for the domain/machine, "
-#| "or ERR if there was some problem.  It is possible to authenticate against "
-#| "NT trusted domains specifyng the username in the domain\\eusername "
-#| "Microsoft notation."
 msgid ""
 "Usage is simple. It accepts a username and password on standard input and "
 "will return B<OK> if the username/password is valid for the domain/machine, "
@@ -1580,8 +1603,8 @@ msgstr ""
 "Usage is simple. It accepts a username and password on standard input and "
 "will return B<OK> if the username/password is valid for the domain/machine, "
 "or B<ERR> if there was some problem. It is possible to authenticate against "
-"NT trusted domains specifying the username in the domain\\eusername Microsoft "
-"notation."
+"NT trusted domains specifying the username in the domain\\eusername "
+"Microsoft notation."
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:38
@@ -2283,13 +2306,6 @@ msgstr ""
 "has been passed.  Please note that you need to specify the full LDAP object "
 "for this, as shown above."
 
-#. type: SH
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:163
-#: helpers/external_acl/unix_group/ext_unix_group_acl.8:62
-#, no-wrap
-msgid "KNOWN ISSUES"
-msgstr "KNOWN ISSUES"
-
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:168
 msgid ""
@@ -2342,11 +2358,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:213
-#| msgid ""
-#| "I *STRONGLY RECOMMEND* using the latest version of the Novell Client in "
-#| "all situations B<before> seeking support! You may also need to make sure "
-#| "your servers have the latest service packs installed, and that your "
-#| "servers are properly synchronizing partitions."
 msgid ""
 "I B<STRONGLY RECOMMEND> using the latest version of the Novell Client in all "
 "situations B<before> seeking support! You may also need to make sure your "
@@ -2361,7 +2372,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:7
 msgid "Restrict users to certain IP addresses, using a text file backend."
-msgstr ""
+msgstr "Restrict users to certain IP addresses, using a text file backend."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:14
@@ -2379,7 +2390,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:22
-#, fuzzy
 msgid ""
 "It works by reading a pair composed by an IP address and an username on "
 "STDIN and matching it against a configuration file."
@@ -2390,7 +2400,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:33
 msgid "Configuration B<file> to load."
-msgstr ""
+msgstr "Configuration B<file> to load."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:43
@@ -2447,13 +2457,6 @@ msgstr "Version 1.3.0sq"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:26
-#| msgid ""
-#| "B<ext_kerberos_ldap_group_acl> is an installed binary and allows Squid to "
-#| "connect to a LDAP directory to authorize users via LDAP groups. Options "
-#| "are specified as parameters on the command line, while the username (e.g. "
-#| "user, user@REALM, NDOMAIN\\euser) to be checked against the LDAP "
-#| "directory are specified on subsequent lines of input to the helper, one "
-#| "username per line."
 msgid ""
 "B<ext_kerberos_ldap_group_acl> is an installed binary and allows Squid to "
 "connect to a LDAP directory to authorize users via LDAP groups. Options are "
@@ -2479,6 +2482,12 @@ msgid ""
 "is available from the username the LDAP server will be determined through "
 "the command line options."
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> will determine the ldap server name from DNS "
+"SRV and/or A records or a local hosts file (e.g. for the Kerberos Realm "
+"B<SUSE.HOME> it will look for an SRV record B<_ldap._tcp.SUSE.HOME> and an A "
+"record B<SUSE.HOME> or a B<SUSE.HOME> hosts entry). If no domain "
+"information is available from the username the LDAP server will be "
+"determined through the command line options."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:51
@@ -2489,6 +2498,11 @@ msgid ""
 "specified by B<-m> depth. For other LDAP servers a RFC2307bis schema of "
 "groups is assumed."
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> requires as a minimum the B<-g> , B<-t> or "
+"B<-T> option which provides the LDAP group name the user has to belong too. "
+"For Active Directory a recursive group lookup is implemented until a max "
+"depth specified by B<-m> depth. For other LDAP servers a RFC2307bis schema "
+"of groups is assumed."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:64
@@ -2499,6 +2513,11 @@ msgid ""
 "helper will produce either B<OK> or B<ERR> on the following line to show if "
 "the user is a member of the specified group."
 msgstr ""
+"Different group names can be specified for different domains using a "
+"group@domain syntax.  As expected by the B<external_acl_type> construct of "
+"Squid, after specifying a username and group followed by a new line, this "
+"helper will produce either B<OK> or B<ERR> on the following line to show if "
+"the user is a member of the specified group."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:72
@@ -2514,7 +2533,6 @@ msgstr "Write informational messages to stderr."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:78
-#, fuzzy
 #| msgid "Use persistent connections."
 msgid "Use SSL for the LDAP connection."
 msgstr "Use SSL for the LDAP connection."
@@ -2525,6 +2543,8 @@ msgid ""
 "The CA certificate file can be set via the environment variable "
 "TLS_CACERTFILE (default /etc/ssl/certs/cert.pem) (OpenLDAP)."
 msgstr ""
+"The CA certificate file can be set via the environment variable "
+"TLS_CACERTFILE (default /etc/ssl/certs/cert.pem) (OpenLDAP)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:82
@@ -2532,11 +2552,13 @@ msgid ""
 "The SSL certificate database can be set via the environment variable "
 "SSL_CERTDBPATH (default /etc/certs) (Sun and Mozilla LDAP SDK)."
 msgstr ""
+"The SSL certificate database can be set via the environment variable "
+"SSL_CERTDBPATH (default /etc/certs) (Sun and Mozilla LDAP SDK)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:85
 msgid "Allow SSL without certificate verification."
-msgstr ""
+msgstr "Allow SSL without certificate verification."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:89
@@ -2544,6 +2566,8 @@ msgid ""
 "Default Kerberos domain to use for usernames which do not contain domain "
 "information (e.g. for users using basic authentication)."
 msgstr ""
+"Default Kerberos domain to use for usernames which do not contain domain "
+"information (e.g. for users using basic authentication)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:94
@@ -2552,6 +2576,9 @@ msgid ""
 "Name@Kerberos-Realm[:Netbios-Name@Kerberos-Realm] (e.g. for users using NTLM "
 "authentication)."
 msgstr ""
+"A list of Netbios name mappings to Kerberos domain names of the form "
+"Netbios-Name@Kerberos-Realm[:Netbios-Name@Kerberos-Realm] (e.g. for users "
+"using NTLM authentication)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:97
@@ -2585,7 +2612,7 @@ msgid ""
 "used from a process listing."
 msgstr ""
 "As the password needs to be printed in plain text in your Squid "
-"configuration it is strongly recommended to use a account with minimal "
+"configuration it is strongly recommended to use an account with minimal "
 "associated privileges.  This to limit the damage in case someone could get "
 "hold of a copy of your Squid configuration file or extracts the password "
 "used from a process listing."
@@ -2598,7 +2625,7 @@ msgstr "LDAP server bind path."
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:115
 msgid "LDAP server URL in form ldap[s]://server:port"
-msgstr ""
+msgstr "LDAP server URL in form ldap[s]://server:port"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:119
@@ -2606,6 +2633,8 @@ msgid ""
 "list of ldap servers of the form lserver|lserver@|lserver@Realm[:lserver@|"
 "lserver@Realm]"
 msgstr ""
+"list of ldap servers of the form "
+"lserver|lserver@|lserver@Realm[:lserver@|lserver@Realm]"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:123
@@ -2613,6 +2642,8 @@ msgid ""
 "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm"
 "[:Group@|Group@Realm]"
 msgstr ""
+"A list of group name per Kerberos domain of the form "
+"Group|Group@|Group@Realm[:Group@|Group@Realm]"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:128
@@ -2620,6 +2651,9 @@ msgid ""
 "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm"
 "[:Group@|Group@Realm] where group is in UTF-8 hex format"
 msgstr ""
+"A list of group name per Kerberos domain of the form "
+"Group|Group@|Group@Realm[:Group@|Group@Realm] where group is in UTF-8 hex "
+"format"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:133
@@ -2627,6 +2661,9 @@ msgid ""
 "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm"
 "[:Group@|Group@Realm] where group and domain is in UTF-8 hex format"
 msgstr ""
+"A list of group name per Kerberos domain of the form "
+"Group|Group@|Group@Realm[:Group@|Group@Realm] where group and domain is in "
+"UTF-8 hex format"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:140
@@ -2653,6 +2690,10 @@ msgid ""
 "Kerberos domain. The fqdn must be the proxy name set in IE or firefox. You "
 "can not use an IP address."
 msgstr ""
+"Add the following lines to the squid startup script to point squid to a "
+"keytab file which contains the HTTP/fqdn service principal for the default "
+"Kerberos domain. The fqdn must be the proxy name set in IE or firefox. You "
+"can not use an IP address."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:170
@@ -2662,6 +2703,9 @@ msgid ""
 "point squid to the seperate Kerberos config file by setting the following "
 "environmnet variable in the startup script."
 msgstr ""
+"If you use a different Kerberos domain than the machine itself is in you can "
+"point squid to the seperate Kerberos config file by setting the following "
+"environmnet variable in the startup script."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:180
@@ -2669,6 +2713,8 @@ msgid ""
 "B<ext_kerberos_ldap_group_acl> will determine automagically the right ldap "
 "server. The following method is used:"
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> will determine automagically the right ldap "
+"server. The following method is used:"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:185
@@ -2679,6 +2725,10 @@ msgid ""
 "   b) Query DNS for A record REALM\n"
 "   c) Use LDAP_URL if given\n"
 msgstr ""
+"1) For user@REALM\n"
+"   a) Query DNS for SRV record _ldap._tcp.REALM\n"
+"   b) Query DNS for A record REALM\n"
+"   c) Use LDAP_URL if given\n"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:189
@@ -3097,68 +3147,87 @@ msgid "Squid session tracking external acl helper."
 msgstr "Squid session tracking external acl helper."
 
 #. type: Plain text
+#: helpers/external_acl/session/ext_session_acl.8:9
+#, fuzzy
+#| msgid "Version 1.22"
+msgid "Version 1.2"
+msgstr "Version 1.22"
+
+#. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:16
 msgid "database"
 msgstr "database"
 
 #. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:23
+#: helpers/external_acl/session/ext_session_acl.8:33
 msgid ""
 "B<ext_session_acl> maintains a concept of sessions by monitoring requests "
-"and timing out sessions if no requests have been seen for the idle timeout "
-"timer."
-msgstr ""
-"B<ext_session_acl> maintains a concept of sessions by monitoring requests "
-"and timing out sessions if no requests have been seen for the idle timeout "
-"timer."
-
-#. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:25
-msgid "Intended use is for displaying \"terms of use\" pages, ad popups etc."
-msgstr "Intended use is for displaying \"terms of use\" pages, ad popups etc."
-
-#. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:31
-msgid ""
-"B<Timeout> for any session. If not specified the default is 3600 seconds."
+"and timing out sessions. The timeout is based either on idle use ( B<-t> ) "
+"or a fixed period of time ( B<-T> ). The former is suitable for displaying "
+"terms and conditions to a user; the latter is suitable for the display of "
+"advertisments or other notices (both as a splash page - see config examples "
+"in the wiki online). The session helper can also be used to force users to "
+"re-authenticate if the B<%LOGIN> and B<-a> are both used."
 msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:38
 msgid ""
-"B<Path> to persistent database. If not specified the session details will be "
-"kept in memory only and all sessions will reset each time Squid restarts "
-"it's helpers (Squid restart or rotation of logs)."
+"Idle timeout for any session. The default if not specified (set to 3600 "
+"seconds)."
 msgstr ""
-"B<Path> to persistent database. If not specified the session details will be "
-"kept in memory only and all sessions will reset each time Squid restarts "
-"it's helpers (Squid restart or rotation of logs)."
 
 #. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:46
+#: helpers/external_acl/session/ext_session_acl.8:51
+msgid ""
+"Fixed timeout for any session. This will end the session after the timeout "
+"regardless of a user's activity. If used with B<active> mode, this will "
+"terminate the user's session after B<timeout> , after which another B<LOGIN> "
+"will be required.  B<LOGOUT> will reset the session and timeout."
+msgstr ""
+
+#. type: Plain text
+#: helpers/external_acl/session/ext_session_acl.8:64
+msgid ""
+"B<Path> to persistent database. If a file is specified then that single file "
+"is used as the database. If a path is specified, a Berkeley DB database "
+"environment is created within the directory. The advantage of the latter is "
+"better database support between multiple instances of the session helper. "
+"Using multiple instances of the session helper with a single database file "
+"will cause synchronisation problems between processes.  If this option is "
+"not specified the session details will be kept in memory only and all "
+"sessions will reset each time Squid restarts its helpers (Squid restart or "
+"rotation of logs)."
+msgstr ""
+
+#. type: Plain text
+#: helpers/external_acl/session/ext_session_acl.8:74
+#, fuzzy
+#| msgid ""
+#| "Active mode. In this mode sessions are started by evaluating an acl with "
+#| "the argument B<LOGIN> , or terminated by the argument B<LOGOUT>"
 msgid ""
 "Active mode. In this mode sessions are started by evaluating an acl with the "
-"argument B<LOGIN> , or terminated by the argument B<LOGOUT>"
+"argument B<LOGIN> , or terminated by the argument B<LOGOUT .> Without this "
+"flag the helper automatically starts the session after the first request."
 msgstr ""
 "Active mode. In this mode sessions are started by evaluating an acl with the "
 "argument B<LOGIN> , or terminated by the argument B<LOGOUT>"
 
 #. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:49
+#: helpers/external_acl/session/ext_session_acl.8:81
 msgid ""
-"Without this flag the helper automatically starts the session after the "
-"first request."
+"The B<ext_session_acl> helper is a concurrent helper; therefore, the "
+"concurrency= option B<must> be specified in the configuration."
 msgstr ""
-"Without this flag the helper automatically starts the session after the "
-"first request."
 
 #. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:53
+#: helpers/external_acl/session/ext_session_acl.8:83
 msgid "Configuration example using the default automatic mode"
 msgstr "Configuration example using the default automatic mode"
 
 #. type: Plain text
-#: helpers/external_acl/session/ext_session_acl.8:66
+#: helpers/external_acl/session/ext_session_acl.8:96
 msgid ""
 "Then set up B<http://your.server.example.com/bannerpage> to display a "
 "session startup page and then redirect the user back to the requested URL "
@@ -4371,3 +4440,33 @@ msgstr "Proxy authentication password"
 #: tools/squidclient.1:184
 msgid "WWW authentication password"
 msgstr "WWW authentication password"
+
+msgid ""
+"B<ext_session_acl> maintains a concept of sessions by monitoring requests "
+"and timing out sessions if no requests have been seen for the idle "
+"timeout timer."
+msgstr ""
+"B<ext_session_acl> maintains a concept of sessions by monitoring requests "
+"and timing out sessions if no requests have been seen for the idle "
+"timeout timer."
+
+msgid ""
+"Intended use is for displaying \"terms of use\" pages, ad popups etc."
+msgstr ""
+"Intended use is for displaying \"terms of use\" pages, ad popups etc."
+
+msgid ""
+"B<Path> to persistent database. If not specified the session details will "
+"be kept in memory only and all sessions will reset each time Squid "
+"restarts it's helpers (Squid restart or rotation of logs)."
+msgstr ""
+"B<Path> to persistent database. If not specified the session details will "
+"be kept in memory only and all sessions will reset each time Squid "
+"restarts it's helpers (Squid restart or rotation of logs)."
+
+msgid ""
+"Without this flag the helper automatically starts the session after the "
+"first request."
+msgstr ""
+"Without this flag the helper automatically starts the session after the "
+"first request."

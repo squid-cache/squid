@@ -21,21 +21,24 @@ peer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(peer * p) STUB
 
 #include "comm/ConnOpener.h"
+CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
-//Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) STUB
-//Comm::ConnOpener::~ConnOpener() STUB
-void Comm::ConnOpener::setHost(const char *) STUB
-const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)
+void Comm::ConnOpener::start() STUB
+void Comm::ConnOpener::swanSong() STUB
+Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
+        Comm::ConnOpener::~ConnOpener() STUB
+        void Comm::ConnOpener::setHost(const char *) STUB
+        const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)
 
 #include "comm/forward.h"
-bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
+        bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
 
 #include "comm/IoCallback.h"
-void Comm::IoCallback::setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz) STUB
-void Comm::IoCallback::selectOrQueueWrite() STUB
-void Comm::IoCallback::cancel(const char *reason) STUB
-void Comm::IoCallback::finish(comm_err_t code, int xerrn) STUB
-Comm::CbEntry *Comm::iocb_table = NULL;
+        void Comm::IoCallback::setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz) STUB
+        void Comm::IoCallback::selectOrQueueWrite() STUB
+        void Comm::IoCallback::cancel(const char *reason) STUB
+        void Comm::IoCallback::finish(comm_err_t code, int xerrn) STUB
+        Comm::CbEntry *Comm::iocb_table = NULL;
 void Comm::CallbackTableInit() STUB
 void Comm::CallbackTableDestruct() STUB
 
@@ -57,4 +60,4 @@ void Comm::TcpAcceptor::notify(const comm_err_t flag, const Comm::ConnectionPoin
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB
 void Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback) STUB
 void Comm::WriteCancel(const Comm::ConnectionPointer &conn, const char *reason) STUB
-//PF Comm::HandleWrite STUB
+/*PF*/ void Comm::HandleWrite(int, void*) STUB

@@ -41,13 +41,15 @@
 #include "SquidTime.h"
 
 void
-Log::Format::SquidUserAgent(AccessLogEntry * al, Logfile * logfile)
+Log::Format::SquidUserAgent(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
-    const char *agent = al->request->header.getStr(HDR_USER_AGENT);
+    const char *agent = NULL;
 
-    // do not log unless there is something to be displayed.
+    if (al->request)
+        agent = al->request->header.getStr(HDR_USER_AGENT);
+
     if (!agent || *agent == '\0')
-        return;
+        agent = "-";
 
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);

@@ -135,7 +135,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
     Must(diskId < 0); // we do not know our disker yet
 
     if (!response) {
-        debugs(79,1, HERE << "error: timeout");
+        debugs(79, DBG_IMPORTANT, HERE << "error: timeout");
         error_ = true;
     } else {
         diskId = response->strand.kidId;
@@ -145,7 +145,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
             Must(inserted);
         } else {
             error_ = true;
-            debugs(79,1, HERE << "error: no disker claimed " << dbName);
+            debugs(79, DBG_IMPORTANT, HERE << "error: no disker claimed " << dbName);
         }
     }
 
@@ -222,10 +222,10 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
         ioError = true; // I/O timeout does not warrant setting error_?
     } else {
         if (response->xerrno) {
-            debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
+            debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(response->xerrno));
             ioError = error_ = true;
         } else if (!response->page) {
-            debugs(79,1, HERE << "error: run out of shared memory pages");
+            debugs(79, DBG_IMPORTANT, HERE << "error: run out of shared memory pages");
             ioError = true;
         } else {
             const char *const buf = Ipc::Mem::PagePointer(response->page);
@@ -268,10 +268,10 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
         debugs(79, 3, HERE << "error: timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
     } else if (response->xerrno) {
-        debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
+        debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(response->xerrno));
         ioError = error_ = true;
     } else if (response->len != writeRequest->len) {
-        debugs(79,1, HERE << "problem: " << response->len << " < " << writeRequest->len);
+        debugs(79, DBG_IMPORTANT, HERE << "problem: " << response->len << " < " << writeRequest->len);
         error_ = true;
     }
 
@@ -788,7 +788,7 @@ void
 IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 {
     if (ipcIo.command != IpcIo::cmdRead && ipcIo.command != IpcIo::cmdWrite) {
-        debugs(0,0, HERE << "disker" << KidIdentifier <<
+        debugs(0, DBG_CRITICAL, HERE << "disker" << KidIdentifier <<
                " should not receive " << ipcIo.command <<
                " ipcIo" << workerId << '.' << ipcIo.requestId);
         return;
@@ -830,12 +830,12 @@ DiskerOpen(const String &path, int flags, mode_t mode)
 
     if (TheFile < 0) {
         const int xerrno = errno;
-        debugs(47,0, HERE << "rock db error opening " << path << ": " <<
+        debugs(47, DBG_CRITICAL, HERE << "rock db error opening " << path << ": " <<
                xstrerr(xerrno));
         return false;
     }
 
-    store_open_disk_fd++;
+    ++store_open_disk_fd;
     debugs(79,3, HERE << "rock db opened " << path << ": FD " << TheFile);
     return true;
 }
@@ -847,7 +847,7 @@ DiskerClose(const String &path)
         file_close(TheFile);
         debugs(79,3, HERE << "rock db closed " << path << ": FD " << TheFile);
         TheFile = -1;
-        store_open_disk_fd--;
+        --store_open_disk_fd;
     }
 }
 

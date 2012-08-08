@@ -10,7 +10,7 @@ endif
 SUBDIRS += scripts icons errors doc helpers src tools test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
-DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 
 dist-hook:
 	@ for subdir in include; do \

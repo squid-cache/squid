@@ -358,19 +358,19 @@ add_User_Group(wchar_t * Group)
     if (User_Groups_Count == 0) {
         User_Groups = (wchar_t **) xmalloc(sizeof(wchar_t *));
         *User_Groups = NULL;
-        User_Groups_Count++;
+        ++User_Groups_Count;
     }
     array = User_Groups;
     while (*array) {
         if (wcscmp(Group, *array) == 0)
             return 0;
-        array++;
+        ++array;
     }
     User_Groups = (wchar_t **) xrealloc(User_Groups, sizeof(wchar_t *) * (User_Groups_Count + 1));
     User_Groups[User_Groups_Count] = NULL;
     User_Groups[User_Groups_Count - 1] = (wchar_t *) xmalloc((wcslen(Group) + 1) * sizeof(wchar_t));
     wcscpy(User_Groups[User_Groups_Count - 1], Group);
-    User_Groups_Count++;
+    ++User_Groups_Count;
 
     return 1;
 }
@@ -384,7 +384,7 @@ wccmparray(const wchar_t * str, const wchar_t ** array)
         debug("Windows group: %S, Squid group: %S\n", str, *array);
         if (wcscmp(str, *array) == 0)
             return 0;
-        array++;
+        ++array;
     }
     return -1;
 }
@@ -402,7 +402,7 @@ wcstrcmparray(const wchar_t * str, const char **array)
         debug("Windows group: %S, Squid group: %S\n", str, wszGroup);
         if ((use_case_insensitive_compare ? _wcsicmp(str, wszGroup) : wcscmp(str, wszGroup)) == 0)
             return 0;
-        array++;
+        ++array;
     }
     return -1;
 }
@@ -519,12 +519,12 @@ build_groups_DN_array(const char **array, char *userdomain)
         MultiByteToWideChar(CP_ACP, 0, Group, -1, wc, wcsize);
         *entry = My_NameTranslate(wc, source_group_format, ADS_NAME_TYPE_1779);
         safe_free(wc);
-        array++;
+        ++array;
         if (*entry == NULL) {
             debug("build_groups_DN_array: cannot get DN for '%s'.\n", Group);
             continue;
         }
-        entry++;
+        ++entry;
     }
     *entry = NULL;
     return wc_array;
@@ -583,7 +583,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
      */
     if (nStatus == NERR_Success) {
         if ((pTmpBuf = pBuf) != NULL) {
-            for (i = 0; i < dwEntriesRead; i++) {
+            for (i = 0; i < dwEntriesRead; ++i) {
                 assert(pTmpBuf != NULL);
                 if (pTmpBuf == NULL) {
                     result = 0;
@@ -593,8 +593,8 @@ Valid_Local_Groups(char *UserName, const char **Groups)
                     result = 1;
                     break;
                 }
-                pTmpBuf++;
-                dwTotalCount++;
+                ++pTmpBuf;
+                ++dwTotalCount;
             }
         }
     } else {
@@ -629,7 +629,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
 
     strncpy(NTDomain, UserName, sizeof(NTDomain));
 
-    for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); j++) {
+    for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++j) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])) != NULL)
             break;
     }
@@ -705,7 +705,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
                 result = 1;
                 break;
             }
-            tmp++;
+            ++tmp;
         }
     } else
         debug("Valid_Global_Groups: ADsGetObject for %S failed, ERROR: %s\n", User_LDAP_path, Get_WIN32_ErrorMessage(hr));
@@ -716,14 +716,14 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     tmp = wszGroups;
     while (*tmp) {
         safe_free(*tmp);
-        tmp++;
+        ++tmp;
     }
     safe_free(wszGroups);
 
     tmp = User_Groups;
     while (*tmp) {
         safe_free(*tmp);
-        tmp++;
+        ++tmp;
     }
     safe_free(User_Groups);
     User_Groups_Count = 0;
@@ -850,7 +850,7 @@ main(int argc, char *argv[])
             continue;
         }
         username = strtok(buf, " ");
-        for (n = 0; (group = strtok(NULL, " ")) != NULL; n++) {
+        for (n = 0; (group = strtok(NULL, " ")) != NULL; ++n) {
             rfc1738_unescape(group);
             groups[n] = group;
         }

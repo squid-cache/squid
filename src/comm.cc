@@ -46,7 +46,6 @@
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
-#include "CommIO.h"
 #include "CommRead.h"
 #include "MemBuf.h"
 #include "pconn.h"
@@ -125,7 +124,7 @@ commHandleRead(int fd, void *data)
     assert(data == COMMIO_FD_READCB(fd));
     assert(ccb->active());
     /* Attempt a read */
-    statCounter.syscalls.sock.reads++;
+    ++ statCounter.syscalls.sock.reads;
     errno = 0;
     int retval;
     retval = FD_READ_METHOD(fd, ccb->buf, ccb->size);
@@ -318,7 +317,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
 int
 comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
 {
-    statCounter.syscalls.sock.recvfroms++;
+    ++ statCounter.syscalls.sock.recvfroms;
     int x = 0;
     struct addrinfo *AI = NULL;
 
@@ -387,7 +386,7 @@ comm_local_port(int fd)
     temp.InitAddrInfo(addr);
 
     if (Squid::getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
-        debugs(50, 1, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
         temp.FreeAddrInfo(addr);
         return 0;
     }
@@ -409,7 +408,7 @@ comm_local_port(int fd)
 static comm_err_t
 commBind(int s, struct addrinfo &inaddr)
 {
-    statCounter.syscalls.sock.binds++;
+    ++ statCounter.syscalls.sock.binds;
 
     if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "commBind: bind socket FD " << s << " to " << fd_table[s].local_addr);
@@ -477,7 +476,7 @@ comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
     if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
-        debugs(50, 1, "comm_open: setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerror());
     }
 #else
     debugs(50, 0, "WARNING: comm_open: setsockopt(IPV6_V6ONLY) not supported on this platform");
@@ -521,7 +520,7 @@ comm_openex(int sock_type,
 
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
-    statCounter.syscalls.sock.sockets++;
+    ++ statCounter.syscalls.sock.sockets;
 
     /* Setup the socket addrinfo details for use */
     addr.GetAddrInfo(AI);
@@ -663,7 +662,7 @@ comm_apply_flags(int new_socket,
 
     if ( (flags & COMM_DOBIND) || addr.GetPort() > 0 || !addr.IsAnyAddr() ) {
         if ( !(flags & COMM_DOBIND) && addr.IsAnyAddr() )
-            debugs(5,1,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
+            debugs(5, DBG_IMPORTANT,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
         if ( addr.IsNoAddr() )
             debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
 
@@ -822,7 +821,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     if (!F->flags.called_connect) {
         F->flags.called_connect = 1;
-        statCounter.syscalls.sock.connects++;
+        ++ statCounter.syscalls.sock.connects;
 
         x = connect(sock, AI->ai_addr, AI->ai_addrlen);
 
@@ -917,9 +916,9 @@ comm_connect_addr(int sock, const Ip::Address &address)
     F->remote_port = address.GetPort(); /* remote_port is HS */
 
     if (status == COMM_OK) {
-        debugs(5, 10, "comm_connect_addr: FD " << sock << " connected to " << address);
+        debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connected to " << address);
     } else if (status == COMM_INPROGRESS) {
-        debugs(5, 10, "comm_connect_addr: FD " << sock << " connection pending");
+        debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connection pending");
     }
 
     return status;
@@ -1057,7 +1056,7 @@ comm_close_complete(const FdeCbParams &params)
     fd_close(params.fd);		/* update fdstat */
     close(params.fd);
 
-    statCounter.syscalls.sock.closes++;
+    ++ statCounter.syscalls.sock.closes;
 
     /* When one connection closes, give accept() a chance, if need be */
     Comm::AcceptLimiter::Instance().kick();
@@ -1092,7 +1091,11 @@ _comm_close(int fd, char const *file, int line)
         return;
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
-    assert(isOpen(fd));
+    if (!isOpen(fd)) {
+        debugs(50, DBG_IMPORTANT, HERE << "BUG 3556: FD " << fd << " is not an open socket.");
+        // XXX: do we need to run close(fd) or fd_close(fd) here?
+        return;
+    }
 
     assert(F->type != FD_FILE);
 
@@ -1165,7 +1168,7 @@ comm_udp_sendto(int fd,
     struct addrinfo *AI = NULL;
 
     PROF_start(comm_udp_sendto);
-    statCounter.syscalls.sock.sendtos++;
+    ++ statCounter.syscalls.sock.sendtos;
 
     debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
            " using FD " << fd << " using Port " << comm_local_port(fd) );
@@ -1190,7 +1193,7 @@ comm_udp_sendto(int fd,
     if (ECONNREFUSED != errno)
 #endif
 
-        debugs(50, 1, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
 
     return COMM_ERROR;
 }
@@ -1286,19 +1289,19 @@ commSetReuseAddr(int fd)
     int on = 1;
 
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) < 0)
-        debugs(50, 1, "commSetReuseAddr: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetReuseAddr: FD " << fd << ": " << xstrerror());
 }
 
 static void
 commSetTcpRcvbuf(int fd, int size)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(size)) < 0)
-        debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
     if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0)
-        debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
 #ifdef TCP_WINDOW_CLAMP
     if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0)
-        debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
 #endif
 }
 
@@ -1399,7 +1402,7 @@ commSetTcpNoDelay(int fd)
     int on = 1;
 
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
-        debugs(50, 1, "commSetTcpNoDelay: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "commSetTcpNoDelay: FD " << fd << ": " << xstrerror());
 
     fd_table[fd].flags.nodelay = 1;
 }
@@ -1414,23 +1417,23 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
     if (timeout && interval) {
         int count = (timeout + interval - 1) / interval;
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
-            debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+            debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPIDLE
     if (idle) {
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
-            debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+            debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPINTVL
     if (interval) {
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
-            debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+            debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0)
-        debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
+        debugs(5, DBG_IMPORTANT, "commSetKeepalive: FD " << fd << ": " << xstrerror());
 }
 
 void
@@ -1737,7 +1740,7 @@ commCloseAllSockets(void)
     int fd;
     fde *F = NULL;
 
-    for (fd = 0; fd <= Biggest_FD; fd++) {
+    for (fd = 0; fd <= Biggest_FD; ++fd) {
         F = &fd_table[fd];
 
         if (!F->flags.open)
@@ -1795,7 +1798,7 @@ checkTimeouts(void)
     fde *F = NULL;
     AsyncCall::Pointer callback;
 
-    for (fd = 0; fd <= Biggest_FD; fd++) {
+    for (fd = 0; fd <= Biggest_FD; ++fd) {
         F = &fd_table[fd];
 
         if (writeTimedOut(fd)) {
@@ -1817,60 +1820,6 @@ checkTimeouts(void)
             debugs(5, 5, "checkTimeouts: FD " << fd << ": Forcing comm_close()");
             comm_close(fd);
         }
-    }
-}
-
-void CommIO::Initialise()
-{
-    /* Initialize done pipe signal */
-    int DonePipe[2];
-    if (Squid::pipe(DonePipe)) {}
-    DoneFD = DonePipe[1];
-    DoneReadFD = DonePipe[0];
-    fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
-    fd_open(DoneFD, FD_PIPE, "async-io completetion event: threads");
-    commSetNonBlocking(DoneReadFD);
-    commSetNonBlocking(DoneFD);
-    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
-    Initialised = true;
-}
-
-void CommIO::NotifyIOClose()
-{
-    /* Close done pipe signal */
-    FlushPipe();
-    close(DoneFD);
-    close(DoneReadFD);
-    fd_close(DoneFD);
-    fd_close(DoneReadFD);
-    Initialised = false;
-}
-
-bool CommIO::Initialised = false;
-bool CommIO::DoneSignalled = false;
-int CommIO::DoneFD = -1;
-int CommIO::DoneReadFD = -1;
-
-void
-CommIO::FlushPipe()
-{
-    char buf[256];
-    FD_READ_METHOD(DoneReadFD, buf, sizeof(buf));
-}
-
-void
-CommIO::NULLFDHandler(int fd, void *data)
-{
-    FlushPipe();
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
-}
-
-void
-CommIO::ResetNotifications()
-{
-    if (DoneSignalled) {
-        FlushPipe();
-        DoneSignalled = false;
     }
 }
 
@@ -2152,7 +2101,7 @@ comm_open_uds(int sock_type,
 
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
-    statCounter.syscalls.sock.sockets++;
+    ++ statCounter.syscalls.sock.sockets;
 
     /* Setup the socket addrinfo details for use */
     struct addrinfo AI;

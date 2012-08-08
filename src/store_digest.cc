@@ -125,7 +125,7 @@ storeDigestInit(void)
     }
 
     store_digest = cacheDigestCreate(cap, Config.digest.bits_per_entry);
-    debugs(71, 1, "Local cache digest enabled; rebuild/rewrite every " <<
+    debugs(71, DBG_IMPORTANT, "Local cache digest enabled; rebuild/rewrite every " <<
            (int) Config.digest.rebuild_period << "/" <<
            (int) Config.digest.rewrite_period << " sec");
 
@@ -165,10 +165,10 @@ storeDigestDel(const StoreEntry * entry)
 
     if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
         if (!cacheDigestTest(store_digest,  (const cache_key *)entry->key)) {
-            sd_stats.del_lost_count++;
+            ++sd_stats.del_lost_count;
             debugs(71, 6, "storeDigestDel: lost entry, key: " << entry->getMD5Text() << " url: " << entry->url()  );
         } else {
-            sd_stats.del_count++;
+            ++sd_stats.del_count;
             cacheDigestDel(store_digest,  (const cache_key *)entry->key);
             debugs(71, 6, "storeDigestDel: deled entry, key: " << entry->getMD5Text());
         }
@@ -275,19 +275,19 @@ storeDigestAdd(const StoreEntry * entry)
     assert(entry && store_digest);
 
     if (storeDigestAddable(entry)) {
-        sd_stats.add_count++;
+        ++sd_stats.add_count;
 
         if (cacheDigestTest(store_digest, (const cache_key *)entry->key))
-            sd_stats.add_coll_count++;
+            ++sd_stats.add_coll_count;
 
         cacheDigestAdd(store_digest,  (const cache_key *)entry->key);
 
         debugs(71, 6, "storeDigestAdd: added entry, key: " << entry->getMD5Text());
     } else {
-        sd_stats.rej_count++;
+        ++sd_stats.rej_count;
 
         if (cacheDigestTest(store_digest,  (const cache_key *)entry->key))
-            sd_stats.rej_coll_count++;
+            ++sd_stats.rej_coll_count;
     }
 }
 
@@ -299,7 +299,7 @@ storeDigestRebuildStart(void *datanotused)
     /* prevent overlapping if rebuild schedule is too tight */
 
     if (sd_state.rebuild_lock) {
-        debugs(71, 1, "storeDigestRebuildStart: overlap detected, consider increasing rebuild period");
+        debugs(71, DBG_IMPORTANT, "storeDigestRebuildStart: overlap detected, consider increasing rebuild period");
         return;
     }
 
@@ -337,7 +337,7 @@ storeDigestRebuildFinish(void)
 {
     assert(sd_state.rebuild_lock);
     sd_state.rebuild_lock = 0;
-    sd_state.rebuild_count++;
+    ++sd_state.rebuild_count;
     debugs(71, 2, "storeDigestRebuildFinish: done.");
     eventAdd("storeDigestRebuildStart", storeDigestRebuildStart, NULL, (double)
              Config.digest.rebuild_period, 1);
@@ -381,7 +381,7 @@ storeDigestRewriteStart(void *datanotused)
     /* prevent overlapping if rewrite schedule is too tight */
 
     if (sd_state.rewrite_lock) {
-        debugs(71, 1, "storeDigestRewrite: overlap detected, consider increasing rewrite period");
+        debugs(71, DBG_IMPORTANT, "storeDigestRewrite: overlap detected, consider increasing rewrite period");
         return;
     }
 
@@ -444,7 +444,7 @@ storeDigestRewriteFinish(StoreEntry * e)
     e->mem_obj->unlinkRequest();
     e->unlock();
     sd_state.rewrite_lock = NULL;
-    sd_state.rewrite_count++;
+    ++sd_state.rewrite_count;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
              Config.digest.rewrite_period, 1);
     /* resume pending Rebuild if any */

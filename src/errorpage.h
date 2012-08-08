@@ -40,6 +40,7 @@
 #endif
 #include "cbdata.h"
 #include "comm/forward.h"
+#include "err_detail_type.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
 #if USE_SSL
@@ -103,6 +104,9 @@ public:
      * Allocates and initializes an error response
      */
     HttpReply *BuildHttpReply(void);
+
+    /// set error type-specific detail code
+    void detailError(int dCode) {detailCode = dCode;}
 
 private:
     /**
@@ -182,6 +186,9 @@ public:
 #if USE_SSL
     Ssl::ErrorDetail *detail;
 #endif
+    /// type-specific detail about the transaction error;
+    /// overwrites xerrno; overwritten by detail, if any.
+    int detailCode;
 private:
     CBDATA_CLASS2(ErrorState);
 };
@@ -254,7 +261,7 @@ SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
 class TemplateFile
 {
 public:
-    TemplateFile(const char *name);
+    TemplateFile(const char *name, const err_type code);
     virtual ~TemplateFile() {}
 
     /// return true if the data loaded from disk without any problem
@@ -301,6 +308,7 @@ protected:
     bool wasLoaded; ///< True if the template data read from disk without any problem
     String errLanguage; ///< The error language of the template.
     String templateName; ///< The name of the template
+    err_type templateCode; ///< The internal code for this template.
 };
 
 /**

@@ -93,7 +93,7 @@ peerSelectStateFree(ps_state * psstate)
     }
 
     if (psstate->acl_checklist) {
-        debugs(44, 1, "calling aclChecklistFree() from peerSelectStateFree");
+        debugs(44, DBG_IMPORTANT, "calling aclChecklistFree() from peerSelectStateFree");
         delete (psstate->acl_checklist);
     }
 
@@ -188,8 +188,6 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
     case ACCESS_DUNNO:  // not relevant.
         break;
     case ACCESS_AUTH_REQUIRED:
-    case ACCESS_AUTH_EXPIRED_OK:
-    case ACCESS_AUTH_EXPIRED_BAD:
         debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }
@@ -213,8 +211,6 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
     case ACCESS_DUNNO:  // not relevant.
         break;
     case ACCESS_AUTH_REQUIRED:
-    case ACCESS_AUTH_EXPIRED_OK:
-    case ACCESS_AUTH_EXPIRED_BAD:
         debugs(44, DBG_IMPORTANT, "WARNING: always_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }
@@ -225,6 +221,34 @@ void
 peerSelectDnsPaths(ps_state *psstate)
 {
     FwdServer *fs = psstate->servers;
+
+    // Bug 3243: CVE 2009-0801
+    // Bypass of browser same-origin access control in intercepted communication
+    // To resolve this we must use only the original client destination when going DIRECT
+    // on intercepted traffic which failed Host verification
+    const HttpRequest *req = psstate->request;
+    const bool isIntercepted = !req->flags.redirected &&
+                               (req->flags.intercepted || req->flags.spoof_client_ip);
+    const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
+    const bool choseDirect = fs && fs->code == HIER_DIRECT;
+    if (isIntercepted && useOriginalDst && choseDirect) {
+        // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
+        Comm::ConnectionPointer p = new Comm::Connection();
+        p->remote = req->clientConnectionManager->clientConnection->local;
+        p->peerType = fs->code;
+        p->setPeer(fs->_peer);
+
+        // check for a configured outgoing address for this destination...
+        getOutgoingAddress(psstate->request, p);
+        psstate->paths->push_back(p);
+
+        // clear the used fs and continue
+        psstate->servers = fs->next;
+        cbdataReferenceDone(fs->_peer);
+        memFree(fs, MEM_FWD_SERVER);
+        peerSelectDnsPaths(psstate);
+        return;
+    }
 
     // convert the list of FwdServer destinations into destinations IP addresses
     if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
@@ -248,9 +272,13 @@ peerSelectDnsPaths(ps_state *psstate)
         debugs(44, 2, "Found sources for '" << psstate->entry->url() << "'");
         debugs(44, 2, "  always_direct = " << psstate->always_direct);
         debugs(44, 2, "   never_direct = " << psstate->never_direct);
-        for (size_t i = 0; i < psstate->paths->size(); i++) {
+        for (size_t i = 0; i < psstate->paths->size(); ++i) {
             if ((*psstate->paths)[i]->peerType == HIER_DIRECT)
                 debugs(44, 2, "         DIRECT = " << (*psstate->paths)[i]);
+            else if ((*psstate->paths)[i]->peerType == ORIGINAL_DST)
+                debugs(44, 2, "   ORIGINAL_DST = " << (*psstate->paths)[i]);
+            else if ((*psstate->paths)[i]->peerType == PINNED)
+                debugs(44, 2, "         PINNED = " << (*psstate->paths)[i]);
             else
                 debugs(44, 2, "     cache_peer = " << (*psstate->paths)[i]);
         }
@@ -283,7 +311,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
         // loop over each result address, adding to the possible destinations.
         int ip = ia->cur;
-        for (int n = 0; n < ia->count; n++, ip++) {
+        for (int n = 0; n < ia->count; ++n, ++ip) {
             Comm::ConnectionPointer p;
 
             if (ip >= ia->count) ip = 0; // looped back to zero.
@@ -314,7 +342,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
             psstate->paths->push_back(p);
         }
     } else {
-        debugs(44, 3, HERE << "Unknown host: " << fs->_peer ? fs->_peer->host : psstate->request->GetHost());
+        debugs(44, 3, HERE << "Unknown host: " << (fs->_peer ? fs->_peer->host : psstate->request->GetHost()));
         // discard any previous error.
         delete psstate->lastError;
         psstate->lastError = NULL;
@@ -533,7 +561,7 @@ peerGetSomeNeighbor(ps_state * ps)
                                                &ps->ping.timeout);
 
             if (ps->ping.n_sent == 0)
-                debugs(44, 0, "WARNING: neighborsUdpPing returned 0");
+                debugs(44, DBG_CRITICAL, "WARNING: neighborsUdpPing returned 0");
             debugs(44, 3, "peerSelect: " << ps->ping.n_replies_expected <<
                    " ICP replies expected, RTT " << ps->ping.timeout <<
                    " msec");
@@ -704,7 +732,7 @@ peerPingTimeout(void *data)
         return;
     }
 
-    PeerStats.timeouts++;
+    ++PeerStats.timeouts;
     psstate->ping.timedout = 1;
     peerSelectFoo(psstate);
 }
@@ -772,7 +800,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 
 #endif
 
-    psstate->ping.n_recv++;
+    ++ psstate->ping.n_recv;
 
     if (op == ICP_MISS || op == ICP_DECHO) {
         if (type == PEER_PARENT)
@@ -798,7 +826,7 @@ peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
     debugs(44, 3, "peerHandleHtcpReply: " <<
            (htcp->hit ? "HIT" : "MISS") << " " <<
            psstate->entry->url()  );
-    psstate->ping.n_recv++;
+    ++ psstate->ping.n_recv;
 
     if (htcp->hit) {
         psstate->hit = p;
@@ -871,7 +899,7 @@ peerHandlePingReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *pingd
 #endif
 
     else
-        debugs(44, 1, "peerHandlePingReply: unknown protocol " << proto);
+        debugs(44, DBG_IMPORTANT, "peerHandlePingReply: unknown protocol " << proto);
 }
 
 static void

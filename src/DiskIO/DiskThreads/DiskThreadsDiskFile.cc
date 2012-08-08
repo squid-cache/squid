@@ -96,7 +96,7 @@ DiskThreadsDiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback
     }
 
 #endif
-    Opening_FD++;
+    ++Opening_FD;
 
     ioRequestor = callback;
 
@@ -145,7 +145,7 @@ DiskThreadsDiskFile::create(int flags, mode_t mode, RefCount<IORequestor> callba
     }
 
 #endif
-    Opening_FD++;
+    ++Opening_FD;
 
     ioRequestor = callback;
 
@@ -179,17 +179,17 @@ void
 DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int errflag)
 {
     debugs(79, 3, "DiskThreadsDiskFile::openDone: FD " << anFD << ", errflag " << errflag);
-    Opening_FD--;
+    --Opening_FD;
 
     fd = anFD;
 
     if (errflag || fd < 0) {
         errno = errflag;
-        debugs(79, 0, "DiskThreadsDiskFile::openDone: " << xstrerror());
-        debugs(79, 1, "\t" << path_);
+        debugs(79, DBG_CRITICAL, "DiskThreadsDiskFile::openDone: " << xstrerror());
+        debugs(79, DBG_IMPORTANT, "\t" << path_);
         errorOccured = true;
     } else {
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         commSetCloseOnExec(fd);
         fd_open(fd, FD_FILE, path_);
     }
@@ -215,7 +215,7 @@ void DiskThreadsDiskFile::doClose()
         file_close(fd);
 #endif
 
-        store_open_disk_fd--;
+        --store_open_disk_fd;
         fd = -1;
     }
 }
@@ -231,7 +231,7 @@ DiskThreadsDiskFile::close()
         ioRequestor->closeCompleted();
         return;
     } else {
-        debugs(79,0,HERE << "DiskThreadsDiskFile::close: " <<
+        debugs(79, DBG_CRITICAL, HERE << "DiskThreadsDiskFile::close: " <<
                "did NOT close because ioInProgress() is true.  now what?");
     }
 }

@@ -147,7 +147,7 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
     freeList = objCache;
     void **Free = (void **)freeList;
 
-    for (int i = 1; i < pool->chunk_capacity; i++) {
+    for (int i = 1; i < pool->chunk_capacity; ++i) {
         *Free = (void *) ((char *) Free + pool->obj_size);
         void **nextFree = (void **)*Free;
         (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->obj_size);
@@ -158,7 +158,7 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
 
     memMeterAdd(pool->getMeter().alloc, pool->chunk_capacity);
     memMeterAdd(pool->getMeter().idle, pool->chunk_capacity);
-    pool->chunkCount++;
+    ++pool->chunkCount;
     lastref = squid_curtime;
     pool->allChunks.insert(this, memCompChunks);
 }
@@ -184,7 +184,7 @@ MemChunk::~MemChunk()
 {
     memMeterDel(pool->getMeter().alloc, pool->chunk_capacity);
     memMeterDel(pool->getMeter().idle, pool->chunk_capacity);
-    pool->chunkCount--;
+    -- pool->chunkCount;
     pool->allChunks.remove(this, memCompChunks);
     xfree(objCache);
 }
@@ -217,7 +217,7 @@ MemPoolChunked::get()
 {
     void **Free;
 
-    saved_calls++;
+    ++saved_calls;
 
     /* first, try cache */
     if (freeCache) {
@@ -230,7 +230,7 @@ MemPoolChunked::get()
     /* then try perchunk freelist chain */
     if (nextFreeChunk == NULL) {
         /* no chunk with frees, so create new one */
-        saved_calls--; // compensate for the ++ above
+        -- saved_calls; // compensate for the ++ above
         createChunk();
     }
     /* now we have some in perchunk freelist chain */
@@ -239,7 +239,7 @@ MemPoolChunked::get()
     Free = (void **)chunk->freeList;
     chunk->freeList = *Free;
     *Free = NULL;
-    chunk->inuse_count++;
+    ++chunk->inuse_count;
     chunk->lastref = squid_curtime;
 
     if (chunk->freeList == NULL) {
@@ -371,7 +371,7 @@ MemPoolChunked::convertFreeCacheToChunkFreeCache()
         chunk = const_cast<MemChunk *>(*allChunks.find(Free, memCompObjChunks));
         assert(splayLastResult == 0);
         assert(chunk->inuse_count > 0);
-        chunk->inuse_count--;
+        -- chunk->inuse_count;
         (void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
         freeCache = *(void **)Free;	/* remove from global cache */
         *(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
@@ -480,9 +480,9 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
     chunk = Chunks;
     while (chunk) {
         if (chunk->inuse_count == 0)
-            chunks_free++;
+            ++chunks_free;
         else if (chunk->inuse_count < chunk_capacity)
-            chunks_partial++;
+            ++chunks_partial;
         chunk = chunk->next;
     }
 

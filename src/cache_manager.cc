@@ -202,8 +202,12 @@ CacheManager::ParseUrl(const char *url)
     if (t < 1) {
         t = sscanf(url, "https://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
     }
-    if (t < 2)
-        xstrncpy(request, "index", MAX_URL);
+    if (t < 2) {
+        if (strncmp("cache_object://",url,15)==0)
+            xstrncpy(request, "menu", MAX_URL);
+        else
+            xstrncpy(request, "index", MAX_URL);
+    }
 
 #if _SQUID_OS2_
     if (t == 2 && request[0] == '\0') {
@@ -211,7 +215,10 @@ CacheManager::ParseUrl(const char *url)
          * emx's sscanf insists of returning 2 because it sets request
          * to null
          */
-        xstrncpy(request, "index", MAX_URL);
+        if (strncmp("cache_object://",url,15)==0)
+            xstrncpy(request, "menu", MAX_URL);
+        else
+            xstrncpy(request, "index", MAX_URL);
     }
 #endif
 

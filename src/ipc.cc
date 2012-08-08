@@ -100,6 +100,13 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (hIpc)
         *hIpc = NULL;
 
+// NP: no wrapping around d and c usage since we *want* code expansion
+#define IPC_CHECK_FAIL(f,d,c) \
+    if ((f) < 0) { \
+        debugs(54, DBG_CRITICAL, "ERROR: Failed to create helper " d " FD: " << c); \
+        return ipcCloseAllFD(prfd, pwfd, crfd, cwfd); \
+    } else void(0)
+
     if (type == IPC_TCP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_STREAM,
                                 0,
@@ -111,6 +118,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 local_addr,
                                 0,			/* blocking */
                                 name);
+        IPC_CHECK_FAIL(crfd, "child read", "TCP " << local_addr);
+        IPC_CHECK_FAIL(prfd, "parent read", "TCP " << local_addr);
     } else if (type == IPC_UDP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_DGRAM,
                                 0,
@@ -122,23 +131,28 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 local_addr,
                                 0,
                                 name);
+        IPC_CHECK_FAIL(crfd, "child read", "UDP" << local_addr);
+        IPC_CHECK_FAIL(prfd, "parent read", "UDP" << local_addr);
     } else if (type == IPC_FIFO) {
         int p2c[2];
         int c2p[2];
 
         if (pipe(p2c) < 0) {
-            debugs(54, 0, "ipcCreate: pipe: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: pipe: " << xstrerror());
             return -1; // maybe ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
         fd_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
         fd_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
 
         if (pipe(c2p) < 0) {
-            debugs(54, 0, "ipcCreate: pipe: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: pipe: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
         fd_open(crfd = c2p[0], FD_PIPE, "IPC FIFO Child Read");
         fd_open(pwfd = c2p[1], FD_PIPE, "IPC FIFO Parent Write");
+
+        IPC_CHECK_FAIL(crfd, "child read", "FIFO pipe");
+        IPC_CHECK_FAIL(prfd, "parent read", "FIFO pipe");
 
 #if HAVE_SOCKETPAIR && defined(AF_UNIX)
 
@@ -147,7 +161,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         int buflen = 32768;
 
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0) {
-            debugs(54, 0, "ipcCreate: socketpair: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: socketpair: " << xstrerror());
             return -1;
         }
 
@@ -157,16 +171,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen));
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
         fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX STREAM Parent");
+        IPC_CHECK_FAIL(crfd, "child read", "UDS socket");
+        IPC_CHECK_FAIL(prfd, "parent read", "UDS socket");
+
     } else if (type == IPC_UNIX_DGRAM) {
         int fds[2];
 
         if (socketpair(AF_UNIX, SOCK_DGRAM, 0, fds) < 0) {
-            debugs(54, 0, "ipcCreate: socketpair: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: socketpair: " << xstrerror());
             return -1;
         }
 
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX DGRAM Parent");
         fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX DGRAM Parent");
+
+        IPC_CHECK_FAIL(crfd, "child read", "UDS datagram");
+        IPC_CHECK_FAIL(prfd, "parent read", "UDS datagram");
 #endif
 
     } else {
@@ -178,22 +198,12 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     debugs(54, 3, "ipcCreate: crfd FD " << crfd);
     debugs(54, 3, "ipcCreate: cwfd FD " << cwfd);
 
-    if (crfd < 0) {
-        debugs(54, 0, "ipcCreate: Failed to create child FD.");
-        return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
-    }
-
-    if (pwfd < 0) {
-        debugs(54, 0, "ipcCreate: Failed to create server FD.");
-        return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
-    }
-
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
         PaS.InitAddrInfo(AI);
 
         if (getsockname(pwfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
             PaS.FreeAddrInfo(AI);
-            debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -207,7 +217,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         if (getsockname(crfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
             ChS.FreeAddrInfo(AI);
-            debugs(54, 0, "ipcCreate: getsockname: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -221,7 +231,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (type == IPC_TCP_SOCKET) {
         if (listen(crfd, 1) < 0) {
-            debugs(54, 1, "ipcCreate: listen FD " << crfd << ": " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "ipcCreate: listen FD " << crfd << ": " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -232,7 +242,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     logsFlush();
 
     if ((pid = fork()) < 0) {
-        debugs(54, 1, "ipcCreate: fork: " << xstrerror());
+        debugs(54, DBG_IMPORTANT, "ipcCreate: fork: " << xstrerror());
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
@@ -258,13 +268,13 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             x = read(prfd, hello_buf, HELLO_BUF_SZ - 1);
 
         if (x < 0) {
-            debugs(54, 0, "ipcCreate: PARENT: hello read test failed");
-            debugs(54, 0, "--> read: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: PARENT: hello read test failed");
+            debugs(54, DBG_CRITICAL, "--> read: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         } else if (strcmp(hello_buf, hello_string)) {
-            debugs(54, 0, "ipcCreate: PARENT: hello read test failed");
-            debugs(54, 0, "--> read returned " << x);
-            debugs(54, 0, "--> got '" << rfc1738_escape(hello_buf) << "'");
+            debugs(54, DBG_CRITICAL, "ipcCreate: PARENT: hello read test failed");
+            debugs(54, DBG_CRITICAL, "--> read returned " << x);
+            debugs(54, DBG_CRITICAL, "--> got '" << rfc1738_escape(hello_buf) << "'");
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -309,7 +319,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
         if ((fd = accept(crfd, NULL, NULL)) < 0) {
-            debugs(54, 0, "ipcCreate: FD " << crfd << " accept: " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerror());
             _exit(1);
         }
 
@@ -325,14 +335,14 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         x = comm_udp_send(cwfd, hello_string, strlen(hello_string) + 1, 0);
 
         if (x < 0) {
-            debugs(54, 0, "sendto FD " << cwfd << ": " << xstrerror());
-            debugs(54, 0, "ipcCreate: CHILD: hello write test failed");
+            debugs(54, DBG_CRITICAL, "sendto FD " << cwfd << ": " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: CHILD: hello write test failed");
             _exit(1);
         }
     } else {
         if (write(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
-            debugs(54, 0, "write FD " << cwfd << ": " << xstrerror());
-            debugs(54, 0, "ipcCreate: CHILD: hello write test failed");
+            debugs(54, DBG_CRITICAL, "write FD " << cwfd << ": " << xstrerror());
+            debugs(54, DBG_CRITICAL, "ipcCreate: CHILD: hello write test failed");
             _exit(1);
         }
     }
@@ -378,7 +388,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     close(t3);
 
     /* Make sure all other filedescriptors are closed */
-    for (x = 3; x < SQUID_MAXFD; x++)
+    for (x = 3; x < SQUID_MAXFD; ++x)
         close(x);
 
 #if HAVE_SETSID
@@ -390,7 +400,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     debug_log = fdopen(2, "a+");
 
-    debugs(54, 0, "ipcCreate: " << prog << ": " << xstrerror());
+    debugs(54, DBG_CRITICAL, "ipcCreate: " << prog << ": " << xstrerror());
 
     _exit(1);
 

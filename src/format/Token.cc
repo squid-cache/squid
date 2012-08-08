@@ -20,9 +20,7 @@ const char *Format::log_tags[] = {
     "TCP_DENIED",
     "TCP_DENIED_REPLY",
     "TCP_OFFLINE_HIT",
-#if LOG_TCP_REDIRECTS
     "TCP_REDIRECT",
-#endif
     "UDP_HIT",
     "UDP_MISS",
     "UDP_DENIED",
@@ -188,6 +186,15 @@ static TokenTableEntry TokenTableIcap[] = {
 };
 #endif
 
+#if USE_SSL
+// SSL (ssl::) tokens
+static TokenTableEntry TokenTableSsl[] = {
+    {"bump_mode", LFT_SSL_BUMP_MODE},
+    {">cert_subject", LFT_SSL_USER_CERT_SUBJECT},
+    {">cert_issuer", LFT_SSL_USER_CERT_ISSUER},
+    {NULL, LFT_NONE}
+};
+#endif
 } // namespace Format
 
 /// Register all components custom format tokens
@@ -203,16 +210,17 @@ Format::Token::Init()
 #if ICAP_CLIENT
     TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
 #endif
-
-    // TODO tokens for OpenSSL errors in "ssl::"
+#if USE_SSL
+    TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
+#endif
 }
 
 /// Scans a token table to see if the next token exists there
 /// returns a pointer to next unparsed byte and updates type member if found
-char *
-Format::Token::scanForToken(TokenTableEntry const table[], char *cur)
+const char *
+Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
 {
-    for (TokenTableEntry const *lte = table; lte->configTag != NULL; lte++) {
+    for (TokenTableEntry const *lte = table; lte->configTag != NULL; ++lte) {
         debugs(46, 8, HERE << "compare tokens '" << lte->configTag << "' with '" << cur << "'");
         if (strncmp(lte->configTag, cur, strlen(lte->configTag)) == 0) {
             type = lte->tokenType;
@@ -229,9 +237,9 @@ Format::Token::scanForToken(TokenTableEntry const table[], char *cur)
  * def is for sure null-terminated
  */
 int
-Format::Token::parse(char *def, Quoting *quoting)
+Format::Token::parse(const char *def, Quoting *quoting)
 {
-    char *cur = def;
+    const char *cur = def;
 
     int l;
 
@@ -270,8 +278,8 @@ Format::Token::parse(char *def, Quoting *quoting)
                 break;
             }
 
-            cur++;
-            l--;
+            ++cur;
+            --l;
         }
 
         goto done;
@@ -280,29 +288,29 @@ Format::Token::parse(char *def, Quoting *quoting)
     if (!*cur)
         goto done;
 
-    cur++;
+    ++cur;
 
     // select quoting style for his particular token
     switch (*cur) {
 
     case '"':
         quote = LOG_QUOTE_QUOTES;
-        cur++;
+        ++cur;
         break;
 
     case '\'':
         quote = LOG_QUOTE_RAW;
-        cur++;
+        ++cur;
         break;
 
     case '[':
         quote = LOG_QUOTE_MIMEBLOB;
-        cur++;
+        ++cur;
         break;
 
     case '#':
         quote = LOG_QUOTE_URL;
-        cur++;
+        ++cur;
         break;
 
     default:
@@ -312,23 +320,28 @@ Format::Token::parse(char *def, Quoting *quoting)
 
     if (*cur == '-') {
         left = 1;
-        cur++;
+        ++cur;
     }
 
     if (*cur == '0') {
         zero = 1;
-        cur++;
+        ++cur;
     }
 
-    if (xisdigit(*cur))
-        widthMin = strtol(cur, &cur, 10);
+    char *endp;
+    if (xisdigit(*cur)) {
+        widthMin = strtol(cur, &endp, 10);
+        cur = endp;
+    }
 
-    if (*cur == '.' && xisdigit(*(++cur)))
-        widthMax = strtol(cur, &cur, 10);
+    if (*cur == '.' && xisdigit(*(++cur))) {
+        widthMax = strtol(cur, &endp, 10);
+        cur = endp;
+    }
 
     if (*cur == '{') {
         char *cp;
-        cur++;
+        ++cur;
         l = strcspn(cur, "}");
         cp = (char *)xmalloc(l + 1);
         xstrncpy(cp, cur, l + 1);
@@ -336,14 +349,14 @@ Format::Token::parse(char *def, Quoting *quoting)
         cur += l;
 
         if (*cur == '}')
-            cur++;
+            ++cur;
     }
 
     type = LFT_NONE;
 
     // Scan each registered token namespace
     debugs(46, 9, HERE << "check for token in " << TheConfig.tokens.size() << " namespaces.");
-    for (std::list<TokenNamespace>::const_iterator itr = TheConfig.tokens.begin(); itr != TheConfig.tokens.end(); itr++) {
+    for (std::list<TokenNamespace>::const_iterator itr = TheConfig.tokens.begin(); itr != TheConfig.tokens.end(); ++itr) {
         debugs(46, 7, HERE << "check for possible " << itr->prefix << ":: token");
         const size_t len = itr->prefix.size();
         if (itr->prefix.cmp(cur, len) == 0 && cur[len] == ':' && cur[len+1] == ':') {
@@ -388,7 +401,7 @@ Format::Token::parse(char *def, Quoting *quoting)
 
     if (*cur == ' ') {
         space = 1;
-        cur++;
+        ++cur;
     }
 
 done:
@@ -416,12 +429,15 @@ done:
             char *cp = strchr(header, ':');
 
             if (cp) {
-                *cp++ = '\0';
+                *cp = '\0';
+                ++cp;
 
-                if (*cp == ',' || *cp == ';' || *cp == ':')
-                    data.header.separator = *cp++;
-                else
+                if (*cp == ',' || *cp == ';' || *cp == ':') {
+                    data.header.separator = *cp;
+                    ++cp;
+                } else {
                     data.header.separator = ',';
+                }
 
                 data.header.element = cp;
 
@@ -501,7 +517,7 @@ done:
             int i;
             divisor = 1000000;
 
-            for (i = widthMax; i > 1; i--)
+            for (i = widthMax; i > 1; --i)
                 divisor /= 10;
 
             if (!divisor)
@@ -510,28 +526,28 @@ done:
         break;
 
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
-        debugs(46, 0, "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
+        debugs(46, DBG_CRITICAL, "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
         type = LFT_HTTP_SENT_STATUS_CODE;
         break;
 
     case LFT_SERVER_LOCAL_IP_OLD_27:
-        debugs(46, 0, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
+        debugs(46, DBG_CRITICAL, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
         type = LFT_SERVER_LOCAL_IP;
         break;
 
     case LFT_REQUEST_URLPATH_OLD_31:
-        debugs(46, 0, "WARNING: The \"rp\" formatting code is deprecated. Use the \">rp\" instead.");
+        debugs(46, DBG_CRITICAL, "WARNING: The \"rp\" formatting code is deprecated. Use the \">rp\" instead.");
         type = LFT_CLIENT_REQ_URLPATH;
         break;
 
     case LFT_REQUEST_VERSION_OLD_2X:
-        debugs(46, 0, "WARNING: The \">v\" formatting code is deprecated. Use the \">rv\" instead.");
+        debugs(46, DBG_CRITICAL, "WARNING: The \">v\" formatting code is deprecated. Use the \">rv\" instead.");
         type = LFT_REQUEST_VERSION;
         break;
 
 #if !USE_SQUID_EUI
     case LFT_CLIENT_EUI:
-        debugs(46, 0, "WARNING: The \">eui\" formatting code requires EUI features which are disabled in this Squid.");
+        debugs(46, DBG_CRITICAL, "WARNING: The \">eui\" formatting code requires EUI features which are disabled in this Squid.");
         break;
 #endif
 

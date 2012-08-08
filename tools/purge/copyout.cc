@@ -166,7 +166,8 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
         } else if ( debug & 0x02 ) {
         	std::cerr << "# creating" << filename;
         }
-        *t++ = '/';
+        *t = '/';
+        ++t;
     }
 
     // create file
@@ -207,7 +208,8 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
             //    1 ||  0 |  4 |  0 |
             //    2 ||  1 |  4 |  0 |
             //    3 ||  4 |  2 |  0 |
-            state = table[ state ][ xlate(*s++) ];
+            state = table[ state ][ xlate(*s) ];
+            ++s;
         }
 
         if ( state < 4 )

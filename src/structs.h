@@ -36,6 +36,7 @@
 
 /* needed for the global config */
 #include "HttpHeader.h"
+#include "HttpHeaderTools.h"
 
 /* for ICP_END */
 #include "icp_opcode.h"
@@ -56,14 +57,6 @@ struct acl_deny_info_list {
     char *err_page_name;
     acl_name_list *acl_list;
     acl_deny_info_list *next;
-};
-
-
-class acl_access;
-
-struct _header_mangler {
-    acl_access *access_list;
-    char *replacement;
 };
 
 class ACLChecklist;
@@ -145,7 +138,10 @@ class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
 class Store;
-struct http_port_list;
+namespace AnyP
+{
+struct PortCfg;
+}
 class SwapDir;
 
 /// Used for boolean enabled/disabled options with complex default logic.
@@ -244,11 +240,10 @@ struct SquidConfig {
     } Port;
 
     struct {
-        http_port_list *http;
+        AnyP::PortCfg *http;
 #if USE_SSL
-        http_port_list *https;
+        AnyP::PortCfg *https;
 #endif
-
     } Sockaddr;
 #if SQUID_SNMP
 
@@ -556,12 +551,10 @@ struct SquidConfig {
 #endif
 
     struct {
-        int icp_average;
-        int dns_average;
-        int http_average;
-        int icp_min_poll;
-        int dns_min_poll;
-        int http_min_poll;
+        struct {
+            int average;
+            int min_poll;
+        } dns, udp, tcp;
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
@@ -577,10 +570,12 @@ struct SquidConfig {
     } mcast_miss;
 #endif
 
-    /* one access list per header type we know of */
-    header_mangler request_header_access[HDR_ENUM_END];
-    /* one access list per header type we know of */
-    header_mangler reply_header_access[HDR_ENUM_END];
+    /// request_header_access and request_header_replace
+    HeaderManglers *request_header_access;
+    /// reply_header_access and reply_header_replace
+    HeaderManglers *reply_header_access;
+    ///request_header_add access list
+    HeaderWithAclList *request_header_add;
     char *coredump_dir;
     char *chroot_dir;
 #if USE_CACHE_DIGESTS
@@ -627,6 +622,8 @@ struct SquidConfig {
         char *flags;
         acl_access *cert_error;
         SSL_CTX *sslContext;
+        sslproxy_cert_sign *cert_sign;
+        sslproxy_cert_adapt *cert_adapt;
     } ssl_client;
 #endif
 
@@ -963,7 +960,7 @@ struct _iostats {
 
 
 struct request_flags {
-    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),sslBumped(0),destinationIPLookedUp_(0) {
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),hostVerified(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),pinned(0),canRePin(0),chunked_reply(0),stream_error(0),sslPeek(0),sslBumped(0),destinationIPLookedUp_(0) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -973,10 +970,10 @@ struct request_flags {
     }
 
     unsigned int range:1;
-    unsigned int nocache:1;
+    unsigned int nocache:1;            ///< whether the response to this request may be READ from cache
     unsigned int ims:1;
     unsigned int auth:1;
-    unsigned int cachable:1;
+    unsigned int cachable:1;           ///< whether the response to thie request may be stored in the cache
     unsigned int hierarchical:1;
     unsigned int loopdetect:1;
     unsigned int proxy_keepalive:1;
@@ -992,7 +989,8 @@ unsigned int proxying:
 #endif
     unsigned int accelerated:1;
     unsigned int ignore_cc:1;
-    unsigned int intercepted:1;  /**< transparently intercepted request */
+    unsigned int intercepted:1;        ///< intercepted request
+    unsigned int hostVerified:1;       ///< whether the Host: header passed verification
     unsigned int spoof_client_ip:1;  /**< spoof client ip if possible */
     unsigned int internal:1;
     unsigned int internalclient:1;
@@ -1001,10 +999,12 @@ unsigned int proxying:
     unsigned int connection_auth_disabled:1; /** Connection oriented auth can not be supported */
     unsigned int connection_proxy_auth:1; /** Request wants connection oriented auth */
     unsigned int pinned:1;      /* Request sent on a pinned connection */
+    unsigned int canRePin:1; ///< OK to reopen a failed pinned connection
     unsigned int auth_sent:1;   /* Authentication forwarded */
     unsigned int no_direct:1;	/* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
     unsigned int chunked_reply:1; /**< Reply with chunked transfer encoding */
     unsigned int stream_error:1; /**< Whether stream error has occured */
+    unsigned int sslPeek:1; ///< internal ssl-bump request to get server cert
     unsigned int sslBumped:1; /**< ssl-bumped request*/
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
@@ -1091,6 +1091,21 @@ struct _store_rebuild_data {
     int bad_log_op;
     int zero_object_sz;
 };
+
+#if USE_SSL
+struct _sslproxy_cert_sign {
+    int alg;
+    ACLList *aclList;
+    sslproxy_cert_sign *next;
+};
+
+struct _sslproxy_cert_adapt {
+    int alg;
+    char *param;
+    ACLList *aclList;
+    sslproxy_cert_adapt *next;
+};
+#endif
 
 class Logfile;
 

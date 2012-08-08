@@ -31,8 +31,8 @@
  */
 
 #include "squid-old.h"
-#include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
@@ -107,7 +107,7 @@ whichPeer(const Ip::Address &from)
     debugs(15, 3, "whichPeer: from " << from);
 
     for (p = Config.peers; p; p = p->next) {
-        for (j = 0; j < p->n_addresses; j++) {
+        for (j = 0; j < p->n_addresses; ++j) {
             if (from == p->addresses[j] && from.GetPort() == p->icp.port) {
                 return p;
             }
@@ -271,7 +271,7 @@ neighborsCount(HttpRequest * request)
 
     for (p = Config.peers; p; p = p->next)
         if (peerWouldBePinged(p, request))
-            count++;
+            ++count;
 
     debugs(15, 3, "neighborsCount: " << count);
 
@@ -332,7 +332,7 @@ getRoundRobinParent(HttpRequest * request)
     }
 
     if (q)
-        q->rr_count++;
+        ++ q->rr_count;
 
     debugs(15, 3, HERE << "returning " << (q ? q->host : "NULL"));
 
@@ -442,7 +442,7 @@ void
 peerAlive(peer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, 1, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
     }
@@ -507,7 +507,7 @@ neighborRemove(peer * target)
     if (p) {
         *P = p->next;
         cbdataFree(p);
-        Config.npeers--;
+        --Config.npeers;
     }
 
     first_ping = Config.peers;
@@ -540,13 +540,12 @@ neighbors_init(void)
     if (Comm::IsConnOpen(icpIncomingConn)) {
 
         for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
-            http_port_list *s = NULL;
             next = thisPeer->next;
 
             if (0 != strcmp(thisPeer->host, me))
                 continue;
 
-            for (s = Config.Sockaddr.http; s; s = s->next) {
+            for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
                 if (thisPeer->http_port != s->s.GetPort())
                     continue;
 
@@ -613,7 +612,7 @@ neighborsUdpPing(HttpRequest * request,
         if (!peerWouldBePinged(p, request))
             continue;		/* next peer */
 
-        peers_pinged++;
+        ++peers_pinged;
 
         debugs(15, 4, "neighborsUdpPing: pinging peer " << p->host << " for '" << url << "'");
 
@@ -629,7 +628,8 @@ neighborsUdpPing(HttpRequest * request,
             }
 
             debugs(15, 3, "neighborsUdpPing: sending HTCP query");
-            if (htcpQuery(entry, request, p) <= 0) continue; // unable to send.
+            if (htcpQuery(entry, request, p) <= 0)
+                continue; // unable to send.
         } else
 #endif
         {
@@ -659,9 +659,9 @@ neighborsUdpPing(HttpRequest * request,
             }
         }
 
-        queries_sent++;
+        ++queries_sent;
 
-        p->stats.pings_sent++;
+        ++ p->stats.pings_sent;
 
         if (p->type == PEER_MULTICAST) {
             mcast_exprep += p->mcast.n_replies_expected;
@@ -670,10 +670,10 @@ neighborsUdpPing(HttpRequest * request,
             /* its alive, expect a reply from it */
 
             if (neighborType(p, request) == PEER_PARENT) {
-                parent_exprep++;
+                ++parent_exprep;
                 parent_timeout += p->stats.rtt;
             } else {
-                sibling_exprep++;
+                ++sibling_exprep;
                 sibling_timeout += p->stats.rtt;
             }
         } else {
@@ -681,7 +681,7 @@ neighborsUdpPing(HttpRequest * request,
             /* log it once at the threshold */
 
             if (p->stats.logged_state == PEER_ALIVE) {
-                debugs(15, 1, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
                 p->stats.logged_state = PEER_DEAD;
             }
         }
@@ -807,7 +807,7 @@ neighborsDigestSelect(HttpRequest * request)
         if (lookup == LOOKUP_NONE)
             continue;
 
-        choice_count++;
+        ++choice_count;
 
         if (lookup == LOOKUP_MISS)
             continue;
@@ -822,7 +822,7 @@ neighborsDigestSelect(HttpRequest * request)
             best_rtt = p_rtt;
 
             if (p_rtt)		/* informative choice (aka educated guess) */
-                ichoice_count++;
+                ++ichoice_count;
 
             debugs(15, 4, "neighborsDigestSelect: peer " << p->host << " leads with rtt " << best_rtt);
         }
@@ -856,10 +856,10 @@ static void
 neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 {
     peerAlive(p);
-    p->stats.pings_acked++;
+    ++ p->stats.pings_acked;
 
     if ((icp_opcode) header->opcode <= ICP_END)
-        p->icp.counts[header->opcode]++;
+        ++ p->icp.counts[header->opcode];
 
     p->icp.version = (int) header->version;
 }
@@ -893,8 +893,8 @@ static void
 neighborAliveHtcp(peer * p, const MemObject * mem, const htcpReplyData * htcp)
 {
     peerAlive(p);
-    p->stats.pings_acked++;
-    p->htcp.counts[htcp->hit ? 1 : 0]++;
+    ++ p->stats.pings_acked;
+    ++ p->htcp.counts[htcp->hit ? 1 : 0];
     p->htcp.version = htcp->version;
 }
 
@@ -906,9 +906,9 @@ neighborCountIgnored(peer * p)
     if (p == NULL)
         return;
 
-    p->stats.ignored_replies++;
+    ++ p->stats.ignored_replies;
 
-    NLateReplies++;
+    ++NLateReplies;
 }
 
 static peer *non_peers = NULL;
@@ -939,10 +939,10 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
         non_peers = np;
     }
 
-    np->icp.counts[opcode]++;
+    ++ np->icp.counts[opcode];
 
     if (isPowTen(++np->stats.ignored_replies))
-        debugs(15, 1, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << np->host);
+        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << np->host);
 }
 
 /* ignoreMulticastReply
@@ -1026,7 +1026,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 
     if (entry->lock_count == 0) {
         // TODO: many entries are unlocked; why is this reported at level 1?
-        debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
+        debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
     }
@@ -1063,18 +1063,18 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         }
     } else if (opcode == ICP_SECHO) {
         if (p) {
-            debugs(15, 1, "Ignoring SECHO from neighbor " << p->host);
+            debugs(15, DBG_IMPORTANT, "Ignoring SECHO from neighbor " << p->host);
             neighborCountIgnored(p);
         } else {
-            debugs(15, 1, "Unsolicited SECHO from " << from);
+            debugs(15, DBG_IMPORTANT, "Unsolicited SECHO from " << from);
         }
     } else if (opcode == ICP_DENIED) {
         if (p == NULL) {
             neighborIgnoreNonPeer(from, opcode);
         } else if (p->stats.pings_acked > 100) {
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
-                debugs(15, 0, "95%% of replies from '" << p->host << "' are UDP_DENIED");
-                debugs(15, 0, "Disabling '" << p->host << "', please check your configuration.");
+                debugs(15, DBG_CRITICAL, "95%% of replies from '" << p->host << "' are UDP_DENIED");
+                debugs(15, DBG_CRITICAL, "Disabling '" << p->host << "', please check your configuration.");
                 neighborRemove(p);
                 p = NULL;
             } else {
@@ -1084,7 +1084,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     } else if (opcode == ICP_MISS_NOFETCH) {
         mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
     } else {
-        debugs(15, 0, "neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
+        debugs(15, DBG_CRITICAL, "neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
     }
 }
 
@@ -1194,30 +1194,30 @@ peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
     int j;
 
     if (p->n_addresses == 0) {
-        debugs(15, 1, "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
+        debugs(15, DBG_IMPORTANT, "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
 
         if (p->type == PEER_MULTICAST)
-            debugs(15, 1, "    Multicast TTL = " << p->mcast.ttl);
+            debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);
     }
 
     p->n_addresses = 0;
 
     if (ia == NULL) {
-        debugs(0, 0, "WARNING: DNS lookup for '" << p->host << "' failed!");
+        debugs(0, DBG_CRITICAL, "WARNING: DNS lookup for '" << p->host << "' failed!");
         return;
     }
 
     if ((int) ia->count < 1) {
-        debugs(0, 0, "WARNING: No IP address found for '" << p->host << "'!");
+        debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << p->host << "'!");
         return;
     }
 
     p->tcp_up = p->connect_fail_limit;
 
-    for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
+    for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; ++j) {
         p->addresses[j] = ia->in_addrs[j];
         debugs(15, 2, "--> IP address #" << j << ": " << p->addresses[j]);
-        p->n_addresses++;
+        ++ p->n_addresses;
     }
 
     p->in_addr.SetEmpty();
@@ -1267,10 +1267,10 @@ peerConnectFailedSilent(peer * p)
         return;
     }
 
-    p->tcp_up--;
+    -- p->tcp_up;
 
     if (!p->tcp_up) {
-        debugs(15, 1, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+        debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
         p->stats.logged_state = PEER_DEAD;
     }
 }
@@ -1278,7 +1278,7 @@ peerConnectFailedSilent(peer * p)
 void
 peerConnectFailed(peer *p)
 {
-    debugs(15, 1, "TCP connection to " << p->host << "/" << p->http_port << " failed");
+    debugs(15, DBG_IMPORTANT, "TCP connection to " << p->host << "/" << p->http_port << " failed");
     peerConnectFailedSilent(p);
 }
 
@@ -1311,13 +1311,13 @@ peerProbeConnect(peer * p)
         return ret;/* don't probe to often */
 
     /* for each IP address of this peer. find one that we can connect to and probe it. */
-    for (int i = 0; i < p->n_addresses; i++) {
+    for (int i = 0; i < p->n_addresses; ++i) {
         Comm::ConnectionPointer conn = new Comm::Connection;
         conn->remote = p->addresses[i];
         conn->remote.SetPort(p->http_port);
         getOutgoingAddress(NULL, conn);
 
-        p->testing_now++;
+        ++ p->testing_now;
 
         AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
         Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, ctimeout);
@@ -1341,7 +1341,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
         peerConnectFailedSilent(p);
     }
 
-    p->testing_now--;
+    -- p->testing_now;
     conn->close();
     // TODO: log this traffic.
 }
@@ -1412,7 +1412,7 @@ peerCountMcastPeersDone(void *data)
         peer *p = (peer *)psstate->callback_data;
         p->mcast.flags.counting = 0;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
-        debugs(15, 1, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
+        debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
                p->mcast.avg_n_members <<" average, RTT " << p->stats.rtt);
         p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
@@ -1439,7 +1439,7 @@ peerCountHandleIcpReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *h
     assert(proto == AnyP::PROTO_ICP);
     assert(fake);
     assert(mem);
-    psstate->ping.n_recv++;
+    ++ psstate->ping.n_recv;
     rtt_av_factor = RTT_AV_FACTOR;
 
     if (p->options.weighted_roundrobin)
@@ -1602,7 +1602,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
         storeAppendPrintf(sentry, "Flags      :");
         dump_peer_options(sentry, e);
 
-        for (i = 0; i < e->n_addresses; i++) {
+        for (i = 0; i < e->n_addresses; ++i) {
             storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
                               e->addresses[i].NtoA(ntoabuf,MAX_IPSTRLEN) );
         }
@@ -1730,7 +1730,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Addres
 
     if (e->lock_count == 0) {
         // TODO: many entries are unlocked; why is this reported at level 1?
-        debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
+        debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
     }

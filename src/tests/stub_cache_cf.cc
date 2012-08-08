@@ -52,7 +52,7 @@ void parse_eol(char *volatile *var) STUB
         self_destruct();
 
     while (*token && xisspace(*token))
-        token++;
+        ++token;
 
     if (!*token)
         self_destruct();

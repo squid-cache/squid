@@ -35,7 +35,6 @@
 #define _etext etext
 
 #include "squid.h"
-#include "profiler/Profiler.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
@@ -77,24 +76,6 @@ tvSubDsec(struct timeval t1, struct timeval t2)
 {
     return (double) (t2.tv_sec - t1.tv_sec) +
            (double) (t2.tv_usec - t1.tv_usec) / 1000000.0;
-}
-
-/* returns the number of leading white spaces in str; handy in skipping ws */
-size_t
-xcountws(const char *str)
-{
-    size_t count = 0;
-    PROF_start(xcountws);
-
-    if (str) {
-        while (xisspace(*str)) {
-            str++;
-            count++;
-        }
-    }
-
-    PROF_stop(xcountws);
-    return count;
 }
 
 /* somewhat safer calculation of %s */

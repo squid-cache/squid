@@ -220,6 +220,10 @@ httpStatusString(http_status status)
         p = "Temporary Redirect";
         break;
 
+    case HTTP_PERMANENT_REDIRECT:
+        p = "Permanent Redirect";
+        break;
+
     case HTTP_BAD_REQUEST:
         p = "Bad Request";
         break;
@@ -314,6 +318,23 @@ httpStatusString(http_status status)
 
     case HTTP_HTTP_VERSION_NOT_SUPPORTED:
         p = "HTTP Version not supported";
+        break;
+
+        // RFC 6585
+    case HTTP_PRECONDITION_REQUIRED: // 428
+        p = "Precondition Required";
+        break;
+
+    case HTTP_TOO_MANY_REQUESTS: // 429
+        p = "Too Many Requests";
+        break;
+
+    case HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE: // 431
+        p = "Request Header Fields Too Large";
+        break;
+
+    case HTTP_NETWORK_AUTHENTICATION_REQUIRED: // 511
+        p = "Network Authentication Required";
         break;
 
     default:

@@ -109,14 +109,14 @@ Ssl::CertificateDb::Row::Row()
         :   width(cnlNumber)
 {
     row = new char *[width + 1];
-    for (size_t i = 0; i < width + 1; i++)
+    for (size_t i = 0; i < width + 1; ++i)
         row[i] = NULL;
 }
 
 Ssl::CertificateDb::Row::~Row()
 {
     if (row) {
-        for (size_t i = 0; i < width + 1; i++) {
+        for (size_t i = 0; i < width + 1; ++i) {
             delete[](row[i]);
         }
         delete[](row);
@@ -149,15 +149,16 @@ char ** Ssl::CertificateDb::Row::getRow()
 unsigned long Ssl::CertificateDb::index_serial_hash(const char **a)
 {
     const char *n = a[Ssl::CertificateDb::cnlSerial];
-    while (*n == '0') n++;
+    while (*n == '0')
+        ++n;
     return lh_strhash(n);
 }
 
 int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b)
 {
     const char *aa, *bb;
-    for (aa = a[Ssl::CertificateDb::cnlSerial]; *aa == '0'; aa++);
-    for (bb = b[Ssl::CertificateDb::cnlSerial]; *bb == '0'; bb++);
+    for (aa = a[Ssl::CertificateDb::cnlSerial]; *aa == '0'; ++aa);
+    for (bb = b[Ssl::CertificateDb::cnlSerial]; *bb == '0'; ++bb);
     return strcmp(aa, bb);
 }
 
@@ -171,15 +172,12 @@ int Ssl::CertificateDb::index_name_cmp(const char **a, const char **b)
     return(strcmp(a[Ssl::CertificateDb::cnlName], b[CertificateDb::cnlName]));
 }
 
-const std::string Ssl::CertificateDb::serial_file("serial");
 const std::string Ssl::CertificateDb::db_file("index.txt");
 const std::string Ssl::CertificateDb::cert_dir("certs");
 const std::string Ssl::CertificateDb::size_file("size");
-const size_t Ssl::CertificateDb::min_db_size(4096);
 
 Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_size, size_t aFs_block_size)
         :  db_path(aDb_path),
-        serial_full(aDb_path + "/" + serial_file),
         db_full(aDb_path + "/" + db_file),
         cert_full(aDb_path + "/" + cert_dir),
         size_full(aDb_path + "/" + size_file),
@@ -187,7 +185,6 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
         max_db_size(aMax_db_size),
         fs_block_size(aFs_block_size),
         dbLock(db_full),
-        dbSerialLock(serial_full),
         enabled_disk_store(true)
 {
     if (db_path.empty() && !max_db_size)
@@ -203,11 +200,25 @@ bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer &
     return pure_find(host_name, cert, pkey);
 }
 
-bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
+bool Ssl::CertificateDb::purgeCert(std::string const & key)
 {
     const Locker locker(dbLock, Here);
     load();
-    if (!db || !cert || !pkey || min_db_size > max_db_size)
+    if (!db)
+        return false;
+
+    if (!deleteByHostname(key))
+        return false;
+
+    save();
+    return true;
+}
+
+bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName)
+{
+    const Locker locker(dbLock, Here);
+    load();
+    if (!db || !cert || !pkey)
         return false;
     Row row;
     ASN1_INTEGER * ai = X509_get_serialNumber(cert.get());
@@ -219,29 +230,37 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     }
     row.setValue(cnlSerial, serial_string.c_str());
     char ** rrow = TXT_DB_get_by_index(db.get(), cnlSerial, row.getRow());
+    // We are creating certificates with unique serial numbers. If the serial
+    // number is found in the database, the same certificate is already stored.
     if (rrow != NULL)
-        return false;
+        return true;
 
     {
         TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
-        if (pure_find(subject.get(), cert, pkey))
+        if (pure_find(useName.empty() ? subject.get() : useName, cert, pkey))
             return true;
     }
-    // check db size.
-    while (max_db_size < size()) {
-        if (!deleteInvalidCertificate())
-            break;
-    }
 
-    while (max_db_size < size()) {
-        deleteOldestCertificate();
+    // check db size while trying to minimize calls to size()
+    while (size() > max_db_size) {
+        if (deleteInvalidCertificate())
+            continue; // try to find another invalid certificate if needed
+
+        // there are no more invalid ones, but there must be valid certificates
+        do {
+            if (!deleteOldestCertificate())
+                return false; // errors prevented us from freeing enough space
+        } while (size() > max_db_size);
+        break;
     }
 
     row.setValue(cnlType, "V");
     ASN1_UTCTIME * tm = X509_get_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
     row.setValue(cnlFile, "unknown");
-    {
+    if (!useName.empty())
+        row.setValue(cnlName, useName.c_str());
+    else {
         TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
         row.setValue(cnlName, subject.get());
     }
@@ -259,56 +278,10 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     return true;
 }
 
-BIGNUM * Ssl::CertificateDb::getCurrentSerialNumber()
-{
-    const Locker locker(dbSerialLock, Here);
-    // load serial number from file.
-    Ssl::BIO_Pointer file(BIO_new(BIO_s_file()));
-    if (!file)
-        return NULL;
-
-    if (BIO_rw_filename(file.get(), const_cast<char *>(serial_full.c_str())) <= 0)
-        return NULL;
-
-    Ssl::ASN1_INT_Pointer serial_ai(ASN1_INTEGER_new());
-    if (!serial_ai)
-        return NULL;
-
-    char buffer[1024];
-    if (!a2i_ASN1_INTEGER(file.get(), serial_ai.get(), buffer, sizeof(buffer)))
-        return NULL;
-
-    Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(serial_ai.get(), NULL));
-
-    if (!serial)
-        return NULL;
-
-    // increase serial number.
-    Ssl::BIGNUM_Pointer increased_serial(BN_dup(serial.get()));
-    if (!increased_serial)
-        return NULL;
-
-    BN_add_word(increased_serial.get(), 1);
-
-    // save increased serial number.
-    if (BIO_seek(file.get(), 0))
-        return NULL;
-
-    Ssl::ASN1_INT_Pointer increased_serial_ai(BN_to_ASN1_INTEGER(increased_serial.get(), NULL));
-    if (!increased_serial_ai)
-        return NULL;
-
-    i2a_ASN1_INTEGER(file.get(), increased_serial_ai.get());
-    BIO_puts(file.get(),"\n");
-
-    return serial.release();
-}
-
-void Ssl::CertificateDb::create(std::string const & db_path, int serial)
+void Ssl::CertificateDb::create(std::string const & db_path)
 {
     if (db_path == "")
         throw std::runtime_error("Path to db is empty");
-    std::string serial_full(db_path + "/" + serial_file);
     std::string db_full(db_path + "/" + db_file);
     std::string cert_full(db_path + "/" + cert_dir);
     std::string size_full(db_path + "/" + size_file);
@@ -318,18 +291,6 @@ void Ssl::CertificateDb::create(std::string const & db_path, int serial)
 
     if (mkdir(cert_full.c_str(), 0777))
         throw std::runtime_error("Cannot create " + cert_full);
-
-    Ssl::ASN1_INT_Pointer i(ASN1_INTEGER_new());
-    ASN1_INTEGER_set(i.get(), serial);
-
-    Ssl::BIO_Pointer file(BIO_new(BIO_s_file()));
-    if (!file)
-        throw std::runtime_error("SSL error");
-
-    if (BIO_write_filename(file.get(), const_cast<char *>(serial_full.c_str())) <= 0)
-        throw std::runtime_error("Cannot open " + cert_full + " to open");
-
-    i2a_ASN1_INTEGER(file.get(), i.get());
 
     std::ofstream size(size_full.c_str());
     if (size)
@@ -345,17 +306,6 @@ void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size)
 {
     CertificateDb db(db_path, max_db_size, 0);
     db.load();
-}
-
-std::string Ssl::CertificateDb::getSNString() const
-{
-    const Locker locker(dbSerialLock, Here);
-    std::ifstream file(serial_full.c_str());
-    if (!file)
-        return "";
-    std::string serial;
-    file >> serial;
-    return serial;
 }
 
 bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
@@ -400,11 +350,12 @@ void Ssl::CertificateDb::subSize(std::string const & filename)
 
 size_t Ssl::CertificateDb::readSize() const
 {
-    size_t db_size;
     std::ifstream size_file(size_full.c_str());
     if (!size_file && enabled_disk_store)
-        throw std::runtime_error("cannot read \"" + size_full + "\" file");
-    size_file >> db_size;
+        throw std::runtime_error("cannot open for reading: " + size_full);
+    size_t db_size = 0;
+    if (!(size_file >> db_size))
+        throw std::runtime_error("error while reading " + size_full);
     return db_size;
 }
 
@@ -483,7 +434,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
 #endif
 
     const Columns db_indexes[]={cnlSerial, cnlName};
-    for (unsigned int i = 0; i < countof(db_indexes); i++) {
+    for (unsigned int i = 0; i < countof(db_indexes); ++i) {
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
         if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db.get()->index[db_indexes[i]])
             lh_OPENSSL_STRING_delete(fieldIndex, (char **)row);
@@ -495,7 +446,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
 
     subSize(filename);
     int ret = remove(filename.c_str());
-    if (ret < 0)
+    if (ret < 0 && errno != ENOENT)
         throw std::runtime_error("Failed to remove certficate file " + filename + " from db");
 }
 
@@ -506,10 +457,10 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
 
     bool removed_one = false;
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
-    for (int i = 0; i < sk_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
 
@@ -554,10 +505,10 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
         return false;
 
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
-    for (int i = 0; i < sk_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
         if (host == current_row[cnlName]) {

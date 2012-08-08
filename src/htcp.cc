@@ -38,12 +38,13 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "comm/UdpOpenDialer.h"
 #include "htcp.h"
 #include "http.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
-#include "ipc/StartListening.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
@@ -51,22 +52,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "compat/xalloc.h"
-
-/// dials htcpIncomingConnectionOpened call
-class HtcpListeningStartedDialer: public CallDialer,
-        public Ipc::StartListeningCb
-{
-public:
-    typedef void (*Handler)(int errNo);
-    HtcpListeningStartedDialer(Handler aHandler): handler(aHandler) {}
-
-    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
-    virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(errNo); }
-
-public:
-    Handler handler;
-};
 
 typedef struct _Countstr Countstr;
 
@@ -246,7 +231,7 @@ enum {
     RR_RESPONSE
 };
 
-static void htcpIncomingConnectionOpened(int errNo);
+static void htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 static uint32_t msg_id_counter = 0;
 
 static Comm::ConnectionPointer htcpOutgoingConn = NULL;
@@ -305,7 +290,7 @@ htcpHexdump(const char *tag, const char *s, int sz)
     debugs(31, 3, "htcpHexdump " << tag);
     memset(hex, '\0', 80);
 
-    for (i = 0; i < sz; i++) {
+    for (i = 0; i < sz; ++i) {
         k = i % 16;
         snprintf(&hex[k * 3], 4, " %02x", (int) *(s + i));
 
@@ -623,7 +608,7 @@ htcpSend(const char *buf, int len, Ip::Address &to)
     if (comm_udp_sendto(htcpOutgoingConn->fd, to, buf, len) < 0)
         debugs(31, 3, HERE << htcpOutgoingConn << " sendto: " << xstrerror());
     else
-        statCounter.htcp.pkts_sent++;
+        ++statCounter.htcp.pkts_sent;
 }
 
 /*
@@ -1072,7 +1057,7 @@ htcpClrStore(const htcpSpecifier * s)
     while ((e = storeGetPublicByRequest(request)) != NULL) {
         if (e != NULL) {
             htcpClrStoreEntry(e);
-            released++;
+            ++released;
         }
     }
 
@@ -1471,7 +1456,7 @@ htcpRecv(int fd, void *data)
     debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " << from );
 
     if (len)
-        statCounter.htcp.pkts_recv++;
+        ++statCounter.htcp.pkts_recv;
 
     htcpHandleMsg(buf, len, from);
 
@@ -1485,7 +1470,7 @@ htcpRecv(int fd, void *data)
  */
 
 void
-htcpInit(void)
+htcpOpenPorts(void)
 {
     if (Config.Port.htcp <= 0) {
         debugs(31, DBG_IMPORTANT, "HTCP Disabled.");
@@ -1507,7 +1492,7 @@ htcpInit(void)
 
     AsyncCall::Pointer call = asyncCall(31, 2,
                                         "htcpIncomingConnectionOpened",
-                                        HtcpListeningStartedDialer(&htcpIncomingConnectionOpened));
+                                        Comm::UdpOpenDialer(&htcpIncomingConnectionOpened));
 
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
@@ -1546,17 +1531,17 @@ htcpInit(void)
 }
 
 static void
-htcpIncomingConnectionOpened(int)
+htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
 {
-    if (!Comm::IsConnOpen(htcpIncomingConn))
+    if (!Comm::IsConnOpen(conn))
         fatal("Cannot open HTCP Socket");
 
-    Comm::SetSelect(htcpIncomingConn->fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
-    debugs(31, DBG_CRITICAL, "Accepting HTCP messages on " << htcpIncomingConn->local);
+    debugs(31, DBG_CRITICAL, "Accepting HTCP messages on " << conn->local);
 
     if (Config.Addrs.udp_outgoing.IsNoAddr()) {
-        htcpOutgoingConn = htcpIncomingConn;
+        htcpOutgoingConn = conn;
         debugs(31, DBG_IMPORTANT, "Sending HTCP messages from " << htcpOutgoingConn->local);
     }
 }
@@ -1589,7 +1574,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     stuff.S.method = (char *) RequestMethodStr(req->method);
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
-    HttpStateData::httpBuildRequestHeader(req, e, &hdr, flags);
+    HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
     mb.init();
     packerToMemInit(&pa, &mb);
     hdr.packInto(&pa);
@@ -1660,7 +1645,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     }
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
-        HttpStateData::httpBuildRequestHeader(req, e, &hdr, flags);
+        HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
         mb.init();
         packerToMemInit(&pa, &mb);
         hdr.packInto(&pa);
@@ -1719,7 +1704,7 @@ htcpSocketShutdown(void)
 }
 
 void
-htcpSocketClose(void)
+htcpClosePorts(void)
 {
     htcpSocketShutdown();
 
@@ -1732,15 +1717,15 @@ htcpSocketClose(void)
 static void
 htcpLogHtcp(Ip::Address &caddr, int opcode, log_type logcode, const char *url)
 {
-    AccessLogEntry al;
+    AccessLogEntry::Pointer al = new AccessLogEntry;
     if (LOG_TAG_NONE == logcode)
         return;
     if (!Config.onoff.log_udp)
         return;
-    al.htcp.opcode = htcpOpcodeStr[opcode];
-    al.url = url;
-    al.cache.caddr = caddr;
-    al.cache.code = logcode;
-    al.cache.msec = 0;
-    accessLogLog(&al, NULL);
+    al->htcp.opcode = htcpOpcodeStr[opcode];
+    al->url = url;
+    al->cache.caddr = caddr;
+    al->cache.code = logcode;
+    al->cache.msec = 0;
+    accessLogLog(al, NULL);
 }

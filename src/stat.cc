@@ -33,6 +33,7 @@
  */
 
 #include "squid-old.h"
+#include "comm/Loops.h"
 #include "event.h"
 #include "format/Token.h"
 #include "StoreClient.h"
@@ -214,19 +215,19 @@ GetIoStats(Mgr::IoActionData& stats)
 
     stats.http_reads = IOStats.Http.reads;
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         stats.http_read_hist[i] = IOStats.Http.read_hist[i];
     }
 
     stats.ftp_reads = IOStats.Ftp.reads;
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         stats.ftp_read_hist[i] = IOStats.Ftp.read_hist[i];
     }
 
     stats.gopher_reads = IOStats.Gopher.reads;
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         stats.gopher_read_hist[i] = IOStats.Gopher.read_hist[i];
     }
 }
@@ -240,7 +241,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.http_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -253,7 +254,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.ftp_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -266,7 +267,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -1075,7 +1076,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, 1, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 
@@ -1384,10 +1385,10 @@ statInit(void)
     int i;
     debugs(18, 5, "statInit: Initializing...");
 
-    for (i = 0; i < N_COUNT_HIST; i++)
+    for (i = 0; i < N_COUNT_HIST; ++i)
         statCountersInit(&CountHist[i]);
 
-    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+    for (i = 0; i < N_COUNT_HOUR_HIST; ++i)
         statCountersInit(&CountHourHist[i]);
 
     statCountersInit(&statCounter);
@@ -1418,7 +1419,7 @@ statAvgTick(void *notused)
     statCountersClean(CountHist + N_COUNT_HIST - 1);
     memmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
     statCountersCopy(t, c);
-    NCountHist++;
+    ++NCountHist;
 
     if ((NCountHist % COUNT_INTERVAL) == 0) {
         /* we have an hours worth of readings.  store previous hour */
@@ -1428,14 +1429,14 @@ statAvgTick(void *notused)
         statCountersClean(CountHourHist + N_COUNT_HOUR_HIST - 1);
         memmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
         statCountersCopy(t2, c2);
-        NCountHourHist++;
+        ++NCountHourHist;
     }
 
     if (Config.warnings.high_rptm > 0) {
         int i = (int) statPctileSvc(0.5, 20, PCTILE_HTTP);
 
         if (Config.warnings.high_rptm < i)
-            debugs(18, 0, "WARNING: Median response time is " << i << " milliseconds");
+            debugs(18, DBG_CRITICAL, "WARNING: Median response time is " << i << " milliseconds");
     }
 
     if (Config.warnings.high_pf) {
@@ -1446,7 +1447,7 @@ statAvgTick(void *notused)
             i /= (int) dt;
 
             if (Config.warnings.high_pf < i)
-                debugs(18, 0, "WARNING: Page faults occuring at " << i << "/sec");
+                debugs(18, DBG_CRITICAL, "WARNING: Page faults occuring at " << i << "/sec");
         }
     }
 
@@ -1466,7 +1467,7 @@ statAvgTick(void *notused)
 #endif
 
         if (Config.warnings.high_memory < i)
-            debugs(18, 0, "WARNING: Memory usage at " << ((unsigned long int)(i >> 20)) << " MB");
+            debugs(18, DBG_CRITICAL, "WARNING: Memory usage at " << ((unsigned long int)(i >> 20)) << " MB");
     }
 }
 
@@ -1504,9 +1505,9 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     C->cd.on_xition_count.enumInit(CacheDigestHashFuncCount);
-    C->comm_icp_incoming.enumInit(INCOMING_ICP_MAX);
+    C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
     C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
-    C->comm_http_incoming.enumInit(INCOMING_HTTP_MAX);
+    C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
     C->select_fds_hist.enumInit(256);	/* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
@@ -1524,9 +1525,9 @@ statCountersClean(StatCounters * C)
     C->icp.replySvcTime.clear();
     C->dns.svcTime.clear();
     C->cd.on_xition_count.clear();
-    C->comm_icp_incoming.clear();
+    C->comm_udp_incoming.clear();
     C->comm_dns_incoming.clear();
-    C->comm_http_incoming.clear();
+    C->comm_tcp_incoming.clear();
     C->select_fds_hist.clear();
 }
 
@@ -1551,8 +1552,9 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     dest->icp.replySvcTime=orig->icp.replySvcTime;
     dest->dns.svcTime=orig->dns.svcTime;
     dest->cd.on_xition_count=orig->cd.on_xition_count;
-    dest->comm_icp_incoming=orig->comm_icp_incoming;
-    dest->comm_http_incoming=orig->comm_http_incoming;
+    dest->comm_udp_incoming=orig->comm_udp_incoming;
+    dest->comm_dns_incoming=orig->comm_dns_incoming;
+    dest->comm_tcp_incoming=orig->comm_tcp_incoming;
     dest->select_fds_hist=orig->select_fds_hist;
 }
 
@@ -1793,10 +1795,10 @@ statFreeMemory(void)
 {
     int i;
 
-    for (i = 0; i < N_COUNT_HIST; i++)
+    for (i = 0; i < N_COUNT_HIST; ++i)
         statCountersClean(&CountHist[i]);
 
-    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+    for (i = 0; i < N_COUNT_HOUR_HIST; ++i)
         statCountersClean(&CountHourHist[i]);
 }
 
@@ -1982,7 +1984,7 @@ statByteHitRatio(int minutes)
     cd = CountHist[0].cd.kbytes_recv.kb - CountHist[minutes].cd.kbytes_recv.kb;
 
     if (s < cd)
-        debugs(18, 1, "STRANGE: srv_kbytes=" << s << ", cd_kbytes=" << cd);
+        debugs(18, DBG_IMPORTANT, "STRANGE: srv_kbytes=" << s << ", cd_kbytes=" << cd);
 
     s -= cd;
 
@@ -2011,7 +2013,7 @@ statClientRequests(StoreEntry * s)
 
         if (conn != NULL) {
             const int fd = conn->clientConnection->fd;
-            storeAppendPrintf(s, "\tFD %d, read %"PRId64", wrote %"PRId64"\n", fd,
+            storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
             storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
             storeAppendPrintf(s, "\tin: buf %p, offset %ld, size %ld\n",
@@ -2079,7 +2081,7 @@ statClientRequests(StoreEntry * s)
  */
 
 #define GRAPH_PER_MIN(Y) \
-    for (i=0;i<(N_COUNT_HIST-2);i++) { \
+    for (i=0;i<(N_COUNT_HIST-2);++i) { \
 	dt = tvSubDsec(CountHist[i+1].timestamp, CountHist[i].timestamp); \
 	if (dt <= 0.0) \
 	    break; \
@@ -2089,7 +2091,7 @@ statClientRequests(StoreEntry * s)
     }
 
 #define GRAPH_PER_HOUR(Y) \
-    for (i=0;i<(N_COUNT_HOUR_HIST-2);i++) { \
+    for (i=0;i<(N_COUNT_HOUR_HIST-2);++i) { \
 	dt = tvSubDsec(CountHourHist[i+1].timestamp, CountHourHist[i].timestamp); \
 	if (dt <= 0.0) \
 	    break; \

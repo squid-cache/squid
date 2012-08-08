@@ -318,7 +318,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
             debugs(50, 3, HERE << status() << ": " << xstrerror());
             return COMM_ERROR;
         } else {
-            debugs(50, 1, HERE << status() << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, HERE << status() << ": " << xstrerror());
             return COMM_ERROR;
         }
     }

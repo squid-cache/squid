@@ -37,7 +37,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "dlink.h"
-#include "ProtoPort.h"
+#include "anyp/PortCfg.h"
 
 const char *AclMatchedName = NULL;
 
@@ -99,13 +99,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL name */
 
     if ((t = strtok(NULL, w_space)) == NULL) {
-        debugs(28, 0, "aclParseAclLine: missing ACL name.");
+        debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
     }
 
     if (strlen(t) >= ACL_NAME_SZ) {
-        debugs(28, 0, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
+        debugs(28, DBG_CRITICAL, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
                "' too long, max " << ACL_NAME_SZ - 1 << " characters supported");
         parser.destruct();
         return;
@@ -116,14 +116,14 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     const char *theType;
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
-        debugs(28, 0, "aclParseAclLine: missing ACL type.");
+        debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
     }
 
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
-        http_port_list *p = Config.Sockaddr.http;
+        AnyP::PortCfg *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
             if (p->intercepted)
@@ -133,7 +133,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
         theType = "localip";
     } else if (strcmp(theType, "myport") == 0) {
-        http_port_list *p = Config.Sockaddr.http;
+        AnyP::PortCfg *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
@@ -160,7 +160,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {
-            debugs(28, 0, "aclParseAclLine: ACL '" << A->name << "' already exists with different type.");
+            debugs(28, DBG_CRITICAL, "aclParseAclLine: ACL '" << A->name << "' already exists with different type.");
             parser.destruct();
             return;
         }
@@ -187,7 +187,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
 
     if (A->empty()) {
-        debugs(28, 0, "Warning: empty ACL: " << A->cfgline);
+        debugs(28, DBG_CRITICAL, "Warning: empty ACL: " << A->cfgline);
     }
 
     if (!A->valid()) {
@@ -303,12 +303,12 @@ ACL::checklistMatches(ACLChecklist *checklist)
     int rv;
 
     if (!checklist->hasRequest() && requiresRequest()) {
-        debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
+        debugs(28, DBG_IMPORTANT, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
         return 0;
     }
 
     if (!checklist->hasReply() && requiresReply()) {
-        debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
+        debugs(28, DBG_IMPORTANT, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
         return 0;
     }
 
@@ -322,16 +322,22 @@ bool
 ACLList::matches (ACLChecklist *checklist) const
 {
     assert (_acl);
+    // XXX: AclMatchedName does not contain a matched ACL name when the acl
+    // does not match (or contains stale name if no ACLs are checked). In
+    // either case, we get misleading debugging and possibly incorrect error
+    // messages. Unfortunately, deny_info's "when none http_access
+    // lines match" exception essentially requires this mess.
+    // TODO: Rework by using an acl-free deny_info for the no-match cases?
     AclMatchedName = _acl->name;
     debugs(28, 3, "ACLList::matches: checking " << (op ? null_string : "!") << _acl->name);
 
     if (_acl->checklistMatches(checklist) != op) {
         debugs(28, 4, "ACLList::matches: result is false");
-        return checklist->lastACLResult(false);
+        return false;
     }
 
     debugs(28, 4, "ACLList::matches: result is true");
-    return checklist->lastACLResult(true);
+    return true;
 }
 
 

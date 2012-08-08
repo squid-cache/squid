@@ -35,7 +35,7 @@
  */
 
 #include "squid-old.h"
-#include "CommIO.h"
+#include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -304,7 +304,7 @@ squidaio_init(void)
 
     assert(NUMTHREADS);
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = NULL;
@@ -363,7 +363,7 @@ squidaio_shutdown(void)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         threadp->exit = 1;
         hthreads[i] = threadp->thread;
         threadp = threadp->next;
@@ -377,7 +377,7 @@ squidaio_shutdown(void)
 
     WaitForMultipleObjects(NUMTHREADS, hthreads, TRUE, 2000);
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         CloseHandle(hthreads[i]);
     }
 
@@ -549,7 +549,7 @@ squidaio_thread_loop(LPVOID lpParam)
 
         CommIO::NotifyIOCompleted();
         Sleep(0);
-        threadp->requests++;
+        ++ threadp->requests;
     }				/* while forever */
 
     CloseHandle(cond);
@@ -611,7 +611,7 @@ squidaio_queue_request(squidaio_request_t * request)
         if (++filter >= filter_limit) {
             filter_limit += filter;
             filter = 0;
-            debugs(43, 1, "squidaio_queue_request: WARNING - Queue congestion");
+            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Queue congestion");
         }
     }
 
@@ -634,10 +634,10 @@ squidaio_queue_request(squidaio_request_t * request)
 
         if (squid_curtime >= (last_warn + 15) &&
                 squid_curtime >= (high_start + 5)) {
-            debugs(43, 1, "squidaio_queue_request: WARNING - Disk I/O overloading");
+            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Disk I/O overloading");
 
             if (squid_curtime >= (high_start + 15))
-                debugs(43, 1, "squidaio_queue_request: Queue Length: current=" <<
+                debugs(43, DBG_IMPORTANT, "squidaio_queue_request: Queue Length: current=" <<
                        request_queue_len << ", high=" << queue_high <<
                        ", low=" << queue_low << ", duration=" <<
                        (long int) (squid_curtime - high_start));
@@ -650,10 +650,10 @@ squidaio_queue_request(squidaio_request_t * request)
 
     /* Warn if seriously overloaded */
     if (request_queue_len > RIDICULOUS_LENGTH) {
-        debugs(43, 0, "squidaio_queue_request: Async request queue growing uncontrollably!");
-        debugs(43, 0, "squidaio_queue_request: Syncing pending I/O operations.. (blocking)");
+        debugs(43, DBG_CRITICAL, "squidaio_queue_request: Async request queue growing uncontrollably!");
+        debugs(43, DBG_CRITICAL, "squidaio_queue_request: Syncing pending I/O operations.. (blocking)");
         squidaio_sync();
-        debugs(43, 0, "squidaio_queue_request: Synced");
+        debugs(43, DBG_CRITICAL, "squidaio_queue_request: Synced");
     }
 }				/* squidaio_queue_request */
 
@@ -892,7 +892,7 @@ static void
 squidaio_do_close(squidaio_request_t * requestp)
 {
     if ((requestp->ret = close(requestp->fd)) < 0) {
-        debugs(43, 0, "squidaio_do_close: FD " << requestp->fd << ", errno " << errno);
+        debugs(43, DBG_CRITICAL, "squidaio_do_close: FD " << requestp->fd << ", errno " << errno);
         close(requestp->fd);
     }
 
@@ -1152,7 +1152,7 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, threadp->dwThreadId, threadp->requests);
         threadp = threadp->next;
     }

@@ -209,7 +209,7 @@ int Adaptation::Icap::ServiceRep::excessConnections() const
 
 void Adaptation::Icap::ServiceRep::noteGoneWaiter()
 {
-    theAllWaiters--;
+    --theAllWaiters;
 
     // in case the notified transaction did not take the connection slot
     busyCheckpoint();
@@ -254,7 +254,7 @@ void Adaptation::Icap::ServiceRep::suspend(const char *reason)
         debugs(93,4, HERE << "keeping suspended, also for " << reason);
     } else {
         isSuspended = reason;
-        debugs(93,1, "suspending ICAP service for " << reason);
+        debugs(93, DBG_IMPORTANT, "suspending ICAP service for " << reason);
         scheduleUpdate(squid_curtime + TheConfig.service_revival_delay);
         announceStatusChange("suspended", true);
     }
@@ -455,7 +455,7 @@ void Adaptation::Icap::ServiceRep::checkOptions()
         return;
 
     if (!theOptions->valid()) {
-        debugs(93,1, "WARNING: Squid got an invalid ICAP OPTIONS response " <<
+        debugs(93, DBG_IMPORTANT, "WARNING: Squid got an invalid ICAP OPTIONS response " <<
                "from service " << cfg().uri << "; error: " << theOptions->error);
         return;
     }
@@ -479,11 +479,11 @@ void Adaptation::Icap::ServiceRep::checkOptions()
 
             method_list.append(ICAP::methodStr(*iter));
             method_list.append(" ", 1);
-            iter++;
+            ++iter;
         }
 
         if (!method_found) {
-            debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
+            debugs(93, DBG_IMPORTANT, "WARNING: Squid is configured to use ICAP method " <<
                    cfg().methodStr() <<
                    " for service " << cfg().uri <<
                    " but OPTIONS response declares the methods are " << method_list);
@@ -498,7 +498,7 @@ void Adaptation::Icap::ServiceRep::checkOptions()
     if (abs(skew) > theOptions->ttl()) {
         // TODO: If skew is negative, the option will be considered down
         // because of stale options. We should probably change this.
-        debugs(93, 1, "ICAP service's clock is skewed by " << skew <<
+        debugs(93, DBG_IMPORTANT, "ICAP service's clock is skewed by " << skew <<
                " seconds: " << cfg().uri);
     }
 }
@@ -540,7 +540,7 @@ void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(const Answer &answer)
         newOptions = new Adaptation::Icap::Options;
         newOptions->configure(r);
     } else {
-        debugs(93,1, "ICAP service got wrong options message " << status());
+        debugs(93, DBG_IMPORTANT, "ICAP service got wrong options message " << status());
     }
 
     handleNewOptions(newOptions);
@@ -599,7 +599,7 @@ void Adaptation::Icap::ServiceRep::scheduleUpdate(time_t when)
         if (eventFind(&ServiceRep_noteTimeToUpdate, this))
             eventDelete(&ServiceRep_noteTimeToUpdate, this);
         else
-            debugs(93,1, "XXX: ICAP service lost an update event.");
+            debugs(93, DBG_IMPORTANT, "XXX: ICAP service lost an update event.");
         updateScheduled = false;
     }
 

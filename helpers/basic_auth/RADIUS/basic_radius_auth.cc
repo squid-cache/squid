@@ -264,16 +264,21 @@ urldecode(char *dst, const char *src, int size)
     tmp[2] = '\0';
     while (*src && size > 1) {
         if (*src == '%' && src[1] != '\0' && src[2] != '\0') {
-            src++;
-            tmp[0] = *src++;
-            tmp[1] = *src++;
-            *dst++ = strtol(tmp, NULL, 16);
+            ++src;
+            tmp[0] = *src;
+            ++src;
+            tmp[1] = *src;
+            ++src;
+            *dst = strtol(tmp, NULL, 16);
+            ++dst;
         } else {
-            *dst++ = *src++;
+            *dst = *src;
+            ++dst;
+            ++src;
         }
-        size--;
+        --size;
     }
-    *dst++ = '\0';
+    *dst = '\0';
 }
 
 static int
@@ -308,12 +313,14 @@ authenticate(int socket_fd, const char *username, const char *passwd)
     /*
      *    User Name
      */
-    *ptr++ = PW_USER_NAME;
+    *ptr = PW_USER_NAME;
+    ++ptr;
     length = strlen(username);
     if (length > MAXPWNAM) {
         length = MAXPWNAM;
     }
-    *ptr++ = length + 2;
+    *ptr = length + 2;
+    ++ptr;
     memcpy(ptr, username, length);
     ptr += length;
     total_length += length + 2;
@@ -335,8 +342,10 @@ authenticate(int socket_fd, const char *username, const char *passwd)
      */
     length = ((length / AUTH_VECTOR_LEN) + 1) * AUTH_VECTOR_LEN;
 
-    *ptr++ = PW_PASSWORD;
-    *ptr++ = length + 2;
+    *ptr = PW_PASSWORD;
+    ++ptr;
+    *ptr = length + 2;
+    ++ptr;
 
     secretlen = strlen(secretkey);
     /* Set up the Cipher block chain */
@@ -348,22 +357,27 @@ authenticate(int socket_fd, const char *username, const char *passwd)
         md5_calc(cbc, md5buf, secretlen + AUTH_VECTOR_LEN);
 
         /* Xor the password into the MD5 digest */
-        for (i = 0; i < AUTH_VECTOR_LEN; i++) {
-            *ptr++ = (cbc[i] ^= passbuf[j + i]);
+        for (i = 0; i < AUTH_VECTOR_LEN; ++i) {
+            *ptr = (cbc[i] ^= passbuf[j + i]);
+            ++ptr;
         }
     }
     total_length += length + 2;
 
-    *ptr++ = PW_NAS_PORT_ID;
-    *ptr++ = 6;
+    *ptr = PW_NAS_PORT_ID;
+    ++ptr;
+    *ptr = 6;
+    ++ptr;
 
     ui = htonl(nasport);
     memcpy(ptr, &ui, 4);
     ptr += 4;
     total_length += 6;
 
-    *ptr++ = PW_NAS_PORT_TYPE;
-    *ptr++ = 6;
+    *ptr = PW_NAS_PORT_TYPE;
+    ++ptr;
+    *ptr = 6;
+    ++ptr;
 
     ui = htonl(nasporttype);
     memcpy(ptr, &ui, 4);
@@ -372,14 +386,18 @@ authenticate(int socket_fd, const char *username, const char *passwd)
 
     if (*identifier) {
         int len = strlen(identifier);
-        *ptr++ = PW_NAS_ID;
-        *ptr++ = len + 2;
+        *ptr = PW_NAS_ID;
+        ++ptr;
+        *ptr = len + 2;
+        ++ptr;
         memcpy(ptr, identifier, len);
         ptr += len;
         total_length += len + 2;
     } else {
-        *ptr++ = PW_NAS_IP_ADDRESS;
-        *ptr++ = 6;
+        *ptr = PW_NAS_IP_ADDRESS;
+        ++ptr;
+        *ptr = 6;
+        ++ptr;
 
         ui = htonl(nas_ipaddr);
         memcpy(ptr, &ui, 4);
@@ -397,7 +415,8 @@ authenticate(int socket_fd, const char *username, const char *passwd)
      */
     auth->length = htons(total_length);
 
-    while (retry--) {
+    while (retry) {
+        --retry;
         int time_spent;
         struct timeval sent;
         /*
@@ -566,7 +585,7 @@ main(int argc, char **argv)
         /* Parse out the username and password */
         ptr = buf;
         while (isspace(*ptr))
-            ptr++;
+            ++ptr;
         if ((end = strchr(ptr, ' ')) == NULL) {
             SEND_ERR("No password");
             continue;
@@ -575,7 +594,7 @@ main(int argc, char **argv)
         urldecode(username, ptr, MAXPWNAM);
         ptr = end + 1;
         while (isspace(*ptr))
-            ptr++;
+            ++ptr;
         urldecode(passwd, ptr, MAXPASS);
 
         if (authenticate(sockfd, username, passwd))

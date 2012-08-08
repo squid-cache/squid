@@ -80,22 +80,23 @@ int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
     allow_t answer = AuthenticateAcl(checklist);
-    checklist->currentAnswer(answer);
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
     case ACCESS_ALLOWED:
-    case ACCESS_AUTH_EXPIRED_OK:
         // check for a match
         return matchProxyAuth(checklist);
 
     case ACCESS_DENIED:
-    case ACCESS_AUTH_EXPIRED_BAD:
         return 0; // non-match
 
     case ACCESS_DUNNO:
     case ACCESS_AUTH_REQUIRED:
     default:
+        // If the answer is not allowed or denied (matches/not matches) and
+        // async authentication is not needed (asyncNeeded), then we are done.
+        if (!checklist->asyncNeeded())
+            checklist->markFinished(answer, "AuthenticateAcl exception");
         return -1; // other
     }
 }
@@ -116,24 +117,16 @@ bool
 ACLProxyAuth::valid () const
 {
     if (authenticateSchemeCount() == 0) {
-        debugs(28, 0, "Can't use proxy auth because no authentication schemes were compiled.");
+        debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes were compiled.");
         return false;
     }
 
     if (authenticateActiveSchemeCount() == 0) {
-        debugs(28, 0, "Can't use proxy auth because no authentication schemes are fully configured.");
+        debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes are fully configured.");
         return false;
     }
 
     return true;
-}
-
-ProxyAuthNeeded ProxyAuthNeeded::instance_;
-
-ProxyAuthNeeded *
-ProxyAuthNeeded::Instance()
-{
-    return &instance_;
 }
 
 ProxyAuthLookup ProxyAuthLookup::instance_;
@@ -159,14 +152,11 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
 }
 
 void
-ProxyAuthLookup::LookupDone(void *data, char *result)
+ProxyAuthLookup::LookupDone(void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
 
     assert (checklist->asyncState() == ProxyAuthLookup::Instance());
-
-    if (result != NULL)
-        fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
 
     if (checklist->auth_user_request == NULL || !checklist->auth_user_request->valid() || checklist->conn() == NULL) {
         /* credentials could not be checked either way
@@ -182,19 +172,6 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->matchNonBlocking();
-}
-
-void
-ProxyAuthNeeded::checkForAsync(ACLChecklist *checklist) const
-{
-    /* Client is required to resend the request with correct authentication
-     * credentials. (This may be part of a stateful auth protocol.)
-     * The request is denied.
-     */
-    debugs(28, 6, "ACLChecklist::checkForAsync: requiring Proxy Auth header.");
-    checklist->currentAnswer(ACCESS_AUTH_REQUIRED);
-    checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->markFinished();
 }
 
 ACL *

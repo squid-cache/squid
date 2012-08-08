@@ -379,7 +379,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
     }
 
     if (io.flag) {
-        debugs(11, 1, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
         err = new ErrorState(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = io.xerrno;
@@ -734,10 +734,7 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
     if (!contentSize)
         return; // XXX: bytesWanted asserts on zero-size ranges
 
-    // XXX: entry->bytesWanted returns contentSize-1 if entry can accept data.
-    // We have to add 1 to avoid suspending forever.
-    const size_t bytesWanted = entry->bytesWanted(Range<size_t>(0, contentSize));
-    const size_t spaceAvailable = bytesWanted >  0 ? (bytesWanted + 1) : 0;
+    const size_t spaceAvailable = entry->bytesWanted(Range<size_t>(0, contentSize), true);
 
     if (spaceAvailable < contentSize ) {
         // No or partial body data consuming
@@ -747,8 +744,7 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
         entry->deferProducer(call);
     }
 
-    // XXX: bytesWanted API does not allow us to write just one byte!
-    if (!spaceAvailable && contentSize > 1)  {
+    if (!spaceAvailable)  {
         debugs(11, 5, HERE << "NOT storing " << contentSize << " bytes of adapted " <<
                "response body at offset " << adaptedBodySource->consumedSize());
         return;
@@ -832,7 +828,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
         ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        err->xerrno = ERR_DETAIL_ICAP_RESPMOD_EARLY;
+        err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
     } else if (request) { // update logged info directly
@@ -866,7 +862,7 @@ ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
         page_id = ERR_ACCESS_DENIED;
 
     ErrorState *err = new ErrorState(page_id, HTTP_FORBIDDEN, request);
-    err->xerrno = ERR_DETAIL_RESPMOD_BLOCK_EARLY;
+    err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
 
@@ -905,7 +901,6 @@ void
 ServerStateData::sendBodyIsTooLargeError()
 {
     ErrorState *err = new ErrorState(ERR_TOO_BIG, HTTP_FORBIDDEN, request);
-    err->xerrno = errno;
     fwd->fail(err);
     fwd->dontRetry(true);
     abortTransaction("Virgin body too large.");

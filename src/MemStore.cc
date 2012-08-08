@@ -76,7 +76,7 @@ MemStore::stat(StoreEntry &e) const
         const int limit = map->entryLimit();
         storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
         if (limit > 0) {
-            storeAppendPrintf(&e, "Current entries: %"PRId64" %.2f%%\n",
+            storeAppendPrintf(&e, "Current entries: %" PRId64 " %.2f%%\n",
                               currentCount(), (100.0 * currentCount() / limit));
 
             if (limit < 100) { // XXX: otherwise too expensive to count
@@ -251,27 +251,70 @@ MemStore::copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras)
     return true;
 }
 
-void
-MemStore::considerKeeping(StoreEntry &e)
+bool
+MemStore::keepInLocalMemory(const StoreEntry &e) const
 {
     if (!e.memoryCachable()) {
         debugs(20, 7, HERE << "Not memory cachable: " << e);
-        return; // cannot keep due to entry state or properties
+        return false; // will not cache due to entry state or properties
     }
 
     assert(e.mem_obj);
-    if (!willFit(e.mem_obj->endOffset())) {
-        debugs(20, 5, HERE << "No mem-cache space for " << e);
-        return; // failed to free enough space
+    const int64_t loadedSize = e.mem_obj->endOffset();
+    const int64_t expectedSize = e.mem_obj->expectedReplySize(); // may be < 0
+    const int64_t ramSize = max(loadedSize, expectedSize);
+
+    if (ramSize > static_cast<int64_t>(Config.Store.maxInMemObjSize)) {
+        debugs(20, 5, HERE << "Too big max(" <<
+               loadedSize << ", " << expectedSize << "): " << e);
+        return false; // will not cache due to cachable entry size limits
+    }
+
+    if (!willFit(ramSize)) {
+        debugs(20, 5, HERE << "Wont fit max(" <<
+               loadedSize << ", " << expectedSize << "): " << e);
+        return false; // will not cache due to memory cache slot limit
+    }
+
+    return true;
+}
+
+void
+MemStore::considerKeeping(StoreEntry &e)
+{
+    if (!keepInLocalMemory(e))
+        return;
+
+    // since we copy everything at once, we can only keep complete entries
+    if (e.store_status != STORE_OK) {
+        debugs(20, 7, HERE << "Incomplete: " << e);
+        return;
+    }
+
+    assert(e.mem_obj);
+
+    const int64_t loadedSize = e.mem_obj->endOffset();
+    const int64_t expectedSize = e.mem_obj->expectedReplySize();
+
+    // objects of unknown size are not allowed into memory cache, for now
+    if (expectedSize < 0) {
+        debugs(20, 5, HERE << "Unknown expected size: " << e);
+        return;
+    }
+
+    // since we copy everything at once, we can only keep fully loaded entries
+    if (loadedSize != expectedSize) {
+        debugs(20, 7, HERE << "partially loaded: " << loadedSize << " != " <<
+               expectedSize);
+        return;
     }
 
     keep(e); // may still fail
 }
 
 bool
-MemStore::willFit(int64_t need)
+MemStore::willFit(int64_t need) const
 {
-    // TODO: obey configured maximum entry size (with page-based rounding)
     return need <= static_cast<int64_t>(Ipc::Mem::PageSize());
 }
 
@@ -347,7 +390,7 @@ MemStore::cleanReadable(const sfileno fileno)
 int64_t
 MemStore::EntryLimit()
 {
-    if (!Config.memMaxSize)
+    if (!Config.memShared || !Config.memMaxSize)
         return 0; // no memory cache configured
 
     const int64_t entrySize = Ipc::Mem::PageSize(); // for now
@@ -374,6 +417,35 @@ MemStoreClaimMemoryNeedsRr::run(const RunnerRegistry &)
 }
 
 
+/// decides whether to use a shared memory cache or checks its configuration
+class MemStoreCfgRr: public ::RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &);
+};
+
+RunnerRegistrationEntry(rrFinalizeConfig, MemStoreCfgRr);
+
+void MemStoreCfgRr::run(const RunnerRegistry &r)
+{
+    // decide whether to use a shared memory cache if the user did not specify
+    if (!Config.memShared.configured()) {
+        Config.memShared.configure(Ipc::Atomic::Enabled() &&
+                                   Ipc::Mem::Segment::Enabled() && UsingSmp() &&
+                                   Config.memMaxSize > 0);
+    } else if (Config.memShared && !Ipc::Atomic::Enabled()) {
+        // bail if the user wants shared memory cache but we cannot support it
+        fatal("memory_cache_shared is on, but no support for atomic operations detected");
+    } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
+        fatal("memory_cache_shared is on, but no support for shared memory detected");
+    } else if (Config.memShared && !UsingSmp()) {
+        debugs(20, DBG_IMPORTANT, "WARNING: memory_cache_shared is on, but only"
+               " a single worker is running");
+    }
+}
+
+
 /// initializes shared memory segments used by MemStore
 class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
@@ -395,21 +467,7 @@ RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
 
 void MemStoreRr::run(const RunnerRegistry &r)
 {
-    // decide whether to use a shared memory cache if the user did not specify
-    if (!Config.memShared.configured()) {
-        Config.memShared.configure(Ipc::Atomic::Enabled() &&
-                                   Ipc::Mem::Segment::Enabled() && UsingSmp() &&
-                                   Config.memMaxSize > 0);
-    } else if (Config.memShared && !Ipc::Atomic::Enabled()) {
-        // bail if the user wants shared memory cache but we cannot support it
-        fatal("memory_cache_shared is on, but no support for atomic operations detected");
-    } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
-        fatal("memory_cache_shared is on, but no support for shared memory detected");
-    } else if (Config.memShared && !UsingSmp()) {
-        debugs(20, DBG_IMPORTANT, "WARNING: memory_cache_shared is on, but only"
-               " a single worker is running");
-    }
-
+    assert(Config.memShared.configured());
     Ipc::Mem::RegisteredRunner::run(r);
 }
 

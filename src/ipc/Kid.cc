@@ -54,7 +54,7 @@ void Kid::stop(status_type exitStatus)
     time_t stop_time;
     time(&stop_time);
     if ((stop_time - startTime) < fastFailureTimeLimit)
-        badFailures++;
+        ++badFailures;
     else
         badFailures = 0; // the failures are not "frequent" [any more]
 

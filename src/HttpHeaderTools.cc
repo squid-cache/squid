@@ -34,10 +34,25 @@
 
 #include "squid-old.h"
 #include "acl/FilledChecklist.h"
+#include "acl/Gadgets.h"
+#include "client_side.h"
+#include "client_side_request.h"
+#include "comm/Connection.h"
 #include "compat/strtoll.h"
+#include "fde.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
+#include "HttpHeaderTools.h"
+#include "HttpRequest.h"
 #include "MemBuf.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
+#include "Store.h"
+#include <algorithm>
+#if HAVE_STRING
+#include <string>
+#endif
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
@@ -275,7 +290,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 
     /* rtrim */
     while (len > 0 && xisspace((*item)[len - 1]))
-        len--;
+        --len;
 
     if (ilen)
         *ilen = len;
@@ -344,7 +359,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     while (*pos != '"' && len > (pos-start)) {
 
         if (*pos =='\r') {
-            pos++;
+            ++pos;
             if ((pos-start) > len || *pos != '\n') {
                 debugs(66, 2, HERE << "failed to parse a quoted-string header field with '\\r' octet " << (start-pos)
                        << " bytes into '" << start << "'");
@@ -354,7 +369,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
         }
 
         if (*pos == '\n') {
-            pos++;
+            ++pos;
             if ( (pos-start) > len || (*pos != ' ' && *pos != '\t')) {
                 debugs(66, 2, HERE << "failed to parse multiline quoted-string header field '" << start << "'");
                 val->clean();
@@ -362,14 +377,14 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
             }
             // TODO: replace the entire LWS with a space
             val->append(" ");
-            pos++;
+            ++pos;
             debugs(66, 2, HERE << "len < pos-start => " << len << " < " << (pos-start));
             continue;
         }
 
         bool quoted = (*pos == '\\');
         if (quoted) {
-            pos++;
+            ++pos;
             if (!*pos || (pos-start) > len) {
                 debugs(66, 2, HERE << "failed to parse a quoted-string header field near '" << start << "'");
                 val->clean();
@@ -378,7 +393,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
         }
         end = pos;
         while (end < (start+len) && *end != '\\' && *end != '\"' && (unsigned char)*end > 0x1F && *end != 0x7F)
-            end++;
+            ++end;
         if (((unsigned char)*end <= 0x1F && *end != '\r' && *end != '\n') || *end == 0x7F) {
             debugs(66, 2, HERE << "failed to parse a quoted-string header field with CTL octet " << (start-pos)
                    << " bytes into '" << start << "'");
@@ -414,17 +429,23 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
     int retval;
 
     /* check with anonymizer tables */
-    header_mangler *hm;
+    HeaderManglers *hms = NULL;
     assert(e);
 
     if (ROR_REQUEST == req_or_rep) {
-        hm = &Config.request_header_access[e->id];
+        hms = Config.request_header_access;
     } else if (ROR_REPLY == req_or_rep) {
-        hm = &Config.reply_header_access[e->id];
+        hms = Config.reply_header_access;
     } else {
         /* error. But let's call it "request". */
-        hm = &Config.request_header_access[e->id];
+        hms = Config.request_header_access;
     }
+
+    /* manglers are not configured for this message kind */
+    if (!hms)
+        return 1;
+
+    const header_mangler *hm = hms->find(*e);
 
     /* mangler or checklist went away. default allow */
     if (!hm || !hm->access_list) {
@@ -467,17 +488,170 @@ httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
         l->refreshMask();
 }
 
-/**
- * return 1 if manglers are configured.  Used to set a flag
- * for optimization during request forwarding.
- */
-int
-httpReqHdrManglersConfigured()
+static
+void header_mangler_clean(header_mangler &m)
 {
-    for (int i = 0; i < HDR_ENUM_END; i++) {
-        if (NULL != Config.request_header_access[i].access_list)
-            return 1;
+    aclDestroyAccessList(&m.access_list);
+    safe_free(m.replacement);
+}
+
+static
+void header_mangler_dump_access(StoreEntry * entry, const char *option,
+                                const header_mangler &m, const char *name)
+{
+    if (m.access_list != NULL) {
+        storeAppendPrintf(entry, "%s ", option);
+        dump_acl_access(entry, name, m.access_list);
+    }
+}
+
+static
+void header_mangler_dump_replacement(StoreEntry * entry, const char *option,
+                                     const header_mangler &m, const char *name)
+{
+    if (m.replacement)
+        storeAppendPrintf(entry, "%s %s %s\n", option, name, m.replacement);
+}
+
+HeaderManglers::HeaderManglers()
+{
+    memset(known, 0, sizeof(known));
+    memset(&all, 0, sizeof(all));
+}
+
+HeaderManglers::~HeaderManglers()
+{
+    for (int i = 0; i < HDR_ENUM_END; ++i)
+        header_mangler_clean(known[i]);
+
+    typedef ManglersByName::iterator MBNI;
+    for (MBNI i = custom.begin(); i != custom.end(); ++i)
+        header_mangler_clean(i->second);
+
+    header_mangler_clean(all);
+}
+
+void
+HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
+{
+    for (int i = 0; i < HDR_ENUM_END; ++i) {
+        header_mangler_dump_access(entry, name, known[i],
+                                   httpHeaderNameById(i));
     }
 
-    return 0;
+    typedef ManglersByName::const_iterator MBNCI;
+    for (MBNCI i = custom.begin(); i != custom.end(); ++i)
+        header_mangler_dump_access(entry, name, i->second, i->first.c_str());
+
+    header_mangler_dump_access(entry, name, all, "All");
+}
+
+void
+HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
+{
+    for (int i = 0; i < HDR_ENUM_END; ++i) {
+        header_mangler_dump_replacement(entry, name, known[i],
+                                        httpHeaderNameById(i));
+    }
+
+    typedef ManglersByName::const_iterator MBNCI;
+    for (MBNCI i = custom.begin(); i != custom.end(); ++i) {
+        header_mangler_dump_replacement(entry, name, i->second,
+                                        i->first.c_str());
+    }
+
+    header_mangler_dump_replacement(entry, name, all, "All");
+}
+
+header_mangler *
+HeaderManglers::track(const char *name)
+{
+    int id = httpHeaderIdByNameDef(name, strlen(name));
+
+    if (id == HDR_BAD_HDR) { // special keyword or a custom header
+        if (strcmp(name, "All") == 0)
+            id = HDR_ENUM_END;
+        else if (strcmp(name, "Other") == 0)
+            id = HDR_OTHER;
+    }
+
+    header_mangler *m = NULL;
+    if (id == HDR_ENUM_END) {
+        m = &all;
+    } else if (id == HDR_BAD_HDR) {
+        m = &custom[name];
+    } else {
+        m = &known[id]; // including HDR_OTHER
+    }
+
+    assert(m);
+    return m;
+}
+
+void
+HeaderManglers::setReplacement(const char *name, const char *value)
+{
+    // for backword compatibility, we allow replacements to be configured
+    // for headers w/o access rules, but such replacements are ignored
+    header_mangler *m = track(name);
+
+    safe_free(m->replacement); // overwrite old value if any
+    m->replacement = xstrdup(value);
+}
+
+const header_mangler *
+HeaderManglers::find(const HttpHeaderEntry &e) const
+{
+    // a known header with a configured ACL list
+    if (e.id != HDR_OTHER && 0 <= e.id && e.id < HDR_ENUM_END &&
+            known[e.id].access_list)
+        return &known[e.id];
+
+    // a custom header
+    if (e.id == HDR_OTHER) {
+        // does it have an ACL list configured?
+        // Optimize: use a name type that we do not need to convert to here
+        const ManglersByName::const_iterator i = custom.find(e.name.termedBuf());
+        if (i != custom.end())
+            return &i->second;
+    }
+
+    // Next-to-last resort: "Other" rules match any custom header
+    if (e.id == HDR_OTHER && known[HDR_OTHER].access_list)
+        return &known[HDR_OTHER];
+
+    // Last resort: "All" rules match any header
+    if (all.access_list)
+        return &all;
+
+    return NULL;
+}
+
+void
+httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
+{
+    ACLFilledChecklist checklist(NULL, request, NULL);
+
+    for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
+        if (!hwa->aclList || checklist.fastCheck(hwa->aclList) == ACCESS_ALLOWED) {
+            const char *fieldValue = NULL;
+            MemBuf mb;
+            if (hwa->quoted) {
+                if (al != NULL) {
+                    mb.init();
+                    hwa->valueFormat->assemble(mb, al, 0);
+                    fieldValue = mb.content();
+                }
+            } else {
+                fieldValue = hwa->fieldValue.c_str();
+            }
+
+            if (!fieldValue || fieldValue[0] == '\0')
+                fieldValue = "-";
+
+            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, hwa->fieldName.c_str(),
+                    fieldValue);
+            heads->addEntry(e);
+        }
+    }
 }

@@ -48,10 +48,8 @@ SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
 static LPTOP_LEVEL_EXCEPTION_FILTER Win32_Old_ExceptionHandler = NULL;
 
-
-
-int Win32__WSAFDIsSet(int fd, fd_set FAR * set
-                     )
+int
+Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 {
     fde *F = &fd_table[fd];
     SOCKET s = F->win32.handle;

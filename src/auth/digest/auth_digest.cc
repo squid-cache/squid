@@ -185,6 +185,8 @@ authenticateDigestNonceNew(void)
     while ((temp = authenticateDigestNonceFindNonce((char const *) (newnonce->key)))) {
         /* create a new nonce */
         newnonce->noncedata.randomdata = squid_random();
+        /* Bug 3526 high performance fix: add 1 second to creationtime to avoid duplication */
+        ++newnonce->noncedata.creationtime;
         authDigestNonceEncode(newnonce);
     }
 
@@ -296,7 +298,7 @@ static void
 authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
-    nonce->references++;
+    ++nonce->references;
     debugs(29, 9, "authDigestNonceLink: nonce '" << nonce << "' now at '" << nonce->references << "'.");
 }
 
@@ -318,9 +320,9 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     assert(nonce != NULL);
 
     if (nonce->references > 0) {
-        nonce->references--;
+        -- nonce->references;
     } else {
-        debugs(29, 1, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
+        debugs(29, DBG_IMPORTANT, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
     }
 
     debugs(29, 9, "authDigestNonceUnlink: nonce '" << nonce << "' now at '" << nonce->references << "'.");
@@ -377,7 +379,7 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 
     /* is the nonce-count ok ? */
     if (!static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->CheckNonceCount) {
-        nonce->nc++;
+        ++nonce->nc;
         return -1;              /* forced OK by configuration */
     }
 
@@ -665,7 +667,7 @@ Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param
     } else if (strcasecmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
     } else {
-        debugs(29, 0, "unrecognised digest auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "unrecognised digest auth scheme parameter '" << param_str << "'");
     }
 }
 
@@ -794,11 +796,11 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* trim DIGEST from string */
 
     while (xisgraph(*proxy_auth))
-        proxy_auth++;
+        ++proxy_auth;
 
     /* Trim leading whitespace before decoding */
     while (xisspace(*proxy_auth))
-        proxy_auth++;
+        ++proxy_auth;
 
     String temp(proxy_auth);
 
@@ -807,7 +809,8 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         size_t nlen;
         size_t vlen;
         if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
-            nlen = p++ - item;
+            nlen = p - item;
+            ++p;
             vlen = ilen - (p - item);
         } else {
             nlen = ilen;
@@ -1063,6 +1066,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     } else {
         debugs(29, 9, HERE << "Found user '" << username << "' in the user cache as '" << auth_user << "'");
         digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());
+        digest_user->credentials(Auth::Unchecked);
         xfree(username);
     }
 

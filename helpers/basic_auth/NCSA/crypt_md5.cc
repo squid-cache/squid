@@ -32,7 +32,8 @@ static unsigned char itoa64[] =	/* 0 ... 63 => ascii - 64 */
 static void md5to64(char *s, unsigned long v, int n)
 {
     while (--n >= 0) {
-        *s++ = itoa64[v & 0x3f];
+        *s = itoa64[v & 0x3f];
+        ++s;
         v >>= 6;
     }
 }
@@ -59,11 +60,12 @@ char *crypt_md5(const char *pw, const char *salt)
     unsigned long l;
 
     if (*salt == '$') {
-        magic = salt++;
+        magic = salt;
+        ++salt;
         while (*salt && *salt != '$')
-            salt++;
+            ++salt;
         if (*salt == '$') {
-            salt++;
+            ++salt;
             magiclen = salt - magic;
         } else {
             salt = magic;
@@ -75,7 +77,7 @@ char *crypt_md5(const char *pw, const char *salt)
     sp = salt;
 
     /* It stops at the first '$', max 8 chars */
-    for (ep = sp; *ep && *ep != '$' && ep < (sp + 8); ep++)
+    for (ep = sp; *ep && *ep != '$' && ep < (sp + 8); ++ep)
         continue;
 
     /* get the length of the true salt */
@@ -124,7 +126,7 @@ char *crypt_md5(const char *pw, const char *salt)
      * On a 60 Mhz Pentium this takes 34 msec, so you would
      * need 30 seconds to build a 1000 entry dictionary...
      */
-    for (i = 0; i < 1000; i++) {
+    for (i = 0; i < 1000; ++i) {
         SquidMD5Init(&ctx1);
         if (i & 1)
             SquidMD5Update(&ctx1, (unsigned const char *) pw, strlen(pw));
@@ -188,7 +190,7 @@ char *md5sum(const char *s)
     SquidMD5Update(&ctx,(const unsigned char *)s,strlen(s));
     SquidMD5Final(digest,&ctx);
 
-    for (idx=0; idx<16; idx++)
+    for (idx=0; idx<16; ++idx)
         snprintf(&sum[idx*2],(33-(idx*2)),"%02x",digest[idx]);
 
     sum[32]='\0';

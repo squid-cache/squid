@@ -134,6 +134,8 @@ public:
     // custom exception handling and end-of-call checks
     virtual void callException(const std::exception  &e);
     virtual void callEnd();
+    /// clear stored error details, if any; used for retries/repeats
+    virtual void clearError() {}
     void dnsLookupDone(const ipcache_addrs *ia);
 
 protected:
@@ -180,7 +182,8 @@ protected:
     AsyncCall::Pointer writer;
     AsyncCall::Pointer closer;
 
-    AccessLogEntry al;
+    AccessLogEntry::Pointer alep; ///< icap.log entry
+    AccessLogEntry &al; ///< short for *alep
 
     timeval icap_tr_start;     /*time when the ICAP transaction was created */
     timeval icap_tio_start;    /*time when the first ICAP request byte was scheduled for sending*/

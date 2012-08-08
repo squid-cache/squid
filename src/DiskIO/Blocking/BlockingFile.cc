@@ -82,7 +82,7 @@ BlockingFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         error(true);
     } else {
         closed = false;
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         debugs(79, 3, "BlockingFile::open: opened FD " << fd);
     }
 
@@ -106,7 +106,7 @@ void BlockingFile::doClose()
     if (fd > -1) {
         closed = true;
         file_close(fd);
-        store_open_disk_fd--;
+        --store_open_disk_fd;
         fd = -1;
     }
 }
@@ -223,7 +223,7 @@ BlockingFile::writeDone(int rvfd, int errflag, size_t len)
     writeRequest = NULL;
 
     if (errflag) {
-        debugs(79, 0, "storeUfsWriteDone: got failure (" << errflag << ")");
+        debugs(79, DBG_CRITICAL, "storeUfsWriteDone: got failure (" << errflag << ")");
         doClose();
         ioRequestor->writeCompleted (DISK_ERROR,0, result);
         return;

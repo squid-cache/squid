@@ -92,7 +92,7 @@ krb5_create_cache(struct main_args *margs, char *domain)
     krb5_kt_default_name(kparam.context, buf, KT_PATH_MAX);
     p = strchr(buf, ':');	/* Find the end if "FILE:" */
     if (p)
-        p++;			/* step past : */
+        ++p;			/* step past : */
     keytab_name = xstrdup(p ? p : buf);
     debug((char *) "%s| %s: DEBUG: Got default keytab file name %s\n", LogTime(), PROGRAM, keytab_name);
 
@@ -187,7 +187,7 @@ krb5_create_cache(struct main_args *margs, char *domain)
         creds = (krb5_creds *) xmalloc(sizeof(*creds));
         memset(creds, 0, sizeof(*creds));
 
-        for (i = 0; i < nprinc; i++) {
+        for (i = 0; i < nprinc; ++i) {
             /*
              * get credentials
              */
@@ -324,7 +324,7 @@ cleanup:
         xfree(mem_cache);
     if (principal)
         krb5_free_principal(kparam.context, principal);
-    for (i = 0; i < nprinc; i++) {
+    for (i = 0; i < nprinc; ++i) {
         if (principal_list[i])
             krb5_free_principal(kparam.context, principal_list[i]);
     }

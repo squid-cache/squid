@@ -77,7 +77,7 @@ Auth::Basic::UserRequest::module_direction()
 
 /* send the initial data to a basic authenticator module */
 void
-Auth::Basic::UserRequest::module_start(RH * handler, void *data)
+Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
 {
     assert(user()->auth_type == Auth::AUTH_BASIC);
     Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
@@ -86,7 +86,7 @@ Auth::Basic::UserRequest::module_start(RH * handler, void *data)
 
     if (static_cast<Auth::Basic::Config*>(Auth::Config::Find("basic"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Basic authentication program configured.");
-        handler(data, NULL);
+        handler(data);
         return;
     }
 
@@ -124,10 +124,10 @@ Auth::Basic::UserRequest::module_start(RH * handler, void *data)
     int sz = snprintf(buf, sizeof(buf), "%s %s\n", username, pass);
     if (sz<=0) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. Can not build helper validation request.");
-        handler(data, NULL);
+        handler(data);
     } else if (static_cast<size_t>(sz) >= sizeof(buf)) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. user:password exceeds " << sizeof(buf) << " bytes.");
-        handler(data, NULL);
+        handler(data);
     } else
         helperSubmit(basicauthenticators, buf, Auth::Basic::UserRequest::HandleReply,
                      new Auth::StateData(this, handler, data));
@@ -143,8 +143,10 @@ Auth::Basic::UserRequest::HandleReply(void *data, char *reply)
     debugs(29, 5, HERE << "{" << (reply ? reply : "<NULL>") << "}");
 
     if (reply) {
-        if ((t = strchr(reply, ' ')))
-            *t++ = '\0';
+        if ((t = strchr(reply, ' '))) {
+            *t = '\0';
+            ++t;
+        }
 
         if (*reply == '\0')
             reply = NULL;
@@ -171,7 +173,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, char *reply)
     basic_auth->expiretime = squid_curtime;
 
     if (cbdataReferenceValidDone(r->data, &cbdata))
-        r->handler(cbdata, NULL);
+        r->handler(cbdata);
 
     cbdataReferenceDone(r->data);
 
@@ -179,7 +181,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, char *reply)
         tmpnode = basic_auth->auth_queue->next;
 
         if (cbdataReferenceValidDone(basic_auth->auth_queue->data, &cbdata))
-            basic_auth->auth_queue->handler(cbdata, NULL);
+            basic_auth->auth_queue->handler(cbdata);
 
         xfree(basic_auth->auth_queue);
 

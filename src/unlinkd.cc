@@ -108,9 +108,9 @@ unlinkdUnlink(const char *path)
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';
 
-            for (i = 0; i < bytes_read; i++)
+            for (i = 0; i < bytes_read; ++i)
                 if ('\n' == rbuf[i])
-                    queuelen--;
+                    --queuelen;
 
             assert(queuelen >= 0);
         }
@@ -119,15 +119,16 @@ unlinkdUnlink(const char *path)
     l = strlen(path);
     assert(l < MAXPATHLEN);
     xstrncpy(buf, path, MAXPATHLEN);
-    buf[l++] = '\n';
+    buf[l] = '\n';
+    ++l;
     bytes_written = write(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
-        debugs(2, 1, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
+        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
         safeunlink(path, 0);
         return;
     } else if (bytes_written != l) {
-        debugs(2, 1, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << bytes_written << " of " << l << " bytes");
+        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << bytes_written << " of " << l << " bytes");
         safeunlink(path, 0);
         return;
     }
@@ -139,7 +140,7 @@ unlinkdUnlink(const char *path)
     * in counting unlink operations.
     */
     ++statCounter.syscalls.disk.unlinks;
-    queuelen++;
+    ++queuelen;
 }
 
 void
@@ -148,7 +149,7 @@ unlinkdClose(void)
 {
 
     if (unlinkd_wfd > -1) {
-        debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
+        debugs(2, DBG_IMPORTANT, "Closing unlinkd pipe on FD " << unlinkd_wfd);
         shutdown(unlinkd_wfd, SD_BOTH);
         comm_close(unlinkd_wfd);
 
@@ -163,7 +164,7 @@ unlinkdClose(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(2, 1, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
+            debugs(2, DBG_IMPORTANT, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
         }
 
         CloseHandle(hIpc);
@@ -175,7 +176,7 @@ unlinkdClose(void)
     if (unlinkd_wfd < 0)
         return;
 
-    debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
+    debugs(2, DBG_IMPORTANT, "Closing unlinkd pipe on FD " << unlinkd_wfd);
 
     file_close(unlinkd_wfd);
 
@@ -258,7 +259,7 @@ unlinkdInit(void)
     if (FD_PIPE == fd_table[unlinkd_wfd].type)
         commUnsetNonBlocking(unlinkd_wfd);
 
-    debugs(2, 1, "Unlinkd pipe opened on FD " << unlinkd_wfd);
+    debugs(2, DBG_IMPORTANT, "Unlinkd pipe opened on FD " << unlinkd_wfd);
 
 #if _SQUID_WINDOWS_
 

@@ -258,7 +258,7 @@ Comm::DoSelect(int msec)
 
     for (;;) {
         num = epoll_wait(kdpfd, pevents, SQUID_MAXFD, msec);
-        ++statCounter.select_loops;
+        ++ statCounter.select_loops;
 
         if (num >= 0)
             break;
@@ -283,7 +283,7 @@ Comm::DoSelect(int msec)
 
     PROF_start(comm_handle_ready_fd);
 
-    for (i = 0, cevents = pevents; i < num; i++, cevents++) {
+    for (i = 0, cevents = pevents; i < num; ++i, ++cevents) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
         debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
@@ -300,7 +300,7 @@ Comm::DoSelect(int msec)
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_write_handler);
-                statCounter.select_fds++;
+                ++ statCounter.select_fds;
             } else {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no read handler for FD " << fd);
                 // remove interest since no handler exist for this event.
@@ -315,7 +315,7 @@ Comm::DoSelect(int msec)
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
                 PROF_stop(comm_read_handler);
-                statCounter.select_fds++;
+                ++ statCounter.select_fds;
             } else {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.

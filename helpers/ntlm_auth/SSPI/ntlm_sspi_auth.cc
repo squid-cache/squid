@@ -152,7 +152,7 @@ Valid_Group(char *UserName, char *Group)
      */
     if (nStatus == NERR_Success) {
         if ((pTmpBuf = pBuf) != NULL) {
-            for (i = 0; i < dwEntriesRead; i++) {
+            for (i = 0; i < dwEntriesRead; ++i) {
                 if (pTmpBuf == NULL) {
                     result = FALSE;
                     break;
@@ -161,8 +161,8 @@ Valid_Group(char *UserName, char *Group)
                     result = TRUE;
                     break;
                 }
-                pTmpBuf++;
-                dwTotalCount++;
+                ++pTmpBuf;
+                ++dwTotalCount;
             }
         }
     } else

@@ -91,7 +91,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
+accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
 
     if (al->url == NULL)
@@ -167,7 +167,7 @@ accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
 }
 
 void
-accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
+accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
     if (LogfileStatus != LOG_ENABLE)
         return;
@@ -362,7 +362,7 @@ accessLogInit(void)
         if (mcast_miss_fd < 0)
             fatal("Cannot open Multicast Miss Stream Socket");
 
-        debugs(46, 1, "Multicast Miss Stream Socket opened on FD " << mcast_miss_fd);
+        debugs(46, DBG_IMPORTANT, "Multicast Miss Stream Socket opened on FD " << mcast_miss_fd);
 
         mcastSetTtl(mcast_miss_fd, Config.mcast_miss.ttl);
 
@@ -411,7 +411,7 @@ fvdbCount(hash_table * hash, const char *key)
         hash_join(hash, &fv->hash);
     }
 
-    fv->n++;
+    ++ fv->n;
 }
 
 void
@@ -505,7 +505,7 @@ mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
         z = htonl(ibuf[i + 1]);
         sum = 0;
 
-        for (n = 32; n; n--) {
+        for (n = 32; n; --n) {
             sum += delta;
             y += (z << 4) + (k0 ^ z) + (sum ^ (z >> 5)) + k1;
             z += (y << 4) + (k2 ^ y) + (sum ^ (y >> 5)) + k3;
@@ -574,30 +574,6 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
 }
 
 #endif
-
-void
-accessLogFreeMemory(AccessLogEntry * aLogEntry)
-{
-    safe_free(aLogEntry->headers.request);
-
-#if ICAP_CLIENT
-    safe_free(aLogEntry->adapt.last_meta);
-#endif
-
-    safe_free(aLogEntry->headers.reply);
-    safe_free(aLogEntry->cache.authuser);
-
-    safe_free(aLogEntry->headers.adapted_request);
-    HTTPMSGUNLOCK(aLogEntry->adapted_request);
-
-    HTTPMSGUNLOCK(aLogEntry->reply);
-    HTTPMSGUNLOCK(aLogEntry->request);
-#if ICAP_CLIENT
-    HTTPMSGUNLOCK(aLogEntry->icap.reply);
-    HTTPMSGUNLOCK(aLogEntry->icap.request);
-#endif
-    cbdataReferenceDone(aLogEntry->cache.port);
-}
 
 int
 logTypeIsATcpHit(log_type code)

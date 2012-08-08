@@ -88,7 +88,7 @@ IcmpPinger::Open(void)
 
     if (x < (int)sizeof(wpi)) {
         getCurrentTime();
-        debugs(42, 0, HERE << "read: FD 0: " << xstrerror());
+        debugs(42, DBG_CRITICAL, HERE << "read: FD 0: " << xstrerror());
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -100,7 +100,7 @@ IcmpPinger::Open(void)
 
     if (x < (int)sizeof(PS)) {
         getCurrentTime();
-        debugs(42, 0, HERE << "read: FD 0: " << xstrerror());
+        debugs(42, DBG_CRITICAL, HERE << "read: FD 0: " << xstrerror());
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -111,7 +111,7 @@ IcmpPinger::Open(void)
 
     if (icmp_sock == -1) {
         getCurrentTime();
-        debugs(42, 0, HERE << "WSASocket: " << xstrerror());
+        debugs(42, DBG_CRITICAL, HERE << "WSASocket: " << xstrerror());
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -120,7 +120,7 @@ IcmpPinger::Open(void)
 
     if (SOCKET_ERROR == x) {
         getCurrentTime();
-        debugs(42, 0, HERE << "connect: " << xstrerror());
+        debugs(42, DBG_CRITICAL, HERE << "connect: " << xstrerror());
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -130,19 +130,19 @@ IcmpPinger::Open(void)
     x = recv(icmp_sock, (void *) buf, sizeof(buf), 0);
 
     if (x < 3) {
-        debugs(42, 0, HERE << "recv: " << xstrerror());
+        debugs(42, DBG_CRITICAL, HERE << "recv: " << xstrerror());
         return -1;
     }
 
     x = send(icmp_sock, (const void *) buf, strlen(buf), 0);
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
-        debugs(42, 0, HERE << "recv: " << xstrerror());
+        debugs(42, DBG_CRITICAL, HERE << "recv: " << xstrerror());
         return -1;
     }
 
     getCurrentTime();
-    debugs(42, 1, "pinger: Squid socket opened");
+    debugs(42, DBG_IMPORTANT, "pinger: Squid socket opened");
 
     /* windows uses a socket stream as a dual-direction channel */
     socket_to_squid = icmp_sock;
@@ -185,14 +185,14 @@ IcmpPinger::Recv(void)
     n = recv(socket_from_squid, &pecho, sizeof(pecho), 0);
 
     if (n < 0) {
-        debugs(42, 1, "Pinger exiting.");
+        debugs(42, DBG_IMPORTANT, "Pinger exiting.");
         Close();
         exit(1);
     }
 
     if (0 == n) {
         /* EOF indicator */
-        debugs(42, 0, HERE << "EOF encountered. Pinger exiting.\n");
+        debugs(42, DBG_CRITICAL, HERE << "EOF encountered. Pinger exiting.\n");
         errno = 0;
         Close();
         exit(1);
@@ -223,7 +223,7 @@ IcmpPinger::Recv(void)
                        pecho.payload,
                        pecho.psize);
     } else {
-        debugs(42, 1, HERE << " IP has unknown Type. " << pecho.to );
+        debugs(42, DBG_IMPORTANT, HERE << " IP has unknown Type. " << pecho.to );
     }
 }
 
@@ -233,7 +233,7 @@ IcmpPinger::SendResult(pingerReplyData &preply, int len)
     debugs(42, 2, HERE << "return result to squid. len=" << len);
 
     if (send(socket_to_squid, &preply, len, 0) < 0) {
-        debugs(42, 0, "pinger: FATAL error on send: " << xstrerror());
+        debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerror());
         Close();
         exit(1);
     }

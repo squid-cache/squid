@@ -6,6 +6,7 @@ ERROR_TEMPLATES= \
     templates/ERR_CACHE_ACCESS_DENIED \
     templates/ERR_CACHE_MGR_ACCESS_DENIED \
     templates/ERR_CANNOT_FORWARD \
+    templates/ERR_CONFLICT_HOST \
     templates/ERR_CONNECT_FAIL \
     templates/ERR_DIR_LISTING \
     templates/ERR_DNS_FAIL \

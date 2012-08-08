@@ -96,7 +96,7 @@ clientdbAdd(const Ip::Address &addr)
     ++statCounter.client_http.clients;
 
     if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
-        cleanup_scheduled++;
+        ++cleanup_scheduled;
         eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
     }
 
@@ -137,7 +137,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
 
     c = (ClientInfo *) hash_lookup(client_table, key);
     if (c==NULL) {
-        debugs(77,1,"Client db does not contain information for given IP address "<<(const char*)key);
+        debugs(77, DBG_IMPORTANT,"Client db does not contain information for given IP address "<<(const char*)key);
         return NULL;
     }
     return c;
@@ -163,15 +163,15 @@ clientdbUpdate(const Ip::Address &addr, log_type ltype, AnyP::ProtocolType p, si
         debug_trap("clientdbUpdate: Failed to add entry");
 
     if (p == AnyP::PROTO_HTTP) {
-        c->Http.n_requests++;
-        c->Http.result_hist[ltype]++;
+        ++ c->Http.n_requests;
+        ++ c->Http.result_hist[ltype];
         kb_incr(&c->Http.kbytes_out, size);
 
         if (logTypeIsATcpHit(ltype))
             kb_incr(&c->Http.hit_kbytes_out, size);
     } else if (p == AnyP::PROTO_ICP) {
-        c->Icp.n_requests++;
-        c->Icp.result_hist[ltype]++;
+        ++ c->Icp.n_requests;
+        ++ c->Icp.result_hist[ltype];
         kb_incr(&c->Icp.kbytes_out, size);
 
         if (LOG_UDP_HIT == ltype)
@@ -255,12 +255,12 @@ clientdbCutoffDenied(const Ip::Address &addr)
     if (p < 95.0)
         return 0;
 
-    debugs(1, 0, "WARNING: Probable misconfigured neighbor at " << key);
+    debugs(1, DBG_CRITICAL, "WARNING: Probable misconfigured neighbor at " << key);
 
-    debugs(1, 0, "WARNING: " << ND << " of the last " << NR <<
+    debugs(1, DBG_CRITICAL, "WARNING: " << ND << " of the last " << NR <<
            " ICP replies are DENIED");
 
-    debugs(1, 0, "WARNING: No replies will be sent for the next " <<
+    debugs(1, DBG_CRITICAL, "WARNING: No replies will be sent for the next " <<
            CUTOFF_SECONDS << " seconds");
 
     c->cutoff.time = squid_curtime;
@@ -407,7 +407,7 @@ clientdbGC(void *unused)
 
         --statCounter.client_http.clients;
 
-        cleanup_removed++;
+        ++cleanup_removed;
     }
 
     if (bucket < CLIENT_DB_HASH_SIZE)

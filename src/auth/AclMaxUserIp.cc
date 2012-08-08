@@ -79,7 +79,7 @@ void
 ACLMaxUserIP::parse()
 {
     if (maximum) {
-        debugs(28, 1, "Attempting to alter already set User max IP acl");
+        debugs(28, DBG_IMPORTANT, "Attempting to alter already set User max IP acl");
         return;
     }
 
@@ -123,7 +123,7 @@ ACLMaxUserIP::match(Auth::UserRequest::Pointer auth_user_request, Ip::Address co
     if (authenticateAuthUserRequestIPCount(auth_user_request) <= maximum)
         return 0;
 
-    debugs(28, 1, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
+    debugs(28, DBG_IMPORTANT, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
 
     /* this is a match */
     if (flags.strict) {
@@ -151,25 +151,26 @@ ACLMaxUserIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
     allow_t answer = AuthenticateAcl(checklist);
-    checklist->currentAnswer(answer);
     int ti;
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
     case ACCESS_ALLOWED:
-    case ACCESS_AUTH_EXPIRED_OK:
         // check for a match
         ti = match(checklist->auth_user_request, checklist->src_addr);
         checklist->auth_user_request = NULL;
         return ti;
 
     case ACCESS_DENIED:
-    case ACCESS_AUTH_EXPIRED_BAD:
         return 0; // non-match
 
     case ACCESS_DUNNO:
     case ACCESS_AUTH_REQUIRED:
     default:
+        // If the answer is not allowed or denied (matches/not matches) and
+        // async authentication is not needed (asyncNeeded), then we are done.
+        if (!checklist->asyncNeeded())
+            checklist->markFinished(answer, "AuthenticateAcl exception");
         return -1; // other
     }
 }

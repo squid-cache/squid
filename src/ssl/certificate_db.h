@@ -6,7 +6,6 @@
 #define SQUID_SSL_CERTIFICATE_DB_H
 
 #include "ssl/gadgets.h"
-#include "ssl/support.h"
 #if HAVE_STRING
 #include <string>
 #endif
@@ -95,15 +94,14 @@ public:
     CertificateDb(std::string const & db_path, size_t aMax_db_size, size_t aFs_block_size);
     /// Find certificate and private key for host name
     bool find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    /// Delete a certificate from database
+    bool purgeCert(std::string const & key);
     /// Save certificate to disk.
-    bool addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
-    /// Get a serial number to use for generating a new certificate.
-    BIGNUM * getCurrentSerialNumber();
+    bool addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName);
     /// Create and initialize a database  under the  db_path
-    static void create(std::string const & db_path, int serial);
+    static void create(std::string const & db_path);
     /// Check the database stored under the db_path.
     static void check(std::string const & db_path, size_t max_db_size);
-    std::string getSNString() const; ///< Get serial number as string.
     bool IsEnabledDiskStore() const; ///< Check enabled of dist store.
 private:
     void load(); ///< Load db from disk.
@@ -155,7 +153,6 @@ private:
     static IMPLEMENT_LHASH_COMP_FN(index_name_cmp,const char **)
 #endif
 
-    static const std::string serial_file; ///< Base name of the file to store serial number.
     static const std::string db_file; ///< Base name of the database index file.
     static const std::string cert_dir; ///< Base name of the directory to store the certs.
     static const std::string size_file; ///< Base name of the file to store db size.
@@ -163,7 +160,6 @@ private:
     static const size_t min_db_size;
 
     const std::string db_path; ///< The database directory.
-    const std::string serial_full; ///< Full path of the file to store serial number.
     const std::string db_full; ///< Full path of the database index file.
     const std::string cert_full; ///< Full path of the directory to store the certs.
     const std::string size_full; ///< Full path of the file to store the db size.
@@ -172,7 +168,6 @@ private:
     const size_t max_db_size; ///< Max size of db.
     const size_t fs_block_size; ///< File system block size.
     mutable Lock dbLock;  ///< protects the database file
-    mutable Lock dbSerialLock; ///< protects the serial number file
 
     bool enabled_disk_store; ///< The storage on the disk is enabled.
 };

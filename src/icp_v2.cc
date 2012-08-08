@@ -38,9 +38,10 @@
 #include "squid-old.h"
 #include "Store.h"
 #include "comm.h"
-#include "comm/Loops.h"
-#include "ICP.h"
 #include "comm/Connection.h"
+#include "comm/Loops.h"
+#include "comm/UdpOpenDialer.h"
+#include "ICP.h"
 #include "HttpRequest.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
@@ -52,28 +53,10 @@
 #include "icmp/net_db.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "ipc/StartListening.h"
 #include "ipcache.h"
 #include "rfc1738.h"
 
-/// dials icpIncomingConnectionOpened call
-class IcpListeningStartedDialer: public CallDialer,
-        public Ipc::StartListeningCb
-{
-public:
-    typedef void (*Handler)(int errNo);
-    IcpListeningStartedDialer(Handler aHandler):
-            handler(aHandler) {}
-
-    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
-    virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(errNo); }
-
-public:
-    Handler handler;
-};
-
-static void icpIncomingConnectionOpened(int errNo);
+static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);
@@ -203,7 +186,7 @@ ICP2State::created(StoreEntry *newEntry)
 static void
 icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, int delay)
 {
-    AccessLogEntry al;
+    AccessLogEntry::Pointer al = new AccessLogEntry();
 
     if (LOG_TAG_NONE == logcode)
         return;
@@ -216,19 +199,19 @@ icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, 
     if (!Config.onoff.log_udp)
         return;
 
-    al.icp.opcode = ICP_QUERY;
+    al->icp.opcode = ICP_QUERY;
 
-    al.url = url;
+    al->url = url;
 
-    al.cache.caddr = caddr;
+    al->cache.caddr = caddr;
 
-    al.cache.replySize = len;
+    al->cache.replySize = len;
 
-    al.cache.code = logcode;
+    al->cache.code = logcode;
 
-    al.cache.msec = delay;
+    al->cache.msec = delay;
 
-    accessLogLog(&al, NULL);
+    accessLogLog(al, NULL);
 }
 
 /// \ingroup ServerProtocolICPInternal2
@@ -336,10 +319,10 @@ icpUdpSend(int fd,
         }
 
         Comm::SetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
-        statCounter.icp.replies_queued++;
+        ++statCounter.icp.replies_queued;
     } else {
         /* don't queue it */
-        statCounter.icp.replies_dropped++;
+        ++statCounter.icp.replies_dropped;
     }
 
     return x;
@@ -523,8 +506,8 @@ void
 _icp_common_t::handleReply(char *buf, Ip::Address &from)
 {
     if (neighbors_do_private_keys && reqnum == 0) {
-        debugs(12, 0, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
-        debugs(12, 0, "icpHandleIcpV2: Disabling use of private keys");
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Disabling use of private keys");
         neighbors_do_private_keys = 0;
     }
 
@@ -579,7 +562,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, 0, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
 
         break;
     }
@@ -612,10 +595,11 @@ icpHandleUdp(int sock, void *data)
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
-    int max = INCOMING_ICP_MAX;
+    int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
-    while (max--) {
+    while (max) {
+        --max;
         len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,
@@ -637,12 +621,12 @@ icpHandleUdp(int sock, void *data)
             if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
 #endif
 
-                debugs(50, 1, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
+                debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
 
             break;
         }
 
-        (*N)++;
+        ++(*N);
         icpCount(buf, RECV, (size_t) len, 0);
         buf[len] = '\0';
         debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
@@ -668,13 +652,13 @@ icpHandleUdp(int sock, void *data)
         else if (icp_version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);
         else
-            debugs(12, 1, "WARNING: Unused ICP version " << icp_version <<
+            debugs(12, DBG_IMPORTANT, "WARNING: Unused ICP version " << icp_version <<
                    " received from " << from);
     }
 }
 
 void
-icpConnectionsOpen(void)
+icpOpenPorts(void)
 {
     uint16_t port;
 
@@ -696,7 +680,7 @@ icpConnectionsOpen(void)
 
     AsyncCall::Pointer call = asyncCall(12, 2,
                                         "icpIncomingConnectionOpened",
-                                        IcpListeningStartedDialer(&icpIncomingConnectionOpened));
+                                        Comm::UdpOpenDialer(&icpIncomingConnectionOpened));
 
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
@@ -732,22 +716,22 @@ icpConnectionsOpen(void)
 }
 
 static void
-icpIncomingConnectionOpened(int errNo)
+icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo)
 {
-    if (!Comm::IsConnOpen(icpIncomingConn))
+    if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 
-    Comm::SetSelect(icpIncomingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
-        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the icpIncomingConn for mcastJoinGroups usage.
+        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the conn for mcastJoinGroups usage.
 
-    debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << icpIncomingConn->local);
+    debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << conn->local);
 
-    fd_note(icpIncomingConn->fd, "Incoming ICP port");
+    fd_note(conn->fd, "Incoming ICP port");
 
     if (Config.Addrs.udp_outgoing.IsNoAddr()) {
-        icpOutgoingConn = icpIncomingConn;
+        icpOutgoingConn = conn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
     }
 }
@@ -782,7 +766,7 @@ icpConnectionShutdown(void)
 }
 
 void
-icpConnectionClose(void)
+icpClosePorts(void)
 {
     icpConnectionShutdown();
 
@@ -801,36 +785,36 @@ icpCount(void *buf, int which, size_t len, int delay)
         return;
 
     if (SENT == which) {
-        statCounter.icp.pkts_sent++;
+        ++statCounter.icp.pkts_sent;
         kb_incr(&statCounter.icp.kbytes_sent, len);
 
         if (ICP_QUERY == icp->opcode) {
-            statCounter.icp.queries_sent++;
+            ++statCounter.icp.queries_sent;
             kb_incr(&statCounter.icp.q_kbytes_sent, len);
         } else {
-            statCounter.icp.replies_sent++;
+            ++statCounter.icp.replies_sent;
             kb_incr(&statCounter.icp.r_kbytes_sent, len);
             /* this is the sent-reply service time */
             statCounter.icp.replySvcTime.count(delay);
         }
 
         if (ICP_HIT == icp->opcode)
-            statCounter.icp.hits_sent++;
+            ++statCounter.icp.hits_sent;
     } else if (RECV == which) {
-        statCounter.icp.pkts_recv++;
+        ++statCounter.icp.pkts_recv;
         kb_incr(&statCounter.icp.kbytes_recv, len);
 
         if (ICP_QUERY == icp->opcode) {
-            statCounter.icp.queries_recv++;
+            ++statCounter.icp.queries_recv;
             kb_incr(&statCounter.icp.q_kbytes_recv, len);
         } else {
-            statCounter.icp.replies_recv++;
+            ++statCounter.icp.replies_recv;
             kb_incr(&statCounter.icp.r_kbytes_recv, len);
             /* statCounter.icp.querySvcTime set in clientUpdateCounters */
         }
 
         if (ICP_HIT == icp->opcode)
-            statCounter.icp.hits_recv++;
+            ++statCounter.icp.hits_recv;
     }
 }
 

@@ -237,12 +237,12 @@ local_printfx(const char *msg,...)
     va_end(ap);
     if (x > 0) {
         dbuf[x] = '\0';
-        x++;
+        ++x;
         fputs(dbuf, stdout);
         *(dbuf) = '\0';
     } else {
         /* FAIL */
-        debug("local_printfx() FAILURE: %zd\n", x);
+        debug("local_printfx() FAILURE: %" PRIuSIZE "\n", x);
     }
 
     /* stdout needs to be flushed for it to work with Squid */
@@ -267,7 +267,7 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
     // find the char delimiter position...
     char *p = In_Str;
     while (*p != chr && *p != '\0' && (In_Str+In_Len) > p) {
-        p++;
+        ++p;
     }
 
     size_t i = (p-In_Str);
@@ -283,8 +283,8 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
 
     // omit the delimiter
     if (*p == chr) {
-        p++;
-        i++;
+        ++p;
+        ++i;
     } else {
         // chr not found (or \0 found first). Wipe whole input buffer.
         memset(In_Str, 0, In_Len);
@@ -320,7 +320,7 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
     // find the char delimiter position...
     char *p = static_cast<char*>(In_Obj);
     while (*p != chr && (in+In_Sz) > p) {
-        p++;
+        ++p;
     }
 
     size_t i = (p-in);
@@ -336,8 +336,8 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
 
     // omit the delimiter
     if (*p == chr) {
-        p++;
-        i++;
+        ++p;
+        ++i;
     } else {
         // chr not found
         memset(In_Obj, 0, In_Sz);
@@ -475,7 +475,7 @@ DisplayConf()
     DisplayVersion();
     local_printfx("\n");
     local_printfx("Configuration:\n");
-    local_printfx("	EDUI_MAXLEN: %zd\n", EDUI_MAXLEN);
+    local_printfx("	EDUI_MAXLEN: %u\n", EDUI_MAXLEN);
     if (edui_conf.mode & EDUI_MODE_DEBUG)
         local_printfx("	Debug mode: ON\n");
     else
@@ -853,13 +853,13 @@ ConvertIP(edui_ldap_t *l, char *ip)
             /* bufa starts with a ::, so just copy and clear */
             xstrncpy(bufb, bufa, sizeof(bufb));
             *(bufa) = '\0';
-            swi++;								/* Indicates that there is a bufb */
+            ++swi;								/* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
             /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
             bufb[0] = ':';
             strncat(bufb, bufa, strlen(bufa));
             *(bufa) = '\0';
-            swi++;								/* Indicates that there is a bufb */
+            ++swi;								/* Indicates that there is a bufb */
         } else {
             p = strstr(bufa, "::");
             if (p != NULL) {
@@ -869,7 +869,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 memcpy(bufb, p, i);
                 *p = '\0';
                 bufb[i] = '\0';
-                swi++;								/* Indicates that there is a bufb */
+                ++swi;								/* Indicates that there is a bufb */
             }
         }
     }
@@ -973,21 +973,21 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 t = strlen(bufb);
                 /* How many ':' exist in bufb ? */
                 j = 0;
-                for (i = 0; i < t; i++) {
+                for (i = 0; i < t; ++i) {
                     if (bufb[i] == ':')
-                        j++;
+                        ++j;
                 }
-                j--;								/* Preceeding "::" doesn't count */
+                --j;								/* Preceeding "::" doesn't count */
                 t = 8 - (strlen(l->search_ip) / 4) - j;			/* Remainder */
                 if (t > 0) {
-                    for (i = 0; i < t; i++)
+                    for (i = 0; i < t; ++i)
                         strncat(l->search_ip, "0000", 4);
                 }
             }
         }
         if ((bufa[0] == '\0') && (swi > 0)) {
             s = strlen(bufb);
-            swi++;
+            ++swi;
         } else
             s = strlen(bufa);
     }
@@ -1092,17 +1092,17 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
     bufc[0] = '\134';
     swi = 0;
     j = 1;
-    for (i = 0; i < s; i++) {
+    for (i = 0; i < s; ++i) {
         if (swi == 2) {
             bufc[j] = '\134';
-            j++;
+            ++j;
             bufc[j] = l->search_ip[i];
-            j++;
+            ++j;
             swi = 1;
         } else {
             bufc[j] = l->search_ip[i];
-            j++;
-            swi++;
+            ++j;
+            ++swi;
         }
     }
     if (group == NULL) {
@@ -1256,26 +1256,26 @@ SearchIPLDAP(edui_ldap_t *l)
             l->num_val = x;
             if (x > 0) {
                 /* Display all values */
-                for (i = 0; i < x; i++) {
+                for (i = 0; i < x; ++i) {
                     j = l->val[i]->bv_len;
                     memcpy(bufa, l->val[i]->bv_val, j);
                     z = BinarySplit(bufa, j, '#', bufb, sizeof(bufb));
                     /* BINARY DEBUGGING *
-                                        	  local_printfx("value[%zd]: BinarySplit(", (size_t) i);
-                                        	  for (k = 0; k < z; k++) {
+                                        	  local_printfx("value[%" PRIuSIZE "]: BinarySplit(", (size_t) i);
+                                        	  for (k = 0; k < z; ++k) {
                                         	    c = (int) bufb[k];
                                         	    if (c < 0)
                                         	      c = c + 256;
                                         	    local_printfx("%02X", c);
                                         	  }
                                         	  local_printfx(", ");
-                                        	  for (k = 0; k < (j - z - 1); k++) {
+                                        	  for (k = 0; k < (j - z - 1); ++k) {
                                         	    c = (int) bufa[k];
                                         	    if (c < 0)
                                         	      c = c + 256;
                                         	    local_printfx("%02X", c);
                                         	  }
-                                        	  local_printfx("): %zd\n", (size_t) z);
+                                        	  local_printfx("): %" PRIuSIZE "\n", (size_t) z);
                     * BINARY DEBUGGING */
                     z = j - z - 1;
                     j = atoi(bufb);
@@ -1284,7 +1284,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv4 */
-                        for (k = 0; k < z; k++) {
+                        for (k = 0; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
@@ -1299,7 +1299,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++) {
+                            for (j = 0; j < z; ++j) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
@@ -1319,7 +1319,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv4 */
-                        for (k = 2; k < z; k++) {
+                        for (k = 2; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
@@ -1334,7 +1334,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++) {
+                            for (j = 0; j < z; ++j) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
@@ -1354,7 +1354,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv6 */
-                        for (k = 2; k < z; k++) {
+                        for (k = 2; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
@@ -1369,7 +1369,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++) {
+                            for (j = 0; j < z; ++j) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
@@ -1527,7 +1527,7 @@ MainSafe(int argc, char **argv)
 
     /* Scan args */
     if (k > 1) {
-        for (i = 1; i < k; i++) {
+        for (i = 1; i < k; ++i) {
             /* Classic / novelty usage schemes */
             if (!strcmp(argv[i], "--help")) {
                 DisplayUsage();
@@ -1540,7 +1540,7 @@ MainSafe(int argc, char **argv)
                 return 1;
             } else if (argv[i][0] == '-') {
                 s = strlen(argv[i]);
-                for (j = 1; j < s; j++) {
+                for (j = 1; j < s; ++j) {
                     switch (argv[i][j]) {
                     case 'h':
                         DisplayUsage();
@@ -1570,7 +1570,7 @@ MainSafe(int argc, char **argv)
                             edui_conf.mode |= EDUI_MODE_PERSIST;	/* Don't set mode more than once */
                         break;
                     case 'v':
-                        i++;						/* Set LDAP version */
+                        ++i;						/* Set LDAP version */
                         if (argv[i] != NULL) {
                             edui_conf.ver = atoi(argv[i]);
                             if (edui_conf.ver < 1)
@@ -1584,7 +1584,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 't':
-                        i++;						/* Set Persistent timeout */
+                        ++i;						/* Set Persistent timeout */
                         if (argv[i] != NULL) {
                             edui_conf.persist_timeout = atoi(argv[i]);
                             if (edui_conf.persist_timeout < 0)
@@ -1596,7 +1596,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'b':
-                        i++;						/* Set Base DN */
+                        ++i;						/* Set Base DN */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.basedn, argv[i], sizeof(edui_conf.basedn));
                         else {
@@ -1606,7 +1606,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'H':
-                        i++;						/* Set Hostname */
+                        ++i;						/* Set Hostname */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.host, argv[i], sizeof(edui_conf.host));
                         else {
@@ -1616,7 +1616,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'p':
-                        i++;						/* Set port */
+                        ++i;						/* Set port */
                         if (argv[i] != NULL)
                             edui_conf.port = atoi(argv[i]);
                         else {
@@ -1626,7 +1626,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'D':
-                        i++;						/* Set Bind DN */
+                        ++i;						/* Set Bind DN */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.dn, argv[i], sizeof(edui_conf.dn));
                         else {
@@ -1636,7 +1636,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'W':
-                        i++;						/* Set Bind PWD */
+                        ++i;						/* Set Bind PWD */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.passwd, argv[i], sizeof(edui_conf.passwd));
                         else {
@@ -1646,7 +1646,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'F':
-                        i++;						/* Set Search Filter */
+                        ++i;						/* Set Search Filter */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.search_filter, argv[i], sizeof(edui_conf.search_filter));
                         else {
@@ -1660,7 +1660,7 @@ MainSafe(int argc, char **argv)
                             edui_conf.mode |= EDUI_MODE_GROUP;		/* Don't set mode more than once */
                         break;
                     case 's':
-                        i++;						/* Set Scope Level */
+                        ++i;						/* Set Scope Level */
                         if (argv[i] != NULL) {
                             if (!strncmp(argv[i], "base", 4))
                                 edui_conf.scope = 0;
@@ -1677,7 +1677,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'u':
-                        i++;						/* Set Search Attribute */
+                        ++i;						/* Set Search Attribute */
                         if (argv[i] != NULL) {
                             xstrncpy(edui_conf.attrib, argv[i], sizeof(edui_conf.attrib));
                         } else {
@@ -1759,8 +1759,8 @@ MainSafe(int argc, char **argv)
             edui_elap = 0;
         k = strlen(bufa);
         /* BINARY DEBUGGING *
-                    local_printfx("while() -> bufa[%zd]: %s", k, bufa);
-                    for (i = 0; i < k; i++)
+                    local_printfx("while() -> bufa[%" PRIuSIZE "]: %s", k, bufa);
+                    for (i = 0; i < k; ++i)
                       local_printfx("%02X", bufa[i]);
                     local_printfx("\n");
         * BINARY DEBUGGING */
@@ -1866,10 +1866,10 @@ MainSafe(int argc, char **argv)
         /* If we got a group string, split it */
         if (p != NULL) {
             /* Split string */
-            debug("StringSplit(%s, ' ', %s, %zd)\n", bufa, bufb, sizeof(bufb));
+            debug("StringSplit(%s, ' ', %s, %" PRIuSIZE ")\n", bufa, bufb, sizeof(bufb));
             i = StringSplit(bufa, ' ', bufb, sizeof(bufb));
             if (i > 0) {
-                debug("StringSplit(%s, %s) done.  Result: %zd\n", bufa, bufb, i);
+                debug("StringSplit(%s, %s) done.  Result: %" PRIuSIZE "\n", bufa, bufb, i);
                 /* Got a group to match against */
                 x = ConvertIP(&edui_ldap, bufb);
                 if (x < 0) {
@@ -1907,8 +1907,8 @@ MainSafe(int argc, char **argv)
                     }
                 }
             } else {
-                debug("StringSplit() -> Error: %"PRIuSIZE"\n", i);
-                local_printfx("ERR (StringSplit Error %d)\n", i);
+                debug("StringSplit() -> Error: %" PRIuSIZE "\n", i);
+                local_printfx("ERR (StringSplit Error %" PRIuSIZE ")\n", i);
             }
         } else {
             /* No group to match against, only an IP */
