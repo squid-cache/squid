@@ -49,30 +49,13 @@ IamWorkerProcess()
     return true;
 }
 
-bool
-IamDiskProcess()
-{
-    std::cerr << STUB_API << " IamDiskProcess() Not implemented\n";
-    return false;
-}
-
-bool
-InDaemonMode()
-{
-    std::cerr << STUB_API << " InDaemonMode() Not implemented\n";
-    return false;
-}
-
-bool
-UsingSmp()
-{
-    std::cerr << STUB_API << " UsingSnmp() Not implemented\n";
-    return false;
-}
-
+bool IamDiskProcess() STUB_RETVAL_NOP(false)
+bool InDaemonMode() STUB_RETVAL_NOP(false)
+bool UsingSmp() STUB_RETVAL_NOP(false)
 bool IamCoordinatorProcess() STUB_RETVAL(false)
 bool IamPrimaryProcess() STUB_RETVAL(false)
 int NumberOfKids() STUB_RETVAL(0)
+
 //not yet needed in the Stub, causes dependency on String
 //String ProcessRoles() STUB_RETVAL(String())
 void writePidFile(void) STUB
