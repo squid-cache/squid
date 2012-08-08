@@ -38,12 +38,12 @@
 #include "squid-old.h"
 #include "DelayId.h"
 
+#define STUB_API "stub_DelayId.cc"
+#include "tests/STUB.h"
+
 DelayId::DelayId() {}
-
-void
-DelayId::delayRead(DeferredRead const&)
-{}
-
 DelayId::~DelayId() {}
+
+void DelayId::delayRead(DeferredRead const&) STUB_NOP
 
 #endif /* USE_DELAY_POOLS */
