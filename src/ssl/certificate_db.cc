@@ -286,18 +286,10 @@ void Ssl::CertificateDb::create(std::string const & db_path)
     std::string cert_full(db_path + "/" + cert_dir);
     std::string size_full(db_path + "/" + size_file);
 
-#if _SQUID_MSWIN_
-    if (mkdir(db_path.c_str()))
-#else
     if (mkdir(db_path.c_str(), 0777))
-#endif
         throw std::runtime_error("Cannot create " + db_path);
 
-#if _SQUID_MSWIN_
-    if (mkdir(cert_full.c_str()))
-#else
     if (mkdir(cert_full.c_str(), 0777))
-#endif
         throw std::runtime_error("Cannot create " + cert_full);
 
     std::ofstream size(size_full.c_str());
