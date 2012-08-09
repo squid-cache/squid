@@ -14,12 +14,12 @@
 
 /* mostly windows-specific */
 #ifndef CMSG_SPACE
-struct cmsghdr{
-        unsigned int    cmsg_len;
-        int  cmsg_level;
-        int     cmsg_type;
-        unsigned char cmsg_data[16]; /* dummy */
-        /* followed by UCHAR cmsg_data[]; */
+struct cmsghdr {
+    unsigned int    cmsg_len;
+    int  cmsg_level;
+    int     cmsg_type;
+    unsigned char cmsg_data[16]; /* dummy */
+    /* followed by UCHAR cmsg_data[]; */
 } ;
 
 /* lifted off https://metacpan.org/source/SAMPO/Socket-PassAccessRights-0.03/passfd.c */
@@ -69,11 +69,11 @@ struct msghdr {
 
 
 struct iovec {
-	void *iov_base;
-	size_t iov_len;
+    void *iov_base;
+    size_t iov_len;
 };
 struct sockaddr_un {
-	char sun_family;
+    char sun_family;
     char sun_path[256];   /* pathname */
 };
 # define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path)        \
