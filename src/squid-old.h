@@ -34,12 +34,6 @@
 
 #include "squid.h"
 
-#if _SQUID_MSWIN_
-/** \cond AUTODOCS-IGNORE */
-using namespace Squid;
-/** \endcond */
-#endif
-
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -138,19 +132,6 @@ using namespace Squid;
 
 #ifndef MAXPATHLEN
 #define MAXPATHLEN SQUID_MAXPATHLEN
-#endif
-
-#if LEAK_CHECK_MODE
-#define LOCAL_ARRAY(type,name,size) \
-        static type *local_##name=NULL; \
-        type *name = local_##name ? local_##name : \
-                ( local_##name = (type *)xcalloc(size, sizeof(type)) )
-#else
-#define LOCAL_ARRAY(type,name,size) static type name[size]
-#endif
-
-#if _SQUID_NEXT_ && !defined(S_ISDIR)
-#define S_ISDIR(mode) (((mode) & (_S_IFMT)) == (_S_IFDIR))
 #endif
 
 #include "md5.h"
