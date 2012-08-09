@@ -116,4 +116,14 @@
 /* temp hack: needs to be pre-defined for now. */
 #define SQUID_MAXPATHLEN 256
 
+// TODO: determine if this is required. OR if compat/os/mswin.h works
+#if _SQUID_MSWIN_
+/** \cond AUTODOCS-IGNORE */
+using namespace Squid;
+/** \endcond */
+#endif
+
+// temporary for the definition of LOCAL_ARRAY
+#include "leakcheck.h"
+
 #endif /* SQUID_CONFIG_H */
