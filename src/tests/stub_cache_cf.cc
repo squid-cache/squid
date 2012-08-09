@@ -43,35 +43,7 @@ void self_destruct(void) STUB
 void parse_int(int *var) STUB
 void parse_onoff(int *var) STUB
 void parse_eol(char *volatile *var) STUB
-#if 0
-{
-    unsigned char *token = (unsigned char *) strtok(NULL, null_string);
-    safe_free(*var);
-
-    if (token == NULL)
-        self_destruct();
-
-    while (*token && xisspace(*token))
-        ++token;
-
-    if (!*token)
-        self_destruct();
-
-    *var = xstrdup((char *) token);
-}
-#endif
-
 void parse_wordlist(wordlist ** list) STUB
-#if 0
-{
-    char *token;
-    char *t = strtok(NULL, "");
-
-    while ((token = strwordtok(NULL, &t)))
-        wordlistAdd(list, token);
-}
-#endif
-
 void requirePathnameExists(const char *name, const char *path) STUB_NOP
 void parse_time_t(time_t * var) STUB
 char * strtokFile(void) STUB_RETVAL(NULL)
