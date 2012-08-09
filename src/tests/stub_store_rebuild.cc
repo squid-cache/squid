@@ -34,30 +34,14 @@
 
 #include "squid-old.h"
 
-void
-storeRebuildProgress(int sd_index, int total, int sofar)
-{}
+#define STUB_API "stub_store_rebuild.cc"
+#include "tests/STUB.h"
 
-void
-
-storeRebuildComplete(struct _store_rebuild_data *dc)
-{}
-
-bool
-storeRebuildLoadEntry(int, int, MemBuf&, _store_rebuild_data&)
+void storeRebuildProgress(int sd_index, int total, int sofar) STUB
+void storeRebuildComplete(struct _store_rebuild_data *dc) STUB_NOP
+bool storeRebuildLoadEntry(int, int, MemBuf&, _store_rebuild_data&)
 {
     return false;
 }
-
-bool
-storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
-                      struct _store_rebuild_data &counts)
-{
-    return false;
-}
-
-bool
-storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, struct _store_rebuild_data &, uint64_t)
-{
-    return false;
-}
+bool storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, struct _store_rebuild_data &counts) STUB_RETVAL(false)
+bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, struct _store_rebuild_data &, uint64_t) STUB_RETVAL(false)
