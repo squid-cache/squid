@@ -28,10 +28,14 @@
 /// Intended for registration pattern APIs where the function result does not matter to the test
 #define STUB_NOP { std::cerr<<"SKIP: "<<STUB_API<<" "<<__FUNCTION__<<" (not implemented).\n"; }
 
-/** macro to stub a function with return value.
- *  Aborts unit tests requiring its definition with a message about the missing linkage
- */
+/// macro to stub a function with return value.
+/// Aborts unit tests requiring its definition with a message about the missing linkage
 #define STUB_RETVAL(x) { stub_fatal(STUB_API " required"); return x; }
+
+/// macro to stub a void function without a fatal message and with a return value
+/// Intended for registration pattern APIs where the function result does not matter to the test
+#define STUB_RETVAL_NOP(x) { std::cerr<<"SKIP: "<<STUB_API<<" "<<__FUNCTION__<<" (not implemented).\n"; return x; }
+
 
 /** macro to stub a function which returns a reference to dynamic
  *  Aborts unit tests requiring its definition with a message about the missing linkage
