@@ -123,4 +123,7 @@ using namespace Squid;
 /** \endcond */
 #endif
 
+// temporary for the definition of LOCAL_ARRAY
+#include "leakcheck.h"
+
 #endif /* SQUID_CONFIG_H */
