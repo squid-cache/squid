@@ -125,6 +125,7 @@ void FwdState::start(Pointer aSelf)
 
     entry->registerAbort(FwdState::abort, this);
 
+#if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
@@ -132,17 +133,18 @@ void FwdState::start(Pointer aSelf)
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
-#if STRICT_ORIGINAL_DST
         // 3.2 does not suppro re-wrapping inside CONNECT.
         // our only alternative is to fake destination "found" and continue with the forwarding.
         startConnectionOrFail();
         return;
-#endif
     }
+#endif
+
     // do full route options selection
     peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
 }
 
+#if STRICT_ORIGINAL_DST
 /// bypasses peerSelect() when dealing with intercepted requests
 void
 FwdState::selectPeerForIntercepted()
@@ -170,6 +172,7 @@ FwdState::selectPeerForIntercepted()
     debugs(17, 3, HERE << "using client original destination: " << *p);
     serverDestinations.push_back(p);
 }
+#endif
 
 void
 FwdState::completed()

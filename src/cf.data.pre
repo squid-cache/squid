@@ -1778,7 +1778,7 @@ DOC_START
 		 * Reverse-proxy traffic is not checked at all.
 	
 		 * Intercepted traffic which passes verification is handled
-		   normally.
+		   according to client_dst_passthru.
 	
 		 * Intercepted requests which fail verification are sent
 		   to the client original destination instead of DIRECT.
