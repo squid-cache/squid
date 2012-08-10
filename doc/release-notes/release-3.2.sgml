@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.19 release notes</title>
+<title>Squid 3.2.0.20 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.19 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.20 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -29,7 +29,6 @@ Although this release is deemed good enough for use in many setups, please note 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.2 series are:
 
 <itemize>
-	<item>CVE-2009-0801 : interception proxies cannot relay certain requests to peers safely. see the CVE section below for details.
 	<item>TCP logging of access.log does not recover from broken connections well.
 </itemize>
 
@@ -83,14 +82,14 @@ Most user-facing changes are reflected in squid.conf (see below).
   directive. Squid will respond with 409 Conflict error response when strict validation
   fails and handles the request normally when strict validation succeeds or is OFF (default).
 
-<p>Relaying of messages which FAIL non-strct Host: validation are permitted through Squid but
-  only to the original destination IP the client was requesting. This means interception proxies
-  can not be used as feeder gateways into a cluster or peer hierarchy without strict validation.
+<p>Relaying of messages which FAIL non-strict Host: validation are permitted through Squid but
+  only to the original destination IP the client was requesting or to explicit peers. This means
+  DNS lookups to locate alternative DIRECT destinations will not be done.
 
 <p>Known Issue: When non-strict validation fails Squid will relay the request, but can only do
   so safely to the orginal destination IP the client was contacting. The client original
-  destinatio IP is lost when relayign to peers in a hierarchy. This means the upstream peers
-  are at risk of cache poisoning from CVE-2009-0801 vulnerability.
+  destination IP is lost when relaying to peers in a hierarchy. This means the upstream peers
+  are still at risk of causing same-origin bypass CVE-2009-0801 vulnerability.
   Developer time is required to implement safe transit of these requests.
   Please contact squid-dev if you are able to assist or sponsor the development.
 
