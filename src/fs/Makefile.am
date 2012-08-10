@@ -22,11 +22,18 @@ libcoss_la_SOURCES = \
 libufs_la_SOURCES = \
 	ufs/StoreFSufs.h \
 	ufs/StoreFSufs.cc \
-	ufs/store_dir_ufs.cc \
-	ufs/store_io_ufs.cc \
-	ufs/ufscommon.cci \
-	ufs/ufscommon.cc \
-	ufs/ufscommon.h 
+	ufs/UFSStoreState.cc \
+	ufs/UFSSwapDir.cc \
+	ufs/UFSSwapDir.h \
+	ufs/UFSStrategy.cc \
+	ufs/UFSStrategy.h \
+	ufs/UFSStoreState.h \
+	ufs/StoreSearchUFS.h \
+	ufs/StoreSearchUFS.cc \
+	ufs/UFSSwapLogParser.h \
+	ufs/UFSSwapLogParser.cc \
+	ufs/RebuildState.h \
+	ufs/RebuildState.cc
 
 librock_la_SOURCES = \
 	rock/RockDbCell.h \

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
  *
@@ -29,25 +27,64 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
+ * 
  */
-
-/* TODO: remove this file as unused */
 
 #include "squid.h"
-#if 0
-#include "StoreFileSystem.h"
-#include "DiskIO/DiskIOModule.h"
-#endif
+#include "cbdata.h"
+#include "StoreSearchUFS.h"
+#include "UFSSwapDir.h"
 
-#include "fs/ufs/StoreFSufs.h"
-#include "fs/ufs/UFSSwapDir.h"
+CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,StoreSearchUFS);
 
-/**
- \defgroup diskd diskd Storage Filesystem (UFS Based)
- \ingroup FileSystems, UFS
- */
+Fs::Ufs::StoreSearchUFS::StoreSearchUFS(RefCount<UFSSwapDir> aSwapDir) :
+        sd(aSwapDir), walker (sd->repl->WalkInit(sd->repl)),
+        current (NULL), _done (false)
+{}
 
-/* Unused variable: */
-Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance_foo = NULL;
+Fs::Ufs::StoreSearchUFS::~StoreSearchUFS()
+{
+    walker->Done(walker);
+    walker = NULL;
+}
+
+void
+Fs::Ufs::StoreSearchUFS::next(void (aCallback)(void *cbdata), void *aCallbackArgs)
+{
+    next();
+    aCallback(aCallbackArgs);
+}
+
+bool
+Fs::Ufs::StoreSearchUFS::next()
+{
+    /* the walker API doesn't make sense. the store entries referred to are already readwrite
+     * from their hash table entries
+     */
+
+    if (walker)
+        current = const_cast<StoreEntry *>(walker->Next(walker));
+
+    if (current == NULL)
+        _done = true;
+
+    return current != NULL;
+}
+
+bool
+Fs::Ufs::StoreSearchUFS::error() const
+{
+    return false;
+}
+
+bool
+Fs::Ufs::StoreSearchUFS::isDone() const
+{
+    return _done;
+}
+
+StoreEntry *
+Fs::Ufs::StoreSearchUFS::currentItem()
+{
+    return current;
+}

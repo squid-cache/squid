@@ -18,6 +18,7 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "SquidMath.h"
+#include <cstdlib>
 #include <iomanip>
 
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;

@@ -1,5 +1,4 @@
 /*
- * $Id$
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -30,313 +29,18 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "ufscommon.h"
-#include "Store.h"
-#include "fde.h"
+#include "RebuildState.h"
 #include "SquidTime.h"
-#include "StoreMeta.h"
-#include "Generic.h"
-#include "StoreMetaUnpacker.h"
-#include "RefCount.h"
 #include "StoreSwapLogData.h"
-#include "swap_log_op.h"
+#include "UFSSwapLogParser.h"
 
+CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 
-CBDATA_CLASS_INIT(RebuildState);
-
-/// Parse a swap header entry created on a system with 32-bit size_t and sfileno
-/// this is typical of 32-bit systems without large file support
-/// NP: SQUID_MD5_DIGEST_LENGTH is very risky still.
-class UFSSwapLogParser_v1_32bs:public UFSSwapLogParser
-{
-public:
-    /// version 1 cache swap.state entry with 32-bit size_t (swap_file_sz)
-    /// time_t an sfileno have no variation from the v1 baseline format
-    struct StoreSwapLogDataOld {
-        char op;
-        sfileno swap_filen;
-        time_t timestamp;
-        time_t lastref;
-        time_t expires;
-        time_t lastmod;
-        uint32_t swap_file_sz;
-        uint16_t refcount;
-        uint16_t flags;
-        unsigned char key[SQUID_MD5_DIGEST_LENGTH];
-    };
-    UFSSwapLogParser_v1_32bs(FILE *fp):UFSSwapLogParser(fp) {
-        record_size = sizeof(UFSSwapLogParser_v1_32bs::StoreSwapLogDataOld);
-    }
-    /// Convert the on-disk 32-bit format to our current format while reading
-    bool ReadRecord(StoreSwapLogData &swapData) {
-        UFSSwapLogParser_v1_32bs::StoreSwapLogDataOld readData;
-        int bytes = sizeof(UFSSwapLogParser_v1_32bs::StoreSwapLogDataOld);
-
-        assert(log);
-
-        if (fread(&readData, bytes, 1, log) != 1) {
-            return false;
-        }
-        swapData.op = readData.op;
-        swapData.swap_filen = readData.swap_filen;
-        swapData.timestamp = readData.timestamp;
-        swapData.lastref = readData.lastref;
-        swapData.expires = readData.expires;
-        swapData.lastmod = readData.lastmod;
-        swapData.swap_file_sz = readData.swap_file_sz;
-        swapData.refcount = readData.refcount;
-        swapData.flags = readData.flags;
-        memcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
-        return true;
-    }
-};
-
-#if UNUSED_CODE
-/// Parse a swap header entry created on a system with 32-bit size_t, time_t and sfileno
-/// this is typical of 32-bit systems without large file support and with old kernels
-/// NP: SQUID_MD5_DIGEST_LENGTH is very risky still.
-class UFSSwapLogParser_v1_32bst:public UFSSwapLogParser
-{
-public:
-    /// version 1 cache swap.state entry with 32-bit size_t (swap_file_sz)
-    /// time_t also differs
-    /// sfileno has no variation from the v1 baseline format
-    struct StoreSwapLogDataOld {
-        char op;
-        sfileno swap_filen;
-        int32_t timestamp;
-        int32_t lastref;
-        int32_t expires;
-        int32_t lastmod;
-        uint32_t swap_file_sz;
-        uint16_t refcount;
-        uint16_t flags;
-        unsigned char key[SQUID_MD5_DIGEST_LENGTH];
-    };
-    UFSSwapLogParser_v1_32bst(FILE *fp):UFSSwapLogParser(fp) {
-        record_size = sizeof(UFSSwapLogParser_v1_32bst::StoreSwapLogDataOld);
-    }
-    /// Convert the on-disk 32-bit format to our current format while reading
-    bool ReadRecord(StoreSwapLogData &swapData) {
-        UFSSwapLogParser_v1_32bst::StoreSwapLogDataOld readData;
-        int bytes = sizeof(UFSSwapLogParser_v1_32bst::StoreSwapLogDataOld);
-
-        assert(log);
-
-        if (fread(&readData, bytes, 1, log) != 1) {
-            return false;
-        }
-        swapData.op = readData.op;
-        swapData.swap_filen = readData.swap_filen;
-        swapData.timestamp = readData.timestamp;
-        swapData.lastref = readData.lastref;
-        swapData.expires = readData.expires;
-        swapData.lastmod = readData.lastmod;
-        swapData.swap_file_sz = readData.swap_file_sz;
-        swapData.refcount = readData.refcount;
-        swapData.flags = readData.flags;
-        memcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
-        return true;
-    }
-};
-
-/// Parse a swap header entry created on a system with 64-bit size_t and sfileno
-/// this is typical of 64-bit systems prior to this patch fixing sfileno to 32-bits
-/// NP: SQUID_MD5_DIGEST_LENGTH is very risky still.
-class UFSSwapLogParser_v1_64bfn:public UFSSwapLogParser
-{
-public:
-    /// version 1 cache swap.state entry with 64-bit sfileno
-    struct StoreSwapLogDataOld {
-        char op;
-        int64_t swap_filen;
-        time_t timestamp;
-        time_t lastref;
-        time_t expires;
-        time_t lastmod;
-        uint64_t swap_file_sz;
-        uint16_t refcount;
-        uint16_t flags;
-        unsigned char key[SQUID_MD5_DIGEST_LENGTH];
-    };
-    UFSSwapLogParser_v1_64bfn(FILE *fp):UFSSwapLogParser(fp) {
-        record_size = sizeof(UFSSwapLogParser_v1_64bfn::StoreSwapLogDataOld);
-    }
-    /// Convert the on-disk 64-bit format to our current format while reading
-    bool ReadRecord(StoreSwapLogData &swapData) {
-        UFSSwapLogParser_v1_64bfn::StoreSwapLogDataOld readData;
-        int bytes = sizeof(UFSSwapLogParser_v1_64bfn::StoreSwapLogDataOld);
-
-        assert(log);
-
-        if (fread(&readData, bytes, 1, log) != 1) {
-            return false;
-        }
-        swapData.op = readData.op;
-        if ((readData.swap_filen>>32) != 0) {
-            fatalf("File ID on record is greater than maximum cache file ID.");
-        }
-        swapData.swap_filen = (int32_t)readData.swap_filen;
-        swapData.timestamp = readData.timestamp;
-        swapData.lastref = readData.lastref;
-        swapData.expires = readData.expires;
-        swapData.lastmod = readData.lastmod;
-        swapData.swap_file_sz = readData.swap_file_sz;
-        swapData.refcount = readData.refcount;
-        swapData.flags = readData.flags;
-        memcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
-        return true;
-    }
-};
-
-class UFSSwapLogParser_v1:public UFSSwapLogParser
-{
-public:
-    UFSSwapLogParser_v1(FILE *fp):UFSSwapLogParser(fp) {
-        record_size = sizeof(StoreSwapLogData);
-    }
-    bool ReadRecord(StoreSwapLogData &swapData);
-};
-
-
-bool UFSSwapLogParser_v1::ReadRecord(StoreSwapLogData &swapData)
-{
-    int bytes = sizeof(StoreSwapLogData);
-
-    assert(log);
-
-    if (fread(&swapData, bytes, 1, log) != 1) {
-        return false;
-    }
-    return true;
-}
-#endif /* UNUSED_CODE */
-
-/// swap.state v2 log parser
-class UFSSwapLogParser_v2: public UFSSwapLogParser
-{
-public:
-    UFSSwapLogParser_v2(FILE *fp): UFSSwapLogParser(fp) {
-        record_size = sizeof(StoreSwapLogData);
-    }
-    bool ReadRecord(StoreSwapLogData &swapData) {
-        assert(log);
-        return fread(&swapData, sizeof(StoreSwapLogData), 1, log) == 1;
-    }
-};
-
-
-UFSSwapLogParser *UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
-{
-    StoreSwapLogHeader header;
-
-    assert(fp);
-
-    if (fread(&header, sizeof(StoreSwapLogHeader), 1, fp) != 1)
-        return NULL;
-
-    if (header.op != SWAP_LOG_VERSION) {
-        debugs(47, 1, "Old swap file detected...");
-        fseek(fp, 0, SEEK_SET);
-        return new UFSSwapLogParser_v1_32bs(fp); // Um. 32-bits except time_t, and can't determine that.
-    }
-
-    debugs(47, 2, "Swap file version: " << header.version);
-
-    if (header.version == 1) {
-        if (fseek(fp, header.record_size, SEEK_SET) != 0)
-            return NULL;
-
-        debugs(47, DBG_IMPORTANT, "Rejecting swap file v1 to avoid cache " <<
-               "index corruption. Forcing a full cache index rebuild. " <<
-               "See Squid bug #3441.");
-        return NULL;
-
-#if UNUSED_CODE
-        // baseline
-        // 32-bit sfileno
-        // native time_t (hopefully 64-bit)
-        // 64-bit file size
-        if (header.record_size == sizeof(StoreSwapLogData)) {
-            debugs(47, 1, "Version 1 of swap file with LFS support detected... ");
-            return new UFSSwapLogParser_v1(fp);
-        }
-
-        // which means we have a 3-way grid of permutations to import (yuck!)
-        // 1) sfileno 32-bit / 64-bit  (64-bit was broken)
-        // 2) time_t 32-bit / 64-bit
-        // 3) size_t 32-bit / 64-bit  (32-bit was pre-LFS)
-
-        // 32-bit systems...
-        // only LFS (size_t) differs from baseline
-        if (header.record_size == sizeof(struct UFSSwapLogParser_v1_32bs::StoreSwapLogDataOld)) {
-            debugs(47, 1, "Version 1 (32-bit) swap file without LFS support detected... ");
-            return new UFSSwapLogParser_v1_32bs(fp);
-        }
-        // LFS (size_t) and timestamps (time_t) differs from baseline
-        if (header.record_size == sizeof(struct UFSSwapLogParser_v1_32bst::StoreSwapLogDataOld)) {
-            debugs(47, 1, "Version 1 (32-bit) swap file with short timestamps and without LFS support detected... ");
-            return new UFSSwapLogParser_v1_32bst(fp);
-        }
-        // No downgrade for 64-bit timestamps to 32-bit.
-
-        // 64-bit systems
-        // sfileno was 64-bit for a some builds
-        if (header.record_size == sizeof(struct UFSSwapLogParser_v1_64bfn::StoreSwapLogDataOld)) {
-            debugs(47, 1, "Version 1 (64-bit) swap file with broken sfileno detected... ");
-            return new UFSSwapLogParser_v1_64bfn(fp);
-        }
-        // NP: 64-bit system with 32-bit size_t/time_t are not handled.
-
-        debugs(47, 1, "WARNING: The swap file has wrong format!... ");
-        debugs(47, 1, "NOTE: Cannot safely downgrade caches to short (32-bit) timestamps.");
-        return NULL;
-#endif
-    }
-
-    if (header.version >= 2) {
-        if (!header.sane()) {
-            debugs(47, DBG_IMPORTANT, "ERROR: Corrupted v" << header.version <<
-                   " swap file header.");
-            return NULL;
-        }
-
-        if (fseek(fp, header.record_size, SEEK_SET) != 0)
-            return NULL;
-
-        if (header.version == 2)
-            return new UFSSwapLogParser_v2(fp);
-    }
-
-    // TODO: v3: write to disk in network-order bytes for the larger fields?
-
-    debugs(47, DBG_IMPORTANT, "Unknown swap file version: " << header.version);
-    return NULL;
-}
-
-int UFSSwapLogParser::SwapLogEntries()
-{
-    struct stat sb;
-
-    if (log_entries >= 0)
-        return log_entries;
-
-    if (log && record_size && 0 == fstat(fileno(log), &sb)) {
-        log_entries = sb.st_size/record_size;
-        return log_entries;
-    }
-
-    return 0;
-}
-
-
-
-
-RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogParser(NULL), e(NULL), fromLog(true), _done (false)
+Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
+                sd (aSwapDir), LogParser(NULL), e(NULL), fromLog(true), _done (false)
 {
     /*
      * If the swap.state file exists in the cache_dir, then
@@ -349,7 +53,7 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogPa
     FILE *fp = sd->openTmpSwapLog(&clean, &zeroLengthLog);
 
     if (fp && !zeroLengthLog)
-        LogParser = UFSSwapLogParser::GetUFSSwapLogParser(fp);
+        LogParser = Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(fp);
 
     if (LogParser == NULL ) {
         fromLog = false;
@@ -369,7 +73,7 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogPa
            (clean ? "clean log" : (LogParser ? "dirty log" : "no log")) << ")");
 }
 
-RebuildState::~RebuildState()
+Fs::Ufs::RebuildState::~RebuildState()
 {
     sd->closeTmpSwapLog();
 
@@ -378,7 +82,7 @@ RebuildState::~RebuildState()
 }
 
 void
-RebuildState::RebuildStep(void *data)
+Fs::Ufs::RebuildState::RebuildStep(void *data)
 {
     RebuildState *rb = (RebuildState *)data;
     rb->rebuildStep();
@@ -394,7 +98,7 @@ RebuildState::RebuildStep(void *data)
 
 /// load entries from swap.state or files until we run out of entries or time
 void
-RebuildState::rebuildStep()
+Fs::Ufs::RebuildState::rebuildStep()
 {
     currentEntry(NULL);
 
@@ -431,14 +135,14 @@ RebuildState::rebuildStep()
 
 /// process one cache file
 void
-RebuildState::rebuildFromDirectory()
+Fs::Ufs::RebuildState::rebuildFromDirectory()
 {
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
 
     struct stat sb;
     int fd = -1;
     assert(this != NULL);
-    debugs(47, 3, "commonUfsDirRebuildFromDirectory: DIR #" << sd->index);
+    debugs(47, 3, HERE << "DIR #" << sd->index);
 
     assert(fd == -1);
     sfileno filn = 0;
@@ -460,7 +164,7 @@ RebuildState::rebuildFromDirectory()
     ++n_read;
 
     if (fstat(fd, &sb) < 0) {
-        debugs(47, 1, "commonUfsDirRebuildFromDirectory: fstat(FD " << fd << "): " << xstrerror());
+        debugs(47, DBG_IMPORTANT, HERE << "fstat(FD " << fd << "): " << xstrerror());
         file_close(fd);
         --store_open_disk_fd;
         fd = -1;
@@ -498,32 +202,32 @@ RebuildState::rebuildFromDirectory()
                                     tmpe.timestamp,
                                     tmpe.lastref,
                                     tmpe.lastmod,
-                                    tmpe.refcount,	/* refcount */
-                                    tmpe.flags,		/* flags */
+                                    tmpe.refcount,  /* refcount */
+                                    tmpe.flags,     /* flags */
                                     (int) flags.clean));
     storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
 }
 
 StoreEntry *
-RebuildState::currentEntry() const
+Fs::Ufs::RebuildState::currentEntry() const
 {
     return e;
 }
 
 void
-RebuildState::currentEntry(StoreEntry *newValue)
+Fs::Ufs::RebuildState::currentEntry(StoreEntry *newValue)
 {
     e = newValue;
 }
 
 /// process one swap log entry
 void
-RebuildState::rebuildFromSwapLog()
+Fs::Ufs::RebuildState::rebuildFromSwapLog()
 {
     StoreSwapLogData swapData;
 
     if (LogParser->ReadRecord(swapData) != 1) {
-        debugs(47, 1, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
+        debugs(47, DBG_IMPORTANT, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
         LogParser->Close();
         delete LogParser;
         LogParser = NULL;
@@ -548,8 +252,7 @@ RebuildState::rebuildFromSwapLog()
      */
     swapData.swap_filen &= 0x00FFFFFF;
 
-    debugs(47, 3, "commonUfsDirRebuildFromSwapLog: " <<
-           swap_log_op_str[(int) swapData.op]  << " " <<
+    debugs(47, 3, HERE << swap_log_op_str[(int) swapData.op]  << " " <<
            storeKeyText(swapData.key)  << " "<< std::setfill('0') <<
            std::hex << std::uppercase << std::setw(8) <<
            swapData.swap_filen);
@@ -577,7 +280,7 @@ RebuildState::rebuildFromSwapLog()
         x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
         if (0.0 == x - (double) (int) x)
-            debugs(47, 1, "WARNING: " << counts.bad_log_op << " invalid swap log entries found");
+            debugs(47, DBG_IMPORTANT, "WARNING: " << counts.bad_log_op << " invalid swap log entries found");
 
         ++counts.invalid;
 
@@ -604,7 +307,7 @@ RebuildState::rebuildFromSwapLog()
      */
     currentEntry (Store::Root().get(swapData.key));
 
-    int used;			/* is swapfile already in use? */
+    int used;           /* is swapfile already in use? */
 
     used = sd->mapBitTest(swapData.swap_filen);
 
@@ -631,7 +334,7 @@ RebuildState::rebuildFromSwapLog()
             sd->dereference(*currentEntry());
         } else {
             debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
-            debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
+            debugs(47, DBG_IMPORTANT, HERE << "bad condition");
         }
         return;
     } else if (used) {
@@ -640,7 +343,7 @@ RebuildState::rebuildFromSwapLog()
          * point.  If the log is dirty, the filesize check should have
          * caught this.  If the log is clean, there should never be a
          * newer entry. */
-        debugs(47, 1, "WARNING: newer swaplog entry for dirno " <<
+        debugs(47, DBG_IMPORTANT, "WARNING: newer swaplog entry for dirno " <<
                sd->index  << ", fileno "<< std::setfill('0') << std::hex <<
                std::uppercase << std::setw(8) << swapData.swap_filen);
 
@@ -691,7 +394,7 @@ RebuildState::rebuildFromSwapLog()
 
 /// undo the effects of adding an entry in rebuildFromSwapLog()
 void
-RebuildState::undoAdd()
+Fs::Ufs::RebuildState::undoAdd()
 {
     StoreEntry *added = currentEntry();
     assert(added);
@@ -711,11 +414,11 @@ RebuildState::undoAdd()
 }
 
 int
-RebuildState::getNextFile(sfileno * filn_p, int *size)
+Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *size)
 {
     int fd = -1;
     int dirs_opened = 0;
-    debugs(47, 3, "commonUfsDirGetNextFile: flag=" << flags.init  << ", " <<
+    debugs(47, 3, HERE << "flag=" << flags.init  << ", " <<
            sd->index  << ": /"<< std::setfill('0') << std::hex <<
            std::uppercase << std::setw(2) << curlvl1  << "/" << std::setw(2) <<
            curlvl2);
@@ -726,7 +429,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
     while (fd < 0 && done == 0) {
         fd = -1;
 
-        if (0 == flags.init) {	/* initialize, open first file */
+        if (0 == flags.init) {  /* initialize, open first file */
             done = 0;
             curlvl1 = 0;
             curlvl2 = 0;
@@ -735,7 +438,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             assert(Config.cacheSwap.n_configured > 0);
         }
 
-        if (0 == in_dir) {	/* we need to read in a new directory */
+        if (0 == in_dir) {  /* we need to read in a new directory */
             snprintf(fullpath, MAXPATHLEN, "%s/%02X/%02X",
                      sd->path,
                      curlvl1, curlvl2);
@@ -748,14 +451,14 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             ++dirs_opened;
 
             if (td == NULL) {
-                debugs(47, 1, "commonUfsDirGetNextFile: opendir: " << fullpath << ": " << xstrerror());
+                debugs(47, DBG_IMPORTANT, HERE << "error in opendir (" << fullpath << "): " << xstrerror());
             } else {
-                entry = readdir(td);	/* skip . and .. */
+                entry = readdir(td);    /* skip . and .. */
                 entry = readdir(td);
 
                 if (entry == NULL && errno == ENOENT)
-                    debugs(47, 1, "commonUfsDirGetNextFile: directory does not exist!.");
-                debugs(47, 3, "commonUfsDirGetNextFile: Directory " << fullpath);
+                    debugs(47, DBG_IMPORTANT, HERE << "WARNING: directory does not exist!");
+                debugs(47, 3, HERE << "Directory " << fullpath);
             }
         }
 
@@ -763,12 +466,12 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             ++in_dir;
 
             if (sscanf(entry->d_name, "%x", &fn) != 1) {
-                debugs(47, 3, "commonUfsDirGetNextFile: invalid " << entry->d_name);
+                debugs(47, 3, HERE << "invalid entry " << entry->d_name);
                 continue;
             }
 
             if (!UFSSwapDir::FilenoBelongsHere(fn, sd->index, curlvl1, curlvl2)) {
-                debugs(47, 3, "commonUfsDirGetNextFile: "<< std::setfill('0') <<
+                debugs(47, 3, HERE << std::setfill('0') <<
                        std::hex << std::uppercase << std::setw(8) << fn  <<
                        " does not belong in " << std::dec << sd->index  << "/" <<
                        curlvl1  << "/" << curlvl2);
@@ -777,17 +480,17 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             }
 
             if (sd->mapBitTest(fn)) {
-                debugs(47, 3, "commonUfsDirGetNextFile: Locked, continuing with next.");
+                debugs(47, 3, HERE << "Locked, continuing with next.");
                 continue;
             }
 
             snprintf(fullfilename, MAXPATHLEN, "%s/%s",
                      fullpath, entry->d_name);
-            debugs(47, 3, "commonUfsDirGetNextFile: Opening " << fullfilename);
+            debugs(47, 3, HERE << "Opening " << fullfilename);
             fd = file_open(fullfilename, O_RDONLY | O_BINARY);
 
             if (fd < 0)
-                debugs(47, 1, "commonUfsDirGetNextFile: " << fullfilename << ": " << xstrerror());
+                debugs(47, DBG_IMPORTANT, HERE << "error opening " << fullfilename << ": " << xstrerror());
             else
                 ++store_open_disk_fd;
 
@@ -819,23 +522,19 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
 }
 
 bool
-RebuildState::error() const
+Fs::Ufs::RebuildState::error() const
 {
     return false;
 }
 
 bool
-RebuildState::isDone() const
+Fs::Ufs::RebuildState::isDone() const
 {
     return _done;
 }
 
 StoreEntry *
-RebuildState::currentItem()
+Fs::Ufs::RebuildState::currentItem()
 {
     return currentEntry();
 }
-
-#if !_USE_INLINE_
-#include "ufscommon.cci"
-#endif
