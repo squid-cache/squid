@@ -35,7 +35,6 @@
 
 #include "squid-old.h"
 #include "Store.h"
-#include "ufscommon.h"
 #include "Generic.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -43,63 +42,27 @@
 #include "DiskIO/WriteRequest.h"
 
 #include "SwapDir.h"
-
-bool
-UFSStrategy::shedLoad()
-{
-    return io->shedLoad();
-}
-
-int
-UFSStrategy::load()
-{
-    return io->load();
-}
-
-UFSStrategy::UFSStrategy (DiskIOStrategy *anIO) : io(anIO)
-{}
-
-UFSStrategy::~UFSStrategy ()
-{
-    delete io;
-}
-
-StoreIOState::Pointer
-UFSStrategy::createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * aCallback, void *callback_data) const
-{
-    return new UFSStoreState (SD, e, aCallback, callback_data);
-}
-
-DiskFile::Pointer
-UFSStrategy::newFile (char const *path)
-{
-    return io->newFile(path);
-}
+#include "UFSStrategy.h"
+#include "UFSStoreState.h"
 
 
-void
-UFSStrategy::unlinkFile(char const *path)
-{
-    io->unlinkFile(path);
-}
-
-CBDATA_CLASS_INIT(UFSStoreState);
+CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,UFSStoreState);
 
 void *
-UFSStoreState::operator new (size_t)
+Fs::Ufs::UFSStoreState::operator new (size_t)
 {
     CBDATA_INIT_TYPE(UFSStoreState);
     return cbdataAlloc(UFSStoreState);
 }
 
 void
-UFSStoreState::operator delete (void *address)
+Fs::Ufs::UFSStoreState::operator delete (void *address)
 {
     cbdataFree(address);
 }
 
 void
-UFSStoreState::ioCompletedNotification()
+Fs::Ufs::UFSStoreState::ioCompletedNotification()
 {
     if (opening) {
         opening = false;
@@ -137,7 +100,7 @@ UFSStoreState::ioCompletedNotification()
 }
 
 void
-UFSStoreState::openDone()
+Fs::Ufs::UFSStoreState::openDone()
 {
     if (closing)
         debugs(0, DBG_CRITICAL, HERE << "already closing in openDone()!?");
@@ -162,7 +125,7 @@ UFSStoreState::openDone()
 }
 
 void
-UFSStoreState::closeCompleted()
+Fs::Ufs::UFSStoreState::closeCompleted()
 {
     assert (closing);
     debugs(79, 3, "UFSStoreState::closeCompleted: dirno " << swap_dirn  <<
@@ -190,7 +153,7 @@ UFSStoreState::closeCompleted()
  * when it is safe to actually signal the lower layer for closing.
  */
 void
-UFSStoreState::close(int)
+Fs::Ufs::UFSStoreState::close(int)
 {
     debugs(79, 3, "UFSStoreState::close: dirno " << swap_dirn  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
@@ -198,7 +161,7 @@ UFSStoreState::close(int)
 }
 
 void
-UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCallback, void *aCallbackData)
+Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCallback, void *aCallbackData)
 {
     assert(read.callback == NULL);
     assert(read.callback_data == NULL);
@@ -232,7 +195,7 @@ UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCallback, v
  * code simpler and always go through the pending_writes queue.
  */
 void
-UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
+Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
     debugs(79, 3, "UFSStoreState::write: dirn " << swap_dirn  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
@@ -256,7 +219,7 @@ UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_fu
  * called by drainWriteQueue().
  */
 void
-UFSStoreState::doWrite()
+Fs::Ufs::UFSStoreState::doWrite()
 {
     debugs(79, 3, HERE << this << " UFSStoreState::doWrite");
 
@@ -300,7 +263,7 @@ UFSStoreState::doWrite()
 }
 
 void
-UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest> result)
+Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest> result)
 {
     assert (result.getRaw());
     reading = false;
@@ -343,7 +306,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
 }
 
 void
-UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
+Fs::Ufs::UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
 {
     debugs(79, 3, HERE << "dirno " << swap_dirn << ", fileno " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen <<
@@ -369,7 +332,7 @@ UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> wr
 }
 
 void
-UFSStoreState::doCloseCallback(int errflag)
+Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
 {
     debugs(79, 3, "storeUfsIOCallback: errflag=" << errflag);
     /*
@@ -398,7 +361,7 @@ UFSStoreState::doCloseCallback(int errflag)
 
 /* ============= THE REAL UFS CODE ================ */
 
-UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_) : opening (false), creating (false), closing (false), reading(false), writing(false), pending_reads(NULL), pending_writes (NULL)
+Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_) : opening (false), creating (false), closing (false), reading(false), writing(false), pending_reads(NULL), pending_writes (NULL)
 {
     swap_filen = anEntry->swap_filen;
     swap_dirn = SD->index;
@@ -410,14 +373,14 @@ UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callba
     flags.try_closing = false;
 }
 
-UFSStoreState::~UFSStoreState()
+Fs::Ufs::UFSStoreState::~UFSStoreState()
 {
     assert(pending_reads == NULL);
     assert(pending_writes == NULL);
 }
 
 void
-UFSStoreState::freePending()
+Fs::Ufs::UFSStoreState::freePending()
 {
     _queued_read *qr;
 
@@ -440,7 +403,7 @@ UFSStoreState::freePending()
 }
 
 bool
-UFSStoreState::kickReadQueue()
+Fs::Ufs::UFSStoreState::kickReadQueue()
 {
     _queued_read *q = (_queued_read *)linklistShift(&pending_reads);
 
@@ -465,7 +428,7 @@ UFSStoreState::kickReadQueue()
 }
 
 void
-UFSStoreState::queueRead(char *buf, size_t size, off_t aOffset, STRCB *callback_, void *callback_data_)
+Fs::Ufs::UFSStoreState::queueRead(char *buf, size_t size, off_t aOffset, STRCB *callback_, void *callback_data_)
 {
     debugs(79, 3, "UFSStoreState::queueRead: queueing read");
     assert(opening);
@@ -484,7 +447,7 @@ UFSStoreState::queueRead(char *buf, size_t size, off_t aOffset, STRCB *callback_
  * drainWriteQueue() is a loop around doWrite().
  */
 void
-UFSStoreState::drainWriteQueue()
+Fs::Ufs::UFSStoreState::drainWriteQueue()
 {
     /*
      * DPW 2007-04-12
@@ -521,7 +484,7 @@ UFSStoreState::drainWriteQueue()
  * or will remember to do the close for us.
  */
 void
-UFSStoreState::tryClosing()
+Fs::Ufs::UFSStoreState::tryClosing()
 {
     debugs(79,3,HERE << this << " tryClosing()" <<
            " closing = " << closing <<
@@ -541,7 +504,7 @@ UFSStoreState::tryClosing()
 }
 
 void
-UFSStoreState::queueWrite(char const *buf, size_t size, off_t aOffset, FREE * free_func)
+Fs::Ufs::UFSStoreState::queueWrite(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
     debugs(79, 3, HERE << this << " UFSStoreState::queueWrite: queueing write of size " << size);
 
@@ -552,111 +515,5 @@ UFSStoreState::queueWrite(char const *buf, size_t size, off_t aOffset, FREE * fr
     q->offset = aOffset;
     q->free_func = free_func;
     linklistPush(&pending_writes, q);
-}
-
-StoreIOState::Pointer
-UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
-                  StoreIOState::STIOCB * aCallback, void *callback_data)
-{
-    assert (((UFSSwapDir *)SD)->IO == this);
-    debugs(79, 3, "UFSStrategy::open: fileno "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e->swap_filen);
-
-    /* to consider: make createstate a private UFSStrategy call */
-    StoreIOState::Pointer sio = createState (SD, e, aCallback, callback_data);
-
-    sio->mode |= O_RDONLY;
-
-    UFSStoreState *state = dynamic_cast <UFSStoreState *>(sio.getRaw());
-
-    assert (state);
-
-    char *path = ((UFSSwapDir *)SD)->fullPath(e->swap_filen, NULL);
-
-    DiskFile::Pointer myFile = newFile (path);
-
-    if (myFile.getRaw() == NULL)
-        return NULL;
-
-    state->theFile = myFile;
-
-    state->opening = true;
-
-    myFile->open (sio->mode, 0644, state);
-
-    if (myFile->error())
-        return NULL;
-
-    return sio;
-}
-
-StoreIOState::Pointer
-UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
-                    StoreIOState::STIOCB * aCallback, void *callback_data)
-{
-    assert (((UFSSwapDir *)SD)->IO == this);
-    /* Allocate a number */
-    sfileno filn = ((UFSSwapDir *)SD)->mapBitAllocate();
-    debugs(79, 3, "UFSStrategy::create: fileno "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << filn);
-
-    /* Shouldn't we handle a 'bitmap full' error here? */
-
-    StoreIOState::Pointer sio = createState (SD, e, aCallback, callback_data);
-
-    sio->mode |= O_WRONLY | O_CREAT | O_TRUNC;
-
-    sio->swap_filen = filn;
-
-    UFSStoreState *state = dynamic_cast <UFSStoreState *>(sio.getRaw());
-
-    assert (state);
-
-    char *path = ((UFSSwapDir *)SD)->fullPath(filn, NULL);
-
-    DiskFile::Pointer myFile = newFile (path);
-
-    if (myFile.getRaw() == NULL) {
-        ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
-    }
-
-    state->theFile = myFile;
-
-    state->creating = true;
-
-    myFile->create (state->mode, 0644, state);
-
-    if (myFile->error()) {
-        ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
-    }
-
-    /* now insert into the replacement policy */
-    ((UFSSwapDir *)SD)->replacementAdd(e);
-
-    return sio;
-}
-
-int
-UFSStrategy::callback()
-{
-    return io->callback();
-}
-
-void
-UFSStrategy::init()
-{
-    io->init();
-}
-
-void
-UFSStrategy::sync()
-{
-    io->sync();
-}
-
-void
-UFSStrategy::statfs(StoreEntry & sentry)const
-{
-    io->statfs(sentry);
 }
 

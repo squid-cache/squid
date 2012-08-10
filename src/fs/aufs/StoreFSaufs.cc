@@ -45,8 +45,7 @@
 
 #include "fs/ufs/StoreFSufs.h"
 
-/** \todo FIXME: break UFSSwapDir out so we don't need all the guff */
-#include "fs/ufs/ufscommon.h"
+#include "fs/ufs/UFSSwapDir.h"
 
 /**
  \defgroup AUFS AUFS Storage Filesystem (UFS Based)
@@ -54,4 +53,3 @@
  */
 
 /* Unused variable: */
-StoreFSufs<UFSSwapDir> *AufsInstance_foo = NULL;

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
  *
@@ -41,13 +39,11 @@
 #endif
 
 #include "fs/ufs/StoreFSufs.h"
+#include "fs/ufs/UFSSwapDir.h"
 
 #if 0
 #include "DiskIO/DiskIOModule.h"
 #endif
 
-/** \todo FIXME: break UFSSwapDir out so we don't build all the extras */
-#include "fs/ufs/ufscommon.h"
-
 /* Unused variable: */
-StoreFSufs<UFSSwapDir> *UfsInstance_foo = NULL;
+Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance_foo = NULL;

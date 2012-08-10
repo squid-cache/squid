@@ -1,9 +1,4 @@
 /*
- * $Id$
- *
- * DEBUG: section 47    Store Directory Routines
- * AUTHOR: Robert Collins
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -29,25 +24,60 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
+ * 
  */
 
-/* TODO: remove this file as unused */
+#ifndef SQUID_FS_UFS_STORESEARCHUFS_H
+#define SQUID_FS_UFS_STORESEARCHUFS_H
 
-#include "squid.h"
-#if 0
-#include "StoreFileSystem.h"
-#include "DiskIO/DiskIOModule.h"
-#endif
+#include "StoreSearch.h"
+#include "UFSSwapDir.h"
 
-#include "fs/ufs/StoreFSufs.h"
-#include "fs/ufs/UFSSwapDir.h"
+namespace Fs
+{
+namespace Ufs
+{
 
-/**
- \defgroup diskd diskd Storage Filesystem (UFS Based)
- \ingroup FileSystems, UFS
- */
+/// \ingroup UFS
+class StoreSearchUFS : public StoreSearch
+{
+public:
+    StoreSearchUFS(RefCount<UFSSwapDir> sd);
+    virtual ~StoreSearchUFS();
 
-/* Unused variable: */
-Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance_foo = NULL;
+    /** \todo Iterator API - garh, wrong place */
+    /**
+     * callback the client when a new StoreEntry is available
+     * or an error occurs
+     */
+    virtual void next(void (callback)(void *cbdata), void *cbdata);
+
+    /**
+     \retval true if a new StoreEntry is immediately available
+     \retval false if a new StoreEntry is NOT immediately available
+     */
+    virtual bool next();
+
+    virtual bool error() const;
+    virtual bool isDone() const;
+    virtual StoreEntry *currentItem();
+
+    RefCount<UFSSwapDir> sd;
+    RemovalPolicyWalker *walker;
+
+private:
+    CBDATA_CLASS2(StoreSearchUFS);
+    /// \bug (callback) should be hidden behind a proper human readable name
+    void (callback)(void *cbdata);
+    void *cbdata;
+    StoreEntry * current;
+    bool _done;
+
+    StoreSearchUFS(StoreSearchUFS const &); //disabled
+    StoreSearchUFS& operator=(StoreSearchUFS const &); //disabled
+    StoreSearchUFS(); //disabled
+};
+
+} //namespace Ufs
+} //namespace Fs
+#endif /* SQUID_FS_UFS_STORESEARCHUFS_H */
