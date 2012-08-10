@@ -74,7 +74,9 @@ private:
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
     void start(Pointer aSelf);
 
+#if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();
+#endif
     static void logReplyStatus(int tries, http_status status);
     void doneWithRetries();
     void completed();
