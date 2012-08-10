@@ -37,10 +37,14 @@
  \ingroup FileSystems
  */
 
-class DiskIOModule;
-
 #include "StoreFileSystem.h"
 
+class DiskIOModule;
+
+namespace Fs
+{
+namespace Ufs
+{
 /**
  \ingroup UFS, FileSystems
  *
@@ -52,7 +56,6 @@ class DiskIOModule;
 template <class TheSwapDir>
 class StoreFSufs : public StoreFileSystem
 {
-
 public:
     static StoreFileSystem &GetInstance();
     StoreFSufs(char const *DefaultModuleType, char const *label);
@@ -107,5 +110,8 @@ StoreFSufs<C>::setup()
     assert(!initialised);
     initialised = true;
 }
+
+} /* namespace Ufs */
+} /* namespace Fs */
 
 #endif /* SQUID_STOREFSUFS_H */

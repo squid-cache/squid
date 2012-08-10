@@ -4,7 +4,6 @@
 #include "Store.h"
 #include "SwapDir.h"
 #include "DiskIO/DiskIOModule.h"
-#include "fs/ufs/ufscommon.h"
 #include "fs/coss/CossSwapDir.h"
 #include "Mem.h"
 #include "MemObject.h"

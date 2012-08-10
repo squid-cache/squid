@@ -5,7 +5,6 @@
 #include "Store.h"
 #include "SwapDir.h"
 #include "DiskIO/DiskIOModule.h"
-#include "fs/ufs/ufscommon.h"
 #if 0 // AYJ: COSS in Squid-3 is disabled.
 #include "fs/coss/CossSwapDir.h"
 #endif
