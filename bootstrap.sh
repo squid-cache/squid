@@ -94,7 +94,7 @@ bootstrap_libtoolize() {
 }
 
 # On MAC OS X, GNU libtool is named 'glibtool':
-if [ `(uname -s) 2>/dev/null` == 'Darwin' ]
+if [ `uname -s 2>/dev/null` = 'Darwin' ]
 then
   LIBTOOL_BIN="glibtool"
 else
