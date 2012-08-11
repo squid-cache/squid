@@ -163,10 +163,9 @@ private:
     peer *_peer;
 };
 
-MEMPROXY_CLASS_INLINE(Connection);
-
 }; // namespace Comm
 
+MEMPROXY_CLASS_INLINE(Comm::Connection);
 
 // NP: Order and namespace here is very important.
 //     * The second define inlines the first.
