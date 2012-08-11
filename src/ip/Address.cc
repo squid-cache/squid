@@ -631,7 +631,12 @@ Ip::Address::GetAddrInfo(struct addrinfo *&dst, int force) const
     memset(dst, 0, sizeof(struct addrinfo));
 
     // set defaults
+    // Mac OS X does not emit a flag indicating the output is numeric (IP address)
+#if _SQUID_APPLE_
+    dst->ai_flags = 0;
+#else
     dst->ai_flags = AI_NUMERICHOST;
+#endif
 
     if (dst->ai_socktype == 0)
         dst->ai_socktype = SOCK_STREAM;
