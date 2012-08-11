@@ -74,8 +74,8 @@ public:
 };
 
 UFSCleanLog::UFSCleanLog(SwapDir *aSwapDir) :
-                cur(NULL), newLog(NULL), cln(NULL), outbuf(NULL),
-                outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
+        cur(NULL), newLog(NULL), cln(NULL), outbuf(NULL),
+        outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
 {}
 
 const StoreEntry *
@@ -361,7 +361,7 @@ Fs::Ufs::UFSSwapDir::doubleCheck(StoreEntry & e)
 
     if ((off_t)e.swap_file_sz != sb.st_size) {
         debugs(47, DBG_CRITICAL, HERE << "WARNING: Size Mismatch. Entry size: "
-                << e.swap_file_sz << ", file size: " << sb.st_size);
+               << e.swap_file_sz << ", file size: " << sb.st_size);
         dumpEntry(e);
         return true;
     }
@@ -471,7 +471,7 @@ void
 Fs::Ufs::UFSSwapDir::reference(StoreEntry &e)
 {
     debugs(47, 3, HERE << "referencing " << &e << " " <<
-            e.swap_dirn << "/" << e.swap_filen);
+           e.swap_dirn << "/" << e.swap_filen);
 
     if (repl->Referenced)
         repl->Referenced(repl, &e, &e.repl);
@@ -481,7 +481,7 @@ bool
 Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
 {
     debugs(47, 3, HERE << "dereferencing " << &e << " " <<
-            e.swap_dirn << "/" << e.swap_filen);
+           e.swap_dirn << "/" << e.swap_filen);
 
     if (repl->Dereferenced)
         repl->Dereferenced(repl, &e, &e.repl);
@@ -731,15 +731,15 @@ Fs::Ufs::UFSSwapDir::validL2(int anInt) const
 
 StoreEntry *
 Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
-                           sfileno file_number,
-                           uint64_t swap_file_sz,
-                           time_t expires,
-                           time_t timestamp,
-                           time_t lastref,
-                           time_t lastmod,
-                           uint32_t refcount,
-                           uint16_t newFlags,
-                           int clean)
+                                    sfileno file_number,
+                                    uint64_t swap_file_sz,
+                                    time_t expires,
+                                    time_t timestamp,
+                                    time_t lastref,
+                                    time_t lastmod,
+                                    uint32_t refcount,
+                                    uint16_t newFlags,
+                                    int clean)
 {
     StoreEntry *e = NULL;
     debugs(47, 5, HERE << storeKeyText(key)  <<
