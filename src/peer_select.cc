@@ -269,6 +269,18 @@ peerSelectDnsPaths(ps_state *psstate)
         return;
     }
 
+    // Bug 3605: clear any extra listed FwdServer destinations, when the options exceeds max_foward_tries.
+    // due to the allocation method of fs, we must deallocate each manually.
+    // TODO: use a std::list so we can get the size and abort adding whenever the selection loops reach Config.forward_max_tries
+    if (fs && psstate->paths->size() >= (unsigned int)Config.forward_max_tries) {
+        while(fs) {
+            FwdServer *next = fs->next;
+            cbdataReferenceDone(fs->_peer);
+            memFree(fs, MEM_FWD_SERVER);
+            fs = next;
+        }
+    }
+
     // done with DNS lookups. pass back to caller
     PSC *callback = psstate->callback;
     psstate->callback = NULL;
