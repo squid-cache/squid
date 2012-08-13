@@ -273,7 +273,7 @@ peerSelectDnsPaths(ps_state *psstate)
     // due to the allocation method of fs, we must deallocate each manually.
     // TODO: use a std::list so we can get the size and abort adding whenever the selection loops reach Config.forward_max_tries
     if (fs && psstate->paths->size() >= (unsigned int)Config.forward_max_tries) {
-        while(fs) {
+        while (fs) {
             FwdServer *next = fs->next;
             cbdataReferenceDone(fs->_peer);
             memFree(fs, MEM_FWD_SERVER);
