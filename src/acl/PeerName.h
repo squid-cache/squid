@@ -28,6 +28,8 @@ class ACLPeerName
 private:
     static ACL::Prototype RegistryProtoype;
     static ACLStrategised<const char *> RegistryEntry_;
+    static ACL::Prototype RegexRegistryProtoype;
+    static ACLStrategised<char const *> RegexRegistryEntry_;
 };
 
 #endif /* SQUID_ACLPEERNAME_H */

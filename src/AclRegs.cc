@@ -109,6 +109,8 @@ ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "
 ACLStrategised<const char *> ACLMyPortName::RegistryEntry_(new ACLStringData, ACLMyPortNameStrategy::Instance(), "myportname");
 ACL::Prototype ACLPeerName::RegistryProtoype(&ACLPeerName::RegistryEntry_, "peername");
 ACLStrategised<const char *> ACLPeerName::RegistryEntry_(new ACLStringData, ACLPeerNameStrategy::Instance(), "peername");
+ACL::Prototype ACLPeerName::RegexRegistryProtoype(&ACLPeerName::RegexRegistryEntry_, "peername_regex");
+ACLStrategised<char const *> ACLPeerName::RegexRegistryEntry_(new ACLRegexData, ACLPeerNameStrategy::Instance(), "peername_regex");
 ACL::Prototype ACLProtocol::RegistryProtoype(&ACLProtocol::RegistryEntry_, "proto");
 ACLStrategised<AnyP::ProtocolType> ACLProtocol::RegistryEntry_(new ACLProtocolData, ACLProtocolStrategy::Instance(), "proto");
 ACL::Prototype ACLRandom::RegistryProtoype(&ACLRandom::RegistryEntry_, "random");
