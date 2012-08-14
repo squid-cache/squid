@@ -2,6 +2,7 @@
 #define SQUID_SRC_DISKIO_DISKTHREADS_COMMIO_H
 
 #include "fde.h"
+#include "globals.h"
 
 class CommIO
 {

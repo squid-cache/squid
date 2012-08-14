@@ -36,15 +36,7 @@
 /* TODO: remove this file as unused */
 
 #include "squid.h"
-
-#if 0
-#include "squid-old.h"
-#include "StoreFileSystem.h"
-#include "DiskIO/DiskIOModule.h"
-#endif
-
 #include "fs/ufs/StoreFSufs.h"
-
 #include "fs/ufs/UFSSwapDir.h"
 
 /**

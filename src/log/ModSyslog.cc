@@ -30,7 +30,8 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
 
 #if HAVE_SYSLOG
 

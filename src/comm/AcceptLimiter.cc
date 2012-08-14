@@ -3,6 +3,7 @@
 #include "comm/Connection.h"
 #include "comm/TcpAcceptor.h"
 #include "fde.h"
+#include "globals.h"
 
 Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
 

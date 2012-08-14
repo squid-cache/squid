@@ -32,7 +32,9 @@
 #ifndef SQUID_HTTPHDRCC_H
 #define SQUID_HTTPHDRCC_H
 
+#include "enums.h"
 #include "MemPool.h"
+#include "Packer.h"
 #include "SquidString.h"
 
 /** Http Cache-Control header representation

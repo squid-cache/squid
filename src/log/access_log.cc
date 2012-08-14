@@ -33,7 +33,7 @@
  */
 
 
-#include "squid-old.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
 
 // Store.h Required by configuration directives parsing/dumping only
@@ -48,6 +48,7 @@
 #include "eui/Eui64.h"
 #endif
 #include "format/Token.h"
+#include "globals.h"
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

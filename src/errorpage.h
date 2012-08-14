@@ -34,15 +34,16 @@
 #ifndef   SQUID_ERRORPAGE_H
 #define   SQUID_ERRORPAGE_H
 
-#include "squid-old.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "err_detail_type.h"
+#include "err_type.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
+#include "SquidString.h"
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
 #if USE_SSL
 #include "ssl/ErrorDetail.h"
 #endif
@@ -90,6 +91,7 @@
  */
 
 class HttpReply;
+class HttpRequest;
 class MemBuf;
 
 /// \ingroup ErrorPageAPI

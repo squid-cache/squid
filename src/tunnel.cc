@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "errorpage.h"
 #include "HttpRequest.h"
 #include "fde.h"
@@ -44,14 +44,20 @@
 #include "comm/Write.h"
 #include "client_side_request.h"
 #include "acl/FilledChecklist.h"
-#if USE_DELAY_POOLS
-#include "DelayId.h"
-#endif
 #include "client_side.h"
 #include "MemBuf.h"
 #include "http.h"
 #include "PeerSelectState.h"
+#include "protos.h"
 #include "StatCounters.h"
+
+#if USE_DELAY_POOLS
+#include "DelayId.h"
+#endif
+
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 class TunnelStateData
 {

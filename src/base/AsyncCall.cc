@@ -2,11 +2,11 @@
  * $Id$
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
 #include "cbdata.h"
-
+#include "Debug.h"
 #include <ostream>
 
 InstanceIdDefinitions(AsyncCall, "call");

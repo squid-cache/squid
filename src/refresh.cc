@@ -37,14 +37,15 @@
 #define USE_POSIX_REGEX		/* put before includes; always use POSIX */
 #endif
 
-#include "squid-old.h"
-#include "HttpHdrCc.h"
+#include "squid.h"
 #include "mgr/Registration.h"
-#include "Store.h"
-#include "MemObject.h"
+#include "HttpHdrCc.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "MemObject.h"
+#include "protos.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 typedef enum {
     rcHTTP,

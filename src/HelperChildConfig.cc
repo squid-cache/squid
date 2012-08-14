@@ -1,6 +1,8 @@
 #include "squid.h"
+#include "Debug.h"
 #include "HelperChildConfig.h"
 #include "globals.h"
+#include "protos.h"
 
 #include <string.h>
 

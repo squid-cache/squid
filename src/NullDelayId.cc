@@ -40,9 +40,8 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
-#include "NullDelayId.h"
 #include "DelayPools.h"
+#include "NullDelayId.h"
 
 void *
 NullDelayId::operator new(size_t size)

@@ -33,10 +33,16 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "mgr/Registration.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 #include "Store.h"
+
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 int
 String::psize() const

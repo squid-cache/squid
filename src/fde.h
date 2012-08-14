@@ -32,6 +32,7 @@
 
 #include "comm.h"
 #include "ip/Address.h"
+#include "structs.h"
 
 #if USE_DELAY_POOLS
 class ClientInfo;

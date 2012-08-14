@@ -10,6 +10,8 @@
 #include "CpuAffinity.h"
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
+#include "Debug.h"
+#include "protos.h"
 #include "structs.h"
 
 #include <algorithm>

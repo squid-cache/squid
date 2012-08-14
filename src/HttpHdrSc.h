@@ -37,6 +37,8 @@
 #include "dlink.h"
 #include "HttpHdrScTarget.h"
 
+class StatHist;
+
 /* http surogate control header field */
 
 class HttpHdrSc

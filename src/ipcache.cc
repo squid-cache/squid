@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "CacheManager.h"
 #include "DnsLookupDetails.h"
@@ -39,6 +39,8 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "mgr/Registration.h"
+#include "protos.h"
+#include "rfc3596.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

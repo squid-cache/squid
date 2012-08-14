@@ -36,9 +36,9 @@
 #ifndef SQUID_ESISEQUENCE_H
 #define SQUID_ESISEQUENCE_H
 
-#include "squid-old.h"
 #include "esi/Element.h"
 #include "esi/ElementList.h"
+#include "MemPool.h"
 
 /* esiSequence */
 

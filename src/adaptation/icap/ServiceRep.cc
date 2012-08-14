@@ -2,7 +2,7 @@
  * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "adaptation/Answer.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ModXact.h"
@@ -12,10 +12,12 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "ConfigParser.h"
-#include "ip/tools.h"
-#include "HttpReply.h"
-#include "SquidTime.h"
+#include "Debug.h"
 #include "fde.h"
+#include "HttpReply.h"
+#include "ip/tools.h"
+#include "protos.h"
+#include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 

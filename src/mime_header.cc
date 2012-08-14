@@ -33,16 +33,11 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #define GET_HDR_SZ 1024
-
-/* returns a pointer to a field-value of the first matching field-name */
-char *
-mime_get_header(const char *mime, const char *name)
-{
-    return mime_get_header_field(mime, name, NULL);
-}
+#include "Debug.h"
+#include "profiler/Profiler.h"
 
 /*
  * returns a pointer to a field-value of the first matching field-name where
@@ -116,6 +111,14 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
 
     return NULL;
 }
+
+/* returns a pointer to a field-value of the first matching field-name */
+char *
+mime_get_header(const char *mime, const char *name)
+{
+    return mime_get_header_field(mime, name, NULL);
+}
+
 
 size_t
 headersEnd(const char *mime, size_t l)

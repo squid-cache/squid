@@ -34,6 +34,8 @@
 #ifndef SQUID_MEM_NODE_H
 #define SQUID_MEM_NODE_H
 
+#include "defines.h"
+#include "MemPool.h"
 #include "StoreIOBuffer.h"
 #include "Range.h"
 

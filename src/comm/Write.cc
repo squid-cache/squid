@@ -6,9 +6,12 @@
 #include "comm/IoCallback.h"
 #include "comm/Write.h"
 #include "fde.h"
+#include "globals.h"
 #include "StatCounters.h"
 #include "SquidTime.h"
 #include "MemBuf.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 
 void
 Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback)

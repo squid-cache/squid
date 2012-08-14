@@ -99,10 +99,10 @@
  \endverbatim
  */
 
-/* if you have configure you can use this */
-#if defined(HAVE_CONFIG_H)
 #include "squid.h"
-#endif
+#include "MemBuf.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 
 #ifdef VA_COPY
 #undef VA_COPY
@@ -112,9 +112,6 @@
 #elif defined HAVE___VA_COPY
 #define VA_COPY __va_copy
 #endif
-
-#include "squid-old.h"
-#include "MemBuf.h"
 
 /* local constants */
 

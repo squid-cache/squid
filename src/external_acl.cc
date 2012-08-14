@@ -40,35 +40,36 @@
  *
  */
 
-#include "squid-old.h"
-#include "mgr/Registration.h"
-#include "ExternalACL.h"
+#include "squid.h"
+#include "acl/Acl.h"
+#include "acl/FilledChecklist.h"
+#include "client_side.h"
+#include "comm/Connection.h"
 #include "ExternalACLEntry.h"
+#include "ExternalACL.h"
+#include "fde.h"
+#include "helper.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "ip/tools.h"
+#include "MemBuf.h"
+#include "mgr/Registration.h"
+#include "protos.h"
+#include "rfc1738.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "URLScheme.h"
+#include "wordlist.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 #if USE_AUTH
 #include "auth/Acl.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #endif
-#include "SquidTime.h"
-#include "Store.h"
-#include "fde.h"
-#include "acl/FilledChecklist.h"
-#include "acl/Acl.h"
 #if USE_IDENT
 #include "ident/AclIdent.h"
-#endif
-#include "ip/tools.h"
-#include "client_side.h"
-#include "comm/Connection.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "helper.h"
-#include "MemBuf.h"
-#include "rfc1738.h"
-#include "URLScheme.h"
-#include "wordlist.h"
-#if USE_SSL
-#include "ssl/support.h"
 #endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL

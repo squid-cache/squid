@@ -34,12 +34,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
+#include "Debug.h"
+#include "protos.h"
 #include "wordlist.h"
-
-
 
 ACL *
 ACLMaxConnection::clone() const

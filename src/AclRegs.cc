@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 
 /** This file exists to provide satic registration code to executables
     that need ACLs. We cannot place this code in acl/lib*.la because it

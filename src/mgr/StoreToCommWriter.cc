@@ -12,6 +12,7 @@
 #include "comm/Write.h"
 #include "ipc/FdNotes.h"
 #include "mgr/StoreToCommWriter.h"
+#include "protos.h"
 #include "StoreClient.h"
 #include "Store.h"
 

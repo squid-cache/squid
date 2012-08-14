@@ -36,7 +36,6 @@
 #ifndef SQUID_ESIATTEMPT_H
 #define SQUID_ESIATTEMPT_H
 
-#include "squid-old.h"
 #include "esi/Element.h"
 #include "esi/Sequence.h"
 

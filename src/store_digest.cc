@@ -40,18 +40,25 @@
  *       storeDigestRebuild/write schedule to be activated
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
 #include "event.h"
+#include "globals.h"
 #include "mgr/Registration.h"
+#include "protos.h"
 #if USE_CACHE_DIGESTS
 
-#include "Store.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "StoreSearch.h"
+
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 
 /*
  * local types

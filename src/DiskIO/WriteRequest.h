@@ -34,8 +34,6 @@
 #ifndef SQUID_WRITEREQUEST_H
 #define SQUID_WRITEREQUEST_H
 
-#include "squid-old.h"
-
 #include "cbdata.h"
 #include "RefCount.h"
 

@@ -34,9 +34,11 @@
  */
 #include "squid.h"
 #include "BlockingFile.h"
+#include "Debug.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "protos.h"
 
 CBDATA_CLASS_INIT(BlockingFile);
 

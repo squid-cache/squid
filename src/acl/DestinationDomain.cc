@@ -34,13 +34,14 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/DestinationDomain.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "acl/DomainData.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
+#include "protos.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 

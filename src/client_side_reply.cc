@@ -32,39 +32,37 @@
  *
  */
 #include "squid.h"
-
-/* for ClientActiveRequests global */
-#include "dlink.h"
-
-/* old includes without reasons given. */
-#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
-#include "client_side.h"
 #include "client_side_reply.h"
+#include "client_side.h"
 #include "clientStream.h"
-#if USE_DELAY_POOLS
-#include "DelayPools.h"
-#endif
+#include "dlink.h"
 #include "errorpage.h"
-#if USE_SQUID_ESI
-#include "esi/Esi.h"
-#endif
 #include "fde.h"
-#include "forward.h"
 #include "format/Token.h"
+#include "forward.h"
+#include "globals.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "MemObject.h"
+#include "protos.h"
 #include "SquidTime.h"
-#include "StoreClient.h"
 #include "Store.h"
+#include "StoreClient.h"
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
+#if USE_DELAY_POOLS
+#include "DelayPools.h"
+#endif
+#if USE_SQUID_ESI
+#include "esi/Esi.h"
+#endif
 
 CBDATA_CLASS_INIT(clientReplyContext);
 

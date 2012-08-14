@@ -38,11 +38,10 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS && USE_AUTH
-#include "squid-old.h"
-#include "DelayUser.h"
-#include "auth/UserRequest.h"
 #include "auth/User.h"
+#include "auth/UserRequest.h"
 #include "comm/Connection.h"
+#include "DelayUser.h"
 #include "NullDelayId.h"
 #include "Store.h"
 

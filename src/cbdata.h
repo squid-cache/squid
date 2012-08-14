@@ -34,7 +34,7 @@
 #ifndef   SQUID_CBDATA_H
 #define   SQUID_CBDATA_H
 
-#include "squid-old.h"
+#include "typedefs.h"
 
 /**
  \defgroup CBDATAAPI Callback Data Allocator API

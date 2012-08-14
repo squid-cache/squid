@@ -33,21 +33,27 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
+#include "base/CbcPointer.h"
+#include "Debug.h"
+#include "HierarchyLogEntry.h"
+#include "HttpMsg.h"
+#include "HttpRequestMethod.h"
+
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
 #if USE_ADAPTATION
 #include "adaptation/History.h"
 #endif
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
-#include "base/CbcPointer.h"
-#include "client_side.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
-#include "HierarchyLogEntry.h"
-#include "HttpMsg.h"
-#include "HttpRequestMethod.h"
+
+class ConnStateData;
 
 /*  Http Request */
 //DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
@@ -229,11 +235,7 @@ public:
 
     static HttpRequest * CreateFromUrl(char * url);
 
-    ConnStateData *pinnedConnection() {
-        if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
-            return clientConnectionManager.get();
-        return NULL;
-    }
+    ConnStateData *pinnedConnection();
 
     /**
      * The client connection manager, if known;

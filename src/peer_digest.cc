@@ -33,17 +33,17 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #if USE_CACHE_DIGESTS
-
 #include "event.h"
 #include "forward.h"
-#include "Store.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
+#include "protos.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "StoreClient.h"
 
 /* local types */

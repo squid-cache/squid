@@ -32,11 +32,11 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "client_side.h"
 #include "client_side_request.h"
+#include "client_side.h"
 #include "comm/Connection.h"
 #include "compat/strtoll.h"
 #include "fde.h"
@@ -45,14 +45,15 @@
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "protos.h"
+#include "Store.h"
+
 #if USE_SSL
 #include "ssl/support.h"
 #endif
-#include "Store.h"
+
 #include <algorithm>
-#if HAVE_STRING
 #include <string>
-#endif
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 

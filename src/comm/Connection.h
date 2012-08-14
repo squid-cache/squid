@@ -38,6 +38,7 @@
 #define _SQUIDCONNECTIONDETAIL_H_
 
 #include "comm/forward.h"
+#include "defines.h"
 #include "hier_code.h"
 #include "ip/Address.h"
 #include "MemPool.h"

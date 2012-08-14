@@ -1,6 +1,7 @@
 #ifndef ICAP_LOG_H_
 #define ICAP_LOG_H_
 
+#include "AccessLogEntry.h"
 #include "RefCount.h"
 
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;

@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "format/Token.h"
 #include "HttpReply.h"
 #include "log/File.h"

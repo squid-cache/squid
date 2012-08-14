@@ -33,25 +33,28 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
-#include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
+#include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
+#include "compat/xalloc.h"
+#include "globals.h"
 #include "htcp.h"
 #include "http.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
+#include "md5.h"
 #include "MemBuf.h"
+#include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "StoreClient.h"
-#include "compat/xalloc.h"
 
 typedef struct _Countstr Countstr;
 

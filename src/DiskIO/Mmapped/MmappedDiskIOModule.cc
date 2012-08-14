@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "MmappedDiskIOModule.h"
 #include "MmappedIOStrategy.h"
 

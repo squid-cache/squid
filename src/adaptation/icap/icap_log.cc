@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "icap_log.h"
 #include "AccessLogEntry.h"
 #include "log/File.h"

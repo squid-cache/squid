@@ -2,6 +2,7 @@
 #define SQUID_HTTPHEADERTOOLS_H
 
 #include "format/Format.h"
+#include "HttpHeader.h"
 
 #if HAVE_LIST
 #include <list>
@@ -89,4 +90,7 @@ public:
     /// whether fieldValue may contain macros
     bool quoted;
 };
+
+SQUIDCEXTERN int httpHeaderParseOffset(const char *start, int64_t * off);
+
 #endif

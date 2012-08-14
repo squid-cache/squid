@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "errorpage.h"
+#include "protos.h"
 
 #define STUB_API "errorpage.cc"
 #include "tests/STUB.h"

@@ -34,9 +34,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/TimeData.h"
 #include "acl/Checklist.h"
+#include "Debug.h"
+#include "protos.h"
 #include "wordlist.h"
 
 ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (NULL) {}

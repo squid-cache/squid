@@ -32,10 +32,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "MemBuf.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 #include "StatCounters.h"
 
 static PF diskHandleRead;

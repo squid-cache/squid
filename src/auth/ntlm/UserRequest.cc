@@ -3,6 +3,8 @@
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cbdata.h"
+#include "client_side.h"
+#include "globals.h"
 #include "HttpRequest.h"
 #include "SquidTime.h"
 

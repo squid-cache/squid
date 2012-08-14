@@ -34,9 +34,10 @@
 #ifndef SQUID_EVENT_H
 #define SQUID_EVENT_H
 
-#include "squid-old.h"
 #include "Array.h"
 #include "AsyncEngine.h"
+#include "MemPool.h"
+#include "RefCount.h"
 
 /* forward decls */
 

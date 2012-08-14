@@ -38,14 +38,16 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Strategised.h"
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
+#include "globals.h"
 #include "HttpRequest.h"
+#include "protos.h"
 
 
 /* does name lookup, returns page_id */

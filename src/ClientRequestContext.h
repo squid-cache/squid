@@ -1,18 +1,18 @@
 #ifndef SQUID_CLIENTREQUESTCONTEXT_H
 #define SQUID_CLIENTREQUESTCONTEXT_H
 
-class ACLChecklist;
-class ClientHttpRequest;
-class DnsLookupDetails;
-
-/* for RefCountable */
-#include "RefCount.h"
-/* for CBDATA_CLASS() */
 #include "cbdata.h"
+#include "RefCount.h"
+#include "ipcache.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #endif
+
+class ACLChecklist;
+class ClientHttpRequest;
+class DnsLookupDetails;
+class ErrorState;
 
 class ClientRequestContext : public RefCountable
 {

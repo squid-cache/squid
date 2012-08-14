@@ -34,12 +34,13 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/SourceDomain.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "acl/DomainData.h"
 #include "HttpRequest.h"
+#include "protos.h"
 
 SourceDomainLookup SourceDomainLookup::instance_;
 

@@ -11,6 +11,7 @@
 #include "CommCalls.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipc/Port.h"

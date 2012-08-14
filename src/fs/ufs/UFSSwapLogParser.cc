@@ -28,10 +28,15 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
 #include "md5.h"
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"
 #include "UFSSwapLogParser.h"
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 /// Parse a swap header entry created on a system with 32-bit size_t and sfileno
 /// this is typical of 32-bit systems without large file support

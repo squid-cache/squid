@@ -36,6 +36,7 @@
 #include "AccessLogEntry.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
+#include "globals.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "SquidTime.h"

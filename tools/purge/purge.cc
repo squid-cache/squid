@@ -98,16 +98,12 @@
 #endif
 
 #include "squid.h"
-// for xstrdup
 #include "util.h"
 
-//#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <dirent.h>
-//#include <ctype.h>
 #include <string.h>
-//#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -122,10 +118,9 @@
 #endif
 
 #include <netinet/in.h>
-#include <netinet/tcp.h>  // TCP_NODELAY
+#include <netinet/tcp.h> 
 #include <arpa/inet.h>
-#include <netdb.h>        // gethostbyname()
-//#include <regex.h>    //comes via compat.h
+#include <netdb.h>
 
 #include "convert.hh"
 #include "socket.hh"

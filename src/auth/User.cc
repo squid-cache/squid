@@ -33,7 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "auth/Config.h"
@@ -41,6 +41,7 @@
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
 #include "event.h"
+#include "globals.h"
 #include "SquidTime.h"
 #include "Store.h"
 

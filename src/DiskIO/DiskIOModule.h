@@ -34,7 +34,6 @@
 #ifndef SQUID_DISKIOMODULE_H
 #define SQUID_DISKIOMODULE_H
 
-#include "squid-old.h"
 #include "Array.h"
 
 /* forward decls */

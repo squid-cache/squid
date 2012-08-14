@@ -32,20 +32,21 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
-#include "Server.h"
-#include "Store.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "errorpage.h"
 #include "err_detail_type.h"
-#include "StatCounters.h"
+#include "errorpage.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "protos.h"
+#include "Server.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
+#include "Store.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"

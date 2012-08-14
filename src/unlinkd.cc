@@ -33,12 +33,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "fde.h"
+#include "globals.h"
+#include "xusleep.h"
+#include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "SwapDir.h"
-#include "fde.h"
-#include "xusleep.h"
 
 /* This code gets linked to Squid */
 

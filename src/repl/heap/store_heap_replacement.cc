@@ -41,12 +41,16 @@
  *  http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "heap.h"
 #include "store_heap_replacement.h"
 #include "Store.h"
 #include "MemObject.h"
 #include "SquidTime.h"
+
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 
 /*
  * Key generation function to implement the LFU-DA policy (Least

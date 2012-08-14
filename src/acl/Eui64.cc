@@ -32,14 +32,16 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_SQUID_EUI
 
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
+#include "Debug.h"
 #include "eui/Eui64.h"
 #include "ip/Address.h"
+#include "protos.h"
 #include "wordlist.h"
 
 static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);

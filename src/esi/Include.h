@@ -36,10 +36,9 @@
 #ifndef SQUID_ESIINCLUDE_H
 #define SQUID_ESIINCLUDE_H
 
-#include "squid-old.h"
-#include "esi/Segment.h"
-#include "esi/Element.h"
 #include "esi/Context.h"
+#include "esi/Element.h"
+#include "esi/Segment.h"
 
 class ESIInclude;
 typedef RefCount<ESIInclude> ESIIncludePtr;

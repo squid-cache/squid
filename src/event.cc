@@ -38,6 +38,8 @@
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "SquidTime.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 
 /* The list of event processes */
 

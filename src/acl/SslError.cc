@@ -3,7 +3,7 @@
  * $Id$
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/SslError.h"
 #include "acl/SslErrorData.h"
 #include "acl/Checklist.h"

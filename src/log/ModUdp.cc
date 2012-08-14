@@ -30,12 +30,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "log/File.h"
 #include "log/ModUdp.h"
 #include "Parsing.h"
+#include "protos.h"
+#include "structs.h"
 
 /*
  * This logfile UDP module is mostly inspired by a patch by Tim Starling

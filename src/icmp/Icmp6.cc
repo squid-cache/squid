@@ -33,10 +33,11 @@
  */
 //#define SQUID_HELPER 1
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_ICMP
 
+#include "leakcheck.h"
 #include "SquidTime.h"
 #include "Debug.h"
 #include "Icmp6.h"

@@ -40,14 +40,13 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
-#include "DelayConfig.h"
-#include "ConfigParser.h"
-#include "DelayPools.h"
-#include "DelayPool.h"
-#include "Store.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "ConfigParser.h"
+#include "DelayConfig.h"
+#include "DelayPool.h"
+#include "DelayPools.h"
+#include "Store.h"
 
 void
 DelayConfig::parsePoolCount()

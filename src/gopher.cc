@@ -33,23 +33,25 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "comm.h"
 #include "comm/Write.h"
 #include "errorpage.h"
-#include "Store.h"
+#include "forward.h"
 #include "html_quote.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
-#include "comm.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
+#include "protos.h"
+#include "rfc1738.h"
+#include "SquidTime.h"
+#include "StatCounters.h"
+#include "Store.h"
+
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #include "MemObject.h"
 #endif
-#include "MemBuf.h"
-#include "forward.h"
-#include "rfc1738.h"
-#include "StatCounters.h"
-#include "SquidTime.h"
 
 /**
  \defgroup ServerProtocolGopherInternal Server-Side Gopher Internals

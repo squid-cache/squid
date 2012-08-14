@@ -11,7 +11,7 @@
 #include "comm/Connection.h"
 #include "ipc/SharedListen.h"
 #include "ipc/StartListening.h"
-
+#include "protos.h"
 
 Ipc::StartListeningCb::StartListeningCb(): conn(NULL), errNo(0)
 {

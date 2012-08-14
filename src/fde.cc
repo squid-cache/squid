@@ -33,11 +33,13 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "comm.h"
 #include "fde.h"
+#include "globals.h"
+#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "comm.h"
 
 bool
 fde::readPending(int fdNumber)

@@ -1,12 +1,14 @@
-#include "squid-old.h"
-
-#include "ConfigParser.h"
-#include "adaptation/Config.h"
+#include "squid.h"
 #include "adaptation/AccessRule.h"
+#include "adaptation/Config.h"
 #include "adaptation/DynamicGroupCfg.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
+#include "ConfigParser.h"
+#include "Debug.h"
+#include "protos.h"
+#include "wordlist.h"
 
 
 Adaptation::ServiceGroup::ServiceGroup(const String &aKind, bool allSame):

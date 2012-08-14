@@ -11,6 +11,7 @@
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "globals.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
 #include "ipc/Queue.h"
@@ -19,6 +20,7 @@
 #include "ipc/mem/Pages.h"
 #include "StatCounters.h"
 #include "SquidTime.h"
+#include "protos.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
 

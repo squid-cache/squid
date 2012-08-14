@@ -35,7 +35,6 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "DelayId.h"
 
 #define STUB_API "stub_DelayId.cc"

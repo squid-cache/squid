@@ -2,10 +2,14 @@
  * $Id$
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "SquidTime.h"
 #include "FadingCounter.h"
+
+#if HAVE_MATH_H
+#include <math.h>
+#endif /* HAVE_MATH_H */
 
 FadingCounter::FadingCounter(): horizon(-1), precision(10), delta(-1),
         lastTime(0), total(0)

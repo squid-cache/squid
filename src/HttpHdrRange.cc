@@ -33,11 +33,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "Store.h"
 #include "HttpHeaderRange.h"
 #include "client_side_request.h"
 #include "HttpReply.h"
+#include "protos.h"
 
 /*
  *    Currently only byte ranges are supported

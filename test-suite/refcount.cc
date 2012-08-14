@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "RefCount.h"
 
 class _ToRefCount :public RefCountable

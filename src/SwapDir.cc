@@ -32,11 +32,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "compat/strtoll.h"
-#include "SwapDir.h"
-#include "StoreFileSystem.h"
 #include "ConfigOption.h"
+#include "protos.h"
+#include "StoreFileSystem.h"
+#include "SwapDir.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
         max_size(0),

@@ -33,8 +33,11 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
 #include "HttpStatusLine.h"
+#include "protos.h"
+#include "Packer.h"
 
 /* local constants */
 /* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */

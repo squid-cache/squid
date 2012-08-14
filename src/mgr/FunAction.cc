@@ -8,11 +8,13 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "globals.h"
 #include "ipc/UdsOp.h"
 #include "mgr/Command.h"
 #include "mgr/Filler.h"
 #include "mgr/FunAction.h"
 #include "mgr/Request.h"
+#include "protos.h"
 #include "Store.h"
 
 

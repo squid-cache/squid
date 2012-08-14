@@ -3,11 +3,12 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "testEvent.h"
-#include "event.h"
 #include "base/AsyncCallQueue.h"
 #include "CapturingStoreEntry.h"
+#include "event.h"
 #include "Mem.h"
+#include "protos.h"
+#include "testEvent.h"
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );

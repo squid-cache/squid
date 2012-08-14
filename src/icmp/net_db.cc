@@ -38,7 +38,7 @@
  * (adrian@squid-cache.org) to sort them out.
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "icmp/net_db.h"
 #include "log/File.h"
 #include "cbdata.h"
@@ -51,9 +51,14 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "forward.h"
+#include "protos.h"
 #include "SquidTime.h"
 #include "wordlist.h"
 #include "ip/Address.h"
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"

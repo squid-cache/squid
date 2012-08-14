@@ -38,8 +38,8 @@
  */
 #ifndef NULLDELAYID_H
 #define NULLDELAYID_H
+
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "RefCount.h"
 #include "DelayIdComposite.h"
 

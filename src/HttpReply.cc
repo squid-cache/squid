@@ -33,17 +33,19 @@
  *
  */
 
-#include "squid-old.h"
-#include "SquidTime.h"
-#include "Store.h"
-#include "HttpBody.h"
-#include "HttpReply.h"
-#include "HttpHdrContRange.h"
-#include "HttpHdrCc.h"
-#include "HttpHdrSc.h"
+#include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "globals.h"
+#include "HttpBody.h"
+#include "HttpHdrCc.h"
+#include "HttpHdrContRange.h"
+#include "HttpHdrSc.h"
+#include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "protos.h"
+#include "SquidTime.h"
+#include "Store.h"
 
 /* local constants */
 

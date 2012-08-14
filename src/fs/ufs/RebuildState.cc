@@ -32,10 +32,18 @@
  */
 
 #include "squid.h"
+#include "protos.h"
 #include "RebuildState.h"
 #include "SquidTime.h"
 #include "StoreSwapLogData.h"
 #include "UFSSwapLogParser.h"
+
+#if HAVE_MATH_H
+#include <math.h>
+#endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 

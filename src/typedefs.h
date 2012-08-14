@@ -31,7 +31,8 @@
  *
  */
 
-#include "squid-old.h"
+#include "enums.h"
+#include "rfc1035.h"
 
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
@@ -98,6 +99,8 @@ typedef struct _sslproxy_cert_adapt sslproxy_cert_adapt;
 #endif
 
 #if SQUID_SNMP
+#include "snmp_vars.h"
+#include "cache_snmp.h"
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 
 typedef struct _snmp_request_t snmp_request_t;

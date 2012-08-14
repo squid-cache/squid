@@ -34,10 +34,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/IntRange.h"
+#include "Debug.h"
 #include "wordlist.h"
 #include "Parsing.h"
+#include "protos.h"
 
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS-IGNORE */

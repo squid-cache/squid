@@ -2,18 +2,23 @@
 #include "squid.h"
 
 #include "DiskIO/DiskIOModule.h"
+#include "fs/rock/RockSwapDir.h"
+#include "globals.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
+#include "protos.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
 #include "SwapDir.h"
-#include "fs/rock/RockSwapDir.h"
 #include "testRock.h"
 #include "testStoreSupport.h"
 
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 #if HAVE_STDEXCEPT
 #include <stdexcept>
 #endif

@@ -33,8 +33,6 @@
 #include "squid.h"
 
 #if USE_SELECT_WIN32
-
-#include "squid-old.h"
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

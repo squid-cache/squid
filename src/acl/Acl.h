@@ -37,7 +37,10 @@
 
 #include "Array.h"
 #include "cbdata.h"
+#include "defines.h"
 #include "dlink.h"
+#include "MemPool.h"
+#include "structs.h"
 
 #if HAVE_OSTREAM
 #include <ostream>

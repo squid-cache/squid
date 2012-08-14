@@ -49,6 +49,7 @@
  \ingroup CacheManagerAPI
  */
 
+class HttpRequest;
 /**
  \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.

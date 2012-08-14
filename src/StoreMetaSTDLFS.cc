@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "StoreMetaSTDLFS.h"
 #include "Store.h"
 #include "MemObject.h"

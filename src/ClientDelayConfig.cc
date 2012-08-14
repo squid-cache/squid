@@ -1,11 +1,10 @@
 #include "squid.h"
-#include "squid-old.h"
-#include "ConfigParser.h"
-#include "ClientDelayConfig.h"
-#include "Parsing.h"
-#include "Store.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "ClientDelayConfig.h"
+#include "ConfigParser.h"
+#include "Parsing.h"
+#include "Store.h"
 
 void ClientDelayPool::dump(StoreEntry * entry, unsigned int poolNumberMinusOne) const
 {

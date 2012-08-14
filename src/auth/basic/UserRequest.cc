@@ -4,6 +4,7 @@
 #include "auth/basic/UserRequest.h"
 #include "auth/State.h"
 #include "charset.h"
+#include "Debug.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 

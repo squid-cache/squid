@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/AsyncCallQueue.h"
 #include "base/AsyncCall.h"
+#include "Debug.h"
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
 
