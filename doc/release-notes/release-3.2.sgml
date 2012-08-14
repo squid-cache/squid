@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.20 release notes</title>
+<title>Squid 3.2.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.20 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.1 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -30,6 +30,8 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>TCP logging of access.log does not recover from broken connections well.
+	<item>SSL-Bump not re-wrapping decrypted traffic in CONNECT for peers.
+	<item>Cache Manager reports in txt/plain format even when requested directly via browser.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.2 release are:
@@ -941,8 +943,17 @@ This section gives an account of those changes in three categories:
 <sect1>Removed squid.conf options since Squid-2.6
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p><em>urlgroup</em> type removed. Use <em>myportname</em> type instead.
+
 	<tag>cache_dir</tag>
 	<p><em>read-only</em> option replaced by <em>no-store</em>.
+
+	<tag>http_port</tag>
+	<p><em>urlgroup=</em> removed. Use <em>name=</em> feature instead.
+
+	<tag>zero_buffers</tag>
+	<p>Replaced by native support.
 
 </descrip>
 
@@ -997,6 +1008,9 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-kqueue</tag>
 	<p>Obsolete. Disabled by default.
 
+	<tag>--without-system-md5</tag>
+	<p>Obsolete. Disabled by default.
+
 </descrip>
 
 
@@ -1046,9 +1060,6 @@ This section gives an account of those changes in three categories:
 	<tag>external_refresh_check</tag>
 	<p>Not yet ported from 2.7
 
-	<tag>http_port</tag>
-	<p><em>urlgroup=</em> not yet ported from 2.6
-
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
 
@@ -1085,18 +1096,7 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 	
 	<tag>update_headers</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>zero_buffers</tag>
-	<p>Not yet ported from 2.7
+	<p>Not yet fully ported from 2.7. Memory and rock storage caches support this natively. UFS caches do not support it.
 
 </descrip>
-
-<sect1>Missing ./configure options available in Squid-2.7
-<p>
-<descrip>
-	<tag>--without-system-md5</tag>
-
-</descrip>
-
 </article>

@@ -1,3 +1,9 @@
+Changes to squid-3.2.1 (15 Aug 2012):
+
+	- Bug 3605: memory leak in peer selection
+	- Bug 3478: better default handling without -DSTRICT_ORIGINAL_DST
+	- ... and some documentation updates
+
 Changes to squid-3.2.0.19 (02 Aug 2012):
 
 	- Regression Bug 3580: IDENT request makes squid crash
