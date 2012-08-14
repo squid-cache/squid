@@ -3337,17 +3337,17 @@ SQUID_DEFINE_BOOL(LINUX_NETFILTER,$enable_linux_netfilter,
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
 AC_MSG_NOTICE([Support for Netfilter-based interception proxy requested: $enable_linux_netfilter])
 if test "x$enable_linux_netfilter" = "xyes" -a "x$with_libcap" != "xyes" ; then
-    AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
-    AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
-    AC_MSG_WARN([Reduced support to Interception Proxy])
+    AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for TPROXY])
+    AC_MSG_WARN([Linux Transparent Proxy (version 4+) support WILL NOT be enabled])
+    AC_MSG_WARN([Reduced support to NAT Interception Proxy])
     # AC_DEFINEd later
 fi
 
 if test "x$squid_opt_netfilterconntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
-    AC_MSG_ERROR([Linux netfilter conntrack requires libcap support (libcap or libcap2)])
+    AC_MSG_ERROR([Linux netfilter conntrack requires libcap support (libcap 2.09+)])
 fi
 if test "x$with_netfilter_conntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
-    AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for netfilter mark support])
+    AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for netfilter mark support])
     AC_MSG_WARN([Linux netfilter marking support WILL NOT be enabled])
     with_netfilter_conntrack=no
 fi
