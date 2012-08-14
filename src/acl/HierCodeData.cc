@@ -1,7 +1,8 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/HierCodeData.h"
 #include "acl/Checklist.h"
 #include "hier_code.h"
+#include "protos.h"
 #include "wordlist.h"
 
 ACLHierCodeData::ACLHierCodeData()

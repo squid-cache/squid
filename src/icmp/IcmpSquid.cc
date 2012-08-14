@@ -32,12 +32,13 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
+#include "protos.h"
 #include "SquidTime.h"
 
 // Instance global to be available in main() and elsewhere.

@@ -55,13 +55,11 @@
 #include "squid.h"
 
 #if USE_KQUEUE
-
-#include "squid-old.h"
 #include "comm/Loops.h"
 #include "fde.h"
-#include "Store.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "Store.h"
 
 #if HAVE_SYS_EVENT_H
 #include <sys/event.h>

@@ -81,30 +81,24 @@
  * data flow.
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #include "acl/FilledChecklist.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "ChunkedCodingParser.h"
-#include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
-#if USE_DELAY_POOLS
-#include "ClientInfo.h"
-#endif
+#include "client_side.h"
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "CommCalls.h"
 #include "comm/Loops.h"
-#include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
+#include "comm/Write.h"
+#include "CommCalls.h"
 #include "errorpage.h"
 #include "eui/Config.h"
 #include "fde.h"
@@ -118,10 +112,21 @@
 #include "ipc/StartListening.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 #include "rfc1738.h"
+#include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
-#include "SquidTime.h"
+#include "Store.h"
+#include "TimeOrTag.h"
+
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
+#if USE_DELAY_POOLS
+#include "ClientInfo.h"
+#endif
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
@@ -133,9 +138,13 @@
 #include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
 #endif
-#include "Store.h"
-#include "TimeOrTag.h"
 
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 #if HAVE_LIMITS
 #include <limits>
 #endif

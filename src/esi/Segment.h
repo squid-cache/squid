@@ -38,6 +38,7 @@
  */
 
 #include "cbdata.h"
+#include "defines.h"
 #include "RefCount.h"
 #include "SquidString.h"
 

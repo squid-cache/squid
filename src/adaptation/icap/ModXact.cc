@@ -2,7 +2,7 @@
  * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
 #include "adaptation/Answer.h"
 #include "adaptation/History.h"
@@ -19,11 +19,12 @@
 #include "ChunkedCodingParser.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "HttpMsg.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "SquidTime.h"
 #include "err_detail_type.h"
+#include "HttpMsg.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "protos.h"
+#include "SquidTime.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network

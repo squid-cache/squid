@@ -38,7 +38,6 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "comm/Connection.h"
 #include "DelayTagged.h"
 #include "NullDelayId.h"

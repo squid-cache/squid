@@ -4,7 +4,7 @@
  * DEBUG: section 54    Interprocess Communication
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #include "Store.h"
 #include "ipc/ReadWriteLock.h"

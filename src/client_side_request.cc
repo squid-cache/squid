@@ -42,9 +42,36 @@
  * From that point on it's up to reply management.
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "anyp/PortCfg.h"
+#include "ClientRequestContext.h"
+#include "client_side.h"
+#include "client_side_reply.h"
+#include "client_side_request.h"
+#include "clientStream.h"
+#include "comm/Connection.h"
+#include "comm/Write.h"
+#include "compat/inet_pton.h"
+#include "err_detail_type.h"
+#include "errorpage.h"
+#include "fde.h"
+#include "format/Token.h"
+#include "HttpHdrCc.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "ipcache.h"
+#include "ip/QosConfig.h"
+#include "MemObject.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "wordlist.h"
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Answer.h"
@@ -54,30 +81,6 @@
 #include "adaptation/icap/History.h"
 #endif
 #endif
-#include "anyp/PortCfg.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
-#include "clientStream.h"
-#include "client_side.h"
-#include "client_side_reply.h"
-#include "client_side_request.h"
-#include "ClientRequestContext.h"
-#include "comm/Connection.h"
-#include "comm/Write.h"
-#include "compat/inet_pton.h"
-#include "errorpage.h"
-#include "fde.h"
-#include "format/Token.h"
-#include "HttpHdrCc.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "ip/QosConfig.h"
-#include "MemObject.h"
-#include "Store.h"
-#include "SquidTime.h"
-#include "wordlist.h"
-#include "err_detail_type.h"
 #if USE_SSL
 #include "ssl/support.h"
 #include "ssl/ServerBump.h"

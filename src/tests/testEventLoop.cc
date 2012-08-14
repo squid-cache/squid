@@ -6,12 +6,7 @@
 #include "testEventLoop.h"
 #include "EventLoop.h"
 #include "Mem.h"
-
-#if 0
-#include "AsyncEngine.h"
-#include "base/AsyncCallQueue.h"
-#include "event.h"
-#endif
+#include "protos.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
 

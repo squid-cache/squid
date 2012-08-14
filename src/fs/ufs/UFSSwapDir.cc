@@ -29,7 +29,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #define CLEAN_BUF_SZ 16384
 
@@ -48,6 +48,12 @@
 #include "StatCounters.h"
 #include "UFSSwapDir.h"
 
+#if HAVE_MATH_H
+#include <math.h>
+#endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
 int *Fs::Ufs::UFSSwapDir::UFSDirToGlobalDirMapping = NULL;

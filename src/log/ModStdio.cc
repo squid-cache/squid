@@ -30,10 +30,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "fde.h"
+#include "globals.h"
 #include "log/File.h"
 #include "log/ModStdio.h"
+#include "protos.h"
 
 typedef struct {
     int fd;

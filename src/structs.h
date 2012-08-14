@@ -31,8 +31,11 @@
 
 #include "RefCount.h"
 #include "cbdata.h"
+#include "defines.h"
 #include "dlink.h"
 #include "err_type.h"
+#include "hash.h"
+#include "ip/Address.h"
 
 /* needed for the global config */
 #include "HttpHeader.h"
@@ -63,6 +66,7 @@ class ACLChecklist;
 
 #if SQUID_SNMP
 
+#include "snmp_session.h"
 struct _snmp_request_t {
     u_char *buf;
     u_char *outbuf;

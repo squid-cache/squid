@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/PeerName.h"
 #include "acl/RegexData.h"
 #include "acl/StringData.h"

@@ -34,10 +34,11 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "anyp/PortCfg.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "dlink.h"
-#include "anyp/PortCfg.h"
+#include "globals.h"
 
 const char *AclMatchedName = NULL;
 

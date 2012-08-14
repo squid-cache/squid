@@ -1,7 +1,8 @@
-#include "squid-old.h"
-#include "fde.h"
+#include "squid.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
+#include "fde.h"
+#include "globals.h"
 
 /* CommCommonCbParams */
 

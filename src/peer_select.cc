@@ -32,21 +32,23 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "acl/FilledChecklist.h"
+#include "client_side.h"
 #include "DnsLookupDetails.h"
 #include "errorpage.h"
 #include "event.h"
-#include "PeerSelectState.h"
-#include "Store.h"
-#include "hier_code.h"
-#include "ICP.h"
-#include "HttpRequest.h"
-#include "acl/FilledChecklist.h"
-#include "htcp.h"
 #include "forward.h"
-#include "SquidTime.h"
+#include "hier_code.h"
+#include "htcp.h"
+#include "HttpRequest.h"
 #include "icmp/net_db.h"
+#include "ICP.h"
 #include "ipcache.h"
+#include "PeerSelectState.h"
+#include "protos.h"
+#include "SquidTime.h"
+#include "Store.h"
 
 static struct {
     int timeouts;

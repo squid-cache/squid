@@ -34,17 +34,21 @@
 
 #if USE_SELECT
 
-#include "squid-old.h"
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fde.h"
+#include "globals.h"
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 

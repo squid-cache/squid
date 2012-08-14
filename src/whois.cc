@@ -33,16 +33,17 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "comm.h"
 #include "comm/Write.h"
 #include "errorpage.h"
-#include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "comm.h"
 #include "HttpRequest.h"
 #include "forward.h"
+#include "protos.h"
 #include "StatCounters.h"
+#include "Store.h"
 
 #define WHOIS_PORT 43
 

@@ -30,27 +30,28 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
+#include "globals.h"
 #include "htcp.h"
 #include "HttpRequest.h"
+#include "icmp/net_db.h"
 #include "ICP.h"
+#include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "MemObject.h"
+#include "mgr/Registration.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
+#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "icmp/net_db.h"
-#include "ip/Address.h"
-#include "ip/tools.h"
-#include "mgr/Registration.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900

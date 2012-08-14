@@ -17,9 +17,14 @@
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "Parsing.h"
+#include "protos.h"
 #include "SquidMath.h"
 #include <cstdlib>
 #include <iomanip>
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 

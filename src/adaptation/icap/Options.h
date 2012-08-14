@@ -34,9 +34,9 @@
 #ifndef SQUID_ICAPOPTIONS_H
 #define SQUID_ICAPOPTIONS_H
 
-#include "squid-old.h"
 #include "adaptation/icap/ServiceRep.h"
 
+class HttpHeader;
 class wordlist;
 
 namespace Adaptation

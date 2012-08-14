@@ -8,6 +8,7 @@
 #include "ip/Address.h"
 
 class ConnStateData;
+class store_client;
 
 namespace Ssl
 {

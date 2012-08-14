@@ -8,9 +8,11 @@
 #include "comm/Loops.h"
 #include "comm.h"
 #include "fde.h"
+#include "globals.h"
 #include "icmp/net_db.h"
 #include "ipcache.h"
 #include "SquidTime.h"
+#include "protos.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 

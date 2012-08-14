@@ -1,7 +1,6 @@
 #ifndef TEST_TESTSWAPDIR
 #define TEST_TESTSWAPDIR
 
-#include "squid-old.h"
 #include "SwapDir.h"
 
 class TestSwapDir : public SwapDir

@@ -34,6 +34,7 @@
 
 #include "HttpBody.h"
 #include "HttpMsg.h"
+#include "HttpRequest.h"
 #include "HttpStatusLine.h"
 
 extern void httpReplyInitModule(void);

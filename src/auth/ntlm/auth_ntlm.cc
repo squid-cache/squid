@@ -37,7 +37,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 
-#include "squid-old.h"
+#include "squid.h"
 #include "auth/Gadgets.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/Scheme.h"
@@ -49,6 +49,7 @@
 #include "client_side.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 

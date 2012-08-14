@@ -32,8 +32,48 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
+#include "acl/Asn.h"
+#include "base/RunnersRegistry.h"
+#include "base/Subscription.h"
+#include "base/TextException.h"
+#include "comm.h"
+#include "ConfigParser.h"
+#include "CpuAffinity.h"
+#include "DiskIO/DiskIOModule.h"
+#include "errorpage.h"
+#include "event.h"
+#include "EventLoop.h"
+#include "ExternalACL.h"
+#include "format/Token.h"
+#include "forward.h"
+#include "fs/Module.h"
+#include "fs/Module.h"
+#include "htcp.h"
+#include "HttpReply.h"
+#include "icmp/IcmpSquid.h"
+#include "icmp/net_db.h"
+#include "ICP.h"
+#include "ident/Ident.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
+#include "ipc/Strand.h"
+#include "ip/tools.h"
+#include "Mem.h"
+#include "MemPool.h"
+#include "pconn.h"
+#include "PeerSelectState.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
+#include "SquidDns.h"
+#include "SquidTime.h"
+#include "StatCounters.h"
+#include "StoreFileSystem.h"
+#include "Store.h"
+#include "SwapDir.h"
+
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
@@ -47,62 +87,22 @@
 #if USE_AUTH
 #include "auth/Gadgets.h"
 #endif
-#include "base/RunnersRegistry.h"
-#include "base/Subscription.h"
-#include "base/TextException.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #endif
-#include "comm.h"
-#include "ConfigParser.h"
-#include "CpuAffinity.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "errorpage.h"
-#include "event.h"
-#include "EventLoop.h"
-#include "ExternalACL.h"
-#include "format/Token.h"
-#include "fs/Module.h"
-#include "PeerSelectState.h"
-#include "SquidDns.h"
-#include "Store.h"
-#include "ICP.h"
-#include "ident/Ident.h"
-#include "HttpReply.h"
-#include "pconn.h"
-#include "Mem.h"
-#include "acl/Asn.h"
-#include "acl/Acl.h"
-#include "htcp.h"
-#include "StoreFileSystem.h"
-#include "DiskIO/DiskIOModule.h"
-#include "ipc/Kids.h"
-#include "ipc/Coordinator.h"
-#include "ipc/Strand.h"
-#include "ip/tools.h"
-#include "SquidTime.h"
-#include "StatCounters.h"
-#include "SwapDir.h"
-#include "forward.h"
-#include "MemPool.h"
-#include "icmp/IcmpSquid.h"
-#include "icmp/net_db.h"
-
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
-
 #if USE_SSL_CRTD
 #include "ssl/helper.h"
 #include "ssl/certificate_db.h"
 #endif
-
 #if USE_SSL
 #include "ssl/context_storage.h"
 #endif
-
 #if ICAP_CLIENT
 #include "adaptation/icap/Config.h"
 #endif
@@ -115,10 +115,12 @@
 #if USE_SQUID_ESI
 #include "esi/Module.h"
 #endif
-#include "fs/Module.h"
 
 #if HAVE_PATHS_H
 #include <paths.h>
+#endif
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
 #endif
 
 #if USE_WIN32_SERVICE
@@ -655,7 +657,6 @@ serverConnectionsOpen(void)
 {
     if (IamPrimaryProcess()) {
 #if USE_WCCP
-
         wccpConnectionOpen();
 #endif
 

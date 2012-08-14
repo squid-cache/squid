@@ -32,12 +32,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/AsyncCall.h"
-#include "StoreIOBuffer.h"
 #include "comm.h"
-#include "event.h"
-#include "fde.h"
+#include "ClientInfo.h"
+#include "CommCalls.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
@@ -46,18 +45,23 @@
 #include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
 #include "CommRead.h"
-#include "MemBuf.h"
-#include "pconn.h"
-#include "SquidTime.h"
-#include "CommCalls.h"
+#include "compat/cmsg.h"
 #include "DescriptorSet.h"
+#include "event.h"
+#include "fde.h"
+#include "globals.h"
 #include "icmp/net_db.h"
 #include "ip/Address.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
-#include "ClientInfo.h"
+#include "MemBuf.h"
+#include "pconn.h"
+#include "protos.h"
+#include "profiler/Profiler.h"
+#include "SquidTime.h"
 #include "StatCounters.h"
+#include "StoreIOBuffer.h"
 #if USE_SSL
 #include "ssl/support.h"
 #endif
@@ -68,6 +72,12 @@
 #endif
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
+#if HAVE_SYS_UN_H
+#include <sys/un.h>
+#endif
+#if HAVE_MATH_H
+#include <math.h>
 #endif
 
 /*

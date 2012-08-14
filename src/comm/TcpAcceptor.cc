@@ -32,16 +32,17 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/TextException.h"
-#include "CommCalls.h"
 #include "comm/AcceptLimiter.h"
+#include "CommCalls.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
 #include "fde.h"
 #include "ip/Intercept.h"
+#include "profiler/Profiler.h"
 #include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

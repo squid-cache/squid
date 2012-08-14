@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "structs.h"
 
 #include "ConfigParser.h"
@@ -6,7 +6,7 @@
 #include "adaptation/AccessRule.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
-
+#include "Debug.h"
 
 int Adaptation::AccessRule::LastId = 0;
 

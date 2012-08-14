@@ -71,7 +71,7 @@
  */
 
 
-#include "squid-old.h"
+#include "squid.h"
 #include "Store.h"
 #include "MemBuf.h"
 

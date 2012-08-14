@@ -34,8 +34,6 @@
 #ifndef SQUID_IOREQUESTOR_H
 #define SQUID_IOREQUESTOR_H
 
-#include "squid-old.h"
-
 #include "RefCount.h"
 
 class ReadRequest;

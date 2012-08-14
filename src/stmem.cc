@@ -34,11 +34,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
-#include "stmem.h"
+#include "squid.h"
+#include "Generic.h"
 #include "mem_node.h"
 #include "MemObject.h"
-#include "Generic.h"
+#include "profiler/Profiler.h"
+#include "stmem.h"
 
 /*
  * NodeGet() is called to get the data buffer to pass to storeIOWrite().

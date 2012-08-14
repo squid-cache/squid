@@ -40,10 +40,10 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "DelaySpec.h"
-#include "Store.h"
 #include "Parsing.h"
+#include "protos.h"
+#include "Store.h"
 
 DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
 {}

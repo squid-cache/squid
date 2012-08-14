@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm.h"
 #include "aio_win32.h"
 

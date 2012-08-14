@@ -34,14 +34,16 @@
  */
 
 
-#include "squid-old.h"
+#include "squid.h"
 #include "DiskThreadsDiskFile.h"
-#include "Store.h"
-#include "Generic.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "Generic.h"
+#include "globals.h"
 #include "StatCounters.h"
+#include "Store.h"
+#include "protos.h"
 
 /* === PUBLIC =========================================================== */
 

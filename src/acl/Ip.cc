@@ -33,12 +33,13 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
-//#include "compat/getaddrinfo.h"
+#include "squid.h"
 #include "acl/Ip.h"
 #include "acl/Checklist.h"
+#include "Debug.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
+#include "protos.h"
 #include "wordlist.h"
 
 void *

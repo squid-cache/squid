@@ -6,6 +6,7 @@
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "fde.h"
+#include "globals.h"
 
 Comm::CbEntry *Comm::iocb_table;
 

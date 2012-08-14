@@ -4,6 +4,7 @@
 #include "Debug.h"
 #include "dlink.h"
 #include "SquidTime.h"
+#include "structs.h"
 
 Auth::Digest::User::User(Auth::Config *aConfig) :
         Auth::User(aConfig),

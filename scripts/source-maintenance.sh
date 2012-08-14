@@ -68,18 +68,18 @@ for FILENAME in `ls -1`; do
 	fi
 
 	#
-	# REQUIRE squid.h/squid-old.h as first #include
+	# REQUIRE squid.h first #include
 	#
 	case ${FILENAME} in
 	*.c|*.cc)
 		FI=`grep "#include" ${FILENAME} | head -1`;
-		if test "${FI}" != "#include \"squid.h\"" -a "${FI}" != "#include \"squid-old.h\"" -a "${FILENAME}" != "cf_gen.cc"; then
-			echo "ERROR: ${PWD}/${FILENAME} does not include squid.h or squid-old.h first!"
+		if test "${FI}" != "#include \"squid.h\"" -a "${FILENAME}" != "cf_gen.cc"; then
+			echo "ERROR: ${PWD}/${FILENAME} does not include squid.h first!"
 		fi
 		;;
 	*.h|*.cci)
 		FI=`grep "#include \"squid.h\"" ${FILENAME}`;
-		if test "x${FI}" != "x" -a "${FILENAME}" != "squid-old.h" ; then
+		if test "x${FI}" != "x" ; then
 			echo "ERROR: ${PWD}/${FILENAME} duplicate include of squid.h"
 		fi
 		;;

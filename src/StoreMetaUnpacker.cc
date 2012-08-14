@@ -33,7 +33,9 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "defines.h"
+#include "Debug.h"
 #include "StoreMetaUnpacker.h"
 #include "StoreMeta.h"
 

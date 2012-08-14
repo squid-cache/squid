@@ -37,13 +37,14 @@
 
 #include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "HttpRequestMethod.h"
 
 /// \ingroup ACLAPI
 class ACLMethodStrategy : public ACLStrategy<HttpRequestMethod>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<ACLStrategy::MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresRequest() const {return true;}
 
     static ACLMethodStrategy *Instance();

@@ -32,11 +32,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #include "ConfigParser.h"
 #include "Store.h"
-#include "Array.h"	// really Vector
+#include "Array.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "HttpRequest.h"

@@ -36,8 +36,6 @@
 #ifndef SQUID_ESIEXPRESSION_H
 #define SQUID_ESIEXPRESSION_H
 
-#include "squid-old.h"
-
 class ESIExpression
 {
 

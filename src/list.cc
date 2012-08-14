@@ -33,7 +33,9 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "protos.h"
+#include "typedefs.h"
 
 /* This should go away, in favour of the List template class */
 

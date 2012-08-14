@@ -2,9 +2,11 @@
  * DEBUG: section 93    Adaptation
  */
 
-#include "squid-old.h"
-#include "ConfigParser.h"
+#include "squid.h"
 #include "adaptation/ServiceConfig.h"
+#include "ConfigParser.h"
+#include "Debug.h"
+#include "globals.h"
 #include "ip/tools.h"
 #include <set>
 

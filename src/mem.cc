@@ -32,16 +32,18 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "event.h"
-#include "mgr/Registration.h"
 #include "ClientInfo.h"
 #include "Mem.h"
+#include "md5.h"
+#include "MemBuf.h"
 #include "memMeter.h"
+#include "mgr/Registration.h"
+#include "protos.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
-#include "MemBuf.h"
-#include "SquidTime.h"
 
 #if HAVE_IOMANIP
 #include <iomanip>

@@ -40,10 +40,9 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "comm/Connection.h"
-#include "DelayVector.h"
 #include "CommRead.h"
+#include "DelayVector.h"
 
 void *
 DelayVector::operator new(size_t size)

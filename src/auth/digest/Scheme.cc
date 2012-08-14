@@ -32,6 +32,8 @@
 
 #include "squid.h"
 #include "auth/digest/Scheme.h"
+#include "Debug.h"
+#include "globals.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Digest::Scheme::_instance = NULL;

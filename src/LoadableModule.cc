@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 
 /* The original code has this constant ./configure-able.
  * The "#else" branches use raw dlopen interface and have not been tested.

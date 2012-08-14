@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "mgr/Registration.h"
 #include "radix.h"
 #include "HttpRequest.h"
@@ -48,6 +48,7 @@
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "forward.h"
+#include "protos.h"
 #include "wordlist.h"
 
 #define WHOIS_PORT 43

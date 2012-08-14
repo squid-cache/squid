@@ -3,6 +3,7 @@
 
 #include "StoreFileSystem.h"
 
+class StoreEntry;
 namespace Rock
 {
 

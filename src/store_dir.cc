@@ -33,13 +33,16 @@
  *
  */
 
-#include "squid-old.h"
-#include "Store.h"
+#include "squid.h"
+#include "globals.h"
+#include "mem_node.h"
 #include "MemObject.h"
 #include "MemStore.h"
-#include "mem_node.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
 
@@ -58,6 +61,9 @@
 /* Windows and Linux use sys/vfs.h */
 #if HAVE_SYS_VFS_H
 #include <sys/vfs.h>
+#endif
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
 #endif
 
 #include "StoreHashIndex.h"

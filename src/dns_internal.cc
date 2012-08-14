@@ -32,22 +32,24 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "base/InstanceId.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "event.h"
-#include "SquidTime.h"
-#include "Store.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "protos.h"
+#include "rfc3596.h"
+#include "SquidTime.h"
+#include "Store.h"
 #include "util.h"
 #include "wordlist.h"
-#include "base/InstanceId.h"
 
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>

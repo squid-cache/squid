@@ -39,8 +39,11 @@
  */
 
 #include "comm/forward.h"
+#include "icp_opcode.h"
 #include "ip/Address.h"
 #include "StoreClient.h"
+
+class HttpRequest;
 
 /**
  \ingroup ServerProtocolICPAPI

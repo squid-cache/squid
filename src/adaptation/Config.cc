@@ -30,21 +30,21 @@
  *
  */
 
-#include "squid-old.h"
-#include "structs.h"
-
-#include "ConfigParser.h"
-#include "acl/Gadgets.h"
-#include "Store.h"
-#include "Array.h"    // really Vector
+#include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "adaptation/Config.h"
-#include "adaptation/Service.h"
+#include "acl/Gadgets.h"
 #include "adaptation/AccessRule.h"
-#include "adaptation/ServiceGroups.h"
+#include "adaptation/Config.h"
 #include "adaptation/History.h"
+#include "adaptation/Service.h"
+#include "adaptation/ServiceGroups.h"
+#include "Array.h"
+#include "ConfigParser.h"
+#include "globals.h"
+#include "HttpReply.h"
 #include "HttpRequest.h"
-
+#include "Store.h"
+#include "structs.h"
 
 bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;

@@ -11,6 +11,7 @@
 
 class ExternalACLEntry;
 class ConnStateData;
+class HttpRequest;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction

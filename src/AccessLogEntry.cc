@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ssl/support.h"
 

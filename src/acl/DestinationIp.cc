@@ -33,12 +33,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/DestinationIp.h"
 #include "acl/FilledChecklist.h"
+#include "client_side.h"
 #include "comm/Connection.h"
 #include "HttpRequest.h"
-// for Config.*
 #include "structs.h"
 
 char const *

@@ -3,9 +3,12 @@
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "auth/User.h"
+#include "client_side.h"
+#include "globals.h"
 #include "helper.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "protos.h"
 #include "SquidTime.h"
 
 Auth::Negotiate::UserRequest::UserRequest()

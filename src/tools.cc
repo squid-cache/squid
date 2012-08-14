@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/Subscription.h"
 #include "fde.h"
 #include "htcp.h"
@@ -46,11 +46,21 @@
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
 #include "ipcache.h"
+#include "protos.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
+#endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+#if HAVE_GRP_H
+#include <grp.h>
 #endif
 
 #define DEAD_MSG "\

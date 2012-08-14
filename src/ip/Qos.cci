@@ -1,5 +1,6 @@
 /* Inline QOS functions */
 #include "comm/Connection.h"
+#include "Debug.h"
 
 int
 Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)

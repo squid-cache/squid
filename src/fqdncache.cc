@@ -32,11 +32,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "mgr/Registration.h"
+#include "protos.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

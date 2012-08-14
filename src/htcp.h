@@ -33,8 +33,10 @@
 #if USE_HTCP
 
 #include "HttpHeader.h"
-
+#include "HttpRequestMethod.h"
 #include "ip/forward.h"
+
+class HttpRequest;
 
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData

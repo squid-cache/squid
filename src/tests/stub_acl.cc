@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 /*
  * DO NOT MODIFY:

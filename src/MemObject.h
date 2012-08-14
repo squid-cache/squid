@@ -43,6 +43,7 @@
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
 class store_client;
+class HttpRequest;
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif

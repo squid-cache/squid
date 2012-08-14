@@ -34,6 +34,7 @@
 #include "squid.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "err_detail_type.h"
 #include "errorpage.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -49,10 +50,10 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "MemBuf.h"
+#include "protos.h"
 #include "rfc1738.h"
 #include "URLScheme.h"
 #include "wordlist.h"
-#include "err_detail_type.h"
 
 /**
  \defgroup ErrorPageInternal Error Page Internals

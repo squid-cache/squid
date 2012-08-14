@@ -77,4 +77,7 @@ SQUIDCEXTERN int httpStatusLineParse(HttpStatusLine * sline, const String &proto
 /* pack fields using Packer */
 SQUIDCEXTERN void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 
+SQUIDCEXTERN const char *httpStatusString(http_status status);
+
+
 #endif /* SQUID_HTTPSTATUSLINE_H */

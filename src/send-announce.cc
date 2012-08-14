@@ -33,12 +33,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm/Connection.h"
 #include "event.h"
 #include "fde.h"
+#include "globals.h"
 #include "ICP.h"
 #include "ipcache.h"
+#include "protos.h"
 #include "SquidTime.h"
 
 static IPH send_announce;

@@ -1,7 +1,8 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "ErrorDetail.h"
 #include "errorpage.h"
 #include "ErrorDetailManager.h"
+#include "protos.h"
 
 void Ssl::errorDetailInitialize()
 {

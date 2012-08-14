@@ -1,14 +1,15 @@
-#include "squid-old.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
+#include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "client_side.h"
+#include "comm/Connection.h"
+#include "comm/forward.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #include "auth/AclProxyAuth.h"
 #endif
-#include "acl/FilledChecklist.h"
-#include "comm/Connection.h"
-#include "comm/forward.h"
+
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 

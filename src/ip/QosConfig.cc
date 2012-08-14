@@ -1,13 +1,15 @@
-#include "squid-old.h"
+#include "squid.h"
 
 #include "acl/Gadgets.h"
 #include "comm/Connection.h"
 #include "ConfigParser.h"
 #include "fde.h"
+#include "globals.h"
 #include "hier_code.h"
 #include "ip/tools.h"
 #include "ip/QosConfig.h"
 #include "Parsing.h"
+#include "protos.h"
 
 /* Qos namespace */
 

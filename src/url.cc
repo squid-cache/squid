@@ -34,10 +34,12 @@
  */
 
 #include "squid.h"
-#include "URL.h"
+#include "globals.h"
 #include "HttpRequest.h"
-#include "URLScheme.h"
+#include "protos.h"
 #include "rfc1738.h"
+#include "URL.h"
+#include "URLScheme.h"
 
 static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
                                    const AnyP::ProtocolType protocol,

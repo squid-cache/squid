@@ -35,26 +35,28 @@
  \ingroup ServerProtocolICPAPI
  */
 
-#include "squid-old.h"
-#include "Store.h"
+#include "squid.h"
+#include "AccessLogEntry.h"
+#include "acl/Acl.h"
+#include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
-#include "ICP.h"
 #include "HttpRequest.h"
-#include "acl/FilledChecklist.h"
-#include "acl/Acl.h"
-#include "AccessLogEntry.h"
-#include "wordlist.h"
-#include "StatCounters.h"
-#include "SquidTime.h"
-#include "SwapDir.h"
 #include "icmp/net_db.h"
+#include "ICP.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"
+#include "md5.h"
+#include "protos.h"
 #include "rfc1738.h"
+#include "SquidTime.h"
+#include "StatCounters.h"
+#include "Store.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 

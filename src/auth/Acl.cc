@@ -1,9 +1,10 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
 #include "auth/Acl.h"
 #include "auth/AclProxyAuth.h"
+#include "client_side.h"
 #include "HttpRequest.h"
 
 /**

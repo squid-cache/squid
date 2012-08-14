@@ -34,23 +34,26 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
+#include "client_side.h"
 #include "DnsLookupDetails.h"
-#include "HttpRequest.h"
+#include "err_detail_type.h"
 #include "HttpHdrCc.h"
+#include "HttpHeaderRange.h"
+#include "HttpRequest.h"
+#include "log/Config.h"
+#include "MemBuf.h"
+#include "protos.h"
+#include "Store.h"
+
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#include "HttpHeaderRange.h"
-#include "log/Config.h"
-#include "MemBuf.h"
-#include "Store.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/icap_log.h"
 #endif
-#include "acl/FilledChecklist.h"
-#include "err_detail_type.h"
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 {
@@ -702,4 +705,11 @@ HttpRequest::canHandle1xx() const
 
     // others must support 1xx control messages
     return true;
+}
+
+ConnStateData *
+HttpRequest::pinnedConnection() {
+    if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
+        return clientConnectionManager.get();
+    return NULL;
 }

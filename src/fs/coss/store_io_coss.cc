@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "CossSwapDir.h"
 #include "Store.h"
 #include "store_coss.h"

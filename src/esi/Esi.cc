@@ -31,33 +31,35 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "esi/Esi.h"
-#include "clientStream.h"
 #include "client_side_request.h"
+#include "client_side.h"
+#include "clientStream.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
-#include "esi/Segment.h"
-#include "esi/Element.h"
+#include "esi/Assign.h"
+#include "esi/Attempt.h"
 #include "esi/Context.h"
+#include "esi/Element.h"
+#include "esi/Esi.h"
+#include "esi/Except.h"
+#include "esi/Expression.h"
+#include "esi/Segment.h"
+#include "esi/VarState.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "HttpReply.h"
-#include "esi/Attempt.h"
-#include "esi/Except.h"
-#include "client_side.h"
-#include "esi/VarState.h"
-#include "esi/Assign.h"
-#include "esi/Expression.h"
 #include "HttpRequest.h"
-#include "MemBuf.h"
 #include "ip/Address.h"
+#include "MemBuf.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to

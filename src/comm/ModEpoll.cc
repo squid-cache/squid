@@ -55,10 +55,11 @@
 
 #if USE_EPOLL
 
-#include "squid-old.h"
 #include "comm/Loops.h"
 #include "fde.h"
+#include "globals.h"
 #include "mgr/Registration.h"
+#include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"

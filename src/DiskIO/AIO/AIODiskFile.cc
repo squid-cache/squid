@@ -44,12 +44,13 @@
  * per storedir it should work just fine.
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "AIODiskFile.h"
 #include "AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "protos.h"
 
 CBDATA_CLASS_INIT(AIODiskFile);
 void *

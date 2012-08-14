@@ -1,6 +1,6 @@
 #define SQUID_UNIT_TEST 1
 
-#include "squid-old.h"
+#include "squid.h"
 #include <cppunit/TestAssert.h>
 
 #include "Mem.h"

@@ -2,6 +2,7 @@
 #include "Debug.h"
 #include "HttpParser.h"
 #include "structs.h"
+#include "profiler/Profiler.h"
 
 void
 HttpParser::clear()

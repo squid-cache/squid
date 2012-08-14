@@ -37,14 +37,14 @@
  \ingroup FileSystems
  */
 
-#include "squid-old.h"
-#include "StoreIOBuffer.h"
+#include "comm/forward.h"
+#include "CommRead.h"
+#include "HttpRequestMethod.h"
+#include "Packer.h"
 #include "Range.h"
 #include "RefCount.h"
-#include "CommRead.h"
-#include "comm/forward.h"
-#include "Packer.h"
 #include "RemovalPolicy.h"
+#include "StoreIOBuffer.h"
 #include "StoreStats.h"
 
 #if USE_SQUID_ESI
@@ -57,8 +57,9 @@
 
 
 class AsyncCall;
-class StoreClient;
+class HttpRequest;
 class MemObject;
+class StoreClient;
 class StoreSearch;
 class SwapDir;
 

@@ -1,8 +1,4 @@
-
 /*
- * $Id$
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -35,7 +31,6 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "squid-old.h"
 #include "HttpHeader.h"
 #include "clientStream.h"
 #include "client_side.h"

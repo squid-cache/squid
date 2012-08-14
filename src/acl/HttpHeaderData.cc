@@ -34,11 +34,13 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/Checklist.h"
 #include "acl/Acl.h"
 #include "acl/RegexData.h"
+#include "Debug.h"
+#include "protos.h"
 #include "wordlist.h"
 #include "ConfigParser.h"
 

@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "errorpage.h"
 #include "StoreClient.h"
 #include "Store.h"
@@ -41,8 +41,10 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "forward.h"
+#include "globals.h"
 #include "SquidTime.h"
 #include "icmp/net_db.h"
+#include "protos.h"
 
 #define	URN_REQBUF_SZ	4096
 
