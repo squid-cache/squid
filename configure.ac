@@ -2013,19 +2013,6 @@ fi
 SQUID_STATE_ROLLBACK([krbsave])
 AM_CONDITIONAL(HAVE_SPNEGO, test x"$squid_cv_have_spnego" = x"yes" )
 
-dnl Enable "NTLM fail open"
-AC_ARG_ENABLE(ntlm-fail-open,
-  AS_HELP_STRING([--enable-ntlm-fail-open],
-    [Enable NTLM fail open, where a helper that fails one of the
-     Authentication steps can allow squid to still authenticate
-     the user. This has security implications, and is deprecated]),
-[ 
-  SQUID_YESNO([$enableval],[--enable-ntlm-fail-open takes no argument])
-])
-SQUID_DEFINE_BOOL(NTLM_FAIL_OPEN,${enable_ntlm_fail_open:=no},
-  [Define if NTLM is allowed to fail gracefully when a helper has problems.])
-AC_MSG_NOTICE([ntlm-fail-open enabled: $enable_ntlm_fail_open])
-
 AC_ARG_ENABLE(external-acl-helpers,
   AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
                  [Enable external_acl helpers support and thelpers themselves.
