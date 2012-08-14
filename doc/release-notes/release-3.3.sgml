@@ -105,6 +105,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--enable-ntlm-fail-open</tag>
+	<p>Removed. This has not been supported by Squid for several versions.
 
 </descrip>
 
