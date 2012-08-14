@@ -32,8 +32,9 @@
 #ifndef SQUID_WORDLIST_H
 #define SQUID_WORDLIST_H
 
-#include "squid-old.h"
+#include "globals.h"
 #include "MemPool.h"
+#include "profiler/Profiler.h"
 
 class wordlist
 {

@@ -51,21 +51,21 @@ class ClientInfo;
 
 
 #if USE_FORW_VIA_DB
-SQUIDCEXTERN void fvdbCountVia(const char *key);
-SQUIDCEXTERN void fvdbCountForw(const char *key);
+extern void fvdbCountVia(const char *key);
+extern void fvdbCountForw(const char *key);
 #endif
 #if HEADERS_LOG
 SQUIDCEXTERN void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
-SQUIDCEXTERN int logTypeIsATcpHit(log_type);
+extern int logTypeIsATcpHit(log_type);
 
 /*
  * cache_cf.c
  */
 SQUIDCEXTERN void configFreeMemory(void);
 class MemBuf;
-SQUIDCEXTERN void wordlistCat(const wordlist *, MemBuf * mb);
-SQUIDCEXTERN void self_destruct(void);
+extern void wordlistCat(const wordlist *, MemBuf * mb);
+extern void self_destruct(void);
 SQUIDCEXTERN void add_http_port(char *portspec);
 extern int xatoi(const char *token);
 extern long xatol(const char *token);
@@ -125,13 +125,13 @@ SQUIDCEXTERN void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void
 SQUIDCEXTERN void file_read(int, char *, int, off_t, DRCB *, void *);
 SQUIDCEXTERN void disk_init(void);
 
-SQUIDCEXTERN void fd_close(int fd);
-SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
-SQUIDCEXTERN void fd_note(int fd, const char *);
-SQUIDCEXTERN void fd_bytes(int fd, int len, unsigned int type);
-SQUIDCEXTERN void fdDumpOpen(void);
-SQUIDCEXTERN int fdUsageHigh(void);
-SQUIDCEXTERN void fdAdjustReserved(void);
+extern void fd_close(int fd);
+extern void fd_open(int fd, unsigned int type, const char *);
+extern void fd_note(int fd, const char *);
+extern void fd_bytes(int fd, int len, unsigned int type);
+extern void fdDumpOpen(void);
+extern int fdUsageHigh(void);
+extern void fdAdjustReserved(void);
 
 SQUIDCEXTERN void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
 
@@ -144,7 +144,7 @@ SQUIDCEXTERN const char *fqdnFromAddr(const Ip::Address &);
 SQUIDCEXTERN int fqdncacheQueueDrain(void);
 SQUIDCEXTERN void fqdncacheFreeMemory(void);
 SQUIDCEXTERN void fqdncache_restart(void);
-void fqdncache_purgelru(void *);
+extern void fqdncache_purgelru(void *);
 SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 class FwdState;
@@ -195,10 +195,9 @@ SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
         StoreEntry * entry,
         MemBuf * mb,
         http_state_flags);
-SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
+extern const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #include "HttpStatusCode.h"
-SQUIDCEXTERN const char *httpStatusString(http_status status);
 
 class StatHist;
 
@@ -206,7 +205,7 @@ class StatHist;
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);
 SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
-void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* Http Header Tools */
 class HttpHeaderFieldInfo;
@@ -222,9 +221,7 @@ SQUIDCEXTERN int strListIsSubstr(const String * list, const char *s, char del);
 SQUIDCEXTERN int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 SQUIDCEXTERN const char *getStringPrefix(const char *str, const char *end);
 SQUIDCEXTERN int httpHeaderParseInt(const char *start, int *val);
-SQUIDCEXTERN int httpHeaderParseOffset(const char *start, int64_t * off);
-SQUIDCEXTERN void
-httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
+SQUIDCEXTERN void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
 
 /* Http Header */
@@ -260,9 +257,9 @@ extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
 #if USE_WCCP
-SQUIDCEXTERN void wccpInit(void);
-SQUIDCEXTERN void wccpConnectionOpen(void);
-SQUIDCEXTERN void wccpConnectionClose(void);
+extern void wccpInit(void);
+extern void wccpConnectionOpen(void);
+extern void wccpConnectionClose(void);
 #endif /* USE_WCCP */
 
 #if USE_WCCPv2
@@ -271,23 +268,23 @@ extern void wccp2ConnectionOpen(void);
 extern void wccp2ConnectionClose(void);
 #endif /* USE_WCCPv2 */
 
-SQUIDCEXTERN char *mime_get_header(const char *mime, const char *header);
-SQUIDCEXTERN char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
-SQUIDCEXTERN size_t headersEnd(const char *, size_t);
+extern char *mime_get_header(const char *mime, const char *header);
+extern char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
+extern size_t headersEnd(const char *, size_t);
 
-SQUIDCEXTERN void mimeInit(char *filename);
-SQUIDCEXTERN void mimeFreeMemory(void);
-SQUIDCEXTERN char *mimeGetContentEncoding(const char *fn);
-SQUIDCEXTERN char *mimeGetContentType(const char *fn);
-SQUIDCEXTERN char const *mimeGetIcon(const char *fn);
-SQUIDCEXTERN const char *mimeGetIconURL(const char *fn);
-SQUIDCEXTERN char mimeGetTransferMode(const char *fn);
-SQUIDCEXTERN int mimeGetDownloadOption(const char *fn);
-SQUIDCEXTERN int mimeGetViewOption(const char *fn);
+extern void mimeInit(char *filename);
+extern void mimeFreeMemory(void);
+extern char *mimeGetContentEncoding(const char *fn);
+extern char *mimeGetContentType(const char *fn);
+extern char const *mimeGetIcon(const char *fn);
+extern const char *mimeGetIconURL(const char *fn);
+extern char mimeGetTransferMode(const char *fn);
+extern int mimeGetDownloadOption(const char *fn);
+extern int mimeGetViewOption(const char *fn);
 
 #include "ipcache.h"
-SQUIDCEXTERN int mcastSetTtl(int, int);
-SQUIDCEXTERN IPH mcastJoinGroups;
+extern int mcastSetTtl(int, int);
+extern IPH mcastJoinGroups;
 
 SQUIDCEXTERN peer *getFirstPeer(void);
 SQUIDCEXTERN peer *getFirstUpParent(HttpRequest *);
@@ -405,15 +402,15 @@ SQUIDCEXTERN void memConfigure(void);
 /* ----------------------------------------------------------------- */
 
 /* repl_modules.c */
-SQUIDCEXTERN void storeReplSetup(void);
+extern void storeReplSetup(void);
 
 /*
  * store_log.c
  */
-SQUIDCEXTERN void storeLog(int tag, const StoreEntry * e);
-SQUIDCEXTERN void storeLogRotate(void);
-SQUIDCEXTERN void storeLogClose(void);
-SQUIDCEXTERN void storeLogOpen(void);
+extern void storeLog(int tag, const StoreEntry * e);
+extern void storeLogRotate(void);
+extern void storeLogClose(void);
+extern void storeLogOpen(void);
 
 
 /*
@@ -437,10 +434,10 @@ SQUIDCEXTERN HASHCMP storeKeyHashCmp;
 /*
  * store_digest.c
  */
-SQUIDCEXTERN void storeDigestInit(void);
-SQUIDCEXTERN void storeDigestNoteStoreReady(void);
-SQUIDCEXTERN void storeDigestScheduleRebuild(void);
-SQUIDCEXTERN void storeDigestDel(const StoreEntry * entry);
+extern void storeDigestInit(void);
+extern void storeDigestNoteStoreReady(void);
+extern void storeDigestScheduleRebuild(void);
+extern void storeDigestDel(const StoreEntry * entry);
 extern void storeDigestReport(StoreEntry *);
 
 /*
@@ -452,18 +449,18 @@ SQUIDCEXTERN void storeRebuildComplete(struct _store_rebuild_data *);
 SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success
-bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
+extern bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
 /// parses entry buffer and validates entry metadata; fills e on success
-bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
+extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
 /// checks whether the loaded entry should be kept; updates counters
-bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
+extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
 
 
 /*
  * store_swapin.c
  */
 class store_client;
-SQUIDCEXTERN void storeSwapInStart(store_client *);
+extern void storeSwapInStart(store_client *);
 
 /*
  * store_client.c
@@ -481,10 +478,10 @@ SQUIDCEXTERN const char *uniqueHostname(void);
 SQUIDCEXTERN void safeunlink(const char *path, int quiet);
 
 #include "fatal.h"
-void death(int sig);
-void sigusr2_handle(int sig);
-void sig_child(int sig);
-void sig_shutdown(int sig); ///< handles shutdown notifications from kids
+extern void death(int sig);
+extern void sigusr2_handle(int sig);
+extern void sig_child(int sig);
+extern void sig_shutdown(int sig); ///< handles shutdown notifications from kids
 SQUIDCEXTERN void leave_suid(void);
 SQUIDCEXTERN void enter_suid(void);
 SQUIDCEXTERN void no_suid(void);
@@ -508,7 +505,7 @@ SQUIDCEXTERN bool IamCoordinatorProcess();
 /// whether the current process handles HTTP transactions and such
 SQUIDCEXTERN bool IamWorkerProcess();
 /// whether the current process is dedicated to managing a cache_dir
-bool IamDiskProcess();
+extern bool IamDiskProcess();
 /// Whether we are running in daemon mode
 SQUIDCEXTERN bool InDaemonMode(); // try using specific Iam*() checks above first
 /// Whether there should be more than one worker process running
@@ -516,7 +513,7 @@ SQUIDCEXTERN bool UsingSmp(); // try using specific Iam*() checks above first
 /// number of Kid processes as defined in src/ipc/Kid.h
 SQUIDCEXTERN int NumberOfKids();
 /// a string describing this process roles such as worker or coordinator
-String ProcessRoles();
+extern String ProcessRoles();
 SQUIDCEXTERN int DebugSignal;
 
 /* AYJ debugs function to show locations being reset with memset() */
@@ -577,7 +574,7 @@ SQUIDCEXTERN int stringHasCntl(const char *);
 SQUIDCEXTERN void linklistPush(link_list **, void *);
 SQUIDCEXTERN void *linklistShift(link_list **);
 SQUIDCEXTERN int xrename(const char *from, const char *to);
-SQUIDCEXTERN int isPowTen(int);
+extern int isPowTen(int);
 SQUIDCEXTERN void parseEtcHosts(void);
 SQUIDCEXTERN int getMyPort(void);
 SQUIDCEXTERN void setUmask(mode_t mask);

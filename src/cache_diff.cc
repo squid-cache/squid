@@ -38,7 +38,7 @@
  * Reports the percentage of common files and other stats
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 typedef struct {
     const char *name;

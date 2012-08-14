@@ -30,13 +30,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/StringArea.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"
 #include "HttpHdrCc.h"
 #include "StatHist.h"
 #include "Store.h"
+#include "protos.h"
 
 #if HAVE_MAP
 #include <map>

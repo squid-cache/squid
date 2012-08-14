@@ -39,7 +39,6 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "DelayBucket.h"
 #include "DelaySpec.h"
 #include "Store.h"

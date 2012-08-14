@@ -34,7 +34,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_IDENT
 
@@ -43,6 +43,7 @@
 #include "acl/UserData.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "globals.h"
 #include "ident/AclIdent.h"
 #include "ident/Ident.h"
 

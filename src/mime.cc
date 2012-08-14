@@ -33,15 +33,21 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "fde.h"
+#include "globals.h"
 #include "HttpHdrCc.h"
-#include "Store.h"
-#include "StoreClient.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "MemObject.h"
-#include "fde.h"
 #include "MemBuf.h"
+#include "MemObject.h"
+#include "protos.h"
+#include "Store.h"
+#include "StoreClient.h"
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 #define GET_HDR_SZ 1024
 

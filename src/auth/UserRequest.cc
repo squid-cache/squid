@@ -39,11 +39,12 @@
  * They DO NOT perform access control or auditing.
  * See acl.c for access control and client_side.c for auditing */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "auth/UserRequest.h"
 #include "auth/User.h"
+#include "client_side.h"
 #include "comm/Connection.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

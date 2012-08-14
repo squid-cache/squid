@@ -5,11 +5,20 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "globals.h"
+#include "protos.h"
+
+#if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 CBDATA_CLASS_INIT(MmappedFile);
 

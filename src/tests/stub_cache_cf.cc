@@ -32,8 +32,9 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "ConfigParser.h"
+#include "protos.h"
 #include "wordlist.h"
 
 #define STUB_API "cache_cf.cc"

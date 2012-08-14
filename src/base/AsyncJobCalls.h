@@ -8,6 +8,7 @@
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
+#include "Debug.h"
 
 /**
  \ingroup AsyncJobAPI

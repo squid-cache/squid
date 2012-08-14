@@ -1,6 +1,7 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "protos.h"
 
 #define STUB_API "store_client.cc"
 #include "tests/STUB.h"

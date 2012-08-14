@@ -8,6 +8,7 @@
 #include "squid.h"
 #include "MmappedFile.h"
 #include "MmappedIOStrategy.h"
+#include "protos.h"
 
 bool
 MmappedIOStrategy::shedLoad()

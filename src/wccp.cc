@@ -35,12 +35,12 @@
 #include "squid.h"
 
 #if USE_WCCP
-
-#include "squid-old.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
+#include "structs.h"
+
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0

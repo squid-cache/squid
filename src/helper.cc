@@ -32,14 +32,15 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/AsyncCbdataCalls.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "helper.h"
 #include "format/Quoting.h"
+#include "helper.h"
 #include "MemBuf.h"
+#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"

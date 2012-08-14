@@ -33,11 +33,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Array.h"
 #include "esi/CustomParser.h"
+#include "Debug.h"
 #include "Trie.h"
 #include "TrieCharTransform.h"
-#include "Array.h"
 
 Trie *ESICustomParser::SearchTrie=NULL;
 

@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "auth/basic/Scheme.h"
+#include "Debug.h"
 #include "helper.h"
 
 /* for Auth::Config */

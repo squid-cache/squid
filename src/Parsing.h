@@ -36,7 +36,7 @@
 #ifndef SQUID_PARSING_H
 #define SQUID_PARSING_H
 
-#include "squid-old.h"
+#include "ip/Address.h"
 
 extern double xatof(const char *token);
 extern int xatoi(const char *token);

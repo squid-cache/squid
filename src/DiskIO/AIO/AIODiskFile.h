@@ -38,6 +38,7 @@
 #include "DiskIO/DiskFile.h"
 #include "async_io.h"
 #include "cbdata.h"
+#include "SquidString.h"
 
 class AIODiskIOStrategy;
 

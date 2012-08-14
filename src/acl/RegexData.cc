@@ -36,12 +36,14 @@
  * Copyright (c) 2011, Marcus Kool
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/RegexData.h"
 #include "acl/Checklist.h"
 #include "acl/Acl.h"
-#include "wordlist.h"
 #include "ConfigParser.h"
+#include "Debug.h"
+#include "protos.h"
+#include "wordlist.h"
 
 static void
 aclDestroyRegexList(relist * data)

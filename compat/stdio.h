@@ -50,4 +50,8 @@ inline FILE * tmpfile(void) { return tmpfile64(); }
 #include<cstdio>
 #endif
 
+#ifndef MAXPATHLEN
+#define MAXPATHLEN SQUID_MAXPATHLEN
+#endif
+
 #endif /* _SQUID_COMPAT_STDIO_H */

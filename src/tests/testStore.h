@@ -2,7 +2,6 @@
 #ifndef SQUID_SRC_TEST_STORE_H
 #define SQUID_SRC_TEST_STORE_H
 
-#include "squid-old.h"
 #include "Store.h"
 
 #include <cppunit/extensions/HelperMacros.h>

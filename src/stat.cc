@@ -32,36 +32,38 @@
  *
  */
 
-#include "squid-old.h"
-#include "comm/Loops.h"
-#include "event.h"
-#include "format/Token.h"
-#include "StoreClient.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
-#include "comm/Connection.h"
-#include "mgr/Registration.h"
-#include "Store.h"
-#include "HttpRequest.h"
-#include "MemObject.h"
-#include "fde.h"
-#include "mem_node.h"
-#if USE_DELAY_POOLS
-#include "DelayId.h"
-#endif
+#include "squid.h"
 #include "client_side_request.h"
 #include "client_side.h"
+#include "comm/Connection.h"
+#include "comm/Loops.h"
+#include "event.h"
+#include "fde.h"
+#include "format/Token.h"
+#include "globals.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "mem_node.h"
 #include "MemBuf.h"
-#include "SquidMath.h"
-#include "SquidTime.h"
-#include "StatCounters.h"
 #include "mgr/CountersAction.h"
 #include "mgr/FunAction.h"
 #include "mgr/InfoAction.h"
 #include "mgr/IntervalAction.h"
 #include "mgr/IoAction.h"
+#include "mgr/Registration.h"
 #include "mgr/ServiceTimesAction.h"
+#include "protos.h"
+#include "SquidMath.h"
+#include "SquidTime.h"
+#include "StatCounters.h"
+#include "StoreClient.h"
+#include "Store.h"
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
+#if USE_DELAY_POOLS
+#include "DelayId.h"
+#endif
 #if USE_SSL
 #include "ssl/support.h"
 #endif

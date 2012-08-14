@@ -31,7 +31,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "DiskDaemonDiskIOModule.h"
 #include "DiskdIOStrategy.h"
 #include "DiskIO/DiskDaemon/DiskdAction.h"

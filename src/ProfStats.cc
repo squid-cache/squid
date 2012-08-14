@@ -33,12 +33,13 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_XPROF_STATS
 
 #include "event.h"
 #include "mgr/Registration.h"
+#include "profiler/Profiler.h"
 #include "SquidMath.h"
 #include "Store.h"
 

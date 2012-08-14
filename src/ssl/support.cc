@@ -33,15 +33,17 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
  */
 #if USE_SSL
 
-#include "fde.h"
 #include "acl/FilledChecklist.h"
+#include "fde.h"
+#include "globals.h"
+#include "protos.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"

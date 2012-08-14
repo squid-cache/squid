@@ -57,6 +57,10 @@
 #endif
 #include "Generic.h"
 
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
 #if WITH_VALGRIND
 #define HASHED_CBDATA 1
 #endif

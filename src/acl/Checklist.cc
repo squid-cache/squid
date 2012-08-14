@@ -33,8 +33,10 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/Checklist.h"
+#include "Debug.h"
+#include "profiler/Profiler.h"
 
 void
 ACLChecklist::matchNonBlocking()

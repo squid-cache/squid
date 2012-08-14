@@ -41,8 +41,9 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "heap.h"
+#include "protos.h"
 #include "store_heap_replacement.h"
 #include "Store.h"
 #include "MemObject.h"

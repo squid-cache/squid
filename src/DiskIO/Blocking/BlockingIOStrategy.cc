@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "BlockingIOStrategy.h"
 #include "BlockingFile.h"
+#include "protos.h"
 
 bool
 BlockingIOStrategy::shedLoad()

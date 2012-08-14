@@ -34,14 +34,20 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_AUTH
 
-#include "mgr/Registration.h"
-#include "Store.h"
-#include "HttpRequest.h"
 #include "auth/UserRequest.h"
+#include "globals.h"
+#include "HttpRequest.h"
+#include "mgr/Registration.h"
+#include "protos.h"
+#include "Store.h"
+
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 

@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "clientStream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

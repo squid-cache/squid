@@ -1,5 +1,6 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "adaptation/icap/History.h"
+#include "Debug.h"
 #include "globals.h"
 #include "SquidTime.h"
 

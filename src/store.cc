@@ -33,31 +33,37 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
-#include "Store.h"
-#include "mgr/Registration.h"
-#include "StoreClient.h"
-#include "stmem.h"
+#include "http.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "MemObject.h"
 #include "mem_node.h"
+#include "MemObject.h"
+#include "mgr/Registration.h"
+#include "mgr/StoreIoAction.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
+#include "SquidTime.h"
+#include "Stack.h"
 #include "StatCounters.h"
+#include "stmem.h"
+#include "StoreClient.h"
+#include "Store.h"
+#include "StoreIOState.h"
 #include "StoreMeta.h"
 #include "SwapDir.h"
-#include "StoreIOState.h"
+#include "swap_log_op.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "Stack.h"
-#include "SquidTime.h"
-#include "swap_log_op.h"
-#include "mgr/StoreIoAction.h"
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 static STMCB storeWriteComplete;
 

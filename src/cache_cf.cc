@@ -32,11 +32,35 @@
  *
  */
 
-#include "squid-old.h"
-
+#include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
+#include "anyp/PortCfg.h"
+#include "base/RunnersRegistry.h"
+#include "ConfigParser.h"
+#include "CpuAffinityMap.h"
+#include "DiskIO/DiskIOModule.h"
+#include "eui/Config.h"
+#include "format/Format.h"
+#include "globals.h"
+#include "HttpRequestMethod.h"
+#include "ident/Config.h"
+#include "ip/Intercept.h"
+#include "ip/QosConfig.h"
+#include "ip/tools.h"
+#include "ipc/Kids.h"
+#include "log/Config.h"
+#include "MemBuf.h"
+#include "mgr/Registration.h"
+#include "Parsing.h"
+#include "protos.h"
+#include "rfc1738.h"
+#include "Store.h"
+#include "StoreFileSystem.h"
+#include "structs.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
@@ -46,7 +70,6 @@
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
 #endif
-#include "anyp/PortCfg.h"
 #if USE_SSL
 #include "ssl/support.h"
 #include "ssl/Config.h"
@@ -55,33 +78,15 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #endif
-#include "base/RunnersRegistry.h"
-#include "ConfigParser.h"
-#include "CpuAffinityMap.h"
-#include "DiskIO/DiskIOModule.h"
-#include "eui/Config.h"
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
 #endif
-#include "format/Format.h"
-#include "HttpRequestMethod.h"
-#include "ident/Config.h"
-#include "ip/Intercept.h"
-#include "ip/QosConfig.h"
-#include "ip/tools.h"
-#include "log/Config.h"
-#include "MemBuf.h"
-#include "mgr/Registration.h"
-#include "Parsing.h"
-#include "rfc1738.h"
 #if SQUID_SNMP
 #include "snmp.h"
 #endif
-#include "Store.h"
-#include "StoreFileSystem.h"
-#include "SwapDir.h"
-#include "wordlist.h"
-#include "ipc/Kids.h"
+
+
+
 
 #if HAVE_GLOB_H
 #include <glob.h>
@@ -93,6 +98,18 @@
 
 #if HAVE_LIST
 #include <list>
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_PWD_H
+#include <pwd.h>
+#endif
+#if HAVE_GRP_H
+#include <grp.h>
+#endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
 #endif
 
 #if USE_SSL

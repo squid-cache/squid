@@ -34,11 +34,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/StringData.h"
 #include "acl/Checklist.h"
+#include "protos.h"
 #include "wordlist.h"
-
 
 ACLStringData::ACLStringData() : values (NULL)
 {}

@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "ConfigOption.h"
 
 ConfigOptionVector::~ConfigOptionVector()

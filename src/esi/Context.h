@@ -34,14 +34,13 @@
 #ifndef SQUID_ESICONTEXT_H
 #define SQUID_ESICONTEXT_H
 
+#include "esi/Parser.h"
 #include "esi/Element.h"
 #include "clientStream.h"
+#include "err_type.h"
 
 class ESIVarState;
-
 class ClientHttpRequest;
-
-#include "esi/Parser.h"
 
 /* ESIContext */
 

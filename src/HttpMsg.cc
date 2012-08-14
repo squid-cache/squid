@@ -33,9 +33,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
 #include "HttpMsg.h"
 #include "MemBuf.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
         cache_control(NULL), hdr_sz(0), content_length(0), protocol(AnyP::PROTO_NONE),

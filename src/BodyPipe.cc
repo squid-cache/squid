@@ -1,5 +1,5 @@
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "BodyPipe.h"

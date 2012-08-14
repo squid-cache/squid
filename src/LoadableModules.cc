@@ -1,7 +1,8 @@
-#include "squid-old.h"
-#include "wordlist.h"
+#include "squid.h"
+#include "Debug.h"
 #include "LoadableModule.h"
 #include "LoadableModules.h"
+#include "wordlist.h"
 
 static void
 LoadModule(const char *fname)

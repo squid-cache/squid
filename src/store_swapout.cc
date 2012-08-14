@@ -33,13 +33,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "StoreClient.h"
 #include "Store.h"
 /* FIXME: Abstract the use of this more */
 #include "mem_node.h"
 #include "MemObject.h"
+#include "protos.h"
 #include "SwapDir.h"
 #include "StatCounters.h"
 #include "swap_log_op.h"

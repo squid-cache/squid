@@ -33,14 +33,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "Store.h"
 #include "Generic.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-
+#include "protos.h"
 #include "SwapDir.h"
 #include "UFSStrategy.h"
 #include "UFSStoreState.h"

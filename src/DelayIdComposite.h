@@ -40,7 +40,7 @@
 #define DELAYIDCOMPOSITE_H
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
+#include "fatal.h"
 #include "RefCount.h"
 
 class DeferredRead;

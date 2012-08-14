@@ -33,9 +33,10 @@
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
 
-#include "squid-old.h"
-#include <iosfwd>
 #include "SquidString.h"
+#include "structs.h"
+
+#include <iosfwd>
 
 enum _method_t {
     METHOD_NONE,		/* 000 */

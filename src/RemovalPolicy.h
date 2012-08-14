@@ -35,7 +35,6 @@
 #ifndef   SQUID_REMOVALPOLICY_H
 #define   SQUID_REMOVALPOLICY_H
 
-#include "squid-old.h"
 #include "cbdata.h"
 
 class RemovalPolicyWalker;

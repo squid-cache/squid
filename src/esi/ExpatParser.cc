@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_SQUID_ESI && HAVE_LIBEXPAT
 

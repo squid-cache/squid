@@ -33,10 +33,10 @@
 #ifndef SQUID_HELPER_H
 #define SQUID_HELPER_H
 
-#include "squid-old.h"
 #include "base/AsyncCall.h"
 #include "cbdata.h"
 #include "comm/forward.h"
+#include "dlink.h"
 #include "ip/Address.h"
 #include "HelperChildConfig.h"
 
@@ -131,6 +131,8 @@ public:
     } flags;
 
 };
+
+class MemBuf;
 
 class helper_server : public HelperServerBase
 {

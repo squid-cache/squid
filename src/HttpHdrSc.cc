@@ -36,11 +36,12 @@
  *
  */
 
-#include "squid-old.h"
-#include "Store.h"
+#include "squid.h"
+#include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"
-#include "HttpHdrSc.h"
+#include "Store.h"
+#include "protos.h"
 
 #if HAVE_MAP
 #include <map>

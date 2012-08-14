@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
 #include "EventLoop.h"
 #include "base/AsyncCallQueue.h"
 

@@ -34,7 +34,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_AUTH
 
@@ -43,7 +43,6 @@
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
 #include "client_side.h"
-#include "HttpRequest.h"
 
 ACLExtUser::~ACLExtUser()
 {

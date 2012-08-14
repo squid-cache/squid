@@ -1,6 +1,13 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
+#include "Array.h"
+#include "comm.h"
+#include "comm/Connection.h"
+#include "fde.h"
+#include "ip/Address.h"
+#include "RefCount.h"
+
 /* forward decls */
 
 class AccessLogEntry;
@@ -8,11 +15,6 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
-#include "comm.h"
-#include "comm/Connection.h"
-#include "fde.h"
-#include "ip/Address.h"
-#include "Array.h"
 
 /**
  * Returns the TOS value that we should be setting on the connection

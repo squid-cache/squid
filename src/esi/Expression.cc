@@ -33,8 +33,14 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
 #include "esi/Expression.h"
+#include "profiler/Profiler.h"
+
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 
 /* stack precedence rules:
  * before pushing an operator onto the stack, the

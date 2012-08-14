@@ -34,9 +34,10 @@
  * Copyright (c) 2003  Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
-#include "stmem.h"
+#include "squid.h"
+#include "Debug.h"
 #include "mem_node.h"
+#include "stmem.h"
 
 class StreamTest
 {

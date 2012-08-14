@@ -32,12 +32,13 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "event.h"
 #include "format/Token.h"
 #include "ClientInfo.h"
 #include "ip/Address.h"
 #include "mgr/Registration.h"
+#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

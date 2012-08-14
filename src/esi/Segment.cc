@@ -33,7 +33,8 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
 #include "esi/Segment.h"
 #include "SquidString.h"
 

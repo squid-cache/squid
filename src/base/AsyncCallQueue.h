@@ -1,13 +1,6 @@
-
-/*
- * $Id$
- *
- */
-
 #ifndef SQUID_ASYNCCALLQUEUE_H
 #define SQUID_ASYNCCALLQUEUE_H
 
-#include "squid-old.h"
 #include "base/AsyncCall.h"
 
 //class AsyncCall;

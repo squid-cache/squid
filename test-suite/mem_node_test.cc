@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "mem_node.h"
 
 #if HAVE_IOSTREAM

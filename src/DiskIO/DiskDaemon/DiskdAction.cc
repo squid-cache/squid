@@ -7,12 +7,13 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Store.h"
+#include "DiskIO/DiskDaemon/DiskdAction.h"
+#include "DiskIO/DiskDaemon/DiskdIOStrategy.h"
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionWriter.h"
-#include "DiskIO/DiskDaemon/DiskdAction.h"
-#include "DiskIO/DiskDaemon/DiskdIOStrategy.h"
+#include "Store.h"
+#include "protos.h"
 
 
 DiskdActionData::DiskdActionData()

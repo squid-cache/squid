@@ -34,20 +34,22 @@
  * Portions copyright (c) 2003 Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "event.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
+#include "MemObject.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
+#include "StatCounters.h"
 #include "StoreClient.h"
 #include "Store.h"
-#include "HttpReply.h"
-#include "MemObject.h"
-#include "StatCounters.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "HttpRequest.h"
-#include "MemBuf.h"
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.

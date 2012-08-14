@@ -1,4 +1,4 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "adaptation/Elements.h"
 
 const char *Adaptation::crlf = "\r\n";

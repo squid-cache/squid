@@ -1,6 +1,6 @@
 #define SQUID_UNIT_TEST 1
 
-#include "squid-old.h"
+#include "squid.h"
 #include "Mem.h"
 #include "testStore.h"
 #include "testStoreEntryStream.h"

@@ -6,9 +6,12 @@
 #include "base/AsyncCall.h"
 #include "adaptation/forward.h"
 #include "adaptation/Elements.h"
+#include "SquidString.h"
 
 class acl_access;
 class ConfigParser;
+class HttpRequest;
+class HttpReply;
 
 namespace Adaptation
 {

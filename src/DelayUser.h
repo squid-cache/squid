@@ -38,7 +38,6 @@
 
 #if USE_DELAY_POOLS && USE_AUTH
 
-#include "squid-old.h"
 #include "auth/Gadgets.h"
 #include "auth/User.h"
 #include "CompositePoolNode.h"

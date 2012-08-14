@@ -1,8 +1,9 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Options.h"
 #include "base/TextException.h"
 #include "HttpReply.h"
+#include "protos.h"
 #include "SquidTime.h"
 #include "wordlist.h"
 

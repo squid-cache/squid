@@ -33,11 +33,13 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm/Loops.h"
-#include "fde.h"
-#include "SquidTime.h"
 #include "Debug.h"
+#include "fde.h"
+#include "globals.h"
+#include "profiler/Profiler.h"
+#include "SquidTime.h"
 
 
 // Solaris and possibly others lack MSG_NOSIGNAL optimization

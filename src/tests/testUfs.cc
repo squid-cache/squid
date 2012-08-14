@@ -2,15 +2,17 @@
 #include "squid.h"
 
 #include "DiskIO/DiskIOModule.h"
+#include "fs/ufs/UFSSwapDir.h"
+#include "globals.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
-#include "testStoreSupport.h"
-#include "testUfs.h"
+#include "protos.h"
 #include "Store.h"
 #include "SwapDir.h"
-#include "fs/ufs/UFSSwapDir.h"
+#include "testStoreSupport.h"
+#include "testUfs.h"
 
 #if HAVE_STDEXCEPT
 #include <stdexcept>

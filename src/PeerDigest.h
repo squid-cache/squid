@@ -34,12 +34,9 @@
 #ifndef   SQUID_PEERDIGEST_H
 #define   SQUID_PEERDIGEST_H
 
-#include "squid-old.h"
-
 #if USE_CACHE_DIGESTS
 
 #include "cbdata.h"
-
 /* for CacheDigestGuessStats */
 #include "StatCounters.h"
 

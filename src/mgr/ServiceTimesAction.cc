@@ -10,8 +10,8 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ServiceTimesAction.h"
+#include "protos.h"
 #include "Store.h"
-
 
 extern void GetServiceTimesStats(Mgr::ServiceTimesActionData& stats);
 extern void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry);

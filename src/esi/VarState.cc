@@ -34,9 +34,10 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "esi/VarState.h"
 #include "HttpReply.h"
+#include "protos.h"
 
 CBDATA_TYPE (ESIVarState);
 FREE ESIVarStateFree;

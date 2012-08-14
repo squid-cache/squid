@@ -36,7 +36,6 @@
 #ifndef SQUID_ESIEXCEPT_H
 #define SQUID_ESIEXCEPT_H
 
-#include "squid-old.h"
 #include "esi/Element.h"
 #include "esi/Sequence.h"
 

@@ -2,9 +2,10 @@
  * $Id$
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/SslErrorData.h"
 #include "acl/Checklist.h"
+#include "protos.h"
 #include "wordlist.h"
 
 ACLSslErrorData::ACLSslErrorData() : values (NULL)

@@ -37,7 +37,7 @@
  \ingroup ServerProtocolICPAPI
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "Store.h"
 #include "ICP.h"
 #include "HttpRequest.h"

@@ -32,13 +32,15 @@
 #ifndef SQUID_HTTPHDRSURROGATECONTROLTARGET_H
 #define SQUID_HTTPHDRSURROGATECONTROLTARGET_H
 
-class Packer;
-class StoreEntry;
-
 #include "MemPool.h"
+#include "defines.h"
 #include "dlink.h"
 #include "SquidString.h"
 #include "typedefs.h"
+
+class StatHist;
+class Packer;
+class StoreEntry;
 
 /** Representation of HTTP Surogate-Control header field targeted directive
  *

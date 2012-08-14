@@ -37,12 +37,12 @@
 #define COMPOSITEPOOLNODE_H
 
 #if USE_DELAY_POOLS
-#include "squid-old.h"
 #include "auth/UserRequest.h"
-#include "DelayPools.h"
-#include "DelayIdComposite.h"
 #include "CommRead.h"
+#include "DelayIdComposite.h"
+#include "DelayPools.h"
 #include "ip/Address.h"
+#include "SquidString.h"
 
 class StoreEntry;
 

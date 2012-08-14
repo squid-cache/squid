@@ -30,13 +30,15 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "comm/Loops.h"
 #include "fde.h"
+#include "globals.h"
 #include "log/Config.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"
+#include "protos.h"
 #include "SquidTime.h"
 
 /* How many buffers to keep before we say we've buffered too much */

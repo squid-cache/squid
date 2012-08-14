@@ -38,39 +38,40 @@
  * have a look into http-anon.c to get more informations.
  */
 
-#include "squid-old.h"
-
+#include "squid.h"
 #include "acl/FilledChecklist.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
+#include "base64.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
-#include "base64.h"
+#include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#if USE_DELAY_POOLS
-#include "DelayPools.h"
-#endif
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fde.h"
-#include "http.h"
 #include "HttpControlMsg.h"
-#include "HttpHdrContRange.h"
+#include "http.h"
 #include "HttpHdrCc.h"
+#include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "profiler/Profiler.h"
 #include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
+#if USE_DELAY_POOLS
+#include "DelayPools.h"
+#endif
 
 #define SQUID_ENTER_THROWING_CODE() try {
 #define SQUID_EXIT_THROWING_CODE(status) \

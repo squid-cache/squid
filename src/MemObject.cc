@@ -33,18 +33,21 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm/Connection.h"
-#include "MemObject.h"
-#include "HttpRequest.h"
+#include "Generic.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
+#include "MemObject.h"
+#include "profiler/Profiler.h"
 #include "Store.h"
 #include "StoreClient.h"
-#include "Generic.h"
+#include "protos.h"
+
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "MemBuf.h"
 
 /* TODO: make this global or private */
 #if URL_CHECKSUM_DEBUG

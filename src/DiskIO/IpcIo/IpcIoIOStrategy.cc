@@ -8,6 +8,7 @@
 #include "squid.h"
 #include "IpcIoFile.h"
 #include "IpcIoIOStrategy.h"
+#include "protos.h"
 
 bool
 IpcIoIOStrategy::shedLoad()

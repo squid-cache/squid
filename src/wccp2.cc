@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_WCCPv2
 
@@ -40,7 +40,9 @@
 #include "compat/strsep.h"
 #include "event.h"
 #include "ip/Address.h"
+#include "md5.h"
 #include "Parsing.h"
+#include "protos.h"
 #include "Store.h"
 #include "SwapDir.h"
 

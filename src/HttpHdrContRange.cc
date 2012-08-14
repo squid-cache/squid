@@ -33,8 +33,12 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
+#include "Debug.h"
+#include "enums.h"
 #include "HttpHdrContRange.h"
+#include "HttpHeaderTools.h"
+#include "protos.h"
 
 /*
  *    Currently only byte ranges are supported

@@ -33,21 +33,21 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "comm/Loops.h"
+#include "ConfigOption.h"
+#include "DiskdIOStrategy.h"
+#include "DiskIO/DiskFile.h"
+#include "DiskdFile.h"
+#include "diomsg.h"
+#include "protos.h"
+#include "Store.h"
+#include "StatCounters.h"
+#include "SquidTime.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
-#include "DiskdIOStrategy.h"
-#include "ConfigOption.h"
-#include "DiskIO/DiskFile.h"
-#include "DiskdFile.h"
-#include "diomsg.h"
-/* for statfs */
-#include "Store.h"
-#include "StatCounters.h"
-#include "SquidTime.h"
 
 diskd_stats_t diskd_stats;
 

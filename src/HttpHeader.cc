@@ -33,15 +33,17 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "base64.h"
-#include "HttpHdrContRange.h"
 #include "HttpHdrCc.h"
+#include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "profiler/Profiler.h"
+#include "protos.h"
 #include "rfc1123.h"
 #include "StatHist.h"
 #include "Store.h"

@@ -41,6 +41,7 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
+#include "protos.h"
 #include "SquidTime.h"
 
 void

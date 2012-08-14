@@ -10,6 +10,7 @@
 #include "base/RunnersRegistry.h"
 #include "ipc/mem/PagePool.h"
 #include "ipc/mem/Pages.h"
+#include "protos.h"
 #include "structs.h"
 #include "SwapDir.h"
 

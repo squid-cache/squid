@@ -7,12 +7,13 @@
 
 #include "squid.h"
 #include "base/RunnersRegistry.h"
+#include "HttpReply.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "MemStore.h"
+#include "protos.h"
 #include "StoreStats.h"
-#include "HttpReply.h"
 
 /// shared memory segment path to use for MemStore maps
 static const char *ShmLabel = "cache_mem";

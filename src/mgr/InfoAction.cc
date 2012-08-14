@@ -8,6 +8,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "ipc/Messages.h"
 #include "ipc/UdsOp.h"
@@ -16,6 +17,7 @@
 #include "mgr/InfoAction.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
+#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 

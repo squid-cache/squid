@@ -1,8 +1,11 @@
-#include "squid-old.h"
+#include "squid.h"
 #include "errorpage.h"
 #include "ssl/ErrorDetail.h"
 #if HAVE_MAP
 #include <map>
+#endif
+#if HAVE_CLIMITS
+#include <climits>
 #endif
 
 struct SslErrorEntry {

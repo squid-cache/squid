@@ -10,6 +10,7 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/StoreIoAction.h"
+#include "protos.h"
 #include "Store.h"
 
 

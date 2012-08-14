@@ -37,7 +37,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 
-#include "squid-old.h"
+#include "squid.h"
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/Scheme.h"
 #include "auth/basic/User.h"
@@ -48,6 +48,7 @@
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpReply.h"
+#include "protos.h"
 #include "rfc1738.h"
 #include "uudecode.h"
 #include "wordlist.h"

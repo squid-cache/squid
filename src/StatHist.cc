@@ -34,6 +34,9 @@
 #include "squid.h"
 #include "StatHist.h"
 
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 /* Local functions */
 static StatHistBinDumper statHistBinDumper;
 
