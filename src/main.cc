@@ -122,6 +122,9 @@
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #if USE_WIN32_SERVICE
 #include "squid_windows.h"

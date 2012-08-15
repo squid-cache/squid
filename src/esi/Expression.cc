@@ -41,6 +41,9 @@
 #if HAVE_MATH_H
 #include <math.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 /* stack precedence rules:
  * before pushing an operator onto the stack, the
