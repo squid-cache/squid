@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.19 release notes</TITLE>
+ <TITLE>Squid 3.2.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.19 release notes</H1>
+<H1>Squid 3.2.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -67,13 +67,12 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <UL>
 <LI><A NAME="toc6.1">6.1</A> <A HREF="#ss6.1">Missing squid.conf options available in Squid-2.7</A>
-<LI><A NAME="toc6.2">6.2</A> <A HREF="#ss6.2">Missing ./configure options available in Squid-2.7</A>
 </UL>
 
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.19 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.1 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -91,8 +90,9 @@ report with a stack trace.</P>
 <P>Some issues to note as currently known in this release which are not able to be fixed in the 3.2 series are:</P>
 <P>
 <UL>
-<LI>CVE-2009-0801 : interception proxies cannot relay certain requests to peers safely. see the CVE section below for details.</LI>
 <LI>TCP logging of access.log does not recover from broken connections well.</LI>
+<LI>SSL-Bump not re-wrapping decrypted traffic in CONNECT for peers.</LI>
+<LI>Cache Manager reports in txt/plain format even when requested directly via browser.</LI>
 </UL>
 </P>
 
@@ -154,14 +154,14 @@ by the
 directive. Squid will respond with 409 Conflict error response when strict validation
 fails and handles the request normally when strict validation succeeds or is OFF (default).</P>
 
-<P>Relaying of messages which FAIL non-strct Host: validation are permitted through Squid but
-only to the original destination IP the client was requesting. This means interception proxies
-can not be used as feeder gateways into a cluster or peer hierarchy without strict validation.</P>
+<P>Relaying of messages which FAIL non-strict Host: validation are permitted through Squid but
+only to the original destination IP the client was requesting or to explicit peers. This means
+DNS lookups to locate alternative DIRECT destinations will not be done.</P>
 
 <P>Known Issue: When non-strict validation fails Squid will relay the request, but can only do
 so safely to the orginal destination IP the client was contacting. The client original
-destinatio IP is lost when relayign to peers in a hierarchy. This means the upstream peers
-are at risk of cache poisoning from CVE-2009-0801 vulnerability.
+destination IP is lost when relaying to peers in a hierarchy. This means the upstream peers
+are still at risk of causing same-origin bypass CVE-2009-0801 vulnerability.
 Developer time is required to implement safe transit of these requests.
 Please contact squid-dev if you are able to assist or sponsor the development.</P>
 
@@ -1101,8 +1101,17 @@ An external_acl_type helper may be used to bypass authentication if that is suit
 
 <P>
 <DL>
+<DT><B>acl</B><DD>
+<P><EM>urlgroup</EM> type removed. Use <EM>myportname</EM> type instead.</P>
+
 <DT><B>cache_dir</B><DD>
 <P><EM>read-only</EM> option replaced by <EM>no-store</EM>.</P>
+
+<DT><B>http_port</B><DD>
+<P><EM>urlgroup=</EM> removed. Use <EM>name=</EM> feature instead.</P>
+
+<DT><B>zero_buffers</B><DD>
+<P>Replaced by native support.</P>
 
 </DL>
 </P>
@@ -1160,6 +1169,9 @@ An external_acl_type helper may be used to bypass authentication if that is suit
 <DT><B>--disable-kqueue</B><DD>
 <P>Obsolete. Disabled by default.</P>
 
+<DT><B>--without-system-md5</B><DD>
+<P>Obsolete. Disabled by default.</P>
+
 </DL>
 </P>
 
@@ -1212,9 +1224,6 @@ An external_acl_type helper may be used to bypass authentication if that is suit
 <DT><B>external_refresh_check</B><DD>
 <P>Not yet ported from 2.7</P>
 
-<DT><B>http_port</B><DD>
-<P><EM>urlgroup=</EM> not yet ported from 2.6</P>
-
 <DT><B>ignore_ims_on_miss</B><DD>
 <P>Not yet ported from 2.7</P>
 
@@ -1251,23 +1260,9 @@ An external_acl_type helper may be used to bypass authentication if that is suit
 <P>Not yet ported from 2.7</P>
 
 <DT><B>update_headers</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>zero_buffers</B><DD>
-<P>Not yet ported from 2.7</P>
+<P>Not yet fully ported from 2.7. Memory and rock storage caches support this natively. UFS caches do not support it.</P>
 
 </DL>
 </P>
-
-<H2><A NAME="ss6.2">6.2</A> <A HREF="#toc6.2">Missing ./configure options available in Squid-2.7</A>
-</H2>
-
-<P>
-<DL>
-<DT><B>--without-system-md5</B><DD>
-
-</DL>
-</P>
-
 </BODY>
 </HTML>
