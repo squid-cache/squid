@@ -293,7 +293,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The man(8) and man(1) pages bundled with Squid are now provided online for all
    versions and beginning with 3.2 they are available in languages other than English (where translated).
 
-<p>Details in <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
 <p>3.1 began the Internationalization of Squid with the public facing error pages.
    This move begins the Localization of the internal administrator facing manuals.
