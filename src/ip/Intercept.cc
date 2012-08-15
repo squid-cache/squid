@@ -89,7 +89,10 @@
 #include <net/pfvar.h>
 #endif /* HAVE_NET_PFVAR_H */
 #endif /* PF_TRANSPARENT required headers */
-
+/* must be before including netfilter_ipv4.h */
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #if LINUX_NETFILTER
 #include <linux/netfilter_ipv4.h>
 #endif
