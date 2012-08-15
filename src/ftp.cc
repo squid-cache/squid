@@ -65,6 +65,10 @@
 #include "MemObject.h"
 #endif
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
  \ingroup ServerProtocolFTPAPI

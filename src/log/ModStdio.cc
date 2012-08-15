@@ -37,6 +37,10 @@
 #include "log/ModStdio.h"
 #include "protos.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 typedef struct {
     int fd;
     char *buf;

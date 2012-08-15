@@ -13,6 +13,10 @@
 #include "typedefs.h"
 #include "SquidTime.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
 Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),

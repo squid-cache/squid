@@ -70,6 +70,9 @@
 #elif HAVE_NETINET_IP_NAT_H
 #include <netinet/ip_nat.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #endif /* IPF_TRANSPARENT required headers */
 

@@ -47,6 +47,10 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 namespace Comm
 {
 CBDATA_CLASS_INIT(TcpAcceptor);

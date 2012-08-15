@@ -67,6 +67,9 @@
 /* Solaris /dev/poll support, see "man -s 7D poll" */
 #include <sys/devpoll.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #define DEBUG_DEVPOLL 0
 

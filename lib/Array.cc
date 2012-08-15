@@ -49,5 +49,3 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-#include "util.h"
-#include "Array.h"

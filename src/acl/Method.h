@@ -44,7 +44,7 @@ class ACLMethodStrategy : public ACLStrategy<HttpRequestMethod>
 {
 
 public:
-    virtual int match (ACLData<ACLStrategy::MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresRequest() const {return true;}
 
     static ACLMethodStrategy *Instance();

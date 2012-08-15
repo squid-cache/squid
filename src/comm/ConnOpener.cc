@@ -14,6 +14,10 @@
 #include "SquidTime.h"
 #include "protos.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 
 Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :

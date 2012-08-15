@@ -79,6 +79,9 @@
 #if HAVE_MATH_H
 #include <math.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 /*
  * New C-like simple comm code. This stuff is a mess and doesn't really buy us anything.
