@@ -41,7 +41,9 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 #if _SQUID_CYGWIN_
 #include <squid_windows.h>
 #endif

@@ -44,6 +44,9 @@
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 

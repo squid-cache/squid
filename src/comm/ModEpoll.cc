@@ -70,6 +70,9 @@
 #if HAVE_SYS_EPOLL_H
 #include <sys/epoll.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 static int kdpfd;
 static int max_poll_time = 1000;

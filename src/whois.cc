@@ -45,6 +45,10 @@
 #include "StatCounters.h"
 #include "Store.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 #define WHOIS_PORT 43
 
 class WhoisState

@@ -43,6 +43,7 @@
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StoreHashIndex.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
 
@@ -65,8 +66,10 @@
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
-#include "StoreHashIndex.h"
 
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
 static STDIRSELECT storeDirSelectSwapDirLeastLoad;

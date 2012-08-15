@@ -62,6 +62,9 @@
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\

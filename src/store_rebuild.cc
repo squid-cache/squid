@@ -44,6 +44,9 @@
 #include "StoreSearch.h"
 #include "SquidTime.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 static struct _store_rebuild_data counts;
 
 static struct timeval rebuild_start;

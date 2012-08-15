@@ -49,6 +49,9 @@
 #if HAVE_POLL_H
 #include <poll.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 /* Needed for poll() on Linux at least */
 #if USE_POLL
