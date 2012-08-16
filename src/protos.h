@@ -64,7 +64,6 @@ extern int logTypeIsATcpHit(log_type);
  */
 SQUIDCEXTERN void configFreeMemory(void);
 class MemBuf;
-extern void wordlistCat(const wordlist *, MemBuf * mb);
 extern void self_destruct(void);
 SQUIDCEXTERN void add_http_port(char *portspec);
 extern int xatoi(const char *token);
