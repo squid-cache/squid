@@ -52,6 +52,10 @@
 #include "DiskIO/WriteRequest.h"
 #include "protos.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 CBDATA_CLASS_INIT(AIODiskFile);
 void *
 AIODiskFile::operator new(size_t unused)

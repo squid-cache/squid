@@ -38,6 +38,10 @@
 
 #include "squid.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 typedef struct {
     int query_count;
     int true_hit_count;

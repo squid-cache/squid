@@ -11,6 +11,10 @@
 #include "Parsing.h"
 #include "protos.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 /* Qos namespace */
 
 void

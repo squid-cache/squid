@@ -22,12 +22,14 @@ Copyright != 1			{		 print; next }
 # Check exactly for lines beginning with "    extern", generated
 # from astyle (grrrrr ...)
 #
-/^    extern / {			     # process "^extern " input lines.
+/^ *extern / {			     # process "^extern " input lines.
 					     #		 0 1	  2    #######
     # extern int variable; /* val */   -->   int variable; /* val */   #######
     ##########################################################################
-    len = length($0) - 11				# sub(/extern /, "")
-    str = substr($0, 12, len)				# strip "^extern ".
+    pos0 = index($0,"extern")  #find how much whitespeace there is
+    str = substr($0,pos0,length($0))
+    len = length(str) - length("extern ")		# sub(/extern /, "")
+    str = substr($0, length("extern ")+1, len)		# strip "^extern ".
 
     pos0 = index(str, ";")				# position of ";".
     pos1 = index(str, "/*")				# position of "/*".

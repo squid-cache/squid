@@ -64,6 +64,9 @@
 #if HAVE_SYS_EVENT_H
 #include <sys/event.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #define KE_LENGTH        128
 

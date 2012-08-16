@@ -45,6 +45,10 @@
 #include "Store.h"
 #include "protos.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 /* === PUBLIC =========================================================== */
 
 CBDATA_CLASS_INIT(DiskThreadsDiskFile);

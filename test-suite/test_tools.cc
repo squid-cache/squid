@@ -7,6 +7,7 @@
 
 #include "squid.h"
 #include "dlink.h"
+#include <iostream>
 
 void
 xassert(const char *msg, const char *file, int line)

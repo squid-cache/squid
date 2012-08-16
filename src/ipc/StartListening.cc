@@ -13,6 +13,10 @@
 #include "ipc/StartListening.h"
 #include "protos.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 Ipc::StartListeningCb::StartListeningCb(): conn(NULL), errNo(0)
 {
 }

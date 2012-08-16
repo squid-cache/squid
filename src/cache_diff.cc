@@ -40,6 +40,10 @@
 
 #include "squid.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 typedef struct {
     const char *name;
     hash_table *hash;

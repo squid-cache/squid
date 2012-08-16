@@ -36,7 +36,6 @@
 #include "squid.h"
 #include "CossSwapDir.h"
 #include "Store.h"
-
 #include "store_coss.h"
 #include "event.h"
 #include "fde.h"
@@ -50,6 +49,10 @@
 #include "Parsing.h"
 #include "swap_log_op.h"
 #include "SquidMath.h"
+
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #define STORE_META_BUFSZ 4096
 
