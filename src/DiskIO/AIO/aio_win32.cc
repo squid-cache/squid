@@ -37,6 +37,10 @@
 #include "comm.h"
 #include "aio_win32.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 #if _SQUID_WINDOWS_
 VOID CALLBACK IoCompletionRoutine(DWORD dwErrorCode,
                                   DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)

@@ -40,6 +40,10 @@
 #include "protos.h"
 #include "StatCounters.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 static PF diskHandleRead;
 static PF diskHandleWrite;
 

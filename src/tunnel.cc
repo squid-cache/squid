@@ -58,6 +58,9 @@
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 class TunnelStateData
 {

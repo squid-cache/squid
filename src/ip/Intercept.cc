@@ -70,6 +70,9 @@
 #elif HAVE_NETINET_IP_NAT_H
 #include <netinet/ip_nat.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #endif /* IPF_TRANSPARENT required headers */
 
@@ -88,8 +91,12 @@
 #endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
-#include <linux/netfilter_ipv4.h>
+#if HAVE_LIMITS_H
+/* must be before including netfilter_ipv4.h */
+#include <limits.h>
 #endif
+#include <linux/netfilter_ipv4.h>
+#endif /* LINUX_NETFILTER required headers */
 
 // single global instance for access by other components.
 Ip::Intercept Ip::Interceptor;

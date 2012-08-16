@@ -40,6 +40,9 @@
 #include "protos.h"
 #include "structs.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 /*
  * This logfile TCP module is mostly inspired by a patch by Tim Starling
  * from Wikimedia.

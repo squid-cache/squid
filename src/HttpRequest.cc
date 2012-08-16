@@ -708,7 +708,8 @@ HttpRequest::canHandle1xx() const
 }
 
 ConnStateData *
-HttpRequest::pinnedConnection() {
+HttpRequest::pinnedConnection()
+{
     if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
         return clientConnectionManager.get();
     return NULL;
