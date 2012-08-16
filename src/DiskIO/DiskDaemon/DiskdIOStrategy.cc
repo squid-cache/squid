@@ -48,6 +48,9 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 diskd_stats_t diskd_stats;
 

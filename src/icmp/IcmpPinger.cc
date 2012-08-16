@@ -44,6 +44,10 @@
 #include "Icmp6.h"
 #include "Debug.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 IcmpPinger::IcmpPinger() : Icmp()
 {
     // these start invalid. Setup properly in Open()

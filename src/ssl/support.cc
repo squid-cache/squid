@@ -48,6 +48,10 @@
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 const char *Ssl::BumpModeStr[] = {
     "none",
     "client-first",

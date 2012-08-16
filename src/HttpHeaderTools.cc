@@ -54,6 +54,9 @@
 
 #include <algorithm>
 #include <string>
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 

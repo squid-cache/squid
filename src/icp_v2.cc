@@ -58,6 +58,10 @@
 #include "SwapDir.h"
 #include "wordlist.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2

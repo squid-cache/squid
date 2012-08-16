@@ -57,6 +57,9 @@
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 /* MS Visual Studio Projects are monolithic, so we need the following
    #ifndef to exclude the internal DNS code from compile process when
