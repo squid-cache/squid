@@ -38,6 +38,7 @@
 
 #include "AccessLogEntry.h"
 #include "format/Quoting.h"
+#include "fqdncache.h"
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"

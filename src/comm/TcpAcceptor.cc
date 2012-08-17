@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "client_db.h"
 #include "comm/AcceptLimiter.h"
 #include "CommCalls.h"
 #include "comm/comm_internal.h"
