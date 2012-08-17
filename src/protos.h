@@ -161,10 +161,6 @@ extern const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * rep
 
 #include "HttpStatusCode.h"
 
-class StatHist;
-
-/* Http Cache Control Header Field */
-
 /* Http Header Tools */
 class HttpHeaderFieldInfo;
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
@@ -182,9 +178,6 @@ SQUIDCEXTERN int httpHeaderParseInt(const char *start, int *val);
 SQUIDCEXTERN void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
 
-/* Http Header */
-SQUIDCEXTERN void httpHeaderInitModule(void);
-SQUIDCEXTERN void httpHeaderCleanModule(void);
 
 /* store report about current header usage and other stats */
 void httpHeaderStoreReport(StoreEntry * e);
