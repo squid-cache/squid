@@ -51,6 +51,7 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "md5.h"
+#include "neighbors.h"
 #include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"

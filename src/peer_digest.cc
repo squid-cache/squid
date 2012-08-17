@@ -40,6 +40,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
+#include "neighbors.h"
 #include "PeerDigest.h"
 #include "protos.h"
 #include "SquidTime.h"

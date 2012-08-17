@@ -61,6 +61,7 @@
 #include "structs.h"
 #include "SwapDir.h"
 #include "wordlist.h"
+#include "neighbors.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif

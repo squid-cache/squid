@@ -52,6 +52,7 @@
 #include "mgr/IoAction.h"
 #include "mgr/Registration.h"
 #include "mgr/ServiceTimesAction.h"
+#include "neighbors.h"
 #include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"

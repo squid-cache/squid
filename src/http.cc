@@ -59,6 +59,7 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "neighbors.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
 #include "rfc1738.h"
