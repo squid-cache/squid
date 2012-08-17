@@ -272,6 +272,7 @@ squid_SOURCES = \
 	cbdata.h \
 	ChunkedCodingParser.cc \
 	ChunkedCodingParser.h \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side.h \
@@ -1296,6 +1297,7 @@ tests_testCacheManager_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -1464,6 +1466,7 @@ tests_testCacheManager_DEPENDENCIES = \
 tests_testDiskIO_SOURCES = \
 	CacheDigest.cc \
 	cbdata.cc \
+	client_db.h \
 	ClientInfo.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1618,6 +1621,7 @@ tests_testEvent_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -1810,6 +1814,7 @@ tests_testEventLoop_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2000,6 +2005,7 @@ tests_test_http_range_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2238,6 +2244,7 @@ tests_testHttpRequest_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2609,6 +2616,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
+	client_db.h \
 	disk.cc \
 	FileMap.h \
 	filemap.cc \
@@ -2799,6 +2807,7 @@ tests_testRock_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	client_db.h \
 	tests/stub_client_db.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
@@ -2868,6 +2877,7 @@ tests_testCoss_SOURCES = \
 	tests/testMain.cc \
 	tests/testCoss.h \
 	tests/stub_cache_manager.cc \
+	client_db.h \
 	tests/stub_client_db.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -3137,6 +3147,7 @@ tests_testURL_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
+	client_db.h \
 	client_db.cc \
 	client_side.cc \
 	client_side_reply.cc \

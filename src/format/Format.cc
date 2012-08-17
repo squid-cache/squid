@@ -8,6 +8,7 @@
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
+#include "fqdncache.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "protos.h"
