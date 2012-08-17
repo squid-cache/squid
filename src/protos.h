@@ -234,15 +234,6 @@ SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 SQUIDCEXTERN void redirectInit(void);
 SQUIDCEXTERN void redirectShutdown(void);
 
-extern void refreshAddToList(const char *, int, time_t, int, time_t);
-extern int refreshIsCachable(const StoreEntry *);
-extern int refreshCheckHTTP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckICP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckDigest(const StoreEntry *, time_t delta);
-extern time_t getMaxAge(const char *url);
-extern void refreshInit(void);
-extern const refresh_t *refreshLimits(const char *url);
 
 extern void shut_down(int);
 extern void rotate_logs(int);

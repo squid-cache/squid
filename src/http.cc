@@ -62,6 +62,7 @@
 #include "neighbors.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
+#include "refresh.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

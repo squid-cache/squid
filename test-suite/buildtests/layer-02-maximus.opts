@@ -108,6 +108,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-pic \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \
+	--enable-ssl-crtd \
 	"
 
 # Fix the distclean testing.
