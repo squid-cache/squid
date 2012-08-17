@@ -164,10 +164,6 @@ extern const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * rep
 class StatHist;
 
 /* Http Cache Control Header Field */
-SQUIDCEXTERN void httpHdrCcInitModule(void);
-SQUIDCEXTERN void httpHdrCcCleanModule(void);
-SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
-extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* Http Header Tools */
 class HttpHeaderFieldInfo;
