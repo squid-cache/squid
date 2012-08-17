@@ -136,16 +136,6 @@ class HttpReply;
 SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
 
 
-/**
- \defgroup ServerProtocolGopherAPI Server-Side Gopher API
- \ingroup ServerProtocol
- */
-
-/// \ingroup ServerProtocolGopherAPI
-SQUIDCEXTERN void gopherStart(FwdState *);
-
-/// \ingroup ServerProtocolGopherAPI
-SQUIDCEXTERN int gopherCachable(const HttpRequest *);
 
 
 /**
