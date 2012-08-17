@@ -53,6 +53,7 @@
 #include "fs/Module.h"
 #include "fqdncache.h"
 #include "htcp.h"
+#include "HttpHeader.h"
 #include "HttpReply.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"

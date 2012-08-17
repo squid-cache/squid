@@ -3,6 +3,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "testHttpReply.h"
+#include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
 #include "protos.h"
