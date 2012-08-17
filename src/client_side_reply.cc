@@ -52,6 +52,7 @@
 #include "MemObject.h"
 #include "neighbors.h"
 #include "protos.h"
+#include "refresh.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"

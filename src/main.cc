@@ -70,6 +70,7 @@
 #include "PeerSelectState.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
+#include "refresh.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

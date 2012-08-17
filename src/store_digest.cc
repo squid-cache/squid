@@ -52,6 +52,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
+#include "refresh.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreSearch.h"

@@ -51,6 +51,7 @@
 #include "md5.h"
 #include "MemBuf.h"
 #include "protos.h"
+#include "refresh.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"

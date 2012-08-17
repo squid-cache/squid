@@ -424,6 +424,7 @@ squid_SOURCES = \
 	PingData.h \
 	protos.h \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
@@ -1384,6 +1385,7 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1517,6 +1519,7 @@ tests_testDiskIO_SOURCES = \
 	mem.cc \
 	Packer.cc \
 	Parsing.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	StatCounters.h \
@@ -1725,6 +1728,7 @@ tests_testEvent_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1925,6 +1929,7 @@ tests_testEventLoop_SOURCES = \
 	peer_userhash.cc \
 	RemovalPolicy.cc \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -2119,6 +2124,7 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.cc \
 	pconn.cc \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -2354,6 +2360,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -2482,6 +2489,7 @@ tests_testStore_SOURCES= \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
+	refresh.h \
 	refresh.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -2734,6 +2742,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc \
+	refresh.h \
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
@@ -3005,6 +3014,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc \
+	refresh.h \
 	refresh.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_Port.cc \
@@ -3142,6 +3152,7 @@ tests_testNull_SOURCES = \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc \
+	refresh.h \
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
@@ -3284,6 +3295,7 @@ tests_testURL_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
+	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
