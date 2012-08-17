@@ -207,18 +207,6 @@ extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
-#if USE_WCCP
-extern void wccpInit(void);
-extern void wccpConnectionOpen(void);
-extern void wccpConnectionClose(void);
-#endif /* USE_WCCP */
-
-#if USE_WCCPv2
-extern void wccp2Init(void);
-extern void wccp2ConnectionOpen(void);
-extern void wccp2ConnectionClose(void);
-#endif /* USE_WCCPv2 */
-
 extern char *mime_get_header(const char *mime, const char *header);
 extern char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
 extern size_t headersEnd(const char *, size_t);
