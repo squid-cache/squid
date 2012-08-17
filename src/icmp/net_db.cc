@@ -55,6 +55,8 @@
 #include "SquidTime.h"
 #include "wordlist.h"
 #include "ip/Address.h"
+#include "neighbors.h"
+
 
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>

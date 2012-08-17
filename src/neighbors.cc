@@ -46,6 +46,7 @@
 #include "ipcache.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
 #include "protos.h"
