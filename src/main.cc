@@ -65,6 +65,7 @@
 #include "ip/tools.h"
 #include "Mem.h"
 #include "MemPool.h"
+#include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
 #include "profiler/Profiler.h"

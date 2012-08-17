@@ -57,6 +57,7 @@
 #include "ip/tools.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
 #include "protos.h"

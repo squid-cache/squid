@@ -50,6 +50,7 @@
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "MemObject.h"
+#include "neighbors.h"
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
