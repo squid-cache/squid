@@ -76,6 +76,7 @@
 #include "Store.h"
 #include "SwapDir.h"
 #include "wccp.h"
+#include "wccp2.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
