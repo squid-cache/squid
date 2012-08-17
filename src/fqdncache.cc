@@ -588,50 +588,6 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
 #endif
 }
 
-/// \ingroup FQDNCacheInternal
-static void
-fqdncacheRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("fqdncache", "FQDN Cache Stats and Contents",
-                        fqdnStats, 0, 1);
-
-}
-
-/**
- \ingroup FQDNCacheAPI
- *
- * Initialize the fqdncache.
- * Called after IP cache initialization.
- */
-void
-fqdncache_init(void)
-{
-    int n;
-
-    fqdncacheRegisterWithCacheManager();
-
-    if (fqdn_table)
-        return;
-
-    debugs(35, 3, "Initializing FQDN Cache...");
-
-    memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
-
-    memset(&lru_list, '\0', sizeof(lru_list));
-
-    fqdncache_high = (long) (((float) Config.fqdncache.size *
-                              (float) FQDN_HIGH_WATER) / (float) 100);
-
-    fqdncache_low = (long) (((float) Config.fqdncache.size *
-                             (float) FQDN_LOW_WATER) / (float) 100);
-
-    n = hashPrime(fqdncache_high / 4);
-
-    fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
-
-    memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
-                sizeof(fqdncache_entry), 0);
-}
 
 /**
  \ingroup FQDNCacheAPI
@@ -746,6 +702,7 @@ fqdnStats(StoreEntry * sentry)
 }
 
 /// \ingroup FQDNCacheAPI
+#if 0
 const char *
 fqdnFromAddr(const Ip::Address &addr)
 {
@@ -761,6 +718,7 @@ fqdnFromAddr(const Ip::Address &addr)
 
     return buf;
 }
+#endif
 
 /// \ingroup FQDNCacheInternal
 static void
@@ -873,6 +831,50 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
     fqdncacheLockEntry(fce);
 }
 
+/// \ingroup FQDNCacheInternal
+static void
+fqdncacheRegisterWithCacheManager(void)
+{
+    Mgr::RegisterAction("fqdncache", "FQDN Cache Stats and Contents",
+                        fqdnStats, 0, 1);
+
+}
+
+/**
+ \ingroup FQDNCacheAPI
+ *
+ * Initialize the fqdncache.
+ * Called after IP cache initialization.
+ */
+void
+fqdncache_init(void)
+{
+    int n;
+
+    fqdncacheRegisterWithCacheManager();
+
+    if (fqdn_table)
+        return;
+
+    debugs(35, 3, "Initializing FQDN Cache...");
+
+    memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
+
+    memset(&lru_list, '\0', sizeof(lru_list));
+
+    fqdncache_high = (long) (((float) Config.fqdncache.size *
+                              (float) FQDN_HIGH_WATER) / (float) 100);
+
+    fqdncache_low = (long) (((float) Config.fqdncache.size *
+                             (float) FQDN_LOW_WATER) / (float) 100);
+
+    n = hashPrime(fqdncache_high / 4);
+
+    fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
+
+    memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
+                sizeof(fqdncache_entry), 0);
+}
 
 #if SQUID_SNMP
 /**

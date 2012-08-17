@@ -81,20 +81,7 @@ SQUIDCEXTERN void parse_time_t(time_t * var);
 
 /* client_side.c - FD related client side routines */
 
-SQUIDCEXTERN void clientdbInit(void);
-
 #include "anyp/ProtocolType.h"
-SQUIDCEXTERN void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
-
-SQUIDCEXTERN int clientdbCutoffDenied(const Ip::Address &);
-void clientdbDump(StoreEntry *);
-SQUIDCEXTERN void clientdbFreeMemory(void);
-
-SQUIDCEXTERN int clientdbEstablished(const Ip::Address &, int);
-#if USE_DELAY_POOLS
-SQUIDCEXTERN void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
-SQUIDCEXTERN ClientInfo * clientdbGetInfo(const Ip::Address &addr);
-#endif
 SQUIDCEXTERN void clientOpenListenSockets(void);
 SQUIDCEXTERN void clientHttpConnectionsClose(void);
 SQUIDCEXTERN void httpRequestFree(void *);
@@ -131,20 +118,6 @@ extern void fd_bytes(int fd, int len, unsigned int type);
 extern void fdDumpOpen(void);
 extern int fdUsageHigh(void);
 extern void fdAdjustReserved(void);
-
-SQUIDCEXTERN void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
-
-SQUIDCEXTERN const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
-SQUIDCEXTERN void fqdncache_init(void);
-void fqdnStats(StoreEntry *);
-SQUIDCEXTERN void fqdncacheReleaseInvalid(const char *);
-
-SQUIDCEXTERN const char *fqdnFromAddr(const Ip::Address &);
-SQUIDCEXTERN int fqdncacheQueueDrain(void);
-SQUIDCEXTERN void fqdncacheFreeMemory(void);
-SQUIDCEXTERN void fqdncache_restart(void);
-extern void fqdncache_purgelru(void *);
-SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 class FwdState;
 

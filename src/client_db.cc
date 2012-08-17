@@ -33,9 +33,11 @@
  */
 
 #include "squid.h"
+#include "client_db.h"
 #include "event.h"
 #include "format/Token.h"
 #include "ClientInfo.h"
+#include "fqdncache.h"
 #include "ip/Address.h"
 #include "mgr/Registration.h"
 #include "protos.h"
