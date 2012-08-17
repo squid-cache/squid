@@ -332,10 +332,12 @@ squid_SOURCES = \
 	filemap.cc \
 	forward.cc \
 	forward.h \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
 	Generic.h \
 	globals.h \
+	gopher.h \
 	gopher.cc \
 	helper.cc \
 	helper.h \
@@ -360,8 +362,8 @@ squid_SOURCES = \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHeaderStat.h \
-	HttpHeader.cc \
 	HttpHeader.h \
+	HttpHeader.cc \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
 	HttpHeaderTools.h \
@@ -403,6 +405,7 @@ squid_SOURCES = \
 	mime.cc \
 	mime_header.cc \
 	multicast.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Packer.h \
@@ -496,11 +499,13 @@ squid_SOURCES = \
 	URLScheme.cc \
 	URLScheme.h \
 	urn.cc \
+	wccp.h \
 	wccp.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
-	wordlist.cc \
 	wordlist.h \
+	wordlist.cc \
 	$(WIN32_SOURCE) \
 	$(WINSVC_SOURCE)
 
@@ -1071,8 +1076,8 @@ tests_testHttpReply_SOURCES=\
 	HttpHdrSc.h \
 	HttpHdrScTarget.cc \
 	HttpHdrScTarget.h \
-	HttpHeader.cc \
 	HttpHeader.h \
+	HttpHeader.cc \
 	HttpHeaderMask.h \
 	HttpHeaderTools.cc \
 	HttpControlMsg.h \
@@ -1113,6 +1118,7 @@ tests_testHttpReply_SOURCES=\
 	time.cc \
 	url.cc \
 	URLScheme.cc \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
@@ -1151,6 +1157,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
 	HttpBody.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
@@ -1224,6 +1231,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	URLScheme.h \
 	mem.cc \
 	MemBuf.cc \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
@@ -1326,8 +1334,10 @@ tests_testCacheManager_SOURCES = \
 	FileMap.h \
 	filemap.cc \
 	forward.cc \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
+	gopher.h \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
@@ -1337,6 +1347,7 @@ tests_testCacheManager_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
@@ -1362,6 +1373,7 @@ tests_testCacheManager_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	mime_header.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1413,10 +1425,12 @@ tests_testCacheManager_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES) \
@@ -1489,6 +1503,7 @@ tests_testDiskIO_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHdrRange.cc \
 	HttpHeaderTools.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
@@ -1564,6 +1579,7 @@ tests_testDiskIO_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(TESTSOURCES) \
@@ -1654,8 +1670,10 @@ tests_testEvent_SOURCES = \
 	FileMap.h \
 	filemap.cc \
 	forward.cc \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
+	gopher.h \
 	gopher.cc \
 	helper.cc \
 	HelperChildConfig.h \
@@ -1665,6 +1683,7 @@ tests_testEvent_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
@@ -1695,6 +1714,7 @@ tests_testEvent_SOURCES = \
 	mime.cc \
 	mime_header.cc \
 	multicast.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1755,9 +1775,11 @@ tests_testEvent_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
 	$(BUILT_SOURCES) \
@@ -1847,8 +1869,10 @@ tests_testEventLoop_SOURCES = \
 	FileMap.h \
 	filemap.cc \
 	forward.cc \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
+	gopher.h \
 	gopher.cc \
 	helper.cc \
 	HelperChildConfig.h \
@@ -1858,6 +1882,7 @@ tests_testEventLoop_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
@@ -1888,6 +1913,7 @@ tests_testEventLoop_SOURCES = \
 	mime.cc \
 	mime_header.cc \
 	multicast.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1947,9 +1973,11 @@ tests_testEventLoop_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
 	$(BUILT_SOURCES) \
@@ -2036,8 +2064,10 @@ tests_test_http_range_SOURCES = \
 	FileMap.h \
 	filemap.cc \
 	forward.cc \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
+	gopher.h \
 	gopher.cc \
 	helper.cc \
 	HelperChildConfig.h \
@@ -2054,6 +2084,7 @@ tests_test_http_range_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
@@ -2077,6 +2108,7 @@ tests_test_http_range_SOURCES = \
 	mime.cc \
 	mime_header.cc \
 	multicast.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -2134,9 +2166,11 @@ tests_test_http_range_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
@@ -2201,6 +2235,7 @@ tests_testHttpParser_SOURCES = \
 	tests/testHttpParser.h \
 	tests/testMain.cc \
 	time.cc \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpParser_SOURCES = \
 	$(TESTSOURCES)
@@ -2269,8 +2304,10 @@ tests_testHttpRequest_SOURCES = \
 	fd.cc \
 	fde.cc \
 	forward.cc \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
+	gopher.h \
 	gopher.cc \
 	helper.cc \
 	HelperChildConfig.h \
@@ -2280,6 +2317,7 @@ tests_testHttpRequest_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
@@ -2305,6 +2343,7 @@ tests_testHttpRequest_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	mime_header.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -2356,10 +2395,12 @@ tests_testHttpRequest_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
@@ -2428,6 +2469,7 @@ tests_testStore_SOURCES= \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpHeaderTools.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
@@ -2507,6 +2549,7 @@ tests_testStore_SOURCES= \
 	time.cc \
 	url.cc \
 	URLScheme.cc \
+	wordlist.h \
 	wordlist.cc
 
 nodist_tests_testStore_SOURCES= \
@@ -2562,6 +2605,7 @@ tests_testString_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_tools.cc \
 	time.cc \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
@@ -2668,6 +2712,7 @@ tests_testUfs_SOURCES = \
 	stmem.cc \
 	tests/stub_mime.cc \
 	HttpHeaderTools.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	mem.cc \
 	ClientInfo.h \
@@ -2696,6 +2741,7 @@ tests_testUfs_SOURCES = \
 	tests/testStoreSupport.h \
 	time.cc \
 	URLScheme.cc \
+	wordlist.h \
 	wordlist.cc \
 	$(DISKIO_SOURCE)
 
@@ -2761,6 +2807,7 @@ tests_testRock_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
@@ -2831,6 +2878,7 @@ tests_testRock_SOURCES = \
 	time.cc \
 	url.cc \
 	URLScheme.cc \
+	wordlist.h \
 	wordlist.cc \
 	$(DELAY_POOL_SOURCE) \
 	$(DISKIO_SOURCE) \
@@ -2937,6 +2985,7 @@ tests_testCoss_SOURCES = \
 	stmem.cc \
 	tests/stub_mime.cc \
 	HttpHeaderTools.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	mem.cc \
 	ClientInfo.h \
@@ -2967,6 +3016,7 @@ tests_testCoss_SOURCES = \
 	tests/testStoreSupport.h \
 	time.cc \
 	URLScheme.cc \
+	wordlist.h \
 	wordlist.cc \
 	$(DISKIO_SOURCE)
 
@@ -3072,6 +3122,7 @@ tests_testNull_SOURCES = \
 	stmem.cc \
 	tests/stub_mime.cc \
 	HttpHeaderTools.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	mem.cc \
 	ClientInfo.h \
@@ -3099,6 +3150,7 @@ tests_testNull_SOURCES = \
 	tests/testStoreSupport.h \
 	time.cc \
 	URLScheme.cc \
+	wordlist.h \
 	wordlist.cc \
 	$(DISKIO_SOURCE)
 
@@ -3177,8 +3229,10 @@ tests_testURL_SOURCES = \
 	FileMap.h \
 	filemap.cc \
 	forward.cc \
+	fqdncache.h \
 	fqdncache.cc \
 	ftp.cc \
+	gopher.h \
 	gopher.cc \
 	helper.cc \
 	HelperChildConfig.h \
@@ -3195,6 +3249,7 @@ tests_testURL_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
@@ -3218,6 +3273,7 @@ tests_testURL_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	mime_header.cc \
+	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -3280,10 +3336,12 @@ tests_testURL_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
+	wccp2.h \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
 	$(BUILT_SOURCES)
@@ -3343,6 +3401,7 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_tools.cc \
 	time.cc \
+	wordlist.h \
 	wordlist.cc
 nodist_tests_testConfigParser_SOURCES = \
 	$(TESTSOURCES)
