@@ -58,6 +58,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "format/Token.h"
+#include "gopher.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

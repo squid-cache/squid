@@ -47,6 +47,7 @@
 #include "fde.h"
 #include "forward.h"
 #include "globals.h"
+#include "gopher.h"
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
