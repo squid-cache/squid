@@ -225,14 +225,6 @@ extern int mimeGetViewOption(const char *fn);
 extern int mcastSetTtl(int, int);
 extern IPH mcastJoinGroups;
 
-
-/* peer_digest.c */
-class PeerDigest;
-SQUIDCEXTERN PeerDigest *peerDigestCreate(peer * p);
-SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
-SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
-SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
-
 #include "comm/forward.h"
 extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);
