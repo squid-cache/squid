@@ -41,6 +41,9 @@
 
 #if USE_CACHE_DIGESTS
 
+#include "CacheDigest.h"
+#include "structs.h"
+
 /* local types */
 
 typedef struct {
