@@ -264,6 +264,7 @@ squid_SOURCES = \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	cache_manager.cc \
 	CacheManager.h \
@@ -1302,6 +1303,7 @@ tests_testCacheManager_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -1480,6 +1482,7 @@ tests_testCacheManager_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 tests_testDiskIO_SOURCES = \
+	CacheDigest.h \
 	CacheDigest.cc \
 	cbdata.cc \
 	client_db.h \
@@ -1634,6 +1637,7 @@ tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	cache_cf.cc \
 	cache_manager.cc \
@@ -1834,6 +1838,7 @@ tests_testEventLoop_SOURCES = \
 	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -2034,6 +2039,7 @@ tests_test_http_range_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.cc \
 	cache_manager.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -2281,6 +2287,7 @@ tests_testHttpRequest_SOURCES = \
 	cache_manager.cc \
 	cache_cf.cc \
 	debug.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -2454,6 +2461,7 @@ tests_testHttpRequest_DEPENDENCIES = \
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
+	CacheDigest.h \
 	CacheDigest.cc \
 	cbdata.cc \
 	ClientInfo.h \
@@ -2696,6 +2704,7 @@ tests_testUfs_SOURCES = \
 	$(WIN32_SOURCE) \
 	event.cc \
 	$(DELAY_POOL_SOURCE) \
+	CacheDigest.h \
 	CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
@@ -2799,6 +2808,7 @@ tests_testUfs_DEPENDENCIES = \
 
 tests_testRock_SOURCES = \
 	cbdata.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -2971,6 +2981,7 @@ tests_testCoss_SOURCES = \
 	$(WIN32_SOURCE) \
 	event.cc \
 	$(DELAY_POOL_SOURCE) \
+	CacheDigest.h \
 	CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
@@ -3107,6 +3118,7 @@ tests_testNull_SOURCES = \
 	$(WIN32_SOURCE) \
 	event.cc \
 	$(DELAY_POOL_SOURCE) \
+	CacheDigest.h \
 	CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
@@ -3206,6 +3218,7 @@ tests_testURL_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.cc \
 	cache_manager.cc \
+	CacheDigest.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \

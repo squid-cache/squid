@@ -46,8 +46,9 @@
 #include "globals.h"
 #include "mgr/Registration.h"
 #include "protos.h"
-#if USE_CACHE_DIGESTS
 
+#if USE_CACHE_DIGESTS
+#include "CacheDigest.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
