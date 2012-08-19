@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "protos.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "SquidTime.h"
