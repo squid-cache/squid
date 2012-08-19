@@ -39,8 +39,10 @@
 #include "enums.h"
 /* some parameters stil need this */
 #include "wordlist.h"
-
-/* for parameters that still need these */
+#include "anyp/ProtocolType.h"
+#include "Debug.h"
+#include "HttpHeader.h"
+#include "HttpStatusCode.h"
 #include "lookup_t.h"
 
 
@@ -81,14 +83,12 @@ SQUIDCEXTERN void parse_time_t(time_t * var);
 
 /* client_side.c - FD related client side routines */
 
-#include "anyp/ProtocolType.h"
 SQUIDCEXTERN void clientOpenListenSockets(void);
 SQUIDCEXTERN void clientHttpConnectionsClose(void);
 SQUIDCEXTERN void httpRequestFree(void *);
 
 extern void clientAccessCheck(void *);
 
-#include "Debug.h"
 
 /* packs, then prints an object using debugs() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
@@ -149,7 +149,6 @@ SQUIDCEXTERN void whoisStart(FwdState *);
 
 /* http.c */
 /* for http_hdr_type field */
-#include "HttpHeader.h"
 SQUIDCEXTERN int httpCachable(const HttpRequestMethod&);
 SQUIDCEXTERN void httpStart(FwdState *);
 SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
@@ -159,7 +158,6 @@ SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
         http_state_flags);
 extern const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
-#include "HttpStatusCode.h"
 
 /* Http Header Tools */
 class HttpHeaderFieldInfo;
@@ -442,13 +440,6 @@ SQUIDCEXTERN void urlExtMethodConfigure(void);
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
 /* tools.c */
-//UNUSED	#include "dlink.h"
-//UNUSED	SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
-//UNUSED	SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
-//UNUSED	SQUIDCEXTERN void dlinkAddTail(void *data, dlink_node *, dlink_list *);
-//UNUSED	SQUIDCEXTERN void dlinkDelete(dlink_node * m, dlink_list * list);
-//UNUSED	SQUIDCEXTERN void dlinkNodeDelete(dlink_node * m);
-//UNUSED	SQUIDCEXTERN dlink_node *dlinkNodeNew(void);
 
 SQUIDCEXTERN void kb_incr(kb_t *, size_t);
 SQUIDCEXTERN int stringHasWhitespace(const char *);
@@ -582,28 +573,6 @@ class StatCounters;
 
                 SQUIDCEXTERN char *strtokFile(void);
 
-#if USE_WCCPv2
-
-                SQUIDCEXTERN void parse_wccp2_method(int *v);
-                SQUIDCEXTERN void free_wccp2_method(int *v);
-                SQUIDCEXTERN void dump_wccp2_method(StoreEntry * e, const char *label, int v);
-                SQUIDCEXTERN void parse_wccp2_amethod(int *v);
-                SQUIDCEXTERN void free_wccp2_amethod(int *v);
-                SQUIDCEXTERN void dump_wccp2_amethod(StoreEntry * e, const char *label, int v);
-
-                SQUIDCEXTERN void parse_wccp2_service(void *v);
-                SQUIDCEXTERN void free_wccp2_service(void *v);
-                SQUIDCEXTERN void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
-
-                SQUIDCEXTERN int check_null_wccp2_service(void *v);
-
-                SQUIDCEXTERN void parse_wccp2_service_info(void *v);
-
-                SQUIDCEXTERN void free_wccp2_service_info(void *v);
-
-                SQUIDCEXTERN void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
-
-#endif
 
 #if USE_AUTH
 

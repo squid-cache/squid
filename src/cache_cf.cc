@@ -63,6 +63,8 @@
 #include "SwapDir.h"
 #include "wordlist.h"
 #include "neighbors.h"
+/* wccp2 has its own conditional definitions */
+#include "wccp2.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
