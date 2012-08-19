@@ -555,24 +555,7 @@ class StatCounters;
 
 #endif
 
-    /* external_acl.c */
-    class external_acl;
-            SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
-
-            SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
-
-            SQUIDCEXTERN void free_externalAclHelper(external_acl **);
-
-            typedef void EAH(void *data, void *result);
-            class ACLChecklist;
-                SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
-
-                SQUIDCEXTERN void externalAclInit(void);
-
-                SQUIDCEXTERN void externalAclShutdown(void);
-
-                SQUIDCEXTERN char *strtokFile(void);
-
+extern char *strtokFile(void);
 
 #if USE_AUTH
 

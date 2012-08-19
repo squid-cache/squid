@@ -42,6 +42,7 @@
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
+#include "ExternalACL.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "HttpRequestMethod.h"
