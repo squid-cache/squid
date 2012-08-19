@@ -413,4 +413,7 @@ void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false)
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
 
+/* Vary support functions */
+extern int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
+
 #endif /* SQUID_CLIENTSIDE_H */
