@@ -35,9 +35,30 @@
 #define SQUID_WCCP2_H_
 
 #if USE_WCCPv2
+
+class StoreEntry;
+
 extern void wccp2Init(void);
 extern void wccp2ConnectionOpen(void);
 extern void wccp2ConnectionClose(void);
-#endif /* SQUID_USE_WCCPv2 */
+extern void parse_wccp2_method(int *v);
+extern void free_wccp2_method(int *v);
+extern void dump_wccp2_method(StoreEntry * e, const char *label, int v);
+extern void parse_wccp2_amethod(int *v);
+extern void free_wccp2_amethod(int *v);
+extern void dump_wccp2_amethod(StoreEntry * e, const char *label, int v);
+
+extern void parse_wccp2_service(void *v);
+extern void free_wccp2_service(void *v);
+extern void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
+
+extern int check_null_wccp2_service(void *v);
+
+extern void parse_wccp2_service_info(void *v);
+
+extern void free_wccp2_service_info(void *v);
+
+extern void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
+#endif /* USE_WCCPv2 */
 
 #endif /* WCCP2_H_ */
