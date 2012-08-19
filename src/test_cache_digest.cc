@@ -37,6 +37,7 @@
  */
 
 #include "squid.h"
+#include "CacheDigest.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

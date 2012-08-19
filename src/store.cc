@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "CacheDigest.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "ETag.h"

@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #if USE_CACHE_DIGESTS
+#include "CacheDigest.h"
 #include "event.h"
 #include "forward.h"
 #include "HttpReply.h"

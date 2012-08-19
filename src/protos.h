@@ -468,22 +468,6 @@ SQUIDCEXTERN pid_t ipcCreate(int type,
                              int *wfd,
                              void **hIpc);
 
-class CacheDigestGuessStats;
-/* CacheDigest */
-SQUIDCEXTERN CacheDigest *cacheDigestCreate(int capacity, int bpe);
-SQUIDCEXTERN void cacheDigestDestroy(CacheDigest * cd);
-SQUIDCEXTERN CacheDigest *cacheDigestClone(const CacheDigest * cd);
-SQUIDCEXTERN void cacheDigestClear(CacheDigest * cd);
-SQUIDCEXTERN void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
-SQUIDCEXTERN int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
-SQUIDCEXTERN void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
-SQUIDCEXTERN void cacheDigestDel(CacheDigest * cd, const cache_key * key);
-SQUIDCEXTERN size_t cacheDigestCalcMaskSize(int cap, int bpe);
-SQUIDCEXTERN int cacheDigestBitUtil(const CacheDigest * cd);
-SQUIDCEXTERN void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
-SQUIDCEXTERN void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
-SQUIDCEXTERN void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
-
 SQUIDCEXTERN void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
 SQUIDCEXTERN int internalCheck(const char *urlpath);
 SQUIDCEXTERN int internalStaticCheck(const char *urlpath);

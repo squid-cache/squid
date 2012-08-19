@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "CacheDigest.h"
 #include "client_side_request.h"
 #include "client_side.h"
 #include "comm/Connection.h"
