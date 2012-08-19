@@ -528,8 +528,6 @@ SQUIDCEXTERN int gethostname(char *, int);
 class StatCounters;
         SQUIDCEXTERN StatCounters *snmpStatGet(int);
 
-        /* Vary support functions */
-        SQUIDCEXTERN int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
         /* CygWin & Windows NT Port */
         /* win32.c */
