@@ -40,6 +40,7 @@
 #include "acl/RegexData.h"
 #include "protos.h"
 #include "rfc1738.h"
+#include "URL.h"
 
 int
 ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)

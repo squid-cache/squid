@@ -45,7 +45,9 @@
 #include "MemBuf.h"
 #include "protos.h"
 #include "rfc1738.h"
+#include "URL.h"
 #include "URLScheme.h"
+#include "URL.h"
 #include "tools.h"
 #include "wordlist.h"
 #if USE_AUTH

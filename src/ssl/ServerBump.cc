@@ -12,7 +12,7 @@
 #include "protos.h"
 #include "ssl/ServerBump.h"
 #include "Store.h"
-
+#include "URL.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 

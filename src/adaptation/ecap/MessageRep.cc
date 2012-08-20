@@ -13,6 +13,7 @@
 #include "adaptation/ecap/XactionRep.h"
 #include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "base/TextException.h"
+#include "URL.h"
 
 /* HeaderRep */
 

@@ -48,6 +48,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+#include "URL.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
