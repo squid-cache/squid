@@ -40,6 +40,7 @@
 #include "forward.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "MemObject.h"
 #include "neighbors.h"
 #include "PeerDigest.h"

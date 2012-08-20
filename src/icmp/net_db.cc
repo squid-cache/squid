@@ -51,6 +51,7 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "forward.h"
+#include "internal.h"
 #include "protos.h"
 #include "SquidTime.h"
 #include "wordlist.h"
