@@ -468,13 +468,6 @@ SQUIDCEXTERN pid_t ipcCreate(int type,
                              int *wfd,
                              void **hIpc);
 
-SQUIDCEXTERN void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
-SQUIDCEXTERN int internalCheck(const char *urlpath);
-SQUIDCEXTERN int internalStaticCheck(const char *urlpath);
-SQUIDCEXTERN char *internalLocalUri(const char *dir, const char *name);
-SQUIDCEXTERN char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
-SQUIDCEXTERN const char *internalHostname(void);
-SQUIDCEXTERN int internalHostnameIs(const char *);
 
 SQUIDCEXTERN void carpInit(void);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);

@@ -39,6 +39,7 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "protos.h"
