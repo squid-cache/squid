@@ -8,6 +8,7 @@
 
 #include "protos.h"
 #include "Store.h"
+#include "store_key_md5.h"
 #include "ipc/StoreMap.h"
 
 Ipc::StoreMap::Owner *

@@ -43,6 +43,7 @@
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "store_key_md5.h"
 #include "StoreHashIndex.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
