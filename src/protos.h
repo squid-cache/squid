@@ -472,9 +472,6 @@ SQUIDCEXTERN pid_t ipcCreate(int type,
 SQUIDCEXTERN void carpInit(void);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 
-SQUIDCEXTERN void peerUserHashInit(void);
-SQUIDCEXTERN peer * peerUserHashSelectParent(HttpRequest * request);
-
 /*
  * prototypes for system functions missing from system includes
  */
