@@ -68,6 +68,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
+#include "peer_sourcehash.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
 #include "refresh.h"

@@ -46,6 +46,7 @@
 #include "ICP.h"
 #include "ipcache.h"
 #include "neighbors.h"
+#include "peer_sourcehash.h"
 #include "PeerSelectState.h"
 #include "protos.h"
 #include "SquidTime.h"
