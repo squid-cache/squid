@@ -475,9 +475,6 @@ SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 SQUIDCEXTERN void peerUserHashInit(void);
 SQUIDCEXTERN peer * peerUserHashSelectParent(HttpRequest * request);
 
-SQUIDCEXTERN void peerSourceHashInit(void);
-SQUIDCEXTERN peer * peerSourceHashSelectParent(HttpRequest * request);
-
 /*
  * prototypes for system functions missing from system includes
  */
