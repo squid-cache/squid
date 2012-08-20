@@ -421,21 +421,6 @@ SQUIDCEXTERN void unlinkdClose(void);
 SQUIDCEXTERN void unlinkdUnlink(const char *);
 #endif
 
-SQUIDCEXTERN AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
-SQUIDCEXTERN void urlInitialize(void);
-SQUIDCEXTERN HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
-SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
-SQUIDCEXTERN char *urlCanonicalClean(const HttpRequest *);
-SQUIDCEXTERN const char *urlCanonicalFakeHttps(const HttpRequest * request);
-SQUIDCEXTERN bool urlIsRelative(const char *);
-SQUIDCEXTERN char *urlMakeAbsolute(const HttpRequest *, const char *);
-SQUIDCEXTERN char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
-SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
-SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
-SQUIDCEXTERN int urlCheckRequest(const HttpRequest *);
-SQUIDCEXTERN int urlDefaultPort(AnyP::ProtocolType p);
-SQUIDCEXTERN char *urlHostname(const char *url);
-SQUIDCEXTERN void urlExtMethodConfigure(void);
 
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 

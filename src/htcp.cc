@@ -56,6 +56,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "URL.h"
 
 typedef struct _Countstr Countstr;
 

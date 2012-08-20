@@ -81,6 +81,7 @@
 #include "StoreFileSystem.h"
 #include "Store.h"
 #include "SwapDir.h"
+#include "URL.h"
 #include "wccp.h"
 #include "wccp2.h"
 

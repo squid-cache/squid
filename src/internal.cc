@@ -45,6 +45,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "tools.h"
+#include "URL.h"
 #include "wordlist.h"
 
 /* called when we "miss" on an internal object;

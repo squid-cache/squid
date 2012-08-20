@@ -60,6 +60,7 @@
 #include "Store.h"
 #include "URLScheme.h"
 #include "tools.h"
+#include "URL.h"
 #include "wordlist.h"
 #if USE_SSL
 #include "ssl/support.h"

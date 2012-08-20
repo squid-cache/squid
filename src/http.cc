@@ -68,6 +68,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
