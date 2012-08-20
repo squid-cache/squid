@@ -439,6 +439,7 @@ squid_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	SquidNew.cc \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1405,6 +1406,7 @@ tests_testCacheManager_SOURCES = \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1757,6 +1759,7 @@ tests_testEvent_SOURCES = \
 	$(SNMP_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1963,6 +1966,7 @@ tests_testEventLoop_SOURCES = \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -2165,6 +2169,7 @@ tests_test_http_range_SOURCES = \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -2408,6 +2413,7 @@ tests_testHttpRequest_SOURCES = \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -3363,6 +3369,7 @@ tests_testURL_SOURCES = \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
+	stat.h \
 	stat.cc \
 	StatCounters.h \
 	StatCounters.cc \
