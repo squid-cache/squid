@@ -48,6 +48,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "tools.h"
 
 /* local types */
 

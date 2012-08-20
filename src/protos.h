@@ -439,21 +439,14 @@ SQUIDCEXTERN void urlExtMethodConfigure(void);
 
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
-/* tools.c */
+SQUIDCEXTERN int stringHasWhitespace(const char *); //String.cc
+SQUIDCEXTERN int stringHasCntl(const char *); //String.cc
+SQUIDCEXTERN void linklistPush(link_list **, void *); //list.cc
+SQUIDCEXTERN void *linklistShift(link_list **); //list.cc
+SQUIDCEXTERN int xrename(const char *from, const char *to); //disk.cc
+extern int isPowTen(int); //int.cc
 
-SQUIDCEXTERN void kb_incr(kb_t *, size_t);
-SQUIDCEXTERN int stringHasWhitespace(const char *);
-SQUIDCEXTERN int stringHasCntl(const char *);
-SQUIDCEXTERN void linklistPush(link_list **, void *);
-SQUIDCEXTERN void *linklistShift(link_list **);
-SQUIDCEXTERN int xrename(const char *from, const char *to);
-extern int isPowTen(int);
-SQUIDCEXTERN void parseEtcHosts(void);
-SQUIDCEXTERN int getMyPort(void);
-SQUIDCEXTERN void setUmask(mode_t mask);
-
-SQUIDCEXTERN char *strwordtok(char *buf, char **t);
-SQUIDCEXTERN void strwordquote(MemBuf * mb, const char *str);
+SQUIDCEXTERN char *strwordtok(char *buf, char **t); //String.cc
 
 
 /*

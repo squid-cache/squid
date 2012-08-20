@@ -57,6 +57,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "tools.h"
 #include "URLScheme.h"
 #include "wordlist.h"
 
