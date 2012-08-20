@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "carp.h"
 #include "client_side.h"
 #include "DnsLookupDetails.h"
 #include "errorpage.h"

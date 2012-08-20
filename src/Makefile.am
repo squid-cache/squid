@@ -268,6 +268,7 @@ squid_SOURCES = \
 	CacheDigest.cc \
 	cache_manager.cc \
 	CacheManager.h \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	cbdata.h \
@@ -1308,6 +1309,7 @@ tests_testCacheManager_SOURCES = \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
@@ -1648,6 +1650,7 @@ tests_testEvent_SOURCES = \
 	CacheDigest.cc \
 	cache_cf.cc \
 	cache_manager.cc \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
@@ -1852,6 +1855,7 @@ tests_testEventLoop_SOURCES = \
 	CacheDigest.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
@@ -2054,6 +2058,7 @@ tests_test_http_range_SOURCES = \
 	cache_manager.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
@@ -2305,6 +2310,7 @@ tests_testHttpRequest_SOURCES = \
 	debug.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
@@ -3242,6 +3248,7 @@ tests_testURL_SOURCES = \
 	cache_manager.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
+	carp.h \
 	carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
