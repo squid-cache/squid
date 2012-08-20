@@ -45,7 +45,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
-
+#include "tools.h"
 
 static hash_table *client_table = NULL;
 

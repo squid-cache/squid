@@ -59,6 +59,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "SwapDir.h"
+#include "tools.h"
 #include "wordlist.h"
 
 #if HAVE_ERRNO_H
