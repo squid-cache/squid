@@ -50,6 +50,7 @@
 #include "PeerSelectState.h"
 #include "protos.h"
 #include "StatCounters.h"
+#include "tools.h"
 
 #if USE_DELAY_POOLS
 #include "DelayId.h"

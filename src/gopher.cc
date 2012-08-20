@@ -47,6 +47,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "tools.h"
 
 #if USE_DELAY_POOLS
 #include "DelayPools.h"

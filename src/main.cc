@@ -74,6 +74,7 @@
 #include "profiler/Profiler.h"
 #include "protos.h"
 #include "refresh.h"
+#include "tools.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

@@ -496,6 +496,7 @@ squid_SOURCES = \
 	MemStore.h \
 	time.cc \
 	TimeOrTag.h \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	typedefs.h \
@@ -1116,6 +1117,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_HttpRequest.cc \
 	tests/testHttpReply.cc \
@@ -1224,6 +1226,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_UdsOp.cc \
@@ -1429,6 +1432,7 @@ tests_testCacheManager_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -1582,6 +1586,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_rebuild.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testDiskIO.cc \
@@ -1789,6 +1794,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	MemStore.cc \
@@ -1993,6 +1999,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	MemStore.cc \
@@ -2193,6 +2200,7 @@ tests_test_http_range_SOURCES = \
 	tests/stub_MemStore.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	$(UNLINKDSOURCE) \
@@ -2263,6 +2271,7 @@ tests_testHttpParser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/testHttpParser.cc \
 	tests/testHttpParser.h \
@@ -2427,6 +2436,7 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	event.cc \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc \
@@ -2572,6 +2582,7 @@ tests_testStore_SOURCES= \
 	tests/stub_store_stats.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_swapout.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testMain.cc \
@@ -2644,6 +2655,7 @@ tests_testString_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	time.cc \
 	wordlist.h \
@@ -2780,6 +2792,7 @@ tests_testUfs_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	tests/stub_store_client.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
@@ -2919,6 +2932,7 @@ tests_testRock_SOURCES = \
 	tests/stub_store_client.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	time.cc \
 	url.cc \
@@ -3058,6 +3072,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testStoreSupport.cc \
@@ -3196,6 +3211,7 @@ tests_testNull_SOURCES = \
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
@@ -3388,6 +3404,7 @@ tests_testURL_SOURCES = \
 	tests/testURLScheme.h \
 	tests/testMain.cc \
 	time.cc \
+	tools.h \
 	tools.cc \
 	tunnel.cc \
 	url.cc \
@@ -3456,6 +3473,7 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	time.cc \
 	wordlist.h \
@@ -3494,6 +3512,7 @@ tests_testStatHist_SOURCES = \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
+	tools.h \
 	tests/stub_tools.cc \
 	tests/testMain.cc \
 	tests/testStatHist.cc \

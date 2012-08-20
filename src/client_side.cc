@@ -122,6 +122,7 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "TimeOrTag.h"
+#include "tools.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"

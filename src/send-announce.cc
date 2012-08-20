@@ -42,6 +42,7 @@
 #include "ipcache.h"
 #include "protos.h"
 #include "SquidTime.h"
+#include "tools.h"
 
 static IPH send_announce;
 
