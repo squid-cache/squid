@@ -462,6 +462,7 @@ squid_SOURCES = \
 	StoreClient.h \
 	store_digest.cc \
 	store_dir.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.cc \
 	store_rebuild.cc \
@@ -690,6 +691,7 @@ ufsdump_SOURCES = \
 	MemBuf.cci \
 	MemBuf.h \
 	Parsing.h \
+	store_key_md5.h \
 	store_key_md5.cc \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
@@ -1203,6 +1205,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	swap_log_op.cc \
 	swap_log_op.h \
@@ -1423,6 +1426,7 @@ tests_testCacheManager_SOURCES = \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.cc \
 	store_rebuild.cc \
@@ -1562,6 +1566,7 @@ tests_testDiskIO_SOURCES = \
 	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_swapout.cc \
 	store_swapmeta.cc \
@@ -1778,6 +1783,7 @@ tests_testEvent_SOURCES = \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.cc \
 	store_rebuild.cc \
@@ -1987,6 +1993,7 @@ tests_testEventLoop_SOURCES = \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.cc \
 	store_rebuild.cc \
@@ -2190,6 +2197,7 @@ tests_test_http_range_SOURCES = \
 	store_client.cc \
 	store_digest.cc \
 	store_dir.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_io.cc \
 	store_log.cc \
@@ -2437,6 +2445,7 @@ tests_testHttpRequest_SOURCES = \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.cc \
 	store_rebuild.cc \
@@ -2571,6 +2580,7 @@ tests_testStore_SOURCES= \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	String.cc \
 	SwapDir.cc \
@@ -2771,6 +2781,7 @@ tests_testUfs_SOURCES = \
 	store_dir.cc \
 	store.cc \
 	HttpRequestMethod.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	Parsing.cc \
 	ConfigOption.cc \
@@ -2921,6 +2932,7 @@ tests_testRock_SOURCES = \
 	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -3053,6 +3065,7 @@ tests_testCoss_SOURCES = \
 	store_dir.cc \
 	store.cc \
 	HttpRequestMethod.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	Parsing.cc \
 	ConfigOption.cc \
@@ -3193,6 +3206,7 @@ tests_testNull_SOURCES = \
 	store_dir.cc \
 	store.cc \
 	HttpRequestMethod.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	Parsing.cc \
 	ConfigOption.cc \
@@ -3400,6 +3414,7 @@ tests_testURL_SOURCES = \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
+	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.cc \
 	store_rebuild.cc \

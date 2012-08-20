@@ -42,6 +42,7 @@
 #include "RebuildState.h"
 #include "SquidMath.h"
 #include "DiskIO/DiskIOStrategy.h"
+#include "store_key_md5.h"
 #include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
 #include "SquidTime.h"

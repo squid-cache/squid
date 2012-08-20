@@ -47,6 +47,7 @@
 #include "ConfigOption.h"
 #include "StoreFScoss.h"
 #include "Parsing.h"
+#include "store_key_md5.h"
 #include "swap_log_op.h"
 #include "SquidMath.h"
 
