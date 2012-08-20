@@ -58,6 +58,8 @@
 #include "ip/Address.h"
 #include "neighbors.h"
 #include "URL.h"
+#include "Mem.h"
+
 
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>

@@ -36,6 +36,7 @@
 #include "cbdata.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
+#include "Mem.h"
 #include "mgr/Registration.h"
 #include "protos.h"
 #include "SquidDns.h"

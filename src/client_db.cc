@@ -39,6 +39,7 @@
 #include "ClientInfo.h"
 #include "fqdncache.h"
 #include "ip/Address.h"
+#include "Mem.h"
 #include "mgr/Registration.h"
 #include "protos.h"
 #include "SquidMath.h"

@@ -38,6 +38,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"
+#include "Mem.h"
 #include "mgr/Registration.h"
 #include "protos.h"
 #include "rfc3596.h"
