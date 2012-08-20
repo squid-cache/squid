@@ -52,6 +52,14 @@
 #include <ostream>
 #endif
 
+/* forward declarations */
+static void memFree2K(void *);
+static void memFree4K(void *);
+static void memFree8K(void *);
+static void memFree16K(void *);
+static void memFree32K(void *);
+static void memFree64K(void *);
+
 /* module globals */
 const size_t squidSystemPageSize=getpagesize();
 

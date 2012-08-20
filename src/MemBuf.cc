@@ -100,6 +100,7 @@
  */
 
 #include "squid.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 #include "protos.h"

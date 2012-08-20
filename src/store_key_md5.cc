@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "HttpRequest.h"
 #include "md5.h"
+#include "Mem.h"
 #include "protos.h"
 #include "URL.h"
 

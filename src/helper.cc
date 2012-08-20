@@ -39,6 +39,7 @@
 #include "comm/Write.h"
 #include "format/Quoting.h"
 #include "helper.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "protos.h"
 #include "SquidMath.h"
