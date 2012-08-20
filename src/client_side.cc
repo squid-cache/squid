@@ -82,7 +82,6 @@
  */
 
 #include "squid.h"
-
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
@@ -110,6 +109,7 @@
 #include "HttpRequest.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
+#include "internal.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
 #include "MemBuf.h"

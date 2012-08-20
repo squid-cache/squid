@@ -51,6 +51,7 @@
 #include "CacheDigest.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "refresh.h"

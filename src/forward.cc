@@ -52,6 +52,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
+#include "internal.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"

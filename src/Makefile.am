@@ -388,6 +388,7 @@ squid_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
@@ -1368,6 +1369,7 @@ tests_testCacheManager_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	list.cc \
 	multicast.cc \
@@ -1561,6 +1563,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_HttpRequest.cc \
 	tests/stub_http.cc \
 	tests/stub_icp.cc \
+	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
@@ -1712,6 +1715,7 @@ tests_testEvent_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	list.cc \
 	mem.cc \
@@ -1913,6 +1917,7 @@ tests_testEventLoop_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	list.cc \
 	MemBuf.cc \
@@ -2108,6 +2113,7 @@ tests_test_http_range_SOURCES = \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
@@ -2348,6 +2354,7 @@ tests_testHttpRequest_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	list.cc \
 	multicast.cc \
@@ -2671,6 +2678,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_UdsOp.cc \
+	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
 	tests/stub_store_rebuild.cc \
@@ -2948,6 +2956,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_client_db.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_pconn.cc \
@@ -3087,6 +3096,7 @@ tests_testNull_SOURCES = \
 	tests/testNull.cc \
 	tests/testMain.cc \
 	tests/testNull.h \
+	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -3288,6 +3298,7 @@ tests_testURL_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
+	internal.h \
 	internal.cc \
 	list.cc \
 	multicast.cc \
