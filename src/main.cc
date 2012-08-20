@@ -77,6 +77,7 @@
 #include "tools.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
+#include "stat.h"
 #include "StatCounters.h"
 #include "StoreFileSystem.h"
 #include "Store.h"

@@ -241,17 +241,6 @@ extern void reconfigure(int);
 extern void start_announce(void *unused);
 extern void waisStart(FwdState *);
 
-SQUIDCEXTERN void statInit(void);
-SQUIDCEXTERN void statFreeMemory(void);
-SQUIDCEXTERN double median_svc_get(int, int);
-SQUIDCEXTERN void pconnHistCount(int, int);
-SQUIDCEXTERN int stat5minClientRequests(void);
-SQUIDCEXTERN double stat5minCPUUsage(void);
-SQUIDCEXTERN double statRequestHitRatio(int minutes);
-SQUIDCEXTERN double statRequestHitMemoryRatio(int minutes);
-SQUIDCEXTERN double statRequestHitDiskRatio(int minutes);
-SQUIDCEXTERN double statByteHitRatio(int minutes);
-
 /* mem */
 SQUIDCEXTERN void memClean(void);
 SQUIDCEXTERN void memInitModule(void);
