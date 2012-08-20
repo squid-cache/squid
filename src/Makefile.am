@@ -420,6 +420,7 @@ squid_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	PeerSelectState.h \
@@ -1386,6 +1387,7 @@ tests_testCacheManager_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
@@ -1733,6 +1735,7 @@ tests_testEvent_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
@@ -1935,6 +1938,7 @@ tests_testEventLoop_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	RemovalPolicy.cc \
@@ -2132,6 +2136,7 @@ tests_test_http_range_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	pconn.cc \
@@ -2371,6 +2376,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
@@ -3316,6 +3322,7 @@ tests_testURL_SOURCES = \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
+	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
