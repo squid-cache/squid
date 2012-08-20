@@ -49,6 +49,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "protos.h"
 #include "rfc1738.h"

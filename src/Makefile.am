@@ -398,6 +398,7 @@ squid_SOURCES = \
 	list.cc \
 	lookup_t.h \
 	main.cc \
+	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	mem_node.h \
@@ -683,6 +684,7 @@ ufsdump_SOURCES = \
 	cbdata.cc \
 	debug.cc \
 	int.cc \
+	Mem.h \
 	mem.cc \
 	MemBuf.cc \
 	MemBuf.cci \
@@ -1096,6 +1098,7 @@ tests_testHttpReply_SOURCES=\
 	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
+	Mem.h \
 	mem.cc \
 	MemBuf.cc \
 	MemBuf.h \
@@ -1239,6 +1242,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	URL.h \
 	URLScheme.cc \
 	URLScheme.h \
+	Mem.h \
 	mem.cc \
 	MemBuf.cc \
 	wordlist.h \
@@ -1299,6 +1303,7 @@ tests_testCacheManager_SOURCES = \
 	HttpParser.h \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
+	Mem.h \
 	mem.cc \
 	String.cc \
 	tests/testCacheManager.cc \
@@ -1533,6 +1538,7 @@ tests_testDiskIO_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
+	Mem.h \
 	mem.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1732,6 +1738,7 @@ tests_testEvent_SOURCES = \
 	internal.h \
 	internal.cc \
 	list.cc \
+	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
@@ -1941,6 +1948,7 @@ tests_testEventLoop_SOURCES = \
 	list.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	mime.cc \
@@ -1972,6 +1980,7 @@ tests_testEventLoop_SOURCES = \
 	StatCounters.cc \
 	StatHist.h \
 	StatHist.cc \
+	Mem.h \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -2144,6 +2153,7 @@ tests_test_http_range_SOURCES = \
 	list.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	mime.cc \
@@ -2268,6 +2278,7 @@ tests_testHttpParser_SOURCES = \
 	HttpParser.h \
 	MemBuf.cc \
 	MemBuf.h \
+	Mem.h \
 	mem.cc \
 	String.cc \
 	structs.h \
@@ -2306,6 +2317,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpParser.h \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
+	Mem.h \
 	mem.cc \
 	String.cc \
 	tests/testHttpRequest.h \
@@ -2531,6 +2543,7 @@ tests_testStore_SOURCES= \
 	HttpRequestMethod.cc \
 	int.cc \
 	list.cc \
+	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
@@ -2651,6 +2664,7 @@ tests_testStore_DEPENDENCIES = \
 ## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
 	ClientInfo.h \
+	Mem.h \
 	mem.cc \
 	MemBuf.cc \
 	String.cc \
@@ -2775,6 +2789,7 @@ tests_testUfs_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	Mem.h \
 	mem.cc \
 	ClientInfo.h \
 	MemBuf.cc \
@@ -2880,6 +2895,7 @@ tests_testRock_SOURCES = \
 	HttpStatusLine.cc \
 	int.cc \
 	list.cc \
+	Mem.h \
 	mem.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -3054,6 +3070,7 @@ tests_testCoss_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	Mem.h \
 	mem.cc \
 	ClientInfo.h \
 	MemBuf.cc \
@@ -3195,6 +3212,7 @@ tests_testNull_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	Mem.h \
 	mem.cc \
 	ClientInfo.h \
 	MemBuf.cc \
@@ -3343,6 +3361,7 @@ tests_testURL_SOURCES = \
 	internal.cc \
 	list.cc \
 	multicast.cc \
+	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
@@ -3469,6 +3488,7 @@ tests_testURL_DEPENDENCIES = \
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
+	Mem.h \
 	mem.cc \
 	MemBuf.cc \
 	String.cc \
@@ -3512,6 +3532,7 @@ tests_testStatHist_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_HelperChildConfig.cc \
+	Mem.h \
 	tests/stub_mem.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_mime.cc \

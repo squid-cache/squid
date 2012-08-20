@@ -46,6 +46,7 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ipcache.h"
+#include "Mem.h"
 #include "neighbors.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
