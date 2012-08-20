@@ -47,6 +47,7 @@
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
+#include "URL.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

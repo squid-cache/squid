@@ -48,6 +48,7 @@
 #include "MemBuf.h"
 #include "protos.h"
 #include "Store.h"
+#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"

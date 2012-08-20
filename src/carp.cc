@@ -40,6 +40,7 @@
 #include "neighbors.h"
 #include "protos.h"
 #include "Store.h"
+#include "URL.h"
 #include "URLScheme.h"
 
 #if HAVE_MATH_H

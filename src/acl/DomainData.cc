@@ -40,6 +40,7 @@
 #include "Debug.h"
 #include "protos.h"
 #include "wordlist.h"
+#include "URL.h"
 
 template<class T>
 inline void
