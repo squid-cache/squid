@@ -39,6 +39,7 @@
 #include "protos.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store_key_md5.h"
 
 #if USE_CACHE_DIGESTS
 

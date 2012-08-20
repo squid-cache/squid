@@ -256,24 +256,6 @@ extern void storeLogOpen(void);
 
 
 /*
- * store_key_*.c
- */
-SQUIDCEXTERN cache_key *storeKeyDup(const cache_key *);
-SQUIDCEXTERN cache_key *storeKeyCopy(cache_key *, const cache_key *);
-SQUIDCEXTERN void storeKeyFree(const cache_key *);
-SQUIDCEXTERN const cache_key *storeKeyScan(const char *);
-SQUIDCEXTERN const char *storeKeyText(const cache_key *);
-SQUIDCEXTERN const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&);
-SQUIDCEXTERN const cache_key *storeKeyPublicByRequest(HttpRequest *);
-SQUIDCEXTERN const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&);
-SQUIDCEXTERN const cache_key *storeKeyPrivate(const char *, const HttpRequestMethod&, int);
-SQUIDCEXTERN int storeKeyHashBuckets(int);
-SQUIDCEXTERN int storeKeyNull(const cache_key *);
-SQUIDCEXTERN void storeKeyInit(void);
-SQUIDCEXTERN HASHHASH storeKeyHashHash;
-SQUIDCEXTERN HASHCMP storeKeyHashCmp;
-
-/*
  * store_digest.c
  */
 extern void storeDigestInit(void);

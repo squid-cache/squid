@@ -38,6 +38,7 @@
 
 #include "squid.h"
 #include "CacheDigest.h"
+#include "store_key_md5.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>
