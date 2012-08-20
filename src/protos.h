@@ -478,13 +478,6 @@ SQUIDCEXTERN peer * peerUserHashSelectParent(HttpRequest * request);
 SQUIDCEXTERN void peerSourceHashInit(void);
 SQUIDCEXTERN peer * peerSourceHashSelectParent(HttpRequest * request);
 
-#if USE_LEAKFINDER
-SQUIDCEXTERN void leakInit(void);
-SQUIDCEXTERN void *leakAddFL(void *, const char *, int);
-SQUIDCEXTERN void *leakTouchFL(void *, const char *, int);
-SQUIDCEXTERN void *leakFreeFL(void *, const char *, int);
-#endif
-
 /*
  * prototypes for system functions missing from system includes
  */
