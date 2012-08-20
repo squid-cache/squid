@@ -59,6 +59,7 @@
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "stat.h"
 #include "StoreClient.h"
 #include "Store.h"
 #if USE_AUTH

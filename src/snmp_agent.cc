@@ -42,6 +42,7 @@
 #include "StatHist.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "stat.h"
 #include "Store.h"
 
 /************************************************************************
