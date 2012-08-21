@@ -263,6 +263,7 @@ squid_SOURCES = \
 	AccessLogEntry.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
+	cache_cf.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1112,6 +1113,7 @@ tests_testHttpReply_SOURCES=\
 	String.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -1214,6 +1216,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	SwapDir.h \
 	log/access_log.h \
 	tests/stub_access_log.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
@@ -1320,6 +1323,7 @@ tests_testCacheManager_SOURCES = \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
+	cache_cf.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1578,6 +1582,7 @@ tests_testDiskIO_SOURCES = \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
@@ -1669,6 +1674,7 @@ tests_testEvent_SOURCES = \
 	BodyPipe.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
+	cache_cf.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -1879,6 +1885,7 @@ tests_testEventLoop_SOURCES = \
 	CacheDigest.h \
 	CacheDigest.cc \
 	cache_manager.cc \
+	cache_cf.h \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2084,6 +2091,7 @@ tests_test_http_range_SOURCES = \
 	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
+	cache_cf.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2293,6 +2301,7 @@ tests_testHttpParser_SOURCES = \
 	mem.cc \
 	String.cc \
 	structs.h \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2343,6 +2352,7 @@ tests_testHttpRequest_SOURCES = \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
+	cache_cf.h \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -2591,6 +2601,7 @@ tests_testStore_SOURCES= \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_side_request.cc \
@@ -2685,6 +2696,7 @@ tests_testString_SOURCES = \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2791,6 +2803,7 @@ tests_testUfs_SOURCES = \
 	ConfigOption.cc \
 	SwapDir.cc \
 	tests/stub_acl.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -2950,6 +2963,7 @@ tests_testRock_SOURCES = \
 	tests/testStoreSupport.h \
 	log/access_log.h \
 	tests/stub_access_log.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	client_db.h \
@@ -3077,6 +3091,7 @@ tests_testCoss_SOURCES = \
 	ConfigOption.cc \
 	SwapDir.cc \
 	tests/stub_acl.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3219,6 +3234,7 @@ tests_testNull_SOURCES = \
 	ConfigOption.cc \
 	SwapDir.cc \
 	tests/stub_acl.cc \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3306,6 +3322,7 @@ tests_testURL_SOURCES = \
 	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
+	cache_cf.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -3519,6 +3536,7 @@ tests_testConfigParser_SOURCES = \
 	tests/testMain.cc \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
+	cache_cf.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
