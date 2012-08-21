@@ -200,17 +200,16 @@ private:
 };
 
 /* client http based routines */
-SQUIDCEXTERN char *clientConstructTraceEcho(ClientHttpRequest *);
+extern char *clientConstructTraceEcho(ClientHttpRequest *);
 
 class ACLFilledChecklist;
-SQUIDCEXTERN ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
-SQUIDCEXTERN int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
-SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
+extern ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
+extern int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
+extern void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-SQUIDCEXTERN void redirectStart(ClientHttpRequest *, RH *, void *);
-
-SQUIDCEXTERN void tunnelStart(ClientHttpRequest *, int64_t *, int *);
+extern void redirectStart(ClientHttpRequest *, RH *, void *);
+extern void tunnelStart(ClientHttpRequest *, int64_t *, int *);
 
 #if _USE_INLINE_
 #include "Store.h"

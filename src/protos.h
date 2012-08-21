@@ -51,13 +51,6 @@ class HttpRequestMethod;
 class ClientInfo;
 #endif
 
-
-//extern void clientAccessCheck(void *);
-
-
-/* packs, then prints an object using debugs() */
-SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
-
 /* disk.c */
 SQUIDCEXTERN int file_open(const char *path, int mode);
 SQUIDCEXTERN void file_close(int fd);
