@@ -52,15 +52,6 @@ class ClientInfo;
 #endif
 
 
-#if USE_FORW_VIA_DB
-extern void fvdbCountVia(const char *key);
-extern void fvdbCountForw(const char *key);
-#endif
-#if HEADERS_LOG
-SQUIDCEXTERN void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
-#endif
-extern int logTypeIsATcpHit(log_type);
-
 /*
  * cache_cf.c
  */

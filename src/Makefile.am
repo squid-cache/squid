@@ -1110,6 +1110,7 @@ tests_testHttpReply_SOURCES=\
 	SquidString.h \
 	SquidTime.h \
 	String.cc \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -1211,6 +1212,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	swap_log_op.h \
 	SwapDir.cc \
 	SwapDir.h \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
@@ -1573,6 +1575,7 @@ tests_testDiskIO_SOURCES = \
 	store.cc \
 	String.cc \
 	SwapDir.cc \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
@@ -2585,6 +2588,7 @@ tests_testStore_SOURCES= \
 	String.cc \
 	SwapDir.cc \
 	tests/CapturingStoreEntry.h \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
@@ -2820,6 +2824,7 @@ tests_testUfs_SOURCES = \
 	ETag.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	refresh.h \
 	refresh.cc \
@@ -2943,6 +2948,7 @@ tests_testRock_SOURCES = \
 	tests/testRock.h \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -3101,6 +3107,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_StatHist.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	refresh.h \
 	refresh.cc \
@@ -3244,6 +3251,7 @@ tests_testNull_SOURCES = \
 	tests/stub_StatHist.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
+	log/access_log.h \
 	tests/stub_access_log.cc \
 	refresh.h \
 	refresh.cc \

@@ -49,6 +49,7 @@
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
+#include "log/access_log.h"
 #include "MemObject.h"
 #include "neighbors.h"
 #include "protos.h"
