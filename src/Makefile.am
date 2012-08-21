@@ -277,6 +277,7 @@ squid_SOURCES = \
 	ChunkedCodingParser.h \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
@@ -1333,6 +1334,7 @@ tests_testCacheManager_SOURCES = \
 	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
@@ -1683,6 +1685,7 @@ tests_testEvent_SOURCES = \
 	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
@@ -1893,6 +1896,7 @@ tests_testEventLoop_SOURCES = \
 	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
@@ -2102,6 +2106,7 @@ tests_test_http_range_SOURCES = \
 	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
@@ -2363,6 +2368,7 @@ tests_testHttpRequest_SOURCES = \
 	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
@@ -3333,6 +3339,7 @@ tests_testURL_SOURCES = \
 	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
+	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
