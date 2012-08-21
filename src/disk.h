@@ -34,7 +34,25 @@
 #ifndef SQUID_DISK_H_
 #define SQUID_DISK_H_
 
+#include "typedefs.h"
+
+class MemBuf;
+
 extern int file_open(const char *path, int mode);
 extern void file_close(int fd);
+
+/* Adapter file_write for object callbacks */
+template <class O>
+void
+FreeObject(void *address)
+{
+    O *anObject = static_cast <O *>(address);
+    delete anObject;
+}
+
+extern void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
+extern void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
+extern void file_read(int, char *, int, off_t, DRCB *, void *);
+extern void disk_init(void);
 
 #endif /* SQUID_DISK_H_ */
