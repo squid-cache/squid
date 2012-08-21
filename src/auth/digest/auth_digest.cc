@@ -38,6 +38,7 @@
 
 
 #include "squid.h"
+#include "cache_cf.h"
 #include "rfc2617.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/Scheme.h"

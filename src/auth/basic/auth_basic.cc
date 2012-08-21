@@ -44,6 +44,7 @@
 #include "auth/basic/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "cache_cf.h"
 #include "charset.h"
 #include "mgr/Registration.h"
 #include "Store.h"

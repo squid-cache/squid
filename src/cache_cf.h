@@ -1,11 +1,6 @@
-
 /*
- * $Id$
- *
- * DEBUG: section 77    Delay Pools
- * AUTHOR: Robert Collins <robertc@squid-cache.org>
- * Based upon original delay pools code by
- *   David Luyer <david@luyer.net>
+ * DEBUG: section 
+ * AUTHOR: 
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,57 +28,24 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
 
-#if USE_DELAY_POOLS
-#include "cache_cf.h"
-#include "DelaySpec.h"
-#include "Parsing.h"
-#include "protos.h"
-#include "Store.h"
+#ifndef SQUID_CACHE_CF_H_
+#define SQUID_CACHE_CF_H_
 
-DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
-{}
+class wordlist;
 
-void
-DelaySpec::stats (StoreEntry * sentry, char const *label) const
-{
-    if (restore_bps == -1) {
-        storeAppendPrintf(sentry, "\t%s:\n\t\tDisabled.\n\n", label);
-        return;
-    }
+extern void configFreeMemory(void);
+extern void self_destruct(void);
+extern void add_http_port(char *portspec);
 
-    storeAppendPrintf(sentry, "\t%s:\n", label);
-    storeAppendPrintf(sentry, "\t\tMax: %" PRId64 "\n", max_bytes);
-    storeAppendPrintf(sentry, "\t\tRestore: %d\n", restore_bps);
-}
+/* extra functions from cache_cf.c useful for lib modules */
+extern void parse_int(int *var);
+extern void parse_onoff(int *var);
+extern void parse_eol(char *volatile *var);
+extern void parse_wordlist(wordlist ** list);
+extern void requirePathnameExists(const char *name, const char *path);
+extern void parse_time_t(time_t * var);
 
-void
-DelaySpec::dump (StoreEntry *entry) const
-{
-    storeAppendPrintf(entry, " %d/%" PRId64 "", restore_bps, max_bytes);
-}
-
-void
-DelaySpec::parse()
-{
-    int r;
-    char *token;
-    token = strtok(NULL, "/");
-
-    if (token == NULL)
-        self_destruct();
-
-    if (sscanf(token, "%d", &r) != 1)
-        self_destruct();
-
-    restore_bps = r;
-
-    max_bytes = GetInteger64();
-}
-
-#endif
+#endif /* SQUID_CACHE_CF_H_ */

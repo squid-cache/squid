@@ -34,6 +34,7 @@
 
 #if USE_WCCPv2
 
+#include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

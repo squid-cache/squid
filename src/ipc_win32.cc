@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "cache_cf.h"
 #include "comm.h"
 #include "fde.h"
 #include "ip/Address.h"

@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "CossSwapDir.h"
+#include "cache_cf.h"
 #include "Store.h"
 #include "store_coss.h"
 #include "event.h"

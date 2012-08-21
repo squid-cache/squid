@@ -66,6 +66,7 @@
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
 #include "MemObject.h"
+#include "Parsing.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
 #include "SquidTime.h"
