@@ -42,6 +42,7 @@
 #include "cache_cf.h"
 #include "carp.h"
 #include "client_db.h"
+#include "client_side.h"
 #include "comm.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"

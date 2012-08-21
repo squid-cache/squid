@@ -51,13 +51,8 @@ class HttpRequestMethod;
 class ClientInfo;
 #endif
 
-/* client_side.c - FD related client side routines */
 
-SQUIDCEXTERN void clientOpenListenSockets(void);
-SQUIDCEXTERN void clientHttpConnectionsClose(void);
-SQUIDCEXTERN void httpRequestFree(void *);
-
-extern void clientAccessCheck(void *);
+//extern void clientAccessCheck(void *);
 
 
 /* packs, then prints an object using debugs() */
