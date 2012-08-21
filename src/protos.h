@@ -51,20 +51,6 @@ class HttpRequestMethod;
 class ClientInfo;
 #endif
 
-/* Adapter file_write for object callbacks */
-
-template <class O>
-void
-FreeObject(void *address)
-{
-    O *anObject = static_cast <O *>(address);
-    delete anObject;
-}
-
-SQUIDCEXTERN void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
-SQUIDCEXTERN void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
-SQUIDCEXTERN void file_read(int, char *, int, off_t, DRCB *, void *);
-SQUIDCEXTERN void disk_init(void);
 
 extern void fd_close(int fd);
 extern void fd_open(int fd, unsigned int type, const char *);
