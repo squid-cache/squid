@@ -416,4 +416,9 @@ const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *e
 /* Vary support functions */
 extern int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
+/* client_side.c - FD related client side routines */
+extern void clientOpenListenSockets(void);
+extern void clientHttpConnectionsClose(void);
+extern void httpRequestFree(void *);
+
 #endif /* SQUID_CLIENTSIDE_H */
