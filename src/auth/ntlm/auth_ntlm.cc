@@ -44,6 +44,7 @@
 #include "auth/ntlm/User.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
+#include "cache_cf.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "client_side.h"

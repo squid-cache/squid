@@ -32,6 +32,7 @@
  *
  */
 #include "squid.h"
+#include "cache_cf.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "err_detail_type.h"

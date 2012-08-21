@@ -38,6 +38,7 @@
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
@@ -92,17 +93,12 @@
 #include "snmp.h"
 #endif
 
-
-
-
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
-
 #if HAVE_LIMITS_H
 #include <limits>
 #endif
-
 #if HAVE_LIST
 #include <list>
 #endif

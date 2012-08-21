@@ -39,6 +39,7 @@
 #include "base/RunnersRegistry.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#include "cache_cf.h"
 #include "carp.h"
 #include "client_db.h"
 #include "comm.h"

@@ -41,6 +41,7 @@
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "cache_cf.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "client_side.h"

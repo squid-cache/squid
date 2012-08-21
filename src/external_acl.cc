@@ -43,6 +43,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "ExternalACLEntry.h"

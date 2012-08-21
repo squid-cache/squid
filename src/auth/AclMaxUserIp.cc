@@ -12,6 +12,7 @@
 #include "protos.h"
 #include "wordlist.h"
 #include "ConfigParser.h"
+#include "Parsing.h"
 
 ACL *
 ACLMaxUserIP::clone() const
