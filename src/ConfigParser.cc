@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"

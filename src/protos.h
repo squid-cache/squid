@@ -51,27 +51,6 @@ class HttpRequestMethod;
 class ClientInfo;
 #endif
 
-
-/*
- * cache_cf.c
- */
-SQUIDCEXTERN void configFreeMemory(void);
-class MemBuf;
-extern void self_destruct(void);
-SQUIDCEXTERN void add_http_port(char *portspec);
-extern int xatoi(const char *token);
-extern long xatol(const char *token);
-
-
-/* extra functions from cache_cf.c useful for lib modules */
-SQUIDCEXTERN void parse_int(int *var);
-SQUIDCEXTERN void parse_onoff(int *var);
-SQUIDCEXTERN void parse_eol(char *volatile *var);
-SQUIDCEXTERN void parse_wordlist(wordlist ** list);
-SQUIDCEXTERN void requirePathnameExists(const char *name, const char *path);
-SQUIDCEXTERN void parse_time_t(time_t * var);
-
-
 /* client_side.c - FD related client side routines */
 
 SQUIDCEXTERN void clientOpenListenSockets(void);

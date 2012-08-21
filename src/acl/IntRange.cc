@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "acl/IntRange.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "wordlist.h"
 #include "Parsing.h"
