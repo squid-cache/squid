@@ -33,6 +33,7 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "disk.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "FileMap.h"

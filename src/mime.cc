@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "disk.h"
 #include "fde.h"
 #include "globals.h"
 #include "HttpHdrCc.h"

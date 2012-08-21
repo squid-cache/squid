@@ -59,6 +59,7 @@
 #include "neighbors.h"
 #include "URL.h"
 #include "Mem.h"
+#include "disk.h"
 
 
 #if HAVE_SYS_STAT_H

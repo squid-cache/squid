@@ -35,6 +35,7 @@
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "disk.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "Store.h"
