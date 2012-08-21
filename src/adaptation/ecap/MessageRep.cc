@@ -5,6 +5,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "BodyPipe.h"
+#include "protos.h"
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
