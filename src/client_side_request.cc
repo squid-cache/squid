@@ -64,6 +64,7 @@
 #include "HttpRequest.h"
 #include "ipcache.h"
 #include "ip/QosConfig.h"
+#include "log/access_log.h"
 #include "MemObject.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
