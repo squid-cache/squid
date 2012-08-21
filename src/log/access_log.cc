@@ -52,6 +52,7 @@
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "log/access_log.h"
 #include "log/Config.h"
 #include "log/File.h"
 #include "log/Formats.h"

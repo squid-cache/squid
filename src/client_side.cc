@@ -112,6 +112,7 @@
 #include "internal.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
+#include "log/access_log.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "MemObject.h"
