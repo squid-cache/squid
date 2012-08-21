@@ -51,9 +51,6 @@ class HttpRequestMethod;
 class ClientInfo;
 #endif
 
-/* disk.c */
-SQUIDCEXTERN int file_open(const char *path, int mode);
-SQUIDCEXTERN void file_close(int fd);
 /* Adapter file_write for object callbacks */
 
 template <class O>

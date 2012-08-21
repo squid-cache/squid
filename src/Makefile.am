@@ -307,6 +307,7 @@ squid_SOURCES = \
 	Debug.h \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
+	disk.h \
 	disk.cc \
 	$(DISKIO_SOURCE) \
 	dlink.h \
@@ -1348,6 +1349,7 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
 	$(DISKIO_SOURCE) \
+	disk.h \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -1522,6 +1524,7 @@ tests_testDiskIO_SOURCES = \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
 	$(DISKIO_SOURCE) \
+	disk.h \
 	disk.cc \
 	ETag.cc \
 	EventLoop.cc \
@@ -1700,6 +1703,7 @@ tests_testEvent_SOURCES = \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	$(DISKIO_SOURCE) \
+	disk.h \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -1911,6 +1915,7 @@ tests_testEventLoop_SOURCES = \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	$(DISKIO_SOURCE) \
+	disk.h \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -2121,6 +2126,7 @@ tests_test_http_range_SOURCES = \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	$(DISKIO_SOURCE) \
+	disk.h \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -2381,6 +2387,7 @@ tests_testHttpRequest_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
+	disk.h \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -2549,6 +2556,7 @@ tests_testStore_SOURCES= \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
+	disk.h \
 	disk.cc \
 	DiskIO/ReadRequest.cc \
 	DiskIO/WriteRequest.cc \
@@ -2767,6 +2775,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	client_db.h \
+	disk.h \
 	disk.cc \
 	FileMap.h \
 	filemap.cc \
@@ -2907,6 +2916,7 @@ tests_testRock_SOURCES = \
 	CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	disk.h \
 	disk.cc \
 	ETag.cc \
 	EventLoop.cc \
@@ -3055,6 +3065,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
+	disk.h \
 	disk.cc \
 	FileMap.h \
 	filemap.cc \
@@ -3198,6 +3209,7 @@ tests_testNull_SOURCES = \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
+	disk.h \
 	disk.cc \
 	FileMap.h \
 	filemap.cc \
@@ -3352,6 +3364,7 @@ tests_testURL_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
+	disk.h \
 	disk.cc \
 	DiskIO/ReadRequest.cc \
 	DiskIO/WriteRequest.cc \

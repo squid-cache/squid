@@ -46,6 +46,7 @@
 #include "comm.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
+#include "disk.h"
 #include "DiskIO/DiskIOModule.h"
 #include "errorpage.h"
 #include "event.h"

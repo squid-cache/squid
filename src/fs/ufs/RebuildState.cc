@@ -32,6 +32,7 @@
  */
 
 #include "squid.h"
+#include "disk.h"
 #include "protos.h"
 #include "RebuildState.h"
 #include "SquidTime.h"
