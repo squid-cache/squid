@@ -38,6 +38,7 @@
 #include "cache_cf.h"
 #include "Store.h"
 #include "store_coss.h"
+#include "disk.h"
 #include "event.h"
 #include "fde.h"
 #include "SwapDir.h"
