@@ -56,6 +56,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "log/access_log.h"
