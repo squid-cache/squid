@@ -40,6 +40,7 @@
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "event.h"
+#include "fd.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "Mem.h"

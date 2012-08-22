@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "Debug.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "profiler/Profiler.h"

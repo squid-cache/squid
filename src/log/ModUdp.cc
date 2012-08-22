@@ -34,6 +34,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "disk.h"
+#include "fd.h"
 #include "log/File.h"
 #include "log/ModUdp.h"
 #include "Parsing.h"

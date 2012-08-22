@@ -40,6 +40,7 @@
 #include "clientStream.h"
 #include "dlink.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
 #include "forward.h"

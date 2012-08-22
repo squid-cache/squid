@@ -330,6 +330,7 @@ squid_SOURCES = \
 	ExternalACLEntry.h \
 	FadingCounter.h \
 	FadingCounter.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	fde.h \
@@ -714,6 +715,7 @@ ufsdump_SOURCES = \
 	HttpRequestMethod.cc \
 	RemovalPolicy.cc \
 	$(WIN32_SOURCE) \
+	fd.h \
 	tests/stub_fd.cc
 ufsdump_LDADD = \
 	$(AUTH_ACL_LIBS) \
@@ -1224,6 +1226,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
+	fd.h \
 	tests/stub_fd.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_HttpReply.cc \
@@ -1359,6 +1362,7 @@ tests_testCacheManager_SOURCES = \
 	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	FileMap.h \
@@ -1529,6 +1533,7 @@ tests_testDiskIO_SOURCES = \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	fd.h \
 	fd.cc \
 	FileMap.h \
 	filemap.cc \
@@ -1716,6 +1721,7 @@ tests_testEvent_SOURCES = \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	FileMap.h \
@@ -1928,6 +1934,7 @@ tests_testEventLoop_SOURCES = \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	FileMap.h \
@@ -2137,6 +2144,7 @@ tests_test_http_range_SOURCES = \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	FileMap.h \
@@ -2396,6 +2404,7 @@ tests_testHttpRequest_SOURCES = \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	forward.cc \
@@ -2623,6 +2632,7 @@ tests_testStore_SOURCES= \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
+	fd.h \
 	tests/stub_fd.cc \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -2773,6 +2783,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	fd.h \
 	fd.cc \
 	client_db.h \
 	disk.h \
@@ -2921,6 +2932,7 @@ tests_testRock_SOURCES = \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	fd.h \
 	fd.cc \
 	FileMap.h \
 	filemap.cc \
@@ -3064,6 +3076,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_pconn.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	fd.h \
 	fd.cc \
 	disk.h \
 	disk.cc \
@@ -3208,6 +3221,7 @@ tests_testNull_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	fd.h \
 	fd.cc \
 	disk.h \
 	disk.cc \
@@ -3376,6 +3390,7 @@ tests_testURL_SOURCES = \
 	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
+	fd.h \
 	fd.cc \
 	fde.cc \
 	FileMap.h \

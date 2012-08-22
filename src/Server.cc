@@ -38,6 +38,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
+#include "fd.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "HttpReply.h"

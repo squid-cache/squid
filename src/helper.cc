@@ -37,6 +37,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "fd.h"
 #include "format/Quoting.h"
 #include "helper.h"
 #include "Mem.h"

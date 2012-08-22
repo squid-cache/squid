@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "comm.h"
+#include "fd.h"
 #include "fde.h"
 #include "ip/Address.h"
 #include "rfc1738.h"

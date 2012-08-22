@@ -41,6 +41,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
+#include "fd.h"
 #include "fde.h"
 #include "ip/Intercept.h"
 #include "profiler/Profiler.h"

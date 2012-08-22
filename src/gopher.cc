@@ -37,6 +37,7 @@
 #include "comm.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "forward.h"
 #include "html_quote.h"
 #include "HttpReply.h"
