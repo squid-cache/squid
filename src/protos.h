@@ -54,19 +54,9 @@ class ClientInfo;
 
 class FwdState;
 
-/**
- \defgroup ServerProtocolFTPAPI Server-Side FTP API
- \ingroup ServerProtocol
- */
-
-/// \ingroup ServerProtocolFTPAPI
-SQUIDCEXTERN void ftpStart(FwdState *);
 
 class HttpRequest;
 class HttpReply;
-
-/// \ingroup ServerProtocolFTPAPI
-SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
 
 
 

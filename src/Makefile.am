@@ -340,6 +340,7 @@ squid_SOURCES = \
 	forward.h \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	Generic.h \
 	globals.h \
@@ -1370,6 +1371,7 @@ tests_testCacheManager_SOURCES = \
 	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	gopher.h \
 	gopher.cc \
@@ -1729,6 +1731,7 @@ tests_testEvent_SOURCES = \
 	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	gopher.h \
 	gopher.cc \
@@ -1942,6 +1945,7 @@ tests_testEventLoop_SOURCES = \
 	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	gopher.h \
 	gopher.cc \
@@ -2152,6 +2156,7 @@ tests_test_http_range_SOURCES = \
 	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	gopher.h \
 	gopher.cc \
@@ -2410,6 +2415,7 @@ tests_testHttpRequest_SOURCES = \
 	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	gopher.h \
 	gopher.cc \
@@ -3398,6 +3404,7 @@ tests_testURL_SOURCES = \
 	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	ftp.h \
 	ftp.cc \
 	gopher.h \
 	gopher.cc \
