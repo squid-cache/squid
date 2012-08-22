@@ -60,6 +60,7 @@
 #include "fde.h"
 #include "format/Token.h"
 #include "gopher.h"
+#include "http.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

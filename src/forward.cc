@@ -51,6 +51,7 @@
 #include "globals.h"
 #include "gopher.h"
 #include "hier_code.h"
+#include "http.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"

@@ -41,6 +41,7 @@
 #include "DnsLookupDetails.h"
 #include "err_detail_type.h"
 #include "gopher.h"
+#include "http.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
