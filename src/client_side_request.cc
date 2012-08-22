@@ -56,6 +56,7 @@
 #include "compat/inet_pton.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
 #include "gopher.h"

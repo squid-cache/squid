@@ -7,6 +7,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "icmp/net_db.h"

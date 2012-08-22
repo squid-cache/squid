@@ -101,6 +101,7 @@
 #include "CommCalls.h"
 #include "errorpage.h"
 #include "eui/Config.h"
+#include "fd.h"
 #include "fde.h"
 #include "forward.h"
 #include "fqdncache.h"

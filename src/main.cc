@@ -52,6 +52,7 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
+#include "fd.h"
 #include "format/Token.h"
 #include "forward.h"
 #include "fs/Module.h"

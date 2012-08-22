@@ -44,6 +44,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
+#include "fd.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
