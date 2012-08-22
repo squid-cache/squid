@@ -518,6 +518,7 @@ squid_SOURCES = \
 	wccp.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	wordlist.h \
 	wordlist.cc \
@@ -1470,6 +1471,7 @@ tests_testCacheManager_SOURCES = \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
@@ -1845,6 +1847,7 @@ tests_testEvent_SOURCES = \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -2059,6 +2062,7 @@ tests_testEventLoop_SOURCES = \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -2267,6 +2271,7 @@ tests_test_http_range_SOURCES = \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -2514,6 +2519,7 @@ tests_testHttpRequest_SOURCES = \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
@@ -3520,6 +3526,7 @@ tests_testURL_SOURCES = \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
+	whois.h \
 	whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
