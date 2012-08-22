@@ -38,6 +38,7 @@
 #include "disk.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "ftp.h"
 #include "Store.h"
 #include "html_quote.h"
 #include "HttpReply.h"
