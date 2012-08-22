@@ -105,6 +105,7 @@
 #include "fde.h"
 #include "forward.h"
 #include "fqdncache.h"
+#include "http.h"
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
