@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 22    Refresh Calculation
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

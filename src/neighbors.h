@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 15    Neighbor Routines
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

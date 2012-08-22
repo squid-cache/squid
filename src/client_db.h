@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 00    Client Database
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

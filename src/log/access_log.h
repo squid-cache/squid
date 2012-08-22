@@ -1,5 +1,6 @@
 /*
- * access_log.h
+ * DEBUG: section 46    Access Log
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
