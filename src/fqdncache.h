@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 35    FQDN Cache
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

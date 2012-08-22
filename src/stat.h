@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 18    Cache Manager Statistics
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
