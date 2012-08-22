@@ -40,6 +40,7 @@
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"
+#include "HttpHeaderTools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"

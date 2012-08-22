@@ -49,6 +49,7 @@
 #include "base64.h"
 #include "base/StringArea.h"
 #include "event.h"
+#include "HttpHeaderTools.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"

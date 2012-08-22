@@ -41,6 +41,7 @@
 #include "ftp.h"
 #include "Store.h"
 #include "html_quote.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"

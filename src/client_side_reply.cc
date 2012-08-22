@@ -46,6 +46,7 @@
 #include "forward.h"
 #include "globals.h"
 #include "globals.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"

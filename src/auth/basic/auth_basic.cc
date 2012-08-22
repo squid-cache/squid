@@ -48,6 +48,7 @@
 #include "charset.h"
 #include "mgr/Registration.h"
 #include "Store.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "protos.h"
 #include "rfc1738.h"
