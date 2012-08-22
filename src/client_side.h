@@ -1,6 +1,6 @@
 /*
- * $Id$
- *
+ * DEBUG: section 33    Client-side Routines
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
