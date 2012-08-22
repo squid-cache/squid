@@ -20,6 +20,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
+#include "HttpHeaderTools.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

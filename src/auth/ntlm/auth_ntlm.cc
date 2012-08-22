@@ -48,6 +48,7 @@
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "client_side.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "protos.h"

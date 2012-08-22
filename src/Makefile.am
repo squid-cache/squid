@@ -1098,6 +1098,7 @@ tests_testHttpReply_SOURCES=\
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderMask.h \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpControlMsg.h \
 	HttpMsg.cc \
@@ -1182,6 +1183,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
@@ -1386,6 +1388,7 @@ tests_testCacheManager_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1550,6 +1553,7 @@ tests_testDiskIO_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpHdrRange.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -1747,6 +1751,7 @@ tests_testEvent_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1962,6 +1967,7 @@ tests_testEventLoop_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2181,6 +2187,7 @@ tests_test_http_range_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpParser.cc \
@@ -2434,6 +2441,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2593,6 +2601,7 @@ tests_testStore_SOURCES= \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -2852,6 +2861,7 @@ tests_testUfs_SOURCES = \
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -2957,6 +2967,7 @@ tests_testRock_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
@@ -3143,6 +3154,7 @@ tests_testCoss_SOURCES = \
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -3290,6 +3302,7 @@ tests_testNull_SOURCES = \
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -3431,6 +3444,7 @@ tests_testURL_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpParser.cc \

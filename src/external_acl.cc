@@ -50,6 +50,7 @@
 #include "ExternalACL.h"
 #include "fde.h"
 #include "helper.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"
