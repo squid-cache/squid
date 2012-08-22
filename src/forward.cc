@@ -47,6 +47,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "forward.h"
+#include "ftp.h"
 #include "globals.h"
 #include "gopher.h"
 #include "hier_code.h"
