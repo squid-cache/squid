@@ -52,14 +52,6 @@ class ClientInfo;
 #endif
 
 
-extern void fd_close(int fd);
-extern void fd_open(int fd, unsigned int type, const char *);
-extern void fd_note(int fd, const char *);
-extern void fd_bytes(int fd, int len, unsigned int type);
-extern void fdDumpOpen(void);
-extern int fdUsageHigh(void);
-extern void fdAdjustReserved(void);
-
 class FwdState;
 
 /**

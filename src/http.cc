@@ -48,6 +48,7 @@
 #include "comm/Write.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "fde.h"
 #include "HttpControlMsg.h"
 #include "http.h"

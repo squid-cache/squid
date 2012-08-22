@@ -40,6 +40,7 @@
 #include "DiskIO/DiskFile.h"
 #include "DiskdFile.h"
 #include "diomsg.h"
+#include "fd.h"
 #include "protos.h"
 #include "Store.h"
 #include "StatCounters.h"

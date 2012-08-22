@@ -44,6 +44,7 @@
 #include "CommCalls.h"
 #include "errorpage.h"
 #include "event.h"
+#include "fd.h"
 #include "fde.h"
 #include "forward.h"
 #include "globals.h"

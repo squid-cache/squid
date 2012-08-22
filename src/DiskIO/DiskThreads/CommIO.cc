@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "DiskIO/DiskThreads/CommIO.h"
+#include "fd.h"
 #include "globals.h"
 #include "protos.h"
 

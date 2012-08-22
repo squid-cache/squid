@@ -37,6 +37,7 @@
 #include "comm/Connection.h"
 #include "disk.h"
 #include "event.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ICP.h"

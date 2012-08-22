@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "disk.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "xusleep.h"

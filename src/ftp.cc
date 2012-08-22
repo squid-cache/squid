@@ -40,6 +40,7 @@
 #include "CommCalls.h"
 #include "compat/strtoll.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "fde.h"
 #include "forward.h"
 #include "html_quote.h"
