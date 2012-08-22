@@ -1,6 +1,7 @@
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 39    Peer source hash based selection
+ * AUTHOR: Henrik Nordstrom
+ * BASED ON: carp.cc
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
