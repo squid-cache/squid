@@ -59,18 +59,6 @@ class HttpRequest;
 class HttpReply;
 
 
-/* http.c */
-/* for http_hdr_type field */
-SQUIDCEXTERN int httpCachable(const HttpRequestMethod&);
-SQUIDCEXTERN void httpStart(FwdState *);
-SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
-        HttpRequest * orig_request,
-        StoreEntry * entry,
-        MemBuf * mb,
-        http_state_flags);
-extern const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
-
-
 /* Http Header Tools */
 class HttpHeaderFieldInfo;
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
