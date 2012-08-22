@@ -59,17 +59,6 @@ class HttpRequest;
 class HttpReply;
 
 
-
-
-/**
- \defgroup ServerProtocolWhoisAPI Server-Side WHOIS API
- \ingroup ServerProtocol
- */
-
-/// \ingroup ServerProtocolWhoisAPI
-SQUIDCEXTERN void whoisStart(FwdState *);
-
-
 /* http.c */
 /* for http_hdr_type field */
 SQUIDCEXTERN int httpCachable(const HttpRequestMethod&);
