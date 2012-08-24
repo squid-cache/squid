@@ -67,7 +67,13 @@ fi
 AX_CXX_COMPILE_STDCXX_0X
 if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
   "x$squid_host_os" != "xmingw" ; then
-    CXXFLAGS="$CXXFLAGS -std=c++0x"
+    #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
+    # in the system libraries, which makes some c99 methods unavailable
+    # (e.g. strtoll), yet configure detects them as avilable.
+    case "$CXX" in
+      *clang++*) ;; #do nothing
+      *) CXXFLAGS="$CXXFLAGS -std=c++0x" ;;
+    esac
 fi
 
 # test for programs
