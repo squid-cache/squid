@@ -24,6 +24,13 @@ SOFTWARE.
  * parse.c
  */
 #include "squid.h"
+#include "asn1.h"
+#include "cache_snmp.h"
+#include "parse.h"
+#include "snmp_debug.h"
+#include "snmp_pdu.h"
+#include "snmp_vars.h"
+#include "util.h"
 
 #include <stdio.h>
 
@@ -78,14 +85,7 @@ SOFTWARE.
 #include <errno.h>
 #endif
 
-#include "asn1.h"
-#include "snmp_vars.h"
-#include "parse.h"
-#include "snmp_debug.h"
 
-#include "util.h"
-
-#include "cache_snmp.h"
 /*
  * This is one element of an object identifier with either an integer subidentifier,
  * or a textual string label, or both.
