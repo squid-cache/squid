@@ -5,7 +5,6 @@
  */
 
 #include "squid.h"
-
 #include "protos.h"
 #include "Store.h"
 #include "ipc/StoreMap.h"

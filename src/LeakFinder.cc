@@ -37,11 +37,13 @@
  */
 
 #include "squid.h"
+
+#if USE_LEAKFINDER
+
 #include "LeakFinder.h"
 #include "Store.h"
 #include "SquidTime.h"
 
-#if USE_LEAKFINDER
 /* ========================================================================= */
 
 LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :

@@ -34,20 +34,19 @@
  */
 
 #include "squid.h"
-
-#include <sys/ipc.h>
-#include <sys/msg.h>
-#include <sys/shm.h>
-
 #include "DiskdFile.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
-
 #include "DiskdIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
 #include "StatCounters.h"
+
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/shm.h>
+
 CBDATA_CLASS_INIT(DiskdFile);
 
 void *
