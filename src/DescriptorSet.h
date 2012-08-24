@@ -1,6 +1,7 @@
 #ifndef SQUID_DESCRIPTOR_SET_H
 #define SQUID_DESCRIPTOR_SET_H
 
+#include <iosfwd>
 
 /** \ingroup Comm
 

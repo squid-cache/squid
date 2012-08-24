@@ -5,7 +5,6 @@
  */
 
 #include "squid.h"
-
 #include "Store.h"
 #include "ipc/ReadWriteLock.h"
 

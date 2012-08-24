@@ -35,18 +35,11 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-
-// Store.h Required by configuration directives parsing/dumping only
 #include "Store.h"
-
 #include "errorpage.h"
 #include "err_detail_type.h"
 #include "acl/Checklist.h"
 #include "errorpage.h"
-#if USE_SQUID_EUI
-#include "eui/Eui48.h"
-#include "eui/Eui64.h"
-#endif
 #include "format/Token.h"
 #include "globals.h"
 #include "hier_code.h"
@@ -59,6 +52,11 @@
 #include "mgr/Registration.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
+
+#if USE_SQUID_EUI
+#include "eui/Eui48.h"
+#include "eui/Eui64.h"
+#endif
 
 #if HEADERS_LOG
 static Logfile *headerslog = NULL;

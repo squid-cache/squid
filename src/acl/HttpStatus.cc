@@ -35,7 +35,6 @@
  */
 
 #include "squid.h"
-
 #include "acl/HttpStatus.h"
 #include "acl/FilledChecklist.h"
 #include "Debug.h"
