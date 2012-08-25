@@ -12,7 +12,7 @@
 #include "StoreFileSystem.h"
 #include "testStoreSupport.h"
 
-#if 0 
+#if 0
 // AYJ: COSS in Squid-3 is disabled.
 #include "fs/coss/CossSwapDir.h"
 #endif
