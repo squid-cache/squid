@@ -43,6 +43,7 @@
 #include "protos.h"
 #include "wordlist.h"
 #include "ConfigParser.h"
+#include "HttpHeaderTools.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.

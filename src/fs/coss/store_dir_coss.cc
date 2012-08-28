@@ -35,8 +35,10 @@
 
 #include "squid.h"
 #include "CossSwapDir.h"
+#include "cache_cf.h"
 #include "Store.h"
 #include "store_coss.h"
+#include "disk.h"
 #include "event.h"
 #include "fde.h"
 #include "SwapDir.h"
@@ -47,6 +49,7 @@
 #include "ConfigOption.h"
 #include "StoreFScoss.h"
 #include "Parsing.h"
+#include "store_key_md5.h"
 #include "swap_log_op.h"
 #include "SquidMath.h"
 

@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
+#include "client_db.h"
 #include "Debug.h"
 #include "protos.h"
 #include "wordlist.h"

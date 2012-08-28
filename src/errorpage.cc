@@ -32,19 +32,16 @@
  *
  */
 #include "squid.h"
+#include "cache_cf.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "disk.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
-#if USE_AUTH
-#include "auth/UserRequest.h"
-#endif
-#include "SquidTime.h"
-#if USE_SSL
-#include "ssl/ErrorDetailManager.h"
-#endif
+#include "ftp.h"
 #include "Store.h"
 #include "html_quote.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
@@ -52,8 +49,18 @@
 #include "MemBuf.h"
 #include "protos.h"
 #include "rfc1738.h"
+#include "URL.h"
 #include "URLScheme.h"
+#include "URL.h"
+#include "tools.h"
 #include "wordlist.h"
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
+#include "SquidTime.h"
+#if USE_SSL
+#include "ssl/ErrorDetailManager.h"
+#endif
 
 /**
  \defgroup ErrorPageInternal Error Page Internals

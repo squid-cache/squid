@@ -40,6 +40,8 @@
 #include "client_side.h"
 #include "DnsLookupDetails.h"
 #include "err_detail_type.h"
+#include "gopher.h"
+#include "http.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
@@ -47,6 +49,7 @@
 #include "MemBuf.h"
 #include "protos.h"
 #include "Store.h"
+#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"

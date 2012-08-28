@@ -1,6 +1,7 @@
 #include "squid.h"
 
 #include "acl/Gadgets.h"
+#include "cache_cf.h"
 #include "comm/Connection.h"
 #include "ConfigParser.h"
 #include "fde.h"

@@ -8,12 +8,14 @@
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
+#include "fqdncache.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "URL.h"
 #if USE_SSL
 #include "ssl/ErrorDetail.h"
 #endif

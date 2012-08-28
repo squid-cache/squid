@@ -9,6 +9,8 @@
 #include "ssl/helper.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
+#include "wordlist.h"
+#include "protos.h"
 
 Ssl::Helper * Ssl::Helper::GetInstance()
 {

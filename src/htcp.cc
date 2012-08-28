@@ -51,10 +51,13 @@
 #include "md5.h"
 #include "MemBuf.h"
 #include "protos.h"
+#include "refresh.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "store_key_md5.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "URL.h"
 
 typedef struct _Countstr Countstr;
 

@@ -33,16 +33,21 @@
  */
 
 #include "squid.h"
+#include "client_db.h"
 #include "event.h"
 #include "format/Token.h"
 #include "ClientInfo.h"
+#include "fqdncache.h"
 #include "ip/Address.h"
+#include "log/access_log.h"
+#include "Mem.h"
 #include "mgr/Registration.h"
 #include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "tools.h"
 
 static hash_table *client_table = NULL;
 

@@ -11,6 +11,8 @@
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "disk.h"
+#include "fd.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
 #include "ipc/Messages.h"

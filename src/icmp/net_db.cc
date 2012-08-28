@@ -51,10 +51,16 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "forward.h"
+#include "internal.h"
 #include "protos.h"
 #include "SquidTime.h"
 #include "wordlist.h"
 #include "ip/Address.h"
+#include "neighbors.h"
+#include "URL.h"
+#include "Mem.h"
+#include "disk.h"
+
 
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>

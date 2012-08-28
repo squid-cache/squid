@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "Mem.h"
 #include "protos.h"
 #include "typedefs.h"
 

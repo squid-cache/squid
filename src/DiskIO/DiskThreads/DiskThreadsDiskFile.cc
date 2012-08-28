@@ -34,10 +34,12 @@
  */
 
 #include "squid.h"
+#include "disk.h"
 #include "DiskThreadsDiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "fd.h"
 #include "Generic.h"
 #include "globals.h"
 #include "StatCounters.h"

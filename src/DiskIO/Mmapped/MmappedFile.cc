@@ -10,6 +10,7 @@
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "disk.h"
 #include "globals.h"
 #include "protos.h"
 

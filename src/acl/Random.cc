@@ -36,7 +36,9 @@
 
 #include "acl/FilledChecklist.h"
 #include "acl/Random.h"
+#include "cache_cf.h"
 #include "Debug.h"
+#include "Parsing.h"
 #include "protos.h"
 #include "wordlist.h"
 

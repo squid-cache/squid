@@ -5,6 +5,7 @@
  */
 
 #include "squid.h"
+#include "disk.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
 #include "fs/rock/RockDbCell.h"
