@@ -38,12 +38,15 @@
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
+#include "ExternalACL.h"
 #include "format/Format.h"
 #include "globals.h"
+#include "HttpHeaderTools.h"
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -51,9 +54,11 @@
 #include "ip/tools.h"
 #include "ipc/Kids.h"
 #include "log/Config.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "Parsing.h"
+#include "PeerDigest.h"
 #include "protos.h"
 #include "rfc1738.h"
 #include "Store.h"
@@ -61,6 +66,10 @@
 #include "structs.h"
 #include "SwapDir.h"
 #include "wordlist.h"
+#include "neighbors.h"
+#include "tools.h"
+/* wccp2 has its own conditional definitions */
+#include "wccp2.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
@@ -88,11 +97,9 @@
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
-
 #if HAVE_LIMITS_H
 #include <limits>
 #endif
-
 #if HAVE_LIST
 #include <list>
 #endif

@@ -40,6 +40,7 @@
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderStat.h"
+#include "HttpHeaderTools.h"
 #include "Store.h"
 #include "protos.h"
 

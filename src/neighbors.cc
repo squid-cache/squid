@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "CacheDigest.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
@@ -46,12 +47,16 @@
 #include "ipcache.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
 #include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "stat.h"
 #include "Store.h"
+#include "store_key_md5.h"
+#include "URL.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900

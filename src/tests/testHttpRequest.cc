@@ -4,6 +4,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "testHttpRequest.h"
+#include "HttpHeader.h"
 #include "HttpRequest.h"
 #include "Mem.h"
 #include "protos.h"

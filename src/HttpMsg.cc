@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "HttpHeaderTools.h"
 #include "HttpMsg.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"

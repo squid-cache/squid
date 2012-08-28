@@ -1,6 +1,6 @@
 /*
- * $Id$
- *
+ * DEBUG: section 33    Client-side Routines
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -411,5 +411,13 @@ private:
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
+
+/* Vary support functions */
+extern int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
+
+/* client_side.c - FD related client side routines */
+extern void clientOpenListenSockets(void);
+extern void clientHttpConnectionsClose(void);
+extern void httpRequestFree(void *);
 
 #endif /* SQUID_CLIENTSIDE_H */

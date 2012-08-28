@@ -93,4 +93,16 @@ protected:
 
 MEMPROXY_CLASS_INLINE(ACLExternal);
 
+class ACLChecklist;
+class StoreEntry;
+
+extern void parse_externalAclHelper(external_acl **);
+extern void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
+extern void free_externalAclHelper(external_acl **);
+typedef void EAH(void *data, void *result);
+extern void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
+extern void externalAclInit(void);
+extern void externalAclShutdown(void);
+
+
 #endif /* SQUID_EXTERNALACL_H */

@@ -36,11 +36,13 @@
 #include "cache_snmp.h"
 #include "globals.h"
 #include "mem_node.h"
+#include "neighbors.h"
 #include "protos.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "stat.h"
 #include "Store.h"
 
 /************************************************************************

@@ -38,6 +38,7 @@
 #include "enums.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
+#include "Mem.h"
 #include "protos.h"
 
 /*

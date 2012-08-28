@@ -36,6 +36,7 @@
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #include "Store.h"
+#include "store_key_md5.h"
 #include "Generic.h"
 #include "mgr/Registration.h"
 

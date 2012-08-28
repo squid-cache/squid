@@ -38,6 +38,7 @@
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "disk.h"
 #include "protos.h"
 
 #if HAVE_ERRNO_H

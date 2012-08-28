@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "CacheDigest.h"
 #include "client_side_request.h"
 #include "client_side.h"
 #include "comm/Connection.h"
@@ -52,10 +53,13 @@
 #include "mgr/IoAction.h"
 #include "mgr/Registration.h"
 #include "mgr/ServiceTimesAction.h"
+#include "neighbors.h"
+#include "PeerDigest.h"
 #include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "stat.h"
 #include "StoreClient.h"
 #include "Store.h"
 #if USE_AUTH

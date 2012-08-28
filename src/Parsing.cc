@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "Parsing.h"
 #include "protos.h"

@@ -34,7 +34,10 @@
 
 #include "squid.h"
 #include "base/Subscription.h"
+#include "client_side.h"
+#include "disk.h"
 #include "fde.h"
+#include "fqdncache.h"
 #include "htcp.h"
 #include "ICP.h"
 #include "ip/Intercept.h"
