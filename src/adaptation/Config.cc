@@ -54,7 +54,6 @@ int Adaptation::Config::send_username = false;
 int Adaptation::Config::use_indirect_client = true;
 Adaptation::Config::MetaHeaders Adaptation::Config::metaHeaders;
 
-
 Adaptation::Config::MetaHeader::Value::~Value()
 {
     aclDestroyAclList(&aclList);
@@ -100,7 +99,6 @@ Adaptation::Config::addMetaHeader(const String &headerName)
     metaHeaders.push_back(meta);
     return meta;
 }
-
 
 Adaptation::ServiceConfig*
 Adaptation::Config::newServiceConfig() const

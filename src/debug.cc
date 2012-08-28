@@ -660,7 +660,6 @@ static const char *Ctx_Descrs[CTX_MAX_LEVEL + 1];
 /* "safe" get secription */
 static const char *ctx_get_descr(Ctx ctx);
 
-
 Ctx
 ctx_enter(const char *descr)
 {

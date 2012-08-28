@@ -47,7 +47,6 @@ public:
 };
 #endif
 
-
 /** General collection of process-wide statistics.
  *
  * \note if you add a field to StatCounters,

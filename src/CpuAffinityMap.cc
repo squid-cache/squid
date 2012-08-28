@@ -11,7 +11,6 @@
 #include "CpuAffinitySet.h"
 #include "Debug.h"
 
-
 bool
 CpuAffinityMap::add(const Vector<int> &aProcesses, const Vector<int> &aCores)
 {

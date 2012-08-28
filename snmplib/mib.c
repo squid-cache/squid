@@ -99,7 +99,6 @@ init_mib(char *file)
         Mib = read_mib(file);
 }
 
-
 static struct snmp_mib_tree *
 find_rfc1066_mib(struct snmp_mib_tree *root) {
     oid *op = RFC1066_MIB;

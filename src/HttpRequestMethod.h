@@ -73,7 +73,6 @@ enum _method_t {
     METHOD_ENUM_END  // MUST be last, (yuck) this is used as an array-initialization index constant!
 };
 
-
 /**
  * This class represents an HTTP Request METHOD
  * - i.e. PUT, POST, GET etc.

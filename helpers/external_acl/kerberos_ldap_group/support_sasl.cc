@@ -72,11 +72,9 @@ int lutil_sasl_interact(
 void lutil_sasl_freedefs(
     void *defaults);
 
-
 /*
  * SASL definitions for openldap support
  */
-
 
 typedef struct lutil_sasl_defaults_s {
     char *mech;

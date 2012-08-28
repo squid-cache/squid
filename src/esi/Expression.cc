@@ -274,7 +274,6 @@ evalexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
     return 1;
 }
 
-
 int
 evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 {
@@ -423,7 +422,6 @@ evallesseq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
     /*  debugs(86, DBG_IMPORTANT, "?= " << srv.value.integral << " "); */
     return 0;
 
-
 }
 
 int
@@ -472,7 +470,6 @@ evallessthan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
     /* debugs(86, DBG_IMPORTANT, "?= " << srv.value.integral << " "); */
     return 0;
 
-
 }
 
 int
@@ -520,7 +517,6 @@ evalmoreeq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     /* debugs(86, DBG_IMPORTANT, "?= " << srv.value.integral << " "); */
     return 0;
-
 
 }
 

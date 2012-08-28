@@ -111,7 +111,6 @@ StoreMeta::validLength(int aLength) const
     return true;
 }
 
-
 StoreMeta *
 StoreMeta::Factory (char type, size_t len, void const *value)
 {

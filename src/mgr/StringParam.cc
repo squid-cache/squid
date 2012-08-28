@@ -9,7 +9,6 @@
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/StringParam.h"
 
-
 Mgr::StringParam::StringParam():
         QueryParam(QueryParam::ptString), str()
 {

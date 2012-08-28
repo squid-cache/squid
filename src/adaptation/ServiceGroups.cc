@@ -10,7 +10,6 @@
 #include "protos.h"
 #include "wordlist.h"
 
-
 Adaptation::ServiceGroup::ServiceGroup(const String &aKind, bool allSame):
         kind(aKind), method(methodNone), point(pointNone),
         allServicesSame(allSame)
@@ -195,13 +194,11 @@ Adaptation::ServiceGroup::findLink(const ServiceFilter &filter, Pos &pos) const
     return !allServicesSame && findService(filter, pos);
 }
 
-
 /* ServiceSet */
 
 Adaptation::ServiceSet::ServiceSet(): ServiceGroup("adaptation set", true)
 {
 }
-
 
 /* SingleService */
 
@@ -212,13 +209,11 @@ Adaptation::SingleService::SingleService(const String &aServiceId):
     services.push_back(aServiceId);
 }
 
-
 /* ServiceChain */
 
 Adaptation::ServiceChain::ServiceChain(): ServiceGroup("adaptation chain", false)
 {
 }
-
 
 /* DynamicServiceChain */
 
@@ -314,7 +309,6 @@ Adaptation::ServicePlan::print(std::ostream &os) const
     return os << group->id << '[' << pos << ".." << group->services.size() <<
            (atEof ? ".]" : "]");
 }
-
 
 /* globals */
 

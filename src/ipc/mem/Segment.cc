@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-
 // test cases change this
 const char *Ipc::Mem::Segment::BasePath = DEFAULT_STATEDIR;
 

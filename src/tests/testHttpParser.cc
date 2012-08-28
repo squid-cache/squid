@@ -9,7 +9,6 @@
 #include "MemBuf.h"
 #include "structs.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpParser );
 
 void

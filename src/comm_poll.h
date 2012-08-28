@@ -34,5 +34,4 @@
 #ifndef SQUID_COMM_POLL_H
 #define SQUID_COMM_POLL_H
 
-
 #endif /* SQUID_COMM_POLL_H */

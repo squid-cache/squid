@@ -12,7 +12,6 @@
 #include "ipc/Response.h"
 #include "mgr/Action.h"
 
-
 namespace Mgr
 {
 

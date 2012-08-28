@@ -11,7 +11,6 @@
 #include "mgr/ActionWriter.h"
 #include "Store.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, ActionWriter);
 
 Mgr::ActionWriter::ActionWriter(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn):

@@ -33,7 +33,6 @@
  *
  */
 
-
 #include "squid.h"
 #if HAVE_ASSERT_H
 #include <assert.h>

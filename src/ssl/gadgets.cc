@@ -603,7 +603,6 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         return false;
     }
 
-
     char *alStr1;
     int alLen;
     alStr1 = (char *)X509_alias_get0(cert, &alLen);

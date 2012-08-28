@@ -228,7 +228,6 @@ public:
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
 
-
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request
      *  \todo Inner class declarations should be moved outside

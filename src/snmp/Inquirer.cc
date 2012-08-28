@@ -16,9 +16,7 @@
 #include "snmp/Response.h"
 #include "snmp/Request.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
-
 
 Snmp::Inquirer::Inquirer(const Request& aRequest, const Ipc::StrandCoords& coords):
         Ipc::Inquirer(aRequest.clone(), coords, 2),

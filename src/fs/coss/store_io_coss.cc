@@ -50,7 +50,6 @@ CBDATA_TYPE(CossMemBuf);
 CossState::CossState(CossSwapDir *aCSD):SD (aCSD)
 {}
 
-
 /*
  * This routine sucks. I want to rewrite it when possible, and I also think
  * that we should check after creatmembuf() to see if the object has a

@@ -13,7 +13,6 @@
 #include "mgr/ActionParams.h"
 #include "mgr/Request.h"
 
-
 Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, const Comm::ConnectionPointer &aConn,
                       const ActionParams &aParams):
         Ipc::Request(aRequestorId, aRequestId),

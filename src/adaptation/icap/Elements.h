@@ -38,7 +38,6 @@
 
 // ICAP-related things shared by many ICAP classes
 
-
 namespace Adaptation
 {
 namespace Icap

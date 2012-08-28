@@ -71,7 +71,6 @@
 #include <errno.h>
 #endif
 
-
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
 static STDIRSELECT storeDirSelectSwapDirLeastLoad;
 
@@ -194,7 +193,6 @@ SwapDir::objectSizeIsAcceptable(int64_t objsize) const
     else
         return min_objsize <= objsize && max_objsize > objsize;
 }
-
 
 /*
  * This new selection scheme simply does round-robin on all SwapDirs.
@@ -523,7 +521,6 @@ storeDirWriteCleanLogs(int reopen)
     debugs(20, DBG_IMPORTANT, "  Finished.  Wrote " << n << " entries.");
     debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt <<
            " seconds ("<< std::setw(6) << ((double) n / (dt > 0.0 ? dt : 1.0)) << " entries/sec).");
-
 
     return n;
 }

@@ -24,7 +24,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 /* NOTES:
  *
  * This code makes no attempt to be fast! In fact, it is a very
@@ -99,7 +98,6 @@ static int perm5[32] = {16, 7, 20, 21,
                         22, 11, 4, 25
                        };
 
-
 static int perm6[64] = {40, 8, 48, 16, 56, 24, 64, 32,
                         39, 7, 47, 15, 55, 23, 63, 31,
                         38, 6, 46, 14, 54, 22, 62, 30,
@@ -109,7 +107,6 @@ static int perm6[64] = {40, 8, 48, 16, 56, 24, 64, 32,
                         34, 2, 42, 10, 50, 18, 58, 26,
                         33, 1, 41, 9, 49, 17, 57, 25
                        };
-
 
 static int sc[16] = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
 
@@ -296,7 +293,6 @@ str_to_key(unsigned char *str, unsigned char *key)
         key[i] = (key[i] << 1);
     }
 }
-
 
 static void
 smbhash(unsigned char *out, unsigned char *in, unsigned char *key)

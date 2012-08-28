@@ -104,7 +104,6 @@ private:
 
 RunnerRegistrationEntry(rrAfterConfig, SharedMemPagesRr);
 
-
 void
 SharedMemPagesRr::run(const RunnerRegistry &r)
 {

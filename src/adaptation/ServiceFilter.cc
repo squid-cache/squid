@@ -3,7 +3,6 @@
 #include "HttpReply.h"
 #include "adaptation/ServiceFilter.h"
 
-
 Adaptation::ServiceFilter::ServiceFilter(Method aMethod, VectPoint aPoint,
         HttpRequest *aReq, HttpReply *aRep): method(aMethod), point(aPoint),
         request(HTTPMSGLOCK(aReq)),

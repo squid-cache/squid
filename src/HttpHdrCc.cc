@@ -81,7 +81,6 @@ http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
     return aHeader;
 }
 
-
 /// Module initialization hook
 void
 httpHdrCcInitModule(void)

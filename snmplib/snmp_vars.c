@@ -93,7 +93,6 @@
 
 #include "util.h"
 
-
 /* #define DEBUG_VARS 1 */
 /* #define DEBUG_VARS_MALLOC 1 */
 /* #define DEBUG_VARS_DECODE 1 */
@@ -361,9 +360,6 @@ snmp_var_EncodeVarBind(u_char * Buffer, int *BufLenP,
     /* or the end of the entire thing */
     return (bufp);
 }
-
-
-
 
 /* Parse all Vars from the buffer */
 u_char *

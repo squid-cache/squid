@@ -14,7 +14,6 @@
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5
 
-
 typedef struct _mib_tree_entry mib_tree_entry;
 typedef oid *(instance_Fn) (oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 typedef enum {atNone = 0, atSum, atAverage, atMax, atMin} AggrType;

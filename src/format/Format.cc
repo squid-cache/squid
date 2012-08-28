@@ -20,7 +20,6 @@
 #include "ssl/ErrorDetail.h"
 #endif
 
-
 /// Convert a string to NULL pointer if it is ""
 #define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
 
@@ -442,7 +441,6 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             outint = current_time.tv_usec / fmt->divisor;
             doint = 1;
             break;
-
 
         case LFT_TIME_LOCALTIME:
 

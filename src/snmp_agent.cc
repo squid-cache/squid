@@ -196,7 +196,6 @@ snmp_confFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
-
 /*
  * cacheMesh group
  *   - cachePeerTable
@@ -226,14 +225,12 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
         return NULL;
     }
 
-
     switch (Var->name[LEN_SQ_MESH + 2]) {
     case MESH_PTBL_INDEX: { // FIXME INET6: Should be visible?
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint)p->index, SMI_INTEGER);
     }
     break;
-
 
     case MESH_PTBL_NAME:
         cp = p->host;

@@ -202,7 +202,6 @@ result_recv(uint32_t host, unsigned short udp_port, char *buffer, int length)
     return 0;
 }
 
-
 /*
  *    Generate a random vector.
  */

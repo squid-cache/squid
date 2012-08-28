@@ -56,7 +56,6 @@
 #include <time.h>
 #endif
 
-
 /************* CONFIGURATION ***************/
 
 #define DEAD_DC_RETRY_INTERVAL 30
@@ -94,7 +93,6 @@ void process_options(int argc, char *argv[]);
 const char * obtain_challenge(void);
 void manage_request(void);
 
-
 #define ENCODED_PASS_LEN 24
 #define MAX_USERNAME_LEN 255
 #define MAX_DOMAIN_LEN 255
@@ -116,7 +114,6 @@ dc *controllers = NULL;
 int numcontrollers = 0;
 dc *current_dc;
 char smb_error_buffer[1000];
-
 
 /* Disconnects from the DC. A reconnection will be done upon the next request
  */
@@ -158,7 +155,6 @@ init_challenge(char *domain, char *domain_controller)
     handle = SMB_Connect_Server(NULL, domain_controller, domain);
     smberr = SMB_Get_Last_Error();
     SMB_Get_Error_Msg(smberr, errstr, 1000);
-
 
     if (handle == NULL) {	/* couldn't connect */
         debug("Couldn't connect to SMB Server. Error:%s\n", errstr);
@@ -257,7 +253,6 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     memcpy(user, tmp.str, tmp.l);
     *(user + tmp.l) = '\0';
 
-
     /* Authenticating against the NT response doesn't seem to work... */
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->lmresponse, auth->flags);
     if (tmp.str == NULL || tmp.l == 0) {
@@ -297,7 +292,6 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 #endif
 
     /* TODO: check against empty password!!!!! */
-
 
     debug("checking domain: '%s', user: '%s', pass='%s'\n", domain, user, pass);
 
@@ -468,7 +462,6 @@ obtain_challenge()
     return NULL;
 }
 
-
 void
 manage_request()
 {
@@ -630,7 +623,6 @@ manage_request()
     SEND("BH Helper detected protocol error");
     return;
     /********* END ********/
-
 
 }
 

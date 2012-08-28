@@ -12,7 +12,6 @@
 #include "snmp/Pdu.h"
 #include "snmp/Session.h"
 
-
 class CommCloseCbParams;
 
 namespace Snmp

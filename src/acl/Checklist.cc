@@ -263,7 +263,6 @@ ACLChecklist::matchNodes(const ACLList * head, bool const fast)
     return true;
 }
 
-
 /// Check whether a single ACL matches, returning NodeMatchingResult
 ACLChecklist::NodeMatchingResult
 ACLChecklist::matchNode(const ACLList &node, bool const fast)
@@ -335,7 +334,6 @@ ACLChecklist::~ACLChecklist()
 
     debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
 }
-
 
 void
 ACLChecklist::AsyncState::changeState (ACLChecklist *checklist, AsyncState *newState) const

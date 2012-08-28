@@ -2,7 +2,9 @@
 #include "esi/Module.h"
 #include "esi/CustomParser.h"
 #include "esi/Libxml2Parser.h"
-#include "esi/ExpatParser.h" /* must follow esi/Libxml2Parser.h */
+/* include for esi/ExpatParser.h must follow esi/Libxml2Parser.h */
+/* do not remove this comment, as it acts as barrier for the autmatic sorting */
+#include "esi/ExpatParser.h"
 
 static ESIParser::Register *prCustom = 0;
 #if HAVE_LIBXML2

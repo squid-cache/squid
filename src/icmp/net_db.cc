@@ -682,7 +682,6 @@ netdbFreeNameEntry(void *data)
     memFree(x, MEM_NET_DB_NAME);
 }
 
-
 static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
@@ -899,7 +898,6 @@ netdbRegisterWithCacheManager(void)
 
 #endif /* USE_ICMP */
 
-
 /* PUBLIC FUNCTIONS */
 
 void
@@ -988,7 +986,6 @@ netdbFreeMemory(void)
     peer_names = NULL;
 #endif
 }
-
 
 #if 0 // AYJ: Looks to be unused code.
 int
@@ -1216,7 +1213,6 @@ netdbDeleteAddrNetwork(Ip::Address &addr)
     netdbRelease(n);
 #endif
 }
-
 
 void
 netdbBinaryExchange(StoreEntry * s)

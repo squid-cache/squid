@@ -49,7 +49,6 @@
 #include "fde.h"
 #include "globals.h"
 
-
 int
 ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

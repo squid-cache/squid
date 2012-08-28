@@ -5,7 +5,6 @@
  *
  */
 
-
 #include "squid.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
@@ -29,7 +28,6 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
-
 
 Ipc::Coordinator::Coordinator():
         Port(coordinatorAddr)

@@ -126,7 +126,6 @@ struct _f FD[SQUID_MAXFD];
 int nfds = 0;
 int maxfd = 0;
 
-
 static void
 free_request(struct _request *r)
 {

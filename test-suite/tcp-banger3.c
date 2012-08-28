@@ -368,7 +368,6 @@ sig_child(int sig)
     signal(sig, sig_child);
 }
 
-
 int
 main(int argc, char *argv[])
 {

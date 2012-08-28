@@ -95,7 +95,6 @@ private:
     CBDATA_CLASS2(StatObjectsState);
 };
 
-
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
 static const char *describeTimestamps(const StoreEntry *);
@@ -1383,7 +1382,6 @@ statRegisterWithCacheManager(void)
                         statGraphDump, 0, 1);
 #endif
 }
-
 
 void
 statInit(void)

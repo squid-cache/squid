@@ -13,7 +13,6 @@
 #include "ipc/Request.h"
 #include <map>
 
-
 namespace Ipc
 {
 

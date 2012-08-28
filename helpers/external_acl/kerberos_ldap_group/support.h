@@ -108,7 +108,6 @@ SQUIDCEXTERN int log_enabled;
 /* the macro overload style is really a gcc-ism */
 #ifdef __GNUC__
 
-
 #define log(X...) \
                      if (log_enabled) { \
                          fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, (long)getpid() ); \
@@ -131,7 +130,6 @@ void error(char *format,...);
 void warn(char *format,...);
 #endif
 
-
 struct hstruct {
     char *host;
     int port;
@@ -143,7 +141,6 @@ struct ldap_creds {
     char *dn;
     char *pw;
 };
-
 
 void init_args(struct main_args *margs);
 void clean_args(struct main_args *margs);

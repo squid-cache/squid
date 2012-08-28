@@ -337,7 +337,6 @@ idnsAddPathComponent(const char *buf)
     ++npc;
 }
 
-
 static void
 idnsFreeNameservers(void)
 {
@@ -351,8 +350,6 @@ idnsFreeSearchpath(void)
     safe_free(searchpath);
     npc = npc_alloc = 0;
 }
-
-
 
 static void
 idnsParseNameservers(void)

@@ -399,7 +399,6 @@ MemStore::EntryLimit()
     return entryLimit;
 }
 
-
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
 class MemStoreClaimMemoryNeedsRr: public RegisteredRunner
 {
@@ -410,13 +409,11 @@ public:
 
 RunnerRegistrationEntry(rrClaimMemoryNeeds, MemStoreClaimMemoryNeedsRr);
 
-
 void
 MemStoreClaimMemoryNeedsRr::run(const RunnerRegistry &)
 {
     Ipc::Mem::NotePageNeed(Ipc::Mem::PageId::cachePage, MemStore::EntryLimit());
 }
-
 
 /// decides whether to use a shared memory cache or checks its configuration
 class MemStoreCfgRr: public ::RegisteredRunner
@@ -446,7 +443,6 @@ void MemStoreCfgRr::run(const RunnerRegistry &r)
     }
 }
 
-
 /// initializes shared memory segments used by MemStore
 class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
@@ -464,7 +460,6 @@ private:
 };
 
 RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
-
 
 void MemStoreRr::run(const RunnerRegistry &r)
 {

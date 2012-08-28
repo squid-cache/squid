@@ -6,7 +6,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-
 /*
  * test the store framework
  */
@@ -28,7 +27,6 @@ protected:
     void testStats();
     void testMaxSize();
 };
-
 
 /* subclass of Store to allow testing of methods without having all the
  * other components live
@@ -74,7 +72,6 @@ public:
 };
 
 typedef RefCount<TestStore> TestStorePointer;
-
 
 #endif
 

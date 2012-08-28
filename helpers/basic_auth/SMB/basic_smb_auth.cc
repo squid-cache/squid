@@ -52,7 +52,6 @@
 #include <string.h>
 #endif
 
-
 #define NMB_UNICAST		1
 #define NMB_BROADCAST	2
 

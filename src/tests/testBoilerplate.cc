@@ -9,7 +9,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testBoilerplate );
 
-
 void
 testBoilerplate::testDemonstration()
 {

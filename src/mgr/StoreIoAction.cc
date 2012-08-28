@@ -13,7 +13,6 @@
 #include "protos.h"
 #include "Store.h"
 
-
 Mgr::StoreIoActionData::StoreIoActionData()
 {
     xmemset(this, 0, sizeof(*this));

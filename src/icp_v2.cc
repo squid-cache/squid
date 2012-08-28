@@ -139,7 +139,6 @@ ICPState::~ICPState()
     HTTPMSGUNLOCK(request);
 }
 
-
 /* End ICPState */
 
 /* ICP2State */

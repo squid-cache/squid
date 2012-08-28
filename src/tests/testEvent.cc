@@ -31,7 +31,6 @@ testEvent::testCreate()
     EventScheduler scheduler = EventScheduler();
 }
 
-
 /* Helper for tests - an event which records the number of calls it received. */
 
 struct CalledEvent {

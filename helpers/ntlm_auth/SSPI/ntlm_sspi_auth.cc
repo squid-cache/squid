@@ -163,7 +163,6 @@ Valid_Group(char *UserName, char *Group)
     return result;
 }
 
-
 char * AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
 {
     size_t len;
@@ -184,7 +183,6 @@ char * AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
     target[len-1] = '\0';
     return target;
 }
-
 
 char * GetDomainName(void)
 
@@ -367,7 +365,6 @@ usage()
             " -h  this message\n\n",
             my_program_name);
 }
-
 
 void
 process_options(int argc, char *argv[])

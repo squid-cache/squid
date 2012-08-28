@@ -60,7 +60,6 @@
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
-
 HttpHeaderFieldInfo *
 httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
 {
@@ -142,7 +141,6 @@ httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list 
     mb.clean();
 }
 
-
 /** wrapper arrounf PutContRange */
 void
 httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
@@ -153,7 +151,6 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
     hdr->putContRange(cr);
     httpHdrContRangeDestroy(cr);
 }
-
 
 /**
  * return true if a given directive is found in at least one of
@@ -341,7 +338,6 @@ httpHeaderParseOffset(const char *start, int64_t * value)
     *value = res;
     return 1;
 }
-
 
 /**
  * Parses a quoted-string field (RFC 2616 section 2.2), complains if

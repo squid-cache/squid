@@ -2,8 +2,9 @@
 #define _SQUID_COMM_IOCALLBACK_H
 
 #include "base/AsyncCall.h"
-#include "comm_err_t.h"
 #include "comm/forward.h"
+#include "comm_err_t.h"
+#include "typedefs.h"
 
 namespace Comm
 {

@@ -62,5 +62,4 @@ private:
     ElementList &operator=(ElementList const&);
 };
 
-
 #endif /* SQUID_ELEMENTLIST_H */

@@ -197,7 +197,6 @@ main(int argc, char *const argv[])
         return 1;
     }
 
-
     if  (( fpid = vfork()) < 0 ) {
         fprintf(stderr, "%s| %s: Failed first fork\n", LogTime(), PROGRAM);
         return 1;
@@ -277,7 +276,6 @@ main(int argc, char *const argv[])
     setbuf(FDKOUT, NULL);
     setbuf(FDNIN, NULL);
     setbuf(FDNOUT, NULL);
-
 
     while (1) {
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {

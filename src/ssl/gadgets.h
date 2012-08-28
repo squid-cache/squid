@@ -95,7 +95,6 @@ typedef TidyPointer<SSL_CTX, SSL_CTX_free_cpp> SSL_CTX_Pointer;
 CtoCpp1(SSL_free, SSL *)
 typedef TidyPointer<SSL, SSL_free_cpp> SSL_Pointer;
 
-
 /**
  \ingroup SslCrtdSslAPI
  * Create 1024 bits rsa key.

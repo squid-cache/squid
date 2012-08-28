@@ -75,7 +75,6 @@ static void comm_select_dns_incoming(void);
 static void commUpdateReadBits(int fd, PF * handler);
 static void commUpdateWriteBits(int fd, PF * handler);
 
-
 static struct timeval zero_tv;
 static fd_set global_readfds;
 static fd_set global_writefds;
@@ -763,7 +762,6 @@ examine_select(fd_set * readfds, fd_set * writefds)
 
     return 0;
 }
-
 
 static void
 commIncomingStats(StoreEntry * sentry)

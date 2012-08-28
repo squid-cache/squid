@@ -66,7 +66,6 @@
 #define SUFFIX	("*")
 #define	SLASH	("\\")
 
-
 /*
  * opendir
  *
@@ -149,7 +148,6 @@ opendir(const CHAR * szPath)
     return nd;
 }
 
-
 /*
  * readdir
  *
@@ -210,7 +208,6 @@ readdir(DIR * dirp) {
     }
     return (struct dirent *) 0;
 }
-
 
 /*
  * closedir

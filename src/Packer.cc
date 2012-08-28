@@ -65,11 +65,9 @@
  *
  */
 
-
 /*
  * To-Do:
  */
-
 
 #include "squid.h"
 #include "Store.h"
@@ -111,7 +109,6 @@ storeEntryAppend(StoreEntry *e, const char *buf, int len)
     e->append(buf, len);
 }
 
-
 /* append()'s */
 static void (*const store_append) (StoreEntry *, const char *, int) = &storeEntryAppend;
 static void (*const memBuf_append) (MemBuf *, const char *, mb_size_t) = &memBufAppend;
@@ -119,7 +116,6 @@ static void (*const memBuf_append) (MemBuf *, const char *, mb_size_t) = &memBuf
 /* vprintf()'s */
 static void (*const store_vprintf) (StoreEntry *, const char *, va_list ap) = &storeAppendVPrintf;
 static void (*const memBuf_vprintf) (MemBuf *, const char *, va_list ap) = &memBufVPrintf;
-
 
 /* init/clean */
 

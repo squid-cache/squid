@@ -103,7 +103,6 @@ neighborTypeStr(const peer * p)
     return "Parent";
 }
 
-
 peer *
 whichPeer(const Ip::Address &from)
 {

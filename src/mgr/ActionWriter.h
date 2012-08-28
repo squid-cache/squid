@@ -12,7 +12,6 @@
 #include "HttpRequestMethod.h"
 #include "mgr/StoreToCommWriter.h"
 
-
 namespace Mgr
 {
 

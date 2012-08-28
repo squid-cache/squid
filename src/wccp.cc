@@ -41,7 +41,6 @@
 #include "event.h"
 #include "structs.h"
 
-
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
 #define WCCP_ACTIVE_CACHES 32
@@ -164,7 +163,6 @@ wccpConnectionOpen(void)
 
     debugs(80, DBG_IMPORTANT, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
 
-
     // Sadly WCCP only does IPv4
 
     struct sockaddr_in router;
@@ -180,7 +178,6 @@ wccpConnectionOpen(void)
 
     local_ip = local;
 }
-
 
 void
 wccpConnectionClose(void)

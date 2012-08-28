@@ -95,7 +95,6 @@ time_t *t;
     return buf;
 }
 
-
 char *
 mime_headers_end(const char *mime)
 {

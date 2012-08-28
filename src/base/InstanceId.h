@@ -48,7 +48,6 @@ private:
         return os << Prefix << value; \
     }
 
-
 /// print the id
 template <class Class>
 inline
@@ -56,6 +55,5 @@ std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id)
 {
     return id.print(os);
 }
-
 
 #endif /* SQUID_BASE_INSTANCE_ID_H */
