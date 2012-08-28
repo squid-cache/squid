@@ -15,7 +15,6 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 
-
 Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
                                      Adaptation::ServicePointer &aService):
         AsyncJob(aTypeName),

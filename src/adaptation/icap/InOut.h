@@ -43,7 +43,6 @@
 // as the "cause". ICAP transactions use this class to store virgin
 // and adapted HTTP messages.
 
-
 namespace Adaptation
 {
 namespace Icap
@@ -89,7 +88,6 @@ public:
 };
 
 // TODO: s/Header/Message/i ?
-
 
 } // namespace Icap
 } // namespace Adaptation

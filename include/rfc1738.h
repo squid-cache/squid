@@ -50,7 +50,6 @@ extern "C" {
      * Suitable for safely encoding an absolute URL which may be encoded but is not trusted. */
 #define rfc1738_escape_unescaped(x)  rfc1738_do_escape(x, RFC1738_ESCAPE_UNSAFE|RFC1738_ESCAPE_CTRLS|RFC1738_ESCAPE_NOPERCENT)
 
-
     /**
      * Unescape a URL string according to RFC 1738 specification.
      * String is unescaped in-place

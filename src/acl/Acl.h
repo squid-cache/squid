@@ -213,7 +213,6 @@ public:
 
 MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
 
-
 /// \ingroup ACLAPI
 extern const char *AclMatchedName;	/* NULL */
 

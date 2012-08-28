@@ -5,12 +5,10 @@
  *
  */
 
-
 #include "squid.h"
 #include "ipc/Messages.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/TypedMsgHdr.h"
-
 
 Ipc::StrandSearchRequest::StrandSearchRequest(): requestorId(-1)
 {
@@ -30,7 +28,6 @@ void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putPod(requestorId);
     hdrMsg.putString(tag);
 }
-
 
 /* StrandSearchResponse */
 

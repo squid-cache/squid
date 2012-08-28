@@ -58,7 +58,6 @@
  *    spec into type one above. (Canonization process).
  */
 
-
 /* local routines */
 #define known_spec(s) ((s) > HttpHdrRangeSpec::UnknownPosition)
 
@@ -361,7 +360,6 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
     debugs(64, 3, "HttpHdrRange::merge: had " << basis.size() <<
            " specs, merged " << basis.size() - specs.size() << " specs");
 }
-
 
 void
 HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)

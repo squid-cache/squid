@@ -143,7 +143,6 @@ static int incoming_tcp_interval = 16 << INCOMING_FACTOR;
 #define commCheckDnsIncoming (++dns_io_events > (incoming_dns_interval>> INCOMING_FACTOR))
 #define commCheckTcpIncoming (++tcp_io_events > (incoming_tcp_interval>> INCOMING_FACTOR))
 
-
 void
 Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
@@ -592,7 +591,6 @@ Comm::DoSelect(int msec)
     return COMM_TIMEOUT;
 }
 
-
 static void
 comm_poll_dns_incoming(void)
 {
@@ -632,7 +630,6 @@ comm_poll_dns_incoming(void)
 
     statCounter.comm_dns_incoming.count(nevents);
 }
-
 
 static void
 commPollRegisterWithCacheManager(void)

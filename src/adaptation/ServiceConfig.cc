@@ -250,7 +250,6 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     return true;
 }
 
-
 bool
 Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *value)
 {

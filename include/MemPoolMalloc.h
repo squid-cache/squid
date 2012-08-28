@@ -45,5 +45,4 @@ private:
     Stack<void *> freelist;
 };
 
-
 #endif /* _MEM_POOL_MALLOC_H_ */

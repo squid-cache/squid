@@ -11,7 +11,6 @@
 
 InstanceIdDefinitions(AsyncCall, "call");
 
-
 /* AsyncCall */
 
 AsyncCall::AsyncCall(int aDebugSection, int aDebugLevel,

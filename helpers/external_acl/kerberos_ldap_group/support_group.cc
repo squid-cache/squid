@@ -152,7 +152,6 @@ hex_utf_char(struct main_args *margs, int flag)
             return NULL;
         }
 
-
         if (n == a - 1) {
             debug((char *) "%s| %s: WARNING: Invalid Hex UTF-8 string %s\n", LogTime(), PROGRAM, up);
             if (ul)
@@ -295,7 +294,6 @@ hex_utf_char(struct main_args *margs, int flag)
         ul = strcat(ul, upd);
     return ul;
 }
-
 
 int
 create_gd(struct main_args *margs)

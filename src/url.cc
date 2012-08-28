@@ -626,7 +626,6 @@ urlCanonicalFakeHttps(const HttpRequest * request)
     return urlCanonicalClean(request);
 }
 
-
 /*
  * Test if a URL is relative.
  *
@@ -822,7 +821,6 @@ matchDomainName(const char *h, const char *d)
 
     return (xtolower(h[hl]) - xtolower(d[dl]));
 }
-
 
 /*
  * return true if we can serve requests for this method.

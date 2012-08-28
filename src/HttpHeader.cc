@@ -68,7 +68,6 @@
  * An entry is a (field_id, field_name, field_value) triplet.
  */
 
-
 /*
  * local constants and vars
  */
@@ -171,7 +170,6 @@ http_hdr_type &operator++ (http_hdr_type &aHeader)
     aHeader = (http_hdr_type)(++tmp);
     return aHeader;
 }
-
 
 /*
  * headers with field values defined as #(values) in HTTP/1.1
@@ -1698,7 +1696,6 @@ httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size
                           idx, (int) val, count,
                           xpercent(count, dump_stat->destroyedCount));
 }
-
 
 static void
 httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)

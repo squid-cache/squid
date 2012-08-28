@@ -10,7 +10,6 @@
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PagePool.h"
 
-
 // Ipc::Mem::PagePool
 
 Ipc::Mem::PagePool::Owner *

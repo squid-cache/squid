@@ -92,7 +92,6 @@ public:
     DelayId mostBytesAllowed() const;
 #endif
 
-
 #if URL_CHECKSUM_DEBUG
 
     void checkUrlChecksum() const;

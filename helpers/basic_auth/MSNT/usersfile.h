@@ -1,5 +1,4 @@
 
-
 typedef struct {
     char *path;
     char **names;
@@ -7,8 +6,6 @@ typedef struct {
     int Inuse;
     time_t LMT;
 } usersfile;
-
-
 
 int Read_usersfile(const char *path, usersfile * uf);
 int Check_userlist(usersfile * uf, char *User);

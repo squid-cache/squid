@@ -52,5 +52,4 @@ private:
     static DiskThreadsDiskIOModule Instance;
 };
 
-
 #endif /* SQUID_DISKTHREADSDISKIOMODULE_H */

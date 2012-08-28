@@ -99,7 +99,6 @@ public:
     MemMeter inuse;
     MemMeter idle;
 
-
     /** history Allocations */
     mgb_t gb_allocated;
     mgb_t gb_oallocated;
@@ -438,6 +437,5 @@ extern int memPoolsTotalAllocated(void);
 MemAllocatorProxy::MemAllocatorProxy(char const *aLabel, size_t const &aSize) : label (aLabel), size(aSize), theAllocator (NULL)
 {
 }
-
 
 #endif /* _MEM_POOL_H_ */

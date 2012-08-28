@@ -37,7 +37,6 @@
 
 #include "squid.h"
 
-
 #ifdef __SUNPRO_CC
 
 #include <new>

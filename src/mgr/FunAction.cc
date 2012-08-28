@@ -17,7 +17,6 @@
 #include "protos.h"
 #include "Store.h"
 
-
 Mgr::FunAction::Pointer
 Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
 {

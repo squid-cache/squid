@@ -14,7 +14,6 @@
 #include "snmp/Pdu.h"
 #include "snmp/Session.h"
 
-
 namespace Snmp
 {
 
@@ -39,7 +38,6 @@ public:
     int fd; ///< client connection descriptor
     Ip::Address address; ///< client address
 };
-
 
 } // namespace Snmp
 

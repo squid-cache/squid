@@ -143,7 +143,6 @@ usage(char *program)
             "-s			Strip NT domain from usernames\n");
 }
 
-
 int
 main(int argc, char *argv[])
 {

@@ -3,7 +3,6 @@
 #include "ip/QosConfig.h"
 #include "Store.h"
 
-
 void
 Ip::Qos::getTosFromServer(fde *clientFde, const int server_fd)
 {

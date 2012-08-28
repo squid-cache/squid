@@ -206,8 +206,6 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
     return (0);
 }
 
-
-
 int
 main(int argc, char *const argv[])
 {
@@ -421,7 +419,6 @@ main(int argc, char *const argv[])
                                               &input_token,
                                               GSS_C_NO_CHANNEL_BINDINGS,
                                               &client_name, NULL, &output_token, &ret_flags, NULL, NULL);
-
 
         if (output_token.length) {
             spnegoToken = (const unsigned char *) output_token.value;

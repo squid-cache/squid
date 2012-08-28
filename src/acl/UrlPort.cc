@@ -39,7 +39,6 @@
 #include "acl/Checklist.h"
 #include "HttpRequest.h"
 
-
 int
 ACLUrlPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

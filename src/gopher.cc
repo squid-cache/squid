@@ -637,7 +637,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             break;
         }			/* HTML_DIR, HTML_INDEX_RESULT */
 
-
         case gopher_ds::HTML_CSO_RESULT: {
             if (line[0] == '-') {
                 int code, recno;
@@ -696,7 +695,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     outbuf.append(tmpbuf);
                     break;
                 }
-
 
                 }
             }

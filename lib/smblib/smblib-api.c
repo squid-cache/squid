@@ -66,7 +66,6 @@ int SMBapi_NetUserPasswordSet(SMB_Tree_Handle tree, char *user,
         pad_api_name = TRUE;
     }
 
-
     pkt_len = pkt_len + param_len;
 
     /* Now allocate space for the packet, build it and send it */
@@ -197,7 +196,6 @@ int SMBapi_NetUserPasswordSet(SMB_Tree_Handle tree, char *user,
 
 #define SMB_LMAPI_SUI_DESC "zWsTPWW"
 #define SMB_LMAPI_SUI_DATA_DESC "B16"
-
 
 /* Set user info ... specifically, password */
 
@@ -381,6 +379,5 @@ int SMBapi_NetShareEnum(SMB_Tree_Handle tree, char *enum_buf, int bufsiz,
                         int *shares_returned, int *shares_total)
 
 {
-
 
 }

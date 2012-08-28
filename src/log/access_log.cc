@@ -32,7 +32,6 @@
  *
  */
 
-
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "Store.h"

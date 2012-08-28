@@ -15,7 +15,6 @@
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Forwarder);
 
 Ipc::Forwarder::RequestsMap Ipc::Forwarder::TheRequestsMap;

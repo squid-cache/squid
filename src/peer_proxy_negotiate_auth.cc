@@ -534,7 +534,6 @@ restart:
                                            output_token.length);
         }
 
-
 cleanup:
         gss_delete_sec_context(&minor_status, &gss_context, NULL);
         gss_release_buffer(&minor_status, &service);

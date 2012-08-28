@@ -39,7 +39,6 @@
 #include "acl/TimeData.h"
 #include "SquidTime.h"
 
-
 int
 ACLTimeStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

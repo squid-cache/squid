@@ -12,7 +12,6 @@
 #include "snmp.h"
 #include "snmp_session.h"
 
-
 namespace Snmp
 {
 

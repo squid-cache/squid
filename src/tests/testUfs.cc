@@ -101,7 +101,6 @@ testUfs::testUfsSearch()
     commonInit();
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
-
     char *path=xstrdup(TESTDIR);
 
     char *config_line=xstrdup("foo 100 1 1");

@@ -86,8 +86,6 @@ extern void (*failure_notify) (const char *);
 # error Unknown select loop model!
 #endif
 
-
-
 #if !HAVE_STRUCT_RUSAGE
 /**
  * If we don't have getrusage() then we create a fake structure
@@ -102,7 +100,6 @@ struct rusage {
     int ru_majflt;
 };
 #endif /* !HAVE_STRUCT_RUSAGE */
-
 
 #ifndef min
 #ifdef __cplusplus
@@ -151,7 +148,6 @@ max(A const & lhs, A const & rhs)
  */
 #define w_space     " \t\n\r"
 
-
 #ifndef SQUID_NONBLOCK
 /* REQUIRED for the below logics. If they move this needs to as well */
 #if HAVE_FCNTL_H
@@ -191,7 +187,6 @@ max(A const & lhs, A const & rhs)
 #undef SA_RESETHAND
 #define SA_RESETHAND SA_ONESHOT
 #endif
-
 
 /**
  * com_err.h is a C header and needs explicit shielding, but not

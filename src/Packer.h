@@ -45,7 +45,6 @@ typedef void (*ObjPackMethod) (void *obj, Packer * p);
 typedef void (*append_f) (void *, const char *buf, int size);
 typedef void (*vprintf_f) (void *, const char *fmt, va_list args);
 
-
 class Packer
 {
 

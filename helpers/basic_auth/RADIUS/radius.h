@@ -33,7 +33,6 @@
 #define AUTH_PASS_LEN		16
 #define AUTH_STRING_LEN		128	/* maximum of 254 */
 
-
 typedef struct pw_auth_hdr {
     u_char		code;
     u_char		id;
@@ -54,7 +53,6 @@ typedef struct pw_auth_hdr {
 #define PW_TYPE_INTEGER			1
 #define PW_TYPE_IPADDR			2
 #define PW_TYPE_DATE			3
-
 
 #define	PW_AUTHENTICATION_REQUEST	1
 #define	PW_AUTHENTICATION_ACK		2

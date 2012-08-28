@@ -49,7 +49,6 @@ static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c);
 static SplayNode<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
 static SplayNode<Eui::Eui48 *>::SPLAYWALKEE aclDumpArpListWalkee;
 
-
 ACL *
 ACLARP::clone() const
 {
@@ -131,7 +130,6 @@ aclParseArpData(const char *t)
 
     return q;
 }
-
 
 /*******************/
 /* aclParseArpList */

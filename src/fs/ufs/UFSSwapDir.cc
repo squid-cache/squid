@@ -950,7 +950,6 @@ Fs::Ufs::UFSSwapDir::writeCleanStart()
 
 #endif
 
-
     cleanLog = state;
     return 0;
 }
@@ -1174,7 +1173,6 @@ Fs::Ufs::UFSSwapDir::replacementAdd(StoreEntry * e)
     debugs(47, 4, HERE << "added node " << e << " to dir " << index);
     repl->Add(repl, e, &e->repl);
 }
-
 
 void
 Fs::Ufs::UFSSwapDir::replacementRemove(StoreEntry * e)

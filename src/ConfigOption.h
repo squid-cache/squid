@@ -37,7 +37,6 @@ class StoreEntry;
 /* for Vector<> */
 #include "Array.h"
 
-
 /* cache option parsers */
 
 class ConfigOption

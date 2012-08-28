@@ -497,7 +497,6 @@ typedef enum {SMB_State_NoState, SMB_State_Stopped, SMB_State_Started} SMB_State
 /* The following two arrays need to be in step!              */
 /* We must make it possible for callers to specify these ... */
 
-
 extern int SMB_Types[];
 
 typedef struct SMB_Status {

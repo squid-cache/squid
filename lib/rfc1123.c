@@ -63,7 +63,6 @@ static const char *month_names[12] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-
 static int
 make_num(const char *s)
 {

@@ -169,7 +169,6 @@ RFCNB_Discard_Rest(struct RFCNB_Con *con, int len)
 
 }
 
-
 /* Send an RFCNB packet to the connection.
  *
  * We just send each of the blocks linked together ...
@@ -190,7 +189,6 @@ RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
 
     /* Try to send the data ... We only send as many bytes as len claims */
     /* We should try to stuff it into an IOVEC and send as one write     */
-
 
     pkt_ptr = pkt;
     len_sent = tot_sent = 0;    /* Nothing sent so far */
@@ -266,7 +264,6 @@ RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
  * rest. We should implement a timeout, but we don't just yet
  *
  */
-
 
 int
 RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)

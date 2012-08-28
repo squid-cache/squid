@@ -71,7 +71,6 @@ static STMCB storeWriteComplete;
 
 #define STORE_IN_MEM_BUCKETS            (229)
 
-
 /** \todo Convert these string constants to enum string-arrays generated */
 
 const char *memStatusStr[] = {
@@ -96,7 +95,6 @@ const char *swapStatusStr[] = {
     "SWAPOUT_DONE"
 };
 
-
 /*
  * This defines an repl type
  */
@@ -109,7 +107,6 @@ struct _storerepl_entry {
 };
 
 static storerepl_entry_t *storerepl_list = NULL;
-
 
 /*
  * local function prototypes
@@ -492,7 +489,6 @@ StoreEntry::hashDelete()
 }
 
 /* -------------------------------------------------------------------------- */
-
 
 /* get rid of memory copy of the object */
 void
@@ -903,7 +899,6 @@ StoreEntry::append(char const *buf, int len)
     write(tempBuffer);
 }
 
-
 void
 storeAppendPrintf(StoreEntry * e, const char *fmt,...)
 {
@@ -1205,7 +1200,6 @@ storeGetMemSpace(int size)
     debugs(20, 3, "  " << std::setw(6) << released  << " were released");
     PROF_stop(storeGetMemSpace);
 }
-
 
 /* thunk through to Store::Root().maintain(). Note that this would be better still
  * if registered against the root store itself, but that requires more complex
@@ -1825,7 +1819,6 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
 
 #endif
 
-
 /*
  * Replace a store entry with
  * a new reply. This eats the reply.
@@ -1845,7 +1838,6 @@ StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
     if (andStartWriting)
         startWriting();
 }
-
 
 void
 StoreEntry::startWriting()
@@ -1870,7 +1862,6 @@ StoreEntry::startWriting()
 
     packerClean(&p);
 }
-
 
 char const *
 StoreEntry::getSerialisedMetaData()

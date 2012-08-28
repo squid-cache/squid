@@ -25,7 +25,6 @@
 #include "protos.h"
 #include "SquidTime.h"
 
-
 //CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);
 
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::ServiceRep::Pointer &aService):
@@ -333,7 +332,6 @@ void Adaptation::Icap::Xaction::callException(const std::exception  &e)
     Adaptation::Initiate::callException(e);
 }
 
-
 void Adaptation::Icap::Xaction::callEnd()
 {
     if (doneWithIo()) {
@@ -536,7 +534,6 @@ void Adaptation::Icap::Xaction::tellQueryAborted()
         clearInitiator();
     }
 }
-
 
 void Adaptation::Icap::Xaction::maybeLog()
 {

@@ -161,7 +161,6 @@ ACLUserData::parse()
     }
 }
 
-
 bool
 ACLUserData::empty() const
 {

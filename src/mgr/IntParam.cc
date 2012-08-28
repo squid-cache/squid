@@ -10,7 +10,6 @@
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/IntParam.h"
 
-
 Mgr::IntParam::IntParam():
         QueryParam(QueryParam::ptInt), array()
 {

@@ -208,7 +208,6 @@ cbdata_hash(const void *p, unsigned int mod)
 }
 #endif
 
-
 cbdata::~cbdata()
 {
 #if USE_CBDATA_DEBUG

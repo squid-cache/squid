@@ -555,7 +555,6 @@ DelayPools::Init()
     RegisterWithCacheManager();
 }
 
-
 void
 DelayPools::InitDelayData()
 {
@@ -892,7 +891,6 @@ ClassCNetPool::makeKey(Ip::Address &src_addr) const
     src_addr.GetInAddr(net);
     return ( (ntohl(net.s_addr) >> 8) & 0xff);
 }
-
 
 ClassCHostPool::ClassCHostPool()
 {

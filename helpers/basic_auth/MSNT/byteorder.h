@@ -74,7 +74,6 @@ typedef unsigned int uint32;
 #define SIVALS(buf,pos,val) IVALS(buf,pos)=((int32)(val))
 #endif
 
-
 /* now the reverse routines - these are used in nmb packets (mostly) */
 #define SREV(x) ((((x)&0xFF)<<8) | (((x)>>8)&0xFF))
 #define IREV(x) ((SREV(x)<<16) | (SREV((x)>>16)))

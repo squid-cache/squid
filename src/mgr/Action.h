@@ -27,7 +27,6 @@ public:
     Action(const CommandPointer &aCmd);
     virtual ~Action();
 
-
     /* for local Cache Manager use */
 
     /// collect + fillEntry: collect local information and fill the store entry
@@ -36,12 +35,10 @@ public:
     /// prepare store entry, dump info, close store entry (if possible)
     void fillEntry(StoreEntry *entry, bool writeHttpHeader);
 
-
     /* for global Coordinator use */
 
     /// incrementally merge in remote information (of the same action type)
     virtual void add(const Action &action);
-
 
     /* global-local communication */
 
@@ -55,7 +52,6 @@ public:
 
     /// notify Coordinator that this action is done with local processing
     void sendResponse(unsigned int requestId);
-
 
     /* Action properties */
 
@@ -79,10 +75,8 @@ protected:
      */
     virtual void dump(StoreEntry *entry) {}
 
-
 private:
     const CommandPointer cmd; ///< the command that caused this action
-
 
 private:
     Action(const Action &); // not implemented

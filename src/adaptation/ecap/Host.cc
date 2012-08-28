@@ -111,7 +111,6 @@ Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
         Debug::finishDebug();
 }
 
-
 Adaptation::Ecap::Host::MessagePtr
 Adaptation::Ecap::Host::newRequest() const
 {

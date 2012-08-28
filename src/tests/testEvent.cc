@@ -10,7 +10,6 @@
 #include "protos.h"
 #include "testEvent.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );
 
 /* init legacy static-initialized modules */
@@ -30,7 +29,6 @@ testEvent::testCreate()
 {
     EventScheduler scheduler = EventScheduler();
 }
-
 
 /* Helper for tests - an event which records the number of calls it received. */
 

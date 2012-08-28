@@ -49,7 +49,6 @@
  * receive the HTTP body.
  */
 
-
 class ChunkedCodingParser;
 
 namespace Adaptation
@@ -105,7 +104,6 @@ private:
     typedef enum { stUndecided, stActive, stDisabled } State;
     State theState;
 };
-
 
 // maintains preview-related sizes
 
@@ -364,7 +362,6 @@ protected:
 private:
     CBDATA_CLASS2(ModXactLauncher);
 };
-
 
 } // namespace Icap
 } // namespace Adaptation

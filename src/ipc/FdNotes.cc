@@ -9,7 +9,6 @@
 #include "Debug.h"
 #include "ipc/FdNotes.h"
 
-
 const char *
 Ipc::FdNote(int fdNoteId)
 {

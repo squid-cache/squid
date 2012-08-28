@@ -33,7 +33,6 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-
 #include "squid.h"
 #include "DiskThreadsDiskFile.h"
 #include "DiskIO/IORequestor.h"

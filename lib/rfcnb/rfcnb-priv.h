@@ -127,7 +127,6 @@ typedef struct RFCNB_Sess_Pkt {
     char calling_name[33];
 } RFCNB_Sess_Pkt;
 
-
 typedef struct RFCNB_Nack_Pkt {
     struct RFCNB_Hdr hdr;
     unsigned char error;

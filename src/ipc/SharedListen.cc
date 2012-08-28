@@ -65,8 +65,6 @@ Ipc::OpenListenerParams::operator <(const OpenListenerParams &p) const
     return addr.compareWhole(p.addr) < 0;
 }
 
-
-
 Ipc::SharedListenRequest::SharedListenRequest(): requestorId(-1), mapId(-1)
 {
     // caller will then set public data members
@@ -83,7 +81,6 @@ void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.setType(mtSharedListenRequest);
     hdrMsg.putPod(*this);
 }
-
 
 Ipc::SharedListenResponse::SharedListenResponse(int aFd, int anErrNo, int aMapId):
         fd(aFd), errNo(anErrNo), mapId(aMapId)
@@ -105,7 +102,6 @@ void Ipc::SharedListenResponse::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putPod(*this);
     hdrMsg.putFd(fd);
 }
-
 
 void Ipc::JoinSharedListen(const OpenListenerParams &params,
                            AsyncCall::Pointer &callback)

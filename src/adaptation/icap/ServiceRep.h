@@ -81,7 +81,6 @@ class OptXact;
  * auto-destroyed by refcounting when no longer used.
  */
 
-
 class ServiceRep : public RefCountable, public Adaptation::Service,
         public Adaptation::Initiator
 {

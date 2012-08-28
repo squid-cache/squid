@@ -48,7 +48,6 @@
 
 #define HELPER_MAX_ARGS 64
 
-
 /** Initial Squid input buffer size. Helper responses may exceed this, and
  * Squid will grow the input buffer as needed, up to ReadBufMaxSize.
  */
@@ -79,7 +78,6 @@ static void helperRequestFree(helper_request * r);
 static void helperStatefulRequestFree(helper_stateful_request * r);
 static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
-
 
 CBDATA_CLASS_INIT(helper);
 CBDATA_TYPE(helper_server);
@@ -385,7 +383,6 @@ helperStatefulOpenServers(statefulhelper * hlp)
     safe_free(procname);
     helperStatefulKickQueue(hlp);
 }
-
 
 void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
@@ -969,7 +966,6 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
            hlp->id_name << " #" << srv->index + 1);
 
-
     if (flag != COMM_OK || len == 0) {
         srv->closePipesSafely();
         return;
@@ -1228,7 +1224,6 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
     return NULL;
 }
 
-
 static void
 helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
@@ -1311,7 +1306,6 @@ helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, 
     /* nothing! */
 }
 
-
 static void
 helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r)
 {
@@ -1356,7 +1350,6 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     ++ srv->stats.uses;
     ++ hlp->stats.requests;
 }
-
 
 static void
 helperKickQueue(helper * hlp)

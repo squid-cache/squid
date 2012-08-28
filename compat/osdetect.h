@@ -1,7 +1,6 @@
 #ifndef SQUID_COMPAT_OSDETECT_H
 #define SQUID_COMPAT_OSDETECT_H
 
-
 /****************************************************************************
  *--------------------------------------------------------------------------*
  * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
@@ -93,7 +92,5 @@
 #define _SQUID_OS2_ 1
 
 #endif /* OS automatic detection */
-
-
 
 #endif /* SQUID_COMPAT_OSDETECT_H */

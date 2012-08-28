@@ -109,7 +109,6 @@ HttpParser::parseRequestFirstLine()
     // NP: we have now seen EOL, more-data (0) cannot occur.
     //     From here on any failure is -1, success is 1
 
-
     // Input Validation:
 
     // Process what we now know about the line structure into field offsets

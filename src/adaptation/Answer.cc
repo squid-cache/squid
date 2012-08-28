@@ -24,7 +24,6 @@ Adaptation::Answer::Forward(HttpMsg *aMsg)
     return answer;
 }
 
-
 Adaptation::Answer
 Adaptation::Answer::Block(const String &aRule)
 {

@@ -80,7 +80,6 @@ Auth::User::credentials(CredentialState newCreds)
     credentials_state = newCreds;
 }
 
-
 /**
  * Combine two user structs. ONLY to be called from within a scheme
  * module. The scheme module is responsible for ensuring that the

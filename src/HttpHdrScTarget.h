@@ -130,6 +130,4 @@ MEMPROXY_CLASS_INLINE(HttpHdrScTarget);
 
 extern void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
-
-
 #endif /* SQUID_HTTPHDRSURROGATECONTROLTARGET_H */

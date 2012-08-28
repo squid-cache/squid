@@ -63,7 +63,6 @@ Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
     ++stats.count;
 }
 
-
 /* Ipc::ReadWriteLockStats */
 
 Ipc::ReadWriteLockStats::ReadWriteLockStats()

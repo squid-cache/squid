@@ -55,7 +55,6 @@
 #include <ostream>
 #endif
 
-
 class AsyncCall;
 class HttpRequest;
 class MemObject;
@@ -254,13 +253,11 @@ private:
 
     void trimMemory(const bool preserveSwappable) {}
 
-
     static NullStoreEntry _instance;
 };
 
 /// \ingroup StoreAPI
 typedef void (*STOREGETCLIENT) (StoreEntry *, void *cbdata);
-
 
 /**
  \ingroup StoreAPI

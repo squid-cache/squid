@@ -56,7 +56,6 @@
 
 /* BEGIN of definitions for radix tree entries */
 
-
 /* 32/128 bits address in memory with length */
 class m_ADDR
 {
@@ -113,7 +112,6 @@ static int asnAddNet(char *, int);
 static void asnCacheStart(int as);
 
 static STCB asHandleReply;
-
 
 #if defined(__cplusplus)
 extern "C" {
@@ -232,7 +230,6 @@ asnStats(StoreEntry * sentry)
 }
 
 /* PRIVATE */
-
 
 static void
 asnCacheStart(int as)
@@ -390,7 +387,6 @@ asStateFree(void *data)
     HTTPMSGUNLOCK(asState->request);
     cbdataFree(asState);
 }
-
 
 /**
  * add a network (addr, mask) to the radix tree, with matching AS number
@@ -630,7 +626,6 @@ ACLSourceASNStrategy::Instance()
 }
 
 ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
-
 
 int
 ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

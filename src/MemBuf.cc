@@ -128,7 +128,6 @@ MemBuf::init()
     init(MEM_BUF_INIT_SIZE, MEM_BUF_MAX_SIZE);
 }
 
-
 /** init with specific sizes */
 void
 MemBuf::init(mb_size_t szInit, mb_size_t szMax)
@@ -286,7 +285,6 @@ MemBuf::Printf(const char *fmt,...)
     va_end(args);
 }
 
-
 /**
  * vPrintf for other printf()'s to use; calls vsnprintf, extends buf if needed
  */
@@ -402,7 +400,6 @@ MemBuf::grow(mb_size_t min_cap)
     capacity = (mb_size_t) buf_cap;
     PROF_stop(MemBuf_grow);
 }
-
 
 /* Reports */
 

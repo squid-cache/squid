@@ -5,7 +5,6 @@
  *
  */
 
-
 #include "squid.h"
 #include "protos.h"
 #include "base/TextException.h"
@@ -60,8 +59,6 @@ void Ipc::TypedMsgHdr::sync()
     }
     offset = 0;
 }
-
-
 
 int
 Ipc::TypedMsgHdr::type() const

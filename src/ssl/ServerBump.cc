@@ -13,9 +13,7 @@
 #include "ssl/ServerBump.h"
 #include "Store.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
-
 
 Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e):
         request(fakeRequest),

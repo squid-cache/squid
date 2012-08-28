@@ -559,7 +559,6 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
     cbdataInternalUnlock(tunnelState);
 }
 
-
 static void
 tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {

@@ -36,7 +36,6 @@
 /// Intended for registration pattern APIs where the function result does not matter to the test
 #define STUB_RETVAL_NOP(x) { std::cerr<<"SKIP: "<<STUB_API<<" "<<__FUNCTION__<<" (not implemented).\n"; return x; }
 
-
 /** macro to stub a function which returns a reference to dynamic
  *  Aborts unit tests requiring its definition with a message about the missing linkage
  *  This macro uses 'new x' to construct a stack vailable for the reference, may leak.

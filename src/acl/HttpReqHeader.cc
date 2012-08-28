@@ -39,8 +39,6 @@
 #include "acl/Checklist.h"
 #include "HttpRequest.h"
 
-
-
 int
 ACLHTTPReqHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

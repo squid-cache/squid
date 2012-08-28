@@ -8,7 +8,6 @@
 #include "fs/rock/RockStoreFileSystem.h"
 #include "fs/rock/RockSwapDir.h"
 
-
 Rock::StoreFileSystem::StoreFileSystem()
 {
     FsAdd(*this);

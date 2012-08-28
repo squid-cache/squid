@@ -56,7 +56,6 @@
 #include "wordlist.h"
 #include <algorithm>
 
-
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
@@ -76,7 +75,6 @@ public:
 private:
     Handler *handler;
 };
-
 
 /// Registers new profiles, ignoring attempts to register a duplicate
 void

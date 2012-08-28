@@ -41,8 +41,6 @@ public:
     StrandCoord strand; ///< registrant coordinates and related details
 };
 
-
-
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_STRAND_COORD_H */

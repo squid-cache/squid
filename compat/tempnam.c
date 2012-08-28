@@ -46,7 +46,6 @@
 #endif
 #endif
 
-
 static char *
 _tmpnam(void)
 {

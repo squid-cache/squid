@@ -11,7 +11,6 @@
 #include "mgr/Action.h"
 #include <sys/time.h>
 
-
 namespace Mgr
 {
 

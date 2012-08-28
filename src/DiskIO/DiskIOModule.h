@@ -84,5 +84,4 @@ private:
     static Vector<DiskIOModule*> *_Modules;
 };
 
-
 #endif /* SQUID_DISKIOMODULE_H */

@@ -56,7 +56,6 @@ void Ssl::Lock::lock()
 #endif
         throw std::runtime_error("Failed to open file " + filename);
 
-
 #if _SQUID_MSWIN_
     if (!LockFile(hFile, 0, 0, 1, 0))
 #else

@@ -161,7 +161,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
     }
 
-
     /* after the write to the user occurs, (ie here, or in a callback)
      * we call */
     if (clientHttpRequestStatus(-1, http)) {
@@ -261,8 +260,6 @@ ESIStreamContextNew (ESIIncludePtr include)
     return rv;
 }
 
-
-
 /* ESIInclude */
 ESIInclude::~ESIInclude()
 {
@@ -321,7 +318,6 @@ ESIInclude::prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars)
     tempheaders.update (&vars->header(), NULL);
     tempheaders.removeHopByHopEntries();
 }
-
 
 void
 ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarState *vars)

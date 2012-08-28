@@ -13,7 +13,6 @@
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
 
-
 AsyncCallQueue::AsyncCallQueue(): theHead(NULL), theTail(NULL)
 {
 }

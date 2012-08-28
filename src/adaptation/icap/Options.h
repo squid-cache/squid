@@ -122,9 +122,6 @@ private:
     void cfgTransferList(const HttpHeader *h, TransferList &l);
 };
 
-
-
-
 } // namespace Icap
 } // namespace Adaptation
 

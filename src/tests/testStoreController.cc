@@ -19,7 +19,6 @@ addSwapDir(TestSwapDirPointer aStore)
     ++Config.cacheSwap.n_configured;
 }
 
-
 void
 testStoreController::testStats()
 {

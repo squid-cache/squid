@@ -51,7 +51,6 @@ String::psize() const
     return size();
 }
 
-
 // low-level buffer allocation,
 // does not free old buffer and does not adjust or look at len_
 void
@@ -263,7 +262,6 @@ String::substr(String::size_type from, String::size_type to) const
     rv.limitInit(rawBuf()+from,to-from);
     return rv;
 }
-
 
 #if DEBUGSTRINGS
 void
@@ -496,8 +494,6 @@ String::rfind(char const ch) const
         return npos;
     return c-rawBuf();
 }
-
-
 
 #if !_USE_INLINE_
 #include "String.cci"
