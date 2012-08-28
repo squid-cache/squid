@@ -9,7 +9,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
 #if USE_ASYNC_IO && defined(LINUXTHREADS)
 #define _SQUID_LINUX_THREADS_
 #endif
@@ -31,7 +30,6 @@
 //#define s6_addr8  __u6_addr.__u6_addr8
 //#define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
-
 
 #endif /* _SQUID_FREEBSD_ */
 #endif /* SQUID_OS_FREEBSD_H */

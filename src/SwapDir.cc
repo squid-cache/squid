@@ -152,7 +152,6 @@ SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
     return true; // kids may provide more tests and should report true load
 }
 
-
 void
 SwapDir::sync() {}
 

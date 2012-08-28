@@ -4,8 +4,6 @@
 #include "acl/StringData.h"
 #include "acl/Checklist.h"
 
-
-
 int
 ACLPeerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

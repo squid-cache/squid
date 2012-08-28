@@ -15,7 +15,6 @@
 #include "Store.h"
 #include "protos.h"
 
-
 DiskdActionData::DiskdActionData()
 {
     xmemset(this, 0, sizeof(*this));
@@ -53,7 +52,6 @@ DiskdActionData::operator += (const DiskdActionData& stats)
 
     return *this;
 }
-
 
 DiskdAction::Pointer
 DiskdAction::Create(const Mgr::CommandPointer &aCmd)

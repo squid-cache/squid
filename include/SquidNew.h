@@ -59,7 +59,6 @@ _SQUID_EXTERNNEW_ void operator delete[] (void *address) throw()
     xfree(address);
 }
 
-
 #endif /* __SUNPRO_CC */
 
 #endif /* SQUID_NEW_H */

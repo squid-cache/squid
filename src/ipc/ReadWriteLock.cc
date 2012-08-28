@@ -5,7 +5,6 @@
  */
 
 #include "squid.h"
-
 #include "Store.h"
 #include "ipc/ReadWriteLock.h"
 
@@ -63,7 +62,6 @@ Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
     }
     ++stats.count;
 }
-
 
 /* Ipc::ReadWriteLockStats */
 

@@ -64,7 +64,6 @@ operator <<(std::ostream &os, const SipcIo &sio)
            (sio.msg.command == IpcIo::cmdRead ? 'r' : 'w') << sio.disker;
 }
 
-
 IpcIoFile::IpcIoFile(char const *aDb):
         dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
         olderRequests(&requestMap1), newerRequests(&requestMap2),
@@ -587,7 +586,6 @@ IpcIoFile::getFD() const
     return -1;
 }
 
-
 /* IpcIoMsg */
 
 IpcIoMsg::IpcIoMsg():
@@ -618,8 +616,6 @@ IpcIoPendingRequest::completeIo(IpcIoMsg *const response)
         file->openCompleted(NULL);
     }
 }
-
-
 
 /* XXX: disker code that should probably be moved elsewhere */
 
@@ -676,7 +672,6 @@ diskerWrite(IpcIoMsg &ipcIo)
 
     Ipc::Mem::PutPage(ipcIo.page);
 }
-
 
 void
 IpcIoFile::DiskerHandleMoreRequests(void *source)
@@ -858,7 +853,6 @@ DiskerClose(const String &path)
     }
 }
 
-
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
 class IpcIoClaimMemoryNeedsRr: public RegisteredRunner
 {
@@ -868,7 +862,6 @@ public:
 };
 
 RunnerRegistrationEntry(rrClaimMemoryNeeds, IpcIoClaimMemoryNeedsRr);
-
 
 void
 IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
@@ -882,7 +875,6 @@ IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
     Ipc::Mem::NotePageNeed(Ipc::Mem::PageId::ioPage,
                            static_cast<int>(itemsCount * 1.1));
 }
-
 
 /// initializes shared memory segments used by IpcIoFile
 class IpcIoRr: public Ipc::Mem::RegisteredRunner
@@ -900,7 +892,6 @@ private:
 };
 
 RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
-
 
 void IpcIoRr::create(const RunnerRegistry &)
 {

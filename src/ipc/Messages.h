@@ -27,5 +27,4 @@ typedef enum { mtNone = 0, mtRegistration,
 
 } // namespace Ipc;
 
-
 #endif /* SQUID_IPC_MESSAGES_H */

@@ -35,7 +35,6 @@ ReadersId(String id)
     return id;
 }
 
-
 /* QueueReader */
 
 InstanceIdDefinitions(Ipc::QueueReader, "ipcQR");
@@ -71,7 +70,6 @@ Ipc::QueueReaders::SharedMemorySize(const int capacity)
     return sizeof(QueueReaders) + sizeof(QueueReader) * capacity;
 }
 
-
 // OneToOneUniQueue
 
 Ipc::OneToOneUniQueue::OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity):
@@ -96,7 +94,6 @@ Ipc::OneToOneUniQueue::Items2Bytes(const unsigned int maxItemSize, const int siz
     assert(size >= 0);
     return sizeof(OneToOneUniQueue) + maxItemSize * size;
 }
-
 
 /* OneToOneUniQueues */
 
@@ -130,7 +127,6 @@ Ipc::OneToOneUniQueues::operator [](const int index) const
         reinterpret_cast<const char *>(this) + sizeof(*this) + index * queueSize;
     return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
-
 
 // FewToFewBiQueue
 

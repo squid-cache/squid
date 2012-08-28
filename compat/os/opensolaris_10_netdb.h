@@ -104,7 +104,6 @@ extern "C" {
 #define	h_addr	h_addr_list[0]	/* address, for backward compatiblity */
     };
 
-
     /*
      * addrinfo introduced with IPv6 for Protocol-Independent Hostname
      * and Service Name Translation.
@@ -125,7 +124,6 @@ extern "C" {
         struct addrinfo *ai_next;	/* next structure in linked list */
     };
 
-
     /* addrinfo flags */
 #define	AI_PASSIVE	0x0008	/* intended for bind() + listen() */
 #define	AI_CANONNAME	0x0010	/* return canonical version of host */
@@ -136,7 +134,6 @@ extern "C" {
 #define	AI_V4MAPPED	0x0001	/* IPv4 mapped addresses if no IPv6 */
 #define	AI_ALL		0x0002	/* IPv6 and IPv4 mapped addresses */
 #define	AI_ADDRCONFIG	0x0004	/* AAAA or A records only if IPv6/IPv4 cnfg'd */
-
 
     /*
      * These were defined in RFC 2553 but not SUSv3
@@ -184,7 +181,6 @@ extern "C" {
      * Scope delimit character
      */
 #define	SCOPE_DELIMITER	'%'
-
 
     /*
      * Algorithm entry for /etc/inet/ipsecalgs which defines IPsec protocols

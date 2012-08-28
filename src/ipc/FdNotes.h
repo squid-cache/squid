@@ -25,5 +25,4 @@ extern const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
 
 } // namespace Ipc;
 
-
 #endif /* SQUID_IPC_FD_NOTES_H */

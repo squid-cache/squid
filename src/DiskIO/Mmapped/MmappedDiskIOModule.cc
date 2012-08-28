@@ -21,7 +21,6 @@ void
 MmappedDiskIOModule::shutdown()
 {}
 
-
 DiskIOStrategy*
 MmappedDiskIOModule::createStrategy()
 {

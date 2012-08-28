@@ -11,7 +11,6 @@
  * to prevent squid knowing the users password (idea suggested in RFC 2617).
  */
 
-
 /*
  * $Id$
  *
@@ -103,7 +102,6 @@ CvtBin(const HASHHEX Hex, HASH Bin)
         Bin[i] = '\0';
     }
 }
-
 
 /* calculate H(A1) as per spec */
 void

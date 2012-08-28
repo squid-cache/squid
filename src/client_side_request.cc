@@ -33,7 +33,6 @@
  *
  */
 
-
 /*
  * General logic of request processing:
  *
@@ -92,7 +91,6 @@
 #include "ssl/support.h"
 #include "ssl/ServerBump.h"
 #endif
-
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close

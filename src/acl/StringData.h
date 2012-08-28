@@ -39,7 +39,6 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 
-
 class ACLStringData : public ACLData<char const *>
 {
 

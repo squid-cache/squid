@@ -49,7 +49,6 @@ static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c);
 static SplayNode<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
 static SplayNode<Eui::Eui64 *>::SPLAYWALKEE aclDumpEuiListWalkee;
 
-
 ACL *
 ACLEui64::clone() const
 {
@@ -105,7 +104,6 @@ aclParseEuiData(const char *t)
 
     return q;
 }
-
 
 /*******************/
 /* aclParseEuiList */

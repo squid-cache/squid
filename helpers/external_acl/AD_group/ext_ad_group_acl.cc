@@ -112,14 +112,12 @@ int User_Groups_Count = 0;
 wchar_t *My_NameTranslate(wchar_t *, int, int);
 char *Get_WIN32_ErrorMessage(HRESULT);
 
-
 void
 CloseCOM(void)
 {
     if (WIN32_COM_initialized == 1)
         CoUninitialize();
 }
-
 
 HRESULT
 GetLPBYTEtoOctetString(VARIANT * pVar, LPBYTE * ppByte)
@@ -150,7 +148,6 @@ GetLPBYTEtoOctetString(VARIANT * pVar, LPBYTE * ppByte)
 
     return hr;
 }
-
 
 wchar_t *
 Get_primaryGroup(IADs * pUser)
@@ -210,7 +207,6 @@ Get_primaryGroup(IADs * pUser)
     return result;
 }
 
-
 char *
 Get_WIN32_ErrorMessage(HRESULT hr)
 {
@@ -224,7 +220,6 @@ Get_WIN32_ErrorMessage(HRESULT hr)
                   NULL);
     return WIN32_ErrorMessage;
 }
-
 
 wchar_t *
 My_NameTranslate(wchar_t * name, int in_format, int out_format)
@@ -281,7 +276,6 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
     return wc;
 }
 
-
 wchar_t *
 GetLDAPPath(wchar_t * Base_DN, int query_mode)
 {
@@ -297,7 +291,6 @@ GetLDAPPath(wchar_t * Base_DN, int query_mode)
 
     return wc;
 }
-
 
 char *
 GetDomainName(void)
@@ -349,7 +342,6 @@ GetDomainName(void)
     return DomainName;
 }
 
-
 int
 add_User_Group(wchar_t * Group)
 {
@@ -375,7 +367,6 @@ add_User_Group(wchar_t * Group)
     return 1;
 }
 
-
 /* returns 0 on match, -1 if no match */
 static int
 wccmparray(const wchar_t * str, const wchar_t ** array)
@@ -388,7 +379,6 @@ wccmparray(const wchar_t * str, const wchar_t ** array)
     }
     return -1;
 }
-
 
 /* returns 0 on match, -1 if no match */
 static int
@@ -406,7 +396,6 @@ wcstrcmparray(const wchar_t * str, const char **array)
     }
     return -1;
 }
-
 
 HRESULT
 Recursive_Memberof(IADs * pObj)
@@ -487,7 +476,6 @@ Recursive_Memberof(IADs * pObj)
     return hr;
 }
 
-
 static wchar_t **
 build_groups_DN_array(const char **array, char *userdomain)
 {
@@ -529,7 +517,6 @@ build_groups_DN_array(const char **array, char *userdomain)
     *entry = NULL;
     return wc_array;
 }
-
 
 /* returns 1 on success, 0 on failure */
 int
@@ -608,7 +595,6 @@ Valid_Local_Groups(char *UserName, const char **Groups)
         NetApiBufferFree(pBuf);
     return result;
 }
-
 
 /* returns 1 on success, 0 on failure */
 int
@@ -780,7 +766,6 @@ process_options(int argc, char *argv[])
     return;
 }
 
-
 int
 main(int argc, char *argv[])
 {
@@ -823,7 +808,6 @@ main(int argc, char *argv[])
         debug("Warning: running in case insensitive mode !!!\n");
 
     atexit(CloseCOM);
-
 
     /* Main Loop */
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {

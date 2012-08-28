@@ -30,7 +30,6 @@
  *
  */
 
-
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
@@ -463,7 +462,6 @@ FwdState::complete()
         self = NULL; // refcounted
     }
 }
-
 
 /**** CALLBACK WRAPPERS ************************************************************/
 
@@ -1279,7 +1277,6 @@ fwdStats(StoreEntry * s)
         storeAppendPrintf(s, "\n");
     }
 }
-
 
 /**** STATIC MEMBER FUNCTIONS *************************************************/
 

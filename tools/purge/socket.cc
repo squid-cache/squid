@@ -120,7 +120,6 @@ setSocketNoDelay( int sockfd, bool nodelay )
         return 0;
 }
 
-
 int
 commonCode( int& sockfd, bool nodelay, int sendBufferSize, int recvBufferSize )
 // purpose: common code in server sockets and client sockets

@@ -293,7 +293,6 @@ MemObject::reset()
     /* Should we check for clients? */
 }
 
-
 int64_t
 MemObject::lowestMemReaderOffset() const
 {
@@ -407,7 +406,6 @@ MemObject::trimUnSwappable()
     data_hdr.freeDataUpto(new_mem_lo);
     inmem_lo = new_mem_lo;
 }
-
 
 bool
 MemObject::isContiguous() const

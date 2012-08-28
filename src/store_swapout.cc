@@ -179,7 +179,6 @@ doPages(StoreEntry *anEntry)
     } while (true);
 }
 
-
 /* This routine is called every time data is sent to the client side.
  * It's overhead is therefor, significant.
  */

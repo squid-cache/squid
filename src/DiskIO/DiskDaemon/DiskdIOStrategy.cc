@@ -319,7 +319,6 @@ DiskdIOStrategy::handle(diomsg * M)
         return;
     }
 
-
     /* set errno passed from diskd.  makes debugging more meaningful */
     if (M->status < 0)
         errno = -M->status;
@@ -537,7 +536,6 @@ DiskdIOStrategy::sync()
         callback();
     }
 }
-
 
 /*
  * Handle callbacks. If we have more than magic2 requests away, we block

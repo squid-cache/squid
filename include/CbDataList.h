@@ -154,7 +154,6 @@ CbDataList<C>::tail()
     return last;
 }
 
-
 template <class C>
 bool
 CbDataList<C>::find (C const &toFind) const

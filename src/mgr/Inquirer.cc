@@ -25,9 +25,7 @@
 #include <memory>
 #include <algorithm>
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Inquirer);
-
 
 Mgr::Inquirer::Inquirer(Action::Pointer anAction,
                         const Request &aCause, const Ipc::StrandCoords &coords):

@@ -13,7 +13,6 @@
 #include "mgr/Action.h"
 #include "StoreIOBuffer.h"
 
-
 class store_client;
 class CommIoCbParams;
 class CommCloseCbParams;

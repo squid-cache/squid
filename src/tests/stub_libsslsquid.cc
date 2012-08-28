@@ -9,7 +9,6 @@
 #define STUB_API "ssl/libsslsquid.la"
 #include "tests/STUB.h"
 
-
 #include "ssl/Config.h"
 Ssl::Config::Config() { printf("Ssl::Config::Config No implemented\n"); }
 Ssl::Config::~Config() { printf("Ssl::Config::Config No implemented\n"); }

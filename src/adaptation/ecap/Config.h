@@ -29,7 +29,6 @@ public:
     Extensions extensions;
 };
 
-
 /// General eCAP configuration
 class Config: public Adaptation::Config
 {

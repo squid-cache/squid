@@ -362,7 +362,6 @@ mem_hdr::nodeToRecieve(int64_t offset)
     return candidate;
 }
 
-
 bool
 mem_hdr::write (StoreIOBuffer const &writeBuffer)
 {

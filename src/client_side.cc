@@ -191,7 +191,6 @@ static void clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId
 
 /* our socket-related context */
 
-
 CBDATA_CLASS_INIT(ClientSocketContext);
 
 void *
@@ -248,7 +247,6 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 
 static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port);
 
-
 clientStreamNode *
 ClientSocketContext::getTail() const
 {
@@ -283,7 +281,6 @@ ConnStateData::readSomeData()
     reader = JobCallback(33, 5, Dialer, this, ConnStateData::clientReadRequest);
     comm_read(clientConnection, in.addressToReadInto(), getAvailableBufferLength(), reader);
 }
-
 
 void
 ClientSocketContext::removeFromConnectionList(ConnStateData * conn)
@@ -1816,7 +1813,6 @@ ClientSocketContext::noteIoError(const int xerrno)
     }
 }
 
-
 void
 ClientSocketContext::doClose()
 {
@@ -2732,7 +2728,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
-
     if (!chunked && !clientIsContentLengthValid(request)) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -3543,7 +3538,6 @@ clientNegotiateSSL(int fd, void *data)
                " client certificate: issuer: " <<
                X509_NAME_oneline(X509_get_issuer_name(client_cert), 0, 0));
 
-
         X509_free(client_cert);
     } else {
         debugs(83, 5, "clientNegotiateSSL: FD " << fd <<
@@ -4295,7 +4289,6 @@ ConnStateData::stopReading()
         reader = NULL;
     }
 }
-
 
 BodyPipe::Pointer
 ConnStateData::expectRequestBody(int64_t size)

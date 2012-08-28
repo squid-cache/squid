@@ -12,7 +12,6 @@
 #include "Range.h"
 #include "snmp_vars.h"
 
-
 namespace Snmp
 {
 

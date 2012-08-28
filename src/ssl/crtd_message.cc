@@ -124,7 +124,6 @@ void Ssl::CrtdMessage::setBody(std::string const & aBody) { body = aBody; }
 
 void Ssl::CrtdMessage::setCode(std::string const & aCode) { code = aCode; }
 
-
 std::string Ssl::CrtdMessage::compose() const
 {
     if (code.empty()) return std::string();
@@ -176,7 +175,6 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
     if (!other_part.empty())
         body += '\n' + other_part;
 }
-
 
 bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, std::string &error)
 {

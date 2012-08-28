@@ -14,7 +14,6 @@
 #include "SquidMath.h"
 #include "Store.h"
 
-
 extern void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
 extern void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
 

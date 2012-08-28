@@ -81,10 +81,8 @@ static struct epoll_event *pevents;
 
 static void commEPollRegisterWithCacheManager(void);
 
-
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /* Public functions */
-
 
 /*
  * This is a needed exported function which will be called to initialise
@@ -215,7 +213,6 @@ Comm::ResetSelect(int fd)
     F->epoll_state = 0;
     SetSelect(fd, 0, NULL, NULL, 0);
 }
-
 
 static void commIncomingStats(StoreEntry * sentry);
 

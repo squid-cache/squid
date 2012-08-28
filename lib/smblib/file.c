@@ -468,7 +468,6 @@ off_t SMB_Lseek(SMB_File *File_Handle, off_t offset, int whence)
 
 }
 
-
 /* Write numbytes from data to the file pointed to by the File_Handle at */
 /* the offset in the File_Handle.                                        */
 
@@ -1195,7 +1194,6 @@ int SMB_Search(SMB_Tree_Handle tree,
 
     }
 
-
     /* Now plug in the bits we need */
 
     memset(SMB_Hdr(pkt), 0, SMB_search_len);
@@ -1223,8 +1221,6 @@ int SMB_Search(SMB_Tree_Handle tree,
     *p = SMBasciiID;
     strcpy(p+1, dir_name);
     p = p + strlen(dir_name) + 2;  /* Skip the null */
-
-
 
     *p = SMBvariableblockID;
     p = p + 1;

@@ -77,7 +77,6 @@
 #define FD_SETSIZE SQUID_MAXFD
 #endif
 
-
 /*
  * Trap unintentional use of fd_set. Must not be used outside the
  * select code as it only supports FD_SETSIZE number of filedescriptors

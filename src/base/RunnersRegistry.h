@@ -51,7 +51,6 @@ public:
     virtual void run(const RunnerRegistry &r) = 0;
 };
 
-
 /// registers a given runner with the given registry and returns registry count
 int RegisterRunner(const RunnerRegistry &registry, RegisteredRunner *rr);
 
@@ -59,7 +58,6 @@ int RegisterRunner(const RunnerRegistry &registry, RegisteredRunner *rr);
 int ActivateRegistered(const RunnerRegistry &registry);
 /// deletes all runners in the given registry
 void DeactivateRegistered(const RunnerRegistry &registry);
-
 
 /// convenience function to "use" an otherwise unreferenced static variable
 bool UseThisStatic(const void *);

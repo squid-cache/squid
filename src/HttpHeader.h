@@ -38,14 +38,12 @@
 /* HttpHeader holds a HttpHeaderMask */
 #include "HttpHeaderMask.h"
 
-
 /* class forward declarations */
 class HttpHdrContRange;
 class HttpHdrCc;
 class HttpHdrSc;
 class HttpHdrRange;
 class String;
-
 
 /* constant attributes of http header fields */
 
@@ -187,7 +185,6 @@ struct _HttpHeaderFieldAttrs {
     field_type type;
 };
 
-
 /** Iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
 
@@ -292,7 +289,6 @@ protected:
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
 };
-
 
 extern int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 extern int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);

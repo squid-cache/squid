@@ -10,7 +10,6 @@
 #include "ipc/TypedMsgHdr.h"
 #include "snmp/Request.h"
 
-
 Snmp::Request::Request(int aRequestorId, unsigned int aRequestId,
                        const Pdu& aPdu, const Session& aSession,
                        int aFd, const Ip::Address& anAddress):

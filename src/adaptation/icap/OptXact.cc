@@ -18,7 +18,6 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXactLauncher);
 
-
 Adaptation::Icap::OptXact::OptXact(Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob("Adaptation::Icap::OptXact"),
         Adaptation::Icap::Xaction("Adaptation::Icap::OptXact", aService),

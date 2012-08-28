@@ -813,7 +813,6 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
     }
 }
 
-
 int
 readSecret(const char *filename)
 {

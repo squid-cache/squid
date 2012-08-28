@@ -37,11 +37,13 @@
  */
 
 #include "squid.h"
+
+#if USE_LEAKFINDER
+
 #include "LeakFinder.h"
 #include "Store.h"
 #include "SquidTime.h"
 
-#if USE_LEAKFINDER
 /* ========================================================================= */
 
 LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
@@ -115,7 +117,6 @@ LeakFinder::hash(const void *p, unsigned int mod)
 {
     return ((unsigned long) p >> 8) % mod;
 }
-
 
 void
 LeakFinder::dump()

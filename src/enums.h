@@ -112,7 +112,6 @@ typedef enum {
     SC_ENUM_END
 } http_hdr_sc_type;
 
-
 typedef enum _mem_status_t {
     NOT_IN_MEMORY,
     IN_MEMORY
@@ -249,7 +248,6 @@ typedef enum {
     psError
 } HttpMsgParseState;
 
-
 enum {
     PCTILE_HTTP,
     PCTILE_ICP_QUERY,
@@ -303,7 +301,6 @@ enum {
     ROR_REQUEST,
     ROR_REPLY
 };
-
 
 /* CygWin & Windows NT Port */
 #if _SQUID_WINDOWS_

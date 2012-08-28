@@ -98,7 +98,6 @@ BodyConsumerDialer::canDial(AsyncCall &call)
     return true;
 }
 
-
 /* BodyProducer */
 
 // inform the pipe that we are done and clear the Pointer
@@ -111,8 +110,6 @@ void BodyProducer::stopProducingFor(RefCount<BodyPipe> &pipe, bool atEof)
     pipe = NULL;
 }
 
-
-
 /* BodyConsumer */
 
 // inform the pipe that we are done and clear the Pointer
@@ -123,7 +120,6 @@ void BodyConsumer::stopConsumingFrom(RefCount<BodyPipe> &pipe)
     pipe->clearConsumer();
     pipe = NULL;
 }
-
 
 /* BodyPipe */
 
@@ -406,7 +402,6 @@ BodyPipe::postAppend(size_t size)
         clearProducer(true); // reached end-of-body
 }
 
-
 void
 BodyPipe::scheduleBodyDataNotification()
 {
@@ -475,7 +470,6 @@ const char *BodyPipe::status() const
     return outputBuffer.content();
 }
 
-
 /* BodyPipeCheckout */
 
 BodyPipeCheckout::BodyPipeCheckout(BodyPipe &aPipe): pipe(aPipe),
@@ -502,7 +496,6 @@ BodyPipeCheckout::checkIn()
     pipe.checkIn(*this);
     checkedIn = true;
 }
-
 
 BodyPipeCheckout::BodyPipeCheckout(const BodyPipeCheckout &c): pipe(c.pipe),
         buf(c.buf), offset(c.offset), checkedOutSize(c.checkedOutSize),

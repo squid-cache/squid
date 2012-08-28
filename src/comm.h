@@ -71,13 +71,11 @@ SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);
 SQUIDCEXTERN void checkTimeouts(void);
 
-
 //typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer details, comm_err_t flag, int xerrno, void *data);
 extern void comm_add_close_handler(int fd, CLCB *, void *);
 extern void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 extern void comm_remove_close_handler(int fd, CLCB *, void *);
 extern void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
-
 
 extern int comm_has_pending_read_callback(int fd);
 extern bool comm_monitors_read(int fd);

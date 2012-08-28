@@ -36,7 +36,6 @@
  * They DO NOT perform access control or auditing.
  * See acl.c for access control and client_side.c for auditing */
 
-
 #include "squid.h"
 #include "cache_cf.h"
 #include "rfc2617.h"
@@ -680,7 +679,6 @@ Auth::Digest::Config::type() const
     return Auth::Digest::Scheme::GetInstance()->type();
 }
 
-
 static void
 authenticateDigestStats(StoreEntry * sentry)
 {
@@ -922,7 +920,6 @@ Auth::Digest::Config::decode(char const *proxy_auth)
 
     temp.clean();
 
-
     /* now we validate the data given to us */
 
     /*
@@ -1036,7 +1033,6 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     }
 
     /* the method we'll check at the authenticate step as well */
-
 
     /* we don't send or parse opaques. Ok so we're flexable ... */
 

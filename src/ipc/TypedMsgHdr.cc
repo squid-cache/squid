@@ -5,12 +5,12 @@
  *
  */
 
-
 #include "squid.h"
-#include <string.h>
 #include "protos.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
+
+#include <string.h>
 
 Ipc::TypedMsgHdr::TypedMsgHdr()
 {
@@ -59,8 +59,6 @@ void Ipc::TypedMsgHdr::sync()
     }
     offset = 0;
 }
-
-
 
 int
 Ipc::TypedMsgHdr::type() const

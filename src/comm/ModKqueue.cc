@@ -154,11 +154,8 @@ kq_update_events(int fd, short filter, PF * handler)
     }
 }
 
-
-
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /* Public functions */
-
 
 /*
  * comm_select_init

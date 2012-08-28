@@ -53,7 +53,6 @@ typedef struct {
     int bad_del_count;		/* #dels with no prior add */
 } CacheIndex;
 
-
 typedef struct _CacheEntry {
     const cache_key *key;
 
@@ -61,7 +60,6 @@ typedef struct _CacheEntry {
     /* StoreSwapLogData s; */
     unsigned char key_arr[SQUID_MD5_DIGEST_LENGTH];
 } CacheEntry;
-
 
 /* copied from url.c */
 const char *RequestMethodStr[] = {
@@ -75,9 +73,7 @@ const char *RequestMethodStr[] = {
     "PURGE"
 };
 
-
 static int cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file);
-
 
 static CacheEntry *
 cacheEntryCreate(const StoreSwapLogData * s)
@@ -264,7 +260,6 @@ cacheIndexCmp(CacheIndex * idx1, CacheIndex * idx2)
     cacheIndexCmpReport(idx1, shared_count);
     cacheIndexCmpReport(idx2, shared_count);
 }
-
 
 static int
 usage(const char *prg_name)

@@ -118,7 +118,6 @@ SQUIDCEXTERN const char * rfc1035ErrorMessage(int n);
 #define RFC1035_TYPE_PTR 12
 #define RFC1035_CLASS_IN 1
 
-
 /* Child Library RFC3596 Depends on some otherwise internal functions */
 SQUIDCEXTERN int rfc1035HeaderPack(char *buf,
                                    size_t sz,

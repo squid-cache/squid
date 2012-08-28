@@ -163,7 +163,6 @@ private:
     CBDATA_CLASS(ClientSocketContext);
 };
 
-
 class ConnectionDetail;
 #if USE_SSL
 namespace Ssl

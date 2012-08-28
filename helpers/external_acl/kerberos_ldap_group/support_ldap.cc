@@ -826,7 +826,6 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     char *p;
     char *ldap_filter_esc = NULL;
 
-
     searchtime.tv_sec = SEARCH_TIMEOUT;
     searchtime.tv_usec = 0;
     /*

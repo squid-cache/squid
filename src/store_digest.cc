@@ -33,7 +33,6 @@
  *
  */
 
-
 /*
  * TODO: We probably do not track all the cases when
  *       storeDigestNoteStoreReady() must be called; this may prevent
@@ -79,7 +78,6 @@ public:
     int rebuild_count;
     int rewrite_count;
 };
-
 
 typedef struct {
     int del_count;		/* #store entries deleted from store_digest */
@@ -377,7 +375,6 @@ storeDigestRebuildStep(void *datanotused)
     else
         eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.0, 1);
 }
-
 
 /* starts swap out sequence for the digest */
 static void

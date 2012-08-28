@@ -12,7 +12,6 @@
 #include "mgr/StringParam.h"
 #include "mgr/QueryParams.h"
 
-
 Mgr::QueryParam::Pointer
 Mgr::QueryParams::get(const String& name) const
 {

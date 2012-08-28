@@ -355,7 +355,6 @@ hashKeyStr(hash_link * hl)
     return (const char *) hl->key;
 }
 
-
 #if USE_HASH_DRIVER
 /**
  *  hash-driver - Run with a big file as stdin to insert each line into the
@@ -407,7 +406,6 @@ main(void)
                walker->item);
     }
     printf("done walking hash table...\n");
-
 
     printf("driver finished.\n");
     exit(0);

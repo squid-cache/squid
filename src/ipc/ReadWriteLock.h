@@ -30,7 +30,6 @@ public:
     Atomic::Word writers; ///< number of writers trying to modify protected data
 };
 
-
 /// approximate stats of a set of ReadWriteLocks
 class ReadWriteLockStats
 {

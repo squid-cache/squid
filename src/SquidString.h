@@ -45,7 +45,6 @@
 #define SQUIDSTRINGPRINT(s) (s).psize(),(s).rawBuf()
 #endif /* SQUIDSTRINGPH */
 
-
 #define DEBUGSTRINGS 0
 #if DEBUGSTRINGS
 #include "splay.h"
@@ -158,7 +157,6 @@ public:
 #if DEBUGSTRINGS
     void stat (StoreEntry *) const;
 #endif
-
 
 private:
     void allocAndFill(const char *str, int len);

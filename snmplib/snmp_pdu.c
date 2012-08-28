@@ -263,7 +263,6 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command) {
     return (newpdu);
 }
 
-
 /**********************************************************************/
 
 void

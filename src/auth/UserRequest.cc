@@ -193,7 +193,6 @@ authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer auth_user_request)
     return auth_user_request->user()->ipcount;
 }
 
-
 /*
  * authenticateUserAuthenticated: is this auth_user structure logged in ?
  */

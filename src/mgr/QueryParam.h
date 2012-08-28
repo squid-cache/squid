@@ -11,7 +11,6 @@
 #include "ipc/forward.h"
 #include "RefCount.h"
 
-
 namespace Mgr
 {
 

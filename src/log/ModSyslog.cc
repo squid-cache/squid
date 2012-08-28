@@ -153,8 +153,6 @@ logfile_mod_syslog_close(Logfile * lf)
     lf->data = NULL;
 }
 
-
-
 /*
  * This code expects the path to be syslog:<priority>
  */

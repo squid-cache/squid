@@ -87,7 +87,6 @@ void Ssl::ErrorDetailsManager::Shutdown()
     TheDetailsManager = NULL;
 }
 
-
 Ssl::ErrorDetailsManager::ErrorDetailsManager()
 {
     theDefaultErrorDetails = new ErrorDetailsList();

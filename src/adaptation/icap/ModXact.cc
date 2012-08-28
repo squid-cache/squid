@@ -718,8 +718,6 @@ void Adaptation::Icap::ModXact::disableBypass(const char *reason, bool including
     }
 }
 
-
-
 // note that allocation for echoing is done in handle204NoContent()
 void Adaptation::Icap::ModXact::maybeAllocateHttpMsg()
 {
@@ -1320,7 +1318,6 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     Xaction::finalizeLogInfo();
 }
 
-
 void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 {
     char ntoabuf[MAX_IPSTRLEN];
@@ -1366,7 +1363,6 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
             }
         }
     }
-
 
     buf.Printf("Encapsulated: ");
 
@@ -1787,7 +1783,6 @@ void Adaptation::Icap::ModXact::makeAdaptedBodyPipe(const char *what)
            adapted.body_pipe << " pipe");
 }
 
-
 // TODO: Move SizedEstimate and Preview elsewhere
 
 Adaptation::Icap::SizedEstimate::SizedEstimate()
@@ -1815,8 +1810,6 @@ uint64_t Adaptation::Icap::SizedEstimate::size() const
     Must(knownSize());
     return static_cast<uint64_t>(theData);
 }
-
-
 
 Adaptation::Icap::VirginBodyAct::VirginBodyAct(): theStart(0), theState(stUndecided)
 {}
@@ -1848,7 +1841,6 @@ uint64_t Adaptation::Icap::VirginBodyAct::offset() const
     Must(active());
     return static_cast<uint64_t>(theStart);
 }
-
 
 Adaptation::Icap::Preview::Preview(): theWritten(0), theAd(0), theState(stDisabled)
 {}

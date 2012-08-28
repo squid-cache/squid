@@ -25,7 +25,6 @@ void PutPage(PageId &page);
 /// converts page handler into a temporary writeable shared memory pointer
 char *PagePointer(const PageId &page);
 
-
 /* Limits and statistics */
 
 /// the total number of shared memory pages that can be in use at any time

@@ -44,7 +44,6 @@ Check_fordenychange(void)
     Check_forfilechange(&DenyUsers);
 }
 
-
 /*
  * Check to see if the username provided by Squid appears in the denied
  * user list. Returns 0 if the user was not found, and 1 if they were.

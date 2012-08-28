@@ -12,7 +12,6 @@ class HttpRequest;
 /* for struct peer */
 #include "structs.h"
 
-
 SQUIDCEXTERN void netdbInit(void);
 
 SQUIDCEXTERN void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);

@@ -1,7 +1,6 @@
 #ifndef SQUID_OS_SOLARIS_H
 #define SQUID_OS_SOLARIS_H
 
-
 #if _SQUID_SOLARIS_
 
 /*

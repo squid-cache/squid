@@ -75,7 +75,6 @@ static void peerDigestFetchSetStats(DigestFetchState * fetch);
 static int peerDigestSetCBlock(PeerDigest * pd, const char *buf);
 static int peerDigestUseful(const PeerDigest * pd);
 
-
 /* local constants */
 Version const CacheDigestVer = { 5, 3 };
 
@@ -410,7 +409,6 @@ peerDigestRequest(PeerDigest * pd)
                     peerDigestHandleReply, fetch);
 }
 
-
 /* Handle the data copying .. */
 
 /*
@@ -519,8 +517,6 @@ finish:
     /* Get rid of our reference, we've finished with it for now */
     cbdataReferenceDone(fetch);
 }
-
-
 
 /* wait for full http headers to be received then parse them */
 /*
@@ -870,7 +866,6 @@ peerDigestReqFinish(DigestFetchState * fetch, char *buf,
         peerDigestFetchFinish(fetch, err);
 }
 
-
 /* destroys digest if peer disappeared
  * must be called only when fetch and pd cbdata are valid */
 static void
@@ -984,7 +979,6 @@ peerDigestFetchSetStats(DigestFetchState * fetch)
            ")");
 
 }
-
 
 static int
 peerDigestSetCBlock(PeerDigest * pd, const char *buf)

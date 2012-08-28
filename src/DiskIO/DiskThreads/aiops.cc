@@ -124,7 +124,6 @@ static void squidaio_poll_queues(void);
 static squidaio_thread_t *threads = NULL;
 static int squidaio_initialised = 0;
 
-
 #define AIO_LARGE_BUFS  16384
 #define AIO_MEDIUM_BUFS	AIO_LARGE_BUFS >> 1
 #define AIO_SMALL_BUFS	AIO_LARGE_BUFS >> 2
@@ -636,7 +635,6 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     squidaio_request_pool->freeOne(requestp);
 }				/* squidaio_cleanup_request */
 
-
 int
 squidaio_cancel(squidaio_result_t * resultp)
 {
@@ -653,7 +651,6 @@ squidaio_cancel(squidaio_result_t * resultp)
 
     return 1;
 }				/* squidaio_cancel */
-
 
 int
 squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resultp)
@@ -682,14 +679,12 @@ squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resu
     return 0;
 }
 
-
 static void
 squidaio_do_open(squidaio_request_t * requestp)
 {
     requestp->ret = open(requestp->path, requestp->oflag, requestp->mode);
     requestp->err = errno;
 }
-
 
 int
 squidaio_read(int fd, char *bufp, size_t bufs, off_t offset, int whence, squidaio_result_t * resultp)
@@ -721,7 +716,6 @@ squidaio_read(int fd, char *bufp, size_t bufs, off_t offset, int whence, squidai
     return 0;
 }
 
-
 static void
 squidaio_do_read(squidaio_request_t * requestp)
 {
@@ -729,7 +723,6 @@ squidaio_do_read(squidaio_request_t * requestp)
     requestp->ret = read(requestp->fd, requestp->bufferp, requestp->buflen);
     requestp->err = errno;
 }
-
 
 int
 squidaio_write(int fd, char *bufp, size_t bufs, off_t offset, int whence, squidaio_result_t * resultp)
@@ -761,14 +754,12 @@ squidaio_write(int fd, char *bufp, size_t bufs, off_t offset, int whence, squida
     return 0;
 }
 
-
 static void
 squidaio_do_write(squidaio_request_t * requestp)
 {
     requestp->ret = write(requestp->fd, requestp->bufferp, requestp->buflen);
     requestp->err = errno;
 }
-
 
 int
 squidaio_close(int fd, squidaio_result_t * resultp)
@@ -792,14 +783,12 @@ squidaio_close(int fd, squidaio_result_t * resultp)
     return 0;
 }
 
-
 static void
 squidaio_do_close(squidaio_request_t * requestp)
 {
     requestp->ret = close(requestp->fd);
     requestp->err = errno;
 }
-
 
 int
 
@@ -829,14 +818,12 @@ squidaio_stat(const char *path, struct stat *sb, squidaio_result_t * resultp)
     return 0;
 }
 
-
 static void
 squidaio_do_stat(squidaio_request_t * requestp)
 {
     requestp->ret = stat(requestp->path, requestp->tmpstatp);
     requestp->err = errno;
 }
-
 
 int
 squidaio_unlink(const char *path, squidaio_result_t * resultp)
@@ -860,7 +847,6 @@ squidaio_unlink(const char *path, squidaio_result_t * resultp)
 
     return 0;
 }
-
 
 static void
 squidaio_do_unlink(squidaio_request_t * requestp)

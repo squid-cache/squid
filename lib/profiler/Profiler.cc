@@ -118,7 +118,6 @@
 
 #if USE_XPROF_STATS
 
-
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
@@ -135,7 +134,6 @@
 TimersArray *xprof_Timers = NULL;
 
 /* Private stuff */
-
 
 /* new stuff */
 #define	MAXSTACKDEPTH	512

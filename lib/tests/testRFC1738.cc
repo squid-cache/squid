@@ -61,7 +61,6 @@ void testRFC1738::testUrlDecode()
     CPPUNIT_ASSERT(memcmp(unescaped_str, "Bad String %1",14)==0);
     xfree(unescaped_str);
 
-
     /* A partly corrupt string */
     unescaped_str = xstrdup("Bad String %1A%3");
     rfc1738_unescape(unescaped_str);
@@ -97,7 +96,6 @@ void testRFC1738::testUrlEncode()
     result = rfc1738_do_escape("################ ################ ################ ################ ################ ################ ################ ################", RFC1738_ESCAPE_UNSAFE);
     CPPUNIT_ASSERT(memcmp(result, "%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%20%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23%23",406)==0);
 
-
     /* TEST: escaping only reserved characters */
 
     /* regular URL (full encoding requested) */
@@ -107,7 +105,6 @@ void testRFC1738::testUrlEncode()
     /* regular path (encoding wanted for ALL special chars) */
     result = rfc1738_do_escape("/data/source/path", RFC1738_ESCAPE_RESERVED);
     CPPUNIT_ASSERT(memcmp(result, "%2Fdata%2Fsource%2Fpath",24)==0);
-
 
     /* TEST: safety-escaping a string already partially escaped */
 
