@@ -176,11 +176,24 @@ sub input_filter{
     return 1;
 }
 
+my $last_line_was_empty=0;
+#param: a reference to input line
+#retval 1: print line
+#retval 0: don't print line
 sub output_filter{
     my($line)=@_;
 
+    # collapse multiple empty lines onto the first one
     if($$line =~ /^\s*$/){
-	return 1;
+      if ($last_line_was_empty==1) {
+        $$line="";
+        return 0;
+      } else {
+        $last_line_was_empty=1;
+        return 1;
+      }
+    } else {
+      $last_line_was_empty=0;
     }
 
     if($$line =~ s/\s*\/\/__ASTYLECOMMENT__//) {
