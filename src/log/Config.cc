@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "cache_cf.h"
 #include "log/Config.h"
 #include "protos.h"
 

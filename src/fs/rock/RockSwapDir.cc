@@ -5,6 +5,7 @@
  */
 
 #include "squid.h"
+#include "cache_cf.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"

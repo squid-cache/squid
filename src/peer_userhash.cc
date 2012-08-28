@@ -42,6 +42,7 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "protos.h"
 #include "Store.h"
 

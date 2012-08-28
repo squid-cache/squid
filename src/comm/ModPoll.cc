@@ -36,6 +36,7 @@
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ICP.h"

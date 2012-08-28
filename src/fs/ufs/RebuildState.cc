@@ -32,9 +32,11 @@
  */
 
 #include "squid.h"
+#include "disk.h"
 #include "protos.h"
 #include "RebuildState.h"
 #include "SquidTime.h"
+#include "store_key_md5.h"
 #include "StoreSwapLogData.h"
 #include "UFSSwapLogParser.h"
 

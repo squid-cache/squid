@@ -38,6 +38,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
+#include "fd.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "HttpReply.h"
@@ -47,6 +48,8 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "tools.h"
+#include "URL.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"

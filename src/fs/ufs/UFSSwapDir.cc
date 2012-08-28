@@ -29,10 +29,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-#include "squid.h"
-
 #define CLEAN_BUF_SZ 16384
 
+#include "squid.h"
+#include "cache_cf.h"
+#include "disk.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "FileMap.h"
@@ -42,6 +43,7 @@
 #include "RebuildState.h"
 #include "SquidMath.h"
 #include "DiskIO/DiskIOStrategy.h"
+#include "store_key_md5.h"
 #include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
 #include "SquidTime.h"

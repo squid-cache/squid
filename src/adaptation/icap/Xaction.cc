@@ -21,6 +21,7 @@
 #include "HttpRequest.h"
 #include "icap_log.h"
 #include "ipcache.h"
+#include "Mem.h"
 #include "pconn.h"
 #include "protos.h"
 #include "SquidTime.h"

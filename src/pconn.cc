@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "mgr/Registration.h"

@@ -33,8 +33,10 @@
  */
 
 #include "squid.h"
+#include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "ConfigOption.h"
+#include "Parsing.h"
 #include "protos.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"

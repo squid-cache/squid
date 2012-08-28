@@ -34,11 +34,14 @@
  */
 
 #include "squid.h"
+#include "disk.h"
 #include "fde.h"
 #include "globals.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "protos.h"

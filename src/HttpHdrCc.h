@@ -178,6 +178,14 @@ public:
 
 MEMPROXY_CLASS_INLINE(HttpHdrCc);
 
+class StatHist;
+class StoreEntry;
+
+extern void httpHdrCcInitModule(void);
+extern void httpHdrCcCleanModule(void);
+extern void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
+extern void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+
 #if _USE_INLINE_
 #include "HttpHdrCc.cci"
 #endif

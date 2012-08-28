@@ -35,16 +35,21 @@
 
 #include "squid.h"
 #if USE_CACHE_DIGESTS
+#include "CacheDigest.h"
 #include "event.h"
 #include "forward.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "internal.h"
 #include "MemObject.h"
+#include "neighbors.h"
 #include "PeerDigest.h"
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "store_key_md5.h"
 #include "StoreClient.h"
+#include "tools.h"
 
 /* local types */
 

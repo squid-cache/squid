@@ -46,6 +46,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "URL.h"
 
 typedef enum {
     rcHTTP,

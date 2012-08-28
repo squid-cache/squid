@@ -40,6 +40,7 @@
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "fde.h"
+#include "fqdncache.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "helper.h"

@@ -20,11 +20,13 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
+#include "HttpHeaderTools.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "protos.h"
 #include "SquidTime.h"
+#include "URL.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network

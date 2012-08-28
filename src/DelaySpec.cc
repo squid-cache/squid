@@ -40,6 +40,7 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
+#include "cache_cf.h"
 #include "DelaySpec.h"
 #include "Parsing.h"
 #include "protos.h"

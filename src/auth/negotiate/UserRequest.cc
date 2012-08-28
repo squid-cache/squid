@@ -6,6 +6,7 @@
 #include "client_side.h"
 #include "globals.h"
 #include "helper.h"
+#include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "protos.h"

@@ -6,29 +6,28 @@
 
 #define STUB_API "stub_mem.cc"
 #include "STUB.h"
-/* mem* definitions are still in protos.h */
-#include "protos.h"
+#include "Mem.h"
 
-extern "C" void
+void
 memFreeString(size_t size, void *buf)
 {
     xfree(buf);
 }
 
-extern "C" void *
+void *
 memAllocString(size_t net_size, size_t * gross_size)
 {
     *gross_size=net_size;
     return xmalloc(net_size);
 }
 
-extern "C" void
+void
 memFreeBuf(size_t size, void *buf)
 {
     xfree(buf);
 }
 
-extern "C" void *
+void *
 memAllocBuf(size_t net_size, size_t * gross_size)
 {
     *gross_size=net_size;
@@ -38,7 +37,7 @@ memAllocBuf(size_t net_size, size_t * gross_size)
 /* net_size is the new size, *gross size is the old gross size, to be changed to
  * the new gross size as a side-effect.
  */
-extern "C" void *
+void *
 memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
 {
     void *rv=xrealloc(oldbuf,net_size);

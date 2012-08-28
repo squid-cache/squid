@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "HelperChildConfig.h"
 #include "globals.h"

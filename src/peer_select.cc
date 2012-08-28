@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "carp.h"
 #include "client_side.h"
 #include "DnsLookupDetails.h"
 #include "errorpage.h"
@@ -45,6 +46,10 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ipcache.h"
+#include "Mem.h"
+#include "neighbors.h"
+#include "peer_sourcehash.h"
+#include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "protos.h"
 #include "SquidTime.h"

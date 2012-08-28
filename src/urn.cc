@@ -45,6 +45,7 @@
 #include "SquidTime.h"
 #include "icmp/net_db.h"
 #include "protos.h"
+#include "URL.h"
 
 #define	URN_REQBUF_SZ	4096
 

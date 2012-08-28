@@ -48,6 +48,7 @@
 #include "compat/cmsg.h"
 #include "DescriptorSet.h"
 #include "event.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "icmp/net_db.h"
