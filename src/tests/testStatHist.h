@@ -7,7 +7,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-
 class testStatHist : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testStatHist );

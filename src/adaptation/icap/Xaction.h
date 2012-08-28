@@ -193,7 +193,6 @@ private:
     //CBDATA_CLASS2(Xaction);
 };
 
-
 } // namespace Icap
 } // namespace Adaptation
 

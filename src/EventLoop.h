@@ -110,5 +110,4 @@ private:
     bool runOnceResult; /**< the result from runOnce */
 };
 
-
 #endif /* SQUID_EVENTLOOP_H */

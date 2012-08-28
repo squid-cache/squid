@@ -112,7 +112,6 @@ new_heap(int initSize, heap_key_func gen_key)
     return hp;
 }
 
-
 /*
  * Free memory used by a heap.  Does not free the metadata pointed to by the
  * heap nodes, only the heap's internal memory.
@@ -158,7 +157,6 @@ heap_insert(heap * hp, void *dat)
 
     return elm;
 }
-
 
 /*
  * Delete ELM while maintaining the heap property. ELM may be modified.
@@ -207,7 +205,6 @@ heap_gen_key(heap * hp, heap_t dat)
 }
 #endif /* heap_gen_key */
 
-
 /*
  * Returns the data of the node with the largest KEY value and removes that
  * node from the heap.  Returns NULL if the heap was empty.
@@ -230,7 +227,6 @@ heap_extractmin(heap * hp)
     return data;
 }
 
-
 /*
  * Remove the last node in HP.  Frees the heap internal structure and
  * returns the data pointes to by the last node.
@@ -245,7 +241,6 @@ heap_extractlast(heap * hp)
     xfree(hp->nodes[hp->last]);
     return data;
 }
-
 
 /*
  * The semantics of this routine is the same as the followings:
@@ -270,7 +265,6 @@ heap_update(heap * hp, heap_node * elm, void *dat)
     return old;
 }
 
-
 /*
  * A pointer to the root node's DATA.
  */
@@ -280,7 +274,6 @@ heap_peepmin(heap * hp)
     assert(_heap_node_exist(hp, 0));
     return hp->nodes[0]->data;
 }
-
 
 /*
  * The KEY of the root node.
@@ -292,7 +285,6 @@ heap_peepminkey(heap * hp)
     return hp->nodes[0]->key;
 }
 
-
 /*
  * Same as heap_peep except that this return the KEY of the node.
  * Only meant for iteration.
@@ -303,7 +295,6 @@ heap_peepkey(heap * hp, int n)
     assert(_heap_node_exist(hp, n));
     return hp->nodes[n]->key;
 }
-
 
 /*
  * A pointer to Nth node's DATA. The caller can iterate through HP by
@@ -320,7 +311,6 @@ heap_peep(heap * hp, int n)
     return data;
 }
 
-
 #ifndef	heap_nodes
 /*
  * Current number of nodes in HP.
@@ -331,7 +321,6 @@ heap_nodes(heap * hp)
     return hp->last;
 }
 #endif /* heap_nodes */
-
 
 #ifndef	heap_empty
 /*
@@ -381,7 +370,6 @@ _heap_ify_down(heap * hp, heap_node * elm)
     }
 }
 
-
 /*
  * Maintain the heap property above ELM.  Caller has locked the heap.
  */
@@ -397,7 +385,6 @@ _heap_ify_up(heap * hp, heap_node * elm)
     }
 }
 
-
 /*
  * Swap the position of ELM1 and ELM2 in heap structure. Their IDs are also
  * swapped.
@@ -412,8 +399,6 @@ _heap_swap_element(heap * hp, heap_node * elm1, heap_node * elm2)
     hp->nodes[elm2->id] = elm2;
 }
 
-
-
 #ifdef	NOTDEF
 /*
  * Copy KEY and DATA fields of SRC to DEST. ID field is NOT copied.
@@ -427,7 +412,6 @@ _heap_copy_element(heap_node * src, heap_node * dest)
 
 #endif /* NOTDEF */
 
-
 /*
  * True if HP needs to be grown in size.
  */
@@ -438,7 +422,6 @@ _heap_should_grow(heap * hp)
         return 1;
     return 0;
 }
-
 
 /*
  * Grow HP.
@@ -462,7 +445,6 @@ _heap_grow(heap * hp)
 #endif
     hp->size = newSize;
 }
-
 
 /*
  * True if a node with ID exists in HP.

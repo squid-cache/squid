@@ -54,7 +54,6 @@ void
 BlockingDiskIOModule::shutdown()
 {}
 
-
 DiskIOStrategy*
 BlockingDiskIOModule::createStrategy()
 {

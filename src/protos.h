@@ -43,12 +43,10 @@
 /* for parameters that still need these */
 #include "lookup_t.h"
 
-
 class HttpRequestMethod;
 #if USE_DELAY_POOLS
 class ClientInfo;
 #endif
-
 
 #if USE_FORW_VIA_DB
 extern void fvdbCountVia(const char *key);
@@ -70,7 +68,6 @@ SQUIDCEXTERN void add_http_port(char *portspec);
 extern int xatoi(const char *token);
 extern long xatol(const char *token);
 
-
 /* extra functions from cache_cf.c useful for lib modules */
 SQUIDCEXTERN void parse_int(int *var);
 SQUIDCEXTERN void parse_onoff(int *var);
@@ -78,7 +75,6 @@ SQUIDCEXTERN void parse_eol(char *volatile *var);
 SQUIDCEXTERN void parse_wordlist(wordlist ** list);
 SQUIDCEXTERN void requirePathnameExists(const char *name, const char *path);
 SQUIDCEXTERN void parse_time_t(time_t * var);
-
 
 /* client_side.c - FD related client side routines */
 
@@ -163,7 +159,6 @@ class HttpReply;
 /// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
 
-
 /**
  \defgroup ServerProtocolGopherAPI Server-Side Gopher API
  \ingroup ServerProtocol
@@ -175,7 +170,6 @@ SQUIDCEXTERN void gopherStart(FwdState *);
 /// \ingroup ServerProtocolGopherAPI
 SQUIDCEXTERN int gopherCachable(const HttpRequest *);
 
-
 /**
  \defgroup ServerProtocolWhoisAPI Server-Side WHOIS API
  \ingroup ServerProtocol
@@ -183,7 +177,6 @@ SQUIDCEXTERN int gopherCachable(const HttpRequest *);
 
 /// \ingroup ServerProtocolWhoisAPI
 SQUIDCEXTERN void whoisStart(FwdState *);
-
 
 /* http.c */
 /* for http_hdr_type field */
@@ -222,7 +215,6 @@ SQUIDCEXTERN int strListGetItem(const String * str, char del, const char **item,
 SQUIDCEXTERN const char *getStringPrefix(const char *str, const char *end);
 SQUIDCEXTERN int httpHeaderParseInt(const char *start, int *val);
 SQUIDCEXTERN void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
-
 
 /* Http Header */
 SQUIDCEXTERN void httpHeaderInitModule(void);
@@ -357,7 +349,6 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-
 extern void start_announce(void *unused);
 extern void waisStart(FwdState *);
 
@@ -395,7 +386,6 @@ SQUIDCEXTERN int memInUse(mem_type);
 SQUIDCEXTERN void memDataInit(mem_type, const char *, size_t, int, bool zeroOnPush = true);
 SQUIDCEXTERN void memCheckInit(void);
 
-
 /* Mem */
 SQUIDCEXTERN void memConfigure(void);
 
@@ -411,7 +401,6 @@ extern void storeLog(int tag, const StoreEntry * e);
 extern void storeLogRotate(void);
 extern void storeLogClose(void);
 extern void storeLogOpen(void);
-
 
 /*
  * store_key_*.c
@@ -455,7 +444,6 @@ extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, s
 /// checks whether the loaded entry should be kept; updates counters
 extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
 
-
 /*
  * store_swapin.c
  */
@@ -471,7 +459,6 @@ SQUIDCEXTERN int storeUnregister(store_client * sc, StoreEntry * e, void *data)
 ;
 SQUIDCEXTERN int storePendingNClients(const StoreEntry * e);
 SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
-
 
 SQUIDCEXTERN const char *getMyHostname(void);
 SQUIDCEXTERN const char *uniqueHostname(void);
@@ -581,7 +568,6 @@ SQUIDCEXTERN void setUmask(mode_t mask);
 
 SQUIDCEXTERN char *strwordtok(char *buf, char **t);
 SQUIDCEXTERN void strwordquote(MemBuf * mb, const char *str);
-
 
 /*
  * ipc.c

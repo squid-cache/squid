@@ -15,7 +15,6 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
-
 /**
  * Returns the TOS value that we should be setting on the connection
  * to the server, based on the ACL.
@@ -27,7 +26,6 @@ tos_t GetTosToServer(HttpRequest * request);
  * connection to the server, based on the ACL.
  */
 nfmark_t GetNfmarkToServer(HttpRequest * request);
-
 
 class FwdState : public RefCountable
 {

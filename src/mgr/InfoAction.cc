@@ -21,7 +21,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-
 extern void GetInfo(Mgr::InfoActionData& stats);
 extern void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
 extern void DumpMallocStatistics(StoreEntry* sentry);

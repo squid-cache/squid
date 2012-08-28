@@ -9,7 +9,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
 /* O_NONBLOCK requires <fcntl.h> to be included first */
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -19,8 +18,6 @@
  * We assume O_NONBLOCK is broken, or does not exist, on SunOS.
  */
 #define SQUID_NONBLOCK O_NDELAY
-
-
 
 #endif /* _SQUID_SUNOS_ */
 #endif /* SQUID_OS_SUNOS_H */

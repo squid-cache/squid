@@ -148,7 +148,6 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
     }
 }
 
-
 /*
  * acl_ip_data::NetworkCompare - Compare two acl_ip_data entries.  Strictly
  * used by the splay insertion routine.  It emits a warning if it

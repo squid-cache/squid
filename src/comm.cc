@@ -212,7 +212,6 @@ comm_empty_os_read_buffers(int fd)
 #endif
 }
 
-
 /**
  * Return whether the FD has a pending completed callback.
  * NP: does not work.
@@ -322,7 +321,6 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
     Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
-
 /**
  * synchronous wrapper around udp socket functions
  */
@@ -360,7 +358,6 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
     return send(s, buf, len, flags);
 }
-
 
 bool
 comm_has_incomplete_write(int fd)
@@ -1157,7 +1154,6 @@ _comm_close(int fd, char const *file, int line)
 
     comm_empty_os_read_buffers(fd);
 
-
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
                                     FdeCbPtrFun(comm_close_complete, NULL));
     FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
@@ -1234,7 +1230,6 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 
     fd_table[fd].closeHandler = call;
 }
-
 
 // remove function-based close handler
 void
@@ -1932,7 +1927,6 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, c
     // continue waiting for close or error
     commPlanHalfClosedCheck(); // make sure this fd will be checked again
 }
-
 
 CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}
 

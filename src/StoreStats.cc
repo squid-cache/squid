@@ -9,7 +9,6 @@
 #include "protos.h" /* for xmemset only */
 #include "StoreStats.h"
 
-
 /* StoreInfoStats */
 
 StoreInfoStats::StoreInfoStats()
@@ -50,8 +49,6 @@ StoreInfoStats::operator +=(const StoreInfoStats &stats)
 
     return *this;
 }
-
-
 
 /* StoreIoStats */
 

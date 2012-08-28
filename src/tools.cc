@@ -311,7 +311,6 @@ rusage_pagefaults(struct rusage *r)
 #endif
 }
 
-
 void
 PrintRusage(void)
 {
@@ -327,7 +326,6 @@ PrintRusage(void)
     fprintf(debug_log, "Page faults with physical i/o: %d\n",
             rusage_pagefaults(&rusage));
 }
-
 
 void
 death(int sig)
@@ -512,7 +510,6 @@ fatalf(const char *fmt,...)
     fatalvf(fmt, args);
     va_end(args);
 }
-
 
 /* used by fatalf */
 static void
@@ -933,7 +930,6 @@ writePidFile(void)
     FD_WRITE_METHOD(fd, buf, strlen(buf));
     file_close(fd);
 }
-
 
 pid_t
 readPidFile(void)

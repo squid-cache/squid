@@ -1951,7 +1951,6 @@ FtpStateData::loginFailed()
     if (reply)
         err->ftp.reply = xstrdup(reply);
 
-
     HttpReply *newrep = err->BuildHttpReply();
     delete err;
 
@@ -3295,7 +3294,6 @@ FtpStateData::completedListing()
     entry->flush();
     entry->unlock();
 }
-
 
 /// \ingroup ServerProtocolFTPInternal
 static void

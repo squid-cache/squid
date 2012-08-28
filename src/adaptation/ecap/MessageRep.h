@@ -53,7 +53,6 @@ private:
     HttpMsg &theMessage;   // the message being translated to libecap
 };
 
-
 // Helps translate Squid HttpMsg into libecap::FirstLine (see children).
 class FirstLineRep
 {
@@ -122,7 +121,6 @@ public:
 private:
     HttpReply &theMessage; // the request header being translated to libecap
 };
-
 
 // Translates Squid BodyPipe into libecap::Body.
 class BodyRep: public libecap::Body

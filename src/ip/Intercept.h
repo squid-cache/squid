@@ -85,7 +85,6 @@ public:
      */
     inline void StopInterception(const char *str);
 
-
 private:
 
     /**
@@ -132,7 +131,6 @@ private:
      * \return         Whether successfuly located the new address.
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn, int silent);
-
 
     int transparentActive_;
     int interceptActive_;

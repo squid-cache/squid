@@ -83,7 +83,6 @@
 #include "asn1.h"
 #include "snmp_api_error.h"
 
-
 u_char *
 asn_build_header(u_char * data,	/* IN - ptr to start of object */
                  int *datalength,		/* IN/OUT - # of valid bytes */
@@ -94,7 +93,6 @@ asn_build_header(u_char * data,	/* IN - ptr to start of object */
     /* Truth is 0 'cause we don't know yet */
     return (asn_build_header_with_truth(data, datalength, type, length, 0));
 }
-
 
 /*
  * asn_parse_int - pulls an int out of an ASN int type.
@@ -453,7 +451,6 @@ asn_build_string(u_char * data, int *datalength,
     return (data + strlength);
 }
 
-
 /*
  * asn_parse_header - interprets the ID and length of the current object.
  *  On entry, datalength is input as the number of valid bytes following
@@ -598,7 +595,6 @@ asn_parse_length(u_char * data, u_int * length)
     *length = (int) lengthbyte;
     return (data + 1);
 }
-
 
 u_char *
 asn_build_length(u_char * data, int *datalength,

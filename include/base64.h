@@ -19,7 +19,6 @@ extern "C" {
     /// \return number of bytes filled in result.
     extern int base64_decode(char *result, unsigned int result_max_size, const char *encoded);
 
-
     // Encoding functions
 
     /// Calculate the buffer size required to hold the encoded form of
@@ -45,7 +44,6 @@ extern "C" {
     // Output is presented in a static buffer which will only remain valid until next call.
     // Ensures a nul-terminated result. Will always return non-NULL.
     extern const char *old_base64_encode(const char *decoded);
-
 
 #ifdef __cplusplus
 }

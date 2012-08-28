@@ -267,7 +267,6 @@ Ipc::StoreMap::freeLocked(Slot &s, bool keepLocked)
            " in map [" << path << ']');
 }
 
-
 /* Ipc::StoreMapSlot */
 
 Ipc::StoreMapSlot::StoreMapSlot(): state(Empty)

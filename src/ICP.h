@@ -89,7 +89,6 @@ inline icp_opcode & operator++ (icp_opcode & aCode)
     return aCode;
 }
 
-
 /**
  \ingroup ServerProtocolICPAPI
  \todo mempool this

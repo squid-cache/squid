@@ -85,7 +85,6 @@ SOFTWARE.
 #include <errno.h>
 #endif
 
-
 /*
  * This is one element of an object identifier with either an integer subidentifier,
  * or a textual string label, or both.
@@ -162,7 +161,6 @@ struct tok {
     int hash;			/* hash of name */
     struct tok *next;		/* pointer to next in hash table */
 };
-
 
 struct tok tokens[] = {
     {"obsolete", sizeof("obsolete") - 1, OBSOLETE},
@@ -259,7 +257,6 @@ init_node_hash(struct node *nodes)
         np = nextp;
     }
 }
-
 
 static void
 print_error(const char *string, const char *token, int type)
@@ -472,7 +469,6 @@ build_tree(struct node *nodes) {
     return tp;
 }
 
-
 /*
  * Parses a token from the file.  The type of the token parsed is returned,
  * and the text is placed in the string pointed to by token.
@@ -612,7 +608,6 @@ getoid(register FILE *fp, register struct subid *SubOid, int length)
         type = get_token(fp, token);
     }
     return count;
-
 
 }
 
@@ -970,7 +965,6 @@ parse_objecttype(register FILE *fp, char *name) {
     }
     return np;
 }
-
 
 /*
  * Parses a mib file and returns a linked list of nodes found in the file.

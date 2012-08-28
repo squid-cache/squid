@@ -21,7 +21,6 @@ void
 IpcIoDiskIOModule::shutdown()
 {}
 
-
 DiskIOStrategy*
 IpcIoDiskIOModule::createStrategy()
 {

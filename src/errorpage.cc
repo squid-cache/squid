@@ -66,7 +66,6 @@
  *   Config.errorDirectory)
  */
 
-
 #if !defined(DEFAULT_SQUID_ERROR_DIR)
 /** Where to look for errors if config path fails.
  \note Please use ./configure --datadir=/path instead of patching

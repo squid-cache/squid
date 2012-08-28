@@ -111,7 +111,6 @@ Adaptation::Ecap::HeaderRep::TranslateHeaderId(const Name &name)
     return HDR_OTHER;
 }
 
-
 /* FirstLineRep */
 
 Adaptation::Ecap::FirstLineRep::FirstLineRep(HttpMsg &aMessage): theMessage(aMessage)
@@ -192,7 +191,6 @@ Adaptation::Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
         return static_cast<AnyP::ProtocolType>(name.hostId());
     return AnyP::PROTO_UNKNOWN;
 }
-
 
 /* RequestHeaderRep */
 
@@ -284,7 +282,6 @@ Adaptation::Ecap::RequestLineRep::protocol(const Name &p)
     FirstLineRep::protocol(p);
 }
 
-
 /* ReplyHeaderRep */
 
 Adaptation::Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
@@ -363,7 +360,6 @@ Adaptation::Ecap::BodyRep::bodySize() const
 {
     return !theBody ? BodySize() : BodySize(theBody->bodySize());
 }
-
 
 /* MessageRep */
 

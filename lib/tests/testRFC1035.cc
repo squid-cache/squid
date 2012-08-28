@@ -77,7 +77,6 @@ void testRFC1035::testBugPacketEndingOnCompressionPtr()
     int res = 0;
     unsigned int off = 0;
 
-
     /* Test the HeaderUnpack function results */
     msg = new rfc1035_message;
     res = rfc1035HeaderUnpack(buf, len, &off, msg);

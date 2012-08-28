@@ -29,5 +29,4 @@ public:
     int busyDestroyedCount;
 };
 
-
 #endif /* HTTPHEADERSTAT_H_ */

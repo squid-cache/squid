@@ -15,7 +15,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testURLScheme );
 
-
 #if 0
 /*
  * We should be able to make an HttpRequestMethod straight from a string.

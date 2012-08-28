@@ -28,7 +28,6 @@
   private: /* dummy typedef so that the macro can still end with ';'*/         \
     typedef int CppUnitDummyTypedefForSemiColonEnding__
 
-
 #endif /* HAVE_UNIQUE_PTR */
 #endif /* HAVE_CPPUNIT_EXTENSIONS_HELPERMACROS_H */
 #endif /* SQUID_COMPAT_CPPUNIT_H */

@@ -87,7 +87,6 @@ private:
     static ErrorDetailsManager *TheDetailsManager;
 };
 
-
 void errorDetailInitialize();
 void errorDetailClean();
 } //namespace Ssl

@@ -85,9 +85,6 @@
 #include "snmp.h"
 #endif
 
-
-
-
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
@@ -623,7 +620,6 @@ parseConfigFile(const char *file_name)
     return err_count;
 }
 
-
 static void
 configDoConfigure(void)
 {
@@ -1094,7 +1090,6 @@ parseBytesLine64(int64_t * bptr, const char *units)
     if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
         self_destruct();
 }
-
 
 static void
 parseBytesLine(size_t * bptr, const char *units)
@@ -3303,7 +3298,6 @@ YesNoNone::operator void*() const
     return option > 0 ? (void*)this : NULL;
 }
 
-
 inline void
 free_YesNoNone(YesNoNone *)
 {
@@ -4247,7 +4241,6 @@ free_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
 }
 #endif /* USE_ADAPTATION */
 
-
 #if ICAP_CLIENT
 
 static void
@@ -4285,7 +4278,6 @@ parse_icap_access_type()
 }
 
 #endif
-
 
 #if USE_ECAP
 

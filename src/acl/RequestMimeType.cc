@@ -43,4 +43,3 @@
 
 template class ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>;
 
-

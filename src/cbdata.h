@@ -276,7 +276,6 @@ extern int cbdataReferenceValid(const void *p);
 /// \ingroup CBDATAAPI
 extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
 
-
 /* cbdata macros */
 #if USE_CBDATA_DEBUG
 #define cbdataAlloc(type)	((type *)cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__))

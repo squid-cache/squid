@@ -152,7 +152,6 @@ rfc3596BuildAAAAQuery(const char *hostname, char *buf, size_t sz, unsigned short
     return rfc3596BuildHostQuery(hostname, buf, sz, qid, query, RFC1035_TYPE_AAAA, edns_sz);
 }
 
-
 /**
  * Builds a message buffer with a QUESTION to lookup PTR records
  * for an address.  Caller must allocate 'buf' which should
@@ -195,7 +194,6 @@ rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned
 
     return rfc3596BuildHostQuery(rev, buf, sz, qid, query, RFC1035_TYPE_PTR, edns_sz);
 }
-
 
 #if DRIVER
 
@@ -252,7 +250,6 @@ main(int argc, char *argv[])
         perror("socket");
         return 1;
     }
-
 
     memset(&S, '\0', sizeof(S));
 

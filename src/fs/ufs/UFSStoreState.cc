@@ -45,7 +45,6 @@
 #include "UFSStrategy.h"
 #include "UFSStoreState.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,UFSStoreState);
 
 void *
@@ -185,7 +184,6 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
     theFile->read(new ReadRequest(buf,aOffset,size));
 }
 
-
 /*
  * DPW 2006-05-24
  * This, the public write interface, places the write request at the end
@@ -210,7 +208,6 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
     queueWrite(buf, size, aOffset, free_func);
     drainWriteQueue();
 }
-
 
 /*
  * DPW 2006-05-24

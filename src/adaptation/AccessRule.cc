@@ -49,7 +49,6 @@ Adaptation::AccessRule::group()
     return FindGroup(groupId);
 }
 
-
 Adaptation::AccessRules &
 Adaptation::AllRules()
 {

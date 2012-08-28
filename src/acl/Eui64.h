@@ -41,7 +41,6 @@ namespace Eui
 class Eui64;
 };
 
-
 /// \ingroup ACLAPI
 class ACLEui64 : public ACL
 {

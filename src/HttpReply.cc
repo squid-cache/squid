@@ -626,7 +626,6 @@ HttpReply::clone() const
     return rep;
 }
 
-
 bool HttpReply::inheritProperties(const HttpMsg *aMsg)
 {
     const HttpReply *aRep = dynamic_cast<const HttpReply*>(aMsg);

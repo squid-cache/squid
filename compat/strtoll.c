@@ -43,7 +43,6 @@
 #include <errno.h>
 #endif
 
-
 #ifndef INT64_MIN
 /* Native 64 bit system without strtoll() */
 #if defined(LONG_MIN) && (SIZEOF_LONG == 8)
@@ -63,7 +62,6 @@
 #define INT64_MAX       9223372036854775807L
 #endif
 #endif
-
 
 /*
  * Convert a string to a int64 integer.

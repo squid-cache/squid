@@ -40,7 +40,6 @@
 #define PVAL(buf,pos) ((unsigned)CVAL(buf,pos))
 #define SCVAL(buf,pos,val) (CVAL(buf,pos) = (val))
 
-
 #if CAREFUL_ALIGNMENT
 #define SVAL(buf,pos) (PVAL(buf,pos)|PVAL(buf,(pos)+1)<<8)
 #define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
@@ -68,7 +67,6 @@
 #define SSVALS(buf,pos,val) SVALS(buf,pos)=((int16)(val))
 #define SIVALS(buf,pos,val) IVALS(buf,pos)=((int32)(val))
 #endif
-
 
 /* now the reverse routines - these are used in nmb packets (mostly) */
 #define SREV(x) ((((x)&0xFF)<<8) | (((x)>>8)&0xFF))

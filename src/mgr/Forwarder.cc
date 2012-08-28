@@ -20,9 +20,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
-
 
 Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams,
                           HttpRequest* aRequest, StoreEntry* anEntry):

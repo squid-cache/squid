@@ -19,7 +19,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-
 Mgr::Action::Action(const Command::Pointer &aCmd): cmd(aCmd)
 {
     Must(cmd != NULL);

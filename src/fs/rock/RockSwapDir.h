@@ -112,7 +112,6 @@ private:
     Vector<SwapDir::DirMap::Owner *> owners;
 };
 
-
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_SWAP_DIR_H */

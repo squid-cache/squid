@@ -192,6 +192,4 @@ private:
     char *browserversion;
 };
 
-
-
 #endif /* SQUID_ESIVARSTATE_H */

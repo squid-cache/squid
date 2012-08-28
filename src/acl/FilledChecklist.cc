@@ -10,9 +10,7 @@
 #include "auth/AclProxyAuth.h"
 #endif
 
-
 CBDATA_CLASS_INIT(ACLFilledChecklist);
-
 
 void *
 ACLFilledChecklist::operator new (size_t size)
@@ -29,7 +27,6 @@ ACLFilledChecklist::operator delete (void *address)
     ACLFilledChecklist *t = static_cast<ACLFilledChecklist *>(address);
     cbdataFree(t);
 }
-
 
 ACLFilledChecklist::ACLFilledChecklist() :
         dst_peer(NULL),
@@ -57,7 +54,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
     rfc931[0] = '\0';
 }
 
-
 ACLFilledChecklist::~ACLFilledChecklist()
 {
     assert (!asyncInProgress());
@@ -79,7 +75,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
 
     debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
 }
-
 
 ConnStateData *
 ACLFilledChecklist::conn() const

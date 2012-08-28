@@ -16,7 +16,6 @@
 #include "ipc/StrandCoords.h"
 #include <map>
 
-
 namespace Ipc
 {
 

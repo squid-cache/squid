@@ -138,7 +138,6 @@ struct squid_radix_node_head {
     struct squid_radix_node rnh_nodes[3];	/* empty tree for common case */
 };
 
-
 SQUIDCEXTERN void squid_rn_init (void);
 
 SQUIDCEXTERN int squid_rn_inithead(struct squid_radix_node_head **, int);

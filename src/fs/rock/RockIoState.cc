@@ -194,7 +194,6 @@ private:
     Rock::IoState::Pointer sio;
 };
 
-
 void
 Rock::IoState::callBack(int errflag)
 {

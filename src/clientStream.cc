@@ -108,7 +108,6 @@
 /// \ingroup ClientStreamInternal
 CBDATA_TYPE(clientStreamNode);
 
-
 /* Local functions */
 static FREE clientStreamFree;
 

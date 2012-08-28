@@ -58,7 +58,6 @@
 // implemented in client_side_reply.cc until sides have a common parent
 extern void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
-
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),
         requestSender(NULL),
 #if USE_ADAPTATION
@@ -126,7 +125,6 @@ ServerStateData::swanSong()
     assert(!adaptedBodySource);
 #endif
 }
-
 
 HttpReply *
 ServerStateData::virginReply()
@@ -309,7 +307,6 @@ ServerStateData::noteBodyProducerAborted(BodyPipe::Pointer bp)
     if (requestBodySource == bp)
         handleRequestBodyProducerAborted();
 }
-
 
 // more origin request body data is available
 void
@@ -812,7 +809,6 @@ ServerStateData::handleAdaptationCompleted()
 
     completeForwarding();
 }
-
 
 // common part of noteAdaptation*Aborted and noteBodyConsumerAborted methods
 void

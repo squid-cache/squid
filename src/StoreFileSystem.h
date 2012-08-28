@@ -146,5 +146,4 @@ private:
 // TODO: Kill this typedef!
 typedef StoreFileSystem storefs_entry_t;
 
-
 #endif /* SQUID_STOREFILESYSTEM_H */

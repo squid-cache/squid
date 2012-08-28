@@ -14,7 +14,6 @@
 /// used to mark a stack slot available for storing free page offsets
 const Ipc::Mem::PageStack::Value Writable = 0;
 
-
 Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize):
         thePoolId(aPoolId), theCapacity(aCapacity), thePageSize(aPageSize),
         theSize(theCapacity),

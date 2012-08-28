@@ -147,8 +147,6 @@ logfile_mod_udp_close(Logfile * lf)
     lf->data = NULL;
 }
 
-
-
 /*
  * This code expects the path to be //host:port
  */

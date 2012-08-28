@@ -85,8 +85,6 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
     return ret;
 }
 
-
-
 ACL *
 ACLHTTPStatus::clone() const
 {
@@ -135,7 +133,6 @@ aclParseHTTPStatusData(const char *t)
 
     return new acl_httpstatus_data(status, INT_MAX);
 }
-
 
 void
 ACLHTTPStatus::parse()

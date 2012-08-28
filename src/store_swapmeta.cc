@@ -94,7 +94,6 @@ storeSwapMetaBuild(StoreEntry * e)
         return NULL;
     }
 
-
     if (objsize >= 0) {
         T = StoreMeta::Add(T, t);
         t = StoreMeta::Factory(STORE_META_OBJSIZE, sizeof(objsize), &objsize);

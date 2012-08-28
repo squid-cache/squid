@@ -242,7 +242,6 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
     *secs = (long)(periodLength * value);
 }
 
-
 /** This function parses the time quota file and stores it
  * in memory.
  */

@@ -34,10 +34,8 @@ public:
         bool shared; ///< whether memory cache is shared among workers
     };
 
-
     StoreInfoStats();
     StoreInfoStats &operator +=(const StoreInfoStats &stats);
-
 
     Swap swap; ///< cache_mem stats
     Mem mem; ///< all cache_dirs stats

@@ -9,7 +9,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
 #if USE_ASYNC_IO
 #define _SQUID_LINUX_THREADS_
 #endif
@@ -21,7 +20,6 @@
 #define res_init  __res_init
 #define HAVE_RES_INIT  HAVE___RES_INIT
 #endif
-
 
 /*
  * sys/capability.h is only needed in Linux apparently.

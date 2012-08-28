@@ -44,7 +44,6 @@
 /* for statfs */
 #include "Store.h"
 
-
 void
 DiskThreadsIOStrategy::init(void)
 {

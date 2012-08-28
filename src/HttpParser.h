@@ -94,5 +94,4 @@ extern int HttpParserRequestLen(HttpParser *hp);
 #define HttpParserRequestLen(hp)        ( (hp)->hdr_end - (hp)->req.start + 1 )
 #endif
 
-
 #endif /*  _SQUID_SRC_HTTPPARSER_H */

@@ -66,7 +66,6 @@ public:
     open, create, close, unlink, read, write, stripe_write;
 };
 
-
 class CacheManager;
 
 #include "StoreFileSystem.h"

@@ -13,7 +13,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequestMethod );
 
-
 /*
  * We should be able to make an HttpRequestMethod straight from a string.
  */

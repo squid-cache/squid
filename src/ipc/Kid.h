@@ -8,7 +8,6 @@
 
 #include "SquidString.h"
 
-
 /// Squid child, including current forked process info and
 /// info persistent across restarts
 class Kid
@@ -85,7 +84,6 @@ private:
     status_type status; ///< exit status of a stopped kid
 };
 
-
 // TODO: processes may not be kids; is there a better place to put this?
 
 /// process kinds
@@ -98,6 +96,5 @@ typedef enum {
 
 /// ProcessKind for the current process
 extern int TheProcessKind;
-
 
 #endif /* SQUID_IPC_KID_H */

@@ -10,7 +10,6 @@
 namespace Adaptation
 {
 
-
 /// collects information about adaptations related to a master transaction
 class History: public RefCountable
 {
