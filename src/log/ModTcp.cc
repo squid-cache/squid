@@ -149,8 +149,6 @@ logfile_mod_tcp_close(Logfile * lf)
     lf->data = NULL;
 }
 
-
-
 /*
  * This code expects the path to be //host:port
  */

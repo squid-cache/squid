@@ -18,7 +18,6 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
-
 /// a libecap Visitor for converting adapter transaction options to HttpHeader
 class OptionsExtractor: public libecap::NamedValueVisitor
 {
@@ -464,7 +463,6 @@ Adaptation::Ecap::XactionRep::updateHistory(HttpMsg *adapted)
         adaptedReq->adaptHistoryImport(*request);
 }
 
-
 void
 Adaptation::Ecap::XactionRep::vbDiscard()
 {
@@ -677,7 +675,6 @@ Adaptation::Ecap::XactionRep::status() const
 
     if (vbProductionFinished)
         buf.append(".", 1);
-
 
     buf.Printf(" A%d", static_cast<int>(proxyingAb));
 

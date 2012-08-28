@@ -36,7 +36,6 @@
 
 // ICAP-related things needed by code unaware of ICAP internals.
 
-
 namespace Adaptation
 {
 namespace Icap
@@ -44,7 +43,6 @@ namespace Icap
 
 extern void InitModule();
 extern void CleanModule();
-
 
 } // namespace Icap
 } // namespace Adaptation

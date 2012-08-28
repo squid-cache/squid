@@ -163,4 +163,3 @@ const char *AsyncJob::status() const
     return buf.content();
 }
 
-

@@ -10,7 +10,6 @@
 
 #include "mgr/Action.h"
 
-
 namespace Mgr
 {
 

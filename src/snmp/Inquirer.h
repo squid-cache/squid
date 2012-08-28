@@ -13,7 +13,6 @@
 #include "snmp/forward.h"
 #include "snmp/Pdu.h"
 
-
 class CommCloseCbParams;
 
 namespace Snmp

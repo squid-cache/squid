@@ -72,7 +72,6 @@ DestinationDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &de
     checklist->matchNonBlocking();
 }
 
-
 int
 ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

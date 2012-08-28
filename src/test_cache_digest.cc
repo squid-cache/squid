@@ -64,7 +64,6 @@ struct _Cache {
     int bad_del_count;		/* #dels with no prior add */
 };
 
-
 typedef struct _CacheEntry {
     const cache_key *key;
 
@@ -240,7 +239,6 @@ cacheEntryDestroy(CacheEntry * e)
     assert(e);
     xfree(e);
 }
-
 
 /* Cache */
 
@@ -501,7 +499,6 @@ accessLogReader(FileIterator * fi)
      * fname, count, method, storeKeyText(entry->key), url, hier); */
     return frOk;
 }
-
 
 static void
 cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)

@@ -74,7 +74,6 @@ extern "C" {
 #define SMI_OPAQUE     (ASN_APPLICATION | 4)	/* OCTET STRING */
 #define SMI_COUNTER64  (ASN_APPLICATION | 6)	/* INTEGER */
 
-
     /* constants for enums for the MIB nodes
      * cachePeerAddressType (InetAddressType / ASN_INTEGER)
      * cacheClientAddressType (InetAddressType / ASN_INTEGER)
@@ -92,7 +91,6 @@ extern "C" {
 #define INETADDRESSTYPE_DNS  16
 
 #endif                          /* INETADDRESSTYPE_ENUMS */
-
 
     /*
      * RFC 1905: Protocol Operations for SNMPv2

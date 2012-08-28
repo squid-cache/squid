@@ -14,7 +14,6 @@
 #include <time.h>
 #endif
 
-
 #define ASCII_DIGIT(c) ((c)-48)
 
 time_t

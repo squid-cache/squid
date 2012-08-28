@@ -1245,7 +1245,6 @@ sslGetUserCertificatePEM(SSL *ssl)
 
     PEM_write_bio_X509(mem, cert);
 
-
     len = BIO_get_mem_data(mem, &ptr);
 
     str = (char *)xmalloc(len + 1);

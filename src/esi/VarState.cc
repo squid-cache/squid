@@ -54,7 +54,6 @@ char const * esiBrowsers[]= {"MSIE",
                              "OTHER"
                             };
 
-
 void
 ESIVarState::Variable::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
@@ -856,7 +855,6 @@ ESIVariableProcessor::~ESIVariableProcessor()
 {
     delete currentFunction;
 }
-
 
 /* XXX FIXME: this should be comma delimited, no? */
 void

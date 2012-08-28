@@ -8,7 +8,6 @@
 
 template class ACLStrategised<hier_code>;
 
-
 int
 ACLHierCodeStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

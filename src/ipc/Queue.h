@@ -254,7 +254,6 @@ private:
     int theLastPopProcessId; ///< the ID of the last process we tried to pop() from
 };
 
-
 // OneToOneUniQueue
 
 template <class Value>
@@ -321,7 +320,6 @@ OneToOneUniQueue::push(const Value &value, QueueReader *const reader)
     return wasEmpty && (!reader || reader->raiseSignal());
 }
 
-
 // OneToOneUniQueues
 
 inline OneToOneUniQueue &
@@ -337,7 +335,6 @@ OneToOneUniQueues::front() const
         reinterpret_cast<const char *>(this) + sizeof(*this);
     return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
-
 
 // FewToFewBiQueue
 

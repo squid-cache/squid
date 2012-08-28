@@ -226,7 +226,6 @@ logfileFlushEvent(void *data)
     eventAdd("logfileFlush", logfileFlushEvent, lf, 1.0, 1);
 }
 
-
 /* External code */
 
 int

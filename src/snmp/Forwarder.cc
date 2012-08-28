@@ -16,9 +16,7 @@
 #include "snmp/Request.h"
 #include "snmp/Response.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);
-
 
 Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
                            const Ip::Address& anAddress):

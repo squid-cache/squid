@@ -44,7 +44,6 @@
 /* for iostats */
 #include "structs.h"
 
-
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
 extern char tmp_error_buf[ERROR_BUF_SZ];

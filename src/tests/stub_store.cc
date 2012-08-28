@@ -9,7 +9,6 @@ void StoreController::maintain() STUB
 #include "RemovalPolicy.h"
 RemovalPolicy * createRemovalPolicy(RemovalPolicySettings * settings) STUB_RETVAL(NULL)
 
-
 #include "Store.h"
 StorePointer Store::CurrentRoot = NULL;
 StoreIoStats store_io_stats;

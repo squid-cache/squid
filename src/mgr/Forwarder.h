@@ -12,7 +12,6 @@
 #include "ipc/Forwarder.h"
 #include "mgr/ActionParams.h"
 
-
 class CommCloseCbParams;
 class HttpRequest;
 class StoreEntry;

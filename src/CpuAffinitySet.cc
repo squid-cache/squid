@@ -18,7 +18,6 @@
 #include <string.h>
 #endif
 
-
 CpuAffinitySet::CpuAffinitySet()
 {
     CPU_ZERO(&theCpuSet);

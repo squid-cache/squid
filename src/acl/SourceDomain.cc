@@ -70,7 +70,6 @@ SourceDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details
     checklist->matchNonBlocking();
 }
 
-
 int
 ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

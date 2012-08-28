@@ -213,5 +213,4 @@ SQUIDCEXTERN void helperStatefulShutdown(statefulhelper * hlp);
 SQUIDCEXTERN void helperStatefulReleaseServer(helper_stateful_server * srv);
 SQUIDCEXTERN void *helperStatefulServerGetData(helper_stateful_server * srv);
 
-
 #endif /* SQUID_HELPER_H */

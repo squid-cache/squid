@@ -162,5 +162,4 @@ extern bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer 
 /** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))
 
-
 #endif /* SQUID_ASYNCCALL_H */

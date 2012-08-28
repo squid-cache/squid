@@ -9,7 +9,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
 /*
  * Syslog facility on AIX requires some portability wrappers
  */
@@ -17,7 +16,6 @@
 #define _XOPEN_EXTENDED_SOURCE
 #define _XOPEN_SOURCE_EXTENDED 1
 #endif
-
 
 #endif /* _SQUID_AIX_ */
 #endif /* SQUID_OS_AIX_H */

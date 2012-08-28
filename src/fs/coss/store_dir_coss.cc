@@ -218,7 +218,6 @@ CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writ
 
     debugs(79, 3, "storeCossWriteMemBufDone: buf " << cossWrite->membuf << ", len " << len);
 
-
     if (errflag) {
         ++ StoreFScoss::GetInstance().stats.stripe_write.fail;
         debugs(79, DBG_IMPORTANT, "storeCossWriteMemBufDone: got failure (" << errflag << ")");
@@ -226,7 +225,6 @@ CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writ
     } else {
         ++ StoreFScoss::GetInstance().stats.stripe_write.success;
     }
-
 
     dlinkDelete(&cossWrite->membuf->node, &membufs);
     cbdataFree(cossWrite->membuf);
@@ -305,7 +303,6 @@ CossSwapDir::getOptionTree() const
         new ConfigOptionAdapter<CossSwapDir>(*const_cast<CossSwapDir *>(this),
                                              &CossSwapDir::optionBlockSizeParse,
                                              &CossSwapDir::optionBlockSizeDump));
-
 
     ConfigOption *ioOptions = NULL;
 
@@ -1036,7 +1033,6 @@ CossSwapDir::parse(int anIndex, char *aPath)
         fatal("COSS cache_dir size exceeds largest offset\n");
     }
 }
-
 
 void
 CossSwapDir::reconfigure()

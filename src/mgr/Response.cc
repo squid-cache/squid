@@ -14,7 +14,6 @@
 #include "mgr/ActionProfile.h"
 #include "mgr/Response.h"
 
-
 Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
         Ipc::Response(aRequestId), action(anAction)
 {

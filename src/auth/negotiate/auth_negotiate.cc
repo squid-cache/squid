@@ -36,7 +36,6 @@
  * They DO NOT perform access control or auditing.
  * See acl.c for access control and client_side.c for auditing */
 
-
 #include "squid.h"
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/Gadgets.h"

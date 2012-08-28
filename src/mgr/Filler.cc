@@ -12,7 +12,6 @@
 #include "mgr/Response.h"
 #include "Store.h"
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Filler);
 
 Mgr::Filler::Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn,

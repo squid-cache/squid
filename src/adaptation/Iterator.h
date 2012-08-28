@@ -66,5 +66,4 @@ protected:
 
 } // namespace Adaptation
 
-
 #endif /* SQUID_ADAPTATION__ITERATOR_H */

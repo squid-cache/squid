@@ -445,7 +445,6 @@ squid_res_setservers(int reset)
 #endif /* HAVE_RES_INIT */
 }
 
-
 /**
  * \ingroup dnsserver
  *

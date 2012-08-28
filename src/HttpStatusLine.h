@@ -79,5 +79,4 @@ SQUIDCEXTERN void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * 
 
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
-
 #endif /* SQUID_HTTPSTATUSLINE_H */

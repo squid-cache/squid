@@ -98,7 +98,6 @@ HeapKeyGen_StoreEntry_LFUDA(void *entry, double heap_age)
     return (double) key;
 }
 
-
 /*
  * Key generation function to implement the GDS-Frequency policy.
  * Similar to Greedy Dual-Size Hits policy, but adds aging of

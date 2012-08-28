@@ -209,7 +209,6 @@ ACL::isProxyAuth() const
     return false;
 }
 
-
 ACLList::ACLList() : op (1), _acl (NULL), next (NULL)
 {}
 
@@ -340,7 +339,6 @@ ACLList::matches (ACLChecklist *checklist) const
     debugs(28, 4, "ACLList::matches: result is true");
     return true;
 }
-
 
 /*********************/
 /* Destroy functions */

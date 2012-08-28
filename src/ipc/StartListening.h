@@ -44,5 +44,4 @@ extern void StartListening(int sock_type, int proto, const Comm::ConnectionPoint
 
 } // namespace Ipc;
 
-
 #endif /* SQUID_IPC_START_LISTENING_H */

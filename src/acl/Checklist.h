@@ -86,7 +86,6 @@ public:
         static NullState _instance;
     };
 
-
 public:
     ACLChecklist();
     virtual ~ACLChecklist();

@@ -88,7 +88,6 @@ private:
     Queue lru_queue; ///< LRU cache index
 };
 
-
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage
 {

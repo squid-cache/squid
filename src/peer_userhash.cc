@@ -84,7 +84,6 @@ peerUserHashInit(void)
     n_userhash_peers = 0;
     /* find out which peers we have */
 
-
     peerUserHashRegisterWithCacheManager();
 
     for (p = Config.peers; p; p = p->next) {

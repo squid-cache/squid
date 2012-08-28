@@ -20,7 +20,6 @@ addSwapDir(TestSwapDirPointer aStore)
     ++Config.cacheSwap.n_configured;
 }
 
-
 void
 testStoreHashIndex::testStats()
 {

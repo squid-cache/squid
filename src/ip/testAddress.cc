@@ -24,7 +24,6 @@
 #include <stdexcept>
 #endif
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
 
 /* so that we don't break POD dependency just for the test */
@@ -154,7 +153,6 @@ testIpAddress::testSockAddr6Constructor()
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in6)) == 0 );
 }
 
-
 void
 testIpAddress::testCopyConstructor()
 {
@@ -173,7 +171,6 @@ testIpAddress::testCopyConstructor()
 
     Ip::Address inIPA(insock);
     Ip::Address outIPA(inIPA);
-
 
     /* test stored values */
     CPPUNIT_ASSERT( !outIPA.IsAnyAddr() );
@@ -734,7 +731,6 @@ testIpAddress::testBugNullingDisplay()
 
     Ip::Address anIPA = "192.168.100.12";
 
-
     /* test stored values */
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
@@ -744,7 +740,6 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
-
 
     /* POKE NtoA display function to see what it is doing */
     anIPA.NtoA(ntoabuf,MAX_IPSTRLEN);
@@ -759,8 +754,6 @@ testIpAddress::testBugNullingDisplay()
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
-
-
     /* POKE ToHostname display function to see what it is doing */
     anIPA.ToHostname(hostbuf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
@@ -773,7 +766,6 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
-
 
     /* POKE ToURL display function to see what it is doing */
     anIPA.ToURL(urlbuf,MAX_IPSTRLEN);

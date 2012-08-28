@@ -5,7 +5,6 @@
  *
  */
 
-
 #include "squid.h"
 #include "comm.h"
 #include "CommCalls.h"
@@ -14,7 +13,6 @@
 
 const char Ipc::coordinatorAddr[] = DEFAULT_STATEDIR "/coordinator.ipc";
 const char Ipc::strandAddrPfx[] = DEFAULT_STATEDIR "/kid";
-
 
 Ipc::Port::Port(const String& aListenAddr):
         UdsOp(aListenAddr)

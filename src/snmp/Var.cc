@@ -14,7 +14,6 @@
 #include <algorithm>
 #endif
 
-
 Snmp::Var::Var()
 {
     init();

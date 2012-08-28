@@ -35,7 +35,6 @@
 #include <stdio.h>
 #include "snmp_api_error.h"
 
-
 /***************************************************************************
  *
  ***************************************************************************/
@@ -61,7 +60,6 @@ static const char *api_errors[17] = {
     "Unable to parse PDU",
     "Packet Error",
     "No Response From Host",
-
 
     "Unknown Error"
 };

@@ -15,7 +15,6 @@
 #include "MemBuf.h"
 #include <algorithm>
 
-
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
 
 Ipc::Inquirer::RequestsMap Ipc::Inquirer::TheRequestsMap;

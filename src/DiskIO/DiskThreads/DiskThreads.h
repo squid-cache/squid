@@ -119,5 +119,4 @@ struct AIOCounts {
 extern AIOCounts squidaio_counts;
 extern dlink_list used_list;
 
-
 #endif

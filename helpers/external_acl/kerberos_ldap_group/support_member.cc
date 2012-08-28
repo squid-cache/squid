@@ -48,7 +48,6 @@ check_memberof(struct main_args *margs, char *user, char *domain)
     struct gdstruct *gr;
     int found = 0;
 
-
     /* Check users domain */
 
     gr = margs->groups;

@@ -129,7 +129,6 @@ aioCancel(int fd)
     }
 }
 
-
 void
 aioWrite(int fd, off_t offset, char *bufp, size_t len, AIOCB * callback, void *callback_data, FREE * free_func)
 {
@@ -157,7 +156,6 @@ aioWrite(int fd, off_t offset, char *bufp, size_t len, AIOCB * callback, void *c
     squidaio_write(fd, bufp, len, offset, seekmode, &ctrlp->result);
     dlinkAdd(ctrlp, &ctrlp->node, &used_list);
 }				/* aioWrite */
-
 
 void
 aioRead(int fd, off_t offset, size_t len, AIOCB * callback, void *callback_data)

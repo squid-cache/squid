@@ -77,7 +77,6 @@
 #define ip_dst daddr
 #endif
 
-
 /* Native Windows port doesn't have netinet support, so we emulate it.
    At this time, Cygwin lacks icmp support in its include files, so we need
    to use the native Windows port definitions.

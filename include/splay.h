@@ -79,7 +79,6 @@ public:
     size_t elements;
 };
 
-
 SQUIDCEXTERN int splayLastResult;
 
 SQUIDCEXTERN splayNode *splay_insert(void *, splayNode *, splayNode::SPLAYCMP *);

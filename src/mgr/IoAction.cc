@@ -14,7 +14,6 @@
 #include "SquidMath.h"
 #include "Store.h"
 
-
 extern void GetIoStats(Mgr::IoActionData& stats);
 extern void DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry);
 

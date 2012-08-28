@@ -248,7 +248,6 @@ static MemAllocator *htcpDetailPool = NULL;
 
 static int old_squid_format = 0;
 
-
 static ssize_t htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff);
 static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
 static htcpDetail *htcpUnpackDetail(char *buf, int sz);

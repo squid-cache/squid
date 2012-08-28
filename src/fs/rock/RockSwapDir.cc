@@ -464,7 +464,6 @@ Rock::SwapDir::addEntry(const int filen, const DbCellHeader &header, const Store
     return false;
 }
 
-
 bool
 Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
@@ -779,7 +778,6 @@ Rock::SwapDir::trackReferences(StoreEntry &e)
         repl->Add(repl, &e, &e.repl);
 }
 
-
 void
 Rock::SwapDir::ignoreReferences(StoreEntry &e)
 {
@@ -827,7 +825,6 @@ Rock::SwapDir::statfs(StoreEntry &e) const
     storeAppendPrintf(&e, "\n");
 
 }
-
 
 namespace Rock
 {

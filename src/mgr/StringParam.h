@@ -13,7 +13,6 @@
 #include "mgr/QueryParam.h"
 #include "SquidString.h"
 
-
 namespace Mgr
 {
 

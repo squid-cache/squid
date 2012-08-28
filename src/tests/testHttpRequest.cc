@@ -8,7 +8,6 @@
 #include "Mem.h"
 #include "protos.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 
 /** wrapper for testing HttpRequest object private and protected functions */

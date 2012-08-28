@@ -44,7 +44,6 @@
 #include "StatCounters.h"
 #include "Store.h"
 
-
 static hash_table *client_table = NULL;
 
 static ClientInfo *clientdbAdd(const Ip::Address &addr);

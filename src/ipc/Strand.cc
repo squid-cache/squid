@@ -32,7 +32,6 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
-
 Ipc::Strand::Strand():
         Port(MakeAddr(strandAddrPfx, KidIdentifier)),
         isRegistered(false)

@@ -5,7 +5,6 @@
 #include <sys/sysctl.h>
 #endif
 
-
 /*
  * Some systems have filesystem-based resources and interpret segment names
  * as file paths. The so-called 'portable' "/name" format does not work well

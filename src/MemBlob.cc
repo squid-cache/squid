@@ -28,7 +28,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-
 #include "squid.h"
 #include "base/TextException.h"
 #include "Debug.h"
@@ -40,10 +39,8 @@
 #include <iostream>
 #endif
 
-
 MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
-
 
 /* MemBlobStats */
 
@@ -62,7 +59,6 @@ MemBlobStats::dump(std::ostream &os) const
     (static_cast<double>(liveBytes)/(live?live:1)) << std::endl;
     return os;
 }
-
 
 /* MemBlob */
 
@@ -133,7 +129,6 @@ MemBlob::append(const char *source, const size_type n)
     }
     ++Stats.append;
 }
-
 
 const MemBlobStats&
 MemBlob::GetStats()

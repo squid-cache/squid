@@ -119,7 +119,6 @@ mime_get_header(const char *mime, const char *name)
     return mime_get_header_field(mime, name, NULL);
 }
 
-
 size_t
 headersEnd(const char *mime, size_t l)
 {

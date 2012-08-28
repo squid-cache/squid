@@ -12,7 +12,6 @@
 #include "ipc/Request.h"
 #include "mgr/ActionParams.h"
 
-
 namespace Mgr
 {
 
@@ -36,7 +35,6 @@ public:
 
     ActionParams params; ///< action name and parameters
 };
-
 
 } // namespace Mgr
 

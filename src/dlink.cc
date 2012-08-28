@@ -7,7 +7,6 @@
 /* dlink are Mem-pooled */
 #include "MemPool.h"
 
-
 dlink_list ClientActiveRequests;
 
 MemAllocator *dlink_node_pool = NULL;

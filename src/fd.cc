@@ -41,7 +41,6 @@
 #include "profiler/Profiler.h"
 #include "SquidTime.h"
 
-
 // Solaris and possibly others lack MSG_NOSIGNAL optimization
 // TODO: move this into compat/? Use a dedicated compat file to avoid dragging
 // sys/types.h and sys/socket.h into the rest of Squid??

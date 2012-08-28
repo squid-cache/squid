@@ -21,7 +21,6 @@ private:
     CBDATA_CLASS2(ReadRequest);
 };
 
-
 /// \ingroup Rock
 class WriteRequest: public ::WriteRequest
 {
@@ -32,7 +31,6 @@ public:
 private:
     CBDATA_CLASS2(WriteRequest);
 };
-
 
 } // namespace Rock
 

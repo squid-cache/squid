@@ -100,7 +100,6 @@ file_open(const char *path, int mode)
     return fd;
 }
 
-
 /* close a disk file. */
 void
 file_close(int fd)
@@ -309,7 +308,6 @@ diskHandleWrite(int fd, void *notused)
                    q << "," << (int) q->buf_offset << ", " << q->len << ", " <<
                    len << " FD " << fd << ")");
 
-
         assert(q->buf_offset <= q->len);
 
         if (q->buf_offset == q->len) {
@@ -360,7 +358,6 @@ diskHandleWrite(int fd, void *notused)
 
     PROF_stop(diskHandleWrite);
 }
-
 
 /* write block to a file */
 /* write back queue. Only one writer at a time. */
@@ -486,7 +483,6 @@ diskHandleRead(int fd, void *data)
 
     PROF_stop(diskHandleRead);
 }
-
 
 /* start read operation */
 /* buffer must be allocated from the caller.

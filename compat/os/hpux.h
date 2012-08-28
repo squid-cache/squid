@@ -9,7 +9,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
 #if !defined(HAVE_GETPAGESIZE)
 #define HAVE_GETPAGESIZE
 #define getpagesize( )   sysconf(_SC_PAGE_SIZE)

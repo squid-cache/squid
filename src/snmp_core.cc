@@ -643,7 +643,6 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     if (mibTreeEntry == mib_tree_last)
         return (Fn);
 
-
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
         *NextLen = CurrentLen;
         *Next = (*mibTreeEntry->instancefunction) (Current, NextLen, mibTreeEntry, &Fn);
@@ -741,7 +740,6 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     *Fn = current->parsefunction;
     return (instance);
 }
-
 
 static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
@@ -1003,7 +1001,6 @@ snmpAddNodeStr(const char *base_str, int o, oid_ParseFn * parsefunction, instanc
     return m;
 }
 
-
 /*
  * Adds a node to the MIB tree structure and adds the appropriate children
  */
@@ -1086,8 +1083,6 @@ snmpSnmplibDebug(int lvl, char *buf)
 {
     debugs(49, lvl, buf);
 }
-
-
 
 /*
    IPv4 address: 10.10.0.9  ==>

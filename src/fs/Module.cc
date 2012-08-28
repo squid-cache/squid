@@ -17,7 +17,6 @@ static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance;
 static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *AufsInstance;
 #endif
 
-
 #if HAVE_FS_DISKD
 static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance;
 #endif
@@ -27,7 +26,6 @@ static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance;
 static Rock::StoreFileSystem *RockInstance = NULL;
 #endif
 
-
 /* TODO: Modify coss code to:
  * (a) remove the StoreFScoss::GetInstance method,
  * (b) declare the StoreFScoss::stats  as static and
@@ -36,7 +34,6 @@ static Rock::StoreFileSystem *RockInstance = NULL;
 #if HAVE_FS_COSS
 StoreFScoss &CossInstance = StoreFScoss::GetInstance();
 #endif
-
 
 void Fs::Init()
 {
@@ -49,7 +46,6 @@ void Fs::Init()
     AufsInstance = new Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir>("DiskThreads", "aufs");;
 #endif
 
-
 #if HAVE_FS_DISKD
     DiskdInstance = new Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir>("DiskDaemon", "diskd");;
 #endif
@@ -60,7 +56,6 @@ void Fs::Init()
 
 }
 
-
 void Fs::Clean()
 {
 #if HAVE_FS_UFS
@@ -70,7 +65,6 @@ void Fs::Clean()
 #if HAVE_FS_AUFS
     delete AufsInstance;
 #endif
-
 
 #if HAVE_FS_DISKD
     delete DiskdInstance;

@@ -15,7 +15,6 @@
  * squid.h at the top line of your .cc file.
  */
 
-
 /******************************************************/
 /* Define the _SQUID_TYPE_ based on a guess of the OS */
 /* NP: this MUST come first within compat.h           */
@@ -35,14 +34,11 @@
 #endif
 #endif
 
-
-
 /*****************************************************/
 /* FDSETSIZE is messy and needs to be done before    */
 /* sys/types.h are defined.                          */
 /*****************************************************/
 #include "compat/fdsetsize.h"
-
 
 /*****************************************************/
 /* Global type re-definitions                        */
@@ -76,7 +72,6 @@
 #include "compat/os/sunos.h"
 #include "compat/os/windows.h"
 
-
 /*****************************************************/
 /* portabilities shared between all platforms and    */
 /* components as found to be needed                  */
@@ -88,7 +83,6 @@
 
 /* cstdio has a bunch of problems with 64-bit definitions */
 #include "compat/stdio.h"
-
 
 /*****************************************************/
 /* component-specific portabilities                  */

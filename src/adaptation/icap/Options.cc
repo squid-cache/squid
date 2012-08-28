@@ -155,7 +155,6 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
     list.report(5, "Adaptation::Icap::Options::cfgTransferList: ");
 }
 
-
 /* Adaptation::Icap::Options::TransferList */
 
 Adaptation::Icap::Options::TransferList::TransferList(): extensions(NULL), name(NULL),

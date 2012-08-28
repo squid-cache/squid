@@ -347,7 +347,6 @@ hash_get_bucket(hash_table * hid, unsigned int bucket)
     return (hid->buckets[bucket]);
 }
 
-
 void
 hashFreeMemory(hash_table * hid)
 {
@@ -356,7 +355,6 @@ hashFreeMemory(hash_table * hid)
     if (hid)
         free(hid);
 }
-
 
 #if USE_HASH_DRIVER
 /*
@@ -410,7 +408,6 @@ main(void)
                walker->item);
     }
     printf("done walking hash table...\n");
-
 
     printf("driver finished.\n");
     exit(0);

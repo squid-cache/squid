@@ -37,7 +37,6 @@ CommCommonCbParams::print(std::ostream &os) const
         os << ", data=" << data;
 }
 
-
 /* CommAcceptCbParams */
 
 CommAcceptCbParams::CommAcceptCbParams(void *aData):
@@ -83,7 +82,6 @@ CommIoCbParams::syncWithComm()
     return true; // now we are in sync and can handle the call
 }
 
-
 void
 CommIoCbParams::print(std::ostream &os) const
 {
@@ -93,7 +91,6 @@ CommIoCbParams::print(std::ostream &os) const
         os << ", buf=" << (void*)buf;
     }
 }
-
 
 /* CommCloseCbParams */
 
@@ -145,7 +142,6 @@ CommAcceptCbPtrFun::print(std::ostream &os) const
     os << ')';
 }
 
-
 /* CommConnectCbPtrFun */
 
 CommConnectCbPtrFun::CommConnectCbPtrFun(CNCB *aHandler,
@@ -169,7 +165,6 @@ CommConnectCbPtrFun::print(std::ostream &os) const
     os << ')';
 }
 
-
 /* CommIoCbPtrFun */
 
 CommIoCbPtrFun::CommIoCbPtrFun(IOCB *aHandler, const CommIoCbParams &aParams):
@@ -191,7 +186,6 @@ CommIoCbPtrFun::print(std::ostream &os) const
     params.print(os);
     os << ')';
 }
-
 
 /* CommCloseCbPtrFun */
 

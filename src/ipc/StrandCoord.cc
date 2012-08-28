@@ -5,13 +5,11 @@
  *
  */
 
-
 #include "squid.h"
 #include "Debug.h"
 #include "ipc/Messages.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
-
 
 Ipc::StrandCoord::StrandCoord(): kidId(-1), pid(0)
 {
@@ -35,7 +33,6 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putPod(pid);
     hdrMsg.putString(tag);
 }
-
 
 Ipc::HereIamMessage::HereIamMessage(const StrandCoord &aStrand):
         strand(aStrand)

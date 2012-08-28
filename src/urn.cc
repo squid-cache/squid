@@ -64,7 +64,6 @@ public:
 
     virtual ~UrnState();
 
-
     StoreEntry *entry;
     store_client *sc;
     StoreEntry *urlres_e;

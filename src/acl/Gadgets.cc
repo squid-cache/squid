@@ -49,7 +49,6 @@
 #include "HttpRequest.h"
 #include "protos.h"
 
-
 /* does name lookup, returns page_id */
 err_type
 aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed)
@@ -98,7 +97,6 @@ aclIsProxyAuth(const char *name)
     debugs(28, 3, "aclIsProxyAuth: WARNING, called for nonexistent ACL");
     return false;
 }
-
 
 /* maex@space.net (05.09.96)
  *    get the info for redirecting "access denied" to info pages
@@ -234,8 +232,6 @@ aclParseAclList(ConfigParser &parser, ACLList ** head)
         Tail = &L->next;
     }
 }
-
-
 
 /*********************/
 /* Destroy functions */

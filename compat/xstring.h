@@ -49,7 +49,6 @@ extern "C" {
 #endif
 #define strndup(X) xstrndup((X))
 
-
 #ifdef __cplusplus
 }
 #endif

@@ -13,7 +13,6 @@
 #include "mgr/QueryParam.h"
 #include <vector>
 
-
 namespace Mgr
 {
 

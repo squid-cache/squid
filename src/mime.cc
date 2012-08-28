@@ -172,7 +172,6 @@ MimeIcon::_free()
     safe_free (url);
 }
 
-
 char const *
 mimeGetIcon(const char *fn)
 {

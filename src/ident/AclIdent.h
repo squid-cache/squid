@@ -52,7 +52,6 @@ private:
     static void LookupDone(const char *ident, void *data);
 };
 
-
 #include "acl/Acl.h"
 #include "acl/Data.h"
 

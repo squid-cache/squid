@@ -165,7 +165,6 @@ fqdncache_entry::age() const
     return request_time.tv_sec ? tvSubMsec(request_time, current_time) : -1;
 }
 
-
 /**
  \ingroup FQDNCacheInternal
  * Removes the given fqdncache entry
@@ -488,7 +487,6 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
 
 #endif
 
-
 /**
  \ingroup FQDNCacheAPI
  *
@@ -686,7 +684,6 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
     return NULL;
 }
 
-
 /**
  \ingroup FQDNCacheInternal
  *
@@ -872,7 +869,6 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
     fqdncacheAddEntry(fce);
     fqdncacheLockEntry(fce);
 }
-
 
 #if SQUID_SNMP
 /**
