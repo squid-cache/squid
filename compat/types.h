@@ -81,11 +81,9 @@
 #include <netinet/in_systm.h>
 #endif
 
-
 /******************************************************/
 /* Typedefs for missing entries on a system           */
 /******************************************************/
-
 
 /*
  * ISO C99 Standard printf() macros for 64 bit integers

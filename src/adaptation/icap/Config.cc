@@ -33,7 +33,6 @@
  */
 
 #include "squid.h"
-
 #include "ConfigParser.h"
 #include "Store.h"
 #include "Array.h"

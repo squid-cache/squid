@@ -158,7 +158,6 @@ free_hostname_list(struct hstruct **hlist, int nhosts)
         hp[i].host = NULL;
     }
 
-
     if (hp)
         xfree(hp);
     hp = NULL;

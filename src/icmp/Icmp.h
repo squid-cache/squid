@@ -70,7 +70,6 @@ SQUIDCEXTERN int icmp_pkts_sent;
 
 #endif /* USE_ICMP */
 
-
 /**
  * Implements the squid interface to access ICMP operations
  *

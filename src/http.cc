@@ -791,7 +791,6 @@ HttpStateData::proceedAfter1xx()
     CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
 }
 
-
 /**
  * returns true if the peer can support connection pinning
 */
@@ -1388,7 +1387,6 @@ HttpStateData::processReplyBody()
             if (request->flags.spoof_client_ip)
                 client_addr = request->client_addr;
 
-
             if (request->flags.pinned) {
                 ispinned = true;
             } else if (request->flags.connection_auth && request->flags.auth_sent) {
@@ -1835,7 +1833,6 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_UPGRADE:             /** \par Upgrade: */
     case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
-
 
         /** \par OTHER headers I haven't bothered to track down yet. */
 

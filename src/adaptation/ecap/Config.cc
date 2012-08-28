@@ -3,7 +3,6 @@
  * DEBUG: section 93    eCAP Interface
  */
 #include "squid.h"
-
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Config.h"
@@ -39,7 +38,6 @@ Adaptation::Ecap::Config::createService(const ServiceConfigPointer &cfg)
 {
     return new Adaptation::Ecap::ServiceRep(cfg);
 }
-
 
 /* ServiceConfig */
 

@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "structs.h"
-
 #include "ConfigParser.h"
 #include "acl/Gadgets.h"
 #include "adaptation/AccessRule.h"
@@ -49,7 +48,6 @@ Adaptation::AccessRule::group()
 {
     return FindGroup(groupId);
 }
-
 
 Adaptation::AccessRules &
 Adaptation::AllRules()

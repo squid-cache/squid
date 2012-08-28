@@ -78,5 +78,4 @@ extern void SharedListenJoined(const SharedListenResponse &response);
 
 } // namespace Ipc;
 
-
 #endif /* SQUID_IPC_SHARED_LISTEN_H */

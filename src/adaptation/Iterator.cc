@@ -14,7 +14,6 @@
 #include "HttpReply.h"
 #include "HttpMsg.h"
 
-
 Adaptation::Iterator::Iterator(
     HttpMsg *aMsg, HttpRequest *aCause,
     const ServiceGroupPointer &aGroup):

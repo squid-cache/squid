@@ -42,7 +42,6 @@
 #endif /* INT_MAX */
 #endif /* HAVE_STDINT_H */
 
-
 String::String() : size_(0), len_(0), buf_ (NULL)
 {
 #if DEBUGSTRINGS
@@ -86,7 +85,6 @@ String::operator [](unsigned int aPos) const
     return buf_[aPos];
 }
 
-
 /// compare NULL and empty strings because str*cmp() may fail on NULL strings
 /// and because we need to return consistent results for strncmp(count == 0).
 bool
@@ -104,7 +102,6 @@ String::nilCmp(const bool thisIsNilOrEmpty, const bool otherIsNilOrEmpty, int &r
 
     return true;
 }
-
 
 int
 String::cmp (char const *aString) const
@@ -161,7 +158,6 @@ String::caseCmp(const String &str) const
 {
     return caseCmp(str.rawBuf(),str.size());
 }
-
 
 void
 String::set(char const *loc, char const ch)

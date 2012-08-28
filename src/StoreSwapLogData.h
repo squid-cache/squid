@@ -225,5 +225,4 @@ public:
     int32_t record_size;
 };
 
-
 #endif /* SQUID_STORESWAPLOGDATA_H */

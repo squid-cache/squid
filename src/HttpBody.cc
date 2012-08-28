@@ -37,7 +37,6 @@
 #include "HttpBody.h"
 #include "MemBuf.h"
 
-
 HttpBody::HttpBody() : mb(new MemBuf)
 {}
 

@@ -12,7 +12,6 @@
 #include "mgr/forward.h"
 #include "mgr/Action.h"
 
-
 /// store disk daemon stats
 class DiskdActionData
 {

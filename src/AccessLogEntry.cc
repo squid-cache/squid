@@ -10,7 +10,6 @@ AccessLogEntry::SslDetails::SslDetails(): user(NULL), bumpMode(::Ssl::bumpEnd)
 }
 #endif /* USE_SSL */
 
-
 void
 AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
 {

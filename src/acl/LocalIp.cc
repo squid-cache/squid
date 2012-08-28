@@ -49,9 +49,6 @@ ACLLocalIP::match(ACLChecklist *checklist)
     return ACLIP::match (Filled(checklist)->my_addr);
 }
 
-
-
-
 ACL *
 ACLLocalIP::clone() const
 {

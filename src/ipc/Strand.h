@@ -52,8 +52,6 @@ private:
     CBDATA_CLASS2(Strand);
 };
 
-
 }
-
 
 #endif /* SQUID_IPC_STRAND_H */

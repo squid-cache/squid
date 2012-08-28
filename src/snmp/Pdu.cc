@@ -16,7 +16,6 @@
 #include <algorithm>
 #endif
 
-
 Snmp::Pdu::Pdu()
 {
     init();

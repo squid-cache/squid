@@ -67,7 +67,6 @@ struct msghdr {
     int msg_flags;              /* Flags on received message.  */
 };
 
-
 struct iovec {
     void *iov_base;
     size_t iov_len;
@@ -78,7 +77,6 @@ struct sockaddr_un {
 };
 # define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path)        \
         + strlen ((ptr)->sun_path))
-
 
 #endif /* CMSG_SPACE */
 

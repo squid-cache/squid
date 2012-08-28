@@ -58,7 +58,6 @@
  * ICAP transactions.
  */
 
-
 namespace Adaptation
 {
 namespace Icap
@@ -135,6 +134,5 @@ operator <<(std::ostream &os, const XactAbortInfo &xai)
 
 } // namespace Icap
 } // namespace Adaptation
-
 
 #endif /* SQUID_ICAPLAUNCHER_H */

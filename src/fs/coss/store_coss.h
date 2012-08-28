@@ -50,8 +50,6 @@ struct _cossindex {
     dlink_node node;
 };
 
-
-
 /**
  \ingroup COSS
  * Per-storeiostate info
@@ -90,7 +88,6 @@ MEMPROXY_CLASS_INLINE(CossState);
 
 /// \ingroup COSS
 typedef struct _cossindex CossIndexNode;
-
 
 /**
  \ingroup COSS

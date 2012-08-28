@@ -314,7 +314,6 @@ clientReplyContext::processExpired()
     }
 }
 
-
 void
 clientReplyContext::sendClientUpstreamResponse()
 {
@@ -1113,7 +1112,6 @@ clientReplyContext::storeNotOKTransferDone() const
     }
 }
 
-
 /* A write has completed, what is the next status based on the
  * canonical request data?
  * 1 something is wrong
@@ -1533,7 +1531,6 @@ clientReplyContext::buildReplyHeader()
     httpHdrMangleList(hdr, request, ROR_REPLY);
 }
 
-
 void
 clientReplyContext::cloneReply()
 {
@@ -1691,7 +1688,6 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
     clientReplyContext *context = dynamic_cast<clientReplyContext *>(aNode->data.getRaw());
     assert (context);
     assert(context->http == http);
-
 
     clientStreamNode *next = ( clientStreamNode *)aNode->node.next->data;
 
@@ -2000,7 +1996,6 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 
         startError(err);
 
-
         return;
     }
 
@@ -2159,8 +2154,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     processReplyAccess();
     return;
 }
-
-
 
 /* Using this breaks the client layering just a little!
  */

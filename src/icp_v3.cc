@@ -105,7 +105,6 @@ ICP3State::created(StoreEntry *newEntry)
     delete this;
 }
 
-
 /// \ingroup ServerProtocolICPInternal3
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
 void

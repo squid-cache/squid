@@ -65,7 +65,6 @@ public:
 
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
 
-
     ACLExternal(char const *);
     ACLExternal(ACLExternal const &);
     ~ACLExternal();

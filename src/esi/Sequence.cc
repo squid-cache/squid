@@ -120,7 +120,6 @@ esiSequence::finish()
     parent = NULL;
 }
 
-
 void
 esiSequence::provideData (ESISegment::Pointer data, ESIElement *source)
 {
@@ -129,7 +128,6 @@ esiSequence::provideData (ESISegment::Pointer data, ESIElement *source)
     if (processing)
         debugs(86, 5, "esiSequence::provideData: " << this << " data provided during processing");
     debugs(86, 5, "esiSequence::provideData " << this << " " << data.getRaw() << " " << source);
-
 
     /* when data is provided, the element *must* be completed */
     /* XXX: when the callback model is complete,

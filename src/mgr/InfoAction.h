@@ -12,7 +12,6 @@
 #include "StoreStats.h"
 #include <sys/time.h>
 
-
 namespace Mgr
 {
 

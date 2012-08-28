@@ -14,7 +14,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-
 extern void GetCountersStats(Mgr::CountersActionData& stats);
 extern void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);
 

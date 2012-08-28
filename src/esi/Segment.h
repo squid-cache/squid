@@ -60,7 +60,6 @@ public:
     void adsorbList (ESISegment::Pointer from);
     size_t space() const;
 
-
     char buf[HTTP_REQBUF_SZ];
     size_t len; /* how much data has been pushed into this */
     Pointer next;

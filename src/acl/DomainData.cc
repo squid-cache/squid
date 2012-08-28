@@ -83,7 +83,6 @@ aclHostDomainCompare( char *const &a, char * const &b)
     return matchDomainName(h, d);
 }
 
-
 /* compare two domains */
 
 template<class T>
@@ -168,7 +167,6 @@ ACLDomainData::empty() const
 {
     return domains->empty();
 }
-
 
 ACLData<char const *> *
 ACLDomainData::clone() const

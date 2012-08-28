@@ -85,7 +85,6 @@ static int berEncodePasswordData(
     const char    * utf8Pwd2Ptr = NULL;
     int     utf8Pwd2Size = 0;
 
-
     /* Convert objectDN and tag strings from Unicode to UTF-8 */
     utf8ObjSize = strlen(objectDN)+1;
     utf8ObjPtr = objectDN;
@@ -392,7 +391,6 @@ static int nmasldap_get_simple_pwd(
 
     return err;
 }
-
 
 /**********************************************************************
  Attempts to get the Universal Password

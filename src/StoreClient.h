@@ -129,5 +129,4 @@ private:
 
 SQUIDCEXTERN void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
 
-
 #endif /* SQUID_STORECLIENT_H */

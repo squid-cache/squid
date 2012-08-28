@@ -15,7 +15,6 @@
 #include <regex.h>
 #endif
 
-
 #else  /* USE_GNUREGEX */
 
 #ifdef __cplusplus
@@ -144,7 +143,6 @@ extern "C" {
      * If not set, then an unmatched ) is invalid.  */
 #define RE_UNMATCHED_RIGHT_PAREN_ORD (RE_NO_EMPTY_RANGES << 1)
 
-    
     /* Define combinations of the above bits for the standard possibilities.
      * (The [[[ comments delimit what gets put into the Texinfo file, so
      * don't delete them!)  */
@@ -216,7 +214,6 @@ extern "C" {
 #endif
 #define RE_DUP_MAX ((1 << 15) - 1)
 
-
     /* POSIX `cflags' bits (i.e., information for `regcomp').  */
 
     /* If this bit is set, then use extended regular expression syntax.
@@ -236,7 +233,6 @@ extern "C" {
      * If not set, then returns differ between not matching and errors.  */
 #define REG_NOSUB (REG_NEWLINE << 1)
 
-
     /* POSIX `eflags' bits (i.e., information for regexec).  */
 
     /* If this bit is set, then the beginning-of-line operator doesn't match
@@ -248,7 +244,6 @@ extern "C" {
 
     /* Like REG_NOTBOL, except for the end-of-line.  */
 #define REG_NOTEOL (1 << 1)
-
 
     /* If any error codes are removed, changed, or added, update the
      * `re_error_msg' table in regex.c.  */
@@ -352,14 +347,12 @@ extern "C" {
 
     typedef struct re_pattern_buffer regex_t;
 
-
     /* search.c (search_buffer) in Emacs needs this one opcode value.  It is
      * defined both in `regex.c' and here.  */
 #define RE_EXACTN_VALUE 1
     
     /* Type for byte offsets within the string.  POSIX mandates this.  */
     typedef int regoff_t;
-
 
     /* This is the structure we store register match data in.  See
      * regex.texinfo for a full description of what registers match.  */
@@ -369,14 +362,12 @@ extern "C" {
         regoff_t *end;
     };
 
-
     /* If `regs_allocated' is REGS_UNALLOCATED in the pattern buffer,
      * `re_match_2' returns information about at least this many registers
      * the first time a `regs' structure is passed.  */
 #ifndef RE_NREGS
 #define RE_NREGS 30
 #endif
-
 
     /* POSIX specification for registers.  Aside from the different names than
      * `re_registers', POSIX uses an array of structures, instead of a

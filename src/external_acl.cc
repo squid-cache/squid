@@ -670,7 +670,6 @@ external_acl::trimCache()
         external_acl_cache_delete(this, static_cast<external_acl_entry *>(lru_list.tail->data));
 }
 
-
 /******************************************************************
  * external acl type
  */

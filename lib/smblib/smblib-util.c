@@ -74,7 +74,6 @@ void SMB_Print_Pkt(FILE fd, RFCNB_Pkt *pkt, BOOL command, int Offset, int Len)
 
     /* Print the other bits in the header                  */
 
-
     /* etc                                                 */
 
 }
@@ -223,7 +222,6 @@ int SMB_Figure_Protocol(const char *dialects[], int prot_index)
 
 }
 
-
 /* Negotiate the protocol we will use from the list passed in Prots       */
 /* we return the index of the accepted protocol in NegProt, -1 indicates  */
 /* none acceptible, and our return value is 0 if ok, <0 if problems       */
@@ -302,7 +300,6 @@ int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[])
     /* Now send the packet and sit back ... */
 
     if (RFCNB_Send(Con_Handle -> Trans_Connect, pkt, pkt_len) < 0) {
-
 
 #ifdef DEBUG
         fprintf(stderr, "Error sending negotiate protocol\n");

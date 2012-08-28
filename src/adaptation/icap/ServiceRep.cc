@@ -295,7 +295,6 @@ bool Adaptation::Icap::ServiceRep::availableForOld() const
     return (available != 0); // it is -1 (no limit) or has available slots
 }
 
-
 bool Adaptation::Icap::ServiceRep::wantsUrl(const String &urlPath) const
 {
     Must(hasOptions());
@@ -330,7 +329,6 @@ bool Adaptation::Icap::ServiceRep::allows206() const
         return true; // in the future, we may have ACLs to prevent 206s
     return false;
 }
-
 
 static
 void ServiceRep_noteTimeToUpdate(void *data)
@@ -491,7 +489,6 @@ void Adaptation::Icap::ServiceRep::checkOptions()
                    " but OPTIONS response declares the methods are " << method_list);
         }
     }
-
 
     /*
      *  Check the ICAP server's date header for clock skew

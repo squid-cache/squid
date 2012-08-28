@@ -164,7 +164,6 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     icmp6_pktsize = sizeof(struct icmp6_hdr);
 
-
     // Fill Icmp6 ECHO data content
     echo = (icmpEchoData *) (pkt + sizeof(icmp6_hdr));
     echo->opcode = (unsigned char) opcode;
@@ -267,7 +266,6 @@ Icmp6::Recv(void)
     #define ip6_nxt		// expect to be type 0x3a - ICMPv6
     #define ip6_hlim	// MAX hops  (always 64, but no guarantee)
     #define ip6_hops	// HOPS!!!  (can it be true??)
-
 
         ip = (struct ip6_hdr *) pkt;
         pkt += sizeof(ip6_hdr);

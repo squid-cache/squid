@@ -88,7 +88,6 @@ int ssl_write_method(int, const char *, int);
 /// \ingroup ServerProtocolSSLAPI
 void ssl_shutdown_method(SSL *ssl);
 
-
 /// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserEmail(SSL *ssl);
 

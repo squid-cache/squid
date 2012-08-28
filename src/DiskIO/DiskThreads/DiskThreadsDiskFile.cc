@@ -33,7 +33,6 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-
 #include "squid.h"
 #include "disk.h"
 #include "DiskThreadsDiskFile.h"

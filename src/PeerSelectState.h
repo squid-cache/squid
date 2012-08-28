@@ -108,5 +108,4 @@ private:
     CBDATA_CLASS(ps_state);
 };
 
-
 #endif /* SQUID_PEERSELECTSTATE_H */

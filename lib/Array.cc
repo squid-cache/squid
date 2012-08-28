@@ -39,7 +39,6 @@
  *     we do not need such an interface yet.
  */
 
-
 #include "squid.h"
 #include "Array.h"
 

@@ -295,8 +295,6 @@ retrydnattr:
     return NULL;
 }
 
-
-
 static void
 ldapconnect(void)
 {

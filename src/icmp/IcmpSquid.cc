@@ -62,7 +62,6 @@ static pid_t pid;
 
 #endif /* USE_ICMP */
 
-
 IcmpSquid::IcmpSquid() : Icmp()
 {
     ; // nothing new.
@@ -72,7 +71,6 @@ IcmpSquid::~IcmpSquid()
 {
     Close();
 }
-
 
 #if USE_ICMP
 

@@ -102,7 +102,6 @@ bool operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
 
 typedef ESIContext::esiKick_t esiKick_t;
 
-
 /* some core operators */
 
 /* esiComment */
@@ -146,7 +145,6 @@ public:
 CBDATA_TYPE (esiRemove);
 static FREE esiRemoveFree;
 static ESIElement * esiRemoveNew(void);
-
 
 /* esiTry */
 
@@ -271,14 +269,12 @@ bool ESIContext::reading() const
     return reading_;
 }
 
-
 ESIStreamContext::ESIStreamContext() : finished(false), include (NULL), localbuffer (new ESISegment), buffer (NULL)
 {}
 
 /* Local functions */
 /* ESIContext */
 static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, ClientHttpRequest *);
-
 
 void *
 ESIContext::operator new(size_t byteCount)
@@ -487,7 +483,6 @@ esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
         return;
     }
 
-
     if (context->flags.oktosend && context->flags.finished) {
         StoreIOBuffer tempBuffer;
         assert (!context->outbound.getRaw());
@@ -680,7 +675,6 @@ ESIContext::send ()
 
     if (len == 0)
         len = 1; /* tell the caller we sent something (because we sent headers */
-
 
     cbdataReferenceDone (templock);
 
@@ -1456,7 +1450,6 @@ ESIContext::freeResources ()
 
 extern ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
 
-
 /* This can ONLY be used before we have sent *any* data to the client */
 void
 ESIContext::fail ()
@@ -2217,7 +2210,6 @@ esiChoose::provideData (ESISegment::Pointer data, ESIElement*source)
     checkValidSource (source);
     parent->provideData (data, this);
 }
-
 
 esiChoose::esiChoose(esiChoose const &old) : chosenelement(-1), otherwise (NULL), parent (NULL)
 {

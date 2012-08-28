@@ -11,7 +11,6 @@
 #include "protos.h"
 #include "snmp/Session.h"
 
-
 Snmp::Session::Session()
 {
     clear();

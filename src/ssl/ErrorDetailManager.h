@@ -1,14 +1,19 @@
 #ifndef _SQUID_SSL_ERRORDETAILMANAGER_H
 #define _SQUID_SSL_ERRORDETAILMANAGER_H
 
-#include "ssl/support.h"
 #include "ssl/gadgets.h"
+#include "ssl/support.h"
+#include "RefCount.h"
+#include "SquidString.h"
+
 #if HAVE_MAP
 #include <map>
 #endif
 #if HAVE_STRING
 #include <string>
 #endif
+
+class HttpRequest;
 
 namespace Ssl
 {
@@ -81,7 +86,6 @@ private:
     /// An instance of ErrorDetailsManager to be used by squid (ssl/ErrorDetails.*)
     static ErrorDetailsManager *TheDetailsManager;
 };
-
 
 void errorDetailInitialize();
 void errorDetailClean();

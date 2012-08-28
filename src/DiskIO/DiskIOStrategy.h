@@ -33,7 +33,6 @@
 #ifndef SQUID_DISKIOSTRATEGY_H
 #define SQUID_DISKIOSTRATEGY_H
 
-#include "squid.h"
 #include "Store.h"
 #include "RefCount.h"
 

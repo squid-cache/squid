@@ -140,7 +140,6 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     return n;
 }
 
-
 void
 peerSelect(Comm::ConnectionList * paths,
            HttpRequest * request,
@@ -585,7 +584,6 @@ peerGetSomeNeighbor(ps_state * ps)
                    " ICP replies expected, RTT " << ps->ping.timeout <<
                    " msec");
 
-
             if (ps->ping.n_replies_expected > 0) {
                 entry->ping_status = PING_WAITING;
                 eventAdd("peerPingTimeout",
@@ -643,7 +641,6 @@ peerGetSomeNeighborReplies(ps_state * ps)
         peerAddFwdServer(&ps->servers, p, code);
     }
 }
-
 
 /*
  * peerGetSomeDirect

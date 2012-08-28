@@ -81,7 +81,6 @@ private:
 
 extern Config TheConfig;
 
-
 } // namespace Icap
 } // namespace Adaptation
 

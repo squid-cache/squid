@@ -45,7 +45,6 @@
 #include <grp.h>
 #endif
 
-
 struct ip_user_dict {
     unsigned long address; // IP address (assumes IPv4)
     unsigned long netmask; // IP netmask

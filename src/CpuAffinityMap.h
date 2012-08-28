@@ -10,7 +10,6 @@
 
 class CpuAffinitySet;
 
-
 /// stores cpu_affinity_map configuration
 class CpuAffinityMap
 {

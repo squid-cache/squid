@@ -207,7 +207,6 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused,
     MemPools[type]->zeroOnPush(zeroOnPush);
 }
 
-
 /* find appropriate pool and use it (pools always init buffer with 0s) */
 void *
 memAllocate(mem_type type)

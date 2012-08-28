@@ -106,7 +106,6 @@ BlockingFile::create(int flags, mode_t mode, RefCount<IORequestor> callback)
     open(flags, mode, callback);
 }
 
-
 void BlockingFile::doClose()
 {
     if (fd > -1) {

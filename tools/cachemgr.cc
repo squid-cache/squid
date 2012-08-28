@@ -119,7 +119,6 @@ extern "C" {
 }
 #endif
 
-
 #ifndef DEFAULT_CACHEMGR_CONFIG
 #define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"
 #endif
@@ -324,7 +323,6 @@ auth_html(const char *host, int port, const char *user_name)
     printf("<FORM METHOD=\"POST\" ACTION=\"%s\">\n", script_name);
 
     printf("<TABLE BORDER=\"0\" CELLPADDING=\"10\" CELLSPACING=\"1\">\n");
-
 
     if (fp != NULL) {
         int servers = 0;
@@ -1067,7 +1065,6 @@ read_request(void)
           safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action), safe_str(req->workers), safe_str(req->processes));
     return req;
 }
-
 
 /* Routines to support authentication */
 

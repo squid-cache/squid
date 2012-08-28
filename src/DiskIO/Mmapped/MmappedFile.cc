@@ -47,7 +47,6 @@ private:
     void *buf; ///< buffer returned by mmap, needed for munmap
 };
 
-
 void *
 MmappedFile::operator new(size_t sz)
 {

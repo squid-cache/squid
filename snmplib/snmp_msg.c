@@ -88,7 +88,6 @@
 #include "snmp_pdu.h"
 #include "snmp_msg.h"
 
-
 /*
  * RFC 1901: Introduction to Community-based SNMPv2
  *

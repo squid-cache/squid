@@ -32,8 +32,6 @@ InspectingStatHist::operator ==(const InspectingStatHist & src)
     return (memcmp(bins,src.bins,capacity_*sizeof(*bins))==0);
 }
 
-
-
 void
 testStatHist::testStatHistBaseEquality()
 {
@@ -56,7 +54,6 @@ testStatHist::testStatHistBaseAssignment()
     test=raw;
     CPPUNIT_ASSERT(raw==test);
 }
-
 
 void
 testStatHist::testStatHistLog()

@@ -11,7 +11,6 @@
 #include "ipc/forward.h"
 #include "RefCount.h"
 
-
 namespace Ipc
 {
 
@@ -42,7 +41,6 @@ std::ostream& operator << (std::ostream &os, const Response& response)
     os << "[response.requestId %u]" << response.requestId << '}';
     return os;
 }
-
 
 } // namespace Ipc
 

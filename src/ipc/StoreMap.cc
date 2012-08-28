@@ -5,7 +5,6 @@
  */
 
 #include "squid.h"
-
 #include "protos.h"
 #include "Store.h"
 #include "store_key_md5.h"
@@ -268,7 +267,6 @@ Ipc::StoreMap::freeLocked(Slot &s, bool keepLocked)
     debugs(54, 5, HERE << " freed slot at " << (&s - shared->slots) <<
            " in map [" << path << ']');
 }
-
 
 /* Ipc::StoreMapSlot */
 

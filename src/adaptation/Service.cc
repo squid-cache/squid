@@ -51,7 +51,6 @@ Adaptation::Service::wants(const ServiceFilter &filter) const
     return true;
 }
 
-
 Adaptation::Services &
 Adaptation::AllServices()
 {

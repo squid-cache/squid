@@ -53,7 +53,6 @@
  *    entity-length        = 1*DIGIT
  */
 
-
 /* local constants */
 #define range_spec_unknown (-1)
 

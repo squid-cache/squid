@@ -42,7 +42,6 @@ public:
     virtual ~ESIParserClient() {};
 };
 
-
 /* for RefCountable */
 #include "RefCount.h"
 

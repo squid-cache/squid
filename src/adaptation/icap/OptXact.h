@@ -36,7 +36,6 @@
 #include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/Launcher.h"
 
-
 namespace Adaptation
 {
 namespace Icap
@@ -88,7 +87,6 @@ protected:
 private:
     CBDATA_CLASS2(OptXactLauncher);
 };
-
 
 } // namespace Icap
 } // namespace Adaptation

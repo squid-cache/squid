@@ -36,7 +36,6 @@
 
 #define PROGRAM_NAME "digest_ldap_auth"
 
-
 static void
 GetHHA1(RequestData * requestData)
 {

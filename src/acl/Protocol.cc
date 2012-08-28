@@ -43,8 +43,6 @@
 
 template class ACLStrategised<AnyP::ProtocolType>;
 
-
-
 int
 ACLProtocolStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {

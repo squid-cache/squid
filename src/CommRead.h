@@ -86,5 +86,4 @@ private:
     CbDataListContainer<DeferredRead> deferredReads;
 };
 
-
 #endif /* COMMREAD_H */

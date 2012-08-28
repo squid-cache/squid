@@ -74,5 +74,4 @@ private:
     MemBuf *mb;
 };
 
-
 #endif /* HTTPBODY_H_ */

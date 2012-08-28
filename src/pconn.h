@@ -90,7 +90,6 @@ private:
     CBDATA_CLASS2(IdleConnList);
 };
 
-
 #include "ip/forward.h"
 
 class StoreEntry;
@@ -144,7 +143,6 @@ private:
     const char *descr;
     int theCount; ///< the number of pooled connections
 };
-
 
 class StoreEntry;
 class PconnPool;

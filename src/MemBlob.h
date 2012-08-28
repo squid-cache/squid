@@ -53,7 +53,6 @@ public:
     uint64_t liveBytes; ///< the total size of currently allocated storage
 };
 
-
 /** Refcountable, fixed-size, content-agnostic memory buffer.
  *
  * Allocated memory block is divided into two sequential areas:

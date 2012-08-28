@@ -71,7 +71,6 @@ public:
     String log;
 };
 
-
 /*******************************************************************
  * external_acl cache entry
  * Used opaqueue in the interface

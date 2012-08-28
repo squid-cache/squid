@@ -32,7 +32,6 @@ int Adaptation::History::Entry::rptm()
     return theRptm;
 }
 
-
 Adaptation::History::History():
         lastMeta(hoReply),
         allMeta(hoReply),

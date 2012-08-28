@@ -111,8 +111,6 @@ DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &d
     checklist->matchNonBlocking();
 }
 
-
-
 ACL *
 ACLDestinationIP::clone() const
 {

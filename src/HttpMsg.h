@@ -45,7 +45,6 @@
 template <class Msg>
 class HttpMsgPointerT;
 
-
 class HttpMsg
 {
 

@@ -74,10 +74,8 @@ static EVH wccp2AssignBuckets;
 #define	WCCP2_NUMPORTS	8
 #define	WCCP2_PASSWORD_LEN	8
 
-
 /* WCCPv2 Pakcet format structures */
 /* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
-
 
 /** \interface WCCPv2_Protocol
  * Generic header struct
@@ -101,8 +99,6 @@ struct wccp2_item_header_t {
 #define WCCP2_ASSIGN_MAP		14
 #define WCCP2_COMMAND_EXTENSION		15
 
-
-
 /** \interface WCCPv2_Protocol
  * Sect 5.5  WCCP Message Header
  */
@@ -121,7 +117,6 @@ static struct wccp2_message_header_t wccp2_here_i_am_header;
 #define WCCP2_REDIRECT_ASSIGN     12
 #define WCCP2_REMOVAL_QUERY       13
 
-
 /** \interface WCCPv2_Protocol
  * Sect 5.6.1 Security Info Component
  *
@@ -136,7 +131,6 @@ struct wccp2_security_none_t {
 /* security options */
 #define WCCP2_NO_SECURITY		0
 #define WCCP2_MD5_SECURITY		1
-
 
 /** \interface WCCPv2_Protocol
  * Sect 5.6.1 Security Info Component
@@ -192,7 +186,6 @@ struct wccp2_service_info_t {
 #define WCCP2_SERVICE_SRC_PORT_ALT_HASH	0x400
 #define WCCP2_SERVICE_DST_PORT_ALT_HASH	0x800
 
-
 /* TODO the following structures need to be re-defined for correct full operation.
  wccp2_cache_identity_element needs to be merged as a sub-struct of
  wccp2_identity_info_t (identity_type);  which frees up the identifty info
@@ -237,7 +230,6 @@ struct wccp2_mask_element_t {
     uint16_t dest_port_mask;
     uint32_t number_values;
 };
-
 
 /** \interface WCCPv2_Protocol
  * Sect 5.7.2 Web-Cache Identity Element
@@ -349,8 +341,6 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 /* when type=WCCP2_CAPABILITY_RETURN_METHOD */
 #define WCCP2_PACKET_RETURN_METHOD_GRE	WCCP2_METHOD_GRE
 #define WCCP2_PACKET_RETURN_METHOD_L2	WCCP2_METHOD_L2
-
-
 
 /** \interface WCCPv2_Protocol
  * 5.7.8 Value Element
@@ -628,7 +618,6 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
     return 1;
 }
 
-
 /*
  * Check the given WCCP2 packet against the given password.
  */
@@ -680,7 +669,6 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     return (memcmp(md5_digest, md5_challenge, 16) == 0);
 }
-
 
 void
 wccp2Init(void)
@@ -2006,7 +1994,6 @@ wccp2AssignBuckets(void *voidnotused)
         service_list_ptr = service_list_ptr->next;
     }
 }
-
 
 /*
  * Configuration option parsing code

@@ -18,7 +18,6 @@
 
 static CpuAffinitySet *TheCpuAffinitySet = NULL;
 
-
 void
 CpuAffinityInit()
 {
