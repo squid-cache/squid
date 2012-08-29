@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 61    Redirector
  * AUTHOR: Duane Wessels
  *
@@ -46,6 +43,7 @@
 #include "helper.h"
 #include "mgr/Registration.h"
 #include "protos.h"
+#include "redirect.h"
 #include "rfc1738.h"
 #include "Store.h"
 #if USE_AUTH
