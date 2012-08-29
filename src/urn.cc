@@ -47,6 +47,7 @@
 #include "mime_header.h"
 #include "protos.h"
 #include "URL.h"
+#include "urn.h"
 
 #define	URN_REQBUF_SZ	4096
 
