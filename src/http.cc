@@ -62,6 +62,7 @@
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "mime_header.h"
 #include "neighbors.h"
 #include "profiler/Profiler.h"
 #include "protos.h"

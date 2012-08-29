@@ -52,6 +52,7 @@
 #include "fde.h"
 #include "forward.h"
 #include "internal.h"
+#include "mime_header.h"
 #include "protos.h"
 #include "SquidTime.h"
 #include "wordlist.h"

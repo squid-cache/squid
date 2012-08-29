@@ -38,6 +38,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpMsg.h"
 #include "MemBuf.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
 
