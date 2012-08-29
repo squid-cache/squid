@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
  *
