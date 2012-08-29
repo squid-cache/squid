@@ -411,6 +411,7 @@ squid_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -1248,6 +1249,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
@@ -1420,6 +1422,7 @@ tests_testCacheManager_SOURCES = \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -1632,6 +1635,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
@@ -1793,6 +1797,7 @@ tests_testEvent_SOURCES = \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -2012,6 +2017,7 @@ tests_testEventLoop_SOURCES = \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -2228,6 +2234,7 @@ tests_test_http_range_SOURCES = \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -2487,6 +2494,7 @@ tests_testHttpRequest_SOURCES = \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -2692,6 +2700,7 @@ tests_testStore_SOURCES= \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
@@ -2887,6 +2896,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
@@ -3062,6 +3072,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
 	tests/stub_pconn.cc \
@@ -3184,6 +3195,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
@@ -3332,6 +3344,7 @@ tests_testNull_SOURCES = \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
@@ -3498,6 +3511,7 @@ tests_testURL_SOURCES = \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
 	mime_header.h \
 	mime_header.cc \
@@ -3673,6 +3687,7 @@ tests_testStatHist_SOURCES = \
 	Mem.h \
 	tests/stub_mem.cc \
 	tests/stub_MemObject.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_stmem.cc \

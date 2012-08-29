@@ -80,15 +80,6 @@ extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
-extern void mimeInit(char *filename);
-extern void mimeFreeMemory(void);
-extern char *mimeGetContentEncoding(const char *fn);
-extern char *mimeGetContentType(const char *fn);
-extern char const *mimeGetIcon(const char *fn);
-extern const char *mimeGetIconURL(const char *fn);
-extern char mimeGetTransferMode(const char *fn);
-extern int mimeGetDownloadOption(const char *fn);
-extern int mimeGetViewOption(const char *fn);
 
 #include "ipcache.h"
 extern int mcastSetTtl(int, int);
