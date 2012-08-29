@@ -280,15 +280,19 @@ static int HttpHeaderStatCount = countof(HttpHeaderStats);
 static int HeaderEntryParsedCount = 0;
 
 /*
- * local routines
+ * forward declarations and local routines
  */
 
+class StoreEntry;
 #define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
 
 static void httpHeaderNoteParsedEntry(http_hdr_type id, String const &value, int error);
 
 static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
+
+/** store report about current header usage and other stats */
+static void httpHeaderStoreReport(StoreEntry * e);
 
 /*
  * Module initialization routines
