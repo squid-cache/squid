@@ -64,11 +64,16 @@ class QueueReaders
 {
 public:
     QueueReaders(const int aCapacity);
+    ~QueueReaders();
     size_t sharedMemorySize() const;
     static size_t SharedMemorySize(const int capacity);
 
     const int theCapacity; /// number of readers
-    QueueReader theReaders[]; /// readers
+    QueueReader *theReaders; /// readers
+private:
+    QueueReaders(); //not implemented
+    QueueReaders& operator =(const QueueReaders&); //not implemented
+    QueueReaders(const QueueReaders&); //not implemented
 };
 
 /**

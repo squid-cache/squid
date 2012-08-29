@@ -51,7 +51,12 @@ Ipc::QueueReader::QueueReader(): popBlocked(1), popSignal(0),
 Ipc::QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity)
 {
     Must(theCapacity > 0);
-    new (theReaders) QueueReader[theCapacity];
+    theReaders=new QueueReader[theCapacity];
+}
+
+Ipc::QueueReaders::~QueueReaders()
+{
+    delete[] theReaders;
 }
 
 size_t
