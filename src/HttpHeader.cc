@@ -48,6 +48,7 @@
 #include "rfc1123.h"
 #include "StatHist.h"
 #include "Store.h"
+#include "StrList.h"
 #include "TimeOrTag.h"
 
 /*

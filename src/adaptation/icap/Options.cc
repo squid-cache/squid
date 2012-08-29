@@ -5,6 +5,7 @@
 #include "HttpReply.h"
 #include "protos.h"
 #include "SquidTime.h"
+#include "StrList.h"
 #include "wordlist.h"
 
 Adaptation::Icap::Options::Options(): error("unconfigured"),

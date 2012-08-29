@@ -42,6 +42,7 @@
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "Store.h"
+#include "StrList.h"
 #include "protos.h"
 
 #if HAVE_MAP
