@@ -518,6 +518,7 @@ squid_SOURCES = \
 	URL.h \
 	URLScheme.cc \
 	URLScheme.h \
+	urn.h \
 	urn.cc \
 	wccp.h \
 	wccp.cc \
@@ -1487,6 +1488,7 @@ tests_testCacheManager_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -1873,6 +1875,7 @@ tests_testEvent_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -2094,6 +2097,7 @@ tests_testEventLoop_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -2309,6 +2313,7 @@ tests_test_http_range_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -2563,6 +2568,7 @@ tests_testHttpRequest_SOURCES = \
 	MemStore.cc \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -3592,6 +3598,7 @@ tests_testURL_SOURCES = \
 	tunnel.cc \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \

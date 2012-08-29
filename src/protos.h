@@ -82,8 +82,6 @@ extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 
 #include "comm/forward.h"
 
-SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
-
 SQUIDCEXTERN void redirectInit(void);
 SQUIDCEXTERN void redirectShutdown(void);
 
