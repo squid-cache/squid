@@ -27,12 +27,11 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- * 
+ *
  */
 
 #ifndef SQUID_LOG_ACCESS_LOG_H_
 #define SQUID_LOG_ACCESS_LOG_H_
-
 
 extern int logTypeIsATcpHit(log_type);
 extern void fvdbCountVia(const char *key);
@@ -42,6 +41,5 @@ extern void fvdbCountForw(const char *key);
 class HttpRequestMethod;
 extern void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
-
 
 #endif /* SQUID_LOG_ACCESS_LOG_H_ */

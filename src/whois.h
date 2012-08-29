@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_WHOIS_H_
 #define SQUID_WHOIS_H_
 
@@ -41,6 +40,5 @@
 
 /// \ingroup ServerProtocolWhoisAPI
 extern void whoisStart(FwdState *);
-
 
 #endif /* SQUID_WHOIS_H_ */

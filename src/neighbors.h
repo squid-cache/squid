@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_NEIGHBORS_H_
 #define SQUID_NEIGHBORS_H_
 

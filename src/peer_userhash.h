@@ -31,7 +31,6 @@
  *
  */
 
-
 #ifndef SQUID_PEER_USERHASH_H_
 #define SQUID_PEER_USERHASH_H_
 

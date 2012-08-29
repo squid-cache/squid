@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_FQDNCACHE_H_
 #define SQUID_FQDNCACHE_H_
 
@@ -52,8 +51,5 @@ extern void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 extern const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
 //extern const char *fqdnFromAddr(const Ip::Address &);
 extern void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
-
-
-
 
 #endif /* SQUID_FQDNCACHE_H_ */
