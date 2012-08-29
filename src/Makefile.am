@@ -461,6 +461,7 @@ squid_SOURCES = \
 	StrList.cc \
 	stmem.cc \
 	stmem.h \
+	repl_modules.h \
 	store.cc \
 	Store.h \
 	StoreFileSystem.cc \
@@ -1142,6 +1143,7 @@ tests_testHttpReply_SOURCES=\
 	StatCounters.cc \
 	StatHist.h \
 	tests/stub_StatHist.cc \
+	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tools.h \
@@ -1257,6 +1259,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
+	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -1461,6 +1464,7 @@ tests_testCacheManager_SOURCES = \
 	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
 	store_digest.cc \
@@ -1615,6 +1619,7 @@ tests_testDiskIO_SOURCES = \
 	store_key_md5.cc \
 	store_swapout.cc \
 	store_swapmeta.cc \
+	repl_modules.h \
 	store.cc \
 	String.cc \
   StrList.h \
@@ -1840,6 +1845,7 @@ tests_testEvent_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
 	store_digest.cc \
@@ -2062,6 +2068,7 @@ tests_testEventLoop_SOURCES = \
 	StatHist.cc \
 	Mem.h \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
 	store_digest.cc \
@@ -2281,6 +2288,7 @@ tests_test_http_range_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
 	store_digest.cc \
@@ -2543,6 +2551,7 @@ tests_testHttpRequest_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
 	store_digest.cc \
@@ -2676,6 +2685,7 @@ tests_testStore_SOURCES= \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -2897,6 +2907,7 @@ tests_testUfs_SOURCES = \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	repl_modules.h \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.h \
@@ -3046,6 +3057,7 @@ tests_testRock_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
@@ -3197,6 +3209,7 @@ tests_testCoss_SOURCES = \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	repl_modules.h \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.h \
@@ -3344,6 +3357,7 @@ tests_testNull_SOURCES = \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	repl_modules.h \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.h \
@@ -3563,6 +3577,7 @@ tests_testURL_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
 	store_digest.cc \
@@ -3713,6 +3728,7 @@ tests_testStatHist_SOURCES = \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_stmem.cc \
+	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tools.h \

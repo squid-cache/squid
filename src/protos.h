@@ -86,9 +86,6 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-/* repl_modules.c */
-extern void storeReplSetup(void);
-
 /*
  * store_log.c
  */
