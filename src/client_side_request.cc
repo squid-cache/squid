@@ -72,6 +72,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StrList.h"
 #include "tools.h"
 #include "URL.h"
 #include "wordlist.h"
