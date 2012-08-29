@@ -31,7 +31,6 @@
  *
  */
 
-
 #ifndef SQUID_PEER_SOURCEHASH_H_
 #define SQUID_PEER_SOURCEHASH_H_
 
@@ -40,7 +39,5 @@ class HttpRequest;
 
 extern void peerSourceHashInit(void);
 extern peer * peerSourceHashSelectParent(HttpRequest * request);
-
-
 
 #endif /* SQUID_PEER_SOURCEHASH_H_ */

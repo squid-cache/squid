@@ -45,5 +45,4 @@ extern void ftpStart(FwdState *);
 /// \ingroup ServerProtocolFTPAPI
 extern const char *ftpUrlWith2f(HttpRequest *);
 
-
 #endif /* SQUID_FTP_H_ */

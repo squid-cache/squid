@@ -587,7 +587,6 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
 #endif
 }
 
-
 /**
  \ingroup FQDNCacheAPI
  *

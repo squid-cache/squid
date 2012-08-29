@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_WCCP2_H_
 #define SQUID_WCCP2_H_
 
