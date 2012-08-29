@@ -437,6 +437,7 @@ squid_SOURCES = \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -1441,6 +1442,7 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -1819,6 +1821,7 @@ tests_testEvent_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2042,6 +2045,7 @@ tests_testEventLoop_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	RemovalPolicy.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2260,6 +2264,7 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	pconn.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2521,6 +2526,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -3540,6 +3546,7 @@ tests_testURL_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \

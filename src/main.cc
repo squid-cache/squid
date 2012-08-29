@@ -79,6 +79,7 @@
 #include "peer_userhash.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
+#include "redirect.h"
 #include "refresh.h"
 #include "tools.h"
 #include "SquidDns.h"

@@ -82,9 +82,6 @@ extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 
 #include "comm/forward.h"
 
-SQUIDCEXTERN void redirectInit(void);
-SQUIDCEXTERN void redirectShutdown(void);
-
 extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
