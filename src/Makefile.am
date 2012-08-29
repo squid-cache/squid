@@ -477,6 +477,7 @@ squid_SOURCES = \
 	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
@@ -1472,6 +1473,7 @@ tests_testCacheManager_SOURCES = \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
@@ -1853,6 +1855,7 @@ tests_testEvent_SOURCES = \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
@@ -2076,6 +2079,7 @@ tests_testEventLoop_SOURCES = \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
@@ -2296,6 +2300,7 @@ tests_test_http_range_SOURCES = \
 	store_key_md5.h \
 	store_key_md5.cc \
 	store_io.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
@@ -2559,6 +2564,7 @@ tests_testHttpRequest_SOURCES = \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
@@ -3585,6 +3591,7 @@ tests_testURL_SOURCES = \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
 	store_rebuild.cc \
 	store_swapin.cc \
