@@ -43,6 +43,7 @@
 #include "internal.h"
 #include "Mem.h"
 #include "MemBuf.h"
+#include "mime.h"
 #include "MemObject.h"
 #include "protos.h"
 #include "Store.h"
@@ -53,6 +54,10 @@
 #endif
 
 #define GET_HDR_SZ 1024
+
+/* forward declarations */
+static void mimeFreeMemory(void);
+static char const *mimeGetIcon(const char *fn);
 
 class MimeIcon : public StoreClient
 {
