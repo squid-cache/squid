@@ -443,6 +443,7 @@ squid_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
+	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
