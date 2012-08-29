@@ -81,8 +81,6 @@ extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
 #include "comm/forward.h"
-extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
-extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 
