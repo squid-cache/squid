@@ -80,11 +80,6 @@ extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
-
-#include "ipcache.h"
-extern int mcastSetTtl(int, int);
-extern IPH mcastJoinGroups;
-
 #include "comm/forward.h"
 extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);

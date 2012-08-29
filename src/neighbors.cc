@@ -47,6 +47,7 @@
 #include "ipcache.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
+#include "multicast.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
