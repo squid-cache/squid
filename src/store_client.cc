@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
 #include "StatCounters.h"

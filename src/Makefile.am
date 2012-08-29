@@ -412,6 +412,7 @@ squid_SOURCES = \
 	MemObject.cc \
 	MemObject.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	multicast.cc \
 	neighbors.h \
@@ -1114,6 +1115,7 @@ tests_testHttpReply_SOURCES=\
 	mem.cc \
 	MemBuf.cc \
 	MemBuf.h \
+	mime_header.h \
 	mime_header.cc \
 	Packer.cc \
 	Packer.h \
@@ -1419,6 +1421,7 @@ tests_testCacheManager_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -1791,6 +1794,7 @@ tests_testEvent_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	multicast.cc \
 	neighbors.h \
@@ -2009,6 +2013,7 @@ tests_testEventLoop_SOURCES = \
 	mem.cc \
 	mem_node.cc \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	multicast.cc \
 	neighbors.h \
@@ -2224,6 +2229,7 @@ tests_test_http_range_SOURCES = \
 	mem.cc \
 	mem_node.cc \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	multicast.cc \
 	neighbors.h \
@@ -2482,6 +2488,7 @@ tests_testHttpRequest_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -3492,6 +3499,7 @@ tests_testURL_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \

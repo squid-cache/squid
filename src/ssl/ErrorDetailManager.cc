@@ -2,6 +2,7 @@
 #include "ErrorDetail.h"
 #include "errorpage.h"
 #include "ErrorDetailManager.h"
+#include "mime_header.h"
 #include "protos.h"
 
 void Ssl::errorDetailInitialize()

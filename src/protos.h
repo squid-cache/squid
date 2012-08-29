@@ -80,10 +80,6 @@ extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
-extern char *mime_get_header(const char *mime, const char *header);
-extern char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
-extern size_t headersEnd(const char *, size_t);
-
 extern void mimeInit(char *filename);
 extern void mimeFreeMemory(void);
 extern char *mimeGetContentEncoding(const char *fn);
