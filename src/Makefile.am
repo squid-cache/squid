@@ -452,6 +452,8 @@ squid_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	stmem.cc \
 	stmem.h \
 	store.cc \
@@ -1118,6 +1120,8 @@ tests_testHttpReply_SOURCES=\
 	SquidString.h \
 	SquidTime.h \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
@@ -1203,6 +1207,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.h \
+	StrList.h \
+	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	String.cc \
@@ -1439,6 +1445,8 @@ tests_testCacheManager_SOURCES = \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
+	StrList.h \
+	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -1596,6 +1604,8 @@ tests_testDiskIO_SOURCES = \
 	store_swapmeta.cc \
 	store.cc \
 	String.cc \
+  StrList.h \
+  StrList.cc \
 	SwapDir.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -1800,6 +1810,8 @@ tests_testEvent_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
+  StrList.h \
+  StrList.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
@@ -2050,6 +2062,8 @@ tests_testEventLoop_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+  StrList.h \
+  StrList.cc \
 	SwapDir.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
@@ -2262,6 +2276,8 @@ tests_test_http_range_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+  StrList.h \
+  StrList.cc \
 	SwapDir.cc \
 	tests/test_http_range.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -2516,6 +2532,8 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+  StrList.h \
+  StrList.cc \
 	event.cc \
 	tools.h \
 	tools.cc \
@@ -2640,6 +2658,8 @@ tests_testStore_SOURCES= \
 	store_key_md5.h \
 	store_key_md5.cc \
 	String.cc \
+  StrList.h \
+  StrList.cc \
 	SwapDir.cc \
 	tests/CapturingStoreEntry.h \
 	log/access_log.h \
@@ -2881,6 +2901,8 @@ tests_testUfs_SOURCES = \
 	StatCounters.cc \
 	StatHist.h \
 	StatHist.cc \
+  StrList.h \
+  StrList.cc \
 	HttpHdrRange.cc \
 	ETag.cc \
 	tests/stub_errorpage.cc \
@@ -3006,6 +3028,8 @@ tests_testRock_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	String.cc \
+  StrList.h \
+  StrList.cc \
 	SwapDir.cc \
 	tests/testRock.cc \
 	tests/testMain.cc \
@@ -3519,6 +3543,8 @@ tests_testURL_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+  StrList.h \
+  StrList.cc \
 	SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \

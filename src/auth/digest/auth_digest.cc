@@ -56,6 +56,7 @@
 #include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
+#include "StrList.h"
 
 /* Digest Scheme */
 

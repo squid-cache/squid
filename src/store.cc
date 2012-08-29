@@ -58,6 +58,7 @@
 #include "store_key_md5.h"
 #include "StoreIOState.h"
 #include "StoreMeta.h"
+#include "StrList.h"
 #include "store_key_md5.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"

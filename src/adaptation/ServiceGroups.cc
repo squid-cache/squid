@@ -8,6 +8,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "protos.h"
+#include "StrList.h"
 #include "wordlist.h"
 
 Adaptation::ServiceGroup::ServiceGroup(const String &aKind, bool allSame):

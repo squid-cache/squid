@@ -70,6 +70,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "StrList.h"
 #include "tools.h"
 #include "URL.h"
 
@@ -1586,7 +1587,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     }
     // if no external user credentials are available to fake authentication with PASS acts like PASSTHRU
     if (strcmp(request->peer_login, "PASS") == 0)
-        continue;
+        return;
 
     /* Kerberos login to peer */
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
