@@ -56,8 +56,6 @@ class HttpRequest;
 class HttpReply;
 
 
-extern const char *getStringPrefix(const char *str, const char *end);
-
 /* store report about current header usage and other stats */
 void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
