@@ -44,6 +44,7 @@ class HttpHdrCc;
 class HttpHdrSc;
 class HttpHdrRange;
 class String;
+class StoreEntry;
 
 /* constant attributes of http header fields */
 
@@ -304,5 +305,6 @@ HttpHeader::chunked() const
 
 extern void httpHeaderInitModule(void);
 extern void httpHeaderCleanModule(void);
+
 
 #endif /* SQUID_HTTPHEADER_H */

@@ -56,8 +56,6 @@ class HttpRequest;
 class HttpReply;
 
 
-/* store report about current header usage and other stats */
-void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 
 #if SQUID_SNMP
