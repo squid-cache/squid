@@ -136,7 +136,6 @@ extern void peerDigestNeeded(PeerDigest * pd);
 extern void peerDigestNotePeerGone(PeerDigest * pd);
 extern void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
-
 #endif /* USE_CACHE_DIGESTS */
 
 #endif /* SQUID_PEERDIGEST_H */

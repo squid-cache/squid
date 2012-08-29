@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 

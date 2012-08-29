@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_GOPHER_H_
 #define SQUID_GOPHER_H_
 
@@ -47,6 +46,5 @@ extern void gopherStart(FwdState *);
 
 /// \ingroup ServerProtocolGopherAPI
 extern int gopherCachable(const HttpRequest *);
-
 
 #endif /* SQUID_GOPHER_H_ */
