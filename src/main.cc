@@ -64,6 +64,7 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ident/Ident.h"
+#include "ipcache.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"

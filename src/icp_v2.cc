@@ -52,6 +52,7 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "md5.h"
+#include "multicast.h"
 #include "neighbors.h"
 #include "protos.h"
 #include "refresh.h"
