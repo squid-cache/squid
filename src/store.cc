@@ -49,6 +49,7 @@
 #include "mgr/StoreIoAction.h"
 #include "profiler/Profiler.h"
 #include "protos.h"
+#include "repl_modules.h"
 #include "SquidTime.h"
 #include "Stack.h"
 #include "StatCounters.h"
