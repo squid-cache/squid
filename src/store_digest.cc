@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
  *
@@ -44,6 +41,7 @@
 #include "event.h"
 #include "globals.h"
 #include "mgr/Registration.h"
+#include "store_digest.h"
 #include "protos.h"
 
 #if USE_CACHE_DIGESTS
@@ -139,7 +137,6 @@ storeDigestInit(void)
 
     memset(&sd_state, 0, sizeof(sd_state));
 #else
-
     store_digest = NULL;
     debugs(71, 3, "Local cache digest is 'off'");
 #endif
@@ -159,6 +156,7 @@ storeDigestNoteStoreReady(void)
 #endif
 }
 
+//TODO: this seems to be dead code. Is it needed?
 void
 storeDigestDel(const StoreEntry * entry)
 {
@@ -181,8 +179,7 @@ storeDigestDel(const StoreEntry * entry)
             debugs(71, 6, "storeDigestDel: deled entry, key: " << entry->getMD5Text());
         }
     }
-
-#endif
+#endif //USE_CACHE_DIGESTS
 }
 
 void
@@ -208,7 +205,7 @@ storeDigestReport(StoreEntry * e)
         storeAppendPrintf(e, "store digest: disabled.\n");
     }
 
-#endif
+#endif //USE_CACHE_DIGESTS
 }
 
 /*

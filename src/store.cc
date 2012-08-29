@@ -60,6 +60,7 @@
 #include "StoreIOState.h"
 #include "StoreMeta.h"
 #include "StrList.h"
+#include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_log.h"
 #include "SwapDir.h"

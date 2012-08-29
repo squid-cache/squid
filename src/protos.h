@@ -87,15 +87,6 @@ extern void rotate_logs(int);
 extern void reconfigure(int);
 
 /*
- * store_digest.c
- */
-extern void storeDigestInit(void);
-extern void storeDigestNoteStoreReady(void);
-extern void storeDigestScheduleRebuild(void);
-extern void storeDigestDel(const StoreEntry * entry);
-extern void storeDigestReport(StoreEntry *);
-
-/*
  * store_rebuild.c
  */
 SQUIDCEXTERN void storeRebuildStart(void);

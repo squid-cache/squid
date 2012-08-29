@@ -473,6 +473,7 @@ squid_SOURCES = \
 	StoreIOState.h \
 	store_client.cc \
 	StoreClient.h \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_key_md5.h \
@@ -1468,6 +1469,7 @@ tests_testCacheManager_SOURCES = \
 	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -1850,6 +1852,7 @@ tests_testEvent_SOURCES = \
 	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -2074,6 +2077,7 @@ tests_testEventLoop_SOURCES = \
 	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -2295,6 +2299,7 @@ tests_test_http_range_SOURCES = \
 	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_key_md5.h \
@@ -2559,6 +2564,7 @@ tests_testHttpRequest_SOURCES = \
 	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -3586,6 +3592,7 @@ tests_testURL_SOURCES = \
 	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
