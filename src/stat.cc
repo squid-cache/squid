@@ -62,6 +62,7 @@
 #include "stat.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "store_digest.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
