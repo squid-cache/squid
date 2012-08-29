@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_CACHE_CF_H_
 #define SQUID_CACHE_CF_H_
 

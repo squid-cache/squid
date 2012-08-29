@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_CLIENT_DB_H_
 #define SQUID_CLIENT_DB_H_
 
@@ -52,6 +51,5 @@ extern int clientdbEstablished(const Ip::Address &, int);
 extern void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
 extern ClientInfo * clientdbGetInfo(const Ip::Address &addr);
 #endif
-
 
 #endif /* SQUID_CLIENT_DB_H_ */
