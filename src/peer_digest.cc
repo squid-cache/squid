@@ -43,6 +43,7 @@
 #include "internal.h"
 #include "MemObject.h"
 #include "neighbors.h"
+#include "mime_header.h"
 #include "PeerDigest.h"
 #include "protos.h"
 #include "SquidTime.h"

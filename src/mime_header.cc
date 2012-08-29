@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 25    MiME Header Parsing
  * AUTHOR: Harvest Derived
  *

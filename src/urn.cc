@@ -44,6 +44,7 @@
 #include "globals.h"
 #include "SquidTime.h"
 #include "icmp/net_db.h"
+#include "mime_header.h"
 #include "protos.h"
 #include "URL.h"
 
