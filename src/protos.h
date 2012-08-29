@@ -56,8 +56,6 @@ class HttpRequest;
 class HttpReply;
 
 
-SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
-
 #if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
