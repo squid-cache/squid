@@ -365,7 +365,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
         fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
     }
 
-    lm_request->request = NULL;
+    if (lm_request->request) {
+        HTTPMSGUNLOCK(lm_request->request);
+        lm_request->request = NULL;
+    }
     r->handler(r->data);
     delete r;
 }
