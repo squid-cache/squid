@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_REFRESH_H_
 #define SQUID_REFRESH_H_
 
@@ -43,7 +42,5 @@ extern int refreshCheckDigest(const StoreEntry *, time_t delta);
 extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
 extern const refresh_t *refreshLimits(const char *url);
-
-
 
 #endif /* SQUID_REFRESH_H_ */

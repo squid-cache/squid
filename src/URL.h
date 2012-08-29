@@ -81,7 +81,6 @@ MEMPROXY_CLASS_INLINE(URL);
 class HttpRequest;
 class HttpRequestMethod;
 
-
 extern AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
 extern void urlInitialize(void);
 extern HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);

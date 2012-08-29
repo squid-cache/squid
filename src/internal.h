@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_INTERNAL_H_
 #define SQUID_INTERNAL_H_
 
@@ -45,7 +44,5 @@ extern char *internalLocalUri(const char *dir, const char *name);
 extern char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
 extern const char *internalHostname(void);
 extern int internalHostnameIs(const char *);
-
-
 
 #endif /* SQUID_INTERNAL_H_ */
