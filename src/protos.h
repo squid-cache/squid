@@ -86,11 +86,6 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-extern void start_announce(void *unused);
-extern void waisStart(FwdState *);
-
-/* ----------------------------------------------------------------- */
-
 /* repl_modules.c */
 extern void storeReplSetup(void);
 
