@@ -87,14 +87,6 @@ extern void rotate_logs(int);
 extern void reconfigure(int);
 
 /*
- * store_log.c
- */
-extern void storeLog(int tag, const StoreEntry * e);
-extern void storeLogRotate(void);
-extern void storeLogClose(void);
-extern void storeLogOpen(void);
-
-/*
  * store_digest.c
  */
 extern void storeDigestInit(void);

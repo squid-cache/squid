@@ -82,6 +82,7 @@
 #include "redirect.h"
 #include "refresh.h"
 #include "send-announce.h"
+#include "store_log.h"
 #include "tools.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
