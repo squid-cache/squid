@@ -43,6 +43,7 @@
 #include "protos.h"
 #include "SwapDir.h"
 #include "StatCounters.h"
+#include "store_log.h"
 #include "swap_log_op.h"
 
 static void storeSwapOutStart(StoreEntry * e);

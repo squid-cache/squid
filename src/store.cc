@@ -61,6 +61,7 @@
 #include "StoreMeta.h"
 #include "StrList.h"
 #include "store_key_md5.h"
+#include "store_log.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
 #if USE_DELAY_POOLS
