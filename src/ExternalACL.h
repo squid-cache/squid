@@ -104,5 +104,4 @@ extern void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, 
 extern void externalAclInit(void);
 extern void externalAclShutdown(void);
 
-
 #endif /* SQUID_EXTERNALACL_H */

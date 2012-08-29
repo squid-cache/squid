@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_TOOLS_H_
 #define SQUID_TOOLS_H_
 
@@ -47,6 +46,5 @@ extern void strwordquote(MemBuf * mb, const char *str);
 
 /* packs, then prints an object using debugs() */
 extern void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
-
 
 #endif /* SQUID_TOOLS_H_ */

@@ -27,7 +27,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- * 
+ *
  */
 
 #ifndef SQUID_CACHEDIGEST_H_
@@ -50,6 +50,5 @@ extern int cacheDigestBitUtil(const CacheDigest * cd);
 extern void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
 extern void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
 extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
-
 
 #endif /* SQUID_CACHEDIGEST_H_ */

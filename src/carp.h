@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_CARP_H_
 #define SQUID_CARP_H_
 

@@ -30,7 +30,6 @@
  *
  */
 
-
 #ifndef SQUID_DISK_H_
 #define SQUID_DISK_H_
 

@@ -45,15 +45,12 @@
 #include "HttpStatusCode.h"
 #include "lookup_t.h"
 
-
 class HttpRequestMethod;
 #if USE_DELAY_POOLS
 class ClientInfo;
 #endif
 
-
 class FwdState;
-
 
 class HttpRequest;
 class HttpReply;
@@ -65,8 +62,6 @@ SQUIDCEXTERN int strListIsSubstr(const String * list, const char *s, char del);
 SQUIDCEXTERN int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 
 extern const char *getStringPrefix(const char *str, const char *end);
-
-
 
 /* store report about current header usage and other stats */
 void httpHeaderStoreReport(StoreEntry * e);
@@ -123,11 +118,9 @@ SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 SQUIDCEXTERN void redirectInit(void);
 SQUIDCEXTERN void redirectShutdown(void);
 
-
 extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
-
 
 extern void start_announce(void *unused);
 extern void waisStart(FwdState *);
@@ -144,7 +137,6 @@ extern void storeLog(int tag, const StoreEntry * e);
 extern void storeLogRotate(void);
 extern void storeLogClose(void);
 extern void storeLogOpen(void);
-
 
 /*
  * store_digest.c
@@ -170,7 +162,6 @@ extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, s
 /// checks whether the loaded entry should be kept; updates counters
 extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
 
-
 /*
  * store_swapin.c
  */
@@ -186,7 +177,6 @@ SQUIDCEXTERN int storeUnregister(store_client * sc, StoreEntry * e, void *data)
 ;
 SQUIDCEXTERN int storePendingNClients(const StoreEntry * e);
 SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
-
 
 SQUIDCEXTERN const char *getMyHostname(void);
 SQUIDCEXTERN const char *uniqueHostname(void);
@@ -256,7 +246,6 @@ SQUIDCEXTERN void unlinkdClose(void);
 SQUIDCEXTERN void unlinkdUnlink(const char *);
 #endif
 
-
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
 SQUIDCEXTERN int stringHasWhitespace(const char *); //String.cc
@@ -267,7 +256,6 @@ SQUIDCEXTERN int xrename(const char *from, const char *to); //disk.cc
 extern int isPowTen(int); //int.cc
 
 SQUIDCEXTERN char *strwordtok(char *buf, char **t); //String.cc
-
 
 /*
  * ipc.c
@@ -280,7 +268,6 @@ SQUIDCEXTERN pid_t ipcCreate(int type,
                              int *rfd,
                              int *wfd,
                              void **hIpc);
-
 
 /*
  * prototypes for system functions missing from system includes
@@ -301,7 +288,6 @@ SQUIDCEXTERN int gethostname(char *, int);
  */
 class StatCounters;
         SQUIDCEXTERN StatCounters *snmpStatGet(int);
-
 
         /* CygWin & Windows NT Port */
         /* win32.c */
@@ -327,19 +313,19 @@ class StatCounters;
 
 #endif
 
-extern char *strtokFile(void);
+    extern char *strtokFile(void);
 
 #if USE_AUTH
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
-                /* upstream proxy authentication */
-                SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
+    /* upstream proxy authentication */
+    SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
-                    namespace Auth {
-            /* call to ensure the auth component schemes exist. */
-            extern void Init(void);
-            } // namespace Auth
+    namespace Auth {
+    /* call to ensure the auth component schemes exist. */
+    extern void Init(void);
+    } // namespace Auth
 
 #endif /* USE_AUTH */
 
