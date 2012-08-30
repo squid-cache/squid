@@ -50,4 +50,20 @@ extern void debugObj(int section, int level, const char *label, void *obj, ObjPa
 extern const char *getMyHostname(void);
 extern const char *uniqueHostname(void);
 
+extern void death(int sig);
+extern void sigusr2_handle(int sig);
+extern void sig_child(int sig);
+extern void sig_shutdown(int sig); ///< handles shutdown notifications from kids
+extern void leave_suid(void);
+extern void enter_suid(void);
+extern void no_suid(void);
+extern void writePidFile(void);
+extern void setMaxFD(void);
+extern void setSystemLimits(void);
+extern void squid_signal(int sig, SIGHDLR *, int flags);
+extern pid_t readPidFile(void);
+extern void keepCapabilities(void);
+extern void BroadcastSignalIfAny(int& sig);
+
+
 #endif /* SQUID_TOOLS_H_ */

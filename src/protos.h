@@ -89,21 +89,7 @@ extern void reconfigure(int);
 class store_client;
 
 #include "fatal.h"
-extern void death(int sig);
-extern void sigusr2_handle(int sig);
-extern void sig_child(int sig);
-extern void sig_shutdown(int sig); ///< handles shutdown notifications from kids
-SQUIDCEXTERN void leave_suid(void);
-SQUIDCEXTERN void enter_suid(void);
-SQUIDCEXTERN void no_suid(void);
-SQUIDCEXTERN void writePidFile(void);
-SQUIDCEXTERN void setSocketShutdownLifetimes(int);
-SQUIDCEXTERN void setMaxFD(void);
-SQUIDCEXTERN void setSystemLimits(void);
-extern void squid_signal(int sig, SIGHDLR *, int flags);
-SQUIDCEXTERN pid_t readPidFile(void);
-SQUIDCEXTERN void keepCapabilities(void);
-SQUIDCEXTERN void BroadcastSignalIfAny(int& sig);
+
 /// whether the current process is the parent of all other Squid processes
 SQUIDCEXTERN bool IamMasterProcess();
 /**
