@@ -87,15 +87,6 @@ extern void rotate_logs(int);
 extern void reconfigure(int);
 
 class store_client;
-/*
- * store_client.c
- */
-SQUIDCEXTERN store_client *storeClientListAdd(StoreEntry * e, void *data);
-SQUIDCEXTERN int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
-SQUIDCEXTERN int storeUnregister(store_client * sc, StoreEntry * e, void *data)
-;
-SQUIDCEXTERN int storePendingNClients(const StoreEntry * e);
-SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
 
 SQUIDCEXTERN const char *getMyHostname(void);
 SQUIDCEXTERN const char *uniqueHostname(void);

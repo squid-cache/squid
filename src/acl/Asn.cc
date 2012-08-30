@@ -49,6 +49,7 @@
 #include "ipcache.h"
 #include "forward.h"
 #include "protos.h"
+#include "StoreClient.h"
 #include "wordlist.h"
 
 #define WHOIS_PORT 43
