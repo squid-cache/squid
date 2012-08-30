@@ -46,6 +46,7 @@
 #include "StatCounters.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "store_swapin.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS

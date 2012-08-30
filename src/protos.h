@@ -86,14 +86,7 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-
-
-/*
- * store_swapin.c
- */
 class store_client;
-extern void storeSwapInStart(store_client *);
-
 /*
  * store_client.c
  */
