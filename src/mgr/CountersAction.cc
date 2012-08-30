@@ -13,6 +13,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 
 extern void GetCountersStats(Mgr::CountersActionData& stats);
 extern void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);

@@ -1183,7 +1183,6 @@ tests_testHttpReply_LDADD=\
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
-
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
@@ -1664,8 +1663,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
-	tools.h \
-	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
@@ -1678,7 +1675,9 @@ tests_testDiskIO_SOURCES = \
 	URLScheme.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
-	wordlist.cc
+	wordlist.cc \
+	tools.h \
+	tests/stub_tools.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(TESTSOURCES) \
 	$(DISKIO_GEN_SOURCE) \

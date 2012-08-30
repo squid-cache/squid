@@ -10,6 +10,7 @@
 #include "compat/shm.h"
 #include "ipc/mem/Segment.h"
 #include "protos.h"
+#include "tools.h"
 
 #include <fcntl.h>
 #include <sys/mman.h>

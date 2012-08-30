@@ -39,6 +39,7 @@
 #include "store_key_md5.h"
 #include "StoreSwapLogData.h"
 #include "store_rebuild.h"
+#include "tools.h"
 #include "UFSSwapLogParser.h"
 
 #if HAVE_MATH_H
