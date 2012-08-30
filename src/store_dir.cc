@@ -47,6 +47,7 @@
 #include "StoreHashIndex.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
+#include "tools.h"
 
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H

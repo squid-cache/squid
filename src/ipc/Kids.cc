@@ -9,6 +9,7 @@
 #include "base/TextException.h"
 #include "ipc/Kids.h"
 #include "protos.h"
+#include "tools.h"
 
 Kids TheKids;
 KidName TheKidName;

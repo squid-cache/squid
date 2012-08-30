@@ -13,6 +13,7 @@
 #include "Debug.h"
 #include "protos.h"
 #include "structs.h"
+#include "tools.h"
 
 #include <algorithm>
 

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
  *
@@ -40,6 +38,7 @@
 #include "protos.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
+#include "tools.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
         max_size(0),

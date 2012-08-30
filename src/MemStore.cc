@@ -15,6 +15,7 @@
 #include "mime_header.h"
 #include "protos.h"
 #include "StoreStats.h"
+#include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
 static const char *ShmLabel = "cache_mem";

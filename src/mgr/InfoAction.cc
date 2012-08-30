@@ -20,6 +20,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 
 extern void GetInfo(Mgr::InfoActionData& stats);
 extern void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
