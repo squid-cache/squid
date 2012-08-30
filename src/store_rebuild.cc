@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
  *
