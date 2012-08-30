@@ -1,8 +1,8 @@
 #ifndef SQUID_STORE_REBUILD_H_
 #define SQUID_STORE_REBUILD_H_
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 20    Store Rebuild Routines
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
