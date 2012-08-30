@@ -21,7 +21,7 @@ public:
     void undo();
 
     /// whether apply() was called and was not undone
-    bool applied() const;
+    bool applied();
 
     /// set CPU affinity mask
     void set(const cpu_set_t &aCpuSet);
