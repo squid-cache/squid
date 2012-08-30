@@ -39,6 +39,8 @@
 
 class MemBuf;
 
+extern int DebugSignal;
+
 extern void kb_incr(kb_t *, size_t);
 extern void parseEtcHosts(void);
 extern int getMyPort(void);
@@ -90,5 +92,8 @@ extern String ProcessRoles();
 
 extern void debug_trap(const char *);
 extern void *xmemset(void *dst, int, size_t);
+
+extern void logsFlush(void);
+
 
 #endif /* SQUID_TOOLS_H_ */
