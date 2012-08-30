@@ -58,6 +58,7 @@
 #include "stat.h"
 #include "Store.h"
 #include "store_key_md5.h"
+#include "tools.h"
 #include "URL.h"
 
 /* count mcast group peers every 15 minutes */
