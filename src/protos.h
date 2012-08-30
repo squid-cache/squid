@@ -91,17 +91,6 @@ class store_client;
 #include "fatal.h"
 
 
-SQUIDCEXTERN void squid_getrusage(struct rusage *r);
-
-SQUIDCEXTERN double rusage_cputime(struct rusage *r);
-
-SQUIDCEXTERN int rusage_maxrss(struct rusage *r);
-
-SQUIDCEXTERN int rusage_pagefaults(struct rusage *r);
-SQUIDCEXTERN void releaseServerSockets(void);
-SQUIDCEXTERN void PrintRusage(void);
-SQUIDCEXTERN void dumpMallocStats(void);
-
 #if USE_UNLINKD
 SQUIDCEXTERN bool unlinkdNeeded(void);
 SQUIDCEXTERN void unlinkdInit(void);
