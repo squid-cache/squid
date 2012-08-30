@@ -41,6 +41,7 @@
 #include "ip/Address.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
+#include "tools.h"
 
 #ifndef _MSWSOCK_
 #include <mswsock.h>
