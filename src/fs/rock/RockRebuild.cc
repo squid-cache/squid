@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 79    Disk IO Routines
  */
 
@@ -13,6 +11,7 @@
 #include "protos.h"
 #include "typedefs.h"
 #include "SquidTime.h"
+#include "store_rebuild.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

@@ -480,6 +480,7 @@ squid_SOURCES = \
 	store_key_md5.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
@@ -1263,6 +1264,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_Port.cc \
 	repl_modules.h \
 	tests/stub_store.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
@@ -1477,6 +1479,7 @@ tests_testCacheManager_SOURCES = \
 	store_key_md5.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
@@ -1657,6 +1660,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tools.h \
 	tests/stub_tools.cc \
@@ -1860,6 +1864,7 @@ tests_testEvent_SOURCES = \
 	store_key_md5.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
@@ -2085,6 +2090,7 @@ tests_testEventLoop_SOURCES = \
 	store_key_md5.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
@@ -2307,6 +2313,7 @@ tests_test_http_range_SOURCES = \
 	store_io.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
@@ -2572,6 +2579,7 @@ tests_testHttpRequest_SOURCES = \
 	store_key_md5.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
@@ -2746,6 +2754,7 @@ tests_testStore_SOURCES= \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_swapout.cc \
 	tools.h \
@@ -2879,6 +2888,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.h \
@@ -3120,6 +3130,7 @@ tests_testRock_SOURCES = \
 	tests/stub_Port.cc \
 	tests/stub_pconn.cc \
 	tests/stub_store_client.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tools.h \
@@ -3182,6 +3193,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_pconn.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.h \
@@ -3330,6 +3342,7 @@ tests_testNull_SOURCES = \
 	tests/testNull.h \
 	internal.h \
 	tests/stub_internal.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.h \
@@ -3600,6 +3613,7 @@ tests_testURL_SOURCES = \
 	store_key_md5.cc \
 	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
 	store_swapin.cc \
 	store_swapmeta.cc \
