@@ -1,5 +1,6 @@
 /*
- * $Id$
+ * AUTHOR: Adrian Chadd <adrian@squid-cache.org>
+ * DEBUG: section 79   Disk IO Routines
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,7 +32,6 @@
  */
 
 /**
- * Author: Adrian Chadd <adrian@squid-cache.org>
  *
  \par
  * These routines are simple plugin replacements for the file_* routines
@@ -51,6 +51,7 @@
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
 #include "disk.h"
+#include "globals.h"
 #include "protos.h"
 
 #if HAVE_ERRNO_H

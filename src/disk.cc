@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 06    Disk I/O Routines
  * AUTHOR: Harvest Derived
  *
@@ -36,6 +34,7 @@
 #include "comm/Loops.h"
 #include "fd.h"
 #include "fde.h"
+#include "globals.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
