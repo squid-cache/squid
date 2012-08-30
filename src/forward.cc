@@ -66,6 +66,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StoreClient.h"
 #include "urn.h"
 #include "whois.h"
 #if USE_SSL
