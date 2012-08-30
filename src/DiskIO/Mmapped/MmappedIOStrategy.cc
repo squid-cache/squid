@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  */
 
@@ -9,6 +6,7 @@
 #include "MmappedFile.h"
 #include "MmappedIOStrategy.h"
 #include "protos.h"
+#include "unlinkd.h"
 
 bool
 MmappedIOStrategy::shedLoad()
@@ -38,9 +36,5 @@ MmappedIOStrategy::unlinkdUseful() const
 void
 MmappedIOStrategy::unlinkFile(char const *path)
 {
-#if USE_UNLINKD
     unlinkdUnlink(path);
-#else
-    ::unlink(path);
-#endif
 }

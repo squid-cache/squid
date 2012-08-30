@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 02    Unlink Daemon
  * AUTHOR: Duane Wessels
  *
@@ -34,6 +31,8 @@
  */
 
 #include "squid.h"
+
+#if USE_UNLINKD
 #include "disk.h"
 #include "fd.h"
 #include "fde.h"
@@ -273,3 +272,4 @@ unlinkdInit(void)
 #endif
 
 }
+#endif /* USE_UNLINKD */
