@@ -15,6 +15,7 @@
 #include "fs/rock/RockIoState.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockRebuild.h"
+#include "globals.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "Parsing.h"

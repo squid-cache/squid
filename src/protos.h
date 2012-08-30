@@ -88,8 +88,6 @@ extern void reconfigure(int);
 
 #include "fatal.h"
 
-
-
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
 SQUIDCEXTERN int stringHasWhitespace(const char *); //String.cc
