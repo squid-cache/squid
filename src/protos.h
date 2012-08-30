@@ -86,20 +86,7 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-/*
- * store_rebuild.c
- */
-SQUIDCEXTERN void storeRebuildStart(void);
 
-SQUIDCEXTERN void storeRebuildComplete(struct _store_rebuild_data *);
-SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
-
-/// loads entry from disk; fills supplied memory buffer on success
-extern bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
-/// parses entry buffer and validates entry metadata; fills e on success
-extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
-/// checks whether the loaded entry should be kept; updates counters
-extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
 
 /*
  * store_swapin.c
