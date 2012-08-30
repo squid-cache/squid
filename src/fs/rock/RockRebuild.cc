@@ -9,6 +9,7 @@
 #include "fs/rock/RockDbCell.h"
 #include "md5.h"
 #include "protos.h"
+#include "tools.h"
 #include "typedefs.h"
 #include "SquidTime.h"
 #include "store_rebuild.h"

@@ -23,6 +23,7 @@
 #include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "tools.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

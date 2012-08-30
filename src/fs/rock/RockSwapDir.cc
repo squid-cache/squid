@@ -20,6 +20,8 @@
 #include "Parsing.h"
 #include "protos.h"
 #include "SquidMath.h"
+#include "tools.h"
+
 #include <cstdlib>
 #include <iomanip>
 

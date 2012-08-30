@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels
  *
@@ -51,9 +48,11 @@
 #include "mgr/FunAction.h"
 #include "mgr/QueryParams.h"
 #include "protos.h" /* rotate_logs() */
+#include "tools.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
+
 #include <algorithm>
 
 /// \ingroup CacheManagerInternal

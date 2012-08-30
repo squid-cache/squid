@@ -10,6 +10,7 @@
 #include "ipc/TypedMsgHdr.h"
 #include "protos.h"
 #include "snmp/Session.h"
+#include "tools.h"
 
 Snmp::Session::Session()
 {

@@ -90,33 +90,9 @@ class store_client;
 
 #include "fatal.h"
 
-/// whether the current process is the parent of all other Squid processes
-SQUIDCEXTERN bool IamMasterProcess();
-/**
-    whether the current process is dedicated to doing things that only
-    a single process should do, such as PID file maintenance and WCCP
-*/
-SQUIDCEXTERN bool IamPrimaryProcess();
-/// whether the current process coordinates worker processes
-SQUIDCEXTERN bool IamCoordinatorProcess();
-/// whether the current process handles HTTP transactions and such
-SQUIDCEXTERN bool IamWorkerProcess();
-/// whether the current process is dedicated to managing a cache_dir
-extern bool IamDiskProcess();
-/// Whether we are running in daemon mode
-SQUIDCEXTERN bool InDaemonMode(); // try using specific Iam*() checks above first
-/// Whether there should be more than one worker process running
-SQUIDCEXTERN bool UsingSmp(); // try using specific Iam*() checks above first
-/// number of Kid processes as defined in src/ipc/Kid.h
-SQUIDCEXTERN int NumberOfKids();
-/// a string describing this process roles such as worker or coordinator
-extern String ProcessRoles();
 SQUIDCEXTERN int DebugSignal;
 
-/* AYJ debugs function to show locations being reset with memset() */
-SQUIDCEXTERN void *xmemset(void *dst, int, size_t);
 
-SQUIDCEXTERN void debug_trap(const char *);
 SQUIDCEXTERN void logsFlush(void);
 SQUIDCEXTERN const char *checkNullString(const char *p);
 

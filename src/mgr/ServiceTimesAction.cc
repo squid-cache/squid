@@ -12,6 +12,7 @@
 #include "mgr/ServiceTimesAction.h"
 #include "protos.h"
 #include "Store.h"
+#include "tools.h"
 
 extern void GetServiceTimesStats(Mgr::ServiceTimesActionData& stats);
 extern void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry);

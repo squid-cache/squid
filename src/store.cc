@@ -66,6 +66,7 @@
 #include "StrList.h"
 #include "swap_log_op.h"
 #include "SwapDir.h"
+#include "tools.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif

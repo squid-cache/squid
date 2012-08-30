@@ -43,6 +43,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "SwapDir.h"
+#include "tools.h"
 
 /* This code gets linked to Squid */
 

@@ -12,6 +12,7 @@
 #include "mgr/StoreIoAction.h"
 #include "protos.h"
 #include "Store.h"
+#include "tools.h"
 
 Mgr::StoreIoActionData::StoreIoActionData()
 {

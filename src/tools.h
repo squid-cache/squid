@@ -33,7 +33,8 @@
 #ifndef SQUID_TOOLS_H_
 #define SQUID_TOOLS_H_
 
-/* for kb_t */
+#include "Packer.h"
+#include "SquidString.h"
 #include "typedefs.h"
 
 class MemBuf;
@@ -65,5 +66,29 @@ extern pid_t readPidFile(void);
 extern void keepCapabilities(void);
 extern void BroadcastSignalIfAny(int& sig);
 
+/// whether the current process is the parent of all other Squid processes
+extern bool IamMasterProcess();
+/**
+ *   whether the current process is dedicated to doing things that only
+ *   a single process should do, such as PID file maintenance and WCCP
+ */
+extern bool IamPrimaryProcess();
+/// whether the current process coordinates worker processes
+extern bool IamCoordinatorProcess();
+/// whether the current process handles HTTP transactions and such
+extern bool IamWorkerProcess();
+/// whether the current process is dedicated to managing a cache_dir
+extern bool IamDiskProcess();
+/// Whether we are running in daemon mode
+extern bool InDaemonMode(); // try using specific Iam*() checks above first
+/// Whether there should be more than one worker process running
+extern bool UsingSmp(); // try using specific Iam*() checks above first
+/// number of Kid processes as defined in src/ipc/Kid.h
+extern int NumberOfKids();
+/// a string describing this process roles such as worker or coordinator
+extern String ProcessRoles();
+
+extern void debug_trap(const char *);
+extern void *xmemset(void *dst, int, size_t);
 
 #endif /* SQUID_TOOLS_H_ */
