@@ -44,6 +44,7 @@
 #include "SquidTime.h"
 #include "stat.h"
 #include "Store.h"
+#include "tools.h"
 
 /************************************************************************
 

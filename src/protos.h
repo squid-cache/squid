@@ -88,8 +88,6 @@ extern void reconfigure(int);
 
 class store_client;
 
-SQUIDCEXTERN const char *getMyHostname(void);
-SQUIDCEXTERN const char *uniqueHostname(void);
 SQUIDCEXTERN void safeunlink(const char *path, int quiet);
 
 #include "fatal.h"

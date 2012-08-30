@@ -46,6 +46,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "tools.h"
 #include "URL.h"
 #include "urn.h"
 
