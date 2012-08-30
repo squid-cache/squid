@@ -38,6 +38,7 @@
 #include "DiskIO/DiskIOModule.h"
 #include "FileMap.h"
 #include "fde.h"
+#include "globals.h"
 #include "Parsing.h"
 #include "protos.h"
 #include "RebuildState.h"

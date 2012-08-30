@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
  *
@@ -40,6 +37,7 @@
 #include "client_side.h"
 #include "DnsLookupDetails.h"
 #include "err_detail_type.h"
+#include "globals.h"
 #include "gopher.h"
 #include "http.h"
 #include "HttpHdrCc.h"

@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived
  *
@@ -30,7 +27,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
 
 #include "squid.h"
@@ -39,6 +35,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "forward.h"
+#include "globals.h"
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
