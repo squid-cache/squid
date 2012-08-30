@@ -90,10 +90,7 @@ class store_client;
 
 #include "fatal.h"
 
-SQUIDCEXTERN int DebugSignal;
 
-
-SQUIDCEXTERN void logsFlush(void);
 SQUIDCEXTERN const char *checkNullString(const char *p);
 
 SQUIDCEXTERN void squid_getrusage(struct rusage *r);
