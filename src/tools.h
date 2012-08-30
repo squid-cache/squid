@@ -95,5 +95,12 @@ extern void *xmemset(void *dst, int, size_t);
 
 extern void logsFlush(void);
 
+extern void squid_getrusage(struct rusage *r);
+extern double rusage_cputime(struct rusage *r);
+extern int rusage_maxrss(struct rusage *r);
+extern int rusage_pagefaults(struct rusage *r);
+extern void releaseServerSockets(void);
+extern void PrintRusage(void);
+extern void dumpMallocStats(void);
 
 #endif /* SQUID_TOOLS_H_ */
