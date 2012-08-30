@@ -63,6 +63,7 @@
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_log.h"
+#include "store_rebuild.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
 #if USE_DELAY_POOLS

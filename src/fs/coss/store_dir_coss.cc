@@ -51,6 +51,7 @@
 #include "Parsing.h"
 #include "store_key_md5.h"
 #include "swap_log_op.h"
+#include "store_rebuild.h"
 #include "SquidMath.h"
 
 #if HAVE_ERRNO_H

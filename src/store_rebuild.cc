@@ -43,6 +43,7 @@
 #include "store_key_md5.h"
 #include "SwapDir.h"
 #include "store_digest.h"
+#include "store_rebuild.h"
 #include "StoreSearch.h"
 #include "SquidTime.h"
 
