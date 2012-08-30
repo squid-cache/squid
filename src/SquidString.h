@@ -185,4 +185,6 @@ _SQUID_INLINE_ bool operator<(const String &a, const String &b);
 #include "String.cci"
 #endif
 
+extern const char *checkNullString(const char *p);
+
 #endif /* SQUID_STRING_H */

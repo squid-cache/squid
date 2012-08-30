@@ -91,8 +91,6 @@ class store_client;
 #include "fatal.h"
 
 
-SQUIDCEXTERN const char *checkNullString(const char *p);
-
 SQUIDCEXTERN void squid_getrusage(struct rusage *r);
 
 SQUIDCEXTERN double rusage_cputime(struct rusage *r);
