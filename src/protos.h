@@ -88,8 +88,6 @@ extern void reconfigure(int);
 
 class store_client;
 
-SQUIDCEXTERN void safeunlink(const char *path, int quiet);
-
 #include "fatal.h"
 extern void death(int sig);
 extern void sigusr2_handle(int sig);
