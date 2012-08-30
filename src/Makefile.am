@@ -482,6 +482,7 @@ squid_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -1481,6 +1482,7 @@ tests_testCacheManager_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -1866,6 +1868,7 @@ tests_testEvent_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -2092,6 +2095,7 @@ tests_testEventLoop_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -2315,6 +2319,7 @@ tests_test_http_range_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -2581,6 +2586,7 @@ tests_testHttpRequest_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -3615,6 +3621,7 @@ tests_testURL_SOURCES = \
 	store_log.cc \
 	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
