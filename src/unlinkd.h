@@ -1,6 +1,8 @@
+#ifndef SQUID_UNLINKD_H_
+#define SQUID_UNLINKD_H_
 /*
- * DEBUG: section 47    Store Directory Routines
- * AUTHOR: Robert Collins
+ * DEBUG: section 02    Unlink Daemon
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,42 +30,22 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
-#include "BlockingIOStrategy.h"
-#include "BlockingFile.h"
-#include "protos.h"
-#include "unlinkd.h"
+#if USE_UNLINKD
+extern bool unlinkdNeeded(void);
+extern void unlinkdInit(void);
+extern void unlinkdClose(void);
+extern void unlinkdUnlink(const char *);
+#else /* USE_UNLINKD */
 
-bool
-BlockingIOStrategy::shedLoad()
-{
-    return false;
-}
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+inline bool unlinkdNeeded(void) { return false; }
+inline void unlinkdInit(void) { return; }
+inline void unlinkdClose(void) { return; }
+inline void unlinkdUnlink(const char * path) { ::unlink(path); }
+#endif /* USE_UNLINKD */
 
-int
-BlockingIOStrategy::load()
-{
-    /* Return 999 (99.9%) constant load */
-    return 999;
-}
-
-DiskFile::Pointer
-BlockingIOStrategy::newFile (char const *path)
-{
-    return new BlockingFile (path);
-}
-
-bool
-BlockingIOStrategy::unlinkdUseful() const
-{
-    return true;
-}
-
-void
-BlockingIOStrategy::unlinkFile(char const *path)
-{
-    unlinkdUnlink(path);
-}
+#endif /* SQUID_UNLINKD_H_ */

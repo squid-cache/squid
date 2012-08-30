@@ -86,17 +86,9 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-class store_client;
-
 #include "fatal.h"
 
 
-#if USE_UNLINKD
-SQUIDCEXTERN bool unlinkdNeeded(void);
-SQUIDCEXTERN void unlinkdInit(void);
-SQUIDCEXTERN void unlinkdClose(void);
-SQUIDCEXTERN void unlinkdUnlink(const char *);
-#endif
 
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 

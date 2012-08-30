@@ -137,10 +137,10 @@ LEAKFINDERSOURCE =
 endif
 
 if ENABLE_UNLINKD
-UNLINKDSOURCE = unlinkd.cc
+UNLINKDSOURCE = unlinkd.h unlinkd.cc
 UNLINKD = unlinkd
 else
-UNLINKDSOURCE = 
+UNLINKDSOURCE = unlinkd.h
 UNLINKD = 
 endif
 

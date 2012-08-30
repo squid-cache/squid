@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 01    Startup and Main Loop
  * AUTHOR: Harvest Derived
  *
@@ -91,6 +89,7 @@
 #include "StoreFileSystem.h"
 #include "Store.h"
 #include "SwapDir.h"
+#include "unlinkd.h"
 #include "URL.h"
 #include "wccp.h"
 #include "wccp2.h"
@@ -871,10 +870,8 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
-#if USE_UNLINKD
     if (unlinkdNeeded())
         unlinkdInit();
-#endif
 
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
@@ -1078,10 +1075,8 @@ mainInitialize(void)
 #endif
 
     if (!configured_once) {
-#if USE_UNLINKD
         if (unlinkdNeeded())
             unlinkdInit();
-#endif
 
         urlInitialize();
         statInit();
@@ -1889,10 +1884,8 @@ SquidShutdown()
 #endif
 
     Store::Root().sync(); /* Flush pending object writes/unlinks */
-#if USE_UNLINKD
 
-    unlinkdClose();	  /* after sync/flush */
-#endif
+    unlinkdClose();	  /* after sync/flush. NOP if !USE_UNLINKD */
 
     storeDirWriteCleanLogs(0);
     PrintRusage();

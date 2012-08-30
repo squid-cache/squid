@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  */
 
@@ -9,6 +6,7 @@
 #include "IpcIoFile.h"
 #include "IpcIoIOStrategy.h"
 #include "protos.h"
+#include "unlinkd.h"
 
 bool
 IpcIoIOStrategy::shedLoad()
@@ -38,9 +36,5 @@ IpcIoIOStrategy::unlinkdUseful() const
 void
 IpcIoIOStrategy::unlinkFile(char const *path)
 {
-#if USE_UNLINKD
     unlinkdUnlink(path);
-#else
-    ::unlink(path);
-#endif
 }
