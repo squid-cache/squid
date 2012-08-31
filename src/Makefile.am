@@ -430,6 +430,7 @@ squid_SOURCES = \
 	pconn.h \
 	PeerDigest.h \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -1451,6 +1452,7 @@ tests_testCacheManager_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -1841,6 +1843,7 @@ tests_testEvent_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -2071,6 +2074,7 @@ tests_testEventLoop_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -2297,6 +2301,7 @@ tests_test_http_range_SOURCES = \
 	Packer.cc \
 	Parsing.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -2567,6 +2572,7 @@ tests_testHttpRequest_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -3614,6 +3620,7 @@ tests_testURL_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
