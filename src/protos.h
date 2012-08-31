@@ -88,9 +88,6 @@ extern void reconfigure(int);
 
 #include "fatal.h"
 
-
-SQUIDCEXTERN int stringHasWhitespace(const char *); //String.cc
-SQUIDCEXTERN int stringHasCntl(const char *); //String.cc
 SQUIDCEXTERN void linklistPush(link_list **, void *); //list.cc
 SQUIDCEXTERN void *linklistShift(link_list **); //list.cc
 SQUIDCEXTERN int xrename(const char *from, const char *to); //disk.cc
