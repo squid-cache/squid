@@ -85,7 +85,6 @@ typedef struct _CacheDigest CacheDigest;
 
 typedef struct _Version Version;
 
-typedef struct _link_list link_list;
 
 typedef struct _customlog customlog;
 

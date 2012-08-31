@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          Linked list functions (deprecated)
  * AUTHOR: Harvest Derived
  *
@@ -35,7 +33,7 @@
 
 #include "squid.h"
 #include "Mem.h"
-#include "protos.h"
+#include "SquidList.h"
 #include "typedefs.h"
 
 /* This should go away, in favour of the List template class */

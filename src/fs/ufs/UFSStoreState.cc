@@ -41,6 +41,7 @@
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
 #include "protos.h"
+#include "SquidList.h"
 #include "SwapDir.h"
 #include "UFSStrategy.h"
 #include "UFSStoreState.h"
