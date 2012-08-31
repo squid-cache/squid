@@ -45,6 +45,10 @@
 #include "Store.h"
 #include "wordlist.h"
 
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
+
 /**
  \defgroup FQDNCacheAPI FQDN Cache API
  \ingroup Components

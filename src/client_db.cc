@@ -49,6 +49,10 @@
 #include "Store.h"
 #include "tools.h"
 
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
+
 static hash_table *client_table = NULL;
 
 static ClientInfo *clientdbAdd(const Ip::Address &addr);

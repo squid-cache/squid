@@ -1,6 +1,8 @@
+#ifndef SQUID_SNMP_AGENT_H_
+#define SQUID_SNMP_AGENT_H_
 /*
- * DEBUG: section 00    Client Database
- * AUTHOR: Duane Wessels
+ * DEBUG: section 
+ * AUTHOR: 
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,30 +32,19 @@
  *
  */
 
-#ifndef SQUID_CLIENT_DB_H_
-#define SQUID_CLIENT_DB_H_
-
-#include "anyp/ProtocolType.h"
-#include "enums.h"
-#include "ip/Address.h"
-
-class StoreEntry;
-class ClientInfo;
-
-extern void clientdbInit(void);
-extern void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
-extern int clientdbCutoffDenied(const Ip::Address &);
-extern void clientdbDump(StoreEntry *);
-extern void clientdbFreeMemory(void);
-extern int clientdbEstablished(const Ip::Address &, int);
-
-#if USE_DELAY_POOLS
-extern void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
-extern ClientInfo * clientdbGetInfo(const Ip::Address &addr);
-#endif
-
 #if SQUID_SNMP
-extern Ip::Address *client_entry(Ip::Address *current);
-#endif
 
-#endif /* SQUID_CLIENT_DB_H_ */
+#include "snmp_vars.h"
+
+extern variable_list *snmp_confFn(variable_list *, snint *);
+extern variable_list *snmp_sysFn(variable_list *, snint *);
+extern variable_list *snmp_prfSysFn(variable_list *, snint *);
+extern variable_list *snmp_prfProtoFn(variable_list *, snint *);
+extern variable_list *snmp_netIpFn(variable_list *, snint *);
+extern variable_list *snmp_netFqdnFn(variable_list *, snint *);
+extern variable_list *snmp_netDnsFn(variable_list *, snint *);
+extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
+extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
+
+#endif /* SQUID_SNMP */
+#endif /* SQUID_SNMP_AGENT_H_ */
