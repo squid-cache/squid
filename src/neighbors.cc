@@ -43,6 +43,7 @@
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
+#include "int.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"

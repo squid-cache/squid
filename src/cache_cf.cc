@@ -61,6 +61,7 @@
 #include "PeerDigest.h"
 #include "protos.h"
 #include "rfc1738.h"
+#include "SquidString.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "structs.h"

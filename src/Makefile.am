@@ -393,6 +393,7 @@ squid_SOURCES = \
 	icp_opcode.h \
 	icp_v2.cc \
 	icp_v3.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -704,6 +705,7 @@ ufsdump_SOURCES = \
 	cbdata.h \
 	cbdata.cc \
 	debug.cc \
+	int.h \
 	int.cc \
 	Mem.h \
 	mem.cc \
@@ -1211,6 +1213,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -1427,6 +1430,7 @@ tests_testCacheManager_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -1597,6 +1601,7 @@ tests_testDiskIO_SOURCES = \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -1813,6 +1818,7 @@ tests_testEvent_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -2042,6 +2048,7 @@ tests_testEventLoop_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -2266,6 +2273,7 @@ tests_test_http_range_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -2538,6 +2546,7 @@ tests_testHttpRequest_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -2701,6 +2710,7 @@ tests_testStore_SOURCES= \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -2916,6 +2926,7 @@ tests_testUfs_SOURCES = \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -3079,6 +3090,7 @@ tests_testRock_SOURCES = \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -3222,6 +3234,7 @@ tests_testCoss_SOURCES = \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -3372,6 +3385,7 @@ tests_testNull_SOURCES = \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -3577,6 +3591,7 @@ tests_testURL_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
