@@ -80,11 +80,6 @@ extern void reconfigure(int);
 
 #include "fatal.h"
 
-/*
- * hack to allow snmp access to the statistics counters
- */
-class StatCounters;
-        SQUIDCEXTERN StatCounters *snmpStatGet(int);
 
         /* CygWin & Windows NT Port */
         /* win32.c */
@@ -110,7 +105,6 @@ class StatCounters;
 
 #endif
 
-    extern char *strtokFile(void);
 
 #if USE_AUTH
 
