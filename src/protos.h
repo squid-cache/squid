@@ -29,10 +29,6 @@
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
-/* included for routines that have not moved out to their proper homes
- * yet.
- */
-#include "Packer.h"
 /* for routines still in this file that take CacheManager parameters */
 #include "ip/Address.h"
 /* for parameters that still need these */
@@ -40,10 +36,6 @@
 /* some parameters stil need this */
 #include "wordlist.h"
 #include "anyp/ProtocolType.h"
-#include "Debug.h"
-#include "HttpHeader.h"
-#include "HttpStatusCode.h"
-#include "lookup_t.h"
 
 class HttpRequestMethod;
 #if USE_DELAY_POOLS
@@ -88,10 +80,6 @@ extern void reconfigure(int);
 
 #include "fatal.h"
 
-SQUIDCEXTERN int xrename(const char *from, const char *to); //disk.cc
-extern int isPowTen(int); //int.cc
-
-SQUIDCEXTERN char *strwordtok(char *buf, char **t); //String.cc
 
 /*
  * ipc.c
