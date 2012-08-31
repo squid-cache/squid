@@ -135,6 +135,9 @@
 #if USE_SQUID_ESI
 #include "esi/Module.h"
 #endif
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 #if HAVE_PATHS_H
 #include <paths.h>

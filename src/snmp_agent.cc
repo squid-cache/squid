@@ -38,6 +38,8 @@
 #include "mem_node.h"
 #include "neighbors.h"
 #include "protos.h"
+#include "snmp_agent.h"
+#include "snmp_core.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "SquidMath.h"

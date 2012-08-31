@@ -54,6 +54,10 @@
 #include "util.h"
 #include "wordlist.h"
 
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
+
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
