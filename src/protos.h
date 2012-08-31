@@ -37,17 +37,6 @@
 #include "wordlist.h"
 #include "anyp/ProtocolType.h"
 
-class HttpRequestMethod;
-#if USE_DELAY_POOLS
-class ClientInfo;
-#endif
-
-class FwdState;
-
-class HttpRequest;
-class HttpReply;
-
-
 #if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);

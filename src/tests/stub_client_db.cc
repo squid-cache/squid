@@ -5,6 +5,8 @@
 #define STUB_API "client_db.cc"
 #include "tests/STUB.h"
 
+class ClientInfo;
+
 void clientdbInit(void) STUB
 void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t) STUB
 int clientdbCutoffDenied(const Ip::Address &) STUB_RETVAL(-1)
