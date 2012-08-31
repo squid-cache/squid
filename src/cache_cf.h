@@ -47,4 +47,5 @@ extern void parse_wordlist(wordlist ** list);
 extern void requirePathnameExists(const char *name, const char *path);
 extern void parse_time_t(time_t * var);
 
+
 #endif /* SQUID_CACHE_CF_H_ */
