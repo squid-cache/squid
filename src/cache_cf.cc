@@ -147,6 +147,8 @@ static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation:
 static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
 
+static peer_t parseNeighborType(const char *s);
+
 CBDATA_TYPE(peer);
 
 static const char *const T_MILLISECOND_STR = "millisecond";
