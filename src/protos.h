@@ -37,30 +37,6 @@
 #include "wordlist.h"
 #include "anyp/ProtocolType.h"
 
-#if SQUID_SNMP
-SQUIDCEXTERN PF snmpHandleUdp;
-SQUIDCEXTERN void snmpInit(void);
-SQUIDCEXTERN void snmpOpenPorts(void);
-SQUIDCEXTERN void snmpClosePorts(void);
-SQUIDCEXTERN const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
-
-SQUIDCEXTERN void addr2oid(Ip::Address &addr, oid *Dest);
-SQUIDCEXTERN void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
-
-SQUIDCEXTERN Ip::Address *client_entry(Ip::Address *current);
-extern variable_list *snmp_basicFn(variable_list *, snint *);
-extern variable_list *snmp_confFn(variable_list *, snint *);
-extern variable_list *snmp_sysFn(variable_list *, snint *);
-extern variable_list *snmp_prfSysFn(variable_list *, snint *);
-extern variable_list *snmp_prfProtoFn(variable_list *, snint *);
-extern variable_list *snmp_prfPeerFn(variable_list *, snint *);
-extern variable_list *snmp_netIpFn(variable_list *, snint *);
-extern variable_list *snmp_netFqdnFn(variable_list *, snint *);
-extern variable_list *snmp_netDnsFn(variable_list *, snint *);
-extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
-extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
-#endif /* SQUID_SNMP */
-
 #include "comm/forward.h"
 
 extern void shut_down(int);

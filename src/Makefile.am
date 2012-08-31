@@ -59,6 +59,7 @@ DIST_SUBDIRS += ssl
 SNMP_ALL_SOURCE = \
 	snmp_core.h \
 	snmp_core.cc \
+	snmp_agent.h \
 	snmp_agent.cc
 if ENABLE_SNMP
 SNMP_SOURCE = $(SNMP_ALL_SOURCE)
