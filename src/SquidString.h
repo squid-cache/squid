@@ -186,7 +186,8 @@ _SQUID_INLINE_ bool operator<(const String &a, const String &b);
 #endif
 
 extern const char *checkNullString(const char *p);
-extern int stringHasWhitespace(const char *); //String.cc
-extern int stringHasCntl(const char *); //String.cc
+extern int stringHasWhitespace(const char *);
+extern int stringHasCntl(const char *);
+extern char *strwordtok(char *buf, char **t);
 
 #endif /* SQUID_STRING_H */

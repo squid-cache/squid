@@ -54,5 +54,6 @@ extern void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *hand
 extern void file_read(int, char *, int, off_t, DRCB *, void *);
 extern void disk_init(void);
 extern void safeunlink(const char *path, int quiet);
+extern int xrename(const char *from, const char *to); //disk.cc
 
 #endif /* SQUID_DISK_H_ */

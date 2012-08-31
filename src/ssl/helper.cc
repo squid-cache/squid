@@ -7,6 +7,7 @@
 #include "protos.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
+#include "SquidString.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "wordlist.h"
