@@ -34,6 +34,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
+#include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
@@ -1385,9 +1386,7 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
-#if USE_AUTH
-        Auth::Init();      /* required for config parsing */
-#endif
+        Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
