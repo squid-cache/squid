@@ -45,6 +45,7 @@
 #include "acl/SourceAsn.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "cache_cf.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "forward.h"

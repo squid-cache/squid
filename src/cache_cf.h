@@ -46,6 +46,6 @@ extern void parse_eol(char *volatile *var);
 extern void parse_wordlist(wordlist ** list);
 extern void requirePathnameExists(const char *name, const char *path);
 extern void parse_time_t(time_t * var);
-
+extern char *strtokFile(void);
 
 #endif /* SQUID_CACHE_CF_H_ */
