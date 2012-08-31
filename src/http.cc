@@ -63,7 +63,6 @@
 #include "neighbors.h"
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidTime.h"

@@ -38,7 +38,6 @@
 #include "cache_cf.h"
 #include "client_db.h"
 #include "Debug.h"
-#include "protos.h"
 #include "wordlist.h"
 
 ACL *

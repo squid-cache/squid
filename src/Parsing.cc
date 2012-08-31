@@ -36,7 +36,6 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "Parsing.h"
-#include "protos.h"
 
 /*
  * These functions is the same as atoi/l/f, except that they check for errors

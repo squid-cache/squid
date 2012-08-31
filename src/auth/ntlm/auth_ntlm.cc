@@ -50,7 +50,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 

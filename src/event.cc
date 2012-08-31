@@ -39,7 +39,6 @@
 #include "Store.h"
 #include "SquidTime.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "tools.h"
 
 /* The list of event processes */

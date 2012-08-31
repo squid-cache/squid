@@ -24,7 +24,6 @@
 #include "HttpMsg.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "URL.h"
 

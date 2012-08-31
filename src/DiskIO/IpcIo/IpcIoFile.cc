@@ -20,7 +20,6 @@
 #include "ipc/Queue.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "tools.h"

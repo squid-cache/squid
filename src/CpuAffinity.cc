@@ -9,7 +9,6 @@
 #include "CpuAffinitySet.h"
 #include "Debug.h"
 #include "globals.h"
-#include "protos.h"
 #include "structs.h"
 #include "tools.h"
 

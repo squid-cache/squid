@@ -1,6 +1,5 @@
 #include "squid.h"
-/* because the clientdb API is defined in protos.h still */
-#include "protos.h"
+#include "client_db.h"
 
 #define STUB_API "client_db.cc"
 #include "tests/STUB.h"

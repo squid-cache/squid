@@ -42,7 +42,6 @@
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "ip/Address.h"
-#include "protos.h"
 #include "wordlist.h"
 
 static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);

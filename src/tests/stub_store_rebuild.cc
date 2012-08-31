@@ -34,7 +34,6 @@
 
 #include "squid.h"
 #include "MemBuf.h"
-#include "protos.h"
 
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"

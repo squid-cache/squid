@@ -12,7 +12,6 @@
 #include "DiskIO/WriteRequest.h"
 #include "disk.h"
 #include "globals.h"
-#include "protos.h"
 
 #if HAVE_SYS_MMAN_H
 #include <sys/mman.h>

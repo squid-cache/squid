@@ -47,7 +47,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "auth/negotiate/Scheme.h"
 #include "auth/negotiate/User.h"

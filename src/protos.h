@@ -43,9 +43,6 @@ extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
 
-#include "fatal.h"
-
-
         /* CygWin & Windows NT Port */
         /* win32.c */
 #if _SQUID_WINDOWS_

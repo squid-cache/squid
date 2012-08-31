@@ -41,7 +41,6 @@
 #include "acl/DomainData.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
-#include "protos.h"
 
 SourceDomainLookup SourceDomainLookup::instance_;
 

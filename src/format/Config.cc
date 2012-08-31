@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "cache_cf.h"
+#include "Debug.h"
 #include "format/Config.h"
-#include "protos.h"
 #include <list>
 
 Format::FmtConfig Format::TheConfig;

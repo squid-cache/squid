@@ -5,7 +5,6 @@
 #include "squid.h"
 #include "IpcIoFile.h"
 #include "IpcIoIOStrategy.h"
-#include "protos.h"
 #include "unlinkd.h"
 
 bool

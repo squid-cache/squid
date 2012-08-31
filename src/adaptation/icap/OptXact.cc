@@ -12,7 +12,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXact);

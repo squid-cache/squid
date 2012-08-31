@@ -42,7 +42,6 @@
 #include "icmp/net_db.h"
 #include "MemBuf.h"
 #include "mime_header.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"

@@ -33,7 +33,6 @@
 #include "squid.h"
 #include "disk.h"
 #include "globals.h"
-#include "protos.h"
 #include "RebuildState.h"
 #include "SquidTime.h"
 #include "store_key_md5.h"

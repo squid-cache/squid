@@ -54,7 +54,6 @@
 #include "md5.h"
 #include "multicast.h"
 #include "neighbors.h"
-#include "protos.h"
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidTime.h"

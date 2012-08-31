@@ -39,7 +39,6 @@
 #include "acl/Checklist.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "URL.h"
 

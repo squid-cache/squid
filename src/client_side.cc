@@ -119,7 +119,6 @@
 #include "MemObject.h"
 #include "mime_header.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

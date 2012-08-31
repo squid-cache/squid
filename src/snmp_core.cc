@@ -39,7 +39,6 @@
 #include "comm/UdpOpenDialer.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "protos.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"

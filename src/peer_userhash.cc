@@ -43,7 +43,6 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
-#include "protos.h"
 #include "Store.h"
 
 #if HAVE_MATH_H

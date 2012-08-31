@@ -40,7 +40,6 @@
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "SquidList.h"
 #include "SquidTime.h"
 #include "Store.h"

@@ -42,7 +42,6 @@
 #include "HttpRequest.h"
 #include "helper.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "redirect.h"
 #include "rfc1738.h"
 #include "Store.h"

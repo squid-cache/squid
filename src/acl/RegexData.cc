@@ -43,7 +43,6 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "Mem.h"
-#include "protos.h"
 #include "wordlist.h"
 
 static void

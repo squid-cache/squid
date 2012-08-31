@@ -48,7 +48,6 @@
 #include "MemBuf.h"
 #include "http.h"
 #include "PeerSelectState.h"
-#include "protos.h"
 #include "StatCounters.h"
 #include "tools.h"
 

@@ -39,7 +39,6 @@
 #include "client_side_request.h"
 #include "HttpReply.h"
 #include "StrList.h"
-#include "protos.h"
 
 /*
  *    Currently only byte ranges are supported

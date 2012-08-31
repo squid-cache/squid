@@ -46,7 +46,6 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc3596.h"
 #include "SquidTime.h"
 #include "Store.h"

@@ -41,7 +41,6 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "rfc1123.h"
 #include "StatHist.h"
 #include "Store.h"

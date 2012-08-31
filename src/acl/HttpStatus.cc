@@ -38,7 +38,6 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "HttpReply.h"
-#include "protos.h"
 #include "wordlist.h"
 
 #if HAVE_LIMITS_H

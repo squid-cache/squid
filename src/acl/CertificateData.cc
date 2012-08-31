@@ -38,7 +38,6 @@
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
 #include "cache_cf.h"
-#include "protos.h"
 #include "wordlist.h"
 
 ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (), sslAttributeCall (sslStrategy)

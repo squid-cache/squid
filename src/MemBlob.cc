@@ -33,7 +33,6 @@
 #include "Debug.h"
 #include "Mem.h"
 #include "MemBlob.h"
-#include "protos.h"
 
 #if HAVE_IOSTREAM
 #include <iostream>

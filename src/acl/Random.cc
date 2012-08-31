@@ -39,7 +39,6 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "wordlist.h"
 
 ACL *

@@ -10,7 +10,6 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/IntervalAction.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "Store.h"
 #include "tools.h"
