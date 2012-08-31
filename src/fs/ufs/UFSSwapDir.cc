@@ -40,7 +40,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "RebuildState.h"
 #include "SquidMath.h"
 #include "DiskIO/DiskIOStrategy.h"

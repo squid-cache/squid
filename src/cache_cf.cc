@@ -60,7 +60,6 @@
 #include "mgr/Registration.h"
 #include "Parsing.h"
 #include "PeerDigest.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "SquidString.h"
 #include "Store.h"

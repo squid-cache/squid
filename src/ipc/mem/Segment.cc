@@ -8,8 +8,9 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "compat/shm.h"
+#include "Debug.h"
+#include "fatal.h"
 #include "ipc/mem/Segment.h"
-#include "protos.h"
 #include "tools.h"
 
 #include <fcntl.h>

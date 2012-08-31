@@ -45,7 +45,6 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "MemObject.h"
-#include "protos.h"
 #include "Store.h"
 #include "StoreClient.h"
 

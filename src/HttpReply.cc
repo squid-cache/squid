@@ -43,7 +43,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"

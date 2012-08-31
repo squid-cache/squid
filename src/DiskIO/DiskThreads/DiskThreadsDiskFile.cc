@@ -44,7 +44,6 @@
 #include "globals.h"
 #include "StatCounters.h"
 #include "Store.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

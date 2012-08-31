@@ -42,7 +42,6 @@
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"

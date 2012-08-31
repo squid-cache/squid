@@ -45,7 +45,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "Store.h"
 #include "StrList.h"
 

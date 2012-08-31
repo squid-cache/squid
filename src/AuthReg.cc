@@ -17,7 +17,6 @@
 #endif
 
 #include "Debug.h"
-#include "protos.h"
 
 /**
  * Initialize the authentication modules (if any)

@@ -60,7 +60,6 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to

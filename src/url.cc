@@ -36,7 +36,6 @@
 #include "squid.h"
 #include "globals.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "SquidString.h"
 #include "URL.h"

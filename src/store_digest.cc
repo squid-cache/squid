@@ -42,7 +42,6 @@
 #include "globals.h"
 #include "mgr/Registration.h"
 #include "store_digest.h"
-#include "protos.h"
 
 #if USE_CACHE_DIGESTS
 #include "CacheDigest.h"

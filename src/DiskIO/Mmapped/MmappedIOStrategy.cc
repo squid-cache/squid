@@ -5,7 +5,6 @@
 #include "squid.h"
 #include "MmappedFile.h"
 #include "MmappedIOStrategy.h"
-#include "protos.h"
 #include "unlinkd.h"
 
 bool

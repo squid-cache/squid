@@ -13,7 +13,6 @@
 #include "MemObject.h"
 #include "MemStore.h"
 #include "mime_header.h"
-#include "protos.h"
 #include "StoreStats.h"
 #include "tools.h"
 

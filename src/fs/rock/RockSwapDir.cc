@@ -19,7 +19,6 @@
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "tools.h"
 

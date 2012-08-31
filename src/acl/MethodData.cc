@@ -37,7 +37,6 @@
 #include "acl/Checklist.h"
 #include "cache_cf.h"
 #include "HttpRequestMethod.h"
-#include "protos.h"
 #include "wordlist.h"
 
 int ACLMethodData::ThePurgeCount = 0;

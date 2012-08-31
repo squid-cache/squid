@@ -53,7 +53,6 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mime.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "Server.h"
 #include "SquidString.h"

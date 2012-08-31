@@ -39,7 +39,6 @@
 #include "globals.h"
 #include "ICP.h"
 #include "ipcache.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "tools.h"
 

@@ -39,7 +39,6 @@
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "Mem.h"
-#include "protos.h"
 
 /*
  *    Currently only byte ranges are supported

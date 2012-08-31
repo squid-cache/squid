@@ -38,7 +38,6 @@
 #include "Mem.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "Store.h"
 
 #if HAVE_LIMITS_H

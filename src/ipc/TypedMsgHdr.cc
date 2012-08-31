@@ -6,7 +6,6 @@
  */
 
 #include "squid.h"
-#include "protos.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "tools.h"

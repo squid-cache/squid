@@ -16,7 +16,6 @@
 #include "mgr/Inquirer.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "protos.h"
 #include "tools.h"
 #if SQUID_SNMP
 #include "snmp/Inquirer.h"

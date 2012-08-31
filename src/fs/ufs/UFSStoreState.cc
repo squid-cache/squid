@@ -40,7 +40,6 @@
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "protos.h"
 #include "SquidList.h"
 #include "SwapDir.h"
 #include "UFSStrategy.h"

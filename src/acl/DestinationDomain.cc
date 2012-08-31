@@ -42,7 +42,6 @@
 #include "fqdncache.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
-#include "protos.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 

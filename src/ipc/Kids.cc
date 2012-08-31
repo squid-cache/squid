@@ -6,7 +6,6 @@
 #include "base/TextException.h"
 #include "globals.h"
 #include "ipc/Kids.h"
-#include "protos.h"
 #include "tools.h"
 #include "structs.h"
 

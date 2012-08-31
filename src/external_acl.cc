@@ -56,7 +56,6 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "SquidString.h"
 #include "SquidTime.h"

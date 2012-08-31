@@ -43,7 +43,6 @@
 #include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "Server.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

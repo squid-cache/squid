@@ -6,7 +6,6 @@
 #include "testEventLoop.h"
 #include "EventLoop.h"
 #include "Mem.h"
-#include "protos.h"
 #include "stat.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );

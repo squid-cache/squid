@@ -38,7 +38,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "xusleep.h"
-#include "protos.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
