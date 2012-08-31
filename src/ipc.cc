@@ -37,6 +37,7 @@
 #include "globals.h"
 #include "ip/Address.h"
 #include "protos.h"
+#include "SquidIpc.h"
 #include "tools.h"
 #include "rfc1738.h"
 

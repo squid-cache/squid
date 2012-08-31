@@ -42,6 +42,7 @@
 #include "protos.h"
 #include "Store.h"
 #include "StatCounters.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
 #include "unlinkd.h"
 

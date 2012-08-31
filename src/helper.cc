@@ -43,6 +43,7 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "protos.h"
+#include "SquidIpc.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
