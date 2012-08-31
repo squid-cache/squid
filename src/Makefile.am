@@ -156,9 +156,9 @@ WINSVC_SOURCE =
 endif
 
 if USE_IPC_WIN32
-IPC_SOURCE = ipc_win32.cc
+IPC_SOURCE = SquidIpc.h ipc_win32.cc
 else
-IPC_SOURCE = ipc.cc
+IPC_SOURCE = SquidIpc.h ipc.cc
 endif
 
 AIO_WIN32_ALL_SOURCES = \
