@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "acl/StringData.h"
 #include "acl/Checklist.h"
+#include "Debug.h"
 #include "protos.h"
 #include "wordlist.h"
 
