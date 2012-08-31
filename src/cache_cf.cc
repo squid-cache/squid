@@ -37,6 +37,7 @@
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
+#include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"

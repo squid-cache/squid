@@ -1,6 +1,7 @@
 #include "squid.h"
 
 #if USE_AUTH
+#include "AuthReg.h"
 
 #if HAVE_AUTH_MODULE_BASIC
 #include "auth/basic/Scheme.h"

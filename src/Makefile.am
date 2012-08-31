@@ -265,6 +265,7 @@ squid_SOURCES = \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1361,6 +1362,7 @@ tests_testCacheManager_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1743,6 +1745,7 @@ tests_testEvent_SOURCES = \
 	CacheDigest.h \
 	CacheDigest.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -1975,6 +1978,7 @@ tests_testEventLoop_SOURCES = \
 	CacheDigest.cc \
 	cache_manager.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2202,6 +2206,7 @@ tests_test_http_range_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2484,6 +2489,7 @@ tests_testHttpRequest_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -3521,6 +3527,7 @@ tests_testURL_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \

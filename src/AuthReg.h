@@ -1,4 +1,9 @@
+#ifndef SQUID_AUTHREG_H_
+#define SQUID_AUTHREG_H_
 /*
+ * DEBUG: section 
+ * AUTHOR: 
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -26,50 +31,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_PROTOS_H
-#define SQUID_PROTOS_H
 
-/* for routines still in this file that take CacheManager parameters */
-#include "ip/Address.h"
-/* for parameters that still need these */
-#include "enums.h"
-/* some parameters stil need this */
-#include "wordlist.h"
-#include "anyp/ProtocolType.h"
+namespace Auth {
 
-#include "comm/forward.h"
+#if USE_AUTH
+    /// Initialize Auth subsystem
+    extern void Init(void);
+#else /* USE_AUTH */
+    inline void Init(void) {} /* NOP if not USE_AUTH */
+#endif /* USE_AUTH */
 
-extern void shut_down(int);
-extern void rotate_logs(int);
-extern void reconfigure(int);
-
-#include "fatal.h"
-
-
-        /* CygWin & Windows NT Port */
-        /* win32.c */
-#if _SQUID_WINDOWS_
-        SQUIDCEXTERN int WIN32_Subsystem_Init(int *, char ***);
-        SQUIDCEXTERN void WIN32_sendSignal(int);
-        SQUIDCEXTERN void WIN32_Abort(int);
-        SQUIDCEXTERN void WIN32_Exit(void);
-        SQUIDCEXTERN void WIN32_SetServiceCommandLine(void);
-        SQUIDCEXTERN void WIN32_InstallService(void);
-        SQUIDCEXTERN void WIN32_RemoveService(void);
-        SQUIDCEXTERN int SquidMain(int, char **);
-#endif /* _SQUID_WINDOWS_ */
-#if _SQUID_MSWIN_
-
-        SQUIDCEXTERN int WIN32_pipe(int[2]);
-
-            SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
-    SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
-
-    SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
-    SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
-
-#endif
-
-
-
-#endif /* SQUID_PROTOS_H */
+} // namespace Auth
+#endif /* SQUID_AUTHREG_H_ */
