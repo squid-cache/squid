@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #include "protos.h"
 #include "rfc1738.h"
+#include "SquidString.h"
 #include "URL.h"
 #include "URLScheme.h"
 

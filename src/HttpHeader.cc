@@ -46,6 +46,7 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
+#include "SquidString.h"
 #include "TimeOrTag.h"
 
 /*
