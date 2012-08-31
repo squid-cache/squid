@@ -26,10 +26,13 @@
  */
 
 #include "squid.h"
-#include "base64.h"
-#include "Debug.h"
 
 #if HAVE_KRB5 && HAVE_GSSAPI
+
+#include "base64.h"
+#include "Debug.h"
+#include "peer_proxy_negotiate_auth.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
