@@ -43,7 +43,6 @@
 #include "acl/FilledChecklist.h"
 #include "fde.h"
 #include "globals.h"
-#include "protos.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"

@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "cache_cf.h"
+#include "Debug.h"
 #include "log/Config.h"
-#include "protos.h"
 
 Log::LogConfig Log::TheConfig;
 

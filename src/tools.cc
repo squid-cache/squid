@@ -49,7 +49,6 @@
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
 #include "ipcache.h"
-#include "protos.h"
 #include "tools.h"
 #include "SwapDir.h"
 #include "wordlist.h"

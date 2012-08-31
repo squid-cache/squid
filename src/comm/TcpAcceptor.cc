@@ -46,7 +46,6 @@
 #include "globals.h"
 #include "ip/Intercept.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 

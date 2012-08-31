@@ -38,7 +38,6 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "StatCounters.h"
 
 #if HAVE_ERRNO_H

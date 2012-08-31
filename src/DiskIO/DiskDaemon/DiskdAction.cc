@@ -13,7 +13,6 @@
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionWriter.h"
 #include "Store.h"
-#include "protos.h"
 #include "tools.h"
 
 DiskdActionData::DiskdActionData()

@@ -53,7 +53,6 @@
 #include "neighbors.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "stat.h"

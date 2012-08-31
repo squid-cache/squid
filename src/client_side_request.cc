@@ -69,7 +69,6 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"

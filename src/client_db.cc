@@ -42,7 +42,6 @@
 #include "log/access_log.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

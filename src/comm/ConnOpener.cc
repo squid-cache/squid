@@ -13,7 +13,6 @@
 #include "icmp/net_db.h"
 #include "ipcache.h"
 #include "SquidTime.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

@@ -37,7 +37,6 @@
 #include "int.h"
 #include "md5.h"
 #include "MemObject.h"
-#include "protos.h"
 #include "Store.h"
 #include "StoreMetaMD5.h"
 

@@ -37,7 +37,6 @@
 #include "globals.h"
 #include "log/File.h"
 #include "log/ModStdio.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

@@ -8,7 +8,6 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
-#include "protos.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "testStoreSupport.h"

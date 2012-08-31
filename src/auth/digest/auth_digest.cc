@@ -53,7 +53,6 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 #include "StrList.h"

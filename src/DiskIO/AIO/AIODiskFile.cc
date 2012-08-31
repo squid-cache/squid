@@ -52,7 +52,6 @@
 #include "DiskIO/WriteRequest.h"
 #include "disk.h"
 #include "globals.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

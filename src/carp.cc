@@ -38,7 +38,6 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
-#include "protos.h"
 #include "Store.h"
 #include "URL.h"
 #include "URLScheme.h"

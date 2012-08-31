@@ -47,7 +47,6 @@
 #include "esi/VarState.h"
 #include "HttpReply.h"
 #include "log/access_log.h"
-#include "protos.h"
 
 CBDATA_CLASS_INIT (ESIStreamContext);
 

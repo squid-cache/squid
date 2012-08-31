@@ -7,7 +7,6 @@
 #include "globals.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 

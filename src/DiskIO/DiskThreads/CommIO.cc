@@ -37,7 +37,6 @@
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "fd.h"
 #include "globals.h"
-#include "protos.h"
 
 void
 CommIO::Initialise()

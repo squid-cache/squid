@@ -38,7 +38,6 @@
 #include "Debug.h"
 #include "wordlist.h"
 #include "Parsing.h"
-#include "protos.h"
 
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS-IGNORE */

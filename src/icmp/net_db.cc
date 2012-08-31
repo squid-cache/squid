@@ -55,7 +55,6 @@
 #include "mgr/Registration.h"
 #include "mime_header.h"
 #include "neighbors.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"

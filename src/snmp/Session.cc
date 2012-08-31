@@ -8,7 +8,6 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
-#include "protos.h"
 #include "snmp/Session.h"
 #include "tools.h"
 
