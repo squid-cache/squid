@@ -400,7 +400,8 @@ squid_SOURCES = \
 	ipcache.cc \
 	ipcache.h \
 	$(LEAKFINDERSOURCE) \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	lookup_t.h \
 	main.cc \
 	Mem.h \
@@ -1211,7 +1212,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	mem_node.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1428,7 +1430,8 @@ tests_testCacheManager_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
@@ -1595,7 +1598,8 @@ tests_testDiskIO_SOURCES = \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
@@ -1812,7 +1816,8 @@ tests_testEvent_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
@@ -2040,7 +2045,8 @@ tests_testEventLoop_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
@@ -2265,7 +2271,8 @@ tests_test_http_range_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
@@ -2534,7 +2541,8 @@ tests_testHttpRequest_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
@@ -2694,7 +2702,8 @@ tests_testStore_SOURCES= \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
@@ -2908,7 +2917,8 @@ tests_testUfs_SOURCES = \
 	HttpReply.cc \
 	HttpStatusLine.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -3070,7 +3080,8 @@ tests_testRock_SOURCES = \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	Mem.h \
 	mem.cc \
 	MemBuf.cc \
@@ -3212,7 +3223,8 @@ tests_testCoss_SOURCES = \
 	HttpReply.cc \
 	HttpStatusLine.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -3361,7 +3373,8 @@ tests_testNull_SOURCES = \
 	HttpReply.cc \
 	HttpStatusLine.cc \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -3567,7 +3580,8 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	multicast.h \
 	multicast.cc \
 	Mem.h \

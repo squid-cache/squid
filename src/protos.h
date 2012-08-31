@@ -88,8 +88,6 @@ extern void reconfigure(int);
 
 #include "fatal.h"
 
-SQUIDCEXTERN void linklistPush(link_list **, void *); //list.cc
-SQUIDCEXTERN void *linklistShift(link_list **); //list.cc
 SQUIDCEXTERN int xrename(const char *from, const char *to); //disk.cc
 extern int isPowTen(int); //int.cc
 
