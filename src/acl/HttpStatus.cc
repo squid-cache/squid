@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -37,6 +35,7 @@
 #include "squid.h"
 #include "acl/HttpStatus.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "HttpReply.h"
 #include "protos.h"
