@@ -94,6 +94,7 @@
 #include "URL.h"
 #include "wccp.h"
 #include "wccp2.h"
+#include "WinSvc.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -1279,12 +1280,7 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#if _SQUID_WINDOWS_
-    int WIN32_init_err;
-#endif
-
 #if HAVE_SBRK
-
     sbrk_start = sbrk(0);
 #endif
 
@@ -1298,10 +1294,10 @@ SquidMain(int argc, char **argv)
 
 #endif
 
-#if _SQUID_WINDOWS_
+    /* NOP under non-windows */
+    int WIN32_init_err=0;
     if ((WIN32_init_err = WIN32_Subsystem_Init(&argc, &argv)))
         return WIN32_init_err;
-#endif
 
     /* call mallopt() before anything else */
 #if HAVE_MALLOPT
@@ -1545,22 +1541,16 @@ sendSignal(void)
 
     if (pid > 1) {
 #if USE_WIN32_SERVICE
-
         if (opt_signal_service) {
             WIN32_sendSignal(opt_send_signal);
             exit(0);
-        } else
-#if _SQUID_MSWIN_
-        {
+        } else {
             fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal to Squid Service:\n");
             fprintf(stderr, "missing -n command line switch.\n");
             exit(1);
         }
-
         /* NOTREACHED */
-#endif
-
 #endif
 
         if (kill(pid, opt_send_signal) &&

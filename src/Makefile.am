@@ -147,6 +147,7 @@ endif
 
 WIN32_ALL_SOURCE = \
 	win32.cc \
+	WinSvc.h \
 	WinSvc.cc
 if ENABLE_WIN32SPECIFIC
 WIN32_SOURCE = win32.cc
