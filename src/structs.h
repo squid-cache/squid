@@ -137,6 +137,9 @@ class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
 class Store;
+class customlog;
+class cachemgr_passwd;
+class refresh_t;
 namespace AnyP
 {
 struct PortCfg;
@@ -1039,13 +1042,15 @@ private:
 };
 
 
-struct _cachemgr_passwd {
+class cachemgr_passwd {
+public:
     char *passwd;
     wordlist *actions;
     cachemgr_passwd *next;
 };
 
-struct _refresh_t {
+class refresh_t {
+public:
     const char *pattern;
     regex_t compiled_pattern;
     time_t min;
@@ -1072,7 +1077,8 @@ struct _refresh_t {
     int max_stale;
 };
 
-struct _CacheDigest {
+class CacheDigest {
+public:
     /* public, read-only */
     char *mask;			/* bit mask */
     int mask_size;		/* mask size in bytes */
@@ -1114,7 +1120,8 @@ class Logfile;
 
 #include "format/Format.h"
 #include "log/Formats.h"
-struct _customlog {
+class customlog {
+public:
     char *filename;
     ACLList *aclList;
     Format::Format *logFormat;

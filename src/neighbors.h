@@ -34,54 +34,53 @@
 #define SQUID_NEIGHBORS_H_
 
 #include "enums.h"
-#include "HttpRequestMethod.h"
+#include "ICP.h"
 #include "lookup_t.h"
-#include "ip/Address.h"
-#include "typedefs.h"
 
 class HttpRequest;
+class HttpRequestMethod;
 class peer;
 class StoreEntry;
 
-SQUIDCEXTERN peer *getFirstPeer(void);
-SQUIDCEXTERN peer *getFirstUpParent(HttpRequest *);
-SQUIDCEXTERN peer *getNextPeer(peer *);
-SQUIDCEXTERN peer *getSingleParent(HttpRequest *);
-SQUIDCEXTERN int neighborsCount(HttpRequest *);
-SQUIDCEXTERN int neighborsUdpPing(HttpRequest *,
+extern peer *getFirstPeer(void);
+extern peer *getFirstUpParent(HttpRequest *);
+extern peer *getNextPeer(peer *);
+extern peer *getSingleParent(HttpRequest *);
+extern int neighborsCount(HttpRequest *);
+extern int neighborsUdpPing(HttpRequest *,
                                   StoreEntry *,
                                   IRCB * callback,
                                   void *data,
                                   int *exprep,
                                   int *timeout);
-SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
+extern void neighborAddAcl(const char *, const char *);
 
-SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);
-SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
-SQUIDCEXTERN void neighbors_init(void);
+extern void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);
+extern void neighborAdd(const char *, const char *, int, int, int, int, int);
+extern void neighbors_init(void);
 #if USE_HTCP
-SQUIDCEXTERN void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+extern void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-SQUIDCEXTERN peer *peerFindByName(const char *);
-SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
-SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);
-SQUIDCEXTERN peer *getRoundRobinParent(HttpRequest * request);
-SQUIDCEXTERN peer *getWeightedRoundRobinParent(HttpRequest * request);
-SQUIDCEXTERN void peerClearRRStart(void);
-SQUIDCEXTERN void peerClearRR(void);
-SQUIDCEXTERN lookup_t peerDigestLookup(peer * p, HttpRequest * request);
-SQUIDCEXTERN peer *neighborsDigestSelect(HttpRequest * request);
-SQUIDCEXTERN void peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup);
-SQUIDCEXTERN void peerNoteDigestGone(peer * p);
-SQUIDCEXTERN int neighborUp(const peer * e);
-SQUIDCEXTERN CBDUNL peerDestroy;
-SQUIDCEXTERN const char *neighborTypeStr(const peer * e);
-SQUIDCEXTERN peer_t neighborType(const peer *, const HttpRequest *);
-SQUIDCEXTERN void peerConnectFailed(peer *);
-SQUIDCEXTERN void peerConnectSucceded(peer *);
-SQUIDCEXTERN void dump_peer_options(StoreEntry *, peer *);
-SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
+extern peer *peerFindByName(const char *);
+extern peer *peerFindByNameAndPort(const char *, unsigned short);
+extern peer *getDefaultParent(HttpRequest * request);
+extern peer *getRoundRobinParent(HttpRequest * request);
+extern peer *getWeightedRoundRobinParent(HttpRequest * request);
+extern void peerClearRRStart(void);
+extern void peerClearRR(void);
+extern lookup_t peerDigestLookup(peer * p, HttpRequest * request);
+extern peer *neighborsDigestSelect(HttpRequest * request);
+extern void peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup);
+extern void peerNoteDigestGone(peer * p);
+extern int neighborUp(const peer * e);
+extern CBDUNL peerDestroy;
+extern const char *neighborTypeStr(const peer * e);
+extern peer_t neighborType(const peer *, const HttpRequest *);
+extern void peerConnectFailed(peer *);
+extern void peerConnectSucceded(peer *);
+extern void dump_peer_options(StoreEntry *, peer *);
+extern int peerHTTPOkay(const peer *, HttpRequest *);
 
-SQUIDCEXTERN peer *whichPeer(const Ip::Address &from);
+extern peer *whichPeer(const Ip::Address &from);
 
 #endif /* SQUID_NEIGHBORS_H_ */

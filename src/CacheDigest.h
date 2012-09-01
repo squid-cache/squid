@@ -36,6 +36,7 @@
 #include "typedefs.h"
 class CacheDigestGuessStats;
 class StoreEntry;
+class CacheDigest;
 
 extern CacheDigest *cacheDigestCreate(int capacity, int bpe);
 extern void cacheDigestDestroy(CacheDigest * cd);
