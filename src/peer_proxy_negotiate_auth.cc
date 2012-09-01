@@ -33,6 +33,10 @@
 #include "Debug.h"
 #include "peer_proxy_negotiate_auth.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if HAVE_PROFILE_H
 #include <profile.h>
 #endif				/* HAVE_PROFILE_H */
@@ -543,4 +547,7 @@ cleanup:
         return token;
     }
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
