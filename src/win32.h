@@ -1,4 +1,10 @@
+#ifndef SQUID_WIN32_H_
+#define SQUID_WIN32_H_
 /*
+ * Windows support
+ * AUTHOR: Guido Serassio <serassio@squid-cache.org>
+ * inspired by previous work by Romeo Anghelache & Eric Stern.
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -24,26 +30,35 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * 
  */
-#ifndef SQUID_PROTOS_H
-#define SQUID_PROTOS_H
-
-/* for routines still in this file that take CacheManager parameters */
-#include "ip/Address.h"
-/* for parameters that still need these */
-#include "enums.h"
-/* some parameters stil need this */
-#include "wordlist.h"
-#include "anyp/ProtocolType.h"
-
-#include "comm/forward.h"
-
-extern void shut_down(int);
-extern void rotate_logs(int);
-extern void reconfigure(int);
 
 
+#if _SQUID_MSWIN_
+
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+extern int WIN32_pipe(int[2]);
+
+extern int WIN32_getrusage(int, struct rusage *);
+extern void WIN32_ExceptionHandlerInit(void);
+
+extern int Win32__WSAFDIsSet(int fd, fd_set* set);
+extern DWORD WIN32_IpAddrChangeMonitorInit();
+
+#endif
 
 
-#endif /* SQUID_PROTOS_H */
+
+#endif /* SQUID_WIN32_H_ */
