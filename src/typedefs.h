@@ -45,31 +45,9 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-typedef struct _close_handler close_handler;
-
-typedef struct _dread_ctrl dread_ctrl;
-
-typedef struct _dwrite_q dwrite_q;
-
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
-typedef struct _domain_ping domain_ping;
-
-typedef struct _domain_type domain_type;
-
-typedef struct _DigestFetchState DigestFetchState;
-
-typedef struct _net_db_name net_db_name;
-
-typedef struct _net_db_peer net_db_peer;
-
-typedef struct _netdbEntry netdbEntry;
-
 typedef struct _icp_common_t icp_common_t;
-
-typedef struct _iostats iostats;
-
-typedef struct _http_state_flags http_state_flags;
 
 typedef struct _header_mangler header_mangler;
 
