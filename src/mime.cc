@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 25    MIME Parsing and Internal Icons
  * AUTHOR: Harvest Derived
  *

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 39    Peer user hash based selection
  * AUTHOR: Henrik Nordstrom
  * BASED ON: carp.cc

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 81    Store HEAP Removal Policies
  * AUTHOR: Henrik Nordstrom
  *

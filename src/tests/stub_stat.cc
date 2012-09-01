@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Robert Collins
  *

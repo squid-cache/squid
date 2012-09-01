@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section --    Unlink Daemon
  * AUTHOR: Duane Wessels
  *

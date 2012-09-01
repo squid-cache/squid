@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
  *

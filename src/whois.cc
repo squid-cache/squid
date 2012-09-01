@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
  *

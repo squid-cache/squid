@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom
  *

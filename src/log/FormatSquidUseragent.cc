@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 46    Access Log - Squid useragent format
  * AUTHOR: Joe Ramey <ramey@csc.ti.com>
  * AUTHOR: Amos Jeffries <amosjeffries@squid-cache.org>

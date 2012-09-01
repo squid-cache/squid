@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 81    CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa
  *

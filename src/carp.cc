@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
  * BASED ON: carp.c by Eric Stern and draft-vinod-carp-v1-03.txt

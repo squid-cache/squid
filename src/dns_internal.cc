@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
  *

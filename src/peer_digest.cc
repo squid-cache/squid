@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
  *

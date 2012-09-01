@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          FDE
  * AUTHOR: Robert Collins
  *

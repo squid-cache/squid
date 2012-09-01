@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
  *

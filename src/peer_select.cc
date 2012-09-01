@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
  *

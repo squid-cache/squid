@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived
  *

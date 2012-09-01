@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 33    Client-side Routines
  *
  */

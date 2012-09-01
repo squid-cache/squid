@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 92    Storage File System
  * AUTHOR: Robert Collins
  *

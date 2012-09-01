@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 53    Radix Tree data structure implementation
  * AUTHOR: NetBSD Derived
  *

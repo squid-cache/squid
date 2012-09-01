@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 66    HTTP Header Tools
  * AUTHOR: Alex Rousskov
  *

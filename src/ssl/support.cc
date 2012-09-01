@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
  *
