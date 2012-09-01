@@ -113,11 +113,6 @@ struct acl_size_t {
     int64_t size;
 };
 
-struct ushortlist {
-    unsigned short i;
-    ushortlist *next;
-};
-
 struct relist {
     int flags;
     char *pattern;
@@ -662,13 +657,15 @@ struct SquidConfig2 {
 
 SQUIDCEXTERN SquidConfig2 Config2;
 
-struct _close_handler {
+class close_handler {
+public:
     PF *handler;
     void *data;
     close_handler *next;
 };
 
-struct _dread_ctrl {
+class dread_ctrl {
+public:
     int fd;
     off_t offset;
     int req_len;
@@ -678,7 +675,8 @@ struct _dread_ctrl {
     void *client_data;
 };
 
-struct _dwrite_q {
+class dwrite_q {
+public:
     off_t file_offset;
     char *buf;
     size_t len;
@@ -725,7 +723,8 @@ public:
     HttpHeaderFieldStat stat;
 };
 
-struct _http_state_flags {
+class http_state_flags {
+public:
     unsigned int proxying:1;
     unsigned int keepalive:1;
     unsigned int only_if_cached:1;
@@ -743,13 +742,15 @@ struct _http_state_flags {
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
-struct _domain_ping {
+class domain_ping {
+public:
     char *domain;
     int do_ping;		/* boolean */
     domain_ping *next;
 };
 
-struct _domain_type {
+class domain_type {
+public:
     char *domain;
     peer_t type;
     domain_type *next;
@@ -917,20 +918,25 @@ struct peer {
     int connection_auth;
 };
 
-struct _net_db_name {
+class netdbEntry;
+
+class net_db_name {
+public:
     hash_link hash;		/* must be first */
     net_db_name *next;
     netdbEntry *net_db_entry;
 };
 
-struct _net_db_peer {
+class net_db_peer {
+public:
     const char *peername;
     double hops;
     double rtt;
     time_t expires;
 };
 
-struct _netdbEntry {
+class netdbEntry {
+public:
     hash_link hash;		/* must be first */
     char network[MAX_IPSTRLEN];
     int pings_sent;
@@ -946,9 +952,11 @@ struct _netdbEntry {
     int n_peers;
 };
 
-struct _iostats {
+class iostats {
+public:
+    static const int histSize=16;
 
-    enum { histSize = 16 };
+//    enum { histSize = 16 };
 
     struct {
         int reads;
