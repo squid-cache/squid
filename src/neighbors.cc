@@ -129,7 +129,7 @@ peer_t
 neighborType(const peer * p, const HttpRequest * request)
 {
 
-    const struct _domain_type *d = NULL;
+    const domain_type *d = NULL;
 
     for (d = p->typelist; d; d = d->next) {
         if (0 == matchDomainName(request->GetHost(), d->domain))
@@ -152,7 +152,7 @@ bool
 peerAllowedToUse(const peer * p, HttpRequest * request)
 {
 
-    const struct _domain_ping *d = NULL;
+    const domain_ping *d = NULL;
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
@@ -1169,9 +1169,9 @@ peerDestroy(void *data)
     if (p == NULL)
         return;
 
-    struct _domain_ping *nl = NULL;
+    domain_ping *nl = NULL;
 
-    for (struct _domain_ping *l = p->peer_domain; l; l = nl) {
+    for (domain_ping *l = p->peer_domain; l; l = nl) {
         nl = l->next;
         safe_free(l->domain);
         xfree(l);
@@ -1591,7 +1591,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 {
     peer *e = NULL;
     char ntoabuf[MAX_IPSTRLEN];
-    struct _domain_ping *d = NULL;
+    domain_ping *d = NULL;
     icp_opcode op;
     int i;
 

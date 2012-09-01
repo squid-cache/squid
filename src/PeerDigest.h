@@ -59,7 +59,8 @@ public:
     int reserved[32 - 6];
 };
 
-struct _DigestFetchState {
+class DigestFetchState {
+public:
     PeerDigest *pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
