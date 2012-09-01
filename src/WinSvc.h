@@ -1,4 +1,9 @@
+#ifndef WINSVC_H_
+#define WINSVC_H_
 /*
+ * DEBUG: none
+ * AUTHOR: Guido Serassio <serassio@squid-cache.org>
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -24,37 +29,25 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * 
  */
-#ifndef SQUID_PROTOS_H
-#define SQUID_PROTOS_H
 
-/* for routines still in this file that take CacheManager parameters */
-#include "ip/Address.h"
-/* for parameters that still need these */
-#include "enums.h"
-/* some parameters stil need this */
-#include "wordlist.h"
-#include "anyp/ProtocolType.h"
-
-#include "comm/forward.h"
-
-extern void shut_down(int);
-extern void rotate_logs(int);
-extern void reconfigure(int);
-
-#if _SQUID_MSWIN_
-
-        SQUIDCEXTERN int WIN32_pipe(int[2]);
-
-            SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
-    SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
-
-    SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
-    SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
-
-#endif
+#if _SQUID_WINDOWS_
+extern int WIN32_Subsystem_Init(int *, char ***);
+extern void WIN32_sendSignal(int);
+extern void WIN32_SetServiceCommandLine(void);
+extern void WIN32_InstallService(void);
+extern void WIN32_RemoveService(void);
+extern int SquidMain(int, char **);
+#else /* _SQUID_WINDOWS_ */
+inline int WIN32_Subsystem_Init(int *foo, char ***bar) {return 0; } /* NOP */
+inline void WIN32_sendSignal(int foo) { return; } /* NOP */
+inline void WIN32_SetServiceCommandLine(void) {} /* NOP */
+inline void WIN32_InstallService(void) {} /* NOP */
+inline  void WIN32_RemoveService(void) {} /* NOP */
+#endif /* _SQUID_WINDOWS_ */
 
 
 
-#endif /* SQUID_PROTOS_H */
+
+#endif /* WINSVC_H_ */
