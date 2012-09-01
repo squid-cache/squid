@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  *
