@@ -146,6 +146,7 @@ UNLINKD =
 endif
 
 WIN32_ALL_SOURCE = \
+	win32.h \
 	win32.cc \
 	WinSvc.h \
 	WinSvc.cc
