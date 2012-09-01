@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
  *

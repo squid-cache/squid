@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 04    Error Generation
  * AUTHOR: Duane Wessels
  *

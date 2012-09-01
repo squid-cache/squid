@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived
  *

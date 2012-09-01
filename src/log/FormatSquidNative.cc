@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 46    Access Log - Squid format
  * AUTHOR: Duane Wessels
  *

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 07    Multicast
  * AUTHOR: Martin Hamilton
  *

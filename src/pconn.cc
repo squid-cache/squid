@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
  *

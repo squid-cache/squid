@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 79    Storage Manager UFS Interface
  * AUTHOR: Duane Wessels
  *

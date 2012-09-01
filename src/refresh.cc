@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
  *

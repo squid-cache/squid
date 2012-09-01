@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
  *

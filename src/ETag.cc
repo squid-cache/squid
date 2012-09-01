@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          ETag parsing support
  * AUTHOR: Alex Rousskov
  *

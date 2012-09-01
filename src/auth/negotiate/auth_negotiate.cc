@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
  *

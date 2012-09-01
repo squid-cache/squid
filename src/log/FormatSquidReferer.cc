@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 46    Access Log - Squid referer format
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
  *         Jens-S. V?ckler <voeckler@rvs.uni-hannover.de> (mod 4 referer)

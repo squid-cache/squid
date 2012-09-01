@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 00    Client Database
  * AUTHOR: Duane Wessels
  *

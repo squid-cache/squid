@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 09    File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
  *

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
  *

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels
  *

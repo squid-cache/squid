@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
  *

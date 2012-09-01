@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
  *
