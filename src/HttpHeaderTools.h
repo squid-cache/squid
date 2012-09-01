@@ -19,11 +19,11 @@ class HeaderWithAcl;
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
 class acl_access;
-struct _header_mangler {
+class header_mangler {
+public:
     acl_access *access_list;
     char *replacement;
 };
-typedef struct _header_mangler header_mangler;
 
 class StoreEntry;
 
