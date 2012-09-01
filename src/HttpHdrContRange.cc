@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
  *

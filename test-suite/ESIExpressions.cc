@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 86    ESI Expressions
  * AUTHOR:  Robert Collins
  *

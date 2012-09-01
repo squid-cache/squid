@@ -27,8 +27,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  *
- * $Id$
- *
  **********************************************************************/
 
 #if HAVE_SYS_TYPES_H

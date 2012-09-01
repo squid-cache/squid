@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
  *

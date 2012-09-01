@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Memory Cache
  *
  */

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 79    Disk IO Routines
  */
 

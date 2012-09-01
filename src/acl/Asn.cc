@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
  *

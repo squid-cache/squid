@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 05    Comm
  */
 #include "squid.h"

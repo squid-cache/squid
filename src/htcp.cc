@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
  *

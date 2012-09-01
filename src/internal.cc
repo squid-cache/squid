@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
  *

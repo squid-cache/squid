@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
  *

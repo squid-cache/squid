@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov
  *

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
  *

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * SASL authenticator module for Squid.
  * Copyright (C) 2002 Ian Castle <ian.castle@coldcomfortfarm.net>
  *

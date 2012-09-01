@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived
  *
