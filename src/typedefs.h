@@ -45,26 +45,7 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
-
-typedef struct _icp_common_t icp_common_t;
-
-typedef struct _header_mangler header_mangler;
-
-typedef struct _cachemgr_passwd cachemgr_passwd;
-
-typedef struct _refresh_t refresh_t;
-
 typedef struct _CommWriteStateData CommWriteStateData;
-
-typedef struct _storeSwapLogData storeSwapLogData;
-
-typedef struct _CacheDigest CacheDigest;
-
-typedef struct _Version Version;
-
-
-typedef struct _customlog customlog;
 
 #if USE_SSL
 typedef struct _sslproxy_cert_sign sslproxy_cert_sign;
