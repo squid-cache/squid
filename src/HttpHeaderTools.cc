@@ -179,8 +179,6 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
     return res;
 }
 
-
-
 /** handy to printf prefixes of potentially very long buffers */
 const char *
 getStringPrefix(const char *str, const char *end)
