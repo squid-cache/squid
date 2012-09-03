@@ -304,5 +304,4 @@ HttpHeader::chunked() const
 extern void httpHeaderInitModule(void);
 extern void httpHeaderCleanModule(void);
 
-
 #endif /* SQUID_HTTPHEADER_H */
