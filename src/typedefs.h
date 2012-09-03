@@ -85,7 +85,6 @@ typedef struct _CacheDigest CacheDigest;
 
 typedef struct _Version Version;
 
-
 typedef struct _customlog customlog;
 
 #if USE_SSL

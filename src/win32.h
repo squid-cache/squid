@@ -33,7 +33,6 @@
  * 
  */
 
-
 #if _SQUID_MSWIN_
 
 #if HAVE_SYS_TIME_H
@@ -58,7 +57,5 @@ extern int Win32__WSAFDIsSet(int fd, fd_set* set);
 extern DWORD WIN32_IpAddrChangeMonitorInit();
 
 #endif
-
-
 
 #endif /* SQUID_WIN32_H_ */
