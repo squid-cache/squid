@@ -123,6 +123,12 @@ DOC_START
 	Remove this line. Configure FTP page display using the CSS controls in errorpages.css instead.
 DOC_END
 
+NAME: maximum_single_addr_tries
+TYPE: obsolete
+DOC_START
+	Replaced by connect_retries. The behaviour has changed, please read the documentation before altering.
+DOC_END
+
 NAME: url_rewrite_concurrency
 TYPE: obsolete
 DOC_START
