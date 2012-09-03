@@ -31,8 +31,6 @@
 #ifndef SQUID_RANGE_H
 #define SQUID_RANGE_H
 
-#include "Debug.h"
-
 #if HAVE_IOSFWD
 #include <iosfwd>
 #endif
