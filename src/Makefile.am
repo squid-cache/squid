@@ -268,6 +268,8 @@ squid_SOURCES = \
 	AsyncEngine.h \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1145,6 +1147,7 @@ tests_testHttpReply_SOURCES=\
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -1253,6 +1256,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
@@ -1365,6 +1369,8 @@ tests_testCacheManager_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1653,6 +1659,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
@@ -1748,6 +1755,8 @@ tests_testEvent_SOURCES = \
 	CacheDigest.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -1981,6 +1990,8 @@ tests_testEventLoop_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2209,6 +2220,8 @@ tests_test_http_range_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2440,6 +2453,7 @@ tests_testHttpParser_SOURCES = \
 	String.cc \
 	structs.h \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2492,6 +2506,8 @@ tests_testHttpRequest_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -2769,6 +2785,7 @@ tests_testStore_SOURCES= \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_side_request.cc \
@@ -2867,6 +2884,7 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2980,6 +2998,7 @@ tests_testUfs_SOURCES = \
 	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3152,6 +3171,7 @@ tests_testRock_SOURCES = \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	client_db.h \
@@ -3288,6 +3308,7 @@ tests_testCoss_SOURCES = \
 	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3439,6 +3460,7 @@ tests_testNull_SOURCES = \
 	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3530,6 +3552,8 @@ tests_testURL_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -3765,6 +3789,7 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
