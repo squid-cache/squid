@@ -34,6 +34,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "CacheDigest.h"
+#include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"

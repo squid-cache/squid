@@ -32,24 +32,24 @@
  */
 
 #include "squid.h"
-#include "errorpage.h"
-#include "HttpRequest.h"
-#include "fde.h"
+#include "acl/FilledChecklist.h"
 #include "Array.h"
+#include "CachePeer.h"
+#include "client_side_request.h"
+#include "client_side.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Write.h"
-#include "client_side_request.h"
-#include "acl/FilledChecklist.h"
-#include "client_side.h"
-#include "MemBuf.h"
+#include "errorpage.h"
+#include "fde.h"
 #include "http.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "tools.h"
-
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif

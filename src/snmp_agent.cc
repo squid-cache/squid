@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "cache_snmp.h"
 #include "globals.h"
 #include "mem_node.h"
