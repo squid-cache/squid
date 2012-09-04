@@ -32,6 +32,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
+#include "CachePeer.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"

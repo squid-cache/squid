@@ -9,8 +9,9 @@
 #include "ssl/support.h"
 #endif
 
-class ExternalACLEntry;
+class CachePeer;
 class ConnStateData;
+class ExternalACLEntry;
 class HttpRequest;
 
 /** \ingroup ACLAPI

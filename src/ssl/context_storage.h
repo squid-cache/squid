@@ -17,6 +17,8 @@
 #if HAVE_LIST
 #include <list>
 #endif
+#include <openssl/ssl.h>
+
 
 /// TODO: Replace on real size.
 #define SSL_CTX_SIZE 1024

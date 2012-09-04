@@ -1,10 +1,12 @@
 #include "squid.h"
+#include "CachePeer.h"
 #include "cbdata.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "fde.h"
 #include "SquidTime.h"
 
+class CachePeer;
 bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {

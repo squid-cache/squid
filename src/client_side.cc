@@ -83,6 +83,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_db.h"
 #include "client_side_reply.h"

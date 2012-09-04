@@ -35,6 +35,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "CachePeer.h"
 #include "CacheManager.h"
 #include "client_side.h"
 #include "comm/Connection.h"

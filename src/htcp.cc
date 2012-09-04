@@ -35,6 +35,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

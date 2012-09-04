@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -18,6 +19,8 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+
+class CachePeer;
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 

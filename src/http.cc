@@ -39,6 +39,7 @@
 #include "base64.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
