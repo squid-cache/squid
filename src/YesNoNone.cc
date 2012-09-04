@@ -1,7 +1,4 @@
 /*
- * DEBUG: section 03    Configuration File Parsing
- * AUTHOR: Robert Collins
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -31,21 +28,16 @@
  */
 
 #include "squid.h"
-#include "ConfigParser.h"
-#include "wordlist.h"
 #include "YesNoNone.h"
 
-#define STUB_API "cache_cf.cc"
-#include "tests/STUB.h"
+YesNoNone::operator void*() const
+{
+    assert(option != 0); // must call configure() first
+    return option > 0 ? (void*)this : NULL;
+}
 
-void self_destruct(void) STUB
-void parse_int(int *var) STUB
-void parse_onoff(int *var) STUB
-void parse_eol(char *volatile *var) STUB
-void parse_wordlist(wordlist ** list) STUB
-void requirePathnameExists(const char *name, const char *path) STUB_NOP
-void parse_time_t(time_t * var) STUB
-char * strtokFile(void) STUB_RETVAL(NULL)
-void ConfigParser::ParseUShort(unsigned short *var) STUB
-void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
-YesNoNone::operator void*() const { STUB_NOP; return NULL; }
+void
+YesNoNone::configure(bool beSet)
+{
+    option = beSet ? +1 : -1;
+}
