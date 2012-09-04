@@ -534,4 +534,16 @@ public:
 
 extern SquidConfig Config;
 
+
+struct SquidConfig2 {
+    struct {
+        int enable_purge;
+        int mangle_request_headers;
+    } onoff;
+    uid_t effectiveUserID;
+    gid_t effectiveGroupID;
+};
+
+extern SquidConfig2 Config2;
+
 #endif /* SQUID_SQUIDCONFIG_H_ */
