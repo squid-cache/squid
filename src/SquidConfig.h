@@ -246,7 +246,7 @@ public:
     wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
     wordlist *dns_nameservers;
-    peer *peers;
+    CachePeer *peers;
     int npeers;
 
     struct {

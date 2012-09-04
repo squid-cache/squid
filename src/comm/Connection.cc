@@ -18,7 +18,7 @@ Comm::Connection::Connection() :
         fd(-1),
         tos(0),
         flags(COMM_NONBLOCKING),
-        _peer(NULL)
+        peer_(NULL)
 {
     *rfc931 = 0; // quick init the head. the rest does not matter.
 }
@@ -32,7 +32,7 @@ Comm::Connection::~Connection()
         close();
     }
 
-    cbdataReferenceDone(_peer);
+    cbdataReferenceDone(peer_);
 }
 
 Comm::ConnectionPointer
@@ -49,8 +49,8 @@ Comm::Connection::copyDetails() const
     // ensure FD is not open in the new copy.
     c->fd = -1;
 
-    // ensure we have a cbdata reference to _peer not a straight ptr copy.
-    c->_peer = cbdataReference(getPeer());
+    // ensure we have a cbdata reference to peer_ not a straight ptr copy.
+    c->peer_ = cbdataReference(getPeer());
 
     return c;
 }
@@ -61,29 +61,29 @@ Comm::Connection::close()
     if (isOpen()) {
         comm_close(fd);
         fd = -1;
-        if (peer *p=getPeer())
+        if (CachePeer *p=getPeer())
             -- p->stats.conn_open;
     }
 }
 
-peer *
+CachePeer *
 Comm::Connection::getPeer() const
 {
-    if (cbdataReferenceValid(_peer))
-        return _peer;
+    if (cbdataReferenceValid(peer_))
+        return peer_;
 
     return NULL;
 }
 
 void
-Comm::Connection::setPeer(peer *p)
+Comm::Connection::setPeer(CachePeer *p)
 {
     /* set to self. nothing to do. */
     if (getPeer() == p)
         return;
 
-    cbdataReferenceDone(_peer);
+    cbdataReferenceDone(peer_);
     if (p) {
-        _peer = cbdataReference(p);
+        peer_ = cbdataReference(p);
     }
 }

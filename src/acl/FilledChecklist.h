@@ -52,7 +52,7 @@ public:
     Ip::Address src_addr;
     Ip::Address dst_addr;
     Ip::Address my_addr;
-    struct peer *dst_peer;
+    CachePeer *dst_peer;
     char *dst_rdns;
 
     HttpRequest *request;

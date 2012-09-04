@@ -39,13 +39,13 @@
 
 class HttpRequest;
 class HttpRequestMethod;
-class peer;
+class CachePeer;
 class StoreEntry;
 
-extern peer *getFirstPeer(void);
-extern peer *getFirstUpParent(HttpRequest *);
-extern peer *getNextPeer(peer *);
-extern peer *getSingleParent(HttpRequest *);
+extern CachePeer *getFirstPeer(void);
+extern CachePeer *getFirstUpParent(HttpRequest *);
+extern CachePeer *getNextPeer(CachePeer *);
+extern CachePeer *getSingleParent(HttpRequest *);
 extern int neighborsCount(HttpRequest *);
 extern int neighborsUdpPing(HttpRequest *,
                                   StoreEntry *,
@@ -61,26 +61,26 @@ extern void neighbors_init(void);
 #if USE_HTCP
 extern void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-extern peer *peerFindByName(const char *);
-extern peer *peerFindByNameAndPort(const char *, unsigned short);
-extern peer *getDefaultParent(HttpRequest * request);
-extern peer *getRoundRobinParent(HttpRequest * request);
-extern peer *getWeightedRoundRobinParent(HttpRequest * request);
+extern CachePeer *peerFindByName(const char *);
+extern CachePeer *peerFindByNameAndPort(const char *, unsigned short);
+extern CachePeer *getDefaultParent(HttpRequest * request);
+extern CachePeer *getRoundRobinParent(HttpRequest * request);
+extern CachePeer *getWeightedRoundRobinParent(HttpRequest * request);
 extern void peerClearRRStart(void);
 extern void peerClearRR(void);
-extern lookup_t peerDigestLookup(peer * p, HttpRequest * request);
-extern peer *neighborsDigestSelect(HttpRequest * request);
-extern void peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup);
-extern void peerNoteDigestGone(peer * p);
-extern int neighborUp(const peer * e);
+extern lookup_t peerDigestLookup(CachePeer * p, HttpRequest * request);
+extern CachePeer *neighborsDigestSelect(HttpRequest * request);
+extern void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
+extern void peerNoteDigestGone(CachePeer * p);
+extern int neighborUp(const CachePeer * e);
 extern CBDUNL peerDestroy;
-extern const char *neighborTypeStr(const peer * e);
-extern peer_t neighborType(const peer *, const HttpRequest *);
-extern void peerConnectFailed(peer *);
-extern void peerConnectSucceded(peer *);
-extern void dump_peer_options(StoreEntry *, peer *);
-extern int peerHTTPOkay(const peer *, HttpRequest *);
+extern const char *neighborTypeStr(const CachePeer * e);
+extern peer_t neighborType(const CachePeer *, const HttpRequest *);
+extern void peerConnectFailed(CachePeer *);
+extern void peerConnectSucceded(CachePeer *);
+extern void dump_peer_options(StoreEntry *, CachePeer *);
+extern int peerHTTPOkay(const CachePeer *, HttpRequest *);
 
-extern peer *whichPeer(const Ip::Address &from);
+extern CachePeer *whichPeer(const Ip::Address &from);
 
 #endif /* SQUID_NEIGHBORS_H_ */

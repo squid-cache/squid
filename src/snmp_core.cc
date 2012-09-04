@@ -748,7 +748,7 @@ static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
-    peer *peers = Config.peers;
+    CachePeer *peers = Config.peers;
 
     if (peers == NULL) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");

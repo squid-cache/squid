@@ -80,7 +80,8 @@ typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
 typedef void IDCB(const char *ident, void *data);
 
 #include "anyp/ProtocolType.h"
-typedef void IRCB(struct peer *, peer_t, AnyP::ProtocolType, void *, void *data);
+class CachePeer;
+typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
 typedef void RH(void *data, char *);
 /* in wordlist.h */
