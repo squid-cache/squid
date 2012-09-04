@@ -12,6 +12,7 @@
 #include "globals.h"
 #include "icmp/net_db.h"
 #include "ipcache.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 #if HAVE_ERRNO_H

@@ -38,6 +38,7 @@
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
+#include "SquidConfig.h"
 #include "SquidList.h"
 #include "SquidTime.h"
 #include "Store.h"

@@ -11,6 +11,7 @@
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
 #include "testStoreSupport.h"
+#include "SquidConfig.h"
 
 #if HAVE_STDEXCEPT
 #include <stdexcept>

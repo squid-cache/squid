@@ -63,6 +63,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"

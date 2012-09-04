@@ -120,6 +120,7 @@
 #include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"

@@ -59,6 +59,7 @@
 #include "Parsing.h"
 #include "PeerDigest.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "Store.h"
 #include "StoreFileSystem.h"

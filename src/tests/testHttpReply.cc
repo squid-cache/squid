@@ -7,10 +7,11 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "mime_header.h"
+#include "SquidConfig.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 
-struct SquidConfig Config;
+class SquidConfig Config;
 
 /* stub functions to link successfully */
 

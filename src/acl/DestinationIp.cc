@@ -37,6 +37,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 #include "structs.h"
 
 char const *

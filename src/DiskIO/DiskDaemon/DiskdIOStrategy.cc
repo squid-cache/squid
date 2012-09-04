@@ -41,6 +41,7 @@
 #include "fd.h"
 #include "Store.h"
 #include "StatCounters.h"
+#include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
 #include "unlinkd.h"

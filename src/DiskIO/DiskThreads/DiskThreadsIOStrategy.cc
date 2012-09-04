@@ -38,8 +38,8 @@
 #include "DiskThreadsIOStrategy.h"
 #include "fde.h"
 #include "mgr/Registration.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
-/* for statfs */
 #include "Store.h"
 
 void

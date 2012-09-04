@@ -43,6 +43,7 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "MemObject.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
 

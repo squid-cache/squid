@@ -42,6 +42,7 @@
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "SquidTime.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 

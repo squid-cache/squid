@@ -37,6 +37,7 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
+#include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
 

@@ -39,6 +39,7 @@
 #include "snmp_core.h"
 #include "StatCounters.h"
 #include "StatHist.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "stat.h"

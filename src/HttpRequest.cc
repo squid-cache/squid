@@ -45,6 +45,7 @@
 #include "HttpRequest.h"
 #include "log/Config.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 

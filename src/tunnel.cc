@@ -46,6 +46,7 @@
 #include "MemBuf.h"
 #include "http.h"
 #include "PeerSelectState.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "tools.h"
 

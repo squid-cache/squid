@@ -42,6 +42,7 @@
 #include "snmp_agent.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"
+#include "SquidConfig.h"
 #include "tools.h"
 
 static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);

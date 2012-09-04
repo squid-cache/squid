@@ -38,7 +38,8 @@
 /* for CacheDigestGuessStats */
 #include "StatCounters.h"
 
-struct _Version {
+class Version {
+public:
     short int current;		/* current version */
     short int required;		/* minimal version that can safely handle current version */
 };

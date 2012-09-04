@@ -46,6 +46,7 @@
 #include "fde.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "URL.h"
 #include "URLScheme.h"
 #include "URL.h"
