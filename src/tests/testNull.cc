@@ -9,6 +9,7 @@
 #include "MemObject.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
+#include "SquidConfig.h"
 #include "StoreFileSystem.h"
 #include "testStoreSupport.h"
 

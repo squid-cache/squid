@@ -53,6 +53,7 @@
 #include "mgr/ServiceTimesAction.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

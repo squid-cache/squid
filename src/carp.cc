@@ -36,6 +36,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 #include "URLScheme.h"

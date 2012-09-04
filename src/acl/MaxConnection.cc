@@ -38,6 +38,7 @@
 #include "cache_cf.h"
 #include "client_db.h"
 #include "Debug.h"
+#include "SquidConfig.h"
 #include "wordlist.h"
 
 ACL *

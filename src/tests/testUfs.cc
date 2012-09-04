@@ -8,6 +8,7 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "testStoreSupport.h"

@@ -2,6 +2,7 @@
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/User.h"
 #include "Debug.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "structs.h"
 

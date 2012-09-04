@@ -8,6 +8,7 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "structs.h"
+#include "SquidConfig.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpParser );
 

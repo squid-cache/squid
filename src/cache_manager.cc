@@ -49,6 +49,7 @@
 #include "mgr/QueryParams.h"
 #include "protos.h" /* rotate_logs() */
 #include "tools.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"

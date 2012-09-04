@@ -51,6 +51,7 @@
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "refresh.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreSearch.h"

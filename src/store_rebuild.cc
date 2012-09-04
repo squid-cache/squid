@@ -41,6 +41,7 @@
 #include "store_digest.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 #if HAVE_ERRNO_H
