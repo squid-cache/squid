@@ -218,7 +218,8 @@ public:
 
 class PeerDigest;
 
-struct peer {
+class CachePeer {
+public:
     u_int index;
     char *name;
     char *host;
@@ -331,7 +332,7 @@ struct peer {
     Ip::Address addresses[10];
     int n_addresses;
     int rr_count;
-    peer *next;
+    CachePeer *next;
     int testing_now;
 
     struct {

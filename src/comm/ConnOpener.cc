@@ -204,11 +204,11 @@ Comm::ConnOpener::connected()
 
     /*
      * stats.conn_open is used to account for the number of
-     * connections that we have open to the peer, so we can limit
+     * connections that we have open to the CachePeer, so we can limit
      * based on the max-conn option.  We need to increment here,
      * even if the connection may fail.
      */
-    if (peer *peer=(conn_->getPeer()))
+    if (CachePeer *peer=(conn_->getPeer()))
         ++peer->stats.conn_open;
 
     lookupLocalAddress();

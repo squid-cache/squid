@@ -1308,7 +1308,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 static void
 htcpForwardClr(char *buf, int sz)
 {
-    peer *p;
+    CachePeer *p;
 
     for (p = Config.peers; p; p = p->next) {
         if (!p->options.htcp) {
@@ -1551,7 +1551,7 @@ htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
 }
 
 int
-htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
+htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
 {
     cache_key *save_key;
     static char pkt[8192];
@@ -1604,10 +1604,10 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 }
 
 /*
- * Send an HTCP CLR message for a specified item to a given peer.
+ * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, peer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;

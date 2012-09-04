@@ -69,10 +69,10 @@ static void peerSelectFoo(ps_state *);
 static void peerPingTimeout(void *data);
 static IRCB peerHandlePingReply;
 static void peerSelectStateFree(ps_state * psstate);
-static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
+static void peerIcpParentMiss(CachePeer *, icp_common_t *, ps_state *);
 #if USE_HTCP
-static void peerHtcpParentMiss(peer *, htcpReplyData *, ps_state *);
-static void peerHandleHtcpReply(peer *, peer_t, htcpReplyData *, void *);
+static void peerHtcpParentMiss(CachePeer *, htcpReplyData *, ps_state *);
+static void peerHandleHtcpReply(CachePeer *, peer_t, htcpReplyData *, void *);
 #endif
 static int peerCheckNetdbDirect(ps_state * psstate);
 static void peerGetSomeNeighbor(ps_state *);
@@ -80,7 +80,7 @@ static void peerGetSomeNeighborReplies(ps_state *);
 static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
-static void peerAddFwdServer(FwdServer **, peer *, hier_code);
+static void peerAddFwdServer(FwdServer **, CachePeer *, hier_code);
 static void peerSelectPinned(ps_state * ps);
 static void peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data);
 
@@ -381,7 +381,7 @@ static int
 peerCheckNetdbDirect(ps_state * psstate)
 {
 #if USE_ICMP
-    peer *p;
+    CachePeer *p;
     int myrtt;
     int myhops;
 
@@ -506,7 +506,7 @@ peerSelectFoo(ps_state * ps)
     peerSelectDnsPaths(ps);
 }
 
-bool peerAllowedToUse(const peer * p, HttpRequest * request);
+bool peerAllowedToUse(const CachePeer * p, HttpRequest * request);
 
 /**
  * peerSelectPinned
@@ -519,7 +519,7 @@ peerSelectPinned(ps_state * ps)
     HttpRequest *request = ps->request;
     if (!request->pinnedConnection())
         return;
-    peer *pear = request->pinnedConnection()->pinnedPeer();
+    CachePeer *pear = request->pinnedConnection()->pinnedPeer();
     if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
         if (pear && peerAllowedToUse(pear, request)) {
             peerAddFwdServer(&ps->servers, pear, PINNED);
@@ -548,7 +548,7 @@ peerGetSomeNeighbor(ps_state * ps)
 {
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
-    peer *p;
+    CachePeer *p;
     hier_code code = HIER_NONE;
     assert(entry->ping_status == PING_NONE);
 
@@ -612,7 +612,7 @@ static void
 peerGetSomeNeighborReplies(ps_state * ps)
 {
     HttpRequest *request = ps->request;
-    peer *p = NULL;
+    CachePeer *p = NULL;
     hier_code code = HIER_NONE;
     assert(ps->entry->ping_status == PING_WAITING);
     assert(ps->direct != DIRECT_YES);
@@ -663,7 +663,7 @@ peerGetSomeDirect(ps_state * ps)
 static void
 peerGetSomeParent(ps_state * ps)
 {
-    peer *p;
+    CachePeer *p;
     HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
     debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr(request->method) << " " << request->GetHost());
@@ -700,7 +700,7 @@ peerGetSomeParent(ps_state * ps)
 static void
 peerGetAllParents(ps_state * ps)
 {
-    peer *p;
+    CachePeer *p;
     HttpRequest *request = ps->request;
     /* Add all alive parents */
 
@@ -760,7 +760,7 @@ peerSelectInit(void)
 }
 
 static void
-peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
+peerIcpParentMiss(CachePeer * p, icp_common_t * header, ps_state * ps)
 {
     int rtt;
 
@@ -801,7 +801,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 }
 
 static void
-peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
+peerHandleIcpReply(CachePeer * p, peer_t type, icp_common_t * header, void *data)
 {
     ps_state *psstate = (ps_state *)data;
     icp_opcode op = header->getOpCode();
@@ -835,7 +835,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 
 #if USE_HTCP
 static void
-peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
+peerHandleHtcpReply(CachePeer * p, peer_t type, htcpReplyData * htcp, void *data)
 {
     ps_state *psstate = (ps_state *)data;
     debugs(44, 3, "peerHandleHtcpReply: " <<
@@ -860,7 +860,7 @@ peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
 }
 
 static void
-peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
+peerHtcpParentMiss(CachePeer * p, htcpReplyData * htcp, ps_state * ps)
 {
     int rtt;
 
@@ -901,7 +901,7 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
 #endif
 
 static void
-peerHandlePingReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *pingdata, void *data)
+peerHandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *pingdata, void *data)
 {
     if (proto == AnyP::PROTO_ICP)
         peerHandleIcpReply(p, type, (icp_common_t *)pingdata, data);
@@ -918,7 +918,7 @@ peerHandlePingReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *pingd
 }
 
 static void
-peerAddFwdServer(FwdServer ** FSVR, peer * p, hier_code code)
+peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
 {
     FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debugs(44, 5, "peerAddFwdServer: adding " <<

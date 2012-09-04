@@ -149,7 +149,7 @@ static void free_ecap_service_type(Adaptation::Ecap::Config *);
 
 static peer_t parseNeighborType(const char *s);
 
-CBDATA_TYPE(peer);
+CBDATA_TYPE(CachePeer);
 
 static const char *const T_MILLISECOND_STR = "millisecond";
 static const char *const T_SECOND_STR = "second";
@@ -919,7 +919,7 @@ configDoConfigure(void)
 
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
-    for (peer *p = Config.peers; p != NULL; p = p->next) {
+    for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
         if (p->use_ssl) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
             p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
@@ -1966,7 +1966,7 @@ peer_type_str(const peer_t type)
 }
 
 static void
-dump_peer(StoreEntry * entry, const char *name, peer * p)
+dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
     domain_ping *d;
     domain_type *t;
@@ -2066,12 +2066,12 @@ GetUdpService(void)
 }
 
 static void
-parse_peer(peer ** head)
+parse_peer(CachePeer ** head)
 {
     char *token = NULL;
-    peer *p;
-    CBDATA_INIT_TYPE_FREECB(peer, peerDestroy);
-    p = cbdataAlloc(peer);
+    CachePeer *p;
+    CBDATA_INIT_TYPE_FREECB(CachePeer, peerDestroy);
+    p = cbdataAlloc(CachePeer);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;
@@ -2345,9 +2345,9 @@ parse_peer(peer ** head)
 }
 
 static void
-free_peer(peer ** P)
+free_peer(CachePeer ** P)
 {
-    peer *p;
+    CachePeer *p;
 
     while ((p = *P) != NULL) {
         *P = p->next;
@@ -2483,7 +2483,7 @@ static void
 parse_peer_access(void)
 {
     char *host = NULL;
-    peer *p;
+    CachePeer *p;
 
     if (!(host = strtok(NULL, w_space)))
         self_destruct();
@@ -2508,7 +2508,7 @@ parse_hostdomain(void)
     while ((domain = strtok(NULL, list_sep))) {
         domain_ping *l = NULL;
         domain_ping **L = NULL;
-        peer *p;
+        CachePeer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
             debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
@@ -2546,7 +2546,7 @@ parse_hostdomaintype(void)
     while ((domain = strtok(NULL, list_sep))) {
         domain_type *l = NULL;
         domain_type **L = NULL;
-        peer *p;
+        CachePeer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
             debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");

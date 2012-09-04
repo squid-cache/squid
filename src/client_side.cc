@@ -1268,7 +1268,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     else if (rep->content_length != http->memObject()->getReply()->content_length)
         range_err = "INCONSISTENT length";	/* a bug? */
 
-    /* hits only - upstream peer determines correct behaviour on misses, and client_side_reply determines
+    /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
      */
     else if (logTypeIsATcpHit(http->logType) && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
@@ -3147,7 +3147,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         repContext->setReplyToError(error, scode,
                                     repContext->http->request->method,
                                     repContext->http->uri,
-                                    peer,
+                                    CachePeer,
                                     repContext->http->request,
                                     in.buf, NULL);
         context->pullData();
@@ -3216,7 +3216,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &peer.sin_addr,
+                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &CachePeer.sin_addr,
                                     NULL, NULL, NULL);
         /* No requests can be outstanded */
         assert(chr == NULL);
@@ -3891,7 +3891,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 
     // commSetConnTimeout() was called for this request before we switched.
 
-    // Disable the client read handler until peer selection is complete
+    // Disable the client read handler until CachePeer selection is complete
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
@@ -4428,7 +4428,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 }
 
 void
-ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, struct peer *aPeer, bool auth)
+ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
 {
     char desc[FD_DESC_SZ];
 
@@ -4474,7 +4474,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
 }
 
 const Comm::ConnectionPointer
-ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
+ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *aPeer)
 {
     debugs(33, 7, HERE << pinning.serverConnection);
 

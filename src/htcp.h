@@ -79,10 +79,10 @@ SQUIDCEXTERN void htcpOpenPorts(void);
  * 		Don't wait for a reply or count in stats as sent.
  * \retval -1   Error sending request.
  */
-SQUIDCEXTERN int htcpQuery(StoreEntry * e, HttpRequest * req, peer * p);
+SQUIDCEXTERN int htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p);
 
 /// \ingroup ServerProtocolHTCP
-SQUIDCEXTERN void htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, peer * p, htcp_clr_reason reason);
+SQUIDCEXTERN void htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason);
 
 /// \ingroup ServerProtocolHTCP
 SQUIDCEXTERN void htcpSocketShutdown(void);
