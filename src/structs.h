@@ -182,21 +182,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-/* per field statistics */
-
-class HttpHeaderFieldStat
-{
-
-public:
-    HttpHeaderFieldStat() : aliveCount(0), seenCount(0), parsCount(0), errCount(0), repCount(0) {}
-
-    int aliveCount;		/* created but not destroyed (count) */
-    int seenCount;		/* #fields we've seen */
-    int parsCount;		/* #parsing attempts */
-    int errCount;		/* #pasring errors */
-    int repCount;		/* #repetitons */
-};
-
 /* compiled version of HttpHeaderFieldAttrs plus stats */
 #include "SquidString.h"
 
