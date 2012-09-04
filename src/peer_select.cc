@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
 #include "DnsLookupDetails.h"

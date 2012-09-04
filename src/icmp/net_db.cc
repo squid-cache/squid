@@ -39,6 +39,7 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "cbdata.h"
 #include "disk.h"
 #include "event.h"

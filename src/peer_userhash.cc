@@ -37,6 +37,7 @@
 #if USE_AUTH
 
 #include "auth/UserRequest.h"
+#include "CachePeer.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"

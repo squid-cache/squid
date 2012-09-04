@@ -34,6 +34,10 @@
 #include "ip/Address.h"
 #include "structs.h"
 
+#if USE_SSL
+#include <openssl/ssl.h>
+#endif
+
 #if USE_DELAY_POOLS
 class ClientInfo;
 #endif

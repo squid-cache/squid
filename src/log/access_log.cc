@@ -32,10 +32,10 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "Store.h"
-#include "errorpage.h"
-#include "err_detail_type.h"
 #include "acl/Checklist.h"
+#include "CachePeer.h"
+#include "err_detail_type.h"
+#include "errorpage.h"
 #include "errorpage.h"
 #include "format/Token.h"
 #include "globals.h"
@@ -51,6 +51,7 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"

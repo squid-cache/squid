@@ -41,6 +41,10 @@
 #include "structs.h"
 #include "YesNoNone.h"
 
+#if USE_SSL
+#include <openssl/ssl.h>
+#endif
+
 class acl_access;
 class acl_deny_info_list;
 class acl_size_t;

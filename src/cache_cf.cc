@@ -37,6 +37,7 @@
 #include "anyp/PortCfg.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
+#include "CachePeer.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
