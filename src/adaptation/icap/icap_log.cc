@@ -3,6 +3,7 @@
 #include "AccessLogEntry.h"
 #include "log/File.h"
 #include "log/Formats.h"
+#include "SquidConfig.h"
 
 int IcapLogfileStatus = LOG_DISABLE;
 

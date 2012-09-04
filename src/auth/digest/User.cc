@@ -3,6 +3,7 @@
 #include "auth/digest/User.h"
 #include "Debug.h"
 #include "dlink.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "structs.h"
 

@@ -47,6 +47,7 @@
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "forward.h"
+#include "SquidConfig.h"
 #include "StoreClient.h"
 #include "wordlist.h"
 

@@ -59,6 +59,7 @@
 #include "MemBuf.h"
 #include "pconn.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"

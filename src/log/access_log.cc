@@ -49,6 +49,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 #if USE_SQUID_EUI

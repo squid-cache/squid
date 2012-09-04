@@ -56,6 +56,7 @@
 #include "neighbors.h"
 #include "refresh.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"

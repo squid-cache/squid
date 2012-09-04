@@ -43,6 +43,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"
 

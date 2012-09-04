@@ -53,6 +53,7 @@
 #include "mime.h"
 #include "rfc1738.h"
 #include "Server.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

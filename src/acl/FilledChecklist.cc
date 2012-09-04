@@ -5,6 +5,7 @@
 #include "comm/forward.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #include "auth/AclProxyAuth.h"
