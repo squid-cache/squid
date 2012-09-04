@@ -1,7 +1,6 @@
+#ifndef SQUID_YESNONONE_H_
+#define SQUID_YESNONONE_H_
 /*
- * DEBUG: section 03    Configuration File Parsing
- * AUTHOR: Robert Collins
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -30,22 +29,28 @@
  *
  */
 
-#include "squid.h"
-#include "ConfigParser.h"
-#include "wordlist.h"
-#include "YesNoNone.h"
+/// Used for boolean enabled/disabled options with complex default logic.
+/// Allows Squid to compute the right default after configuration.
+/// Checks that not-yet-defined option values are not used.
+class YesNoNone
+{
+// TODO: generalize to non-boolean option types
+public:
+    YesNoNone(): option(0) {}
 
-#define STUB_API "cache_cf.cc"
-#include "tests/STUB.h"
+    /// returns true iff enabled; asserts if the option has not been configured
+    operator void *() const; // TODO: use a fancy/safer version of the operator
 
-void self_destruct(void) STUB
-void parse_int(int *var) STUB
-void parse_onoff(int *var) STUB
-void parse_eol(char *volatile *var) STUB
-void parse_wordlist(wordlist ** list) STUB
-void requirePathnameExists(const char *name, const char *path) STUB_NOP
-void parse_time_t(time_t * var) STUB
-char * strtokFile(void) STUB_RETVAL(NULL)
-void ConfigParser::ParseUShort(unsigned short *var) STUB
-void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
-YesNoNone::operator void*() const { STUB_NOP; return NULL; }
+    /// enables or disables the option;
+    void configure(bool beSet);
+
+    /// whether the option was enabled or disabled, by user or Squid
+    bool configured() const { return option != 0; }
+
+private:
+    enum { optUnspecified = -1, optDisabled = 0, optEnabled = 1 };
+    int option; ///< configured value or zero
+};
+
+
+#endif /* SQUID_YESNONONE_H_ */

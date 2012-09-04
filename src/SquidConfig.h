@@ -39,6 +39,7 @@
 #include "ip/Address.h"
 #include "RefCount.h"
 #include "structs.h"
+#include "YesNoNone.h"
 
 class acl_access;
 class acl_deny_info_list;
