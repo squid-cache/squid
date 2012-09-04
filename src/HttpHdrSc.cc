@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
@@ -65,6 +66,7 @@ static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] = {
     {"Other,", (http_hdr_type)SC_OTHER}	/* ',' will protect from matches */
 };
 
+class HttpHeaderFieldInfo;
 HttpHeaderFieldInfo *ScFieldsInfo = NULL;
 
 http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader)

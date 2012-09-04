@@ -94,10 +94,10 @@ public:
 
 extern int httpHeaderParseOffset(const char *start, int64_t * off);
 
-class HttpHeaderFieldInfo;
 class String;
 class HttpHeader;
 class HttpRequest;
+class HttpHeaderFieldInfo;
 
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);

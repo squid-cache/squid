@@ -182,20 +182,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-/* compiled version of HttpHeaderFieldAttrs plus stats */
-#include "SquidString.h"
-
-class HttpHeaderFieldInfo
-{
-
-public:
-    HttpHeaderFieldInfo() : id (HDR_ACCEPT), type (ftInvalid) {}
-
-    http_hdr_type id;
-    String name;
-    field_type type;
-    HttpHeaderFieldStat stat;
-};
 
 class http_state_flags {
 public:
