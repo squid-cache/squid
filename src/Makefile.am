@@ -364,6 +364,7 @@ squid_SOURCES = \
 	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1108,6 +1109,7 @@ tests_testHttpReply_SOURCES=\
 	ETag.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1214,6 +1216,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1428,6 +1431,7 @@ tests_testCacheManager_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1599,6 +1603,7 @@ tests_testDiskIO_SOURCES = \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1817,6 +1822,7 @@ tests_testEvent_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2051,6 +2057,7 @@ tests_testEventLoop_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2278,6 +2285,7 @@ tests_test_http_range_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2562,6 +2570,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2728,6 +2737,7 @@ tests_testStore_SOURCES= \
 	EventLoop.cc \
 	FileMap.h \
 	filemap.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3020,6 +3030,7 @@ tests_testUfs_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3109,6 +3120,7 @@ tests_testRock_SOURCES = \
 	fd.cc \
 	FileMap.h \
 	filemap.cc \
+	HttpHeaderFieldStat.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.cc \
@@ -3329,6 +3341,7 @@ tests_testCoss_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3483,6 +3496,7 @@ tests_testNull_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3609,6 +3623,7 @@ tests_testURL_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
