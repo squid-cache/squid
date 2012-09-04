@@ -81,7 +81,7 @@ typedef enum {
 } netdb_conn_state_t;
 
 typedef struct {
-    peer *p;
+    CachePeer *p;
     StoreEntry *e;
     store_client *sc;
     HttpRequest *r;
@@ -105,7 +105,7 @@ static void netdbHostDelete(const net_db_name * x);
 static void netdbPurgeLRU(void);
 static netdbEntry *netdbLookupHost(const char *key);
 static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
-static net_db_peer *netdbPeerAdd(netdbEntry * n, peer * e);
+static net_db_peer *netdbPeerAdd(netdbEntry * n, CachePeer * e);
 static const char *netdbPeerName(const char *name);
 static IPH netdbSendPing;
 static QS sortPeerByRtt;
@@ -116,7 +116,7 @@ static FREE netdbFreeNetdbEntry;
 static STCB netdbExchangeHandleReply;
 static void netdbExchangeDone(void *);
 
-/* We have to keep a local list of peer names.  The Peers structure
+/* We have to keep a local list of CachePeer names.  The Peers structure
  * gets freed during a reconfigure.  We want this database to
  * remain persisitent, so _net_db_peer->peername points into this
  * linked list */
@@ -421,7 +421,7 @@ netdbPeerByName(const netdbEntry * n, const char *peername)
 }
 
 static net_db_peer *
-netdbPeerAdd(netdbEntry * n, peer * e)
+netdbPeerAdd(netdbEntry * n, CachePeer * e)
 {
     net_db_peer *p;
     net_db_peer *o;
@@ -1123,7 +1123,7 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 }
 
 void
-netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
+netdbUpdatePeer(HttpRequest * r, CachePeer * e, int irtt, int ihops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1159,7 +1159,7 @@ netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
 }
 
 void
-netdbExchangeUpdatePeer(Ip::Address &addr, peer * e, double rtt, double hops)
+netdbExchangeUpdatePeer(Ip::Address &addr, CachePeer * e, double rtt, double hops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1313,7 +1313,7 @@ void
 netdbExchangeStart(void *data)
 {
 #if USE_ICMP
-    peer *p = (peer *)data;
+    CachePeer *p = (CachePeer *)data;
     char *uri;
     netdbExchangeState *ex;
     StoreIOBuffer tempBuffer;
@@ -1355,11 +1355,11 @@ netdbExchangeStart(void *data)
 #endif
 }
 
-peer *
+CachePeer *
 netdbClosestParent(HttpRequest * request)
 {
 #if USE_ICMP
-    peer *p = NULL;
+    CachePeer *p = NULL;
     netdbEntry *n;
     const ipcache_addrs *ia;
     net_db_peer *h;

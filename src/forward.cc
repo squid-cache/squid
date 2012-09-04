@@ -762,7 +762,7 @@ FwdState::initiateSSL()
 {
     SSL *ssl;
     SSL_CTX *sslContext = NULL;
-    const peer *peer = serverConnection()->getPeer();
+    const CachePeer *peer = serverConnection()->getPeer();
     int fd = serverConnection()->fd;
 
     if (peer) {
