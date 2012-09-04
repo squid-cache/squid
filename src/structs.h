@@ -146,17 +146,6 @@ struct PortCfg;
 }
 class SwapDir;
 
-struct SquidConfig2 {
-    struct {
-        int enable_purge;
-        int mangle_request_headers;
-    } onoff;
-    uid_t effectiveUserID;
-    gid_t effectiveGroupID;
-};
-
-SQUIDCEXTERN SquidConfig2 Config2;
-
 class close_handler {
 public:
     PF *handler;
