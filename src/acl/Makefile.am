@@ -105,6 +105,7 @@ libacls_la_SOURCES = \
 	UserData.cc \
 	UserData.h \
 	\
+	AclNameList.h \
 	Gadgets.cc \
 	Gadgets.h
 
