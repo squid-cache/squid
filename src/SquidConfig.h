@@ -46,7 +46,7 @@
 #endif
 
 class acl_access;
-class acl_deny_info_list;
+class AclDenyInfoList;
 class acl_size_t;
 class HeaderManglers;
 class refresh_t;
@@ -389,7 +389,7 @@ public:
         acl_access* icap;
 #endif
     } accessList;
-    acl_deny_info_list *denyInfoList;
+    AclDenyInfoList *denyInfoList;
 
     struct {
         size_t list_width;

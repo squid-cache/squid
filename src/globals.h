@@ -40,6 +40,7 @@
 #include "defines.h"
 
 /* for iostats */
+#include "acl/AclDenyInfoList.h"
 #include "structs.h"
 
 extern char *ConfigFile;	/* NULL */
@@ -87,7 +88,7 @@ extern int DnsSocketB;		/* -1 */
 extern int n_disk_objects;	/* 0 */
 extern iostats IOStats;
 
-extern struct acl_deny_info_list *DenyInfoList;	/* NULL */
+extern AclDenyInfoList *DenyInfoList;	/* NULL */
 
 extern struct timeval squid_start;
 extern int starting_up;	/* 1 */
