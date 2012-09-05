@@ -57,8 +57,6 @@ typedef struct _sslproxy_cert_adapt sslproxy_cert_adapt;
 #include "snmp_vars.h"
 #include "cache_snmp.h"
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
-
-typedef struct _snmp_request_t snmp_request_t;
 #endif
 
 typedef void FREE(void *);

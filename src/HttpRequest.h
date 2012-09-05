@@ -33,6 +33,7 @@
 
 #include "base/CbcPointer.h"
 #include "Debug.h"
+#include "err_type.h"
 #include "HierarchyLogEntry.h"
 #include "HttpMsg.h"
 #include "HttpRequestMethod.h"
