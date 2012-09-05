@@ -32,6 +32,7 @@
  *
  */
 
+#include "acl/AclAddress.h"
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
 #include "HttpHeaderTools.h"
@@ -371,7 +372,7 @@ public:
 #endif
         acl_access *redirector;
         acl_access *reply;
-        acl_address *outgoing_address;
+        AclAddress *outgoing_address;
 #if USE_HTCP
 
         acl_access *htcp;
