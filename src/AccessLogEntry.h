@@ -35,6 +35,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
+#include "icp_opcode.h"
 #include "ip/Address.h"
 #include "HttpRequestMethod.h"
 #if ICAP_CLIENT

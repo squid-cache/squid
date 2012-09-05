@@ -29,21 +29,15 @@
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
-#include "acl/AclNameList.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "err_type.h"
 #include "hash.h"
 #include "ip/Address.h"
-#include "RefCount.h"
 
 /* needed for the global config */
 #include "HttpHeader.h"
 #include "HttpHeaderTools.h"
-
-/* for ICP_END */
-#include "icp_opcode.h"
 
 #define PEER_MULTICAST_SIBLINGS 1
 
@@ -52,7 +46,8 @@ class ACLChecklist;
 #if SQUID_SNMP
 
 #include "snmp_session.h"
-struct _snmp_request_t {
+class snmp_request_t {
+public:
     u_char *buf;
     u_char *outbuf;
     int len;
