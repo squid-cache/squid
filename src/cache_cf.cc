@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "acl/Acl.h"
+#include "acl/AclAddress.h"
 #include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
 #include "acl/Gadgets.h"
@@ -1364,13 +1365,13 @@ free_address(Ip::Address *addr)
     addr->SetEmpty();
 }
 
-CBDATA_TYPE(acl_address);
+CBDATA_TYPE(AclAddress);
 
 static void
-dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
+dump_acl_address(StoreEntry * entry, const char *name, AclAddress * head)
 {
     char buf[MAX_IPSTRLEN];
-    acl_address *l;
+    AclAddress *l;
 
     for (l = head; l; l = l->next) {
         if (!l->addr.IsAnyAddr())
@@ -1387,17 +1388,17 @@ dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
 static void
 freed_acl_address(void *data)
 {
-    acl_address *l = static_cast<acl_address *>(data);
+    AclAddress *l = static_cast<AclAddress *>(data);
     aclDestroyAclList(&l->aclList);
 }
 
 static void
-parse_acl_address(acl_address ** head)
+parse_acl_address(AclAddress ** head)
 {
-    acl_address *l;
-    acl_address **tail = head;	/* sane name below */
-    CBDATA_INIT_TYPE_FREECB(acl_address, freed_acl_address);
-    l = cbdataAlloc(acl_address);
+    AclAddress *l;
+    AclAddress **tail = head;	/* sane name below */
+    CBDATA_INIT_TYPE_FREECB(AclAddress, freed_acl_address);
+    l = cbdataAlloc(AclAddress);
     parse_address(&l->addr);
     aclParseAclList(LegacyParser, &l->aclList);
 
@@ -1408,10 +1409,10 @@ parse_acl_address(acl_address ** head)
 }
 
 static void
-free_acl_address(acl_address ** head)
+free_acl_address(AclAddress ** head)
 {
     while (*head) {
-        acl_address *l = *head;
+        AclAddress *l = *head;
         *head = l->next;
         cbdataFree(l);
     }
