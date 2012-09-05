@@ -39,6 +39,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/AclNameList.h"
+#include "acl/AclDenyInfoList.h"
 #include "acl/Checklist.h"
 #include "acl/Strategised.h"
 #include "acl/Gadgets.h"
@@ -50,9 +51,9 @@
 
 /* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed)
+aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
 {
-    acl_deny_info_list *A = NULL;
+    AclDenyInfoList *A = NULL;
 
     debugs(28, 8, HERE << "got called for " << name);
 
@@ -107,12 +108,12 @@ aclIsProxyAuth(const char *name)
  */
 
 void
-aclParseDenyInfoLine(acl_deny_info_list ** head)
+aclParseDenyInfoLine(AclDenyInfoList ** head)
 {
     char *t = NULL;
-    acl_deny_info_list *A = NULL;
-    acl_deny_info_list *B = NULL;
-    acl_deny_info_list **T = NULL;
+    AclDenyInfoList *A = NULL;
+    AclDenyInfoList *B = NULL;
+    AclDenyInfoList **T = NULL;
     AclNameList *L = NULL;
     AclNameList **Tail = NULL;
 
@@ -124,10 +125,10 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
         return;
     }
 
-    A = (acl_deny_info_list *)memAllocate(MEM_ACL_DENY_INFO_LIST);
+    A = (AclDenyInfoList *)memAllocate(MEM_ACL_DENY_INFO_LIST);
     A->err_page_id = errorReservePageId(t);
     A->err_page_name = xstrdup(t);
-    A->next = (acl_deny_info_list *) NULL;
+    A->next = (AclDenyInfoList *) NULL;
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
 
@@ -281,13 +282,13 @@ aclDestroyAccessList(acl_access ** list)
 }
 
 /* maex@space.net (06.09.1996)
- *    destroy an acl_deny_info_list */
+ *    destroy an AclDenyInfoList */
 
 void
-aclDestroyDenyInfoList(acl_deny_info_list ** list)
+aclDestroyDenyInfoList(AclDenyInfoList ** list)
 {
-    acl_deny_info_list *a = NULL;
-    acl_deny_info_list *a_next = NULL;
+    AclDenyInfoList *a = NULL;
+    AclDenyInfoList *a_next = NULL;
     AclNameList *l = NULL;
     AclNameList *l_next = NULL;
 

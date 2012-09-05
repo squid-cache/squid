@@ -47,13 +47,6 @@
 
 #define PEER_MULTICAST_SIBLINGS 1
 
-struct acl_deny_info_list {
-    err_type err_page_id;
-    char *err_page_name;
-    AclNameList *acl_list;
-    acl_deny_info_list *next;
-};
-
 class ACLChecklist;
 
 #if SQUID_SNMP
