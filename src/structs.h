@@ -68,13 +68,6 @@ public:
 
 class ACLList;
 
-struct acl_address {
-    acl_address *next;
-    ACLList *aclList;
-
-    Ip::Address addr;
-};
-
 struct acl_tos {
     acl_tos *next;
     ACLList *aclList;

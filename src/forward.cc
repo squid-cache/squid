@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/AclAddress.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
@@ -1423,7 +1424,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     // TODO use the connection details in ACL.
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
-    acl_address *l;
+    AclAddress *l;
     for (l = Config.accessList.outgoing_address; l; l = l->next) {
 
         /* check if the outgoing address is usable to the destination */
