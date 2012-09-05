@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "acl/Acl.h"
+#include "acl/AclNameList.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
@@ -2437,7 +2438,7 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 static void
 dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
 {
-    acl_name_list *a;
+    AclNameList *a;
 
     while (var != NULL) {
         storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
@@ -2462,8 +2463,8 @@ free_denyinfo(acl_deny_info_list ** list)
 {
     acl_deny_info_list *a = NULL;
     acl_deny_info_list *a_next = NULL;
-    acl_name_list *l = NULL;
-    acl_name_list *l_next = NULL;
+    AclNameList *l = NULL;
+    AclNameList *l_next = NULL;
 
     for (a = *list; a; a = a_next) {
         for (l = a->acl_list; l; l = l_next) {

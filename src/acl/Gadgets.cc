@@ -38,6 +38,7 @@
 
 #include "squid.h"
 #include "acl/Acl.h"
+#include "acl/AclNameList.h"
 #include "acl/Checklist.h"
 #include "acl/Strategised.h"
 #include "acl/Gadgets.h"
@@ -56,7 +57,7 @@ aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_al
     debugs(28, 8, HERE << "got called for " << name);
 
     for (A = *head; A; A = A->next) {
-        acl_name_list *L = NULL;
+        AclNameList *L = NULL;
 
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
             debugs(28, 8, HERE << "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
@@ -112,8 +113,8 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     acl_deny_info_list *A = NULL;
     acl_deny_info_list *B = NULL;
     acl_deny_info_list **T = NULL;
-    acl_name_list *L = NULL;
-    acl_name_list **Tail = NULL;
+    AclNameList *L = NULL;
+    AclNameList **Tail = NULL;
 
     /* first expect a page name */
 
@@ -131,7 +132,7 @@ aclParseDenyInfoLine(acl_deny_info_list ** head)
     Tail = &A->acl_list;
 
     while ((t = strtok(NULL, w_space))) {
-        L = (acl_name_list *)memAllocate(MEM_ACL_NAME_LIST);
+        L = (AclNameList *)memAllocate(MEM_ACL_NAME_LIST);
         xstrncpy(L->name, t, ACL_NAME_SZ);
         *Tail = L;
         Tail = &L->next;
@@ -287,8 +288,8 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 {
     acl_deny_info_list *a = NULL;
     acl_deny_info_list *a_next = NULL;
-    acl_name_list *l = NULL;
-    acl_name_list *l_next = NULL;
+    AclNameList *l = NULL;
+    AclNameList *l_next = NULL;
 
     debugs(28, 8, "aclDestroyDenyInfoList: invoked");
 

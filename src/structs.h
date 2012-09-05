@@ -29,13 +29,14 @@
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
-#include "RefCount.h"
+#include "acl/AclNameList.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
 #include "err_type.h"
 #include "hash.h"
 #include "ip/Address.h"
+#include "RefCount.h"
 
 /* needed for the global config */
 #include "HttpHeader.h"
@@ -46,15 +47,10 @@
 
 #define PEER_MULTICAST_SIBLINGS 1
 
-struct acl_name_list {
-    char name[ACL_NAME_SZ];
-    acl_name_list *next;
-};
-
 struct acl_deny_info_list {
     err_type err_page_id;
     char *err_page_name;
-    acl_name_list *acl_list;
+    AclNameList *acl_list;
     acl_deny_info_list *next;
 };
 
