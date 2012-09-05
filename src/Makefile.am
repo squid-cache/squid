@@ -258,6 +258,7 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
+	SquidConfig.h \
 	SquidConfig.cc
 
 squid_SOURCES = \
