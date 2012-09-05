@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "acl/Acl.h"
+#include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
@@ -211,9 +212,9 @@ static void parse_http_header_replace(HeaderManglers **manglers);
 static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderWithAclList *headers);
 static void parse_HeaderWithAclList(HeaderWithAclList **header);
 static void free_HeaderWithAclList(HeaderWithAclList **header);
-static void parse_denyinfo(acl_deny_info_list ** var);
-static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
-static void free_denyinfo(acl_deny_info_list ** var);
+static void parse_denyinfo(AclDenyInfoList ** var);
+static void dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var);
+static void free_denyinfo(AclDenyInfoList ** var);
 
 #if USE_WCCPv2
 static void parse_IpAddress_list(Ip::Address_list **);
@@ -2436,7 +2437,7 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 }
 
 static void
-dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
+dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var)
 {
     AclNameList *a;
 
@@ -2453,16 +2454,16 @@ dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
 }
 
 static void
-parse_denyinfo(acl_deny_info_list ** var)
+parse_denyinfo(AclDenyInfoList ** var)
 {
     aclParseDenyInfoLine(var);
 }
 
 void
-free_denyinfo(acl_deny_info_list ** list)
+free_denyinfo(AclDenyInfoList ** list)
 {
-    acl_deny_info_list *a = NULL;
-    acl_deny_info_list *a_next = NULL;
+    AclDenyInfoList *a = NULL;
+    AclDenyInfoList *a_next = NULL;
     AclNameList *l = NULL;
     AclNameList *l_next = NULL;
 
