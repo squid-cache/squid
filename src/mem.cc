@@ -31,10 +31,11 @@
  */
 
 #include "squid.h"
-#include "event.h"
+#include "acl/AclNameList.h"
 #include "ClientInfo.h"
-#include "Mem.h"
+#include "event.h"
 #include "md5.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
@@ -451,7 +452,7 @@ Mem::Init(void)
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
     memDataInit(MEM_ACL_DENY_INFO_LIST, "acl_deny_info_list",
                 sizeof(acl_deny_info_list), 0);
-    memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
+    memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(AclNameList), 0);
 #if USE_CACHE_DIGESTS
 
     memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
