@@ -64,6 +64,11 @@
 #define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_CERT_CHANGE
 #define SQUID_SSL_ERROR_MAX INT_MAX
 
+namespace AnyP
+{
+class PortCfg;
+};
+
 namespace Ssl
 {
 /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
@@ -74,7 +79,7 @@ typedef CbDataList<Ssl::ssl_error_t> Errors;
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
+SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
 SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
@@ -130,6 +135,36 @@ inline const char *bumpMode(int bm)
 }
 
 /**
+ \ingroup ServerProtocolSSLAPI
+ * Parses the SSL flags.
+ */
+long parse_flags(const char *flags);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Parses the SSL options.
+ */
+long parse_options(const char *options);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Load a CRLs list stored in a file
+ */
+STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Load DH params from file
+ */
+DH *readDHParams(const char *dhfile);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Compute the Ssl::ContextMethod (SSL_METHOD) from SSL version
+ */
+ContextMethod contextMethod(int version);
+
+/**
   \ingroup ServerProtocolSSLAPI
   * Generate a certificate to be used as untrusted signing certificate, based on a trusted CA
 */
@@ -139,7 +174,7 @@ bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untr
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-SSL_CTX * generateSslContext(CertificateProperties const &properties);
+SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -155,7 +190,7 @@ bool verifySslCertificate(SSL_CTX * sslContext,  CertificateProperties const &pr
   * Read private key and certificate from memory and generate SSL context
   * using their.
  */
-SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
+SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
