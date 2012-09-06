@@ -41,6 +41,7 @@
 
 /* for iostats */
 #include "acl/AclDenyInfoList.h"
+#include "CacheDigest.h"
 #include "structs.h"
 
 extern char *ConfigFile;	/* NULL */

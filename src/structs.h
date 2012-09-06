@@ -341,16 +341,6 @@ public:
     int max_stale;
 };
 
-class CacheDigest {
-public:
-    /* public, read-only */
-    char *mask;			/* bit mask */
-    int mask_size;		/* mask size in bytes */
-    int capacity;		/* expected maximum for .count, not a hard limit */
-    int bits_per_entry;		/* number of bits allocated for each entry from capacity */
-    int count;			/* number of digested entries */
-    int del_count;		/* number of deletions performed so far */
-};
 
 #if USE_SSL
 struct _sslproxy_cert_sign {

@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
+#include "CacheDigest.h"
 #include "ClientInfo.h"
 #include "event.h"
 #include "md5.h"
