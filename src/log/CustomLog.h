@@ -1,7 +1,6 @@
+#ifndef SQUID_CUSTOMLOG_H_
+#define SQUID_CUSTOMLOG_H_
 /*
- * DEBUG: section 46    Access Log - Squid Custom format
- * AUTHOR: Duane Wessels
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -30,20 +29,7 @@
  *
  */
 
-#include "squid.h"
-#include "AccessLogEntry.h"
-#include "log/File.h"
-#include "log/Formats.h"
-#include "MemBuf.h"
+class CustomLog_ {
+};
 
-void
-Log::Format::SquidCustom(const AccessLogEntry::Pointer &al, CustomLog * log)
-{
-    static MemBuf mb;
-    mb.reset();
-
-    // XXX: because we do not yet have a neutral form of transaction slab. use AccessLogEntry
-    log->logFormat->assemble(mb, al, log->logfile->sequence_number);
-
-    logfilePrintf(log->logfile, "%s\n", mb.buf);
-}
+#endif /* SQUID_CUSTOMLOG_H_ */
