@@ -90,7 +90,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
 
     if (al->url == NULL)
@@ -203,7 +203,7 @@ accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 void
 accessLogRotate(void)
 {
-    customlog *log;
+    CustomLog *log;
 #if USE_FORW_VIA_DB
 
     fvdbClear();
@@ -225,7 +225,7 @@ accessLogRotate(void)
 void
 accessLogClose(void)
 {
-    customlog *log;
+    CustomLog *log;
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
         if (log->logfile) {
@@ -300,7 +300,7 @@ accessLogRegisterWithCacheManager(void)
 void
 accessLogInit(void)
 {
-    customlog *log;
+    CustomLog *log;
 
     accessLogRegisterWithCacheManager();
 

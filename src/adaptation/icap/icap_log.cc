@@ -10,7 +10,7 @@ int IcapLogfileStatus = LOG_DISABLE;
 void
 icapLogOpen()
 {
-    customlog *log;
+    CustomLog *log;
 
     for (log = Config.Log.icaplogs; log; log = log->next) {
         if (log->type == Log::Format::CLF_NONE)
@@ -25,7 +25,7 @@ icapLogOpen()
 void
 icapLogClose()
 {
-    customlog *log;
+    CustomLog *log;
 
     for (log = Config.Log.icaplogs; log; log = log->next) {
         if (log->logfile) {
@@ -38,7 +38,7 @@ icapLogClose()
 void
 icapLogRotate()
 {
-    for (customlog* log = Config.Log.icaplogs; log; log = log->next) {
+    for (CustomLog* log = Config.Log.icaplogs; log; log = log->next) {
         if (log->logfile) {
             logfileRotate(log->logfile);
         }
