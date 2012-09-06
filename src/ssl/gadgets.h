@@ -26,6 +26,12 @@ namespace Ssl
  because they are used by ssl_crtd.
  */
 
+#if OPENSSL_VERSION_NUMBER < 0x00909000L
+typedef SSL_METHOD * ContextMethod;
+#else
+typedef const SSL_METHOD * ContextMethod;
+#endif
+
 /**
    \ingroup SslCrtdSslAPI
   * Add SSL locking (a.k.a. reference counting) to TidyPointer
@@ -55,6 +61,14 @@ public:
             function(a); \
         }
 
+// Macro to be used to define the C++ wrapper function of a sk_*_pop_free
+// openssl family functions. The C++ function suffixed with the _free_wrapper
+// extension
+#define sk_free_wrapper(sk_object, argument, freefunction) \
+        extern "C++" inline void sk_object ## _free_wrapper(argument a) { \
+            sk_object ## _pop_free(a, freefunction); \
+        }
+
 /**
  \ingroup SslCrtdSslAPI
  * TidyPointer typedefs for  common SSL objects
@@ -62,8 +76,8 @@ public:
 CtoCpp1(X509_free, X509 *)
 typedef LockingPointer<X509, X509_free_cpp, CRYPTO_LOCK_X509> X509_Pointer;
 
-CtoCpp1(sk_X509_free, STACK_OF(X509) *)
-typedef TidyPointer<STACK_OF(X509), sk_X509_free_cpp> X509_STACK_Pointer;
+sk_free_wrapper(sk_X509, STACK_OF(X509) *, X509_free)
+typedef TidyPointer<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer;
 
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, CRYPTO_LOCK_EVP_PKEY> EVP_PKEY_Pointer;
@@ -94,6 +108,15 @@ typedef TidyPointer<SSL_CTX, SSL_CTX_free_cpp> SSL_CTX_Pointer;
 
 CtoCpp1(SSL_free, SSL *)
 typedef TidyPointer<SSL, SSL_free_cpp> SSL_Pointer;
+
+CtoCpp1(DH_free, DH *);
+typedef TidyPointer<DH, DH_free_cpp> DH_Pointer;
+
+sk_free_wrapper(sk_X509_CRL, STACK_OF(X509_CRL) *, X509_CRL_free)
+typedef TidyPointer<STACK_OF(X509_CRL), sk_X509_CRL_free_wrapper> X509_CRL_STACK_Pointer;
+
+sk_free_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free)
+typedef TidyPointer<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
 
 /**
  \ingroup SslCrtdSslAPI

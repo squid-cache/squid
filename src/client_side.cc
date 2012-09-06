@@ -3700,7 +3700,7 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
-                SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str());
+                SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
                 getSslContextDone(ctx, true);
                 return;
             }
@@ -3844,7 +3844,7 @@ ConnStateData::getSslContextStart()
 #endif // USE_SSL_CRTD
 
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
-        dynCtx = Ssl::generateSslContext(certProperties);
+        dynCtx = Ssl::generateSslContext(certProperties, *port);
         getSslContextDone(dynCtx, true);
         return;
     }
