@@ -174,9 +174,9 @@ public:
     struct {
         char *store;
         char *swap;
-        customlog *accesslogs;
+        CustomLog *accesslogs;
 #if ICAP_CLIENT
-        customlog *icaplogs;
+        CustomLog *icaplogs;
 #endif
         int rotateNumber;
     } Log;

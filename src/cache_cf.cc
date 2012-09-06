@@ -173,10 +173,10 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-static void parse_access_log(customlog ** customlog_definitions);
-static int check_null_access_log(customlog *customlog_definitions);
-static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
-static void free_access_log(customlog ** definitions);
+static void parse_access_log(CustomLog ** customlog_definitions);
+static int check_null_access_log(CustomLog *customlog_definitions);
+static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * definitions);
+static void free_access_log(CustomLog ** definitions);
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
@@ -3974,11 +3974,11 @@ strtokFile(void)
 #include "AccessLogEntry.h"
 
 static void
-parse_access_log(customlog ** logs)
+parse_access_log(CustomLog ** logs)
 {
     const char *filename, *logdef_name;
 
-    customlog *cl = (customlog *)xcalloc(1, sizeof(*cl));
+    CustomLog *cl = (CustomLog *)xcalloc(1, sizeof(*cl));
 
     if ((filename = strtok(NULL, w_space)) == NULL) {
         self_destruct();
@@ -4048,15 +4048,15 @@ parse_access_log(customlog ** logs)
 }
 
 static int
-check_null_access_log(customlog *customlog_definitions)
+check_null_access_log(CustomLog *customlog_definitions)
 {
     return customlog_definitions == NULL;
 }
 
 static void
-dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
+dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
 {
-    customlog *log;
+    CustomLog *log;
 
     for (log = logs; log; log = log->next) {
         storeAppendPrintf(entry, "%s ", name);
@@ -4108,10 +4108,10 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 }
 
 static void
-free_access_log(customlog ** definitions)
+free_access_log(CustomLog ** definitions)
 {
     while (*definitions) {
-        customlog *log = *definitions;
+        CustomLog *log = *definitions;
         *definitions = log->next;
 
         log->logFormat = NULL;

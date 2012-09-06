@@ -103,7 +103,7 @@ class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
 class Store;
-class customlog;
+class CustomLog;
 class cachemgr_passwd;
 class refresh_t;
 namespace AnyP
@@ -384,13 +384,13 @@ class Logfile;
 
 #include "format/Format.h"
 #include "log/Formats.h"
-class customlog {
+class CustomLog {
 public:
     char *filename;
     ACLList *aclList;
     Format::Format *logFormat;
     Logfile *logfile;
-    customlog *next;
+    CustomLog *next;
     Log::Format::log_type type;
 };
 
