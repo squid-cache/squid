@@ -1139,6 +1139,8 @@ tests_testHttpReply_SOURCES=\
 	HttpStatusLine.h \
 	Mem.h \
 	mem.cc \
+    RegexList.h \
+    RegexList.cc \
 	MemBuf.cc \
 	MemBuf.h \
 	mime_header.h \

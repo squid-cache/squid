@@ -86,13 +86,6 @@ struct acl_size_t {
     int64_t size;
 };
 
-struct relist {
-    int flags;
-    char *pattern;
-    regex_t regex;
-    relist *next;
-};
-
 #if USE_DELAY_POOLS
 #include "DelayConfig.h"
 #include "ClientDelayConfig.h"
