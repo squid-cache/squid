@@ -77,7 +77,7 @@ struct _RebuildState {
         unsigned int clean:1;
     } flags;
 
-    struct _store_rebuild_data counts;
+    StoreRebuildData counts;
 };
 
 static char *storeCossDirSwapLogFile(SwapDir *, const char *);

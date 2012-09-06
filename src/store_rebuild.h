@@ -31,17 +31,30 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+class StoreRebuildData {
+public:
+    int objcount;       /* # objects successfully reloaded */
+    int expcount;       /* # objects expired */
+    int scancount;      /* # entries scanned or read from state file */
+    int clashcount;     /* # swapfile clashes avoided */
+    int dupcount;       /* # duplicates purged */
+    int cancelcount;        /* # SWAP_LOG_DEL objects purged */
+    int invalid;        /* # bad lines */
+    int badflags;       /* # bad e->flags */
+    int bad_log_op;
+    int zero_object_sz;
+};
 
 extern void storeRebuildStart(void);
-extern void storeRebuildComplete(struct _store_rebuild_data *);
+extern void storeRebuildComplete(StoreRebuildData *);
 extern void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success
-extern bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
+extern bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
 /// parses entry buffer and validates entry metadata; fills e on success
-extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
+extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
 /// checks whether the loaded entry should be kept; updates counters
-extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
+extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
 
 
 

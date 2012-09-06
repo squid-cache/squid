@@ -47,7 +47,7 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-static struct _store_rebuild_data counts;
+static StoreRebuildData counts;
 
 static struct timeval rebuild_start;
 static void storeCleanup(void *);
@@ -137,7 +137,7 @@ storeCleanup(void *datanotused)
 /* meta data recreated from disk image in swap directory */
 void
 
-storeRebuildComplete(struct _store_rebuild_data *dc)
+storeRebuildComplete(StoreRebuildData *dc)
 {
     double dt;
     counts.objcount += dc->objcount;
@@ -295,7 +295,7 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
 
 bool
 storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
-                      struct _store_rebuild_data &counts)
+                      StoreRebuildData &counts)
 {
     if (fd < 0)
         return false;
@@ -317,7 +317,7 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
 
 bool
 storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
-                       struct _store_rebuild_data &counts,
+                       StoreRebuildData &counts,
                        uint64_t expectedSize)
 {
     int swap_hdr_len = 0;
@@ -383,7 +383,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
 
 bool
 storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
-                      struct _store_rebuild_data &counts)
+                      StoreRebuildData &counts)
 {
     /* this needs to become
      * 1) unpack url

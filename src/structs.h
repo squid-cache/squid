@@ -352,19 +352,6 @@ public:
     int del_count;		/* number of deletions performed so far */
 };
 
-struct _store_rebuild_data {
-    int objcount;		/* # objects successfully reloaded */
-    int expcount;		/* # objects expired */
-    int scancount;		/* # entries scanned or read from state file */
-    int clashcount;		/* # swapfile clashes avoided */
-    int dupcount;		/* # duplicates purged */
-    int cancelcount;		/* # SWAP_LOG_DEL objects purged */
-    int invalid;		/* # bad lines */
-    int badflags;		/* # bad e->flags */
-    int bad_log_op;
-    int zero_object_sz;
-};
-
 #if USE_SSL
 struct _sslproxy_cert_sign {
     int alg;
