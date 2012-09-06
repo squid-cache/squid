@@ -275,6 +275,7 @@ squid_SOURCES = \
 	CacheDigest.h \
 	CacheDigest.cc \
 	cache_manager.cc \
+	CachePeer.h \
 	CacheManager.h \
 	carp.h \
 	carp.cc \
