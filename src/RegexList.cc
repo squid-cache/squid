@@ -1,5 +1,4 @@
 /*
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -26,34 +25,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-#ifndef SQUID_ACLREGEXDATA_H
-#define SQUID_ACLREGEXDATA_H
 
-#include "acl/Data.h"
-#include "MemPool.h"
+#include "squid.h"
+#include "RegexList.h"
 
-class RegexList;
-
-class ACLRegexData : public ACLData<char const *>
-{
-
-public:
-    MEMPROXY_CLASS(ACLRegexData);
-
-    virtual ~ACLRegexData();
-    virtual bool match(char const *user);
-    virtual wordlist *dump();
-    virtual void parse();
-    virtual bool empty() const;
-    virtual ACLData<char const *> *clone() const;
-
-private:
-    RegexList *data;
-};
-
-MEMPROXY_CLASS_INLINE(ACLRegexData);
-
-#endif /* SQUID_ACLREGEXDATA_H */
