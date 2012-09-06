@@ -44,6 +44,7 @@
 #include "HttpRequest.h"
 #include "log/access_log.h"
 #include "log/Config.h"
+#include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "MemBuf.h"

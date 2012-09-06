@@ -1,6 +1,7 @@
 #include "squid.h"
 #include "icap_log.h"
 #include "AccessLogEntry.h"
+#include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "SquidConfig.h"
