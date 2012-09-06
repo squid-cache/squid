@@ -28,8 +28,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "format/Format.h"
+#include "log/Formats.h"
 
-class CustomLog_ {
+class ACLList;
+class Logfile;
+
+class CustomLog {
+public:
+    char *filename;
+    ACLList *aclList;
+    Format::Format *logFormat;
+    Logfile *logfile;
+    CustomLog *next;
+    Log::Format::log_type type;
 };
+
 
 #endif /* SQUID_CUSTOMLOG_H_ */

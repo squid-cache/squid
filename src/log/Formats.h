@@ -5,6 +5,7 @@
 
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class AccessLogEntry;
+class CustomLog;
 class Logfile;
 
 namespace Log

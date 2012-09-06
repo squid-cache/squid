@@ -57,6 +57,7 @@
 #include "ip/tools.h"
 #include "ipc/Kids.h"
 #include "log/Config.h"
+#include "log/CustomLog.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
