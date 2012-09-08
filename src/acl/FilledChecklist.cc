@@ -110,6 +110,8 @@ ACLFilledChecklist::conn() const
 void
 ACLFilledChecklist::conn(ConnStateData *aConn)
 {
+    if (conn() == aConn)
+        return;
     assert (conn() == NULL);
     conn_ = cbdataReference(aConn);
 }
@@ -205,6 +207,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #endif /* FOLLOW_X_FORWARDED_FOR */
             src_addr = request->client_addr;
         my_addr = request->my_addr;
+
+        if (request->clientConnectionManager.valid())
+            conn(request->clientConnectionManager.get()); 
     }
 
 #if USE_IDENT

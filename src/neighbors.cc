@@ -194,17 +194,6 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     checklist.src_addr = request->client_addr;
     checklist.my_addr = request->my_addr;
 
-#if 0 && USE_IDENT
-    /*
-     * this is currently broken because 'request->user_ident' has been
-     * moved to conn->rfc931 and we don't have access to the parent
-     * ConnStateData here.
-     */
-    if (request->user_ident[0])
-        xstrncpy(checklist.rfc931, request->user_ident, USER_IDENT_SZ);
-
-#endif
-
     return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
