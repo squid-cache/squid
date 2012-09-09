@@ -209,7 +209,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         my_addr = request->my_addr;
 
         if (request->clientConnectionManager.valid())
-            conn(request->clientConnectionManager.get()); 
+            conn(request->clientConnectionManager.get());
     }
 
 #if USE_IDENT
