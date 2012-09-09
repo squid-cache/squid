@@ -5,6 +5,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "Debug.h"
 #include "ipc/TypedMsgHdr.h"
 #include "snmp/Var.h"
 #include "tools.h"

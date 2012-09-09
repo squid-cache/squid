@@ -56,6 +56,4 @@ extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, S
 /// checks whether the loaded entry should be kept; updates counters
 extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
 
-
-
 #endif /* SQUID_STORE_REBUILD_H_ */
