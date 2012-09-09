@@ -116,7 +116,7 @@ static int nasport = 111;
 static int nasporttype = 0;
 static uint32_t nas_ipaddr;
 static uint32_t auth_ipaddr;
-static int retries = 30;
+static int retries = 10;
 
 char progname[] = "basic_radius_auth";
 
@@ -250,6 +250,8 @@ rad_auth_config(const char *cfname)
             sscanf(line, "service %s", svc_name);
         if (!memcmp(line, "port", 4))
             sscanf(line, "port %s", svc_name);
+        if (!memcmp(line, "timeout", 7))
+            sscanf(line, "timeout %d", &retries);
     }
     fclose(cf);
     if (srv && crt)
@@ -281,7 +283,7 @@ urldecode(char *dst, const char *src, int size)
     *dst = '\0';
 }
 
-static int
+static void
 authenticate(int socket_fd, const char *username, const char *passwd)
 {
     AUTH_HDR *auth;
@@ -446,16 +448,20 @@ authenticate(int socket_fd, const char *username, const char *passwd)
                 continue;
 
             rc = result_recv(saremote.sin_addr.s_addr, saremote.sin_port, recv_buffer, len);
-            if (rc == 0)
-                return 1;
-            if (rc == 1)
-                return 0;
+            if (rc == 0) {
+                SEND_OK("");
+                return;
+            }
+            if (rc == 1) {
+                SEND_ERR("");
+                return;
+            }
         }
     }
 
     fprintf(stderr, "%s: No response from RADIUS server\n", progname);
-
-    return 0;
+    SEND_ERR("No response from RADIUS server");
+    return;
 }
 
 int
@@ -597,10 +603,7 @@ main(int argc, char **argv)
             ++ptr;
         urldecode(passwd, ptr, MAXPASS);
 
-        if (authenticate(sockfd, username, passwd))
-            SEND_OK("");
-        else
-            SEND_ERR("");
+        authenticate(sockfd, username, passwd);
     }
     close(sockfd);
     exit(1);
