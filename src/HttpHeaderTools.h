@@ -112,5 +112,4 @@ extern const char *getStringPrefix(const char *str, const char *end);
 
 extern void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 
-
 #endif
