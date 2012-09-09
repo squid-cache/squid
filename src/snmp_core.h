@@ -48,5 +48,4 @@ extern const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 extern void addr2oid(Ip::Address &addr, oid *Dest);
 extern void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 
-
 #endif /* SQUID_SNMP_CORE_H */

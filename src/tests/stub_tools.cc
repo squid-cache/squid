@@ -1,5 +1,4 @@
 #include "squid.h"
-// tool functions still defined in protos.h
 #include "tools.h"
 
 #define STUB_API "tools.cc"

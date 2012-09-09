@@ -29,21 +29,8 @@
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
-/* for routines still in this file that take CacheManager parameters */
-#include "ip/Address.h"
-/* for parameters that still need these */
-#include "enums.h"
-/* some parameters stil need this */
-#include "wordlist.h"
-#include "anyp/ProtocolType.h"
-
-#include "comm/forward.h"
-
 extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
-
-
-
 
 #endif /* SQUID_PROTOS_H */
