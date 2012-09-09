@@ -3166,7 +3166,6 @@ AC_CHECK_FUNCS(\
 	seteuid \
 	setgroups \
 	setpgrp \
-	setrlimit \
 	setsid \
 	sigaction \
 	snprintf \
