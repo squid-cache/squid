@@ -65,6 +65,7 @@
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
 #include "refresh.h"
+#include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -337,7 +338,7 @@ HttpStateData::cacheableReply()
     const char *v;
 #if USE_HTTP_VIOLATIONS
 
-    const refresh_t *R = NULL;
+    const RefreshPattern *R = NULL;
 
     /* This strange looking define first looks up the refresh pattern
      * and then checks if the specified flag is set. The main purpose

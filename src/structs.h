@@ -105,7 +105,6 @@ class external_acl;
 class Store;
 class CustomLog;
 class cachemgr_passwd;
-class refresh_t;
 namespace AnyP
 {
 struct PortCfg;
@@ -311,34 +310,6 @@ public:
     char *passwd;
     wordlist *actions;
     cachemgr_passwd *next;
-};
-
-class refresh_t {
-public:
-    const char *pattern;
-    regex_t compiled_pattern;
-    time_t min;
-    double pct;
-    time_t max;
-    refresh_t *next;
-
-    struct {
-        unsigned int icase:1;
-        unsigned int refresh_ims:1;
-        unsigned int store_stale:1;
-#if USE_HTTP_VIOLATIONS
-        unsigned int override_expire:1;
-        unsigned int override_lastmod:1;
-        unsigned int reload_into_ims:1;
-        unsigned int ignore_reload:1;
-        unsigned int ignore_no_cache:1;
-        unsigned int ignore_no_store:1;
-        unsigned int ignore_must_revalidate:1;
-        unsigned int ignore_private:1;
-        unsigned int ignore_auth:1;
-#endif
-    } flags;
-    int max_stale;
 };
 
 
