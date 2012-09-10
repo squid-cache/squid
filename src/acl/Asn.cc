@@ -32,22 +32,23 @@
  */
 
 #include "squid.h"
-#include "mgr/Registration.h"
-#include "radix.h"
-#include "HttpRequest.h"
-#include "StoreClient.h"
-#include "Store.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
 #include "acl/Checklist.h"
-#include "acl/SourceAsn.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "acl/SourceAsn.h"
 #include "cache_cf.h"
-#include "HttpReply.h"
-#include "ipcache.h"
 #include "forward.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "ipcache.h"
+#include "mgr/Registration.h"
+#include "radix.h"
+#include "RequestFlags.h"
 #include "SquidConfig.h"
+#include "Store.h"
+#include "StoreClient.h"
 #include "StoreClient.h"
 #include "wordlist.h"
 
@@ -248,7 +249,7 @@ asnCacheStart(int as)
     asState->request = HTTPMSGLOCK(req);
 
     if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
-        e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
+        e = storeCreateEntry(asres, asres, RequestFlags(), METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request);
     } else {

@@ -420,27 +420,6 @@ HttpRequest::hdrCacheInit()
     range = header.getRange();
 }
 
-/* request_flags */
-bool
-request_flags::resetTCP() const
-{
-    return reset_tcp != 0;
-}
-
-void
-request_flags::setResetTCP()
-{
-    debugs(73, 9, "request_flags::setResetTCP");
-    reset_tcp = 1;
-}
-
-void
-request_flags::clearResetTCP()
-{
-    debugs(73, 9, "request_flags::clearResetTCP");
-    reset_tcp = 0;
-}
-
 #if ICAP_CLIENT
 Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
@@ -491,27 +470,6 @@ bool
 HttpRequest::multipartRangeRequest() const
 {
     return (range && range->specs.count > 1);
-}
-
-void
-request_flags::destinationIPLookupCompleted()
-{
-    destinationIPLookedUp_ = true;
-}
-
-bool
-request_flags::destinationIPLookedUp() const
-{
-    return destinationIPLookedUp_;
-}
-
-request_flags
-request_flags::cloneAdaptationImmune() const
-{
-    // At the time of writing, all flags where either safe to copy after
-    // adaptation or were not set at the time of the adaptation. If there
-    // are flags that are different, they should be cleared in the clone.
-    return *this;
 }
 
 bool
