@@ -41,7 +41,7 @@ public:
         fail_on_validation_err(0), stale_if_hit(0), accelerated(0),
         ignore_cc(0), intercepted(0), hostVerified(0), spoof_client_ip(0),
         internal(0), internalclient(0), must_keepalive(0), pinned(0),
-        canRePin(0), chunked_reply(0), stream_error(0), sslPeek(0),
+        canRePin(0), chunked_reply(0), stream_error(0), sslPeek_(false),
         done_follow_x_forwarded_for(!FOLLOW_X_FORWARDED_FOR),
         sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
         isRanged_(false) {
@@ -85,7 +85,6 @@ public:
     unsigned int no_direct :1; /* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
     unsigned int chunked_reply :1; /**< Reply with chunked transfer encoding */
     unsigned int stream_error :1; /**< Whether stream error has occured */
-    unsigned int sslPeek :1; ///< internal ssl-bump request to get server cert
 
 #if FOLLOW_X_FORWARDED_FOR
     /* TODO: move from conditional definition to conditional setting */
@@ -117,11 +116,16 @@ public:
         /* do not allow clearing if FOLLOW_X_FORWARDED_FOR is unset */
         done_follow_x_forwarded_for = false || !FOLLOW_X_FORWARDED_FOR;
     }
+
+    bool sslPeek() const { return sslPeek_; }
+    void setSslPeek() { sslPeek_=true; }
+    void clearSslPeek() { sslPeek_=false; }
 private:
 
-    /* done_follow_x_forwarded_for set by default to the opposite of
+    bool sslPeek_ :1; ///< internal ssl-bump request to get server cert
+    /* done_follow_x_forwarded_for is set by default to the opposite of
      * compilation option FOLLOW_X_FORWARDED_FOR (so that it returns
-     * always "done" if the build option is disabled.
+     * always "done" if the build option is disabled).
      */
     bool done_follow_x_forwarded_for :1;
     bool sslBumped_ :1; /**< ssl-bumped request*/

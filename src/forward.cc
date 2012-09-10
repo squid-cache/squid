@@ -373,7 +373,7 @@ FwdState::startConnectionOrFail()
             fail(anErr);
         } // else use actual error from last connection attempt
 #if USE_SSL
-        if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
+        if (request->flags.sslPeek() && request->clientConnectionManager.valid()) {
             errorAppendEntry(entry, err); // will free err
             err = NULL;
             CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
@@ -715,7 +715,7 @@ FwdState::negotiateSSL(int fd)
             // a user-entered address (a host name or a user-entered IP).
             const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
                                           !request->clientConnectionManager->port->intercepted;
-            if (request->flags.sslPeek && !isConnectRequest) {
+            if (request->flags.sslPeek() && !isConnectRequest) {
                 if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
                         request->SetHost(name);
@@ -812,7 +812,7 @@ FwdState::initiateSSL()
         const bool hostnameIsIp = request->GetHostIsNumeric();
         const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
                                       !request->clientConnectionManager->port->intercepted;
-        if (!request->flags.sslPeek || isConnectRequest)
+        if (!request->flags.sslPeek() || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
         // Use SNI TLS extension only when we connect directly
@@ -889,7 +889,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (!request->flags.pinned || rePin) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
-                request->flags.sslPeek) {
+                request->flags.sslPeek()) {
             initiateSSL();
             return;
         }
@@ -1122,7 +1122,7 @@ FwdState::dispatch()
 #endif
 
 #if USE_SSL
-    if (request->flags.sslPeek) {
+    if (request->flags.sslPeek()) {
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                      ConnStateData::httpsPeeked, serverConnection());
         unregister(serverConn); // async call owns it now
@@ -1137,7 +1137,7 @@ FwdState::dispatch()
         request->peer_domain = serverConnection()->getPeer()->domain;
         httpStart(this);
     } else {
-        assert(!request->flags.sslPeek);
+        assert(!request->flags.sslPeek());
         request->peer_login = NULL;
         request->peer_domain = NULL;
 
