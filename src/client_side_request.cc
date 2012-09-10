@@ -1106,7 +1106,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->range = req_hdr->getRange();
 
         if (request->range) {
-            request->flags.range = 1;
+            request->flags.setRanged();
             clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
             /* XXX: This is suboptimal. We should give the stream the range set,
              * and thereby let the top of the stream set the offset when the

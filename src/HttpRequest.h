@@ -37,6 +37,7 @@
 #include "HierarchyLogEntry.h"
 #include "HttpMsg.h"
 #include "HttpRequestMethod.h"
+#include "RequestFlags.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -162,7 +163,7 @@ public:
 
     char *canonical;
 
-    request_flags flags;
+    RequestFlags flags;
 
     HttpHdrRange *range;
 

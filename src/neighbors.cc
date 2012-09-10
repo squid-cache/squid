@@ -54,6 +54,7 @@
 #include "neighbors.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
+#include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
@@ -1375,7 +1376,7 @@ peerCountMcastPeersStart(void *data)
     snprintf(url, MAX_URL, "http://");
     p->in_addr.ToURL(url+7, MAX_URL -8 );
     strcat(url, "/");
-    fake = storeCreateEntry(url, url, request_flags(), METHOD_GET);
+    fake = storeCreateEntry(url, url, RequestFlags(), METHOD_GET);
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
     psstate = new ps_state;
     psstate->request = HTTPMSGLOCK(req);

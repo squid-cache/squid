@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "RequestFlags.h"
 
 #define STUB_API "store.cc"
 #include "tests/STUB.h"
@@ -115,7 +116,7 @@ void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
 SQUIDCEXTERN StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(HttpRequest * request) STUB_RETVAL(NULL)
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method) STUB_RETVAL(NULL)
-SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, const HttpRequestMethod&) STUB_RETVAL(NULL)
+extern StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 SQUIDCEXTERN void storeInit(void) STUB
 SQUIDCEXTERN void storeConfigure(void) STUB
 SQUIDCEXTERN void storeFreeMemory(void) STUB

@@ -54,6 +54,7 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "refresh.h"
+#include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -132,7 +133,7 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
 
     http->al->http.code = errstate->httpStatus;
 
-    createStoreEntry(method, request_flags());
+    createStoreEntry(method, RequestFlags());
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
@@ -226,7 +227,7 @@ clientReplyContext::restoreState()
 void
 clientReplyContext::startError(ErrorState * err)
 {
-    createStoreEntry(http->request->method, request_flags());
+    createStoreEntry(http->request->method, RequestFlags());
     triggerInitialStoreRead();
     errorAppendEntry(http->storeEntry(), err);
 }
@@ -656,7 +657,7 @@ clientReplyContext::processMiss()
     if (r->flags.loopdetect) {
         http->al->http.code = HTTP_FORBIDDEN;
         err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
-        createStoreEntry(r->method, request_flags());
+        createStoreEntry(r->method, RequestFlags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
         return;
@@ -994,7 +995,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     /* FIXME: This doesn't need to go through the store. Simply
      * push down the client chain
      */
-    createStoreEntry(http->request->method, request_flags());
+    createStoreEntry(http->request->method, RequestFlags());
 
     triggerInitialStoreRead();
 
@@ -1009,7 +1010,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
 {
     clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
     StoreIOBuffer localTempBuffer;
-    createStoreEntry(http->request->method, request_flags());
+    createStoreEntry(http->request->method, RequestFlags());
     localTempBuffer.offset = nextNode->readBuffer.offset + headers_sz;
     localTempBuffer.length = nextNode->readBuffer.length;
     localTempBuffer.data = nextNode->readBuffer.data;
@@ -1895,7 +1896,7 @@ clientReplyContext::sendNotModified()
     HttpReply *const temprep = e->getReply()->make304();
     http->logType = LOG_TCP_IMS_HIT;
     removeClientStoreReference(&sc, http);
-    createStoreEntry(http->request->method, request_flags());
+    createStoreEntry(http->request->method, RequestFlags());
     e = http->storeEntry();
     // Copy timestamp from the original entry so the 304
     // reply has a meaningful Age: header.
@@ -2157,7 +2158,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 /* Using this breaks the client layering just a little!
  */
 void
-clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags reqFlags)
+clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags reqFlags)
 {
     assert(http != NULL);
     /*
