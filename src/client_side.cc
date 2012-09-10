@@ -2652,14 +2652,14 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->clientConnectionManager = conn;
 
     request->flags.accelerated = http->flags.accel;
-    request->flags.sslBumped = conn->switchedToHttps();
-    request->flags.canRePin = request->flags.sslBumped && conn->pinning.pinned;
+    request->flags.setSslBumped(conn->switchedToHttps());
+    request->flags.canRePin = request->flags.sslBumped() && conn->pinning.pinned;
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
+    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped()) ?
                                !conn->port->allow_direct : 0;
 #if USE_AUTH
-    if (request->flags.sslBumped) {
+    if (request->flags.sslBumped()) {
         if (conn->auth_user_request != NULL)
             request->auth_user_request = conn->auth_user_request;
     }

@@ -534,7 +534,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         conn->log_addr = request->indirect_client_addr;
     }
     request->x_forwarded_for_iterator.clean();
-    request->flags.done_follow_x_forwarded_for = 1;
+    request->flags.setDoneFollowXFF();
 
     if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
         debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
@@ -709,8 +709,9 @@ ClientRequestContext::hostHeaderVerify()
 void
 ClientRequestContext::clientAccessCheck()
 {
-#if FOLLOW_X_FORWARDED_FOR
-    if (!http->request->flags.done_follow_x_forwarded_for &&
+    /* NOP if !FOLLOW_X_FORWARDED_FOR */
+    if (FOLLOW_X_FORWARDED_FOR &&
+            !http->request->flags.doneFollowXFF() &&
             Config.accessList.followXFF &&
             http->request->header.has(HDR_X_FORWARDED_FOR)) {
 
@@ -726,7 +727,6 @@ ClientRequestContext::clientAccessCheck()
         acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
-#endif /* FOLLOW_X_FORWARDED_FOR */
 
     if (Config.accessList.http) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
@@ -810,7 +810,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
         if (auth_challenge) {
 #if USE_AUTH
-            if (http->request->flags.sslBumped) {
+            if (http->request->flags.sslBumped()) {
                 /*SSL Bumped request, authentication is not possible*/
                 status = HTTP_FORBIDDEN;
             } else if (!http->flags.accel) {
