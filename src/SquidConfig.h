@@ -50,7 +50,7 @@ class acl_access;
 class AclDenyInfoList;
 class acl_size_t;
 class HeaderManglers;
-class refresh_t;
+class RefreshPattern;
 class SwapDir;
 class RemovalPolicySettings;
 
@@ -403,7 +403,7 @@ public:
         int sanitycheck;
         int telnet;
     } Ftp;
-    refresh_t *Refresh;
+    RefreshPattern *Refresh;
 
     struct _cacheSwap {
         RefCount<SwapDir> *swapDirs;

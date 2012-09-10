@@ -1,7 +1,6 @@
+#ifndef SQUID_REFRESHPATTERN_H_
+#define SQUID_REFRESHPATTERN_H_
 /*
- * DEBUG: section 22    Refresh Calculation
- * AUTHOR: Harvest Derived
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -30,19 +29,32 @@
  *
  */
 
-#ifndef SQUID_REFRESH_H_
-#define SQUID_REFRESH_H_
+class RefreshPattern {
+public:
+    const char *pattern;
+    regex_t compiled_pattern;
+    time_t min;
+    double pct;
+    time_t max;
+    RefreshPattern *next;
 
-class RefreshPattern;
+    struct {
+        unsigned int icase:1;
+        unsigned int refresh_ims:1;
+        unsigned int store_stale:1;
+#if USE_HTTP_VIOLATIONS
+        unsigned int override_expire:1;
+        unsigned int override_lastmod:1;
+        unsigned int reload_into_ims:1;
+        unsigned int ignore_reload:1;
+        unsigned int ignore_no_cache:1;
+        unsigned int ignore_no_store:1;
+        unsigned int ignore_must_revalidate:1;
+        unsigned int ignore_private:1;
+        unsigned int ignore_auth:1;
+#endif
+    } flags;
+    int max_stale;
+};
 
-extern void refreshAddToList(const char *, int, time_t, int, time_t);
-extern int refreshIsCachable(const StoreEntry *);
-extern int refreshCheckHTTP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckICP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckDigest(const StoreEntry *, time_t delta);
-extern time_t getMaxAge(const char *url);
-extern void refreshInit(void);
-extern const RefreshPattern *refreshLimits(const char *url);
-
-#endif /* SQUID_REFRESH_H_ */
+#endif /* SQUID_REFRESHPATTERN_H_ */
