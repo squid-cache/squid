@@ -104,7 +104,7 @@ class RemovalPolicySettings;
 class external_acl;
 class Store;
 class CustomLog;
-class cachemgr_passwd;
+class CacheMgrPasswd;
 namespace AnyP
 {
 struct PortCfg;
@@ -303,15 +303,6 @@ private:
     unsigned int reset_tcp:1;
     unsigned int destinationIPLookedUp_:1;
 };
-
-
-class cachemgr_passwd {
-public:
-    char *passwd;
-    wordlist *actions;
-    cachemgr_passwd *next;
-};
-
 
 #if USE_SSL
 struct _sslproxy_cert_sign {
