@@ -47,12 +47,13 @@
 #endif
 
 class acl_access;
-class AclDenyInfoList;
 class acl_size_t;
+class AclDenyInfoList;
+class CacheMgrPasswd;
 class HeaderManglers;
 class RefreshPattern;
-class SwapDir;
 class RemovalPolicySettings;
+class SwapDir;
 
 namespace AnyP {
 class PortCfg;
@@ -265,7 +266,7 @@ public:
     } fqdncache;
     int minDirectHops;
     int minDirectRtt;
-    cachemgr_passwd *passwd_list;
+    CacheMgrPasswd *passwd_list;
 
     struct {
         int objectsPerBucket;
