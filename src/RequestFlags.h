@@ -42,14 +42,12 @@ public:
         ignore_cc(0), intercepted(0), hostVerified(0), spoof_client_ip(0),
         internal(0), internalclient(0), must_keepalive(0), pinned(0),
         canRePin(0), chunked_reply(0), stream_error(0), sslPeek(0),
-        sslBumped(0), destinationIPLookedUp_(false), resetTCP_(false),
+        done_follow_x_forwarded_for(!FOLLOW_X_FORWARDED_FOR),
+        sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
         isRanged_(false) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
-#if FOLLOW_X_FORWARDED_FOR
-        done_follow_x_forwarded_for = 0;
-#endif /* FOLLOW_X_FORWARDED_FOR */
     }
 
     unsigned int nocache :1; ///< whether the response to this request may be READ from cache
@@ -88,11 +86,9 @@ public:
     unsigned int chunked_reply :1; /**< Reply with chunked transfer encoding */
     unsigned int stream_error :1; /**< Whether stream error has occured */
     unsigned int sslPeek :1; ///< internal ssl-bump request to get server cert
-    unsigned int sslBumped :1; /**< ssl-bumped request*/
 
 #if FOLLOW_X_FORWARDED_FOR
     /* TODO: move from conditional definition to conditional setting */
-    unsigned int done_follow_x_forwarded_for :1;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
@@ -108,8 +104,27 @@ public:
     bool isRanged() const;
     void setRanged();
     void clearRanged();
+
+    bool sslBumped() const { return sslBumped_; }
+    void setSslBumped(bool newValue=true) { sslBumped_=newValue; }
+    void clearSslBumpeD() { sslBumped_=false; }
+
+    bool doneFollowXFF() const { return done_follow_x_forwarded_for; }
+    void setDoneFollowXFF() {
+        done_follow_x_forwarded_for = true;
+    }
+    void clearDoneFollowXFF() {
+        /* do not allow clearing if FOLLOW_X_FORWARDED_FOR is unset */
+        done_follow_x_forwarded_for = false || !FOLLOW_X_FORWARDED_FOR;
+    }
 private:
 
+    /* done_follow_x_forwarded_for set by default to the opposite of
+     * compilation option FOLLOW_X_FORWARDED_FOR (so that it returns
+     * always "done" if the build option is disabled.
+     */
+    bool done_follow_x_forwarded_for :1;
+    bool sslBumped_ :1; /**< ssl-bumped request*/
     bool destinationIPLookedUp_:1;
     bool resetTCP_:1;                ///< request to reset the TCP stream
     bool isRanged_ :1;
