@@ -377,7 +377,7 @@ storeDigestRebuildStep(void *datanotused)
 static void
 storeDigestRewriteStart(void *datanotused)
 {
-    request_flags flags;
+    RequestFlags flags;
     char *url;
     StoreEntry *e;
 

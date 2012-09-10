@@ -42,6 +42,7 @@
 #include "Range.h"
 #include "RefCount.h"
 #include "RemovalPolicy.h"
+#include "RequestFlags.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
 
@@ -378,7 +379,8 @@ SQUIDCEXTERN StoreEntry *storeGetPublicByRequest(HttpRequest * request);
 SQUIDCEXTERN StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method);
 
 /// \ingroup StoreAPI
-SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_flags, const HttpRequestMethod&);
+class RequestFlags;
+extern StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&);
 
 /// \ingroup StoreAPI
 SQUIDCEXTERN void storeInit(void);

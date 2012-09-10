@@ -397,6 +397,8 @@ squid_SOURCES = \
 	HttpParser.h \
 	HttpReply.cc \
 	HttpReply.h \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequest.h \
 	HttpRequestMethod.cc \
@@ -1142,8 +1144,8 @@ tests_testHttpReply_SOURCES=\
 	HttpStatusLine.h \
 	Mem.h \
 	mem.cc \
-    RegexList.h \
-    RegexList.cc \
+	RegexList.h \
+	RegexList.cc \
 	MemBuf.cc \
 	MemBuf.h \
 	mime_header.h \
@@ -1366,6 +1368,8 @@ tests_testCacheManager_SOURCES = \
 	debug.cc \
 	HttpParser.cc \
 	HttpParser.h \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	Mem.h \
@@ -1386,7 +1390,7 @@ tests_testCacheManager_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	CacheMgrPasswd.h \
-    CacheMgrPasswd.cc \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1648,6 +1652,8 @@ tests_testDiskIO_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1779,7 +1785,7 @@ tests_testEvent_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	CacheMgrPasswd.h \
-    CacheMgrPasswd.cc \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -1853,6 +1859,8 @@ tests_testEvent_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -2019,7 +2027,7 @@ tests_testEventLoop_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	CacheMgrPasswd.h \
-    CacheMgrPasswd.cc \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2092,6 +2100,8 @@ tests_testEventLoop_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -2254,7 +2264,7 @@ tests_test_http_range_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	CacheMgrPasswd.h \
-    CacheMgrPasswd.cc \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2328,6 +2338,8 @@ tests_test_http_range_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -2522,6 +2534,8 @@ tests_testHttpRequest_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	HttpParser.cc \
 	HttpParser.h \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	Mem.h \
@@ -2545,7 +2559,7 @@ tests_testHttpRequest_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	CacheMgrPasswd.h \
-    CacheMgrPasswd.cc \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -2783,6 +2797,8 @@ tests_testStore_SOURCES= \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -3003,6 +3019,8 @@ tests_testUfs_SOURCES = \
 	HttpStatusLine.cc \
 	int.h \
 	int.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	SquidList.h \
 	SquidList.cc \
 	MemObject.cc \
@@ -3182,6 +3200,8 @@ tests_testRock_SOURCES = \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -3606,7 +3626,7 @@ tests_testURL_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	CacheMgrPasswd.h \
-    CacheMgrPasswd.cc \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -3679,6 +3699,8 @@ tests_testURL_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -3760,8 +3782,8 @@ tests_testURL_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-    StrList.h \
-    StrList.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
