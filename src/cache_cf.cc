@@ -63,6 +63,7 @@
 #include "mgr/Registration.h"
 #include "Parsing.h"
 #include "PeerDigest.h"
+#include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
@@ -181,7 +182,7 @@ static void free_access_log(CustomLog ** definitions);
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
-static void parse_refreshpattern(refresh_t **);
+static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
 static void parse_u_short(unsigned short * var);
@@ -765,7 +766,7 @@ configDoConfigure(void)
 #if USE_HTTP_VIOLATIONS
 
     {
-        const refresh_t *R;
+        const RefreshPattern *R;
 
         for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.override_expire)
@@ -2643,7 +2644,7 @@ parse_tristate(int *var)
 #define free_tristate free_int
 
 static void
-dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
+dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
     while (head != NULL) {
         storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
@@ -2701,7 +2702,7 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 }
 
 static void
-parse_refreshpattern(refresh_t ** head)
+parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
     char *pattern;
@@ -2726,7 +2727,7 @@ parse_refreshpattern(refresh_t ** head)
 #endif
 
     int i;
-    refresh_t *t;
+    RefreshPattern *t;
     regex_t comp;
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
@@ -2831,7 +2832,7 @@ parse_refreshpattern(refresh_t ** head)
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = static_cast<refresh_t *>(xcalloc(1, sizeof(refresh_t)));
+    t = static_cast<RefreshPattern *>(xcalloc(1, sizeof(RefreshPattern)));
     t->pattern = (char *) xstrdup(pattern);
     t->compiled_pattern = comp;
     t->min = min;
@@ -2891,9 +2892,9 @@ parse_refreshpattern(refresh_t ** head)
 }
 
 static void
-free_refreshpattern(refresh_t ** head)
+free_refreshpattern(RefreshPattern ** head)
 {
-    refresh_t *t;
+    RefreshPattern *t;
 
     while ((t = *head) != NULL) {
         *head = t->next;

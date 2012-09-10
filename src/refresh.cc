@@ -41,6 +41,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "RefreshPattern.h"
 #include "SquidTime.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -109,16 +110,16 @@ refreshCounts[rcCount];
 #define REFRESH_DEFAULT_PCT	0.20
 #define REFRESH_DEFAULT_MAX	(time_t)259200
 
-static const refresh_t *refreshUncompiledPattern(const char *);
+static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
-static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const refresh_t * R, stale_flags * sf);
+static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static refresh_t DefaultRefresh;
+static RefreshPattern DefaultRefresh;
 
-const refresh_t *
+const RefreshPattern *
 refreshLimits(const char *url)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
 
     for (R = Config.Refresh; R; R = R->next) {
         if (!regexec(&(R->compiled_pattern), url, 0, 0, 0))
@@ -128,10 +129,10 @@ refreshLimits(const char *url)
     return NULL;
 }
 
-static const refresh_t *
+static const RefreshPattern *
 refreshUncompiledPattern(const char *pat)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
 
     for (R = Config.Refresh; R; R = R->next) {
         if (0 == strcmp(R->pattern, pat))
@@ -157,7 +158,7 @@ refreshUncompiledPattern(const char *pat)
  * times.
  */
 static int
-refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const refresh_t * R, stale_flags * sf)
+refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf)
 {
     /** \par
      * Check for an explicit expiration time (Expires: header).
@@ -231,7 +232,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
 static int
 refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
     const char *uri = NULL;
     time_t age = 0;
     time_t check_time = squid_curtime + delta;
@@ -535,7 +536,7 @@ refreshCheckDigest(const StoreEntry * entry, time_t delta)
 time_t
 getMaxAge(const char *url)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
     debugs(22, 3, "getMaxAge: '" << url << "'");
 
     if ((R = refreshLimits(url)))

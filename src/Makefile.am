@@ -271,6 +271,7 @@ squid_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1381,6 +1382,7 @@ tests_testCacheManager_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1771,6 +1773,7 @@ tests_testEvent_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -2008,6 +2011,7 @@ tests_testEventLoop_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2240,6 +2244,7 @@ tests_test_http_range_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2528,6 +2533,7 @@ tests_testHttpRequest_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -3586,6 +3592,7 @@ tests_testURL_SOURCES = \
 	AuthReg.h \
 	YesNoNone.h \
 	YesNoNone.cc \
+	RefreshPattern.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
