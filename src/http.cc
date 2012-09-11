@@ -379,7 +379,7 @@ HttpStateData::cacheableReply()
         }
     }
 
-    if (request->flags.auth || request->flags.auth_sent) {
+    if (request->flags.auth || request->flags.authSent()) {
         /*
          * Responses to requests with authorization may be cached
          * only if a Cache-Control: public reply header is present.
@@ -837,7 +837,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
         return true;
 
     /*if the connections it is already pinned it is OK*/
-    if (request->flags.pinned)
+    if (request->flags.connPinned())
         return true;
 
     /*Allow pinned connections only if the Proxy-support header exists in
@@ -1389,9 +1389,9 @@ HttpStateData::processReplyBody()
             if (request->flags.spoof_client_ip)
                 client_addr = request->client_addr;
 
-            if (request->flags.pinned) {
+            if (request->flags.connPinned()) {
                 ispinned = true;
-            } else if (request->flags.connection_auth && request->flags.auth_sent) {
+            } else if (request->flags.connection_auth && request->flags.authSent()) {
                 ispinned = true;
             }
 
@@ -2021,10 +2021,10 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
-        if (request->flags.pinned && request->flags.connection_auth)
-            request->flags.auth_sent = 1;
+        if (request->flags.connPinned() && request->flags.connection_auth)
+            request->flags.markAuthSent();
         else if (hdr.has(HDR_AUTHORIZATION))
-            request->flags.auth_sent = 1;
+            request->flags.markAuthSent();
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
