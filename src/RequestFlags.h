@@ -41,10 +41,12 @@ public:
         fail_on_validation_err(0), stale_if_hit(0), accelerated(0),
         ignore_cc(0), intercepted(0), hostVerified(0), spoof_client_ip(0),
         internal(0), internalclient(0), must_keepalive(0), pinned(0),
-        canRePin(0), chunked_reply(0), stream_error(0), sslPeek_(false),
+        canRePin(0), no_direct(false), chunked_reply(false),
+        stream_error(false), sslPeek_(false),
         done_follow_x_forwarded_for(!FOLLOW_X_FORWARDED_FOR),
         sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
-        isRanged_(false) {
+        isRanged_(false)
+    {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -82,13 +84,6 @@ public:
     unsigned int pinned :1; /* Request sent on a pinned connection */
     unsigned int canRePin :1; ///< OK to reopen a failed pinned connection
     unsigned int auth_sent :1; /* Authentication forwarded */
-    unsigned int no_direct :1; /* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
-    unsigned int chunked_reply :1; /**< Reply with chunked transfer encoding */
-    unsigned int stream_error :1; /**< Whether stream error has occured */
-
-#if FOLLOW_X_FORWARDED_FOR
-    /* TODO: move from conditional definition to conditional setting */
-#endif /* FOLLOW_X_FORWARDED_FOR */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -120,8 +115,23 @@ public:
     bool sslPeek() const { return sslPeek_; }
     void setSslPeek() { sslPeek_=true; }
     void clearSslPeek() { sslPeek_=false; }
-private:
 
+    bool hadStreamError() const { return stream_error; }
+    void setStreamError() { stream_error = true; }
+    void clearStreamError() { stream_error = false; }
+
+    bool isReplyChunked() const { return chunked_reply; }
+    void markReplyChunked() { chunked_reply = true; }
+
+    void setNoDirect() { no_direct=true; }
+    bool noDirect() { return no_direct; }
+
+private:
+    /** Deny direct forwarding unless overriden by always_direct.
+     * Used in accelerator mode */
+    bool no_direct :1;
+    bool chunked_reply :1; /**< Reply with chunked transfer encoding */
+    bool stream_error :1; /**< Whether stream error has occured */
     bool sslPeek_ :1; ///< internal ssl-bump request to get server cert
     /* done_follow_x_forwarded_for is set by default to the opposite of
      * compilation option FOLLOW_X_FORWARDED_FOR (so that it returns

@@ -443,7 +443,7 @@ peerSelectFoo(ps_state * ps)
             ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
-        } else if (request->flags.no_direct) {
+        } else if (request->flags.noDirect()) {
             /** if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forced non-direct)");

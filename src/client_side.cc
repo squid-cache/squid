@@ -985,7 +985,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 {
     assert(rep == NULL);
 
-    if (!multipartRangeRequest() && !http->request->flags.chunked_reply) {
+    if (!multipartRangeRequest() && !http->request->flags.isReplyChunked()) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
@@ -1394,7 +1394,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     if (bodyData.data && bodyData.length) {
         if (multipartRangeRequest())
             packRange(bodyData, mb);
-        else if (http->request->flags.chunked_reply) {
+        else if (http->request->flags.isReplyChunked()) {
             packChunk(bodyData, *mb);
         } else {
             size_t length = lengthToSend(bodyData.range());
@@ -1449,8 +1449,9 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
-    const bool mustSendLastChunk = http->request->flags.chunked_reply &&
-                                   !http->request->flags.stream_error && !context->startOfOutput();
+    const bool mustSendLastChunk = http->request->flags.isReplyChunked() &&
+                                   !http->request->flags.hadStreamError() &&
+                                   !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(context->clientConnection, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
@@ -2656,8 +2657,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.canRePin = request->flags.sslBumped() && conn->pinning.pinned;
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped()) ?
-                               !conn->port->allow_direct : 0;
+    if (request->flags.accelerated && !request->flags.sslBumped())
+        if (!conn->port->allow_direct)
+            request->flags.setNoDirect();
 #if USE_AUTH
     if (request->flags.sslBumped()) {
         if (conn->auth_user_request != NULL)
