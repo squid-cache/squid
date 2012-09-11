@@ -1042,7 +1042,7 @@ clientReplyContext::checkTransferDone()
     if (http->flags.done_copying)
         return 1;
 
-    if (http->request->flags.chunked_reply && !flags.complete) {
+    if (http->request->flags.isReplyChunked() && !flags.complete) {
         // last-chunk was not sent
         return 0;
     }
@@ -1488,7 +1488,7 @@ clientReplyContext::buildReplyHeader()
             request->flags.proxy_keepalive &&
             reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: chunked reply");
-        request->flags.chunked_reply = 1;
+        request->flags.markReplyChunked();
         hdr->putStr(HDR_TRANSFER_ENCODING, "chunked");
     }
 
@@ -1825,7 +1825,7 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
     debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
     StoreIOBuffer localTempBuffer;
     flags.complete = 1;
-    http->request->flags.stream_error = 1;
+    http->request->flags.setStreamError();
     localTempBuffer.flags.error = result.flags.error;
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, NULL,
                          localTempBuffer);
