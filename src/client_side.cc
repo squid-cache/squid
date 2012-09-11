@@ -2654,7 +2654,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.accelerated = http->flags.accel;
     request->flags.setSslBumped(conn->switchedToHttps());
-    request->flags.canRePin = request->flags.sslBumped() && conn->pinning.pinned;
+    if (request->flags.sslBumped() && conn->pinning.pinned)
+        request->flags.allowRepinning();
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     if (request->flags.accelerated && !request->flags.sslBumped())
