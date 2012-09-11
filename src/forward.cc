@@ -876,17 +876,17 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
         peerConnectSucceded(serverConnection()->getPeer());
 
     // some requests benefit from pinning but do not require it and can "repin"
-    const bool rePin = request->flags.canRePin &&
+    const bool rePin = request->flags.canRePin() &&
                        request->clientConnectionManager.valid();
     if (rePin) {
         debugs(17, 3, HERE << "repinning " << serverConn);
         request->clientConnectionManager->pinConnection(serverConn,
                 request, serverConn->getPeer(), request->flags.auth);
-        request->flags.pinned = 1;
+        request->flags.markPinned();
     }
 
 #if USE_SSL
-    if (!request->flags.pinned || rePin) {
+    if (!request->flags.connPinned() || rePin) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
                 request->flags.sslPeek()) {
@@ -961,7 +961,7 @@ FwdState::connectStart()
         return;
     }
 
-    request->flags.pinned = 0; // XXX: what if the ConnStateData set this to flag existing credentials?
+    request->flags.clearPinned(); // XXX: what if the ConnStateData set this to flag existing credentials?
     // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
     // XXX: also, logs will now lie if pinning is broken and leads to an error message.
     if (serverDestinations[0]->peerType == PINNED) {
@@ -978,7 +978,7 @@ FwdState::connectStart()
                 serverConn->peerType = HIER_DIRECT;
 #endif
             ++n_tries;
-            request->flags.pinned = 1;
+            request->flags.markPinned();
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
@@ -989,7 +989,7 @@ FwdState::connectStart()
         }
         /* Failure. Fall back on next path unless we can re-pin */
         debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
-        if (pconnRace != raceHappened || !request->flags.canRePin) {
+        if (pconnRace != raceHappened || !request->flags.canRePin()) {
             serverDestinations.shift();
             pconnRace = raceImpossible;
             startConnectionOrFail();

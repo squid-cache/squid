@@ -40,10 +40,10 @@ public:
         refresh(0), redirected(0), need_validation(0),
         fail_on_validation_err(0), stale_if_hit(0), accelerated(0),
         ignore_cc(0), intercepted(0), hostVerified(0), spoof_client_ip(0),
-        internal(0), internalclient(0), must_keepalive(0), pinned(0),
-        canRePin(0), no_direct(false), chunked_reply(false),
-        stream_error(false), sslPeek_(false),
-        done_follow_x_forwarded_for(!FOLLOW_X_FORWARDED_FOR),
+        internal(0), internalclient(0), must_keepalive(0), pinned(false),
+        canRePin_(false), authSent_(false), noDirect_(false), chunkedReply_(false),
+        streamError_(false), sslPeek_(false),
+        doneFollowXForwardedFor(!FOLLOW_X_FORWARDED_FOR),
         sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
         isRanged_(false)
     {
@@ -81,9 +81,6 @@ public:
     unsigned int connection_auth :1; /** Request wants connection oriented auth */
     unsigned int connection_auth_disabled :1; /** Connection oriented auth can not be supported */
     unsigned int connection_proxy_auth :1; /** Request wants connection oriented auth */
-    unsigned int pinned :1; /* Request sent on a pinned connection */
-    unsigned int canRePin :1; ///< OK to reopen a failed pinned connection
-    unsigned int auth_sent :1; /* Authentication forwarded */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -103,41 +100,53 @@ public:
     void setSslBumped(bool newValue=true) { sslBumped_=newValue; }
     void clearSslBumpeD() { sslBumped_=false; }
 
-    bool doneFollowXFF() const { return done_follow_x_forwarded_for; }
+    bool doneFollowXFF() const { return doneFollowXForwardedFor; }
     void setDoneFollowXFF() {
-        done_follow_x_forwarded_for = true;
+        doneFollowXForwardedFor = true;
     }
     void clearDoneFollowXFF() {
         /* do not allow clearing if FOLLOW_X_FORWARDED_FOR is unset */
-        done_follow_x_forwarded_for = false || !FOLLOW_X_FORWARDED_FOR;
+        doneFollowXForwardedFor = false || !FOLLOW_X_FORWARDED_FOR;
     }
 
     bool sslPeek() const { return sslPeek_; }
     void setSslPeek() { sslPeek_=true; }
     void clearSslPeek() { sslPeek_=false; }
 
-    bool hadStreamError() const { return stream_error; }
-    void setStreamError() { stream_error = true; }
-    void clearStreamError() { stream_error = false; }
+    bool hadStreamError() const { return streamError_; }
+    void setStreamError() { streamError_ = true; }
+    void clearStreamError() { streamError_ = false; }
 
-    bool isReplyChunked() const { return chunked_reply; }
-    void markReplyChunked() { chunked_reply = true; }
+    bool isReplyChunked() const { return chunkedReply_; }
+    void markReplyChunked() { chunkedReply_ = true; }
 
-    void setNoDirect() { no_direct=true; }
-    bool noDirect() { return no_direct; }
+    void setNoDirect() { noDirect_=true; }
+    bool noDirect() const{ return noDirect_; }
 
+    bool authSent() const { return authSent_; }
+    void markAuthSent() { authSent_=true;}
+
+    bool canRePin() const { return canRePin_; }
+    void allowRepinning() { canRePin_=true; }
+
+    void markPinned() { pinned = true; }
+    void clearPinned() { pinned = false; }
+    bool connPinned() const { return pinned; }
 private:
+    bool pinned :1; ///< Request sent on a pinned connection
+    bool canRePin_ :1; ///< OK to reopen a failed pinned connection
+    bool authSent_ :1; ///< Authentication was forwarded
     /** Deny direct forwarding unless overriden by always_direct.
      * Used in accelerator mode */
-    bool no_direct :1;
-    bool chunked_reply :1; /**< Reply with chunked transfer encoding */
-    bool stream_error :1; /**< Whether stream error has occured */
+    bool noDirect_ :1;
+    bool chunkedReply_ :1; ///< Reply with chunked transfer encoding
+    bool streamError_ :1; ///< Whether stream error has occured
     bool sslPeek_ :1; ///< internal ssl-bump request to get server cert
-    /* done_follow_x_forwarded_for is set by default to the opposite of
+    /* doneFollowXForwardedFor is set by default to the opposite of
      * compilation option FOLLOW_X_FORWARDED_FOR (so that it returns
      * always "done" if the build option is disabled).
      */
-    bool done_follow_x_forwarded_for :1;
+    bool doneFollowXForwardedFor :1;
     bool sslBumped_ :1; /**< ssl-bumped request*/
     bool destinationIPLookedUp_:1;
     bool resetTCP_:1;                ///< request to reset the TCP stream
