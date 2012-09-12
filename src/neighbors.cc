@@ -161,7 +161,7 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
     if (neighborType(p, request) == PEER_SIBLING) {
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
-                (request->flags.nocache || request->flags.refresh || request->flags.loopdetect || request->flags.need_validation))
+                (request->flags.nocache || request->flags.refresh || request->flags.loopdetect || request->flags.validationNeeded()))
             debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
 #endif
         if (request->flags.nocache)
@@ -173,7 +173,7 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
         if (request->flags.loopdetect)
             return false;
 
-        if (request->flags.need_validation)
+        if (request->flags.validationNeeded())
             return false;
     }
 

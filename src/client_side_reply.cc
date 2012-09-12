@@ -390,7 +390,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     // origin replied 304
     if (status == HTTP_NOT_MODIFIED) {
         http->logType = LOG_TCP_REFRESH_UNMODIFIED;
-        http->request->flags.stale_if_hit = 0; // old_entry is no longer stale
+        http->request->flags.clearStaleIfHit(); // old_entry is no longer stale
 
         // update headers on existing entry
         old_rep->updateOnNotModified(http->storeEntry()->getReply());
@@ -419,7 +419,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     }
 
     // origin replied with an error
-    else if (http->request->flags.fail_on_validation_err) {
+    else if (http->request->flags.failOnValidationError()) {
         http->logType = LOG_TCP_REFRESH_FAIL_ERR;
         debugs(88, 3, "handleIMSReply: origin replied with error " << status <<
                ", forwarding to client due to fail_on_validation_err");
@@ -557,7 +557,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          * request.  Otherwise two siblings could generate a loop if
          * both have a stale version of the object.
          */
-        r->flags.need_validation = 1;
+        r->flags.setNeedValidation();
 
         if (e->lastmod < 0) {
             /*
@@ -1373,9 +1373,9 @@ clientReplyContext::buildReplyHeader()
     }
 
     // add Warnings required by RFC 2616 if serving a stale hit
-    if (http->request->flags.stale_if_hit && logTypeIsATcpHit(http->logType)) {
+    if (http->request->flags.staleIfHit() && logTypeIsATcpHit(http->logType)) {
         hdr->putWarning(110, "Response is stale");
-        if (http->request->flags.need_validation)
+        if (http->request->flags.validationNeeded())
             hdr->putWarning(111, "Revalidation failed");
     }
 

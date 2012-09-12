@@ -37,8 +37,8 @@ public:
     RequestFlags():
         nocache(0), ims(0), auth(0), cachable(0),
         hierarchical(0), loopdetect(0), proxy_keepalive(0), proxying(0),
-        refresh(0), redirected(0), need_validation(0),
-        fail_on_validation_err(0), stale_if_hit(0), nocache_hack(false), accelerated_(false),
+        refresh(0), redirected(false), need_validation(false),
+        fail_on_validation_err(false), stale_if_hit(false), nocache_hack(false), accelerated_(false),
         ignore_cc(false), intercepted_(false), hostVerified_(false), spoof_client_ip(false),
         internal(false), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
         canRePin_(false), authSent_(false), noDirect_(false), chunkedReply_(false),
@@ -57,11 +57,6 @@ public:
     unsigned int proxy_keepalive :1;
     unsigned int proxying :1; /* this should be killed, also in httpstateflags */
     unsigned int refresh :1;
-    unsigned int redirected :1;
-    unsigned int need_validation :1;
-    unsigned int fail_on_validation_err :1; ///< whether we should fail if validation fails
-    unsigned int stale_if_hit :1; ///< reply is stale if it is a hit
-    /* for changing/ignoring no-cache requests. Unused unless USE_HTTP_VIOLATIONS */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -152,7 +147,25 @@ public:
      * Compilers will have an easy time optimizing to a NOP otherwise. */
     void hackNocache() { if (USE_HTTP_VIOLATIONS) nocache_hack=true; }
     bool noCacheHackEnabled() const { return USE_HTTP_VIOLATIONS && nocache_hack; }
+
+    void setStaleIfHit() { stale_if_hit=true; }
+    void clearStaleIfHit() { stale_if_hit=false; }
+    bool staleIfHit() const { return stale_if_hit; }
+
+    void setFailOnValidationError() { fail_on_validation_err=true; }
+    bool failOnValidationError() const { return fail_on_validation_err; }
+
+    bool validationNeeded() const { return need_validation; }
+    void setNeedValidation()  { need_validation=true; }
+
+    bool isRedirected() const { return redirected; }
+    void markRedirected() { redirected=true; }
 private:
+    bool redirected :1;
+    bool need_validation :1;
+    bool fail_on_validation_err :1; ///< whether we should fail if validation fails
+    bool stale_if_hit :1; ///< reply is stale if it is a hit
+    /* for changing/ignoring no-cache requests. Unused unless USE_HTTP_VIOLATIONS */
     bool nocache_hack :1;
     bool accelerated_ :1; ///<request is accelerated
     bool ignore_cc :1; ///< ignore Cache-Control

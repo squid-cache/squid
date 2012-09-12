@@ -1251,7 +1251,7 @@ FwdState::reforward()
 ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
-    return new ErrorState(type, request->flags.need_validation ?
+    return new ErrorState(type, request->flags.validationNeeded() ?
                           HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
