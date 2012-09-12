@@ -218,7 +218,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
         return;
 
     /* Need keep-alive */
-    if (!request->flags.proxy_keepalive && request->flags.must_keepalive)
+    if (!request->flags.proxy_keepalive && request->flags.mustKeepalive())
         return;
 
     /* New request, no user details */

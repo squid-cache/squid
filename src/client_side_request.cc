@@ -389,7 +389,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
      */
     request->flags.accelerated = http->flags.accel;
 
-    request->flags.internalclient = 1;
+    request->flags.setInternalClient();
 
     /* this is an internally created
      * request, not subject to acceleration
@@ -981,14 +981,15 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!http_conn)
         return;
 
-    request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
-    if (!request->flags.connection_auth_disabled) {
+    if (http_conn->port->connection_auth_disabled)
+        request->flags.disableConnectionAuth();
+    if (!request->flags.connectionAuthDisabled()) {
         if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {
             if (http_conn->pinning.auth) {
-                request->flags.connection_auth = 1;
+                request->flags.wantConnectionAuth();
                 request->flags.auth = 1;
             } else {
-                request->flags.connection_proxy_auth = 1;
+                request->flags.requestConnectionProxyAuth();
             }
             // These should already be linked correctly.
             assert(request->clientConnectionManager == http_conn);
@@ -996,11 +997,11 @@ clientCheckPinning(ClientHttpRequest * http)
     }
 
     /* check if connection auth is used, and flag as candidate for pinning
-     * in such case.
+     * in such case.;
      * Note: we may need to set flags.connection_auth even if the connection
      * is already pinned if it was pinned earlier due to proxy auth
      */
-    if (!request->flags.connection_auth) {
+    if (!request->flags.connectionAuthWanted()) {
         if (req_hdr->has(HDR_AUTHORIZATION) || req_hdr->has(HDR_PROXY_AUTHORIZATION)) {
             HttpHeaderPos pos = HttpHeaderInitPos;
             HttpHeaderEntry *e;
@@ -1014,10 +1015,10 @@ clientCheckPinning(ClientHttpRequest * http)
                             ||
                             strncasecmp(value, "Kerberos ", 9) == 0) {
                         if (e->id == HDR_AUTHORIZATION) {
-                            request->flags.connection_auth = 1;
+                            request->flags.wantConnectionAuth();
                             may_pin = 1;
                         } else {
-                            request->flags.connection_proxy_auth = 1;
+                            request->flags.requestConnectionProxyAuth();
                             may_pin = 1;
                         }
                     }

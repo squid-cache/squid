@@ -716,7 +716,7 @@ HttpStateData::processReplyHeader()
     }
 
     if (!peerSupportsConnectionPinning())
-        request->flags.connection_auth_disabled = 1;
+        request->flags.disableConnectionAuth();
 
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
@@ -837,7 +837,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
         return true;
 
     /*if the connections it is already pinned it is OK*/
-    if (request->flags.connPinned())
+    if (request->flags.pinned())
         return true;
 
     /*Allow pinned connections only if the Proxy-support header exists in
@@ -1389,15 +1389,15 @@ HttpStateData::processReplyBody()
             if (request->flags.spoof_client_ip)
                 client_addr = request->client_addr;
 
-            if (request->flags.connPinned()) {
+            if (request->flags.pinned()) {
                 ispinned = true;
-            } else if (request->flags.connection_auth && request->flags.authSent()) {
+            } else if (request->flags.connectionAuthWanted() && request->flags.authSent()) {
                 ispinned = true;
             }
 
             if (request->pinnedConnection() && ispinned) {
                 request->pinnedConnection()->pinConnection(serverConnection, request, _peer,
-                        (request->flags.connection_auth != 0));
+                        request->flags.connectionAuthWanted());
             } else {
                 fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
             }
@@ -1988,7 +1988,7 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
     int64_t roffLimit = request->getRangeOffsetLimit();
 
     if (NULL == request->range || !request->flags.cachable
-            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connection_auth)
+            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuthWanted())
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
@@ -2021,7 +2021,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
-        if (request->flags.connPinned() && request->flags.connection_auth)
+        if (request->flags.pinned() && request->flags.connectionAuthWanted())
             request->flags.markAuthSent();
         else if (hdr.has(HDR_AUTHORIZATION))
             request->flags.markAuthSent();
@@ -2091,7 +2091,7 @@ HttpStateData::sendRequest()
     /*
      * Is keep-alive okay for all request methods?
      */
-    if (request->flags.must_keepalive)
+    if (request->flags.mustKeepalive())
         flags.keepalive = 1;
     else if (!Config.onoff.server_pconns)
         flags.keepalive = 0;
