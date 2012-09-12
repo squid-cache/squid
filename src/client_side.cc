@@ -2652,14 +2652,15 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->clientConnectionManager = conn;
 
-    request->flags.accelerated = http->flags.accel;
+    if (http->flags.accel)
+        request->flags.markAccelerated();
     request->flags.setSslBumped(conn->switchedToHttps());
     if (request->flags.sslBumped() && conn->pinning.pinned)
         request->flags.allowRepinning();
     if (conn->port->ignore_cc)
         request->flags.ignoreCacheControl();
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    if (request->flags.accelerated && !request->flags.sslBumped())
+    if (request->flags.accelerated() && !request->flags.sslBumped())
         if (!conn->port->allow_direct)
             request->flags.setNoDirect();
 #if USE_AUTH

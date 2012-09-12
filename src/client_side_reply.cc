@@ -541,10 +541,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    if (e->checkNegativeHit()
-#if USE_HTTP_VIOLATIONS
-            && !r->flags.nocache_hack
-#endif
+    if (e->checkNegativeHit() && !r->flags.noCacheHackEnabled()
        ) {
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
@@ -1406,7 +1403,7 @@ clientReplyContext::buildReplyHeader()
                         continue;
                     }
                     request->flags.setMustKeepalive();
-                    if (!request->flags.accelerated && !request->flags.intercepted()) {
+                    if (!request->flags.accelerated() && !request->flags.intercepted()) {
                         httpHeaderPutStrf(hdr, HDR_PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
                           We send "[Proxy-]Connection: Proxy-Support" header to mark
@@ -1595,19 +1592,13 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     }
 
-#if USE_HTTP_VIOLATIONS
-
-    else if (r->flags.nocache_hack) {
-
+    else if (r->flags.noCacheHackEnabled()) {
 #if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
 #else
         ipcacheInvalidateNegative(r->GetHost());
 #endif /* USE_DNSHELPER */
-
     }
-
-#endif /* USE_HTTP_VIOLATIONS */
 #if USE_CACHE_DIGESTS
 
     lookup_type = http->storeEntry() ? "HIT" : "MISS";

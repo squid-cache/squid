@@ -319,7 +319,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #if USE_HTTP_VIOLATIONS
 
-        if (!request->flags.nocache_hack) {
+        if (!request->flags.noCacheHackEnabled()) {
             (void) 0;
         } else if (R->flags.ignore_reload) {
             /* The clients no-cache header is ignored */
