@@ -565,7 +565,7 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         for (int i = 0; i < ia->count; ++i) {
             if (clientConn->local.matchIPAddr(ia->in_addrs[i]) == 0) {
                 debugs(85, 3, HERE << "validate IP " << clientConn->local << " possible from Host:");
-                http->request->flags.hostVerified = 1;
+                http->request->flags.markHostVerified();
                 http->doCallouts();
                 return;
             }
@@ -633,7 +633,7 @@ ClientRequestContext::hostHeaderVerify()
         return;
     }
 
-    if (http->request->flags.internal) {
+    if (http->request->flags.isInternal()) {
         // TODO: kill this when URL handling allows partial URLs out of accel mode
         //       and we no longer screw with the URL just to add our internal host there
         debugs(85, 6, HERE << "validate skipped due to internal composite URL.");
@@ -664,7 +664,7 @@ ClientRequestContext::hostHeaderVerify()
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
-    if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
+    if (http->request->flags.intercepted() || http->request->flags.spoofClientIp()) {
         // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
             debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
@@ -699,7 +699,7 @@ ClientRequestContext::hostHeaderVerify()
     } else {
         // Okay no problem.
         debugs(85, 3, HERE << "validate passed.");
-        http->request->flags.hostVerified = 1;
+        http->request->flags.markHostVerified();
         http->doCallouts();
     }
     safe_free(hostB);
@@ -924,7 +924,7 @@ clientHierarchical(ClientHttpRequest * http)
     const wordlist *p = NULL;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
-    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.spoof_client_ip))
+    if (!request->flags.hostVerified() && (request->flags.intercepted() || request->flags.spoofClientIp()))
         return 0;
 
     /*
@@ -1046,7 +1046,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (request->ims > 0)
         request->flags.ims = 1;
 
-    if (!request->flags.ignore_cc) {
+    if (!request->flags.ignoringCacheControl()) {
         if (req_hdr->has(HDR_PRAGMA)) {
             String s = req_hdr->getList(HDR_PRAGMA);
 

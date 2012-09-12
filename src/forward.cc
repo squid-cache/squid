@@ -1397,7 +1397,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         conn->local.SetIPv4();
 
     // maybe use TPROXY client address
-    if (request && request->flags.spoof_client_ip) {
+    if (request && request->flags.spoofClientIp()) {
         if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
 #if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
             if (Config.onoff.tproxy_uses_indirect_client)

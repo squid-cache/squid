@@ -39,8 +39,8 @@ public:
         hierarchical(0), loopdetect(0), proxy_keepalive(0), proxying(0),
         refresh(0), redirected(0), need_validation(0),
         fail_on_validation_err(0), stale_if_hit(0), nocache_hack(0), accelerated(0),
-        ignore_cc(0), intercepted(0), hostVerified(0), spoof_client_ip(0),
-        internal(0), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
+        ignore_cc(false), intercepted_(false), hostVerified_(false), spoof_client_ip(false),
+        internal(false), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
         canRePin_(false), authSent_(false), noDirect_(false), chunkedReply_(false),
         streamError_(false), sslPeek_(false),
         doneFollowXForwardedFor(!FOLLOW_X_FORWARDED_FOR),
@@ -64,11 +64,6 @@ public:
     /* for changing/ignoring no-cache requests. Unused unless USE_HTTP_VIOLATIONS */
     unsigned int nocache_hack :1;
     unsigned int accelerated :1;
-    unsigned int ignore_cc :1;
-    unsigned int intercepted :1; ///< intercepted request
-    unsigned int hostVerified :1; ///< whether the Host: header passed verification
-    unsigned int spoof_client_ip :1; /**< spoof client ip if possible */
-    unsigned int internal :1;
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -122,21 +117,41 @@ public:
     bool pinned() const { return pinned_; }
 
     //XXX: oddly this is set in client_side_request.cc, but never checked.
-    bool wantConnectionProxyAuth() { return connection_proxy_auth; }
+    bool wantConnectionProxyAuth() const { return connection_proxy_auth; }
     void requestConnectionProxyAuth() { connection_proxy_auth=true; }
 
     void disableConnectionAuth() { connection_auth_disabled=true; }
-    bool connectionAuthDisabled() { return connection_auth_disabled; }
+    bool connectionAuthDisabled() const { return connection_auth_disabled; }
 
     void wantConnectionAuth() { connection_auth_wanted=true; }
-    bool connectionAuthWanted() { return connection_auth_wanted; }
+    bool connectionAuthWanted() const { return connection_auth_wanted; }
 
     void setMustKeepalive() { must_keepalive = true; }
-    bool mustKeepalive() { return must_keepalive; }
+    bool mustKeepalive() const { return must_keepalive; }
 
     //XXX: oddly this is set in client_side_request.cc but never checked.
     void setInternalClient() { internalclient=true;}
+
+    void markInternal() { internal=true; }
+    bool isInternal() const { return internal; }
+
+    bool spoofClientIp() const { return spoof_client_ip; }
+    void setSpoofClientIp() { spoof_client_ip = true; }
+
+    bool hostVerified() const { return hostVerified_; }
+    void markHostVerified() { hostVerified_=true; }
+
+    bool intercepted() const { return intercepted_;  }
+    void markIntercepted() { intercepted_=true; }
+
+    bool ignoringCacheControl() const { return ignore_cc; }
+    void ignoreCacheControl() { ignore_cc=true; }
 private:
+    bool ignore_cc :1;
+    bool intercepted_ :1; ///< intercepted request
+    bool hostVerified_ :1; ///< whether the Host: header passed verification
+    bool spoof_client_ip :1; /**< spoof client ip if possible */
+    bool internal :1;
     bool internalclient :1;
     bool must_keepalive :1;
     bool connection_auth_wanted :1; /** Request wants connection oriented auth */
