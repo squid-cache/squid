@@ -1406,7 +1406,7 @@ clientReplyContext::buildReplyHeader()
                         continue;
                     }
                     request->flags.setMustKeepalive();
-                    if (!request->flags.accelerated && !request->flags.intercepted) {
+                    if (!request->flags.accelerated && !request->flags.intercepted()) {
                         httpHeaderPutStrf(hdr, HDR_PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
                           We send "[Proxy-]Connection: Proxy-Support" header to mark
@@ -1554,7 +1554,7 @@ clientReplyContext::identifyStoreObject()
 {
     HttpRequest *r = http->request;
 
-    if (r->flags.cachable || r->flags.internal) {
+    if (r->flags.cachable || r->flags.isInternal()) {
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {

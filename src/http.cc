@@ -1386,7 +1386,7 @@ HttpStateData::processReplyBody()
             closeHandler = NULL;
             fwd->unregister(serverConnection);
 
-            if (request->flags.spoof_client_ip)
+            if (request->flags.spoofClientIp())
                 client_addr = request->client_addr;
 
             if (request->flags.pinned()) {

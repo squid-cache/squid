@@ -234,8 +234,8 @@ peerSelectDnsPaths(ps_state *psstate)
     // on intercepted traffic which failed Host verification
     const HttpRequest *req = psstate->request;
     const bool isIntercepted = !req->flags.redirected &&
-                               (req->flags.intercepted || req->flags.spoof_client_ip);
-    const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
+                               (req->flags.intercepted() || req->flags.spoofClientIp());
+    const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified();
     const bool choseDirect = fs && fs->code == HIER_DIRECT;
     if (isIntercepted && useOriginalDst && choseDirect) {
         // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
@@ -339,7 +339,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
                 break;
 
             // for TPROXY we must skip unusable addresses.
-            if (psstate->request->flags.spoof_client_ip && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
+            if (psstate->request->flags.spoofClientIp() && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
                 if (ia->in_addrs[n].IsIPv4() != psstate->request->client_addr.IsIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
