@@ -233,7 +233,7 @@ peerSelectDnsPaths(ps_state *psstate)
     // To resolve this we must use only the original client destination when going DIRECT
     // on intercepted traffic which failed Host verification
     const HttpRequest *req = psstate->request;
-    const bool isIntercepted = !req->flags.redirected &&
+    const bool isIntercepted = !req->flags.isRedirected() &&
                                (req->flags.intercepted() || req->flags.spoofClientIp());
     const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified();
     const bool choseDirect = fs && fs->code == HIER_DIRECT;

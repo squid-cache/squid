@@ -293,7 +293,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
-        request->flags.fail_on_validation_err = 1;
+        request->flags.setFailOnValidationError();
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
@@ -303,7 +303,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
        ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
         if (request)
-            request->flags.fail_on_validation_err = 1;
+            request->flags.setFailOnValidationError();
         return STALE_MUST_REVALIDATE;
     }
 
@@ -398,7 +398,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if ( max_stale >= 0 && staleness > max_stale) {
         debugs(22, 3, "refreshCheck: YES: max-stale limit");
         if (request)
-            request->flags.fail_on_validation_err = 1;
+            request->flags.setFailOnValidationError();
         return STALE_MAX_STALE;
     }
 
@@ -494,7 +494,8 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     int reason = refreshCheck(entry, request, 0);
     ++ refreshCounts[rcHTTP].total;
     ++ refreshCounts[rcHTTP].status[reason];
-    request->flags.stale_if_hit = refreshIsStaleIfHit(reason);
+    if (refreshIsStaleIfHit(reason))
+        request->flags.setStaleIfHit();
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 
