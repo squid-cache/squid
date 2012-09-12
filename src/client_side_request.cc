@@ -387,7 +387,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /*
      * build new header list *? TODO
      */
-    request->flags.accelerated = http->flags.accel;
+    if (http->flags.accel)
+        request->flags.markAccelerated();
 
     request->flags.setInternalClient();
 
@@ -1091,9 +1092,9 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 #if USE_HTTP_VIOLATIONS
 
         if (Config.onoff.reload_into_ims)
-            request->flags.nocache_hack = 1;
+            request->flags.hackNocache();
         else if (refresh_nocache_hack)
-            request->flags.nocache_hack = 1;
+            request->flags.hackNocache();
         else
 #endif
 

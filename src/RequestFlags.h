@@ -38,7 +38,7 @@ public:
         nocache(0), ims(0), auth(0), cachable(0),
         hierarchical(0), loopdetect(0), proxy_keepalive(0), proxying(0),
         refresh(0), redirected(0), need_validation(0),
-        fail_on_validation_err(0), stale_if_hit(0), nocache_hack(0), accelerated(0),
+        fail_on_validation_err(0), stale_if_hit(0), nocache_hack(false), accelerated_(false),
         ignore_cc(false), intercepted_(false), hostVerified_(false), spoof_client_ip(false),
         internal(false), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
         canRePin_(false), authSent_(false), noDirect_(false), chunkedReply_(false),
@@ -62,8 +62,6 @@ public:
     unsigned int fail_on_validation_err :1; ///< whether we should fail if validation fails
     unsigned int stale_if_hit :1; ///< reply is stale if it is a hit
     /* for changing/ignoring no-cache requests. Unused unless USE_HTTP_VIOLATIONS */
-    unsigned int nocache_hack :1;
-    unsigned int accelerated :1;
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -146,11 +144,21 @@ public:
 
     bool ignoringCacheControl() const { return ignore_cc; }
     void ignoreCacheControl() { ignore_cc=true; }
+
+    bool accelerated() const { return accelerated_; }
+    void markAccelerated() { accelerated_ = true; }
+
+    /* nocache_hack is only enabled if USE_HTTP_VIOLATIONS is set at build-time.
+     * Compilers will have an easy time optimizing to a NOP otherwise. */
+    void hackNocache() { if (USE_HTTP_VIOLATIONS) nocache_hack=true; }
+    bool noCacheHackEnabled() const { return USE_HTTP_VIOLATIONS && nocache_hack; }
 private:
-    bool ignore_cc :1;
+    bool nocache_hack :1;
+    bool accelerated_ :1; ///<request is accelerated
+    bool ignore_cc :1; ///< ignore Cache-Control
     bool intercepted_ :1; ///< intercepted request
     bool hostVerified_ :1; ///< whether the Host: header passed verification
-    bool spoof_client_ip :1; /**< spoof client ip if possible */
+    bool spoof_client_ip :1; ///< spoof client ip if possible
     bool internal :1;
     bool internalclient :1;
     bool must_keepalive :1;

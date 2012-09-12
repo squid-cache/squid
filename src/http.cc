@@ -297,7 +297,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
-    if (request->flags.accelerated && reply->surrogate_control) {
+    if (request->flags.accelerated() && reply->surrogate_control) {
         HttpHdrScTarget *sctusable = reply->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
         if (sctusable) {
@@ -1237,7 +1237,7 @@ HttpStateData::continueAfterParsingHeader()
             debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, (request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
+            debugs(11, (request->flags.accelerated()?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
                    entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         }
     }
@@ -1667,7 +1667,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         strVia.clean();
     }
 
-    if (request->flags.accelerated) {
+    if (request->flags.accelerated()) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(HDR_SURROGATE_CAPABILITY));
 #if USE_SQUID_ESI
