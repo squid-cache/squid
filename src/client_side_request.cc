@@ -1231,7 +1231,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
 
                 // update the new request to flag the re-writing was done on it
-                new_request->flags.redirected = 1;
+                new_request->flags.markRedirected();
 
                 // unlink bodypipe from the old request. Not needed there any longer.
                 if (old_request->body_pipe != NULL) {
