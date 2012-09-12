@@ -31,7 +31,7 @@ AuthenticateAcl(ACLChecklist *ch)
             return ACCESS_ALLOWED;
         else
             return ACCESS_DENIED;
-    } else if (request->flags.accelerated) {
+    } else if (request->flags.accelerated()) {
         /* WWW authorization on accelerated requests */
         headertype = HDR_AUTHORIZATION;
     } else if (request->flags.intercepted() || request->flags.spoofClientIp()) {
