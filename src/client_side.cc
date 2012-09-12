@@ -2656,7 +2656,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.setSslBumped(conn->switchedToHttps());
     if (request->flags.sslBumped() && conn->pinning.pinned)
         request->flags.allowRepinning();
-    request->flags.ignore_cc = conn->port->ignore_cc;
+    if (conn->port->ignore_cc)
+        request->flags.ignoreCacheControl();
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     if (request->flags.accelerated && !request->flags.sslBumped())
         if (!conn->port->allow_direct)
@@ -2673,8 +2674,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * from the port settings to the request.
      */
     if (http->clientConnection != NULL) {
-        request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
-        request->flags.spoof_client_ip = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        if ((http->clientConnection->flags & COMM_INTERCEPTION) != 0)
+            request->flags.markIntercepted();
+        if ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 )
+            request->flags.setSpoofClientIp();
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -2693,7 +2696,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->login[0] = '\0';
     }
 
-    request->flags.internal = http->flags.internal;
+    if (http->flags.internal)
+        request->flags.markInternal();
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
@@ -3583,8 +3587,10 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
         fakeRequest->indirect_client_addr = connState->clientConnection->remote;
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
-        fakeRequest->flags.spoof_client_ip = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
-        fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        if ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0)
+            fakeRequest->flags.setSpoofClientIp();
+        if ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0)
+            fakeRequest->flags.markIntercepted();
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
         connState->switchToHttps(fakeRequest, bumpMode);
     }

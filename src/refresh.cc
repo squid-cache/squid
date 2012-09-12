@@ -267,7 +267,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
 
-    if (request && !request->flags.ignore_cc) {
+    if (request && !request->flags.ignoringCacheControl()) {
         const HttpHdrCc *const cc = request->cache_control;
         if (cc && cc->hasMinFresh()) {
             const int32_t minFresh=cc->minFresh();
@@ -308,7 +308,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     }
 
     /* request-specific checks */
-    if (request && !request->flags.ignore_cc) {
+    if (request && !request->flags.ignoringCacheControl()) {
         HttpHdrCc *cc = request->cache_control;
 
         if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
