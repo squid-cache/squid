@@ -38,19 +38,15 @@ public:
         nocache(0), ims(0), auth(0), cachable(0),
         hierarchical(0), loopdetect(0), proxy_keepalive(0), proxying(0),
         refresh(0), redirected(0), need_validation(0),
-        fail_on_validation_err(0), stale_if_hit(0), accelerated(0),
+        fail_on_validation_err(0), stale_if_hit(0), nocache_hack(0), accelerated(0),
         ignore_cc(0), intercepted(0), hostVerified(0), spoof_client_ip(0),
-        internal(0), internalclient(0), must_keepalive(0), pinned(false),
+        internal(0), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
         canRePin_(false), authSent_(false), noDirect_(false), chunkedReply_(false),
         streamError_(false), sslPeek_(false),
         doneFollowXForwardedFor(!FOLLOW_X_FORWARDED_FOR),
         sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
         isRanged_(false)
-    {
-#if USE_HTTP_VIOLATIONS
-        nocache_hack = 0;
-#endif
-    }
+    {}
 
     unsigned int nocache :1; ///< whether the response to this request may be READ from cache
     unsigned int ims :1;
@@ -65,22 +61,14 @@ public:
     unsigned int need_validation :1;
     unsigned int fail_on_validation_err :1; ///< whether we should fail if validation fails
     unsigned int stale_if_hit :1; ///< reply is stale if it is a hit
-#if USE_HTTP_VIOLATIONS
-    /* for changing/ignoring no-cache requests */
-    /* TODO: remove the conditional definition, move ifdef to setter */
+    /* for changing/ignoring no-cache requests. Unused unless USE_HTTP_VIOLATIONS */
     unsigned int nocache_hack :1;
-#endif
     unsigned int accelerated :1;
     unsigned int ignore_cc :1;
     unsigned int intercepted :1; ///< intercepted request
     unsigned int hostVerified :1; ///< whether the Host: header passed verification
     unsigned int spoof_client_ip :1; /**< spoof client ip if possible */
     unsigned int internal :1;
-    unsigned int internalclient :1;
-    unsigned int must_keepalive :1;
-    unsigned int connection_auth :1; /** Request wants connection oriented auth */
-    unsigned int connection_auth_disabled :1; /** Connection oriented auth can not be supported */
-    unsigned int connection_proxy_auth :1; /** Request wants connection oriented auth */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -129,11 +117,32 @@ public:
     bool canRePin() const { return canRePin_; }
     void allowRepinning() { canRePin_=true; }
 
-    void markPinned() { pinned = true; }
-    void clearPinned() { pinned = false; }
-    bool connPinned() const { return pinned; }
+    void markPinned() { pinned_ = true; }
+    void clearPinned() { pinned_ = false; }
+    bool pinned() const { return pinned_; }
+
+    //XXX: oddly this is set in client_side_request.cc, but never checked.
+    bool wantConnectionProxyAuth() { return connection_proxy_auth; }
+    void requestConnectionProxyAuth() { connection_proxy_auth=true; }
+
+    void disableConnectionAuth() { connection_auth_disabled=true; }
+    bool connectionAuthDisabled() { return connection_auth_disabled; }
+
+    void wantConnectionAuth() { connection_auth_wanted=true; }
+    bool connectionAuthWanted() { return connection_auth_wanted; }
+
+    void setMustKeepalive() { must_keepalive = true; }
+    bool mustKeepalive() { return must_keepalive; }
+
+    //XXX: oddly this is set in client_side_request.cc but never checked.
+    void setInternalClient() { internalclient=true;}
 private:
-    bool pinned :1; ///< Request sent on a pinned connection
+    bool internalclient :1;
+    bool must_keepalive :1;
+    bool connection_auth_wanted :1; /** Request wants connection oriented auth */
+    bool connection_auth_disabled :1; ///< Connection oriented auth can't be supported
+    bool connection_proxy_auth :1; ///< Request wants connection oriented auth
+    bool pinned_ :1; ///< Request sent on a pinned connection
     bool canRePin_ :1; ///< OK to reopen a failed pinned connection
     bool authSent_ :1; ///< Authentication was forwarded
     /** Deny direct forwarding unless overriden by always_direct.

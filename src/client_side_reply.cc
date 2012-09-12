@@ -1401,11 +1401,11 @@ clientReplyContext::buildReplyHeader()
                         ||
                         (strncasecmp(value, "Kerberos", 8) == 0 &&
                          (value[8] == '\0' || value[8] == ' '))) {
-                    if (request->flags.connection_auth_disabled) {
+                    if (request->flags.connectionAuthDisabled()) {
                         hdr->delAt(pos, connection_auth_blocked);
                         continue;
                     }
-                    request->flags.must_keepalive = 1;
+                    request->flags.setMustKeepalive();
                     if (!request->flags.accelerated && !request->flags.intercepted) {
                         httpHeaderPutStrf(hdr, HDR_PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
@@ -1459,22 +1459,22 @@ clientReplyContext::buildReplyHeader()
                                      (request->http_ver >= HttpVersion(1, 1));
 
     /* Check whether we should send keep-alive */
-    if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.must_keepalive) {
+    if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.mustKeepalive()) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
         request->flags.proxy_keepalive = 0;
-    } else if (!Config.onoff.client_pconns && !request->flags.must_keepalive) {
+    } else if (!Config.onoff.client_pconns && !request->flags.mustKeepalive()) {
         debugs(33, 2, "clientBuildReplyHeader: Connection Keep-Alive not requested by admin or client");
         request->flags.proxy_keepalive = 0;
     } else if (request->flags.proxy_keepalive && shutting_down) {
         debugs(88, 3, "clientBuildReplyHeader: Shutting down, don't keep-alive.");
         request->flags.proxy_keepalive = 0;
-    } else if (request->flags.connection_auth && !reply->keep_alive) {
+    } else if (request->flags.connectionAuthWanted() && !reply->keep_alive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection oriented auth but server side non-persistent");
         request->flags.proxy_keepalive = 0;
     } else if (reply->bodySize(request->method) < 0 && !maySendChunkedReply) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
         request->flags.proxy_keepalive = 0;
-    } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
+    } else if (fdUsageHigh()&& !request->flags.mustKeepalive()) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
         request->flags.proxy_keepalive = 0;
     } else if (request->flags.sslBumped() && !reply->persistent()) {

@@ -286,7 +286,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
             ++arg;
         }
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.must_keepalive = 1;
+        lm_request->request->flags.setMustKeepalive();
         if (lm_request->request->flags.proxy_keepalive) {
             lm_request->server_blob = xstrdup(blob);
             auth_user_request->user()->credentials(Auth::Handshake);
