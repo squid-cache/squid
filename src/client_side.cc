@@ -83,6 +83,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_db.h"
 #include "client_side_reply.h"
@@ -120,6 +121,7 @@
 #include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
@@ -847,7 +849,10 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
            RequestMethodStr(request->method));
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
-    request->flags.proxy_keepalive = request->persistent() ? 1 : 0;
+    if (request->persistent())
+        request->flags.setProxyKeepalive();
+    else
+        request->flags.clearProxyKeepalive();
 }
 
 static int
@@ -983,7 +988,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 {
     assert(rep == NULL);
 
-    if (!multipartRangeRequest() && !http->request->flags.chunked_reply) {
+    if (!multipartRangeRequest() && !http->request->flags.isReplyChunked()) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
@@ -1267,7 +1272,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     else if (rep->content_length != http->memObject()->getReply()->content_length)
         range_err = "INCONSISTENT length";	/* a bug? */
 
-    /* hits only - upstream peer determines correct behaviour on misses, and client_side_reply determines
+    /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
      */
     else if (logTypeIsATcpHit(http->logType) && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
@@ -1392,7 +1397,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     if (bodyData.data && bodyData.length) {
         if (multipartRangeRequest())
             packRange(bodyData, mb);
-        else if (http->request->flags.chunked_reply) {
+        else if (http->request->flags.isReplyChunked()) {
             packChunk(bodyData, *mb);
         } else {
             size_t length = lengthToSend(bodyData.range());
@@ -1447,8 +1452,9 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
-    const bool mustSendLastChunk = http->request->flags.chunked_reply &&
-                                   !http->request->flags.stream_error && !context->startOfOutput();
+    const bool mustSendLastChunk = http->request->flags.isReplyChunked() &&
+                                   !http->request->flags.hadStreamError() &&
+                                   !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(context->clientConnection, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
@@ -1736,7 +1742,7 @@ ClientSocketContext::socketState()
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
                        "range sequence on " << clientConnection);
 
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive())
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1753,7 +1759,7 @@ ClientSocketContext::socketState()
             // did we get at least what we expected, based on range specs?
 
             if (bytesSent == bytesExpected) { // got everything
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive())
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1763,7 +1769,7 @@ ClientSocketContext::socketState()
             // expected why would persistency matter? Should not this
             // always be an error?
             if (bytesSent > bytesExpected) { // got extra
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive())
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -2469,7 +2475,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     // at the client-side, but many such errors do require closure and the
     // client-side code is bad at handling errors so we play it safe.
     if (request)
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     flags.readMore = false;
     debugs(33,4, HERE << "Will close after error: " << clientConnection);
 }
@@ -2649,15 +2655,19 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->clientConnectionManager = conn;
 
-    request->flags.accelerated = http->flags.accel;
-    request->flags.sslBumped = conn->switchedToHttps();
-    request->flags.canRePin = request->flags.sslBumped && conn->pinning.pinned;
-    request->flags.ignore_cc = conn->port->ignore_cc;
+    if (http->flags.accel)
+        request->flags.markAccelerated();
+    request->flags.setSslBumped(conn->switchedToHttps());
+    if (request->flags.sslBumped() && conn->pinning.pinned)
+        request->flags.allowRepinning();
+    if (conn->port->ignore_cc)
+        request->flags.ignoreCacheControl();
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
-                               !conn->port->allow_direct : 0;
+    if (request->flags.accelerated() && !request->flags.sslBumped())
+        if (!conn->port->allow_direct)
+            request->flags.setNoDirect();
 #if USE_AUTH
-    if (request->flags.sslBumped) {
+    if (request->flags.sslBumped()) {
         if (conn->auth_user_request != NULL)
             request->auth_user_request = conn->auth_user_request;
     }
@@ -2668,8 +2678,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * from the port settings to the request.
      */
     if (http->clientConnection != NULL) {
-        request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
-        request->flags.spoof_client_ip = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        if ((http->clientConnection->flags & COMM_INTERCEPTION) != 0)
+            request->flags.markIntercepted();
+        if ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 )
+            request->flags.setSpoofClientIp();
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -2688,7 +2700,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->login[0] = '\0';
     }
 
-    request->flags.internal = http->flags.internal;
+    if (http->flags.internal)
+        request->flags.markInternal();
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
@@ -3146,7 +3159,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         repContext->setReplyToError(error, scode,
                                     repContext->http->request->method,
                                     repContext->http->uri,
-                                    peer,
+                                    CachePeer,
                                     repContext->http->request,
                                     in.buf, NULL);
         context->pullData();
@@ -3215,7 +3228,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &peer.sin_addr,
+                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &CachePeer.sin_addr,
                                     NULL, NULL, NULL);
         /* No requests can be outstanded */
         assert(chr == NULL);
@@ -3578,8 +3591,10 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
         fakeRequest->indirect_client_addr = connState->clientConnection->remote;
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
-        fakeRequest->flags.spoof_client_ip = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
-        fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        if ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0)
+            fakeRequest->flags.setSpoofClientIp();
+        if ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0)
+            fakeRequest->flags.markIntercepted();
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
         connState->switchToHttps(fakeRequest, bumpMode);
     }
@@ -3889,7 +3904,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 
     // commSetConnTimeout() was called for this request before we switched.
 
-    // Disable the client read handler until peer selection is complete
+    // Disable the client read handler until CachePeer selection is complete
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
@@ -3911,7 +3926,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     // and now want to switch to SSL to send the error to the client
     // without even peeking at the origin server certificate.
     if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
-        request->flags.sslPeek = 1;
+        request->flags.setSslPeek();
         sslServerBump = new Ssl::ServerBump(request);
 
         // will call httpsPeeked() with certificate and connection, eventually
@@ -4416,7 +4431,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 }
 
 void
-ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, struct peer *aPeer, bool auth)
+ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
 {
     char desc[FD_DESC_SZ];
 
@@ -4462,7 +4477,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
 }
 
 const Comm::ConnectionPointer
-ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
+ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *aPeer)
 {
     debugs(33, 7, HERE << pinning.serverConnection);
 

@@ -61,7 +61,7 @@ public:
     virtual void maybeReadVirginBody(); // read response data from the network
     int cacheableReply();
 
-    peer *_peer;		/* peer request made to */
+    CachePeer *_peer;		/* CachePeer request made to */
     int eof;			/* reached end-of-object? */
     int lastChunk;		/* reached last chunk of a chunk-encoded reply */
     http_state_flags flags;

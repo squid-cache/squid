@@ -19,11 +19,11 @@ class HeaderWithAcl;
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
 class acl_access;
-struct _header_mangler {
+class header_mangler {
+public:
     acl_access *access_list;
     char *replacement;
 };
-typedef struct _header_mangler header_mangler;
 
 class StoreEntry;
 
@@ -94,10 +94,10 @@ public:
 
 extern int httpHeaderParseOffset(const char *start, int64_t * off);
 
-class HttpHeaderFieldInfo;
 class String;
 class HttpHeader;
 class HttpRequest;
+class HttpHeaderFieldInfo;
 
 extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);

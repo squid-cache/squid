@@ -36,6 +36,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
@@ -45,6 +46,7 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "TimeOrTag.h"
 
@@ -161,6 +163,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
 };
 
+class HttpHeaderFieldInfo;
 static HttpHeaderFieldInfo *Headers = NULL;
 
 http_hdr_type &operator++ (http_hdr_type &aHeader)

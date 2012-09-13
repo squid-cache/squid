@@ -1,3 +1,5 @@
+#ifndef SQUID_CACHEDIGEST_H_
+#define SQUID_CACHEDIGEST_H_
 /*
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -30,12 +32,22 @@
  *
  */
 
-#ifndef SQUID_CACHEDIGEST_H_
-#define SQUID_CACHEDIGEST_H_
-
+/* for cache_key */
 #include "typedefs.h"
+
 class CacheDigestGuessStats;
 class StoreEntry;
+
+class CacheDigest {
+public:
+    /* public, read-only */
+    char *mask;         /* bit mask */
+    int mask_size;      /* mask size in bytes */
+    int capacity;       /* expected maximum for .count, not a hard limit */
+    int bits_per_entry;     /* number of bits allocated for each entry from capacity */
+    int count;          /* number of digested entries */
+    int del_count;      /* number of deletions performed so far */
+};
 
 extern CacheDigest *cacheDigestCreate(int capacity, int bpe);
 extern void cacheDigestDestroy(CacheDigest * cd);

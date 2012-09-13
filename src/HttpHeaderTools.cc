@@ -40,9 +40,11 @@
 #include "fde.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"
 

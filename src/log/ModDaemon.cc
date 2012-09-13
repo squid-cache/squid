@@ -39,6 +39,7 @@
 #include "log/File.h"
 #include "log/ModDaemon.h"
 #include "SquidIpc.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 #if HAVE_ERRNO_H

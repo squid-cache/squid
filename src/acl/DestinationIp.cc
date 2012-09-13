@@ -37,6 +37,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 #include "structs.h"
 
 char const *
@@ -55,7 +56,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     // To resolve this we will force DIRECT and only to the original client destination.
     // In which case, we also need this ACL to accurately match the destination
     if (Config.onoff.client_dst_passthru && checklist->request &&
-            (checklist->request->flags.intercepted || checklist->request->flags.spoof_client_ip)) {
+            (checklist->request->flags.intercepted() || checklist->request->flags.spoofClientIp())) {
         assert(checklist->conn() && checklist->conn()->clientConnection != NULL);
         return ACLIP::match(checklist->conn()->clientConnection->local);
     }

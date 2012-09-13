@@ -24,6 +24,7 @@
 #include "ipcache.h"
 #include "Mem.h"
 #include "pconn.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 //CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);

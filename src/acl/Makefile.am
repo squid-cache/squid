@@ -19,7 +19,9 @@ libstate_la_SOURCES = \
 	Strategised.h \
 	\
 	FilledChecklist.cc \
-	FilledChecklist.h
+	FilledChecklist.h \
+	AclAddress.h \
+	AclAddress.cc
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
@@ -105,6 +107,8 @@ libacls_la_SOURCES = \
 	UserData.cc \
 	UserData.h \
 	\
+	AclNameList.h \
+	AclDenyInfoList.h \
 	Gadgets.cc \
 	Gadgets.h
 

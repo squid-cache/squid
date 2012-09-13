@@ -258,6 +258,7 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
+	SquidConfig.h \
 	SquidConfig.cc
 
 squid_SOURCES = \
@@ -268,10 +269,16 @@ squid_SOURCES = \
 	AsyncEngine.h \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
 	cache_manager.cc \
+	CachePeer.h \
 	CacheManager.h \
 	carp.h \
 	carp.cc \
@@ -362,6 +369,7 @@ squid_SOURCES = \
 	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -377,6 +385,7 @@ squid_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpBody.h \
@@ -388,6 +397,8 @@ squid_SOURCES = \
 	HttpParser.h \
 	HttpReply.cc \
 	HttpReply.h \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequest.h \
 	HttpRequestMethod.cc \
@@ -1106,6 +1117,7 @@ tests_testHttpReply_SOURCES=\
 	ETag.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1119,6 +1131,7 @@ tests_testHttpReply_SOURCES=\
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderMask.h \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpControlMsg.h \
@@ -1131,6 +1144,8 @@ tests_testHttpReply_SOURCES=\
 	HttpStatusLine.h \
 	Mem.h \
 	mem.cc \
+	RegexList.h \
+	RegexList.cc \
 	MemBuf.cc \
 	MemBuf.h \
 	mime_header.h \
@@ -1145,6 +1160,7 @@ tests_testHttpReply_SOURCES=\
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -1207,10 +1223,12 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1253,6 +1271,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
@@ -1349,6 +1368,8 @@ tests_testCacheManager_SOURCES = \
 	debug.cc \
 	HttpParser.cc \
 	HttpParser.h \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	Mem.h \
@@ -1365,6 +1386,11 @@ tests_testCacheManager_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1420,8 +1446,10 @@ tests_testCacheManager_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1593,6 +1621,7 @@ tests_testDiskIO_SOURCES = \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1600,6 +1629,7 @@ tests_testDiskIO_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpHdrRange.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
@@ -1622,6 +1652,8 @@ tests_testDiskIO_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1653,6 +1685,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
@@ -1748,6 +1781,11 @@ tests_testEvent_SOURCES = \
 	CacheDigest.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -1806,8 +1844,10 @@ tests_testEvent_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -1819,6 +1859,8 @@ tests_testEvent_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -1981,6 +2023,11 @@ tests_testEventLoop_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2038,8 +2085,10 @@ tests_testEventLoop_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2051,6 +2100,8 @@ tests_testEventLoop_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -2209,6 +2260,11 @@ tests_test_http_range_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2265,6 +2321,7 @@ tests_test_http_range_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2274,12 +2331,15 @@ tests_test_http_range_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -2440,6 +2500,7 @@ tests_testHttpParser_SOURCES = \
 	String.cc \
 	structs.h \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2473,6 +2534,8 @@ tests_testHttpRequest_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	HttpParser.cc \
 	HttpParser.h \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	Mem.h \
@@ -2492,6 +2555,11 @@ tests_testHttpRequest_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -2544,8 +2612,10 @@ tests_testHttpRequest_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2712,6 +2782,7 @@ tests_testStore_SOURCES= \
 	EventLoop.cc \
 	FileMap.h \
 	filemap.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -2719,12 +2790,15 @@ tests_testStore_SOURCES= \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -2769,6 +2843,7 @@ tests_testStore_SOURCES= \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_side_request.cc \
@@ -2867,6 +2942,7 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2943,6 +3019,8 @@ tests_testUfs_SOURCES = \
 	HttpStatusLine.cc \
 	int.h \
 	int.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	SquidList.h \
 	SquidList.cc \
 	MemObject.cc \
@@ -2980,6 +3058,7 @@ tests_testUfs_SOURCES = \
 	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -2991,6 +3070,7 @@ tests_testUfs_SOURCES = \
 	stmem.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
@@ -3001,6 +3081,7 @@ tests_testUfs_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3090,6 +3171,7 @@ tests_testRock_SOURCES = \
 	fd.cc \
 	FileMap.h \
 	filemap.cc \
+	HttpHeaderFieldStat.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.cc \
@@ -3099,6 +3181,7 @@ tests_testRock_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
@@ -3117,6 +3200,8 @@ tests_testRock_SOURCES = \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -3152,6 +3237,7 @@ tests_testRock_SOURCES = \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	client_db.h \
@@ -3288,6 +3374,7 @@ tests_testCoss_SOURCES = \
 	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3298,6 +3385,7 @@ tests_testCoss_SOURCES = \
 	stmem.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
@@ -3308,6 +3396,7 @@ tests_testCoss_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3439,6 +3528,7 @@ tests_testNull_SOURCES = \
 	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3451,6 +3541,7 @@ tests_testNull_SOURCES = \
 	stmem.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
@@ -3461,6 +3552,7 @@ tests_testNull_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3530,6 +3622,11 @@ tests_testURL_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
+	YesNoNone.h \
+	YesNoNone.cc \
+	RefreshPattern.h \
+	CacheMgrPasswd.h \
+	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -3585,6 +3682,7 @@ tests_testURL_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
 	HttpHdrCc.cci \
@@ -3594,12 +3692,15 @@ tests_testURL_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	RequestFlags.h \
+	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
@@ -3681,8 +3782,8 @@ tests_testURL_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-    StrList.h \
-    StrList.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
@@ -3765,6 +3866,7 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
 	cache_cf.h \
+	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \

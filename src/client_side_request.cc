@@ -67,6 +67,7 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
@@ -386,9 +387,10 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /*
      * build new header list *? TODO
      */
-    request->flags.accelerated = http->flags.accel;
+    if (http->flags.accel)
+        request->flags.markAccelerated();
 
-    request->flags.internalclient = 1;
+    request->flags.setInternalClient();
 
     /* this is an internally created
      * request, not subject to acceleration
@@ -533,7 +535,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         conn->log_addr = request->indirect_client_addr;
     }
     request->x_forwarded_for_iterator.clean();
-    request->flags.done_follow_x_forwarded_for = 1;
+    request->flags.setDoneFollowXFF();
 
     if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
         debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
@@ -564,7 +566,7 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         for (int i = 0; i < ia->count; ++i) {
             if (clientConn->local.matchIPAddr(ia->in_addrs[i]) == 0) {
                 debugs(85, 3, HERE << "validate IP " << clientConn->local << " possible from Host:");
-                http->request->flags.hostVerified = 1;
+                http->request->flags.markHostVerified();
                 http->doCallouts();
                 return;
             }
@@ -586,9 +588,9 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 
         // NP: it is tempting to use 'flags.nocache' but that is all about READing cache data.
         // The problems here are about WRITE for new cache content, which means flags.cachable
-        http->request->flags.cachable = 0; // MUST NOT cache (for now)
+        http->request->flags.setNotCachable(); // MUST NOT cache (for now)
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
-        http->request->flags.hierarchical = 0; // MUST NOT pass to peers (for now)
+        http->request->flags.clearHierarchical(); // MUST NOT pass to peers (for now)
         // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
         http->doCallouts();
         return;
@@ -632,7 +634,7 @@ ClientRequestContext::hostHeaderVerify()
         return;
     }
 
-    if (http->request->flags.internal) {
+    if (http->request->flags.isInternal()) {
         // TODO: kill this when URL handling allows partial URLs out of accel mode
         //       and we no longer screw with the URL just to add our internal host there
         debugs(85, 6, HERE << "validate skipped due to internal composite URL.");
@@ -663,7 +665,7 @@ ClientRequestContext::hostHeaderVerify()
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
-    if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
+    if (http->request->flags.intercepted() || http->request->flags.spoofClientIp()) {
         // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
             debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
@@ -698,7 +700,7 @@ ClientRequestContext::hostHeaderVerify()
     } else {
         // Okay no problem.
         debugs(85, 3, HERE << "validate passed.");
-        http->request->flags.hostVerified = 1;
+        http->request->flags.markHostVerified();
         http->doCallouts();
     }
     safe_free(hostB);
@@ -708,8 +710,9 @@ ClientRequestContext::hostHeaderVerify()
 void
 ClientRequestContext::clientAccessCheck()
 {
-#if FOLLOW_X_FORWARDED_FOR
-    if (!http->request->flags.done_follow_x_forwarded_for &&
+    /* NOP if !FOLLOW_X_FORWARDED_FOR */
+    if (FOLLOW_X_FORWARDED_FOR &&
+            !http->request->flags.doneFollowXFF() &&
             Config.accessList.followXFF &&
             http->request->header.has(HDR_X_FORWARDED_FOR)) {
 
@@ -725,7 +728,6 @@ ClientRequestContext::clientAccessCheck()
         acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
-#endif /* FOLLOW_X_FORWARDED_FOR */
 
     if (Config.accessList.http) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
@@ -809,7 +811,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
         if (auth_challenge) {
 #if USE_AUTH
-            if (http->request->flags.sslBumped) {
+            if (http->request->flags.sslBumped()) {
                 /*SSL Bumped request, authentication is not possible*/
                 status = HTTP_FORBIDDEN;
             } else if (!http->flags.accel) {
@@ -923,7 +925,7 @@ clientHierarchical(ClientHttpRequest * http)
     const wordlist *p = NULL;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
-    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.spoof_client_ip))
+    if (!request->flags.hostVerified() && (request->flags.intercepted() || request->flags.spoofClientIp()))
         return 0;
 
     /*
@@ -931,14 +933,14 @@ clientHierarchical(ClientHttpRequest * http)
      * neighbors support private keys
      */
 
-    if (request->flags.ims && !neighbors_do_private_keys)
+    if (request->flags.hasIMS() && !neighbors_do_private_keys)
         return 0;
 
     /*
      * This is incorrect: authenticating requests can be sent via a hierarchy
      * (they can even be cached if the correct headers are set on the reply)
      */
-    if (request->flags.auth)
+    if (request->flags.hasAuth())
         return 0;
 
     if (method == METHOD_TRACE)
@@ -952,7 +954,7 @@ clientHierarchical(ClientHttpRequest * http)
         if (strstr(url, p->key))
             return 0;
 
-    if (request->flags.loopdetect)
+    if (request->flags.loopDetect())
         return 0;
 
     if (request->protocol == AnyP::PROTO_HTTP)
@@ -980,14 +982,15 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!http_conn)
         return;
 
-    request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
-    if (!request->flags.connection_auth_disabled) {
+    if (http_conn->port->connection_auth_disabled)
+        request->flags.disableConnectionAuth();
+    if (!request->flags.connectionAuthDisabled()) {
         if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {
             if (http_conn->pinning.auth) {
-                request->flags.connection_auth = 1;
-                request->flags.auth = 1;
+                request->flags.wantConnectionAuth();
+                request->flags.markAuth();
             } else {
-                request->flags.connection_proxy_auth = 1;
+                request->flags.requestConnectionProxyAuth();
             }
             // These should already be linked correctly.
             assert(request->clientConnectionManager == http_conn);
@@ -995,11 +998,11 @@ clientCheckPinning(ClientHttpRequest * http)
     }
 
     /* check if connection auth is used, and flag as candidate for pinning
-     * in such case.
+     * in such case.;
      * Note: we may need to set flags.connection_auth even if the connection
      * is already pinned if it was pinned earlier due to proxy auth
      */
-    if (!request->flags.connection_auth) {
+    if (!request->flags.connectionAuthWanted()) {
         if (req_hdr->has(HDR_AUTHORIZATION) || req_hdr->has(HDR_PROXY_AUTHORIZATION)) {
             HttpHeaderPos pos = HttpHeaderInitPos;
             HttpHeaderEntry *e;
@@ -1013,10 +1016,10 @@ clientCheckPinning(ClientHttpRequest * http)
                             ||
                             strncasecmp(value, "Kerberos ", 9) == 0) {
                         if (e->id == HDR_AUTHORIZATION) {
-                            request->flags.connection_auth = 1;
+                            request->flags.wantConnectionAuth();
                             may_pin = 1;
                         } else {
-                            request->flags.connection_proxy_auth = 1;
+                            request->flags.requestConnectionProxyAuth();
                             may_pin = 1;
                         }
                     }
@@ -1042,9 +1045,9 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     request->ims = req_hdr->getTime(HDR_IF_MODIFIED_SINCE);
 
     if (request->ims > 0)
-        request->flags.ims = 1;
+        request->flags.setIMS();
 
-    if (!request->flags.ignore_cc) {
+    if (!request->flags.ignoringCacheControl()) {
         if (req_hdr->has(HDR_PRAGMA)) {
             String s = req_hdr->getList(HDR_PRAGMA);
 
@@ -1066,7 +1069,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         * SP1 or not so all 5.5 versions are treated 'normally').
         */
         if (Config.onoff.ie_refresh) {
-            if (http->flags.accel && request->flags.ims) {
+            if (http->flags.accel && request->flags.hasIMS()) {
                 if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
                     if (strstr(str, "MSIE 5.01") != NULL)
                         no_cache=true;
@@ -1089,13 +1092,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 #if USE_HTTP_VIOLATIONS
 
         if (Config.onoff.reload_into_ims)
-            request->flags.nocache_hack = 1;
+            request->flags.hackNocache();
         else if (refresh_nocache_hack)
-            request->flags.nocache_hack = 1;
+            request->flags.hackNocache();
         else
 #endif
 
-            request->flags.nocache = 1;
+            request->flags.setNocache();
     }
 
     /* ignore range header in non-GETs or non-HEADs */
@@ -1105,7 +1108,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->range = req_hdr->getRange();
 
         if (request->range) {
-            request->flags.range = 1;
+            request->flags.setRanged();
             clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
             /* XXX: This is suboptimal. We should give the stream the range set,
              * and thereby let the top of the stream set the offset when the
@@ -1131,12 +1134,12 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
     if (req_hdr->has(HDR_AUTHORIZATION))
-        request->flags.auth = 1;
+        request->flags.markAuth();
 
     clientCheckPinning(http);
 
     if (request->login[0] != '\0')
-        request->flags.auth = 1;
+        request->flags.markAuth();
 
     if (req_hdr->has(HDR_VIA)) {
         String s = req_hdr->getList(HDR_VIA);
@@ -1149,7 +1152,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         if (strListIsSubstr(&s, ThisCache2, ',')) {
             debugObj(33, 1, "WARNING: Forwarding loop detected for:\n",
                      request, (ObjPackMethod) & httpRequestPack);
-            request->flags.loopdetect = 1;
+            request->flags.setLoopDetect();
         }
 
 #if USE_FORW_VIA_DB
@@ -1170,17 +1173,17 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #endif
 
-    request->flags.cachable = http->request->cacheable();
+    request->flags.setCachable(http->request->cacheable());
 
     if (clientHierarchical(http))
-        request->flags.hierarchical = 1;
+        request->flags.setHierarchical();
 
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_NOCACHE = " <<
-           (request->flags.nocache ? "SET" : "NOT SET"));
+           (request->flags.noCache() ? "SET" : "NOT SET"));
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_CACHABLE = " <<
-           (request->flags.cachable ? "SET" : "NOT SET"));
+           (request->flags.isCachable() ? "SET" : "NOT SET"));
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_HIERARCHICAL = " <<
-           (request->flags.hierarchical ? "SET" : "NOT SET"));
+           (request->flags.hierarchical() ? "SET" : "NOT SET"));
 
 }
 
@@ -1228,7 +1231,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
 
                 // update the new request to flag the re-writing was done on it
-                new_request->flags.redirected = 1;
+                new_request->flags.markRedirected();
 
                 // unlink bodypipe from the old request. Not needed there any longer.
                 if (old_request->body_pipe != NULL) {
@@ -1290,7 +1293,8 @@ void
 ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 {
     acl_checklist = NULL;
-    http->request->flags.cachable = (answer == ACCESS_ALLOWED);
+    if (answer == ACCESS_ALLOWED)
+        http->request->flags.setCachable();
     http->doCallouts();
 }
 
@@ -1598,7 +1602,7 @@ ClientHttpRequest::doCallouts()
         if (!calloutContext->no_cache_done) {
             calloutContext->no_cache_done = true;
 
-            if (Config.accessList.noCache && request->flags.cachable) {
+            if (Config.accessList.noCache && request->flags.isCachable()) {
                 debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
                 calloutContext->checkNoCache();
                 return;

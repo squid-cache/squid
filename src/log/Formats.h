@@ -5,6 +5,7 @@
 
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class AccessLogEntry;
+class CustomLog;
 class Logfile;
 
 namespace Log
@@ -40,7 +41,7 @@ void SquidUserAgent(const AccessLogEntryPointer &al, Logfile * logfile);
 void SquidReferer(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with a local custom format
-void SquidCustom(const AccessLogEntryPointer &al, customlog * log);
+void SquidCustom(const AccessLogEntryPointer &al, CustomLog * log);
 
 /// Log with Apache httpd common format
 void HttpdCommon(const AccessLogEntryPointer &al, Logfile * logfile);
