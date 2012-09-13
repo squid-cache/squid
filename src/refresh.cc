@@ -311,7 +311,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if (request && !request->flags.ignoringCacheControl()) {
         HttpHdrCc *cc = request->cache_control;
 
-        if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
+        if (request->flags.hasIMS() && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
             /* The clients no-cache header is changed into a IMS query */
             debugs(22, 3, "refreshCheck: YES: refresh-ims");
             return STALE_FORCED_RELOAD;
@@ -331,7 +331,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         } else {
             /* The clients no-cache header is not overridden on this request */
             debugs(22, 3, "refreshCheck: YES: client reload");
-            request->flags.nocache = 1;
+            request->flags.setNocache();
             return STALE_FORCED_RELOAD;
         }
 

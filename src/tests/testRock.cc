@@ -165,7 +165,7 @@ StoreEntry *
 testRock::createEntry(const int i)
 {
     RequestFlags flags;
-    flags.cachable = 1;
+    flags.setCachable();
     char url[64];
     snprintf(url, sizeof(url), "dummy url %i", i);
     url[sizeof(url) - 1] = '\0';
