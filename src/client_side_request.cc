@@ -954,7 +954,7 @@ clientHierarchical(ClientHttpRequest * http)
         if (strstr(url, p->key))
             return 0;
 
-    if (request->flags.loopdetect)
+    if (request->flags.loopDetect())
         return 0;
 
     if (request->protocol == AnyP::PROTO_HTTP)
@@ -1152,7 +1152,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         if (strListIsSubstr(&s, ThisCache2, ',')) {
             debugObj(33, 1, "WARNING: Forwarding loop detected for:\n",
                      request, (ObjPackMethod) & httpRequestPack);
-            request->flags.loopdetect = 1;
+            request->flags.setLoopDetect();
         }
 
 #if USE_FORW_VIA_DB

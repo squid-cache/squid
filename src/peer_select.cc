@@ -429,26 +429,26 @@ peerSelectFoo(ps_state * ps)
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
 
-    /** If we don't know whether DIRECT is permitted ... */
+    /* If we don't know whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (always_direct to be checked)");
-            /** check always_direct; */
+            /* check always_direct; */
             ps->acl_checklist = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
         } else if (ps->never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (never_direct to be checked)");
-            /** check never_direct; */
+            /* check never_direct; */
             ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
         } else if (request->flags.noDirect()) {
-            /** if we are accelerating, direct is not an option. */
+            /* if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forced non-direct)");
-        } else if (request->flags.loopdetect) {
-            /** if we are in a forwarding-loop, direct is not an option. */
+        } else if (request->flags.loopDetect()) {
+            /* if we are in a forwarding-loop, direct is not an option. */
             ps->direct = DIRECT_YES;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forwarding loop detected)");
         } else if (peerCheckNetdbDirect(ps)) {

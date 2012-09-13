@@ -849,7 +849,10 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
            RequestMethodStr(request->method));
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
-    request->flags.proxy_keepalive = request->persistent() ? 1 : 0;
+    if (request->persistent())
+        request->flags.setProxyKeepalive();
+    else
+        request->flags.clearProxyKeepalive();
 }
 
 static int
@@ -1739,7 +1742,7 @@ ClientSocketContext::socketState()
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
                        "range sequence on " << clientConnection);
 
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive())
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1756,7 +1759,7 @@ ClientSocketContext::socketState()
             // did we get at least what we expected, based on range specs?
 
             if (bytesSent == bytesExpected) { // got everything
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive())
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1766,7 +1769,7 @@ ClientSocketContext::socketState()
             // expected why would persistency matter? Should not this
             // always be an error?
             if (bytesSent > bytesExpected) { // got extra
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive())
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -2472,7 +2475,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     // at the client-side, but many such errors do require closure and the
     // client-side code is bad at handling errors so we play it safe.
     if (request)
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     flags.readMore = false;
     debugs(33,4, HERE << "Will close after error: " << clientConnection);
 }
