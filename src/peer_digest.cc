@@ -370,7 +370,7 @@ peerDigestRequest(PeerDigest * pd)
 
     pd_last_req_time = squid_curtime;
 
-    req->flags.cachable = 1;
+    req->flags.setCachable();
 
     /* the rest is based on clientProcessExpired() */
     req->flags.setRefresh();

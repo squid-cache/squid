@@ -35,8 +35,8 @@
 class RequestFlags {
 public:
     RequestFlags():
-        nocache(0), ims(0), auth(0), cachable(0),
-        hierarchical(0), loopdetect(false), proxy_keepalive(false), proxying_(false),
+        nocache(false), ims(false), auth_(false), cachable(false),
+        hierarchical_(false), loopdetect(false), proxy_keepalive(false), proxying_(false),
         refresh_(false), redirected(false), need_validation(false),
         fail_on_validation_err(false), stale_if_hit(false), nocache_hack(false), accelerated_(false),
         ignore_cc(false), intercepted_(false), hostVerified_(false), spoof_client_ip(false),
@@ -47,12 +47,6 @@ public:
         sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
         isRanged_(false)
     {}
-
-    unsigned int nocache :1; ///< whether the response to this request may be READ from cache
-    unsigned int ims :1;
-    unsigned int auth :1;
-    unsigned int cachable :1; ///< whether the response to thie request may be stored in the cache
-    unsigned int hierarchical :1;
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -170,7 +164,30 @@ public:
 
     bool loopDetect() const { return loopdetect; }
     void setLoopDetect() { loopdetect = 1; }
+
+    bool hierarchical() const { return hierarchical_; }
+    void setHierarchical() { hierarchical_=true; }
+    void clearHierarchical() { hierarchical_=true; }
+
+    bool isCachable() const { return cachable; }
+    void setCachable(bool newValue=true) { cachable = newValue; }
+    void setNotCachable() { cachable = false; }
+
+    bool hasAuth() const { return auth_; }
+    void markAuth() { auth_=true; }
+
+    bool hasIMS() const { return ims; }
+    void setIMS() { ims=true; }
+    void clearIMS() { ims=false; }
+
+    bool noCache() const { return nocache; }
+    void setNocache() { nocache=true;}
 private:
+    bool nocache :1; ///< whether the response to this request may be READ from cache
+    bool ims :1;
+    bool auth_ :1;
+    bool cachable :1; ///< whether the response to thie request may be stored in the cache
+    bool hierarchical_ :1;
     bool loopdetect :1;
     bool proxy_keepalive :1;
     bool proxying_ :1; /* this should be killed, also in httpstateflags */

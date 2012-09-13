@@ -126,7 +126,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     assert(direct != DIRECT_YES);
     debugs(44, 3, "peerSelectIcpPing: " << entry->url()  );
 
-    if (!request->flags.hierarchical && direct != DIRECT_NO)
+    if (!request->flags.hierarchical() && direct != DIRECT_NO)
         return 0;
 
     if (EBIT_TEST(entry->flags, KEY_PRIVATE) && !neighbors_do_private_keys)
@@ -492,7 +492,7 @@ peerSelectFoo(ps_state * ps)
         if (Config.onoff.prefer_direct)
             peerGetSomeDirect(ps);
 
-        if (request->flags.hierarchical || !Config.onoff.nonhierarchical_direct) {
+        if (request->flags.hierarchical() || !Config.onoff.nonhierarchical_direct) {
             peerGetSomeParent(ps);
             peerGetAllParents(ps);
         }

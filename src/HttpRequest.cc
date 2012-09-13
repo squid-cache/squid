@@ -611,7 +611,7 @@ HttpRequest::cacheable() const
 bool
 HttpRequest::conditional() const
 {
-    return flags.ims ||
+    return flags.hasIMS() ||
            header.has(HDR_IF_MATCH) ||
            header.has(HDR_IF_NONE_MATCH);
 }

@@ -887,7 +887,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (rePin) {
         debugs(17, 3, HERE << "repinning " << serverConn);
         request->clientConnectionManager->pinConnection(serverConn,
-                request, serverConn->getPeer(), request->flags.auth);
+                request, serverConn->getPeer(), request->flags.hasAuth());
         request->flags.markPinned();
     }
 
@@ -986,7 +986,7 @@ FwdState::connectStart()
             ++n_tries;
             request->flags.markPinned();
             if (pinned_connection->pinnedAuth())
-                request->flags.auth = 1;
+                request->flags.markAuth();
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
             // the server may close the pinned connection before this request
             pconnRace = racePossible;

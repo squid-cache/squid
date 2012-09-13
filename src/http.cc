@@ -379,7 +379,7 @@ HttpStateData::cacheableReply()
         }
     }
 
-    if (request->flags.auth || request->flags.authSent()) {
+    if (request->flags.hasAuth() || request->flags.authSent()) {
         /*
          * Responses to requests with authorization may be cached
          * only if a Cache-Control: public reply header is present.
@@ -1648,7 +1648,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.cachable = 0;
+        request->flags.setNotCachable();
         /* pretend it's not a range request */
         delete request->range;
         request->range = NULL;
@@ -1987,13 +1987,13 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
 
     int64_t roffLimit = request->getRangeOffsetLimit();
 
-    if (NULL == request->range || !request->flags.cachable
+    if (NULL == request->range || !request->flags.isCachable()
             || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuthWanted())
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
            request->range << ", cachable: " <<
-           request->flags.cachable << "; we_do_ranges: " << result);
+           request->flags.isCachable() << "; we_do_ranges: " << result);
 
     return result;
 }
