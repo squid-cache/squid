@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 00    Debug Routines
  * AUTHOR: Harvest Derived
  *

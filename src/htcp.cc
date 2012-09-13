@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels
  *
@@ -50,13 +48,13 @@
 #include "ip/tools.h"
 #include "md5.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "refresh.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "tools.h"
 #include "URL.h"
 
 typedef struct _Countstr Countstr;

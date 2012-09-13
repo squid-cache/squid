@@ -9,7 +9,6 @@
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
 #include "Debug.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "ConfigParser.h"
 #include "Parsing.h"

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
  *
@@ -45,10 +43,11 @@
 #include "acl/SourceAsn.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "cache_cf.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "forward.h"
-#include "protos.h"
+#include "StoreClient.h"
 #include "wordlist.h"
 
 #define WHOIS_PORT 43

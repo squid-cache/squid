@@ -59,6 +59,7 @@ DIST_SUBDIRS += ssl
 SNMP_ALL_SOURCE = \
 	snmp_core.h \
 	snmp_core.cc \
+	snmp_agent.h \
 	snmp_agent.cc
 if ENABLE_SNMP
 SNMP_SOURCE = $(SNMP_ALL_SOURCE)
@@ -137,15 +138,17 @@ LEAKFINDERSOURCE =
 endif
 
 if ENABLE_UNLINKD
-UNLINKDSOURCE = unlinkd.cc
+UNLINKDSOURCE = unlinkd.h unlinkd.cc
 UNLINKD = unlinkd
 else
-UNLINKDSOURCE = 
+UNLINKDSOURCE = unlinkd.h
 UNLINKD = 
 endif
 
 WIN32_ALL_SOURCE = \
+	win32.h \
 	win32.cc \
+	WinSvc.h \
 	WinSvc.cc
 if ENABLE_WIN32SPECIFIC
 WIN32_SOURCE = win32.cc
@@ -156,9 +159,9 @@ WINSVC_SOURCE =
 endif
 
 if USE_IPC_WIN32
-IPC_SOURCE = ipc_win32.cc
+IPC_SOURCE = SquidIpc.h ipc_win32.cc
 else
-IPC_SOURCE = ipc.cc
+IPC_SOURCE = SquidIpc.h ipc.cc
 endif
 
 AIO_WIN32_ALL_SOURCES = \
@@ -264,6 +267,7 @@ squid_SOURCES = \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -393,6 +397,7 @@ squid_SOURCES = \
 	icp_opcode.h \
 	icp_v2.cc \
 	icp_v3.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
@@ -400,7 +405,8 @@ squid_SOURCES = \
 	ipcache.cc \
 	ipcache.h \
 	$(LEAKFINDERSOURCE) \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	lookup_t.h \
 	main.cc \
 	Mem.h \
@@ -411,8 +417,11 @@ squid_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
+	multicast.h \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -425,6 +434,7 @@ squid_SOURCES = \
 	pconn.h \
 	PeerDigest.h \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -434,11 +444,13 @@ squid_SOURCES = \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
+	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
@@ -452,8 +464,11 @@ squid_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	stmem.cc \
 	stmem.h \
+	repl_modules.h \
 	store.cc \
 	Store.h \
 	StoreFileSystem.cc \
@@ -465,12 +480,16 @@ squid_SOURCES = \
 	StoreIOState.h \
 	store_client.cc \
 	StoreClient.h \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -513,6 +532,7 @@ squid_SOURCES = \
 	URL.h \
 	URLScheme.cc \
 	URLScheme.h \
+	urn.h \
 	urn.cc \
 	wccp.h \
 	wccp.cc \
@@ -690,6 +710,7 @@ ufsdump_SOURCES = \
 	cbdata.h \
 	cbdata.cc \
 	debug.cc \
+	int.h \
 	int.cc \
 	Mem.h \
 	mem.cc \
@@ -1112,12 +1133,15 @@ tests_testHttpReply_SOURCES=\
 	mem.cc \
 	MemBuf.cc \
 	MemBuf.h \
+	mime_header.h \
 	mime_header.cc \
 	Packer.cc \
 	Packer.h \
 	SquidString.h \
 	SquidTime.h \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
@@ -1131,6 +1155,7 @@ tests_testHttpReply_SOURCES=\
 	StatCounters.cc \
 	StatHist.h \
 	tests/stub_StatHist.cc \
+	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tools.h \
@@ -1166,7 +1191,6 @@ tests_testHttpReply_LDADD=\
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
-
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
@@ -1194,8 +1218,10 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	mem_node.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1203,6 +1229,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.h \
+	StrList.h \
+	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	String.cc \
@@ -1240,10 +1268,13 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
+	repl_modules.h \
 	tests/stub_store.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
@@ -1333,6 +1364,7 @@ tests_testCacheManager_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1404,15 +1436,20 @@ tests_testCacheManager_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
+	multicast.h \
 	multicast.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -1420,12 +1457,14 @@ tests_testCacheManager_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -1439,17 +1478,24 @@ tests_testCacheManager_SOURCES = \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
+	StrList.h \
+	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -1471,6 +1517,7 @@ tests_testCacheManager_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -1561,8 +1608,10 @@ tests_testDiskIO_SOURCES = \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
@@ -1594,8 +1643,11 @@ tests_testDiskIO_SOURCES = \
 	store_key_md5.cc \
 	store_swapout.cc \
 	store_swapmeta.cc \
+	repl_modules.h \
 	store.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -1619,14 +1671,14 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
-	tools.h \
-	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
@@ -1639,7 +1691,9 @@ tests_testDiskIO_SOURCES = \
 	URLScheme.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
-	wordlist.cc
+	wordlist.cc \
+	tools.h \
+	tests/stub_tools.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(TESTSOURCES) \
 	$(DISKIO_GEN_SOURCE) \
@@ -1693,6 +1747,7 @@ tests_testEvent_SOURCES = \
 	CacheDigest.h \
 	CacheDigest.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -1771,17 +1826,22 @@ tests_testEvent_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
+	multicast.h \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -1789,17 +1849,21 @@ tests_testEvent_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
+	StrList.h \
+	StrList.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
@@ -1810,15 +1874,20 @@ tests_testEvent_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -1849,6 +1918,7 @@ tests_testEvent_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -1910,6 +1980,7 @@ tests_testEventLoop_SOURCES = \
 	CacheDigest.cc \
 	cache_manager.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -1987,17 +2058,22 @@ tests_testEventLoop_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
+	multicast.h \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -2005,6 +2081,7 @@ tests_testEventLoop_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -2012,6 +2089,7 @@ tests_testEventLoop_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	RemovalPolicy.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2027,15 +2105,20 @@ tests_testEventLoop_SOURCES = \
 	StatHist.cc \
 	Mem.h \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -2050,6 +2133,8 @@ tests_testEventLoop_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
@@ -2065,6 +2150,7 @@ tests_testEventLoop_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -2122,6 +2208,7 @@ tests_test_http_range_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2198,25 +2285,31 @@ tests_test_http_range_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
+	multicast.h \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
@@ -2224,6 +2317,7 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	pconn.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2239,15 +2333,20 @@ tests_test_http_range_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
 	store_io.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -2262,6 +2361,8 @@ tests_test_http_range_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	tests/test_http_range.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -2275,6 +2376,7 @@ tests_test_http_range_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -2389,6 +2491,7 @@ tests_testHttpRequest_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -2457,15 +2560,20 @@ tests_testHttpRequest_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
+	multicast.h \
 	multicast.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -2473,12 +2581,14 @@ tests_testHttpRequest_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2494,15 +2604,20 @@ tests_testHttpRequest_SOURCES = \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -2516,6 +2631,8 @@ tests_testHttpRequest_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
+	StrList.h \
+	StrList.cc \
 	event.cc \
 	tools.h \
 	tools.cc \
@@ -2524,6 +2641,7 @@ tests_testHttpRequest_SOURCES = \
 	MemStore.cc \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -2607,8 +2725,10 @@ tests_testStore_SOURCES= \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpRequestMethod.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
@@ -2624,6 +2744,7 @@ tests_testStore_SOURCES= \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -2640,6 +2761,8 @@ tests_testStore_SOURCES= \
 	store_key_md5.h \
 	store_key_md5.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	tests/CapturingStoreEntry.h \
 	log/access_log.h \
@@ -2665,10 +2788,12 @@ tests_testStore_SOURCES= \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_swapout.cc \
 	tools.h \
@@ -2802,6 +2927,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.h \
@@ -2815,8 +2941,10 @@ tests_testUfs_SOURCES = \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -2842,6 +2970,7 @@ tests_testUfs_SOURCES = \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	repl_modules.h \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.h \
@@ -2860,6 +2989,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
@@ -2881,6 +3011,8 @@ tests_testUfs_SOURCES = \
 	StatCounters.cc \
 	StatHist.h \
 	StatHist.cc \
+	StrList.h \
+	StrList.cc \
 	HttpHdrRange.cc \
 	ETag.cc \
 	tests/stub_errorpage.cc \
@@ -2973,8 +3105,10 @@ tests_testRock_SOURCES = \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	Mem.h \
 	mem.cc \
 	MemBuf.cc \
@@ -2988,6 +3122,7 @@ tests_testRock_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
@@ -3006,6 +3141,8 @@ tests_testRock_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	String.cc \
+	StrList.h \
+	StrList.cc \
 	SwapDir.cc \
 	tests/testRock.cc \
 	tests/testMain.cc \
@@ -3031,10 +3168,12 @@ tests_testRock_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
 	tests/stub_pconn.cc \
 	tests/stub_store_client.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tools.h \
@@ -3097,6 +3236,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_pconn.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.h \
@@ -3109,8 +3249,10 @@ tests_testCoss_SOURCES = \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -3136,6 +3278,7 @@ tests_testCoss_SOURCES = \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	repl_modules.h \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.h \
@@ -3153,6 +3296,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
@@ -3243,6 +3387,7 @@ tests_testNull_SOURCES = \
 	tests/testNull.h \
 	internal.h \
 	tests/stub_internal.cc \
+	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.h \
@@ -3255,8 +3400,10 @@ tests_testNull_SOURCES = \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
+	int.h \
 	int.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -3282,6 +3429,7 @@ tests_testNull_SOURCES = \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	repl_modules.h \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.h \
@@ -3301,6 +3449,7 @@ tests_testNull_SOURCES = \
 	tests/stub_http.cc \
 	mem_node.cc \
 	stmem.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
@@ -3380,6 +3529,7 @@ tests_testURL_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
+	AuthReg.h \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -3457,17 +3607,22 @@ tests_testURL_SOURCES = \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	int.h \
 	int.cc \
 	internal.h \
 	internal.cc \
-	list.cc \
+	SquidList.h \
+	SquidList.cc \
+	multicast.h \
 	multicast.cc \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	mime.h \
 	mime.cc \
+	mime_header.h \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
@@ -3475,12 +3630,14 @@ tests_testURL_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.h \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	redirect.h \
 	redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -3496,15 +3653,20 @@ tests_testURL_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	repl_modules.h \
 	store.cc \
 	store_client.cc \
+	store_digest.h \
 	store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	store_log.h \
 	store_log.cc \
+	store_rebuild.h \
 	store_rebuild.cc \
+	store_swapin.h \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
@@ -3519,6 +3681,8 @@ tests_testURL_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+    StrList.h \
+    StrList.cc \
 	SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
@@ -3537,6 +3701,7 @@ tests_testURL_SOURCES = \
 	tunnel.cc \
 	url.cc \
 	URLScheme.cc \
+	urn.h \
 	urn.cc \
 	wccp2.h \
 	wccp2.cc \
@@ -3639,9 +3804,11 @@ tests_testStatHist_SOURCES = \
 	Mem.h \
 	tests/stub_mem.cc \
 	tests/stub_MemObject.cc \
+	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_stmem.cc \
+	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tools.h \

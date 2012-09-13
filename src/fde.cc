@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          FDE
  * AUTHOR: Robert Collins
  *
@@ -37,7 +35,6 @@
 #include "comm.h"
 #include "fde.h"
 #include "globals.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 

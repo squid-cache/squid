@@ -11,7 +11,6 @@
 #include "fqdncache.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"

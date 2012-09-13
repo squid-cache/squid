@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
  *
@@ -30,7 +27,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
 
 /*
@@ -50,6 +46,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
+#include "globals.h"
 #include "HttpControlMsg.h"
 #include "http.h"
 #include "HttpHdrCc.h"
@@ -62,14 +59,16 @@
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "mime_header.h"
 #include "neighbors.h"
+#include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "StrList.h"
 #include "tools.h"
 #include "URL.h"
 

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 57    HTTP Status-line
  * AUTHOR: Alex Rousskov
  *
@@ -36,7 +34,6 @@
 #include "squid.h"
 #include "Debug.h"
 #include "HttpStatusLine.h"
-#include "protos.h"
 #include "Packer.h"
 
 /* local constants */

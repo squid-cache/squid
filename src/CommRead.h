@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 05    Comm
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  *

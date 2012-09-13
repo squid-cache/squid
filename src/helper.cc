@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
  *
@@ -42,7 +40,7 @@
 #include "helper.h"
 #include "Mem.h"
 #include "MemBuf.h"
-#include "protos.h"
+#include "SquidIpc.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"

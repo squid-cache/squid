@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
  *
@@ -40,6 +38,7 @@
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
+#include "globals.h"
 #include "http.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -48,19 +47,24 @@
 #include "mgr/Registration.h"
 #include "mgr/StoreIoAction.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
+#include "repl_modules.h"
 #include "SquidTime.h"
 #include "Stack.h"
 #include "StatCounters.h"
 #include "stmem.h"
-#include "StoreClient.h"
-#include "Store.h"
+#include "store_digest.h"
 #include "store_key_md5.h"
+#include "store_key_md5.h"
+#include "store_log.h"
+#include "store_rebuild.h"
+#include "Store.h"
+#include "StoreClient.h"
 #include "StoreIOState.h"
 #include "StoreMeta.h"
-#include "store_key_md5.h"
-#include "SwapDir.h"
+#include "StrList.h"
 #include "swap_log_op.h"
+#include "SwapDir.h"
+#include "tools.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif

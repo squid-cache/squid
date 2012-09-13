@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 01    Main Loop
  * AUTHOR: Harvest Derived
  *

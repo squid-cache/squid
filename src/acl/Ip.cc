@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -40,7 +38,6 @@
 #include "Debug.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "wordlist.h"
 
 void *

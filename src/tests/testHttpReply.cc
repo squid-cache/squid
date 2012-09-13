@@ -6,7 +6,7 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
-#include "protos.h"
+#include "mime_header.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 

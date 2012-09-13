@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  *
  */
@@ -11,7 +9,7 @@
 #include "comm/Connection.h"
 #include "ipc/SharedListen.h"
 #include "ipc/StartListening.h"
-#include "protos.h"
+#include "tools.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

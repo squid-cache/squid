@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
  *
@@ -47,7 +45,6 @@
 #include "esi/VarState.h"
 #include "HttpReply.h"
 #include "log/access_log.h"
-#include "protos.h"
 
 CBDATA_CLASS_INIT (ESIStreamContext);
 

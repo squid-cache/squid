@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 34    Dnsserver interface
  * AUTHOR: Harvest Derived
  *

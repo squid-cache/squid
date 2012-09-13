@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Robert Collins
  *
@@ -34,7 +32,6 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
-#include "protos.h"
 #include "wordlist.h"
 
 #define STUB_API "cache_cf.cc"

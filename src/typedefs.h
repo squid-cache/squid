@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -87,8 +84,6 @@ typedef struct _storeSwapLogData storeSwapLogData;
 typedef struct _CacheDigest CacheDigest;
 
 typedef struct _Version Version;
-
-typedef struct _link_list link_list;
 
 typedef struct _customlog customlog;
 

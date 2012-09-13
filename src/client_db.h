@@ -52,4 +52,8 @@ extern void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit
 extern ClientInfo * clientdbGetInfo(const Ip::Address &addr);
 #endif
 
+#if SQUID_SNMP
+extern Ip::Address *client_entry(Ip::Address *current);
+#endif
+
 #endif /* SQUID_CLIENT_DB_H_ */

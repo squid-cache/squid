@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -330,8 +328,7 @@ enum {
 
 #if USE_HTCP
 /*
- * This should be in htcp.h but because neighborsHtcpClear is defined in
- * protos.h it has to be here.
+ * TODO: This should be in htcp.h
  */
 typedef enum {
     HTCP_CLR_PURGE,

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins
  *

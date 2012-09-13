@@ -1,5 +1,4 @@
 #include "squid.h"
-#include "protos.h"
 
 #define STUB_API "internal.cc"
 #include "tests/STUB.h"

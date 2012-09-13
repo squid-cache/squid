@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived
  *
@@ -55,13 +53,14 @@
 #include "mgr/ServiceTimesAction.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "stat.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "store_digest.h"
+#include "tools.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif

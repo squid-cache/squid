@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
  *
@@ -35,7 +33,6 @@
 
 #include "squid.h"
 #include "mem_node.h"
-#include "protos.h"
 
 static ptrdiff_t makeMemNodeDataOffset();
 

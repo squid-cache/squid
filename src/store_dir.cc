@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels
  *
@@ -39,7 +37,6 @@
 #include "MemObject.h"
 #include "MemStore.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -47,6 +44,7 @@
 #include "StoreHashIndex.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
+#include "tools.h"
 
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H

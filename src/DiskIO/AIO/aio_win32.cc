@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 81    aio_xxx() POSIX emulation on Windows
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  *

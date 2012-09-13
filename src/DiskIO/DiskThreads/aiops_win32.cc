@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 43    Windows AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
  * AUTHOR: Robert Collins <robertc@squid-cache.org>

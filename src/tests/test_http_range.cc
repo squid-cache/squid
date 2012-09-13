@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
  *

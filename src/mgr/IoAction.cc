@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 16    Cache Manager API
  *
  */
@@ -10,9 +8,9 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/IoAction.h"
-#include "protos.h"
 #include "SquidMath.h"
 #include "Store.h"
+#include "tools.h"
 
 extern void GetIoStats(Mgr::IoActionData& stats);
 extern void DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry);

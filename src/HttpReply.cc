@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov
  *
@@ -43,9 +41,9 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StrList.h"
 
 /* local constants */
 

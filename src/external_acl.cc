@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
  *
@@ -46,8 +44,8 @@
 #include "cache_cf.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "ExternalACLEntry.h"
 #include "ExternalACL.h"
+#include "ExternalACLEntry.h"
 #include "fde.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
@@ -56,13 +54,13 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc1738.h"
+#include "SquidString.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "URLScheme.h"
 #include "tools.h"
 #include "URL.h"
+#include "URLScheme.h"
 #include "wordlist.h"
 #if USE_SSL
 #include "ssl/support.h"

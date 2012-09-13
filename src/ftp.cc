@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 09    File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
  *
@@ -52,7 +50,7 @@
 #include "ip/tools.h"
 #include "Mem.h"
 #include "MemBuf.h"
-#include "protos.h"
+#include "mime.h"
 #include "rfc1738.h"
 #include "Server.h"
 #include "SquidString.h"

@@ -4,13 +4,12 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "protos.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
+#include "SquidString.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "wordlist.h"
-#include "protos.h"
 
 Ssl::Helper * Ssl::Helper::GetInstance()
 {

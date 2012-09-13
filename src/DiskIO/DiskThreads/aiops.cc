@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
  *

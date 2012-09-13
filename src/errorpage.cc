@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 04    Error Generation
  * AUTHOR: Duane Wessels
  *
@@ -47,7 +45,6 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "URL.h"
 #include "URLScheme.h"

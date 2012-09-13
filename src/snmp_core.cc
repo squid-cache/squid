@@ -32,15 +32,17 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
+#include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "protos.h"
+#include "snmp_agent.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"
+#include "tools.h"
 
 static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);
 

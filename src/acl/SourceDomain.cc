@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -41,7 +39,6 @@
 #include "acl/DomainData.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
-#include "protos.h"
 
 SourceDomainLookup SourceDomainLookup::instance_;
 

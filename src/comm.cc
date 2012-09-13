@@ -58,7 +58,6 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "pconn.h"
-#include "protos.h"
 #include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

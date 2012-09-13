@@ -1,9 +1,4 @@
 /*
- * $Id$
- *
- * DO NOT MODIFY NEXT 2 LINES:
- * arch-tag: 6803fde1-d5a2-4c29-9034-1c0c9f650eb4
- *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins
  *

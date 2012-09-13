@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  * inspired by previous work by Romeo Anghelache & Eric Stern.
@@ -35,6 +33,7 @@
 
 #include "squid.h"
 #include "squid_windows.h"
+#include "win32.h"
 
 #if _SQUID_MSWIN_
 #if HAVE_WIN32_PSAPI

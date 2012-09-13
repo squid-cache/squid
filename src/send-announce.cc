@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels
  *
@@ -42,7 +39,6 @@
 #include "globals.h"
 #include "ICP.h"
 #include "ipcache.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "tools.h"
 

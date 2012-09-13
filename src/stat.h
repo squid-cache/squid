@@ -44,4 +44,7 @@ extern double statRequestHitMemoryRatio(int minutes);
 extern double statRequestHitDiskRatio(int minutes);
 extern double statByteHitRatio(int minutes);
 
+class StatCounters;
+extern StatCounters *snmpStatGet(int);
+
 #endif /* SQUID_STAT_H_ */

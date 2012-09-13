@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 02    Unlink Daemon
  * AUTHOR: Duane Wessels
  *
@@ -34,15 +31,18 @@
  */
 
 #include "squid.h"
+
+#if USE_UNLINKD
 #include "disk.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "xusleep.h"
-#include "protos.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "SwapDir.h"
+#include "tools.h"
 
 /* This code gets linked to Squid */
 
@@ -272,3 +272,4 @@ unlinkdInit(void)
 #endif
 
 }
+#endif /* USE_UNLINKD */
