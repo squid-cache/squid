@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 39    Peer user hash based selection
  * AUTHOR: Henrik Nordstrom
  * BASED ON: carp.cc
@@ -43,7 +41,6 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
-#include "protos.h"
 #include "Store.h"
 
 #if HAVE_MATH_H

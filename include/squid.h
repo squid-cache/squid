@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

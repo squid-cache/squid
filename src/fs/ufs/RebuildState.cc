@@ -1,5 +1,4 @@
 /*
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
  *
@@ -33,11 +32,13 @@
 
 #include "squid.h"
 #include "disk.h"
-#include "protos.h"
+#include "globals.h"
 #include "RebuildState.h"
 #include "SquidTime.h"
 #include "store_key_md5.h"
+#include "store_rebuild.h"
 #include "StoreSwapLogData.h"
+#include "tools.h"
 #include "UFSSwapLogParser.h"
 
 #if HAVE_MATH_H

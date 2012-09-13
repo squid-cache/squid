@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *  SQUID_VERSION - String for version id of this distribution
  */
 

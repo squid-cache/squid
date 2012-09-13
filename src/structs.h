@@ -1030,12 +1030,6 @@ private:
     unsigned int destinationIPLookedUp_:1;
 };
 
-struct _link_list {
-    void *ptr;
-
-    struct _link_list *next;
-};
-
 struct _cachemgr_passwd {
     char *passwd;
     wordlist *actions;

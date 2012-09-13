@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  */
 
 #ifndef SQUID_IPC_MEM_PAGES_H

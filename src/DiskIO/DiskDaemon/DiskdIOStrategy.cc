@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
  *
@@ -41,10 +39,11 @@
 #include "DiskdFile.h"
 #include "diomsg.h"
 #include "fd.h"
-#include "protos.h"
 #include "Store.h"
 #include "StatCounters.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
+#include "unlinkd.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -120,14 +119,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
     if (shedLoad()) {
         /* Damn, we need to issue a sync unlink here :( */
         debugs(79, 2, "storeDiskUnlink: Out of queue space, sync unlink");
-#if USE_UNLINKD
-
         unlinkdUnlink(path);
-#else
-
-        unlink(path);
-#endif
-
         return;
     }
 

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
  *
@@ -47,7 +45,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "auth/negotiate/Scheme.h"
 #include "auth/negotiate/User.h"

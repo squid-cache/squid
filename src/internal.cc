@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
  *
@@ -42,7 +40,6 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "tools.h"
 #include "URL.h"

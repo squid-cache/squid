@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels
  *
@@ -40,6 +38,7 @@
 #include "errorpage.h"
 #include "event.h"
 #include "forward.h"
+#include "globals.h"
 #include "hier_code.h"
 #include "htcp.h"
 #include "HttpRequest.h"
@@ -51,7 +50,6 @@
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 

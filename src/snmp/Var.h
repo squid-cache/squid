@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 49    SNMP Interface
  *
  */

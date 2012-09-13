@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
  *
@@ -50,7 +48,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 

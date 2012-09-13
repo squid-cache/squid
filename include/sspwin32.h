@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  * Based on previous work of Francesco Chemolli, Robert Collins and Andrew Doran
  *

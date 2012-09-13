@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov
  *

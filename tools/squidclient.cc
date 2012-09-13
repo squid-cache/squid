@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section --    WWW Client
  * AUTHOR: Harvest Derived
  *

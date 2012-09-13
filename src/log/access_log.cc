@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
  *

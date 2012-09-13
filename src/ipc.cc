@@ -36,7 +36,8 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
-#include "protos.h"
+#include "SquidIpc.h"
+#include "tools.h"
 #include "rfc1738.h"
 
 static const char *hello_string = "hi there\n";

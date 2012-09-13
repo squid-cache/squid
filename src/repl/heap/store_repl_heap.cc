@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 81    Store HEAP Removal Policies
  * AUTHOR: Henrik Nordstrom
  *
@@ -43,8 +41,8 @@
 
 #include "squid.h"
 #include "heap.h"
-#include "protos.h"
 #include "store_heap_replacement.h"
+#include "SquidList.h"
 #include "Store.h"
 #include "MemObject.h"
 #include "wordlist.h"

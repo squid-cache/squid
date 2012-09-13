@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
  *         Robert Collins (Surrogate-Control is derived from

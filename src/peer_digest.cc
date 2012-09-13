@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
  *
@@ -38,13 +36,14 @@
 #include "CacheDigest.h"
 #include "event.h"
 #include "forward.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
 #include "MemObject.h"
 #include "neighbors.h"
+#include "mime_header.h"
 #include "PeerDigest.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "store_key_md5.h"

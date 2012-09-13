@@ -1,9 +1,8 @@
-
+#ifndef SQUID_STORE_SWAPIN_H_
+#define SQUID_STORE_SWAPIN_H_
 /*
- * $Id$
- *
- * DEBUG: none          Linked list functions (deprecated)
- * AUTHOR: Harvest Derived
+ * DEBUG: section 20    Storage Manager Swapin Functions
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,43 +32,7 @@
  *
  */
 
-#include "squid.h"
-#include "Mem.h"
-#include "protos.h"
-#include "typedefs.h"
+class store_client;
+extern void storeSwapInStart(store_client *);
 
-/* This should go away, in favour of the List template class */
-
-void
-linklistPush(link_list ** L, void *p)
-{
-    link_list *l = (link_list *)memAllocate(MEM_LINK_LIST);
-    l->next = NULL;
-    l->ptr = p;
-
-    while (*L)
-        L = &(*L)->next;
-
-    *L = l;
-}
-
-void *
-linklistShift(link_list ** L)
-{
-    void *p;
-    link_list *l;
-
-    if (NULL == *L)
-        return NULL;
-
-    l = *L;
-
-    p = l->ptr;
-
-    *L = (*L)->next;
-
-    memFree(l, MEM_LINK_LIST);
-
-    return p;
-}
-
+#endif /* SQUID_STORE_SWAPIN_H_ */

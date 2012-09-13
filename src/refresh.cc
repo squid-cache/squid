@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 22    Refresh Calculation
  * AUTHOR: Harvest Derived
  *
@@ -43,7 +41,6 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"

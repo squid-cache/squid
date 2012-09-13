@@ -26,8 +26,6 @@
  *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  *
- * $Id$
- *
  **********************************************************************/
 
 #ifdef __cplusplus

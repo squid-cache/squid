@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Andrew Doran <ad@interlude.eu.org>
  * AUTHOR: Robert Collins <rbtcollins@hotmail.com>
  * AUTHOR: Guido Serassio: <guido.serassio@acmeconsulting.it>

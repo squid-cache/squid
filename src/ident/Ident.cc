@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels
  *

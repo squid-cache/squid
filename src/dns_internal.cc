@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
  *
@@ -46,12 +44,16 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc3596.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 #include "util.h"
 #include "wordlist.h"
+
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>

@@ -38,7 +38,7 @@
 #include "HttpHdrCc.h"
 #include "StatHist.h"
 #include "Store.h"
-#include "protos.h"
+#include "StrList.h"
 
 #if HAVE_MAP
 #include <map>

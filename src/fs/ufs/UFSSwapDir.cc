@@ -38,8 +38,8 @@
 #include "DiskIO/DiskIOModule.h"
 #include "FileMap.h"
 #include "fde.h"
+#include "globals.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "RebuildState.h"
 #include "SquidMath.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -48,6 +48,7 @@
 #include "StoreSwapLogData.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "tools.h"
 #include "UFSSwapDir.h"
 
 #if HAVE_MATH_H

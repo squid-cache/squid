@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 07    Multicast
  * AUTHOR: Martin Hamilton
  *
@@ -39,6 +37,7 @@
 // XXX: for icpIncomingConn - need to pass it as a generic parameter.
 #include "ICP.h"
 #include "ipcache.h"
+#include "multicast.h"
 
 int
 mcastSetTtl(int fd, int mcast_ttl)

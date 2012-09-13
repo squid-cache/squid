@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 68    HTTP Content-Range Header
  * AUTHOR: Alex Rousskov
  *
@@ -39,7 +37,6 @@
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "Mem.h"
-#include "protos.h"
 
 /*
  *    Currently only byte ranges are supported

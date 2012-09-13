@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 20    Store Rebuild Routines
  * AUTHOR: Duane Wessels
  *
@@ -37,11 +34,12 @@
 #include "event.h"
 #include "globals.h"
 #include "md5.h"
-#include "protos.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "SwapDir.h"
+#include "store_digest.h"
+#include "store_rebuild.h"
 #include "StoreSearch.h"
 #include "SquidTime.h"
 

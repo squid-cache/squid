@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: Benno Rice
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

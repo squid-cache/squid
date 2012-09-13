@@ -38,7 +38,6 @@
 #include "log/File.h"
 #include "log/ModUdp.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "structs.h"
 
 #if HAVE_ERRNO_H

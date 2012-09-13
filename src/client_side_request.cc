@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 85    Client-side Request Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
  *
@@ -69,9 +67,9 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StrList.h"
 #include "tools.h"
 #include "URL.h"
 #include "wordlist.h"

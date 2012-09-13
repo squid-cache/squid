@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
  *
@@ -35,17 +33,19 @@
 
 #include "squid.h"
 #include "errorpage.h"
-#include "StoreClient.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "MemBuf.h"
 #include "forward.h"
 #include "globals.h"
-#include "SquidTime.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include "icmp/net_db.h"
-#include "protos.h"
+#include "MemBuf.h"
+#include "mime_header.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "StoreClient.h"
+#include "tools.h"
 #include "URL.h"
+#include "urn.h"
 
 #define	URN_REQBUF_SZ	4096
 

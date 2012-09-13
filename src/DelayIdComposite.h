@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  * Based upon original delay pools code by

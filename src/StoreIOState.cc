@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
  *

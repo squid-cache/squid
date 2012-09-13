@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  */
 
@@ -15,11 +13,13 @@
 #include "fs/rock/RockIoState.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockRebuild.h"
+#include "globals.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "SquidMath.h"
+#include "tools.h"
+
 #include <cstdlib>
 #include <iomanip>
 

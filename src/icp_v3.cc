@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels
  *

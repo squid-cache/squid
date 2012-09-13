@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 49    SNMP Interface
  * AUTHOR: Kostas Anagnostakis
  *
@@ -37,13 +35,15 @@
 #include "globals.h"
 #include "mem_node.h"
 #include "neighbors.h"
-#include "protos.h"
+#include "snmp_agent.h"
+#include "snmp_core.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "stat.h"
 #include "Store.h"
+#include "tools.h"
 
 /************************************************************************
 

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          LRU Removal Policy
  * AUTHOR: Henrik Nordstrom
  *

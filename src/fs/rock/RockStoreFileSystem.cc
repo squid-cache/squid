@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 92    Storage File System
  */
 
