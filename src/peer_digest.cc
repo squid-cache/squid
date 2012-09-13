@@ -373,7 +373,7 @@ peerDigestRequest(PeerDigest * pd)
     req->flags.cachable = 1;
 
     /* the rest is based on clientProcessExpired() */
-    req->flags.refresh = 1;
+    req->flags.setRefresh();
 
     old_e = fetch->old_entry = Store::Root().get(key);
 

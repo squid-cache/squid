@@ -129,7 +129,7 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
 {
     if (errstate->httpStatus == HTTP_NOT_IMPLEMENTED && http->request)
         /* prevent confusion over whether we default to persistent or not */
-        http->request->flags.proxy_keepalive = 0;
+        http->request->flags.clearProxyKeepalive();
 
     http->al->http.code = errstate->httpStatus;
 
@@ -273,7 +273,7 @@ clientReplyContext::processExpired()
         return;
     }
 
-    http->request->flags.refresh = 1;
+    http->request->flags.setRefresh();
 #if STORE_CLIENT_LIST_DEBUG
     /* Prevent a race with the store client memory free routines
      */
@@ -651,7 +651,7 @@ clientReplyContext::processMiss()
     }
 
     /// Deny loops
-    if (r->flags.loopdetect) {
+    if (r->flags.loopDetect()) {
         http->al->http.code = HTTP_FORBIDDEN;
         err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         createStoreEntry(r->method, RequestFlags());
@@ -1183,7 +1183,7 @@ clientReplyContext::replyStatus()
 
         const int64_t expectedBodySize =
             http->storeEntry()->getReply()->bodySize(http->request->method);
-        if (!http->request->flags.proxy_keepalive && expectedBodySize < 0) {
+        if (!http->request->flags.proxyKeepalive() && expectedBodySize < 0) {
             debugs(88, 5, "clientReplyStatus: closing, content_length < 0");
             return STREAM_FAILED;
         }
@@ -1198,7 +1198,7 @@ clientReplyContext::replyStatus()
             return STREAM_UNPLANNED_COMPLETE;
         }
 
-        if (http->request->flags.proxy_keepalive) {
+        if (http->request->flags.proxyKeepalive()) {
             debugs(88, 5, "clientReplyStatus: stream complete and can keepalive");
             return STREAM_COMPLETE;
         }
@@ -1458,31 +1458,31 @@ clientReplyContext::buildReplyHeader()
     /* Check whether we should send keep-alive */
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.mustKeepalive()) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     } else if (!Config.onoff.client_pconns && !request->flags.mustKeepalive()) {
         debugs(33, 2, "clientBuildReplyHeader: Connection Keep-Alive not requested by admin or client");
-        request->flags.proxy_keepalive = 0;
-    } else if (request->flags.proxy_keepalive && shutting_down) {
+        request->flags.clearProxyKeepalive();
+    } else if (request->flags.proxyKeepalive() && shutting_down) {
         debugs(88, 3, "clientBuildReplyHeader: Shutting down, don't keep-alive.");
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     } else if (request->flags.connectionAuthWanted() && !reply->keep_alive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection oriented auth but server side non-persistent");
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     } else if (reply->bodySize(request->method) < 0 && !maySendChunkedReply) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     } else if (fdUsageHigh()&& !request->flags.mustKeepalive()) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     } else if (request->flags.sslBumped() && !reply->persistent()) {
         // We do not really have to close, but we pretend we are a tunnel.
         debugs(88, 3, "clientBuildReplyHeader: bumped reply forces close");
-        request->flags.proxy_keepalive = 0;
+        request->flags.clearProxyKeepalive();
     }
 
     // Decide if we send chunked reply
     if (maySendChunkedReply &&
-            request->flags.proxy_keepalive &&
+            request->flags.proxyKeepalive() &&
             reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: chunked reply");
         request->flags.markReplyChunked();
@@ -1503,7 +1503,7 @@ clientReplyContext::buildReplyHeader()
         hdr->putStr(HDR_VIA, strVia.termedBuf());
     }
     /* Signal keep-alive or close explicitly */
-    hdr->putStr(HDR_CONNECTION, request->flags.proxy_keepalive ? "keep-alive" : "close");
+    hdr->putStr(HDR_CONNECTION, request->flags.proxyKeepalive() ? "keep-alive" : "close");
 
 #if ADD_X_REQUEST_URI
     /*
