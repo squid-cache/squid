@@ -588,9 +588,9 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 
         // NP: it is tempting to use 'flags.nocache' but that is all about READing cache data.
         // The problems here are about WRITE for new cache content, which means flags.cachable
-        http->request->flags.cachable = 0; // MUST NOT cache (for now)
+        http->request->flags.setNotCachable(); // MUST NOT cache (for now)
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
-        http->request->flags.hierarchical = 0; // MUST NOT pass to peers (for now)
+        http->request->flags.clearHierarchical(); // MUST NOT pass to peers (for now)
         // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
         http->doCallouts();
         return;
@@ -933,14 +933,14 @@ clientHierarchical(ClientHttpRequest * http)
      * neighbors support private keys
      */
 
-    if (request->flags.ims && !neighbors_do_private_keys)
+    if (request->flags.hasIMS() && !neighbors_do_private_keys)
         return 0;
 
     /*
      * This is incorrect: authenticating requests can be sent via a hierarchy
      * (they can even be cached if the correct headers are set on the reply)
      */
-    if (request->flags.auth)
+    if (request->flags.hasAuth())
         return 0;
 
     if (method == METHOD_TRACE)
@@ -988,7 +988,7 @@ clientCheckPinning(ClientHttpRequest * http)
         if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {
             if (http_conn->pinning.auth) {
                 request->flags.wantConnectionAuth();
-                request->flags.auth = 1;
+                request->flags.markAuth();
             } else {
                 request->flags.requestConnectionProxyAuth();
             }
@@ -1045,7 +1045,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     request->ims = req_hdr->getTime(HDR_IF_MODIFIED_SINCE);
 
     if (request->ims > 0)
-        request->flags.ims = 1;
+        request->flags.setIMS();
 
     if (!request->flags.ignoringCacheControl()) {
         if (req_hdr->has(HDR_PRAGMA)) {
@@ -1069,7 +1069,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         * SP1 or not so all 5.5 versions are treated 'normally').
         */
         if (Config.onoff.ie_refresh) {
-            if (http->flags.accel && request->flags.ims) {
+            if (http->flags.accel && request->flags.hasIMS()) {
                 if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
                     if (strstr(str, "MSIE 5.01") != NULL)
                         no_cache=true;
@@ -1098,7 +1098,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         else
 #endif
 
-            request->flags.nocache = 1;
+            request->flags.setNocache();
     }
 
     /* ignore range header in non-GETs or non-HEADs */
@@ -1134,12 +1134,12 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
     if (req_hdr->has(HDR_AUTHORIZATION))
-        request->flags.auth = 1;
+        request->flags.markAuth();
 
     clientCheckPinning(http);
 
     if (request->login[0] != '\0')
-        request->flags.auth = 1;
+        request->flags.markAuth();
 
     if (req_hdr->has(HDR_VIA)) {
         String s = req_hdr->getList(HDR_VIA);
@@ -1173,17 +1173,17 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #endif
 
-    request->flags.cachable = http->request->cacheable();
+    request->flags.setCachable(http->request->cacheable());
 
     if (clientHierarchical(http))
-        request->flags.hierarchical = 1;
+        request->flags.setHierarchical();
 
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_NOCACHE = " <<
-           (request->flags.nocache ? "SET" : "NOT SET"));
+           (request->flags.noCache() ? "SET" : "NOT SET"));
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_CACHABLE = " <<
-           (request->flags.cachable ? "SET" : "NOT SET"));
+           (request->flags.isCachable() ? "SET" : "NOT SET"));
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_HIERARCHICAL = " <<
-           (request->flags.hierarchical ? "SET" : "NOT SET"));
+           (request->flags.hierarchical() ? "SET" : "NOT SET"));
 
 }
 
@@ -1293,7 +1293,8 @@ void
 ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 {
     acl_checklist = NULL;
-    http->request->flags.cachable = (answer == ACCESS_ALLOWED);
+    if (answer == ACCESS_ALLOWED)
+        http->request->flags.setCachable();
     http->doCallouts();
 }
 
@@ -1601,7 +1602,7 @@ ClientHttpRequest::doCallouts()
         if (!calloutContext->no_cache_done) {
             calloutContext->no_cache_done = true;
 
-            if (Config.accessList.noCache && request->flags.cachable) {
+            if (Config.accessList.noCache && request->flags.isCachable()) {
                 debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
                 calloutContext->checkNoCache();
                 return;

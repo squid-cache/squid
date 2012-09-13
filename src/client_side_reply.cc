@@ -398,7 +398,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
         // if client sent IMS
 
-        if (http->request->flags.ims && !old_entry->modifiedSince(http->request)) {
+        if (http->request->flags.hasIMS() && !old_entry->modifiedSince(http->request)) {
             // forward the 304 from origin
             debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client");
             sendClientUpstreamResponse();
@@ -566,7 +566,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              */
             http->logType = LOG_TCP_MISS;
             processMiss();
-        } else if (r->flags.nocache) {
+        } else if (r->flags.noCache()) {
             /*
              * This did not match a refresh pattern that overrides no-cache
              * we should honour the client no-cache header.
@@ -729,7 +729,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
     if (r.header.has(HDR_IF_NONE_MATCH)) {
         if (!e->hasIfNoneMatchEtag(r)) {
             // RFC 2616: ignore IMS if If-None-Match did not match
-            r.flags.ims = 0;
+            r.flags.clearIMS();
             r.ims = -1;
             r.imslen = 0;
             r.header.delById(HDR_IF_MODIFIED_SINCE);
@@ -738,7 +738,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
             return;
         }
 
-        if (!r.flags.ims) {
+        if (!r.flags.hasIMS()) {
             // RFC 2616: if If-None-Match matched and there is no IMS,
             // reply with 304 Not Modified or 412 Precondition Failed
             sendNotModifiedOrPreconditionFailedError();
@@ -749,7 +749,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
         matchedIfNoneMatch = true;
     }
 
-    if (r.flags.ims) {
+    if (r.flags.hasIMS()) {
         // handle If-Modified-Since requests from the client
         if (e->modifiedSince(&r)) {
             http->logType = LOG_TCP_IMS_HIT;
@@ -1555,7 +1555,7 @@ clientReplyContext::identifyStoreObject()
 {
     HttpRequest *r = http->request;
 
-    if (r->flags.cachable || r->flags.isInternal()) {
+    if (r->flags.isCachable() || r->flags.isInternal()) {
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
@@ -1586,7 +1586,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     /** \li If the request has no-cache flag set or some no_cache HACK in operation we
       * 'invalidate' the cached IP entries for this request ???
       */
-    if (r->flags.nocache) {
+    if (r->flags.noCache()) {
 
 #if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
@@ -1650,7 +1650,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         return;
     }
 
-    if (r->flags.nocache) {
+    if (r->flags.noCache()) {
         debugs(85, 3, "clientProcessRequest2: no-cache REFRESH MISS");
         http->storeEntry(NULL);
         http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
