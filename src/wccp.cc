@@ -37,6 +37,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
+#include "SquidConfig.h"
 #include "structs.h"
 
 #define WCCP_PORT 2048

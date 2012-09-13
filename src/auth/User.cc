@@ -40,6 +40,7 @@
 #include "acl/Gadgets.h"
 #include "event.h"
 #include "globals.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 

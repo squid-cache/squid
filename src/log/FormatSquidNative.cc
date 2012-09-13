@@ -37,6 +37,7 @@
 #include "globals.h"
 #include "log/File.h"
 #include "log/Formats.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 void

@@ -38,7 +38,8 @@
 /* for CacheDigestGuessStats */
 #include "StatCounters.h"
 
-struct _Version {
+class Version {
+public:
     short int current;		/* current version */
     short int required;		/* minimal version that can safely handle current version */
 };
@@ -59,7 +60,8 @@ public:
     int reserved[32 - 6];
 };
 
-struct _DigestFetchState {
+class DigestFetchState {
+public:
     PeerDigest *pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
@@ -90,7 +92,7 @@ public:
     void *operator new (size_t);
     void operator delete(void *);
 
-    struct peer *peer;          /**< pointer back to peer structure, argh */
+    CachePeer *peer;          /**< pointer back to peer structure, argh */
     CacheDigest *cd;            /**< actual digest structure */
     String host;                /**< copy of peer->host */
     const char *req_result;     /**< text status of the last request */
@@ -129,7 +131,7 @@ private:
 
 extern const Version CacheDigestVer;
 
-extern PeerDigest *peerDigestCreate(peer * p);
+extern PeerDigest *peerDigestCreate(CachePeer * p);
 extern void peerDigestNeeded(PeerDigest * pd);
 extern void peerDigestNotePeerGone(PeerDigest * pd);
 extern void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);

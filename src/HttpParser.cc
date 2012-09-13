@@ -1,8 +1,9 @@
 #include "squid.h"
 #include "Debug.h"
 #include "HttpParser.h"
-#include "structs.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
+#include "structs.h"
 
 void
 HttpParser::clear()

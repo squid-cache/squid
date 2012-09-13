@@ -34,6 +34,8 @@
 #include "SquidString.h"
 #include "structs.h"
 
+class SquidConfig;
+
 #include <iosfwd>
 
 enum _method_t {

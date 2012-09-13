@@ -76,6 +76,8 @@ struct _icp_common_t {
     icp_opcode getOpCode() const;
 #endif
 };
+typedef struct _icp_common_t icp_common_t;
+
 
 #ifdef __cplusplus
 

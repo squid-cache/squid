@@ -36,6 +36,7 @@
 #include "ConfigOption.h"
 #include "globals.h"
 #include "Parsing.h"
+#include "SquidConfig.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "tools.h"
