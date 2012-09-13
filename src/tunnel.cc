@@ -32,23 +32,24 @@
  */
 
 #include "squid.h"
-#include "errorpage.h"
-#include "HttpRequest.h"
-#include "fde.h"
+#include "acl/FilledChecklist.h"
 #include "Array.h"
+#include "CachePeer.h"
+#include "client_side_request.h"
+#include "client_side.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Write.h"
-#include "client_side_request.h"
-#include "acl/FilledChecklist.h"
-#include "client_side.h"
-#include "MemBuf.h"
+#include "errorpage.h"
+#include "fde.h"
 #include "http.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
 #include "PeerSelectState.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "tools.h"
-
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
@@ -530,7 +531,7 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
 
-    if (tunnelState->request && (tunnelState->request->flags.spoof_client_ip || tunnelState->request->flags.intercepted))
+    if (tunnelState->request && (tunnelState->request->flags.spoofClientIp() || tunnelState->request->flags.intercepted()))
         tunnelStartShoveling(tunnelState); // ssl-bumped connection, be quiet
     else {
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
@@ -604,13 +605,16 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     debugs(26, 4, HERE << "determine post-connect handling pathway.");
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
-        tunnelState->request->flags.proxying = (conn->getPeer()->options.originserver?0:1);
+        if (conn->getPeer()->options.originserver)
+            tunnelState->request->flags.setProxying();
+        else
+            tunnelState->request->flags.clearProxying();
     } else {
         tunnelState->request->peer_login = NULL;
-        tunnelState->request->flags.proxying = 0;
+        tunnelState->request->flags.clearProxying();
     }
 
-    if (tunnelState->request->flags.proxying)
+    if (tunnelState->request->flags.proxying())
         tunnelRelayConnectRequest(conn, tunnelState);
     else {
         tunnelConnected(conn, tunnelState);
@@ -694,7 +698,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     http_state_flags flags;
     debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
     memset(&flags, '\0', sizeof(flags));
-    flags.proxying = tunnelState->request->flags.proxying;
+    flags.proxying = tunnelState->request->flags.proxying();
     MemBuf mb;
     mb.init();
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);

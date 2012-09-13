@@ -39,6 +39,7 @@
 /* FIXME: Abstract the use of this more */
 #include "mem_node.h"
 #include "MemObject.h"
+#include "SquidConfig.h"
 #include "SwapDir.h"
 #include "StatCounters.h"
 #include "store_log.h"

@@ -37,6 +37,7 @@
 #include "MemObject.h"
 #include "MemStore.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"

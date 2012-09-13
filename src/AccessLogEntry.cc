@@ -2,6 +2,7 @@
 #include "AccessLogEntry.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 #include "ssl/support.h"
 
 #if USE_SSL

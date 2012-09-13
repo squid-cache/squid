@@ -32,6 +32,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
+#include "CachePeer.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -42,6 +43,7 @@
 #include "snmp_agent.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"
+#include "SquidConfig.h"
 #include "tools.h"
 
 static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);
@@ -747,7 +749,7 @@ static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
-    peer *peers = Config.peers;
+    CachePeer *peers = Config.peers;
 
     if (peers == NULL) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");

@@ -40,6 +40,7 @@
 #include "MemObject.h"
 #include "mime_header.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreClient.h"
 #include "Store.h"
@@ -790,7 +791,7 @@ CheckQuickAbort2(StoreEntry * entry)
     assert(mem);
     debugs(90, 3, "CheckQuickAbort2: entry=" << entry << ", mem=" << mem);
 
-    if (mem->request && !mem->request->flags.cachable) {
+    if (mem->request && !mem->request->flags.isCachable()) {
         debugs(90, 3, "CheckQuickAbort2: YES !mem->request->flags.cachable");
         return 1;
     }

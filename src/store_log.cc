@@ -38,6 +38,7 @@
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "store_log.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 static const char *storeLogTags[] = {

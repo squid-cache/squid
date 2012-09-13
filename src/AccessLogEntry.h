@@ -35,6 +35,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
+#include "icp_opcode.h"
 #include "ip/Address.h"
 #include "HttpRequestMethod.h"
 #if ICAP_CLIENT
@@ -274,7 +275,7 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-extern void accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
+extern void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
 extern void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);

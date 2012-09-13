@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "wordlist.h"
+#include "YesNoNone.h"
 
 #define STUB_API "cache_cf.cc"
 #include "tests/STUB.h"
