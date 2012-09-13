@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -39,7 +37,7 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
-#include "protos.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
 
 #if HAVE_ERRNO_H

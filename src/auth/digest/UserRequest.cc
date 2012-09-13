@@ -7,7 +7,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "SquidTime.h"
 
 Auth::Digest::UserRequest::UserRequest() :

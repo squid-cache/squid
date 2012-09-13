@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 00    Hash Tables
  * AUTHOR: Harvest Derived
  *

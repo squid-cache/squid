@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
  *
@@ -48,7 +46,6 @@
 #include "MemBuf.h"
 #include "http.h"
 #include "PeerSelectState.h"
-#include "protos.h"
 #include "StatCounters.h"
 #include "tools.h"
 

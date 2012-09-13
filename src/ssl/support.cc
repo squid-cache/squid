@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
  *
@@ -44,7 +42,6 @@
 #include "anyp/PortCfg.h"
 #include "fde.h"
 #include "globals.h"
-#include "protos.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"

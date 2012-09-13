@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG:
  * AUTHOR: Duane Wessels
  *

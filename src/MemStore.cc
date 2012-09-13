@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Memory Cache
  *
  */
@@ -12,8 +10,9 @@
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "MemStore.h"
-#include "protos.h"
+#include "mime_header.h"
 #include "StoreStats.h"
+#include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
 static const char *ShmLabel = "cache_mem";

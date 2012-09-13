@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
  *
@@ -184,5 +182,10 @@ _SQUID_INLINE_ bool operator<(const String &a, const String &b);
 #if _USE_INLINE_
 #include "String.cci"
 #endif
+
+extern const char *checkNullString(const char *p);
+extern int stringHasWhitespace(const char *);
+extern int stringHasCntl(const char *);
+extern char *strwordtok(char *buf, char **t);
 
 #endif /* SQUID_STRING_H */

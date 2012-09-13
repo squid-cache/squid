@@ -63,9 +63,10 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StoreClient.h"
+#include "urn.h"
 #include "whois.h"
 #if USE_SSL
 #include "ssl/support.h"

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
  *
@@ -36,6 +34,7 @@
 #include "squid.h"
 #include "comm/Connection.h"
 #include "Generic.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -43,7 +42,6 @@
 #include "profiler/Profiler.h"
 #include "Store.h"
 #include "StoreClient.h"
-#include "protos.h"
 
 #if USE_DELAY_POOLS
 #include "DelayPools.h"

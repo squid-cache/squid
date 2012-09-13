@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
@@ -37,6 +35,7 @@
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
+#include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -59,8 +58,8 @@
 #include "mgr/Registration.h"
 #include "Parsing.h"
 #include "PeerDigest.h"
-#include "protos.h"
 #include "rfc1738.h"
+#include "SquidString.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "structs.h"
@@ -146,6 +145,8 @@ static void parse_ecap_service_type(Adaptation::Ecap::Config *);
 static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation::Ecap::Config &);
 static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
+
+static peer_t parseNeighborType(const char *s);
 
 CBDATA_TYPE(peer);
 

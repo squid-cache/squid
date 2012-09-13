@@ -1,14 +1,12 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  */
 
 #include "squid.h"
-#include "protos.h"
-#include "Store.h"
-#include "store_key_md5.h"
 #include "ipc/StoreMap.h"
+#include "store_key_md5.h"
+#include "Store.h"
+#include "tools.h"
 
 Ipc::StoreMap::Owner *
 Ipc::StoreMap::Init(const char *const path, const int limit, const size_t extrasSize)

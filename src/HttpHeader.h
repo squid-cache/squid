@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -44,6 +42,7 @@ class HttpHdrCc;
 class HttpHdrSc;
 class HttpHdrRange;
 class String;
+class StoreEntry;
 
 /* constant attributes of http header fields */
 

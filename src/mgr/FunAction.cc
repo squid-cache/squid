@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 16    Cache Manager API
  *
  */
@@ -14,8 +12,8 @@
 #include "mgr/Filler.h"
 #include "mgr/FunAction.h"
 #include "mgr/Request.h"
-#include "protos.h"
 #include "Store.h"
+#include "tools.h"
 
 Mgr::FunAction::Pointer
 Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)

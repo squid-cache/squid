@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

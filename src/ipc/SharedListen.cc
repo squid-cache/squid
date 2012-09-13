@@ -1,8 +1,5 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
- *
  */
 
 #include "squid.h"
@@ -16,7 +13,7 @@
 #include "ipc/TypedMsgHdr.h"
 #include "ipc/StartListening.h"
 #include "ipc/SharedListen.h"
-#include "protos.h"
+#include "tools.h"
 
 #include <map>
 

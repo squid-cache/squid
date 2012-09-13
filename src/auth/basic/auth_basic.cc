@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels
  *
@@ -49,7 +47,6 @@
 #include "Store.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "uudecode.h"
 #include "wordlist.h"

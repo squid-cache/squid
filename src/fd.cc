@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 51    Filedescriptor Functions
  * AUTHOR: Duane Wessels
  *

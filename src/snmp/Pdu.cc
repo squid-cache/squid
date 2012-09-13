@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 49    SNMP Interface
  *
  */
@@ -8,10 +6,10 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
-#include "protos.h"
 #include "snmp_core.h"
 #include "snmp/Pdu.h"
 #include "snmp/Var.h"
+#include "tools.h"
 #if HAVE_ALGORITHM
 #include <algorithm>
 #endif

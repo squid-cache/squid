@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Swapin Functions
  * AUTHOR: Duane Wessels
  *
@@ -38,6 +35,7 @@
 #include "StatCounters.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "store_swapin.h"
 
 static StoreIOState::STIOCB storeSwapInFileClosed;
 static StoreIOState::STFNCB storeSwapInFileNotify;

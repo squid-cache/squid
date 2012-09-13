@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)
  *
@@ -53,12 +51,13 @@
 #include "ipcache.h"
 #include "log/access_log.h"
 #include "MemObject.h"
+#include "mime_header.h"
 #include "neighbors.h"
-#include "protos.h"
 #include "refresh.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "StrList.h"
 #include "tools.h"
 #include "URL.h"
 #if USE_AUTH

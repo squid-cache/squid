@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived
  *
@@ -38,12 +36,15 @@
 #include "event.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "wordlist.h"
+
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 /**
  \defgroup FQDNCacheAPI FQDN Cache API

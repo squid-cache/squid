@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 25    MIME Parsing and Internal Icons
  * AUTHOR: Harvest Derived
  *
@@ -43,8 +41,8 @@
 #include "internal.h"
 #include "Mem.h"
 #include "MemBuf.h"
+#include "mime.h"
 #include "MemObject.h"
-#include "protos.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -53,6 +51,10 @@
 #endif
 
 #define GET_HDR_SZ 1024
+
+/* forward declarations */
+static void mimeFreeMemory(void);
+static char const *mimeGetIcon(const char *fn);
 
 class MimeIcon : public StoreClient
 {

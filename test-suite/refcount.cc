@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section --    Refcount allocator
  * AUTHOR:  Robert Collins
  *

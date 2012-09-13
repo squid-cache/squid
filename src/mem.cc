@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
  *
@@ -40,7 +38,7 @@
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
-#include "protos.h"
+#include "SquidList.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreEntryStream.h"

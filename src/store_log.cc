@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels
  *
@@ -39,6 +37,7 @@
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "Store.h"
+#include "store_log.h"
 #include "SquidTime.h"
 
 static const char *storeLogTags[] = {

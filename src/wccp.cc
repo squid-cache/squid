@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Glenn Chisholm
  *

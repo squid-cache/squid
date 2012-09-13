@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -48,10 +46,7 @@ struct dlink_list {
     dlink_node *tail;
 };
 
-/* mported form globals.h */
 extern dlink_list ClientActiveRequests;
-
-/* imported directly from protos.h */
 
 SQUIDCEXTERN void dlinkAdd(void *data, dlink_node *, dlink_list *);
 SQUIDCEXTERN void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);

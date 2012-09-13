@@ -40,13 +40,16 @@
 #include "ipcache.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc3596.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "wordlist.h"
+
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 /**
  \defgroup IPCacheAPI IP Cache API

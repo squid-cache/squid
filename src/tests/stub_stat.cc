@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Robert Collins
  *
@@ -34,7 +32,3 @@
 
 #include "squid.h"
 
-/*
- * DO NOT MODIFY:
- * arch-tag: 910d285d-c514-4592-adac-1f079ca734ab
- */

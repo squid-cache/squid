@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 21    Integer functions
  * AUTHOR: Harvest Derived
  *

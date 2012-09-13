@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  * inspired by previous work by Romeo Anghelache & Eric Stern.

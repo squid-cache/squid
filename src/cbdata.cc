@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 45    Callback Data Registry
  * ORIGINAL AUTHOR: Duane Wessels
  * Modified by Moez Mahfoudh (08/12/2000)

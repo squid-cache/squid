@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -48,7 +46,6 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "Mem.h"
-#include "protos.h"
 
 /* does name lookup, returns page_id */
 err_type

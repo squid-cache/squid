@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov
  *         Robert Collins (Surrogate-Control is derived from
@@ -42,7 +40,7 @@
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "Store.h"
-#include "protos.h"
+#include "StrList.h"
 
 #if HAVE_MAP
 #include <map>

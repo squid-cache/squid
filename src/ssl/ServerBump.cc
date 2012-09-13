@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 33    Client-side Routines
  *
  */
@@ -9,9 +7,9 @@
 
 #include "client_side.h"
 #include "forward.h"
-#include "protos.h"
 #include "ssl/ServerBump.h"
 #include "Store.h"
+#include "StoreClient.h"
 #include "URL.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
