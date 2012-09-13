@@ -605,13 +605,16 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     debugs(26, 4, HERE << "determine post-connect handling pathway.");
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
-        tunnelState->request->flags.proxying = (conn->getPeer()->options.originserver?0:1);
+        if (conn->getPeer()->options.originserver)
+            tunnelState->request->flags.setProxying();
+        else
+            tunnelState->request->flags.clearProxying();
     } else {
         tunnelState->request->peer_login = NULL;
-        tunnelState->request->flags.proxying = 0;
+        tunnelState->request->flags.clearProxying();
     }
 
-    if (tunnelState->request->flags.proxying)
+    if (tunnelState->request->flags.proxying())
         tunnelRelayConnectRequest(conn, tunnelState);
     else {
         tunnelConnected(conn, tunnelState);
@@ -695,7 +698,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     http_state_flags flags;
     debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
     memset(&flags, '\0', sizeof(flags));
-    flags.proxying = tunnelState->request->flags.proxying;
+    flags.proxying = tunnelState->request->flags.proxying();
     MemBuf mb;
     mb.init();
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);

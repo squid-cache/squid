@@ -120,7 +120,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
-        request->flags.proxying = 1;
+        request->flags.setProxying();
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
          * We might end up getting the object from somewhere else if,
@@ -1530,7 +1530,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     http_hdr_type header = flags.originpeer ? HDR_AUTHORIZATION : HDR_PROXY_AUTHORIZATION;
 
     /* Nothing to do unless we are forwarding to a peer */
-    if (!request->flags.proxying)
+    if (!request->flags.proxying())
         return;
 
     /* Needs to be explicitly enabled */
@@ -1736,7 +1736,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(HDR_AUTHORIZATION)) {
-        if (!request->flags.proxying && request->login && *request->login) {
+        if (!request->flags.proxying() && request->login && *request->login) {
             httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                               old_base64_encode(request->login));
         }

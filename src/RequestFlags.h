@@ -36,8 +36,8 @@ class RequestFlags {
 public:
     RequestFlags():
         nocache(0), ims(0), auth(0), cachable(0),
-        hierarchical(0), loopdetect(0), proxy_keepalive(0), proxying(0),
-        refresh(0), redirected(false), need_validation(false),
+        hierarchical(0), loopdetect(false), proxy_keepalive(false), proxying_(false),
+        refresh_(false), redirected(false), need_validation(false),
         fail_on_validation_err(false), stale_if_hit(false), nocache_hack(false), accelerated_(false),
         ignore_cc(false), intercepted_(false), hostVerified_(false), spoof_client_ip(false),
         internal(false), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
@@ -53,10 +53,6 @@ public:
     unsigned int auth :1;
     unsigned int cachable :1; ///< whether the response to thie request may be stored in the cache
     unsigned int hierarchical :1;
-    unsigned int loopdetect :1;
-    unsigned int proxy_keepalive :1;
-    unsigned int proxying :1; /* this should be killed, also in httpstateflags */
-    unsigned int refresh :1;
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
     bool resetTCP() const;
@@ -160,7 +156,25 @@ public:
 
     bool isRedirected() const { return redirected; }
     void markRedirected() { redirected=true; }
+
+    bool refresh() const { return refresh_; }
+    void setRefresh() { refresh_ = true; }
+
+    bool proxying() const { return proxying_; }
+    void setProxying() { proxying_ = true; }
+    void clearProxying() { proxying_ = false; }
+
+    bool proxyKeepalive() const { return proxy_keepalive; }
+    void setProxyKeepalive() { proxy_keepalive=true;}
+    void clearProxyKeepalive() { proxy_keepalive=false; }
+
+    bool loopDetect() const { return loopdetect; }
+    void setLoopDetect() { loopdetect = 1; }
 private:
+    bool loopdetect :1;
+    bool proxy_keepalive :1;
+    bool proxying_ :1; /* this should be killed, also in httpstateflags */
+    bool refresh_ :1;
     bool redirected :1;
     bool need_validation :1;
     bool fail_on_validation_err :1; ///< whether we should fail if validation fails
