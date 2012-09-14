@@ -281,6 +281,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             ACLFilledChecklist *filledCheck = Filled(check);
             assert(!filledCheck->sslErrors);
             filledCheck->sslErrors = new Ssl::Errors(error_no);
+            filledCheck->serverCert.resetAndLock(peer_cert);
             if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                 ok = 1;
@@ -289,6 +290,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             }
             delete filledCheck->sslErrors;
             filledCheck->sslErrors = NULL;
+            filledCheck->serverCert.reset(NULL);
         }
 #if 1 // USE_SSL_CERT_VALIDATOR
         // If the certificate validator is used then we need to allow all errors and 
@@ -1174,16 +1176,10 @@ done:
 
 /// \ingroup ServerProtocolSSLInternal
 const char *
-sslGetUserAttribute(SSL * ssl, const char *attribute_name)
+Ssl::GetX509UserAttribute(X509 * cert, const char *attribute_name)
 {
-    X509 *cert;
     X509_NAME *name;
     const char *ret;
-
-    if (!ssl)
-        return NULL;
-
-    cert = SSL_get_peer_certificate(ssl);
 
     if (!cert)
         return NULL;
@@ -1192,23 +1188,39 @@ sslGetUserAttribute(SSL * ssl, const char *attribute_name)
 
     ret = ssl_get_attribute(name, attribute_name);
 
-    X509_free(cert);
-
     return ret;
+}
+
+const char *
+Ssl::GetX509Fingerprint(X509 * cert, const char *)
+{
+    static char buf[1024];
+    if (!cert)
+        return NULL;
+    
+    unsigned int n;
+    unsigned char md[EVP_MAX_MD_SIZE];
+    if (!X509_digest(cert, EVP_sha1(), md, &n))
+        return NULL;
+
+    assert(3 * n + 1 < sizeof(buf));
+
+    char *s = buf;
+    for (unsigned int i=0; i < n; ++i, s += 3) {
+        const char term = (i + 1 < n) ? ':' : '\0';
+        snprintf(s, 4, "%02X%c", md[i], term);
+    }
+
+    return buf;
 }
 
 /// \ingroup ServerProtocolSSLInternal
 const char *
-sslGetCAAttribute(SSL * ssl, const char *attribute_name)
+Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
 {
-    X509 *cert;
+
     X509_NAME *name;
     const char *ret;
-
-    if (!ssl)
-        return NULL;
-
-    cert = SSL_get_peer_certificate(ssl);
 
     if (!cert)
         return NULL;
@@ -1217,9 +1229,33 @@ sslGetCAAttribute(SSL * ssl, const char *attribute_name)
 
     ret = ssl_get_attribute(name, attribute_name);
 
-    X509_free(cert);
-
     return ret;
+}
+
+const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name)
+{
+    if (!ssl)
+        return NULL;
+
+    X509 *cert = SSL_get_peer_certificate(ssl);
+
+    const char *attr = Ssl::GetX509UserAttribute(cert, attribute_name);
+
+    X509_free(cert);
+    return attr;
+}
+
+const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name)
+{
+    if (!ssl)
+        return NULL;
+
+    X509 *cert = SSL_get_peer_certificate(ssl);
+
+    const char *attr = Ssl::GetX509CAAttribute(cert, attribute_name);
+
+    X509_free(cert);
+    return attr;
 }
 
 const char *
