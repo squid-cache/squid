@@ -20,3 +20,8 @@ SUBDIRS = \
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlm_auth
 endif
+
+if ENABLE_SSL
+SUBDIRS += ssl
+endif
+

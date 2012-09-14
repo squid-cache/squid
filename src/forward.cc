@@ -68,6 +68,9 @@
 #include "Store.h"
 #include "whois.h"
 #if USE_SSL
+#include "ssl/cert_validate_message.h"
+#include "ssl/Config.h"
+#include "ssl/helper.h"
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"
@@ -213,6 +216,12 @@ FwdState::completed()
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
+#if USE_SSL
+            if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
+                CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                             ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
+            }
+#endif
         } else {
             EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             entry->complete();
@@ -368,14 +377,6 @@ FwdState::startConnectionOrFail()
             ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
             fail(anErr);
         } // else use actual error from last connection attempt
-#if USE_SSL
-        if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
-            errorAppendEntry(entry, err); // will free err
-            err = NULL;
-            CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
-                         ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
-        }
-#endif
         self = NULL;       // refcounted
     }
 }
@@ -758,8 +759,149 @@ FwdState::negotiateSSL(int fd)
         serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
     }
 
+#if 1 // USE_SSL_CERT_VALIDATOR
+    if (Ssl::TheConfig.ssl_crt_validator) {
+        Ssl::ValidateCertificate certValidate;
+        // WARNING: The STACK_OF(*) OpenSSL objects does not support locking.
+        // If we need to support locking we need to sk_X509_dup the STACK_OF(X509)
+        // list and lock all of the X509 members of the list.
+        // Currently we do not use any locking for any of the members of the 
+        // Ssl::ValidateCertificate class. If the ssl object gone, the value returned 
+        // from SSL_get_peer_cert_chain may not exist any more. In this code the
+        // Ssl::ValidateCertificate object used only to pass data to
+        // Ssl::CertValidationHelper::submit method.
+        certValidate.peerCerts = SSL_get_peer_cert_chain(ssl);
+        certValidate.domainName = request->GetHost();
+        if (Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+            certValidate.errors = errs;
+        else
+            certValidate.errors = NULL;
+        try {
+            debugs(83, 5, HERE << "Sending SSL certificate for validation to ssl_crtvd.");
+            Ssl::CertValidateMessage request_message;
+            request_message.setCode(Ssl::CertValidateMessage::code_cert_validate);
+            request_message.composeRequest(certValidate);
+            debugs(83, 5, HERE << "SSL crtvd request: " << request_message.compose().c_str());
+            Ssl::CertValidationHelper::GetInstance()->sslSubmit(request_message, sslCrtvdHandleReplyWrapper, this);
+            return;
+        } catch (const std::exception &e) {
+            debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<
+                   "request for " << certValidate.domainName <<
+                   " certificate: " << e.what() << "; will now block to " <<
+                   "validate that certificate.");
+            // fall through to do blocking in-process generation.
+        }
+    }
+#endif // USE_SSL_CERT_VALIDATOR
+
     dispatch();
 }
+
+#if 1 // USE_SSL_CERT_VALIDATOR
+void
+FwdState::sslCrtvdHandleReplyWrapper(void *data, char *reply)
+{
+    FwdState * fwd = (FwdState *)(data);
+    fwd->sslCrtvdHandleReply(reply);
+}
+
+void
+FwdState::sslCrtvdHandleReply(const char *reply)
+{
+    Ssl::Errors *errs = NULL;
+    Ssl::ErrorDetail *errDetails = NULL;
+    if (!Comm::IsConnOpen(serverConnection())) {
+        return;
+    }
+    SSL *ssl = fd_table[serverConnection()->fd].ssl;
+
+    if (!reply) {
+        debugs(83, 1, HERE << "\"ssl_crtd\" helper return <NULL> reply");
+    } else {
+        Ssl::CertValidateMessage reply_message;
+        Ssl::ValidateCertificateResponse resp;
+        std::string error;
+        if (reply_message.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK ||
+            !reply_message.parseResponse(resp, error) ) {
+            debugs(83, 5, HERE << "Reply from ssl_crtvd for " << request->GetHost() << " is incorrect");
+        } else {
+            if (reply_message.getCode() != "OK") {
+                debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " cannot be validated. ssl_crtvd response: " << reply_message.getBody());
+            } else {
+                debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " was successfully validated from ssl_crtvd");
+                // Copy the list of errors etc....
+                ACLFilledChecklist *check = NULL;
+                if (acl_access *acl = Config.ssl_client.cert_error) {
+                    check = new ACLFilledChecklist(acl, request, dash_str);
+                    for(std::vector<Ssl::ValidateCertificateResponse::ErrorItem>::const_iterator i = resp.errors.begin(); i != resp.errors.end(); ++i) {
+                        debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason << " " << i->certId);
+
+                        if (i->error_no == SSL_ERROR_NONE)
+                            continue; //ignore????
+
+                        if (errDetails == NULL && check) {
+                            check->sslErrors = new Ssl::Errors(i->error_no);
+                            if (check->fastCheck() == ACCESS_ALLOWED) {
+                                debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
+                            } else {
+                                debugs(83, 5, "confirming SSL error " << i->error_no);
+                                STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(ssl);
+                                //if i->certID is not correct sk_X509_value returns NULL
+                                X509 *brokenCert = NULL;
+                                if (i->cert != NULL)
+                                    brokenCert = i->cert;
+                                else
+                                    brokenCert = sk_X509_value(peerCerts, i->certId);
+                                X509 *peerCert = SSL_get_peer_certificate(ssl);
+                                const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
+                                errDetails = new Ssl::ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
+                                X509_free(peerCert);
+                                // set error detail reason
+                            }
+                            delete check->sslErrors;
+                            check->sslErrors = NULL;
+                        }
+
+                        if (errs == NULL)
+                            errs = new Ssl::Errors(i->error_no);
+                        else 
+                            errs->push_back_unique(i->error_no);
+                    }
+
+                    if (!errDetails) {
+                        dispatch();
+                        return;
+                    }
+
+                }
+            }
+        }
+    }
+    // Check the list error with
+    if (errDetails && request->clientConnectionManager.valid()) {
+        // remember the server certificate from the ErrorDetail object
+        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+            // remember validation errors, if any
+            if (errs) {
+                if (serverBump->sslErrors)
+                    cbdataReference(serverBump->sslErrors);
+                serverBump->sslErrors = cbdataReference(errs);
+            }
+        }
+    }
+
+    ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
+    anErr->detail = errDetails;
+    /*anErr->xerrno= Should preserved*/
+    fail(anErr);
+    if (serverConnection()->getPeer()) {
+        peerConnectFailed(serverConnection()->getPeer());
+    }
+    serverConn->close();
+    self = NULL;
+    return;
+}
+#endif // USE_SSL_CERT_VALIDATOR
 
 void
 FwdState::initiateSSL()
@@ -823,13 +965,21 @@ FwdState::initiateSSL()
             Ssl::setClientSNI(ssl, hostname);
     }
 
-    // Create the ACL check list now, while we have access to more info.
-    // The list is used in ssl_verify_cb() and is freed in ssl_free().
-    if (acl_access *acl = Config.ssl_client.cert_error) {
-        ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
-        check->fd(fd);
-        SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
+#if 1 // USE_SSL_CERT_VALIDATOR
+    // If CertValidation Helper used do not lookup checklist for errors,
+    // but keep a list of errors to send it to CertValidator
+    if (!Ssl::TheConfig.ssl_crt_validator) {
+#endif
+        // Create the ACL check list now, while we have access to more info.
+        // The list is used in ssl_verify_cb() and is freed in ssl_free().
+        if (acl_access *acl = Config.ssl_client.cert_error) {
+            ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
+            check->fd(fd);
+            SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
+        }
+#if 1 // USE_SSL_CERT_VALIDATOR
     }
+#endif
 
     // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
     X509 *peeked_cert;

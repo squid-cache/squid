@@ -30,5 +30,20 @@ private:
     helper * ssl_crtd; ///< helper for management of ssl_crtd.
 };
 
+class CertValidationHelper
+{
+public:
+    static CertValidationHelper * GetInstance(); ///< Instance class.
+    void Init(); ///< Init helper structure.
+    void Shutdown(); ///< Shutdown helper structure.
+    /// Submit crtd message to external crtd server.
+    void sslSubmit(CrtdMessage const & message, HLPCB * callback, void *data);
+private:
+    CertValidationHelper();
+    ~CertValidationHelper();
+
+    helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
+};
+
 } //namespace Ssl
 #endif // SQUID_SSL_HELPER_H
