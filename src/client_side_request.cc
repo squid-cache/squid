@@ -710,9 +710,8 @@ ClientRequestContext::hostHeaderVerify()
 void
 ClientRequestContext::clientAccessCheck()
 {
-    /* NOP if !FOLLOW_X_FORWARDED_FOR */
-    if (FOLLOW_X_FORWARDED_FOR &&
-            !http->request->flags.doneFollowXFF() &&
+#if FOLLOW_X_FORWARDED_FOR
+    if (!http->request->flags.doneFollowXFF() &&
             Config.accessList.followXFF &&
             http->request->header.has(HDR_X_FORWARDED_FOR)) {
 
@@ -728,6 +727,7 @@ ClientRequestContext::clientAccessCheck()
         acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
+#endif
 
     if (Config.accessList.http) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
