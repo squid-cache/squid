@@ -1,4 +1,5 @@
 
+section
 section --    CGI Cache Manager
 section --    External DISKD process implementation.
 section --    Refcount allocator
@@ -129,6 +130,7 @@ section 79    Squid-side DISKD I/O functions.
 section 79    Squid-side Disk I/O functions.
 section 79    Storage Manager COSS Interface
 section 79    Storage Manager UFS Interface
+section 79   Disk IO Routines
 section 80    WCCP Support
 section 81    CPU Profiling Routines
 section 81    Store HEAP Removal Policies
