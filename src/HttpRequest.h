@@ -173,7 +173,9 @@ public:
 
     Ip::Address client_addr;
 
+#if FOLLOW_X_FORWARDED_FOR
     Ip::Address indirect_client_addr;
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
     Ip::Address my_addr;
 
@@ -206,7 +208,9 @@ public:
 
     String extacl_message;	/* String to be used for error page purposes */
 
+#if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
 public:
     bool multipartRangeRequest() const;
