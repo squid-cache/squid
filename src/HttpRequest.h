@@ -173,9 +173,7 @@ public:
 
     Ip::Address client_addr;
 
-#if FOLLOW_X_FORWARDED_FOR
     Ip::Address indirect_client_addr;
-#endif /* FOLLOW_X_FORWARDED_FOR */
 
     Ip::Address my_addr;
 
