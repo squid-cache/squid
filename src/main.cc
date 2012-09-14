@@ -758,7 +758,8 @@ mainReconfigureStart(void)
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
 #if USE_SSL
-    Ssl::CertValidationHelper::GetInstance()->Shutdown();
+    if (Ssl::CertValidationHelper::GetInstance())
+        Ssl::CertValidationHelper::GetInstance()->Shutdown();
     Ssl::TheGlobalContextStorage.reconfigureStart();
 #endif
     redirectShutdown();
@@ -1858,7 +1859,8 @@ SquidShutdown()
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
 #if USE_SSL
-    Ssl::CertValidationHelper::GetInstance()->Shutdown();
+    if (Ssl::CertValidationHelper::GetInstance())
+        Ssl::CertValidationHelper::GetInstance()->Shutdown();
 #endif
     redirectShutdown();
     externalAclShutdown();
