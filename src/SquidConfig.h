@@ -383,7 +383,9 @@ public:
 #if USE_SSL
         acl_access *ssl_bump;
 #endif
+#if FOLLOW_X_FORWARDED_FOR
         acl_access *followXFF;
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
 #if ICAP_CLIENT
         acl_access* icap;
