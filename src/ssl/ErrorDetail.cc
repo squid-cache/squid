@@ -338,7 +338,9 @@ const char *Ssl::ErrorDetail::err_descr() const
 
 const char *Ssl::ErrorDetail::err_lib_error() const
 {
-    if (lib_error_no != SSL_ERROR_NONE)
+    if (errReason.defined())
+        return errReason.termedBuf();
+    else if (lib_error_no != SSL_ERROR_NONE)
         return ERR_error_string(lib_error_no, NULL);
     else
         return "[No Error]";
@@ -414,7 +416,7 @@ const String &Ssl::ErrorDetail::toString() const
     return errDetailStr;
 }
 
-Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert, X509 *broken): error_no (err_no), lib_error_no(SSL_ERROR_NONE)
+Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert, X509 *broken, const char *aReason): error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
 {
     if (cert)
         peer_cert.resetAndLock(cert);

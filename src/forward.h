@@ -69,6 +69,10 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
+#if 1 // USE_SSL_CERT_VALIDATOR
+    static void sslCrtvdHandleReplyWrapper(void *data, char *reply);
+    void sslCrtvdHandleReply(const char *reply);
+#endif
 private:
     // hidden for safer management of self; use static fwdStart
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);

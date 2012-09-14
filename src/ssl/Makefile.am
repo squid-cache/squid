@@ -21,6 +21,8 @@ endif
 
 ## SSL stuff used by main Squid but not by ssl_crtd
 libsslsquid_la_SOURCES = \
+	cert_validate_message.cc \
+	cert_validate_message.h \
 	context_storage.cc \
 	context_storage.h \
 	Config.cc \
