@@ -32,8 +32,9 @@
  *
  */
 
-class link_list {
-    public:
+class link_list
+{
+public:
     void *ptr;
     link_list *next;
 };

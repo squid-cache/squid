@@ -10,8 +10,9 @@
 #include "comm/forward.h"
 #include "typedefs.h"
 
-namespace Ip {
-  class Address;
+namespace Ip
+{
+class Address;
 }
 class MemBuf;
 
