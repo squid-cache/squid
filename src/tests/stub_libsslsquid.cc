@@ -48,9 +48,9 @@ int ssl_read_method(int, char *, int) STUB_RETVAL(0)
 int ssl_write_method(int, const char *, int) STUB_RETVAL(0)
 void ssl_shutdown_method(SSL *) STUB
 const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
-// typedef char const *SSLGETATTRIBUTE(SSL *, const char *);
-// SSLGETATTRIBUTE sslGetUserAttribute;
-// SSLGETATTRIBUTE sslGetCAAttribute;
+// typedef char const *Ssl::GETATTRIBUTE(X509 *, const char *);
+// Ssl::GETATTRIBUTE Ssl::GetX509UserAttribute;
+// Ssl::GETATTRIBUTE Ssl::GetX509CAAttribute;
 const char *sslGetUserCertificatePEM(SSL *ssl) STUB_RETVAL(NULL)
 const char *sslGetUserCertificateChainPEM(SSL *ssl) STUB_RETVAL(NULL)
 SSL_CTX * Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &) STUB_RETVAL(NULL)
