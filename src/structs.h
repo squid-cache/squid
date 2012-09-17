@@ -218,23 +218,6 @@ public:
     int n_peers;
 };
 
-class iostats {
-public:
-    static const int histSize=16;
-
-//    enum { histSize = 16 };
-
-    struct {
-        int reads;
-        int reads_deferred;
-        int read_hist[histSize];
-        int writes;
-        int write_hist[histSize];
-    }
-
-    Http, Ftp, Gopher;
-};
-
 #if USE_SSL
 struct _sslproxy_cert_sign {
     int alg;

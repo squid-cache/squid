@@ -30,19 +30,16 @@
 #ifndef SQUID_GLOBALS_H
 #define SQUID_GLOBALS_H
 
+#include "acl/AclDenyInfoList.h"
+#include "CacheDigest.h"
+#include "defines.h"
+#include "hash.h"
+#include "IoStats.h"
+#include "rfc2181.h"
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-
-#include "rfc2181.h"
-
-/* for ERROR_BUF_SZ, BUFSIZ */
-#include "defines.h"
-
-/* for iostats */
-#include "acl/AclDenyInfoList.h"
-#include "CacheDigest.h"
-#include "structs.h"
 
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
@@ -87,7 +84,7 @@ extern int syslog_enable;	/* 0 */
 extern int DnsSocketA;		/* -1 */
 extern int DnsSocketB;		/* -1 */
 extern int n_disk_objects;	/* 0 */
-extern iostats IOStats;
+extern IoStats IOStats;
 
 extern AclDenyInfoList *DenyInfoList;	/* NULL */
 
