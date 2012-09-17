@@ -1,8 +1,8 @@
 #ifndef SQUID_SNMP_AGENT_H_
 #define SQUID_SNMP_AGENT_H_
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section 49    SNMP Interface
+ * AUTHOR: Kostas Anagnostakis
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

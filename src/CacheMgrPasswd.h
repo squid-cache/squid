@@ -1,9 +1,6 @@
 #ifndef SQUID_CACHEMGRPASSWD_H_
 #define SQUID_CACHEMGRPASSWD_H_
 /*
- * DEBUG: section 
- * AUTHOR: 
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
