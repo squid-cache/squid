@@ -184,40 +184,6 @@ public:
 class PeerDigest;
 
 
-class netdbEntry;
-
-class net_db_name {
-public:
-    hash_link hash;		/* must be first */
-    net_db_name *next;
-    netdbEntry *net_db_entry;
-};
-
-class net_db_peer {
-public:
-    const char *peername;
-    double hops;
-    double rtt;
-    time_t expires;
-};
-
-class netdbEntry {
-public:
-    hash_link hash;		/* must be first */
-    char network[MAX_IPSTRLEN];
-    int pings_sent;
-    int pings_recv;
-    double hops;
-    double rtt;
-    time_t next_ping_time;
-    time_t last_use_time;
-    int link_count;
-    net_db_name *hosts;
-    net_db_peer *peers;
-    int n_peers_alloc;
-    int n_peers;
-};
-
 #if USE_SSL
 struct _sslproxy_cert_sign {
     int alg;
