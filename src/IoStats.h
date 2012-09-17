@@ -1,5 +1,6 @@
+#ifndef SQUID_IOSTATS_H_
+#define SQUID_IOSTATS_H_
 /*
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -27,31 +28,20 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_WORDLIST_H
-#define SQUID_WORDLIST_H
 
-#include "globals.h"
-#include "MemPool.h"
-#include "profiler/Profiler.h"
-
-class wordlist
-{
-
+class IoStats {
 public:
-    MEMPROXY_CLASS(wordlist);
-    char *key;
-    wordlist *next;
+    static const int histSize=16;
+
+    struct {
+        int reads;
+        int reads_deferred;
+        int read_hist[histSize];
+        int writes;
+        int write_hist[histSize];
+    }
+
+    Http, Ftp, Gopher;
 };
 
-MEMPROXY_CLASS_INLINE(wordlist);
-
-class MemBuf;
-
-extern const char *wordlistAdd(wordlist **, const char *);
-extern void wordlistCat(const wordlist *, MemBuf * mb);
-extern void wordlistAddWl(wordlist **, wordlist *);
-extern void wordlistJoin(wordlist **, wordlist **);
-extern wordlist *wordlistDup(const wordlist *);
-extern void wordlistDestroy(wordlist **);
-
-#endif /* SQUID_WORDLIST_H */
+#endif /* SQUID_IOSTATS_H_ */
