@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "acl/Acl.h"
 #include "ConfigParser.h"
 #include "wordlist.h"
 #include "YesNoNone.h"
