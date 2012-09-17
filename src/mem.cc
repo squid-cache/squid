@@ -41,6 +41,7 @@
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
+#include "icmp/net_db.h"
 #include "RegexList.h"
 #include "SquidConfig.h"
 #include "SquidList.h"
