@@ -953,7 +953,7 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped() == true) {
+    if (serverDestinations[0]->getPeer() && request->flags.sslBumped_) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
         fail(anErr);
