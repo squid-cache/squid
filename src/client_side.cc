@@ -2652,14 +2652,14 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->clientConnectionManager = conn;
 
     request->flags.accelerated = http->flags.accel;
-    request->flags.setSslBumped(conn->switchedToHttps());
-    request->flags.canRePin = request->flags.sslBumped() && conn->pinning.pinned;
+    request->flags.setSslBumped_=conn->switchedToHttps();
+    request->flags.canRePin = request->flags.sslBumped_ && conn->pinning.pinned;
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped()) ?
+    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped_) ?
                                !conn->port->allow_direct : 0;
 #if USE_AUTH
-    if (request->flags.sslBumped()) {
+    if (request->flags.sslBumped_) {
         if (conn->auth_user_request != NULL)
             request->auth_user_request = conn->auth_user_request;
     }
@@ -2823,7 +2823,7 @@ finish:
      * be freed and the above connNoteUseOfBuffer() would hit an
      * assertion, not to mention that we were accessing freed memory.
      */
-    if (request && request->flags.resetTCP() && Comm::IsConnOpen(conn->clientConnection)) {
+    if (request && request->flags.resetTCP_ && Comm::IsConnOpen(conn->clientConnection)) {
         debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);

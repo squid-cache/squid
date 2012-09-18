@@ -534,7 +534,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         conn->log_addr = request->indirect_client_addr;
     }
     request->x_forwarded_for_iterator.clean();
-    request->flags.setDoneFollowXFF();
+    request->flags.done_follow_x_forwarded_for=true;
 
     if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
         debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
@@ -710,7 +710,7 @@ void
 ClientRequestContext::clientAccessCheck()
 {
 #if FOLLOW_X_FORWARDED_FOR
-    if (!http->request->flags.doneFollowXFF() &&
+    if (!http->request->flags.doneFollowXff() &&
             Config.accessList.followXFF &&
             http->request->header.has(HDR_X_FORWARDED_FOR)) {
 
@@ -810,7 +810,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
         if (auth_challenge) {
 #if USE_AUTH
-            if (http->request->flags.sslBumped()) {
+            if (http->request->flags.sslBumped) {
                 /*SSL Bumped request, authentication is not possible*/
                 status = HTTP_FORBIDDEN;
             } else if (!http->flags.accel) {
@@ -1106,7 +1106,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->range = req_hdr->getRange();
 
         if (request->range) {
-            request->flags.setRanged();
+            request->flags.isRanged_=true;
             clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
             /* XXX: This is suboptimal. We should give the stream the range set,
              * and thereby let the top of the stream set the offset when the
