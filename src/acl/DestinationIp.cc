@@ -72,7 +72,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
         }
 
         return 0;
-    } else if (!checklist->request->flags.destinationIPLookedUp()) {
+    } else if (!checklist->request->flags.destinationIPLookedUp_) {
         /* No entry in cache, lookup not attempted */
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState (DestinationIPLookup::Instance());
@@ -103,7 +103,7 @@ DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &d
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     assert (checklist->asyncState() == DestinationIPLookup::Instance());
-    checklist->request->flags.destinationIPLookupCompleted();
+    checklist->request->flags.destinationIPLookedUp_=true;
     checklist->request->recordLookup(details);
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());

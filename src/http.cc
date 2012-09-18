@@ -1652,7 +1652,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* pretend it's not a range request */
         delete request->range;
         request->range = NULL;
-        request->flags.clearRanged();
+        request->flags.isRanged_=false;
     }
 
     /* append Via */
