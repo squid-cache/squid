@@ -56,7 +56,8 @@ namespace AnyP {
 class PortCfg;
 }
 
-class SquidConfig {
+class SquidConfig
+{
 public:
     struct {
         /* These should be for the Store::Root instance.
