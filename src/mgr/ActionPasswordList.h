@@ -1,5 +1,5 @@
-#ifndef SQUID_CACHEMGRPASSWD_H_
-#define SQUID_CACHEMGRPASSWD_H_
+#ifndef SQUID_MGR_CACHEMGRPASSWD_H_
+#define SQUID_MGR_CACHEMGRPASSWD_H_
 /*
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,14 +31,16 @@
 
 class wordlist;
 
-//TODO: this class is misnamed and C-ish. Split into CacheMgrPasswd and
-// CacheMgrPasswdList (std::list-derived)
-class CacheMgrPasswd
+namespace Mgr {
+//TODO: refactor into a std::list-backed proper list.
+class ActionPasswordList
 {
 public:
     char *passwd;
     wordlist *actions;
-    CacheMgrPasswd *next;
+    ActionPasswordList *next;
 };
 
-#endif /* SQUID_CACHEMGRPASSWD_H_ */
+} //namespace Mgr
+
+#endif /* SQUID_MGR_CACHEMGRPASSWD_H_ */

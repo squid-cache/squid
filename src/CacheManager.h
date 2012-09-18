@@ -48,7 +48,9 @@
  */
 
 class HttpRequest;
-class CacheMgrPasswd;
+namespace Mgr {
+class ActionPasswordList;
+} //namespace Mgr
 /**
  \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
@@ -84,7 +86,7 @@ protected:
     Mgr::CommandPointer ParseUrl(const char *url);
     void ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params);
     int CheckPassword(const Mgr::Command &cmd);
-    char *PasswdGet(CacheMgrPasswd *, const char *);
+    char *PasswdGet(Mgr::ActionPasswordList *, const char *);
 
     void registerProfile(const Mgr::ActionProfilePointer &profile);
 

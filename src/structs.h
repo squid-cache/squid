@@ -101,16 +101,6 @@ struct acl_size_t {
 /* forward decl for SquidConfig, see RemovalPolicy.h */
 
 class CpuAffinityMap;
-class RemovalPolicySettings;
-class external_acl;
-class Store;
-class CustomLog;
-class CacheMgrPasswd;
-namespace AnyP
-{
-struct PortCfg;
-}
-class SwapDir;
 
 class close_handler
 {

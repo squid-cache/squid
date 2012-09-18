@@ -46,7 +46,11 @@
 class acl_access;
 class acl_size_t;
 class AclDenyInfoList;
-class CacheMgrPasswd;
+namespace Mgr {
+class ActionPasswordList;
+} // namespace Mgr
+class CustomLog;
+class external_acl;
 class HeaderManglers;
 class RefreshPattern;
 class RemovalPolicySettings;
@@ -264,7 +268,7 @@ public:
     } fqdncache;
     int minDirectHops;
     int minDirectRtt;
-    CacheMgrPasswd *passwd_list;
+    Mgr::ActionPasswordList *passwd_list;
 
     struct {
         int objectsPerBucket;
