@@ -370,10 +370,10 @@ peerDigestRequest(PeerDigest * pd)
 
     pd_last_req_time = squid_curtime;
 
-    req->flags.setCachable();
+    req->flags.cachable = 1;
 
     /* the rest is based on clientProcessExpired() */
-    req->flags.setRefresh();
+    req->flags.refresh = 1;
 
     old_e = fetch->old_entry = Store::Root().get(key);
 

@@ -120,7 +120,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
-        request->flags.setProxying();
+        request->flags.proxying = 1;
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
          * We might end up getting the object from somewhere else if,
@@ -297,7 +297,7 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
-    if (request->flags.accelerated() && reply->surrogate_control) {
+    if (request->flags.accelerated && reply->surrogate_control) {
         HttpHdrScTarget *sctusable = reply->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
         if (sctusable) {
@@ -379,7 +379,7 @@ HttpStateData::cacheableReply()
         }
     }
 
-    if (request->flags.hasAuth() || request->flags.authSent()) {
+    if (request->flags.auth || request->flags.auth_sent) {
         /*
          * Responses to requests with authorization may be cached
          * only if a Cache-Control: public reply header is present.
@@ -716,7 +716,7 @@ HttpStateData::processReplyHeader()
     }
 
     if (!peerSupportsConnectionPinning())
-        request->flags.disableConnectionAuth();
+        request->flags.connection_auth_disabled = 1;
 
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
@@ -837,7 +837,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
         return true;
 
     /*if the connections it is already pinned it is OK*/
-    if (request->flags.pinned())
+    if (request->flags.pinned)
         return true;
 
     /*Allow pinned connections only if the Proxy-support header exists in
@@ -1237,7 +1237,7 @@ HttpStateData::continueAfterParsingHeader()
             debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, (request->flags.accelerated()?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
+            debugs(11, (request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
                    entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         }
     }
@@ -1386,18 +1386,18 @@ HttpStateData::processReplyBody()
             closeHandler = NULL;
             fwd->unregister(serverConnection);
 
-            if (request->flags.spoofClientIp())
+            if (request->flags.spoof_client_ip)
                 client_addr = request->client_addr;
 
-            if (request->flags.pinned()) {
+            if (request->flags.pinned) {
                 ispinned = true;
-            } else if (request->flags.connectionAuthWanted() && request->flags.authSent()) {
+            } else if (request->flags.connection_auth && request->flags.auth_sent) {
                 ispinned = true;
             }
 
             if (request->pinnedConnection() && ispinned) {
                 request->pinnedConnection()->pinConnection(serverConnection, request, _peer,
-                        request->flags.connectionAuthWanted());
+                        (request->flags.connection_auth != 0));
             } else {
                 fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
             }
@@ -1530,7 +1530,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     http_hdr_type header = flags.originpeer ? HDR_AUTHORIZATION : HDR_PROXY_AUTHORIZATION;
 
     /* Nothing to do unless we are forwarding to a peer */
-    if (!request->flags.proxying())
+    if (!request->flags.proxying)
         return;
 
     /* Needs to be explicitly enabled */
@@ -1648,7 +1648,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.setNotCachable();
+        request->flags.cachable = 0;
         /* pretend it's not a range request */
         delete request->range;
         request->range = NULL;
@@ -1667,7 +1667,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         strVia.clean();
     }
 
-    if (request->flags.accelerated()) {
+    if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(HDR_SURROGATE_CAPABILITY));
 #if USE_SQUID_ESI
@@ -1736,7 +1736,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(HDR_AUTHORIZATION)) {
-        if (!request->flags.proxying() && request->login && *request->login) {
+        if (!request->flags.proxying && request->login && *request->login) {
             httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                               old_base64_encode(request->login));
         }
@@ -1870,7 +1870,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          */
         if (request->peer_domain)
             hdr_out->putStr(HDR_HOST, request->peer_domain);
-        else if (request->flags.isRedirected() && !Config.onoff.redir_rewrites_host)
+        else if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
             hdr_out->addEntry(e->clone());
         else {
             /* use port# only if not default */
@@ -1987,13 +1987,13 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
 
     int64_t roffLimit = request->getRangeOffsetLimit();
 
-    if (NULL == request->range || !request->flags.isCachable()
-            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuthWanted())
+    if (NULL == request->range || !request->flags.cachable
+            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connection_auth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
            request->range << ", cachable: " <<
-           request->flags.isCachable() << "; we_do_ranges: " << result);
+           request->flags.cachable << "; we_do_ranges: " << result);
 
     return result;
 }
@@ -2021,10 +2021,10 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
-        if (request->flags.pinned() && request->flags.connectionAuthWanted())
-            request->flags.markAuthSent();
+        if (request->flags.pinned && request->flags.connection_auth)
+            request->flags.auth_sent = 1;
         else if (hdr.has(HDR_AUTHORIZATION))
-            request->flags.markAuthSent();
+            request->flags.auth_sent = 1;
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
@@ -2091,7 +2091,7 @@ HttpStateData::sendRequest()
     /*
      * Is keep-alive okay for all request methods?
      */
-    if (request->flags.mustKeepalive())
+    if (request->flags.must_keepalive)
         flags.keepalive = 1;
     else if (!Config.onoff.server_pconns)
         flags.keepalive = 0;

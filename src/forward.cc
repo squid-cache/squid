@@ -373,7 +373,7 @@ FwdState::startConnectionOrFail()
             fail(anErr);
         } // else use actual error from last connection attempt
 #if USE_SSL
-        if (request->flags.sslPeek() && request->clientConnectionManager.valid()) {
+        if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
             errorAppendEntry(entry, err); // will free err
             err = NULL;
             CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
@@ -565,12 +565,6 @@ FwdState::checkRetry()
 bool
 FwdState::checkRetriable()
 {
-    // Optimize: A compliant proxy may retry PUTs, but Squid lacks the [rather
-    // complicated] code required to protect the PUT request body from being
-    // nibbled during the first try. Thus, Squid cannot retry some PUTs today.
-    if (request->body_pipe != NULL)
-        return false;
-
     /* RFC2616 9.1 Safe and Idempotent Methods */
     switch (request->method.id()) {
         /* 9.1.1 Safe Methods */
@@ -721,7 +715,7 @@ FwdState::negotiateSSL(int fd)
             // a user-entered address (a host name or a user-entered IP).
             const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
                                           !request->clientConnectionManager->port->intercepted;
-            if (request->flags.sslPeek() && !isConnectRequest) {
+            if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
                         request->SetHost(name);
@@ -818,7 +812,7 @@ FwdState::initiateSSL()
         const bool hostnameIsIp = request->GetHostIsNumeric();
         const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
                                       !request->clientConnectionManager->port->intercepted;
-        if (!request->flags.sslPeek() || isConnectRequest)
+        if (!request->flags.sslPeek || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
         // Use SNI TLS extension only when we connect directly
@@ -882,20 +876,20 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
         peerConnectSucceded(serverConnection()->getPeer());
 
     // some requests benefit from pinning but do not require it and can "repin"
-    const bool rePin = request->flags.canRePin() &&
+    const bool rePin = request->flags.canRePin &&
                        request->clientConnectionManager.valid();
     if (rePin) {
         debugs(17, 3, HERE << "repinning " << serverConn);
         request->clientConnectionManager->pinConnection(serverConn,
-                request, serverConn->getPeer(), request->flags.hasAuth());
-        request->flags.markPinned();
+                request, serverConn->getPeer(), request->flags.auth);
+        request->flags.pinned = 1;
     }
 
 #if USE_SSL
-    if (!request->flags.pinned() || rePin) {
+    if (!request->flags.pinned || rePin) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
-                request->flags.sslPeek()) {
+                request->flags.sslPeek) {
             initiateSSL();
             return;
         }
@@ -967,7 +961,7 @@ FwdState::connectStart()
         return;
     }
 
-    request->flags.clearPinned(); // XXX: what if the ConnStateData set this to flag existing credentials?
+    request->flags.pinned = 0; // XXX: what if the ConnStateData set this to flag existing credentials?
     // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
     // XXX: also, logs will now lie if pinning is broken and leads to an error message.
     if (serverDestinations[0]->peerType == PINNED) {
@@ -984,9 +978,9 @@ FwdState::connectStart()
                 serverConn->peerType = HIER_DIRECT;
 #endif
             ++n_tries;
-            request->flags.markPinned();
+            request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
-                request->flags.markAuth();
+                request->flags.auth = 1;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
             // the server may close the pinned connection before this request
             pconnRace = racePossible;
@@ -995,7 +989,7 @@ FwdState::connectStart()
         }
         /* Failure. Fall back on next path unless we can re-pin */
         debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
-        if (pconnRace != raceHappened || !request->flags.canRePin()) {
+        if (pconnRace != raceHappened || !request->flags.canRePin) {
             serverDestinations.shift();
             pconnRace = raceImpossible;
             startConnectionOrFail();
@@ -1128,7 +1122,7 @@ FwdState::dispatch()
 #endif
 
 #if USE_SSL
-    if (request->flags.sslPeek()) {
+    if (request->flags.sslPeek) {
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                      ConnStateData::httpsPeeked, serverConnection());
         unregister(serverConn); // async call owns it now
@@ -1143,7 +1137,7 @@ FwdState::dispatch()
         request->peer_domain = serverConnection()->getPeer()->domain;
         httpStart(this);
     } else {
-        assert(!request->flags.sslPeek());
+        assert(!request->flags.sslPeek);
         request->peer_login = NULL;
         request->peer_domain = NULL;
 
@@ -1257,7 +1251,7 @@ FwdState::reforward()
 ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
-    return new ErrorState(type, request->flags.validationNeeded() ?
+    return new ErrorState(type, request->flags.need_validation ?
                           HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
@@ -1403,7 +1397,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         conn->local.SetIPv4();
 
     // maybe use TPROXY client address
-    if (request && request->flags.spoofClientIp()) {
+    if (request && request->flags.spoof_client_ip) {
         if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
 #if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
             if (Config.onoff.tproxy_uses_indirect_client)
