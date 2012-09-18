@@ -29,7 +29,8 @@
  *
  */
 
-class RegexList {
+class RegexList
+{
 public:
     int flags;
     char *pattern;

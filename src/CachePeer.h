@@ -42,7 +42,8 @@ class domain_type;
 class acl_access;
 class PeerDigest;
 
-class CachePeer {
+class CachePeer
+{
 public:
     u_int index;
     char *name;

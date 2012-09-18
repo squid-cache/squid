@@ -29,7 +29,8 @@
  *
  */
 
-class IoStats {
+class IoStats
+{
 public:
     static const int histSize=16;
 

@@ -38,7 +38,8 @@
 /* for CacheDigestGuessStats */
 #include "StatCounters.h"
 
-class Version {
+class Version
+{
 public:
     short int current;		/* current version */
     short int required;		/* minimal version that can safely handle current version */
@@ -60,7 +61,8 @@ public:
     int reserved[32 - 6];
 };
 
-class DigestFetchState {
+class DigestFetchState
+{
 public:
     PeerDigest *pd;
     StoreEntry *entry;

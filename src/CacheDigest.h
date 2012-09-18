@@ -38,7 +38,8 @@
 class CacheDigestGuessStats;
 class StoreEntry;
 
-class CacheDigest {
+class CacheDigest
+{
 public:
     /* public, read-only */
     char *mask;         /* bit mask */

@@ -46,7 +46,8 @@ class ACLChecklist;
 #if SQUID_SNMP
 
 #include "snmp_session.h"
-class snmp_request_t {
+class snmp_request_t
+{
 public:
     u_char *buf;
     u_char *outbuf;
@@ -111,14 +112,16 @@ struct PortCfg;
 }
 class SwapDir;
 
-class close_handler {
+class close_handler
+{
 public:
     PF *handler;
     void *data;
     close_handler *next;
 };
 
-class dread_ctrl {
+class dread_ctrl
+{
 public:
     int fd;
     off_t offset;
@@ -129,7 +132,8 @@ public:
     void *client_data;
 };
 
-class dwrite_q {
+class dwrite_q
+{
 public:
     off_t file_offset;
     char *buf;
@@ -147,7 +151,8 @@ struct _fde_disk {
     off_t offset;
 };
 
-class http_state_flags {
+class http_state_flags
+{
 public:
     unsigned int proxying:1;
     unsigned int keepalive:1;
@@ -166,14 +171,16 @@ public:
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
-class domain_ping {
+class domain_ping
+{
 public:
     char *domain;
     int do_ping;		/* boolean */
     domain_ping *next;
 };
 
-class domain_type {
+class domain_type
+{
 public:
     char *domain;
     peer_t type;
