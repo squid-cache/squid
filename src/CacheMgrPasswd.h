@@ -40,5 +40,4 @@ public:
     CacheMgrPasswd *next;
 };
 
-
 #endif /* SQUID_CACHEMGRPASSWD_H_ */

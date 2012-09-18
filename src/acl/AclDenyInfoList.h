@@ -40,5 +40,4 @@ public:
     AclDenyInfoList *next;
 };
 
-
 #endif /* SQUID_ACLDENYINFOLIST_H_ */

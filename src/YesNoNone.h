@@ -52,5 +52,4 @@ private:
     int option; ///< configured value or zero
 };
 
-
 #endif /* SQUID_YESNONONE_H_ */

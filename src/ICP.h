@@ -78,7 +78,6 @@ struct _icp_common_t {
 };
 typedef struct _icp_common_t icp_common_t;
 
-
 #ifdef __cplusplus
 
 /// \ingroup ServerProtocolICPAPI

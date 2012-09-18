@@ -44,5 +44,4 @@ public:
     Log::Format::log_type type;
 };
 
-
 #endif /* SQUID_CUSTOMLOG_H_ */

@@ -42,7 +42,4 @@ public:
     int repCount;       /* #repetitons */
 };
 
-
-
-
 #endif /* SQUID_HTTPHEADERFIELDSTAT_H_ */

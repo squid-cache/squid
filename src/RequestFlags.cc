@@ -86,7 +86,6 @@ RequestFlags::clearRanged()
     isRanged_ = false;
 }
 
-
 RequestFlags
 RequestFlags::cloneAdaptationImmune() const
 {
