@@ -126,7 +126,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     assert(direct != DIRECT_YES);
     debugs(44, 3, "peerSelectIcpPing: " << entry->url()  );
 
-    if (!request->flags.hierarchical() && direct != DIRECT_NO)
+    if (!request->flags.hierarchical && direct != DIRECT_NO)
         return 0;
 
     if (EBIT_TEST(entry->flags, KEY_PRIVATE) && !neighbors_do_private_keys)
@@ -233,9 +233,9 @@ peerSelectDnsPaths(ps_state *psstate)
     // To resolve this we must use only the original client destination when going DIRECT
     // on intercepted traffic which failed Host verification
     const HttpRequest *req = psstate->request;
-    const bool isIntercepted = !req->flags.isRedirected() &&
-                               (req->flags.intercepted() || req->flags.spoofClientIp());
-    const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified();
+    const bool isIntercepted = !req->flags.redirected &&
+                               (req->flags.intercepted || req->flags.spoof_client_ip);
+    const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
     const bool choseDirect = fs && fs->code == HIER_DIRECT;
     if (isIntercepted && useOriginalDst && choseDirect) {
         // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
@@ -339,7 +339,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
                 break;
 
             // for TPROXY we must skip unusable addresses.
-            if (psstate->request->flags.spoofClientIp() && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
+            if (psstate->request->flags.spoof_client_ip && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
                 if (ia->in_addrs[n].IsIPv4() != psstate->request->client_addr.IsIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
@@ -429,26 +429,26 @@ peerSelectFoo(ps_state * ps)
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
 
-    /* If we don't know whether DIRECT is permitted ... */
+    /** If we don't know whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (always_direct to be checked)");
-            /* check always_direct; */
+            /** check always_direct; */
             ps->acl_checklist = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
         } else if (ps->never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (never_direct to be checked)");
-            /* check never_direct; */
+            /** check never_direct; */
             ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
-        } else if (request->flags.noDirect()) {
-            /* if we are accelerating, direct is not an option. */
+        } else if (request->flags.no_direct) {
+            /** if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forced non-direct)");
-        } else if (request->flags.loopDetect()) {
-            /* if we are in a forwarding-loop, direct is not an option. */
+        } else if (request->flags.loopdetect) {
+            /** if we are in a forwarding-loop, direct is not an option. */
             ps->direct = DIRECT_YES;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forwarding loop detected)");
         } else if (peerCheckNetdbDirect(ps)) {
@@ -492,7 +492,7 @@ peerSelectFoo(ps_state * ps)
         if (Config.onoff.prefer_direct)
             peerGetSomeDirect(ps);
 
-        if (request->flags.hierarchical() || !Config.onoff.nonhierarchical_direct) {
+        if (request->flags.hierarchical || !Config.onoff.nonhierarchical_direct) {
             peerGetSomeParent(ps);
             peerGetAllParents(ps);
         }

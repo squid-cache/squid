@@ -791,7 +791,7 @@ CheckQuickAbort2(StoreEntry * entry)
     assert(mem);
     debugs(90, 3, "CheckQuickAbort2: entry=" << entry << ", mem=" << mem);
 
-    if (mem->request && !mem->request->flags.isCachable()) {
+    if (mem->request && !mem->request->flags.cachable) {
         debugs(90, 3, "CheckQuickAbort2: YES !mem->request->flags.cachable");
         return 1;
     }

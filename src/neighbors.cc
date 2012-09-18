@@ -161,19 +161,19 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
     if (neighborType(p, request) == PEER_SIBLING) {
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
-                (request->flags.noCache() || request->flags.refresh() || request->flags.loopDetect() || request->flags.validationNeeded()))
+                (request->flags.nocache || request->flags.refresh || request->flags.loopdetect || request->flags.need_validation))
             debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
 #endif
-        if (request->flags.noCache())
+        if (request->flags.nocache)
             return false;
 
-        if (request->flags.refresh())
+        if (request->flags.refresh)
             return false;
 
-        if (request->flags.loopDetect())
+        if (request->flags.loopdetect)
             return false;
 
-        if (request->flags.validationNeeded())
+        if (request->flags.need_validation)
             return false;
     }
 
@@ -230,7 +230,7 @@ peerWouldBePinged(const CachePeer * p, HttpRequest * request)
     /* the case below seems strange, but can happen if the
      * URL host is on the other side of a firewall */
     if (p->type == PEER_SIBLING)
-        if (!request->flags.hierarchical())
+        if (!request->flags.hierarchical)
             return 0;
 
     if (!peerAllowedToUse(p, request))
@@ -789,7 +789,7 @@ neighborsDigestSelect(HttpRequest * request)
     int p_rtt;
     int i;
 
-    if (!request->flags.hierarchical())
+    if (!request->flags.hierarchical)
         return NULL;
 
     storeKeyPublicByRequest(request);

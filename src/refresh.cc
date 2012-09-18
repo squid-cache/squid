@@ -267,7 +267,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
 
-    if (request && !request->flags.ignoringCacheControl()) {
+    if (request && !request->flags.ignore_cc) {
         const HttpHdrCc *const cc = request->cache_control;
         if (cc && cc->hasMinFresh()) {
             const int32_t minFresh=cc->minFresh();
@@ -293,7 +293,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
-        request->flags.setFailOnValidationError();
+        request->flags.fail_on_validation_err = 1;
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
@@ -303,15 +303,15 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
        ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
         if (request)
-            request->flags.setFailOnValidationError();
+            request->flags.fail_on_validation_err = 1;
         return STALE_MUST_REVALIDATE;
     }
 
     /* request-specific checks */
-    if (request && !request->flags.ignoringCacheControl()) {
+    if (request && !request->flags.ignore_cc) {
         HttpHdrCc *cc = request->cache_control;
 
-        if (request->flags.hasIMS() && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
+        if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
             /* The clients no-cache header is changed into a IMS query */
             debugs(22, 3, "refreshCheck: YES: refresh-ims");
             return STALE_FORCED_RELOAD;
@@ -319,7 +319,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #if USE_HTTP_VIOLATIONS
 
-        if (!request->flags.noCacheHackEnabled()) {
+        if (!request->flags.nocache_hack) {
             (void) 0;
         } else if (R->flags.ignore_reload) {
             /* The clients no-cache header is ignored */
@@ -331,7 +331,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         } else {
             /* The clients no-cache header is not overridden on this request */
             debugs(22, 3, "refreshCheck: YES: client reload");
-            request->flags.setNocache();
+            request->flags.nocache = 1;
             return STALE_FORCED_RELOAD;
         }
 
@@ -398,7 +398,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if ( max_stale >= 0 && staleness > max_stale) {
         debugs(22, 3, "refreshCheck: YES: max-stale limit");
         if (request)
-            request->flags.setFailOnValidationError();
+            request->flags.fail_on_validation_err = 1;
         return STALE_MAX_STALE;
     }
 
@@ -494,8 +494,7 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     int reason = refreshCheck(entry, request, 0);
     ++ refreshCounts[rcHTTP].total;
     ++ refreshCounts[rcHTTP].status[reason];
-    if (refreshIsStaleIfHit(reason))
-        request->flags.setStaleIfHit();
+    request->flags.stale_if_hit = refreshIsStaleIfHit(reason);
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 

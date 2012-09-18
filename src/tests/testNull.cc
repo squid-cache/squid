@@ -161,7 +161,7 @@ testNull::testNullSearch()
     {
         /* Create "vary" base object */
         RequestFlags flags;
-        flags.setCachable();
+        flags.cachable = 1;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
         /* We are allowed to do this typecast */
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const

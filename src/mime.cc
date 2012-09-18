@@ -455,7 +455,7 @@ MimeIcon::created (StoreEntry *newEntry)
         return;
     }
 
-    flags.setCachable();
+    flags.cachable = 1;
     StoreEntry *e = storeCreateEntry(url,
                                      url,
                                      flags,

@@ -829,12 +829,12 @@ storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags
     mem = e->mem_obj;
     mem->method = method;
 
-    if (neighbors_do_private_keys || !flags.hierarchical())
+    if (neighbors_do_private_keys || !flags.hierarchical)
         e->setPrivateKey();
     else
         e->setPublicKey();
 
-    if (flags.isCachable()) {
+    if (flags.cachable) {
         EBIT_SET(e->flags, ENTRY_CACHABLE);
         EBIT_CLR(e->flags, RELEASE_REQUEST);
     } else {
