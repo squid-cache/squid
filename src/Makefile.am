@@ -272,8 +272,6 @@ squid_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1390,8 +1388,6 @@ tests_testCacheManager_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1786,8 +1782,6 @@ tests_testEvent_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
@@ -2029,8 +2023,6 @@ tests_testEventLoop_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	carp.h \
 	carp.cc \
@@ -2267,8 +2259,6 @@ tests_test_http_range_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
@@ -2563,8 +2553,6 @@ tests_testHttpRequest_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
@@ -3631,8 +3619,6 @@ tests_testURL_SOURCES = \
 	YesNoNone.h \
 	YesNoNone.cc \
 	RefreshPattern.h \
-	CacheMgrPasswd.h \
-	CacheMgrPasswd.cc \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \

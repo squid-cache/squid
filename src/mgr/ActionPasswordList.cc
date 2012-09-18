@@ -28,5 +28,5 @@
  */
 
 #include "squid.h"
-#include "CacheMgrPasswd.h"
+#include "mgr/ActionPasswordList.h"
 

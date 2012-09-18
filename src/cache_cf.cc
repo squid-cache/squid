@@ -40,7 +40,7 @@
 #include "anyp/PortCfg.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
-#include "CacheMgrPasswd.h"
+#include "mgr/ActionPasswordList.h"
 #include "CachePeer.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -2370,7 +2370,7 @@ free_peer(CachePeer ** P)
 }
 
 static void
-dump_cachemgrpasswd(StoreEntry * entry, const char *name, CacheMgrPasswd * list)
+dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordList * list)
 {
     wordlist *w;
 
@@ -2390,15 +2390,15 @@ dump_cachemgrpasswd(StoreEntry * entry, const char *name, CacheMgrPasswd * list)
 }
 
 static void
-parse_cachemgrpasswd(CacheMgrPasswd ** head)
+parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
     char *passwd = NULL;
     wordlist *actions = NULL;
-    CacheMgrPasswd *p;
-    CacheMgrPasswd **P;
+    Mgr::ActionPasswordList *p;
+    Mgr::ActionPasswordList **P;
     parse_string(&passwd);
     parse_wordlist(&actions);
-    p = new CacheMgrPasswd;
+    p = new Mgr::ActionPasswordList;
     p->passwd = passwd;
     p->actions = actions;
 
@@ -2407,7 +2407,7 @@ parse_cachemgrpasswd(CacheMgrPasswd ** head)
          * See if any of the actions from this line already have a
          * password from previous lines.  The password checking
          * routines in cache_manager.c take the the password from
-         * the first CacheMgrPasswd struct that contains the
+         * the first Mgr::ActionPasswordList that contains the
          * requested action.  Thus, we should warn users who might
          * think they can have two passwords for the same action.
          */
@@ -2428,9 +2428,9 @@ parse_cachemgrpasswd(CacheMgrPasswd ** head)
 }
 
 static void
-free_cachemgrpasswd(CacheMgrPasswd ** head)
+free_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
-    CacheMgrPasswd *p;
+    Mgr::ActionPasswordList *p;
 
     while ((p = *head) != NULL) {
         *head = p->next;

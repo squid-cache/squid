@@ -32,7 +32,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "CacheMgrPasswd.h"
+#include "mgr/ActionPasswordList.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "Debug.h"
@@ -465,7 +465,7 @@ CacheManager::ActionProtection(const Mgr::ActionProfile::Pointer &profile)
  * for the action she queried
  */
 char *
-CacheManager::PasswdGet(CacheMgrPasswd * a, const char *action)
+CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
 {
     wordlist *w;
 
