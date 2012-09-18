@@ -842,43 +842,10 @@ FwdState::sslCrtvdHandleReply(const char *reply)
                 validatorFailed = true;
             } else {
                 debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " was successfully validated from ssl_crtvd");
-                ACLFilledChecklist *check = NULL;
-                if (acl_access *acl = Config.ssl_client.cert_error) {
-                    check = new ACLFilledChecklist(acl, request, dash_str);
-                    for(std::vector<Ssl::ValidateCertificateResponse::ErrorItem>::const_iterator i = resp.errors.begin(); i != resp.errors.end(); ++i) {
-                        debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
-
-                        if (i->error_no == SSL_ERROR_NONE)
-                            continue; //ignore????
-
-                        if (errDetails == NULL && check) {
-                            check->sslErrors = new Ssl::Errors(i->error_no);
-                            if (check->fastCheck() == ACCESS_ALLOWED) {
-                                debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
-                            } else {
-                                debugs(83, 5, "confirming SSL error " << i->error_no);
-                                X509 *brokenCert = (i->cert ? i->cert : NULL);
-                                X509 *peerCert = SSL_get_peer_certificate(ssl);
-                                const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
-                                errDetails = new Ssl::ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
-                                X509_free(peerCert);
-                                // set error detail reason
-                            }
-                            delete check->sslErrors;
-                            check->sslErrors = NULL;
-                        }
-
-                        if (errs == NULL)
-                            errs = new Ssl::Errors(i->error_no);
-                        else 
-                            errs->push_back_unique(i->error_no);
-                    }
-
-                    if (!errDetails) {
-                        dispatch();
-                        return;
-                    }
-
+                errs = sslCrtvdCheckForErrors(resp, errDetails);
+                if (!errDetails) {
+                    dispatch();
+                    return;
                 }
             }
         }
@@ -896,7 +863,7 @@ FwdState::sslCrtvdHandleReply(const char *reply)
                 // remember validation errors, if any
                 if (errs) {
                     if (serverBump->sslErrors)
-                        cbdataReference(serverBump->sslErrors);
+                        cbdataReferenceDone(serverBump->sslErrors);
                     serverBump->sslErrors = cbdataReference(errs);
                 }
             }
@@ -915,6 +882,57 @@ FwdState::sslCrtvdHandleReply(const char *reply)
     self = NULL;
     return;
 }
+
+Ssl::Errors *
+FwdState::sslCrtvdCheckForErrors(Ssl::ValidateCertificateResponse &resp, Ssl::ErrorDetail *& errDetails)
+{
+    Ssl::Errors *errs = NULL;
+    ACLFilledChecklist *check = NULL;
+    SSL *ssl = fd_table[serverConnection()->fd].ssl;
+
+    if (acl_access *acl = Config.ssl_client.cert_error)
+        check = new ACLFilledChecklist(acl, request, dash_str);
+
+    for(Ssl::ValidateCertificateResponse::Errors::const_iterator i = resp.errors.begin(); i != resp.errors.end(); ++i) {
+        debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
+
+        if (i->error_no == SSL_ERROR_NONE)
+            continue; //ignore????
+
+        if (errDetails == NULL) {
+            bool allowed = false;
+            if (check) {
+                check->sslErrors = new Ssl::Errors(i->error_no);
+                if (check->fastCheck() == ACCESS_ALLOWED)
+                    allowed = true;
+            }
+            // else the Config.ssl_client.cert_error access list is not defined
+            // and the first error will cause the error page
+
+            if (allowed) {
+                debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
+            } else {
+                debugs(83, 5, "confirming SSL error " << i->error_no);
+                X509 *brokenCert = (i->cert ? i->cert : NULL);
+                X509 *peerCert = SSL_get_peer_certificate(ssl);
+                const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
+                errDetails = new Ssl::ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
+                X509_free(peerCert);
+                // set error detail reason
+            }
+            delete check->sslErrors;
+            check->sslErrors = NULL;
+        }
+
+        if (errs == NULL)
+            errs = new Ssl::Errors(i->error_no);
+        else 
+            errs->push_back_unique(i->error_no);
+    }
+
+    return errs;
+}
+
 #endif // USE_SSL_CERT_VALIDATOR
 
 void
