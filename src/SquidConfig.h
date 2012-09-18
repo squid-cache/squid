@@ -537,7 +537,6 @@ public:
 
 extern SquidConfig Config;
 
-
 struct SquidConfig2 {
     struct {
         int enable_purge;

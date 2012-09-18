@@ -45,7 +45,6 @@ public:
     int n_peers;
 };
 
-
 extern void netdbInit(void);
 
 extern void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);

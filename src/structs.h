@@ -147,7 +147,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-
 class http_state_flags {
 public:
     unsigned int proxying:1;
@@ -182,7 +181,6 @@ public:
 };
 
 class PeerDigest;
-
 
 #if USE_SSL
 struct _sslproxy_cert_sign {

@@ -30,4 +30,3 @@
 #include "squid.h"
 #include "CacheMgrPasswd.h"
 
-
