@@ -7,6 +7,9 @@
 #include "fde.h"
 #include "ip/Address.h"
 #include "RefCount.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 /* forward decls */
 
@@ -14,6 +17,12 @@ class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
+
+namespace Ssl
+{
+    class ErrorDetail;
+    class ValidateCertificateResponse;
+};
 
 /**
  * Returns the TOS value that we should be setting on the connection
@@ -72,6 +81,7 @@ public:
 #if 1 // USE_SSL_CERT_VALIDATOR
     static void sslCrtvdHandleReplyWrapper(void *data, char *reply);
     void sslCrtvdHandleReply(const char *reply);
+    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::ValidateCertificateResponse &, Ssl::ErrorDetail *&);
 #endif
 private:
     // hidden for safer management of self; use static fwdStart
