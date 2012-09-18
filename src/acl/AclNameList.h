@@ -31,7 +31,8 @@
 
 #include "defines.h"
 //TODO: convert to a std::list<string>
-class AclNameList {
+class AclNameList
+{
 public:
     char name[ACL_NAME_SZ];
     AclNameList *next;

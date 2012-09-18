@@ -13,14 +13,16 @@ class StoreEntry;
 class HttpRequest;
 class netdbEntry;
 
-class net_db_name {
+class net_db_name
+{
 public:
     hash_link hash;     /* must be first */
     net_db_name *next;
     netdbEntry *net_db_entry;
 };
 
-class net_db_peer {
+class net_db_peer
+{
 public:
     const char *peername;
     double hops;
@@ -28,7 +30,8 @@ public:
     time_t expires;
 };
 
-class netdbEntry {
+class netdbEntry
+{
 public:
     hash_link hash;     /* must be first */
     char network[MAX_IPSTRLEN];

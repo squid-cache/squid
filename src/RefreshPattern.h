@@ -29,7 +29,8 @@
  *
  */
 
-class RefreshPattern {
+class RefreshPattern
+{
 public:
     const char *pattern;
     regex_t compiled_pattern;

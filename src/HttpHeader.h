@@ -178,7 +178,8 @@ typedef enum {
     hoEnd
 } http_hdr_owner_type;
 
-class HttpHeaderFieldAttrs {
+class HttpHeaderFieldAttrs
+{
 public:
     const char *name;
     http_hdr_type id;

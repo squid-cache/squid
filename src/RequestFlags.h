@@ -32,7 +32,8 @@
  *
  */
 
-class RequestFlags {
+class RequestFlags
+{
 public:
     RequestFlags():
         nocache(false), ims(false), auth_(false), cachable(false),

@@ -33,7 +33,8 @@ class wordlist;
 
 //TODO: this class is misnamed and C-ish. Split into CacheMgrPasswd and
 // CacheMgrPasswdList (std::list-derived)
-class CacheMgrPasswd {
+class CacheMgrPasswd
+{
 public:
     char *passwd;
     wordlist *actions;

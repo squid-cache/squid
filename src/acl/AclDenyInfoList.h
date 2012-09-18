@@ -32,7 +32,8 @@
 #include "err_type.h"
 #include "acl/AclNameList.h"
 
-class AclDenyInfoList {
+class AclDenyInfoList
+{
 public:
     err_type err_page_id;
     char *err_page_name;

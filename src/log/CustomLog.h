@@ -34,7 +34,8 @@
 class ACLList;
 class Logfile;
 
-class CustomLog {
+class CustomLog
+{
 public:
     char *filename;
     ACLList *aclList;
