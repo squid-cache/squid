@@ -49,6 +49,7 @@
 /* forward decls */
 class HttpReply;
 class HttpRequest;
+class CustomLog;
 
 class AccessLogEntry: public RefCountable
 {

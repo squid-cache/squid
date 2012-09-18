@@ -45,6 +45,7 @@
 #include "acl/Acl.h"
 #include "cbdata.h"
 
+class external_acl;
 /******************************************************************
  * ExternalACLEntryData
  * Core data that ExternalACLEntry manages.
