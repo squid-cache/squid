@@ -849,10 +849,7 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
            RequestMethodStr(request->method));
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
-    if (request->persistent())
-        request->flags.setProxyKeepalive();
-    else
-        request->flags.clearProxyKeepalive();
+    request->flags.proxy_keepalive = request->persistent() ? 1 : 0;
 }
 
 static int
@@ -988,7 +985,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 {
     assert(rep == NULL);
 
-    if (!multipartRangeRequest() && !http->request->flags.isReplyChunked()) {
+    if (!multipartRangeRequest() && !http->request->flags.chunked_reply) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
@@ -1397,7 +1394,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     if (bodyData.data && bodyData.length) {
         if (multipartRangeRequest())
             packRange(bodyData, mb);
-        else if (http->request->flags.isReplyChunked()) {
+        else if (http->request->flags.chunked_reply) {
             packChunk(bodyData, *mb);
         } else {
             size_t length = lengthToSend(bodyData.range());
@@ -1452,9 +1449,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
-    const bool mustSendLastChunk = http->request->flags.isReplyChunked() &&
-                                   !http->request->flags.hadStreamError() &&
-                                   !context->startOfOutput();
+    const bool mustSendLastChunk = http->request->flags.chunked_reply &&
+                                   !http->request->flags.stream_error && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(context->clientConnection, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
@@ -1742,7 +1738,7 @@ ClientSocketContext::socketState()
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
                        "range sequence on " << clientConnection);
 
-                if (http->request->flags.proxyKeepalive())
+                if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1759,7 +1755,7 @@ ClientSocketContext::socketState()
             // did we get at least what we expected, based on range specs?
 
             if (bytesSent == bytesExpected) { // got everything
-                if (http->request->flags.proxyKeepalive())
+                if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1769,7 +1765,7 @@ ClientSocketContext::socketState()
             // expected why would persistency matter? Should not this
             // always be an error?
             if (bytesSent > bytesExpected) { // got extra
-                if (http->request->flags.proxyKeepalive())
+                if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -2475,7 +2471,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     // at the client-side, but many such errors do require closure and the
     // client-side code is bad at handling errors so we play it safe.
     if (request)
-        request->flags.clearProxyKeepalive();
+        request->flags.proxy_keepalive = 0;
     flags.readMore = false;
     debugs(33,4, HERE << "Will close after error: " << clientConnection);
 }
@@ -2655,17 +2651,13 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->clientConnectionManager = conn;
 
-    if (http->flags.accel)
-        request->flags.markAccelerated();
+    request->flags.accelerated = http->flags.accel;
     request->flags.setSslBumped(conn->switchedToHttps());
-    if (request->flags.sslBumped() && conn->pinning.pinned)
-        request->flags.allowRepinning();
-    if (conn->port->ignore_cc)
-        request->flags.ignoreCacheControl();
+    request->flags.canRePin = request->flags.sslBumped() && conn->pinning.pinned;
+    request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    if (request->flags.accelerated() && !request->flags.sslBumped())
-        if (!conn->port->allow_direct)
-            request->flags.setNoDirect();
+    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped()) ?
+                               !conn->port->allow_direct : 0;
 #if USE_AUTH
     if (request->flags.sslBumped()) {
         if (conn->auth_user_request != NULL)
@@ -2678,10 +2670,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * from the port settings to the request.
      */
     if (http->clientConnection != NULL) {
-        if ((http->clientConnection->flags & COMM_INTERCEPTION) != 0)
-            request->flags.markIntercepted();
-        if ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 )
-            request->flags.setSpoofClientIp();
+        request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        request->flags.spoof_client_ip = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -2700,8 +2690,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->login[0] = '\0';
     }
 
-    if (http->flags.internal)
-        request->flags.markInternal();
+    request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
@@ -3591,10 +3580,8 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
         fakeRequest->indirect_client_addr = connState->clientConnection->remote;
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
-        if ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0)
-            fakeRequest->flags.setSpoofClientIp();
-        if ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0)
-            fakeRequest->flags.markIntercepted();
+        fakeRequest->flags.spoof_client_ip = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
         connState->switchToHttps(fakeRequest, bumpMode);
     }
@@ -3926,7 +3913,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     // and now want to switch to SSL to send the error to the client
     // without even peeking at the origin server certificate.
     if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
-        request->flags.setSslPeek();
+        request->flags.sslPeek = 1;
         sslServerBump = new Ssl::ServerBump(request);
 
         // will call httpsPeeked() with certificate and connection, eventually
