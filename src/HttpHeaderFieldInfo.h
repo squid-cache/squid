@@ -44,6 +44,4 @@ public:
     HttpHeaderFieldStat stat;
 };
 
-
-
 #endif /* SQUID_HTTPHEADERFIELDINFO_H_ */
