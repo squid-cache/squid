@@ -37,13 +37,16 @@ class RequestFlags
 public:
     RequestFlags():
         nocache(false), ims(false), auth_(false), cachable(false),
-        hierarchical_(false), loopdetect(false), proxy_keepalive(false), proxying_(false),
-        refresh_(false), redirected(false), need_validation(false),
-        fail_on_validation_err(false), stale_if_hit(false), nocache_hack(false), accelerated_(false),
-        ignore_cc(false), intercepted_(false), hostVerified_(false), spoof_client_ip(false),
-        internal(false), internalclient(false), must_keepalive(false), connection_auth_wanted(false), connection_auth_disabled(false), connection_proxy_auth(false), pinned_(false),
-        canRePin_(false), authSent_(false), noDirect_(false), chunkedReply_(false),
-        streamError_(false), sslPeek_(false),
+        hierarchical_(false), loopdetect(false), proxy_keepalive(false),
+        proxying_(false), refresh_(false), redirected(false),
+        need_validation(false), fail_on_validation_err(false),
+        stale_if_hit(false), nocache_hack(false), accelerated_(false),
+        ignore_cc(false), intercepted_(false), hostVerified_(false),
+        spoof_client_ip(false), internal(false), internalclient(false),
+        must_keepalive(false), connection_auth_wanted(false),
+        connection_auth_disabled(false), connection_proxy_auth(false),
+        pinned_(false), canRePin_(false), authSent_(false), noDirect_(false),
+        chunkedReply_(false), streamError_(false), sslPeek_(false),
         doneFollowXForwardedFor(!FOLLOW_X_FORWARDED_FOR),
         sslBumped_(false), destinationIPLookedUp_(false), resetTCP_(false),
         isRanged_(false)

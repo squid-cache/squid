@@ -36,7 +36,7 @@
 class HttpHeaderFieldInfo
 {
 public:
-    HttpHeaderFieldInfo() : id (HDR_ACCEPT), type (ftInvalid) {}
+    HttpHeaderFieldInfo() : id(HDR_ACCEPT), type(ftInvalid) {}
 
     http_hdr_type id;
     String name;
