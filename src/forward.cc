@@ -883,23 +883,27 @@ FwdState::sslCrtvdHandleReply(const char *reply)
     return;
 }
 
+/// Checks errors in the cert. validator response against sslproxy_cert_error.
+/// The first honored error, if any, is returned via errDetails parameter.
+/// The method returns all seen errors except SSL_ERROR_NONE as Ssl::Errors.
 Ssl::Errors *
 FwdState::sslCrtvdCheckForErrors(Ssl::ValidateCertificateResponse &resp, Ssl::ErrorDetail *& errDetails)
 {
     Ssl::Errors *errs = NULL;
-    ACLFilledChecklist *check = NULL;
-    SSL *ssl = fd_table[serverConnection()->fd].ssl;
 
+    ACLFilledChecklist *check = NULL;
     if (acl_access *acl = Config.ssl_client.cert_error)
         check = new ACLFilledChecklist(acl, request, dash_str);
 
-    for(Ssl::ValidateCertificateResponse::Errors::const_iterator i = resp.errors.begin(); i != resp.errors.end(); ++i) {
+    SSL *ssl = fd_table[serverConnection()->fd].ssl;
+    typedef Ssl::ValidateCertificateResponse::Errors::const_iterator SVCRECI;
+    for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
         debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
 
         if (i->error_no == SSL_ERROR_NONE)
             continue; //ignore????
 
-        if (errDetails == NULL) {
+        if (!errDetails) {
             bool allowed = false;
             if (check) {
                 check->sslErrors = new Ssl::Errors(i->error_no);
@@ -913,18 +917,17 @@ FwdState::sslCrtvdCheckForErrors(Ssl::ValidateCertificateResponse &resp, Ssl::Er
                 debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
             } else {
                 debugs(83, 5, "confirming SSL error " << i->error_no);
-                X509 *brokenCert = (i->cert ? i->cert : NULL);
+                X509 *brokenCert = i->cert;
                 X509 *peerCert = SSL_get_peer_certificate(ssl);
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
                 errDetails = new Ssl::ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
                 X509_free(peerCert);
-                // set error detail reason
             }
             delete check->sslErrors;
             check->sslErrors = NULL;
         }
 
-        if (errs == NULL)
+        if (!errs)
             errs = new Ssl::Errors(i->error_no);
         else 
             errs->push_back_unique(i->error_no);
