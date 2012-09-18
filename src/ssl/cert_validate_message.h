@@ -25,7 +25,7 @@ class ValidateCertificateResponse {
 public:
     class  ErrorItem{
     public:
-        ErrorItem(): error_no(SSL_ERROR_NONE), certId(0), cert(NULL) {}
+        ErrorItem(): error_no(SSL_ERROR_NONE), cert(NULL) {}
         ErrorItem(const ErrorItem &);
         ~ErrorItem();
         ErrorItem & operator = (const ErrorItem &);
@@ -33,7 +33,6 @@ public:
         void clear();
         ssl_error_t error_no;
         std::string error_reason;
-        int certId;
         X509 *cert;
     };
 
@@ -57,7 +56,7 @@ class CertValidateMessage: public CrtdMessage {
 public:
     CertValidateMessage(): CrtdMessage() {}
     void composeRequest(ValidateCertificate const &vcert);
-    bool parseResponse(ValidateCertificateResponse &resp, std::string &error);
+    bool parseResponse(ValidateCertificateResponse &resp, STACK_OF(X509) *peerCerts, std::string &error);
 
     /// String code for "cert_validate" messages
     static const std::string code_cert_validate;

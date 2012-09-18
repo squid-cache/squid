@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "ssl/support.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
@@ -47,7 +48,7 @@ static int get_error_id(const char *label, size_t len)
     return strtol(e, 0 , 10);
 }
 
-bool Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, std::string &error)
+bool Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, STACK_OF(X509) *peerCerts, std::string &error)
 {
     int current_errorId = -1;
     std::vector<Ssl::ValidateCertificateResponse::CertItem> certs;
@@ -118,8 +119,10 @@ bool Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, 
                 }
             }
             if (!currentItem.cert) {
-                currentItem.certId = get_error_id(v.c_str(), v.length());
-                debugs(83, 6, HERE << "Cert ID read:" << currentItem.certId);
+                int certId = get_error_id(v.c_str(), v.length());
+                //if certId is not correct sk_X509_value returns NULL
+                currentItem.setCert(sk_X509_value(peerCerts, certId));
+                debugs(83, 6, HERE << "Cert ID read:" << certId);
             }
         } 
 
@@ -135,7 +138,6 @@ bool Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, 
 Ssl::ValidateCertificateResponse::ErrorItem::ErrorItem(const ErrorItem &old) {
     error_no = old.error_no;
     error_reason = old.error_reason;
-    certId = old.certId;
     cert = NULL;
     setCert(old.cert);
 }
@@ -148,7 +150,6 @@ Ssl::ValidateCertificateResponse::ErrorItem::~ErrorItem() {
 Ssl::ValidateCertificateResponse::ErrorItem & Ssl::ValidateCertificateResponse::ErrorItem::operator = (const ErrorItem &old) {
     error_no = old.error_no;
     error_reason = old.error_reason;
-    certId = old.certId;
     setCert(old.cert);
     return *this;
 }
@@ -168,7 +169,6 @@ void
 Ssl::ValidateCertificateResponse::ErrorItem::clear() {
     error_no = SSL_ERROR_NONE;
     error_reason = "";
-    certId = 0;
     if (cert)
         X509_free(cert);
     cert = NULL;
