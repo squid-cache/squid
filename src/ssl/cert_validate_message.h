@@ -25,18 +25,29 @@ class ValidateCertificateResponse {
 public:
     class  ErrorItem{
     public:
-        ErrorItem(): error_no(SSL_ERROR_NONE), certId(0), cert(NULL) {}
+        ErrorItem(): id(0), error_no(SSL_ERROR_NONE), cert(NULL) {}
         ErrorItem(const ErrorItem &);
         ~ErrorItem();
         ErrorItem & operator = (const ErrorItem &);
         void setCert(X509 *);
         void clear();
-        ssl_error_t error_no;
-        std::string error_reason;
-        int certId;
-        X509 *cert;
+        int id; ///<  The id of the error
+        ssl_error_t error_no; ///< The SSL error code
+        std::string error_reason; ///< A string describing the error
+        X509 *cert; ///< The broken certificate
     };
 
+    typedef std::vector<ErrorItem> Errors;
+
+    ValidateCertificateResponse() {}
+    /// Search in errors list for an error with id=errorId
+    /// If know found a new ErrorItem added with the given id;
+    ErrorItem &getError(int errorId);
+    Errors errors; ///< The list of parsed errors
+};
+
+class CertValidateMessage: public CrtdMessage {
+private:
     class CertItem {
     public:
         std::string name;
@@ -47,17 +58,11 @@ public:
         ~CertItem();
         void setCert(X509 *);
     };
-
-    std::vector<ErrorItem> errors;
-    ValidateCertificateResponse() {}
-    ~ValidateCertificateResponse() {/*Maybe needs to release Errors*/};
-};
-
-class CertValidateMessage: public CrtdMessage {
 public:
     CertValidateMessage(): CrtdMessage() {}
     void composeRequest(ValidateCertificate const &vcert);
-    bool parseResponse(ValidateCertificateResponse &resp, std::string &error);
+    bool parseResponse(ValidateCertificateResponse &resp, STACK_OF(X509) *peerCerts, std::string &error);
+    X509 *getCertByName(std::vector<CertItem> const &, std::string const & name); ///< search in a list of CertItems for a certificate
 
     /// String code for "cert_validate" messages
     static const std::string code_cert_validate;
