@@ -45,14 +45,14 @@ RequestFlags::resetTCP() const
 void
 RequestFlags::setResetTCP()
 {
-    debugs(73, 9, "request_flags::setResetTCP");
+    debugs(73, 9, HERE);
     resetTCP_ = true;
 }
 
 void
 RequestFlags::clearResetTCP()
 {
-    debugs(73, 9, "request_flags::clearResetTCP");
+    debugs(73, 9, HERE);
     resetTCP_ = false;
 }
 

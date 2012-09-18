@@ -32,7 +32,9 @@
 #include "ip/Address.h"
 #include "acl/Acl.h"
 
-struct AclAddress {
+class AclAddress
+{
+public:
     AclAddress *next;
     ACLList *aclList;
 
