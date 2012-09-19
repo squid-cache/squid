@@ -220,6 +220,18 @@ void MemBuf::consume(mb_size_t shiftSize)
     PROF_stop(MemBuf_consume);
 }
 
+/// removes all whitespace prefix bytes and "packs" by moving content left
+void MemBuf::consumeWhitespace()
+{
+    PROF_start(MemBuf_consumeWhitespace);
+    const char *end = buf + contentSize();
+    const char *p = buf;
+    for(; p<=end && xisspace(*p); ++p);
+    if (p-buf > 0)
+        consume(p-buf);
+    PROF_stop(MemBuf_consumeWhitespace);
+}
+
 // removes last tailSize bytes
 void MemBuf::truncate(mb_size_t tailSize)
 {
