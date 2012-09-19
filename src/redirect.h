@@ -33,7 +33,12 @@
  *
  */
 
+#include "helper.h"
+
+class ClientHttpRequest;
+
 extern void redirectInit(void);
 extern void redirectShutdown(void);
+extern void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 
 #endif /* SQUID_REDIRECT_H_ */

@@ -5,7 +5,7 @@
 #include "tests/STUB.h"
 
 void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data) STUB
-void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver) STUB
+void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver) STUB
 helper::~helper() STUB
 CBDATA_CLASS_INIT(helper);
 

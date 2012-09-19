@@ -1305,30 +1305,28 @@ free_externalAclState(void *data)
  * the whitespace escaped using \ (\ escaping obviously also applies to
  * any " characters)
  */
-
 static void
-externalAclHandleReply(void *data, char *reply)
+externalAclHandleReply(void *data, const HelperReply &reply)
 {
     externalAclState *state = static_cast<externalAclState *>(data);
     externalAclState *next;
-    char *status;
-    char *token;
-    char *value;
     char *t = NULL;
     ExternalACLEntryData entryData;
     entryData.result = ACCESS_DENIED;
     external_acl_entry *entry = NULL;
 
-    debugs(82, 2, "externalAclHandleReply: reply=\"" << reply << "\"");
+    debugs(82, 2, HERE << "reply=" << reply);
 
-    if (reply) {
-        status = strwordtok(reply, &t);
+    if (reply.result == HelperReply::Okay)
+        entryData.result = ACCESS_ALLOWED;
+    // XXX: handle other non-DENIED results better
 
-        if (status && strcmp(status, "OK") == 0)
-            entryData.result = ACCESS_ALLOWED;
+    if (reply.other().hasContent()) {
+        char *temp = reply.modifiableOther().content();
+        char *token = strwordtok(temp, &t);
 
         while ((token = strwordtok(NULL, &t))) {
-            value = strchr(token, '=');
+            char *value = strchr(token, '=');
 
             if (value) {
                 *value = '\0';	/* terminate the token, and move up to the value */
@@ -1362,7 +1360,8 @@ externalAclHandleReply(void *data, char *reply)
     dlinkDelete(&state->list, &state->def->queue);
 
     if (cbdataReferenceValid(state->def)) {
-        if (reply)
+        // only cache OK and ERR results.
+        if (reply.result == HelperReply::Okay || reply.result == HelperReply::Error)
             entry = external_acl_cache_add(state->def, state->key, entryData);
         else {
             external_acl_entry *oldentry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);

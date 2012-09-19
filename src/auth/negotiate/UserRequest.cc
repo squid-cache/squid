@@ -232,23 +232,16 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
 }
 
 void
-Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
+Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
-    char *blob, *arg = NULL;
-
-    debugs(29, 8, HERE << "helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
+    debugs(29, 8, HERE << "helper: '" << reply.whichServer << "' sent us reply=" << reply);
 
     if (!cbdataReferenceValid(r->data)) {
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication invalid callback data. helper '" << lastserver << "'.");
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication invalid callback data. helper '" << reply.whichServer << "'.");
         delete r;
         return;
-    }
-
-    if (!reply) {
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << lastserver << "' crashed!.");
-        reply = (char *)"BH Internal error";
     }
 
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
@@ -265,26 +258,26 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NEGOTIATE);
 
     if (lm_request->authserver == NULL)
-        lm_request->authserver = static_cast<helper_stateful_server*>(lastserver);
+        lm_request->authserver = reply.whichServer.get(); // XXX: no locking?
     else
-        assert(lm_request->authserver == lastserver);
+        assert(lm_request->authserver == reply.whichServer.raw());
 
     /* seperate out the useful data */
-    blob = strchr(reply, ' ');
-
-    if (blob) {
-        ++blob;
-        arg = strchr(blob + 1, ' ');
-    } else {
-        arg = NULL;
-    }
-
-    if (strncasecmp(reply, "TT ", 3) == 0) {
-        /* we have been given a blob to send to the client */
+    char *modifiableBlob = reply.modifiableOther().content();
+    char *arg = NULL;
+    if (modifiableBlob && *modifiableBlob != '\0') {
+        arg = strchr(modifiableBlob + 1, ' ');
         if (arg) {
             *arg = '\0';
             ++arg;
         }
+    }
+    const char *blob = modifiableBlob;
+
+    switch(reply.result)
+    {
+    case HelperReply::TT:
+        /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
         lm_request->request->flags.must_keepalive = 1;
         if (lm_request->request->flags.proxy_keepalive) {
@@ -296,14 +289,19 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
         }
-    } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
-        /* we're finished, release the helper */
+        break;
 
-        if (arg) {
-            *arg = '\0';
-            ++arg;
+    case HelperReply::AF:
+    case HelperReply::Okay:
+    {
+        if (arg == NULL) {
+            // XXX: handle a success with no username better
+            /* protocol error */
+            fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
+            break;
         }
 
+        /* we're finished, release the helper */
         auth_user_request->user()->username(arg);
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
@@ -336,23 +334,32 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << blob << "'");
+        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << arg << "'");
+    }
+        break;
 
-    } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
-        /* authentication failure (wrong password, etc.) */
-
-        if (arg) {
-            *arg = '\0';
-            ++arg;
+    case HelperReply::NA:
+    case HelperReply::Error:
+        if (arg == NULL) {
+            /* protocol error */
+            fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
+            break;
         }
-
+        /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessage(arg);
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->server_blob = xstrdup(blob);
         lm_request->releaseAuthServer();
-        debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << blob << "'");
-    } else if (strncasecmp(reply, "BH ", 3) == 0) {
+        debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << reply << "'");
+        break;
+
+    case HelperReply::Unknown:
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << reply.whichServer << "' crashed!.");
+        blob = "Internal error";
+        /* continue to the next case */
+
+    case HelperReply::BrokenHelper:
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate Negotiate start.
@@ -362,12 +369,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Error returned '" << reply << "'");
-    } else {
-        /* protocol error */
-        fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Error returned " << reply);
     }
 
+    xfree(arg);
     if (lm_request->request) {
         HTTPMSGUNLOCK(lm_request->request);
         lm_request->request = NULL;

@@ -37,6 +37,7 @@
 #include "SquidTime.h"
 #include "mgr/Registration.h"
 #include "helper.h"
+#include "HelperReply.h"
 
 /* MS VisualStudio Projects are monolitich, so we need the following
    #if to include the external DNS code in compile process when
@@ -128,8 +129,8 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
 
         debugs(34, DBG_IMPORTANT, "dnsSubmit: queue overload, rejecting " << lookup);
 
-        callback(data, (char *)"$fail Temporary network problem, please retry later");
-
+        const char *t = "$fail Temporary network problem, please retry later";
+        callback(data, HelperReply(t, strlen(t)));
         return;
     }
 
