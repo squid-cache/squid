@@ -631,7 +631,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     if (err->page_id == TCP_RESET) {
         if (err->request) {
             debugs(4, 2, "RSTing this reply");
-            err->request->flags.resetTCP_=true;
+            err->request->flags.resetTcp=true;
         }
     }
 

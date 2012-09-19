@@ -379,7 +379,7 @@ HttpStateData::cacheableReply()
         }
     }
 
-    if (request->flags.auth || request->flags.auth_sent) {
+    if (request->flags.auth || request->flags.authSent) {
         /*
          * Responses to requests with authorization may be cached
          * only if a Cache-Control: public reply header is present.
@@ -716,7 +716,7 @@ HttpStateData::processReplyHeader()
     }
 
     if (!peerSupportsConnectionPinning())
-        request->flags.connection_auth_disabled = 1;
+        request->flags.connectionAuthDisabled = 1;
 
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
@@ -1386,18 +1386,18 @@ HttpStateData::processReplyBody()
             closeHandler = NULL;
             fwd->unregister(serverConnection);
 
-            if (request->flags.spoof_client_ip)
+            if (request->flags.spoofClientIp)
                 client_addr = request->client_addr;
 
             if (request->flags.pinned) {
                 ispinned = true;
-            } else if (request->flags.connection_auth && request->flags.auth_sent) {
+            } else if (request->flags.connectionAuth && request->flags.authSent) {
                 ispinned = true;
             }
 
             if (request->pinnedConnection() && ispinned) {
                 request->pinnedConnection()->pinConnection(serverConnection, request, _peer,
-                        (request->flags.connection_auth != 0));
+                        (request->flags.connectionAuth != 0));
             } else {
                 fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
             }
@@ -1652,7 +1652,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* pretend it's not a range request */
         delete request->range;
         request->range = NULL;
-        request->flags.isRanged_=false;
+        request->flags.isRanged=false;
     }
 
     /* append Via */
@@ -1988,7 +1988,7 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
     int64_t roffLimit = request->getRangeOffsetLimit();
 
     if (NULL == request->range || !request->flags.cachable
-            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connection_auth)
+            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
@@ -2021,10 +2021,10 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
-        if (request->flags.pinned && request->flags.connection_auth)
-            request->flags.auth_sent = 1;
+        if (request->flags.pinned && request->flags.connectionAuth)
+            request->flags.authSent = 1;
         else if (hdr.has(HDR_AUTHORIZATION))
-            request->flags.auth_sent = 1;
+            request->flags.authSent = 1;
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
@@ -2091,7 +2091,7 @@ HttpStateData::sendRequest()
     /*
      * Is keep-alive okay for all request methods?
      */
-    if (request->flags.must_keepalive)
+    if (request->flags.mustKeepalive)
         flags.keepalive = 1;
     else if (!Config.onoff.server_pconns)
         flags.keepalive = 0;
