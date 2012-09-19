@@ -810,7 +810,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
         if (auth_challenge) {
 #if USE_AUTH
-            if (http->request->flags.sslBumped) {
+            if (http->request->flags.sslBumped_) {
                 /*SSL Bumped request, authentication is not possible*/
                 status = HTTP_FORBIDDEN;
             } else if (!http->flags.accel) {
