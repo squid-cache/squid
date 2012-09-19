@@ -234,7 +234,7 @@ peerSelectDnsPaths(ps_state *psstate)
     // on intercepted traffic which failed Host verification
     const HttpRequest *req = psstate->request;
     const bool isIntercepted = !req->flags.redirected &&
-                               (req->flags.intercepted || req->flags.spoof_client_ip);
+                               (req->flags.intercepted || req->flags.spoofClientIp);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
     const bool choseDirect = fs && fs->code == HIER_DIRECT;
     if (isIntercepted && useOriginalDst && choseDirect) {
@@ -339,7 +339,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
                 break;
 
             // for TPROXY we must skip unusable addresses.
-            if (psstate->request->flags.spoof_client_ip && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
+            if (psstate->request->flags.spoofClientIp && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
                 if (ia->in_addrs[n].IsIPv4() != psstate->request->client_addr.IsIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
@@ -443,11 +443,11 @@ peerSelectFoo(ps_state * ps)
             ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
-        } else if (request->flags.no_direct) {
+        } else if (request->flags.noDirect) {
             /** if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forced non-direct)");
-        } else if (request->flags.loopdetect) {
+        } else if (request->flags.loopDetected) {
             /** if we are in a forwarding-loop, direct is not an option. */
             ps->direct = DIRECT_YES;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forwarding loop detected)");

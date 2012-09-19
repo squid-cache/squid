@@ -34,6 +34,9 @@
 #include "RequestFlags.h"
 
 
+// When adding new flags, please update cloneAdaptationImmune() as needed.
+// returns a partial copy of the flags that includes only those flags
+// that are safe for a related (e.g., ICAP-adapted) request to inherit
 RequestFlags
 RequestFlags::cloneAdaptationImmune() const
 {

@@ -641,7 +641,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
 
         return 0;
 
-    } else if (!checklist->request->flags.destinationIPLookedUp_) {
+    } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
         /* XXX FIXME: allow accessing the acl name here */
         debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");

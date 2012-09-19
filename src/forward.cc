@@ -147,7 +147,7 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoof_client_ip);
+    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoofClientIp);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
@@ -953,7 +953,7 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped_) {
+    if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
         fail(anErr);
@@ -1251,7 +1251,7 @@ FwdState::reforward()
 ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
-    return new ErrorState(type, request->flags.need_validation ?
+    return new ErrorState(type, request->flags.needValidation ?
                           HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
@@ -1397,7 +1397,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         conn->local.SetIPv4();
 
     // maybe use TPROXY client address
-    if (request && request->flags.spoof_client_ip) {
+    if (request && request->flags.spoofClientIp) {
         if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
 #if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
             if (Config.onoff.tproxy_uses_indirect_client)
