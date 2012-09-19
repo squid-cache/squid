@@ -1,6 +1,10 @@
 #ifndef SQUID_DNS_H
 #define SQUID_DNS_H
 
+#if USE_DNSHELPER
+#include "helper.h"
+#endif
+
 namespace Ip
 {
 class Address;

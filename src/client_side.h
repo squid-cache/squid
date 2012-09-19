@@ -53,6 +53,7 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
+class HelperReply;
 
 /**
  * Badly named.
@@ -338,9 +339,9 @@ public:
      */
     void getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
-    static void sslCrtdHandleReplyWrapper(void *data, char *reply);
+    static void sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply);
     /// Proccess response from ssl_crtd.
-    void sslCrtdHandleReply(const char * reply);
+    void sslCrtdHandleReply(const HelperReply &reply);
 
     void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
     bool switchedToHttps() const { return switchedToHttps_; }

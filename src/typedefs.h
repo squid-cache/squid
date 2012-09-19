@@ -122,7 +122,6 @@ typedef void IDCB(const char *ident, void *data);
 #include "anyp/ProtocolType.h"
 typedef void IRCB(struct peer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
-typedef void RH(void *data, char *);
 /* in wordlist.h */
 
 class wordlist;
@@ -137,7 +136,6 @@ class StoreEntry;
 typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
-typedef void HLPCB(void *, char *buf);
 typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);

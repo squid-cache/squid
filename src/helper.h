@@ -39,10 +39,11 @@
 #include "dlink.h"
 #include "ip/Address.h"
 #include "HelperChildConfig.h"
+#include "HelperReply.h"
 
 class helper_request;
 
-typedef void HLPSCB(void *, void *lastserver, char *buf);
+typedef void HLPCB(void *, const HelperReply &reply);
 
 class helper
 {
@@ -194,7 +195,7 @@ class helper_stateful_request
 public:
     MEMPROXY_CLASS(helper_stateful_request);
     char *buf;
-    HLPSCB *callback;
+    HLPCB *callback;
     int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
     void *data;
 };
@@ -205,7 +206,7 @@ MEMPROXY_CLASS_INLINE(helper_stateful_request);
 SQUIDCEXTERN void helperOpenServers(helper * hlp);
 SQUIDCEXTERN void helperStatefulOpenServers(statefulhelper * hlp);
 SQUIDCEXTERN void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
-SQUIDCEXTERN void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
+SQUIDCEXTERN void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
 SQUIDCEXTERN void helperStats(StoreEntry * sentry, helper * hlp, const char *label = NULL);
 SQUIDCEXTERN void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
 SQUIDCEXTERN void helperShutdown(helper * hlp);

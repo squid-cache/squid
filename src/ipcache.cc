@@ -594,7 +594,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
 /// \ingroup IPCacheInternal
 static void
 #if USE_DNSHELPER
-ipcacheHandleReply(void *data, char *reply)
+ipcacheHandleReply(void *data, const HelperReply &reply)
 #else
 ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
 #endif
@@ -606,7 +606,7 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
     statCounter.dns.svcTime.count(age);
 
 #if USE_DNSHELPER
-    ipcacheParse(i, reply);
+    ipcacheParse(i, reply.other().content());
 #else
 
     int done = ipcacheParse(i, answers, na, error_message);

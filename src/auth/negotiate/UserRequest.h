@@ -52,7 +52,7 @@ public:
     HttpRequest *request;
 
 private:
-    static HLPSCB HandleReply;
+    static HLPCB HandleReply;
 };
 
 } // namespace Negotiate
