@@ -2652,7 +2652,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->clientConnectionManager = conn;
 
     request->flags.accelerated = http->flags.accel;
-    request->flags.setSslBumped_=conn->switchedToHttps();
+    request->flags.sslBumped_=conn->switchedToHttps();
     request->flags.canRePin = request->flags.sslBumped_ && conn->pinning.pinned;
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped

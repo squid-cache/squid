@@ -31,60 +31,8 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
 #include "RequestFlags.h"
 
-// TODO: move to .cci
-/* RequestFlags */
-bool
-RequestFlags::resetTCP() const
-{
-    return resetTCP_;
-}
-
-void
-RequestFlags::setResetTCP()
-{
-    debugs(73, 9, HERE);
-    resetTCP_ = true;
-}
-
-void
-RequestFlags::clearResetTCP()
-{
-    debugs(73, 9, HERE);
-    resetTCP_ = false;
-}
-
-void
-RequestFlags::destinationIPLookupCompleted()
-{
-    destinationIPLookedUp_ = true;
-}
-
-bool
-RequestFlags::destinationIPLookedUp() const
-{
-    return destinationIPLookedUp_;
-}
-
-bool
-RequestFlags::isRanged() const
-{
-    return isRanged_;
-}
-
-void
-RequestFlags::setRanged()
-{
-    isRanged_ = true;
-}
-
-void
-RequestFlags::clearRanged()
-{
-    isRanged_ = false;
-}
 
 RequestFlags
 RequestFlags::cloneAdaptationImmune() const
