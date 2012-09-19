@@ -1344,7 +1344,7 @@ netdbExchangeStart(void *data)
     tempBuffer.data = ex->buf;
     storeClientCopy(ex->sc, ex->e, tempBuffer,
                     netdbExchangeHandleReply, ex);
-    ex->r->flags.loopdetect = 1;	/* cheat! -- force direct */
+    ex->r->flags.loopDetected = 1;	/* cheat! -- force direct */
 
     if (p->login)
         xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);

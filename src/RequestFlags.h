@@ -32,6 +32,12 @@
  *
  */
 
+/** request-related flags
+ *
+ * The bit-field contains both flags marking a request's current state,
+ * and flags requesting some processing to be done at a later stage.
+ * TODO: better distinguish the two cases.
+ */
 class RequestFlags
 {
 public:
@@ -39,60 +45,105 @@ public:
         memset(this,0,sizeof(RequestFlags));
     }
 
-    bool nocache :1; ///< whether the response to this request may be READ from cache
+    /** true if the response to this request may not be READ from cache */
+    bool noCache :1;
+    /** request is if-modified-since */
     bool ims :1;
+    /** request is authenticated */
     bool auth :1;
-    bool cachable :1; ///< whether the response to thie request may be stored in the cache
+    /** he response to the request may be stored in the cache */
+    bool cachable :1;
+    /** the request can be forwarded through the hierarchy */
     bool hierarchical :1;
-    bool loopdetect :1;
-    bool proxy_keepalive :1;
-    bool proxying :1; /* this should be killed, also in httpstateflags */
+    /** a loop was detected on this request */
+    bool loopDetected :1;
+    /** the connection can be kept alive */
+    bool proxyKeepalive :1;
+    /* this should be killed, also in httpstateflags */
+    bool proxying :1;
+    /** content has expired, need to refresh it */
     bool refresh :1;
+    /** request was redirected by redirectors */
     bool redirected :1;
-    bool need_validation :1;
-    bool fail_on_validation_err :1; ///< whether we should fail if validation fails
-    bool stale_if_hit :1; ///< reply is stale if it is a hit
-#if USE_HTTP_VIOLATIONS
-    /* for changing/ignoring no-cache requests */
-    /* TODO: remove the conditional definition, move ifdef to setter */
-    bool nocache_hack :1;
-#endif
+    /** the requested object needs to be validated. See client_side_reply.cc
+     * for further information.
+     */
+    bool needValidation :1;
+    /** whether we should fail if validation fails */
+    bool failOnValidationError :1;
+    /** reply is stale if it is a hit */
+    bool staleIfHit :1;
+    /** request to override no-cache directives
+     *
+     * always use noCacheHack() for reading.
+     * \note only meaningful if USE_HTTP_VIOLATIONS is defined at build time
+     */
+    bool nocacheHack :1;
+    /** this request is accelerated (reverse-proxy) */
     bool accelerated :1;
-    bool ignore_cc :1;
-    bool intercepted :1; ///< intercepted request
-    bool hostVerified :1; ///< whether the Host: header passed verification
-    bool spoof_client_ip :1; /**< spoof client ip if possible */
+    /** if set, ignore Cache-Control headers */
+    bool ignoreCc :1;
+    /** set for intercepted requests */
+    bool intercepted :1;
+    /** set if the Host: header passed verification */
+    bool hostVerified :1;
+    /** request to spoof the client ip */
+    bool spoofClientIp :1;
+    /** set if the request is internal (\see ClientHttpRequest::flags.internal)*/
     bool internal :1;
-    bool internalclient :1;
-    bool must_keepalive :1;
-    bool connection_auth :1; /** Request wants connection oriented auth */
-    bool connection_auth_disabled :1; /** Connection oriented auth can not be supported */
-    bool connection_proxy_auth :1; /** Request wants connection oriented auth */
-    bool pinned :1; /* Request sent on a pinned connection */
-    bool canRePin :1; ///< OK to reopen a failed pinned connection
-    bool auth_sent :1; /* Authentication forwarded */
-    bool no_direct :1; /* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
-    bool chunked_reply :1; /**< Reply with chunked transfer encoding */
-    bool stream_error :1; /**< Whether stream error has occured */
-    bool sslPeek :1; ///< internal ssl-bump request to get server cert
-    /* done_follow_x_forwarded_for set by default to the opposite of
-     * compilation option FOLLOW_X_FORWARDED_FOR (so that it returns
-     * always "done" if the build option is disabled.
+    /** set for internally-generated requests */
+    //XXX this is set in in clientBeginRequest, but never tested.
+    bool internalClient :1;
+    /** if set, request to try very hard to keep the connection alive */
+    bool mustKeepalive :1;
+    /** set if the rquest wants connection oriented auth */
+    bool connectionAuth :1;
+    /** set if connection oriented auth can not be supported */
+    bool connectionAuthDisabled :1;
+    /** Request wants connection oriented auth */
+    // XXX This is set in clientCheckPinning but never tested
+    bool connectionProxyAuth :1;
+    /** set if the request was sent on a pinned connection */
+    bool pinned :1;
+    /** OK to reopen a failed pinned connection */
+    bool canRePin :1;
+    /** Authentication was already sent upstream (e.g. due tcp-level auth) */
+    bool authSent :1;
+    /** Deny direct forwarding unless overriden by always_direct
+     * Used in accelerator mode */
+    bool noDirect :1;
+    /** Reply with chunked transfer encoding */
+    bool chunkedReply :1;
+    /** set if stream error has occured */
+    bool streamError :1;
+    /** internal ssl-bump request to get server cert */
+    bool sslPeek :1;
+    /** set if X-Forwarded-For checking is complete
+     *
+     * do not read directly; use doneFollowXff for reading
      */
     bool done_follow_x_forwarded_for :1;
-    bool sslBumped_ :1; /**< ssl-bumped request*/
-    bool destinationIPLookedUp_:1;
-    bool resetTCP_:1;                ///< request to reset the TCP stream
-    bool isRanged_ :1;
+    /** set for ssl-bumped requests */
+    bool sslBumped :1;
+    bool destinationIpLookedUp:1;
+    /** request to reset the TCP stream */
+    bool resetTcp:1;
+    /** set if the request is ranged */
+    bool isRanged :1;
 
-    // When adding new flags, please update cloneAdaptationImmune() as needed.
-    // returns a partial copy of the flags that includes only those flags
-    // that are safe for a related (e.g., ICAP-adapted) request to inherit
+    /** clone the flags, resetting to default those which are not safe in
+     *  a related (e.g. ICAP-adapted) request.
+     */
     RequestFlags cloneAdaptationImmune() const;
 
     // if FOLLOW_X_FORWARDED_FOR is not set, we always return "done".
     bool doneFollowXff() const {
         return done_follow_x_forwarded_for || !FOLLOW_X_FORWARDED_FOR;
+    }
+
+    // if USE_HTTP_VIOLATIONS is not set, never allow this
+    bool noCacheHack() const {
+        return USE_HTTP_VIOLATIONS && nocacheHack;
     }
 };
 
