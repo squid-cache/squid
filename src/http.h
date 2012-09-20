@@ -32,12 +32,11 @@
 #ifndef SQUID_HTTP_H
 #define SQUID_HTTP_H
 
-#include "StoreIOBuffer.h"
 #include "comm.h"
-#include "comm/forward.h"
-#include "forward.h"
 #include "Server.h"
-#include "ChunkedCodingParser.h"
+
+class ChunkedCodingParser;
+class FwdState;
 
 class HttpStateData : public ServerStateData
 {

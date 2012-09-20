@@ -40,6 +40,7 @@
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "CachePeer.h"
+#include "ChunkedCodingParser.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"

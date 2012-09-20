@@ -5,10 +5,9 @@
 #ifndef SQUID_ASYNCCALL_H
 #define SQUID_ASYNCCALL_H
 
-//#include "cbdata.h"
 #include "base/InstanceId.h"
 #include "event.h"
-//#include "TextException.h"
+#include "RefCount.h"
 
 /**
  \defgroup AsynCallsAPI Async-Calls API
