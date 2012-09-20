@@ -6,12 +6,12 @@
 
 
 void
-Ssl::CertValidateMessage::composeRequest(ValidateCertificate const &vcert)
+Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
 {
     body.clear();
-    body += Ssl::CertValidateMessage::param_host + "=" + vcert.domainName;
+    body += Ssl::CertValidationMsg::param_host + "=" + vcert.domainName;
     if (vcert.errors) {
-        body += "\n" + Ssl::CertValidateMessage::param_error + "=";
+        body += "\n" + Ssl::CertValidationMsg::param_error + "=";
         bool comma = false;
         for (const Ssl::Errors *err = vcert.errors; err; err = err->next ) {
             if (comma)
@@ -51,7 +51,7 @@ get_error_id(const char *label, size_t len)
 }
 
 bool
-Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, STACK_OF(X509) *peerCerts, std::string &error)
+Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X509) *peerCerts, std::string &error)
 {
     std::vector<CertItem> certs;
 
@@ -94,7 +94,7 @@ Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, STACK
                v.c_str());
 
         int errorId = get_error_id(param, param_len);
-        Ssl::ValidateCertificateResponse::ErrorItem &currentItem = resp.getError(errorId);
+        Ssl::CertValidationResponse::RecvdError &currentItem = resp.getError(errorId);
 
         if (param_len > param_error_name.length() && 
             strncmp(param, param_error_name.c_str(), param_error_name.length()) == 0){
@@ -117,7 +117,7 @@ Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, STACK
                 // to cert validator. The certificates sent to cert validator have names in
                 // form "cert_xx" where the "xx" is an integer represents the position of
                 // the certificate inside peer certificates list.
-                int certId = get_error_id(v.c_str(), v.length());
+                const int certId = get_error_id(v.c_str(), v.length());
                 debugs(83, 6, HERE << "Cert index in peer certificates list:" << certId);
                 //if certId is not correct sk_X509_value returns NULL
                 currentItem.setCert(sk_X509_value(peerCerts, certId));
@@ -137,7 +137,7 @@ Ssl::CertValidateMessage::parseResponse(ValidateCertificateResponse &resp, STACK
 }
 
 X509 *
-Ssl::CertValidateMessage::getCertByName(std::vector<CertItem> const &certs, std::string const & name)
+Ssl::CertValidationMsg::getCertByName(std::vector<CertItem> const &certs, std::string const & name)
 {
     for (std::vector<CertItem>::const_iterator ci = certs.begin(); ci != certs.end(); ++ci) {
         if (ci->name.compare(name) == 0)
@@ -146,32 +146,32 @@ Ssl::CertValidateMessage::getCertByName(std::vector<CertItem> const &certs, std:
     return NULL;
 }
 
-Ssl::ValidateCertificateResponse::ErrorItem &
-Ssl::ValidateCertificateResponse::getError(int errorId)
+Ssl::CertValidationResponse::RecvdError &
+Ssl::CertValidationResponse::getError(int errorId)
 {
-    for(Ssl::ValidateCertificateResponse::Errors::iterator i = errors.begin(); i != errors.end(); ++i){
+    for(Ssl::CertValidationResponse::RecvdErrors::iterator i = errors.begin(); i != errors.end(); ++i){
         if (i->id == errorId)
             return *i;
     }
-    Ssl::ValidateCertificateResponse::ErrorItem errItem;
+    Ssl::CertValidationResponse::RecvdError errItem;
     errItem.id = errorId;
     errors.push_back(errItem);
     return errors.back();
 }
 
-Ssl::ValidateCertificateResponse::ErrorItem::ErrorItem(const ErrorItem &old) {
+Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old) {
     error_no = old.error_no;
     error_reason = old.error_reason;
     cert = NULL;
     setCert(old.cert);
 }
 
-Ssl::ValidateCertificateResponse::ErrorItem::~ErrorItem() {
+Ssl::CertValidationResponse::RecvdError::~RecvdError() {
     if (cert)
         X509_free(cert);
 }
 
-Ssl::ValidateCertificateResponse::ErrorItem & Ssl::ValidateCertificateResponse::ErrorItem::operator = (const ErrorItem &old) {
+Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdError::operator = (const RecvdError &old) {
     error_no = old.error_no;
     error_reason = old.error_reason;
     setCert(old.cert);
@@ -179,7 +179,7 @@ Ssl::ValidateCertificateResponse::ErrorItem & Ssl::ValidateCertificateResponse::
 }
 
 void
-Ssl::ValidateCertificateResponse::ErrorItem::setCert(X509 *aCert) {
+Ssl::CertValidationResponse::RecvdError::setCert(X509 *aCert) {
     if (cert)
         X509_free(cert);
     if (aCert) {
@@ -189,37 +189,28 @@ Ssl::ValidateCertificateResponse::ErrorItem::setCert(X509 *aCert) {
         cert = NULL;
 }
 
-void
-Ssl::ValidateCertificateResponse::ErrorItem::clear() {
-    error_no = SSL_ERROR_NONE;
-    error_reason = "";
-    if (cert)
-        X509_free(cert);
-    cert = NULL;
-}
-
-Ssl::CertValidateMessage::CertItem::CertItem(const CertItem &old)
+Ssl::CertValidationMsg::CertItem::CertItem(const CertItem &old)
 {
     name = old.name;
     cert = NULL;
     setCert(old.cert);
 }
 
-Ssl::CertValidateMessage::CertItem & Ssl::CertValidateMessage::CertItem::operator = (const CertItem &old)
+Ssl::CertValidationMsg::CertItem & Ssl::CertValidationMsg::CertItem::operator = (const CertItem &old)
 {
     name = old.name;
     setCert(old.cert);
     return *this;
 }
 
-Ssl::CertValidateMessage::CertItem::~CertItem()
+Ssl::CertValidationMsg::CertItem::~CertItem()
 {
     if (cert)
         X509_free(cert);
 }
 
 void
-Ssl::CertValidateMessage::CertItem::setCert(X509 *aCert)
+Ssl::CertValidationMsg::CertItem::setCert(X509 *aCert)
 {
     if (cert)
         X509_free(cert);
@@ -230,11 +221,11 @@ Ssl::CertValidateMessage::CertItem::setCert(X509 *aCert)
         cert = NULL;
 }
 
-const std::string Ssl::CertValidateMessage::code_cert_validate("cert_validate");
-const std::string Ssl::CertValidateMessage::param_domain("domain");
-const std::string Ssl::CertValidateMessage::param_error("errors");
-const std::string Ssl::CertValidateMessage::param_cert("cert_");
-const std::string Ssl::CertValidateMessage::param_error_name("error_name_"); 
-const std::string Ssl::CertValidateMessage::param_error_reason("error_reason_");
-const std::string Ssl::CertValidateMessage::param_error_cert("error_cert_");
+const std::string Ssl::CertValidationMsg::code_cert_validate("cert_validate");
+const std::string Ssl::CertValidationMsg::param_domain("domain");
+const std::string Ssl::CertValidationMsg::param_error("errors");
+const std::string Ssl::CertValidationMsg::param_cert("cert_");
+const std::string Ssl::CertValidationMsg::param_error_name("error_name_"); 
+const std::string Ssl::CertValidationMsg::param_error_reason("error_reason_");
+const std::string Ssl::CertValidationMsg::param_error_cert("error_cert_");
 
