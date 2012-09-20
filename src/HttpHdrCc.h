@@ -34,8 +34,9 @@
 
 #include "enums.h"
 #include "MemPool.h"
-#include "Packer.h"
 #include "SquidString.h"
+
+class Packer;
 
 /** Http Cache-Control header representation
  *

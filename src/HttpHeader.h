@@ -32,15 +32,19 @@
 #define SQUID_HTTPHEADER_H
 
 /* because we pass a spec by value */
-#include "HttpHeaderRange.h"
+//#include "HttpHeaderRange.h"
+#include "SquidString.h"
 /* HttpHeader holds a HttpHeaderMask */
 #include "HttpHeaderMask.h"
+#include "MemPool.h"
+
 
 /* class forward declarations */
 class HttpHdrContRange;
 class HttpHdrCc;
 class HttpHdrSc;
 class HttpHdrRange;
+class Packer;
 class String;
 class StoreEntry;
 
