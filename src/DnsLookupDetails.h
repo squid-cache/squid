@@ -5,7 +5,6 @@
 #ifndef SQUID_DNS_LOOKUP_DETAILS_H
 #define SQUID_DNS_LOOKUP_DETAILS_H
 
-#include "typedefs.h"
 #include "SquidString.h"
 
 /// encapsulates DNS lookup results
