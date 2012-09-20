@@ -6,6 +6,7 @@
 #include "comm/Connection.h"
 #include "err_type.h"
 #include "fde.h"
+#include "HttpStatusCode.h"
 #include "ip/Address.h"
 #include "RefCount.h"
 

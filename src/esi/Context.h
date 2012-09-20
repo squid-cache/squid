@@ -36,6 +36,7 @@
 #include "esi/Element.h"
 #include "clientStream.h"
 #include "err_type.h"
+#include "HttpStatusCode.h"
 
 class ESIVarState;
 class ClientHttpRequest;
