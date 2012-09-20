@@ -21,8 +21,8 @@ class HttpRequest;
 #if USE_SSL
 namespace Ssl
 {
-    class ErrorDetail;
-    class CertValidationResponse;
+class ErrorDetail;
+class CertValidationResponse;
 };
 #endif
 

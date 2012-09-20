@@ -765,8 +765,8 @@ FwdState::negotiateSSL(int fd)
         // WARNING: The STACK_OF(*) OpenSSL objects does not support locking.
         // If we need to support locking we need to sk_X509_dup the STACK_OF(X509)
         // list and lock all of the X509 members of the list.
-        // Currently we do not use any locking for any of the members of the 
-        // Ssl::CertValidationRequest class. If the ssl object gone, the value returned 
+        // Currently we do not use any locking for any of the members of the
+        // Ssl::CertValidationRequest class. If the ssl object gone, the value returned
         // from SSL_get_peer_cert_chain may not exist any more. In this code the
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
@@ -834,7 +834,7 @@ FwdState::sslCrtvdHandleReply(const char *reply)
         std::string error;
         STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(ssl);
         if (replyMsg.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK ||
-            !replyMsg.parseResponse(validationResponse, peerCerts, error) ) {
+                !replyMsg.parseResponse(validationResponse, peerCerts, error) ) {
             debugs(83, 5, HERE << "Reply from ssl_crtvd for " << request->GetHost() << " is incorrect");
             validatorFailed = true;
         } else {
@@ -930,7 +930,7 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse &resp, Ssl::ErrorDe
 
         if (!errs)
             errs = new Ssl::Errors(i->error_no);
-        else 
+        else
             errs->push_back_unique(i->error_no);
     }
 
