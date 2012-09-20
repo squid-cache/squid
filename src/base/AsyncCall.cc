@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "AsyncCall.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
 #include "cbdata.h"

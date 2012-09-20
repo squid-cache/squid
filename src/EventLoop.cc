@@ -31,9 +31,12 @@
  */
 
 #include "squid.h"
+#include "AsyncEngine.h"
 #include "Debug.h"
 #include "EventLoop.h"
 #include "base/AsyncCallQueue.h"
+#include "SquidTime.h"
+
 
 EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
         primaryEngine(NULL)
