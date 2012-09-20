@@ -38,6 +38,7 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
+#include "HttpStatusCode.h"
 #include "ip/Address.h"
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
