@@ -139,7 +139,8 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
 X509 *
 Ssl::CertValidationMsg::getCertByName(std::vector<CertItem> const &certs, std::string const & name)
 {
-    for (std::vector<CertItem>::const_iterator ci = certs.begin(); ci != certs.end(); ++ci) {
+    typedef std::vector<CertItem>::const_iterator SVCI;
+    for (SVCI ci = certs.begin(); ci != certs.end(); ++ci) {
         if (ci->name.compare(name) == 0)
             return ci->cert;
     }
@@ -149,7 +150,8 @@ Ssl::CertValidationMsg::getCertByName(std::vector<CertItem> const &certs, std::s
 Ssl::CertValidationResponse::RecvdError &
 Ssl::CertValidationResponse::getError(int errorId)
 {
-    for(Ssl::CertValidationResponse::RecvdErrors::iterator i = errors.begin(); i != errors.end(); ++i){
+    typedef Ssl::CertValidationResponse::RecvdErrors::iterator SVCREI;
+    for(SVCREI i = errors.begin(); i != errors.end(); ++i){
         if (i->id == errorId)
             return *i;
     }
