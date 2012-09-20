@@ -9,14 +9,15 @@
 #include "ssl/crtd_message.h"
 #include <vector>
 
-namespace Ssl 
+namespace Ssl
 {
 
 /**
  * This class is used to hold the required informations to build
  * a request message for the certificate validator helper
  */
-class CertValidationRequest {
+class CertValidationRequest
+{
 public:
     STACK_OF(X509) *peerCerts; ///< The list of sent by SSL server
     Errors *errors; ///< The list of errors detected
@@ -28,13 +29,15 @@ public:
  * This class is used to store informations found in certificate validation
  * response messages read from certificate validator helper
  */
-class CertValidationResponse {
+class CertValidationResponse
+{
 public:
     /**
      * This class used to hold error informations returned from
      * cert validator helper.
      */
-    class  RecvdError{
+    class  RecvdError
+    {
     public:
         RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL) {}
         RecvdError(const RecvdError &);
@@ -61,13 +64,15 @@ public:
  * The messages format is:
  *   <response/request code> <whitespace> <body length> <whitespace> <key=value> ...\1
  */
-class CertValidationMsg: public CrtdMessage {
+class CertValidationMsg: public CrtdMessage
+{
 private:
     /**
      * This class used to hold the certId/cert pairs found
      * in cert validation messages.
      */
-    class CertItem {
+    class CertItem
+    {
     public:
         std::string name; ///< The certificate Id to use
         X509 *cert;       ///< A pointer to certificate
@@ -98,11 +103,11 @@ public:
     /// Parameter name for passing SSL errors
     static const std::string param_error;
     /// Parameter name for passing SSL certificates
-    static const std::string param_cert; 
+    static const std::string param_cert;
     /// Parameter name for passing the major SSL error
-    static const std::string param_error_name; 
+    static const std::string param_error_name;
     /// Parameter name for passing the error reason
-    static const std::string param_error_reason; 
+    static const std::string param_error_reason;
     /// Parameter name for passing the error cert ID
     static const std::string param_error_cert;
 };
