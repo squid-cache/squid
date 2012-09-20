@@ -163,7 +163,6 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
 };
 
-class HttpHeaderFieldInfo;
 static HttpHeaderFieldInfo *Headers = NULL;
 
 http_hdr_type &operator++ (http_hdr_type &aHeader)
