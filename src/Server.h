@@ -43,6 +43,7 @@
 #endif
 
 class HttpMsg;
+class HttpReply;
 
 /**
  * ServerStateData is a common base for server-side classes such as

@@ -38,13 +38,15 @@
 #include "RemovalPolicy.h"
 #include "HttpRequestMethod.h"
 
+#if USE_DELAY_POOLS
+#include "DelayId.h"
+#endif
+
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
 class store_client;
 class HttpRequest;
-#if USE_DELAY_POOLS
-#include "DelayId.h"
-#endif
+class HttpReply;
 
 class MemObject
 {

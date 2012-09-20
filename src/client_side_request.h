@@ -36,6 +36,7 @@
 #include "AccessLogEntry.h"
 #include "dlink.h"
 #include "base/AsyncJob.h"
+#include "HttpHeaderRange.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
