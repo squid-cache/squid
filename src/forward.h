@@ -18,11 +18,13 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
+#if USE_SSL
 namespace Ssl
 {
     class ErrorDetail;
-    class ValidateCertificateResponse;
+    class CertValidationResponse;
 };
+#endif
 
 /**
  * Returns the TOS value that we should be setting on the connection
@@ -78,10 +80,13 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-#if 1 // USE_SSL_CERT_VALIDATOR
+#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+    /// Callback function called when squid receive message from cert validator helper
     static void sslCrtvdHandleReplyWrapper(void *data, char *reply);
+    /// Process response from cert validator helper
     void sslCrtvdHandleReply(const char *reply);
-    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::ValidateCertificateResponse &, Ssl::ErrorDetail *&);
+    /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
+    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse &, Ssl::ErrorDetail *&);
 #endif
 private:
     // hidden for safer management of self; use static fwdStart
