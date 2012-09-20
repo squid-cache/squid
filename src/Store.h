@@ -37,6 +37,7 @@
 
 #include "comm/forward.h"
 #include "CommRead.h"
+#include "HttpReply.h"
 #include "HttpRequestMethod.h"
 #include "Packer.h"
 #include "Range.h"
