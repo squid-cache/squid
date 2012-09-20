@@ -13,6 +13,7 @@ class CachePeer;
 class ConnStateData;
 class ExternalACLEntry;
 class HttpRequest;
+class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
