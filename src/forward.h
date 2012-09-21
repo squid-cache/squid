@@ -125,6 +125,6 @@ private:
     CBDATA_CLASS2(FwdState);
 };
 
-extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 
 #endif /* SQUID_FORWARD_H */

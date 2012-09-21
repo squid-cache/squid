@@ -234,30 +234,30 @@ typedef enum {
 } cbdata_type;
 
 /// \ingroup CBDATAAPI
-extern void cbdataRegisterWithCacheManager(void);
+void cbdataRegisterWithCacheManager(void);
 
 #if USE_CBDATA_DEBUG
-extern void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
-extern void *cbdataInternalFreeDbg(void *p, const char *, int);
-extern void cbdataInternalLockDbg(const void *p, const char *, int);
-extern void cbdataInternalUnlockDbg(const void *p, const char *, int);
-extern int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
+void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
+void *cbdataInternalFreeDbg(void *p, const char *, int);
+void cbdataInternalLockDbg(const void *p, const char *, int);
+void cbdataInternalUnlockDbg(const void *p, const char *, int);
+int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
 #else
 
 /// \ingroup CBDATAAPI
-extern void *cbdataInternalAlloc(cbdata_type type);
+void *cbdataInternalAlloc(cbdata_type type);
 
 /// \ingroup CBDATAAPI
-extern void *cbdataInternalFree(void *p);
+void *cbdataInternalFree(void *p);
 
 /// \ingroup CBDATAAPI
-extern void cbdataInternalLock(const void *p);
+void cbdataInternalLock(const void *p);
 
 /// \ingroup CBDATAAPI
-extern void cbdataInternalUnlock(const void *p);
+void cbdataInternalUnlock(const void *p);
 
 /// \ingroup CBDATAAPI
-extern int cbdataInternalReferenceDoneValid(void **p, void **tp);
+int cbdataInternalReferenceDoneValid(void **p, void **tp);
 
 #endif /* !CBDATA_DEBUG */
 
@@ -269,10 +269,10 @@ extern int cbdataInternalReferenceDoneValid(void **p, void **tp);
  \retval 0	A reference is stale. The pointer refers to a entry freed by cbdataFree().
  \retval true	The reference is valid and active.
  */
-extern int cbdataReferenceValid(const void *p);
+int cbdataReferenceValid(const void *p);
 
 /// \ingroup CBDATAAPI
-extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
+cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
 
 /* cbdata macros */
 #if USE_CBDATA_DEBUG

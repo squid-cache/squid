@@ -35,17 +35,17 @@ struct _mib_tree_entry {
     AggrType aggrType;
 };
 
-extern struct snmp_pdu* snmpAgentResponse(struct snmp_pdu* PDU);
-extern AggrType snmpAggrType(oid* Current, snint CurrentLen);
+struct snmp_pdu* snmpAgentResponse(struct snmp_pdu* PDU);
+AggrType snmpAggrType(oid* Current, snint CurrentLen);
 
 extern Comm::ConnectionPointer snmpOutgoingConn;
 
 extern PF snmpHandleUdp;
-extern void snmpInit(void);
-extern void snmpOpenPorts(void);
-extern void snmpClosePorts(void);
-extern const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
-extern void addr2oid(Ip::Address &addr, oid *Dest);
-extern void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
+void snmpInit(void);
+void snmpOpenPorts(void);
+void snmpClosePorts(void);
+const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
+void addr2oid(Ip::Address &addr, oid *Dest);
+void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 
 #endif /* SQUID_SNMP_CORE_H */

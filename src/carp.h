@@ -36,7 +36,7 @@
 class CachePeer;
 class HttpRequest;
 
-extern void carpInit(void);
-extern CachePeer *carpSelectParent(HttpRequest *);
+void carpInit(void);
+CachePeer *carpSelectParent(HttpRequest *);
 
 #endif /* SQUID_CARP_H_ */

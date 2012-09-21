@@ -11,7 +11,7 @@
 
 class ACLChecklist;
 /// \ingroup AuthAPI
-extern allow_t AuthenticateAcl(ACLChecklist *ch);
+allow_t AuthenticateAcl(ACLChecklist *ch);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_ACL_H */

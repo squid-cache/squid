@@ -72,6 +72,6 @@ private:
     void dumpOne() const;
 };
 
-extern void ESISegmentFreeList (ESISegment::Pointer &head);
+void ESISegmentFreeList (ESISegment::Pointer &head);
 
 #endif /* SQUID_ESISEGMENT_H */
