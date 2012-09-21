@@ -1,9 +1,9 @@
 #ifndef ICMP_NET_DB_H
 #define ICMP_NET_DB_H
 
-#include "CachePeer.h"
 #include "hash.h"
 
+class CachePeer;
 namespace Ip
 {
 class Address;
