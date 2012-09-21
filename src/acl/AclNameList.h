@@ -30,12 +30,14 @@
  */
 
 #include "defines.h"
-//TODO: convert to a std::list<string>
+
+/// list of name-based ACLs. Currently a POD.
 class AclNameList
 {
 public:
     char name[ACL_NAME_SZ];
     AclNameList *next;
 };
+// TODO: convert to a std::list<string>
 
 #endif /* SQUID_ACLNAMELIST_H_ */

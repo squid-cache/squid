@@ -29,6 +29,7 @@
  *
  */
 
+/// list of regular expressions. Currently a POD.
 class RegexList
 {
 public:

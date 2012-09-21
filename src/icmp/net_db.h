@@ -4,15 +4,15 @@
 #include "hash.h"
 
 class CachePeer;
+class HttpRequest;
+class netdbEntry;
+class StoreEntry;
 namespace Ip
 {
 class Address;
 };
 
-class StoreEntry;
-class HttpRequest;
-class netdbEntry;
-
+// POD
 class net_db_name
 {
 public:
@@ -21,6 +21,7 @@ public:
     netdbEntry *net_db_entry;
 };
 
+// POD
 class net_db_peer
 {
 public:
@@ -30,6 +31,7 @@ public:
     time_t expires;
 };
 
+// POD
 class netdbEntry
 {
 public:
@@ -48,23 +50,23 @@ public:
     int n_peers;
 };
 
-extern void netdbInit(void);
+void netdbInit(void);
 
-extern void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);
-extern void netdbPingSite(const char *hostname);
+void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);
+void netdbPingSite(const char *hostname);
 void netdbDump(StoreEntry *);
 
-extern void netdbFreeMemory(void);
-extern int netdbHostHops(const char *host);
-extern int netdbHostRtt(const char *host);
-extern void netdbUpdatePeer(HttpRequest *, CachePeer * e, int rtt, int hops);
+void netdbFreeMemory(void);
+int netdbHostHops(const char *host);
+int netdbHostRtt(const char *host);
+void netdbUpdatePeer(HttpRequest *, CachePeer * e, int rtt, int hops);
 
-extern void netdbDeleteAddrNetwork(Ip::Address &addr);
-extern void netdbBinaryExchange(StoreEntry *);
-extern void netdbExchangeStart(void *);
+void netdbDeleteAddrNetwork(Ip::Address &addr);
+void netdbBinaryExchange(StoreEntry *);
+void netdbExchangeStart(void *);
 
-extern void netdbExchangeUpdatePeer(Ip::Address &, CachePeer *, double, double);
-extern CachePeer *netdbClosestParent(HttpRequest *);
-extern void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
+void netdbExchangeUpdatePeer(Ip::Address &, CachePeer *, double, double);
+CachePeer *netdbClosestParent(HttpRequest *);
+void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
 #endif /* ICMP_NET_DB_H */

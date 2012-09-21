@@ -29,6 +29,7 @@
  *
  */
 
+/// a representation of a refresh pattern. Currently a POD.
 class RefreshPattern
 {
 public:
