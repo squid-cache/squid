@@ -1,6 +1,7 @@
 #ifndef _SQUID_LOG_FORMATS_H
 #define _SQUID_LOG_FORMATS_H
 
+#include "AccessLogEntry.h"
 #include "RefCount.h"
 
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;

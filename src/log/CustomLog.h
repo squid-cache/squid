@@ -28,11 +28,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "format/Format.h"
+//#include "format/Format.h"
 #include "log/Formats.h"
 
 class ACLList;
 class Logfile;
+namespace Format {
+class Format;
+}
 
 class CustomLog
 {
