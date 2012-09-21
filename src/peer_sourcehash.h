@@ -37,7 +37,7 @@
 class CachePeer;
 class HttpRequest;
 
-extern void peerSourceHashInit(void);
-extern CachePeer * peerSourceHashSelectParent(HttpRequest * request);
+void peerSourceHashInit(void);
+CachePeer * peerSourceHashSelectParent(HttpRequest * request);
 
 #endif /* SQUID_PEER_SOURCEHASH_H_ */

@@ -29,8 +29,8 @@
 #ifndef SQUID_PROTOS_H
 #define SQUID_PROTOS_H
 
-extern void shut_down(int);
-extern void rotate_logs(int);
-extern void reconfigure(int);
+void shut_down(int);
+void rotate_logs(int);
+void reconfigure(int);
 
 #endif /* SQUID_PROTOS_H */

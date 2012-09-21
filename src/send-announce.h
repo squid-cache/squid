@@ -32,6 +32,6 @@
  *
  */
 
-extern void start_announce(void *unused);
+void start_announce(void *unused);
 
 #endif /* SQUID_SEND_ANNOUNCE_H_ */

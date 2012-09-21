@@ -36,6 +36,6 @@
 class HttpRequest;
 class StoreEntry;
 
-extern void urnStart(HttpRequest *, StoreEntry *);
+void urnStart(HttpRequest *, StoreEntry *);
 
 #endif /* SQUID_URN_H_ */

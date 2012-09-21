@@ -33,7 +33,7 @@
  *
  */
 
-extern void redirectInit(void);
-extern void redirectShutdown(void);
+void redirectInit(void);
+void redirectShutdown(void);
 
 #endif /* SQUID_REDIRECT_H_ */

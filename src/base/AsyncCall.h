@@ -156,7 +156,7 @@ asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
 }
 
 /** Call scheduling helper. Use ScheduleCallHere if you can. */
-extern bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
+bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
 
 /** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))

@@ -78,6 +78,6 @@ public:
     static char * strtokFile();
 };
 
-extern int parseConfigFile(const char *file_name);
+int parseConfigFile(const char *file_name);
 
 #endif /* SQUID_CONFIGPARSER_H */

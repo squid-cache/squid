@@ -37,8 +37,8 @@
 
 class MemBuf;
 
-extern int file_open(const char *path, int mode);
-extern void file_close(int fd);
+int file_open(const char *path, int mode);
+void file_close(int fd);
 
 /* Adapter file_write for object callbacks */
 template <class O>
@@ -49,11 +49,11 @@ FreeObject(void *address)
     delete anObject;
 }
 
-extern void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
-extern void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
-extern void file_read(int, char *, int, off_t, DRCB *, void *);
-extern void disk_init(void);
-extern void safeunlink(const char *path, int quiet);
-extern int xrename(const char *from, const char *to); //disk.cc
+void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
+void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
+void file_read(int, char *, int, off_t, DRCB *, void *);
+void disk_init(void);
+void safeunlink(const char *path, int quiet);
+int xrename(const char *from, const char *to); //disk.cc
 
 #endif /* SQUID_DISK_H_ */
