@@ -35,7 +35,7 @@
 namespace Ip {
   class Address;
 }
-extern pid_t ipcCreate(int type,
+pid_t ipcCreate(int type,
                              const char *prog,
                              const char *const args[],
                              const char *name,

@@ -133,10 +133,10 @@ private:
 
 extern const Version CacheDigestVer;
 
-extern PeerDigest *peerDigestCreate(CachePeer * p);
-extern void peerDigestNeeded(PeerDigest * pd);
-extern void peerDigestNotePeerGone(PeerDigest * pd);
-extern void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
+PeerDigest *peerDigestCreate(CachePeer * p);
+void peerDigestNeeded(PeerDigest * pd);
+void peerDigestNotePeerGone(PeerDigest * pd);
+void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 #endif /* USE_CACHE_DIGESTS */
 

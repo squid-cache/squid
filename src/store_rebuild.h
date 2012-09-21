@@ -48,15 +48,15 @@ public:
     int zero_object_sz;
 };
 
-extern void storeRebuildStart(void);
-extern void storeRebuildComplete(StoreRebuildData *);
-extern void storeRebuildProgress(int sd_index, int total, int sofar);
+void storeRebuildStart(void);
+void storeRebuildComplete(StoreRebuildData *);
+void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success
-extern bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
+bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
 /// parses entry buffer and validates entry metadata; fills e on success
-extern bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
+bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
 /// checks whether the loaded entry should be kept; updates counters
-extern bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
+bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
 
 #endif /* SQUID_STORE_REBUILD_H_ */

@@ -13,30 +13,30 @@ class StoreEntry;
 class wordlist;
 
 /// \ingroup ACLAPI
-extern void aclDestroyAccessList(acl_access **list);
+void aclDestroyAccessList(acl_access **list);
 /// \ingroup ACLAPI
-extern void aclDestroyAcls(ACL **);
+void aclDestroyAcls(ACL **);
 /// \ingroup ACLAPI
-extern void aclDestroyAclList(ACLList **);
+void aclDestroyAclList(ACLList **);
 /// \ingroup ACLAPI
-extern void aclParseAccessLine(ConfigParser &parser, acl_access **);
+void aclParseAccessLine(ConfigParser &parser, acl_access **);
 /// \ingroup ACLAPI
-extern void aclParseAclList(ConfigParser &parser, ACLList **);
+void aclParseAclList(ConfigParser &parser, ACLList **);
 /// \ingroup ACLAPI
-extern int aclIsProxyAuth(const char *name);
+int aclIsProxyAuth(const char *name);
 /// \ingroup ACLAPI
-extern err_type aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed);
+err_type aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed);
 /// \ingroup ACLAPI
-extern void aclParseDenyInfoLine(AclDenyInfoList **);
+void aclParseDenyInfoLine(AclDenyInfoList **);
 /// \ingroup ACLAPI
-extern void aclDestroyDenyInfoList(AclDenyInfoList **);
+void aclDestroyDenyInfoList(AclDenyInfoList **);
 /// \ingroup ACLAPI
-extern wordlist *aclDumpGeneric(const ACL *);
+wordlist *aclDumpGeneric(const ACL *);
 /// \ingroup ACLAPI
-extern void aclCacheMatchFlush(dlink_list * cache);
+void aclCacheMatchFlush(dlink_list * cache);
 /// \ingroup ACLAPI
-extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
+void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
-extern void dump_acl_list(StoreEntry * entry, ACLList * head);
+void dump_acl_list(StoreEntry * entry, ACLList * head);
 
 #endif /* SQUID_ACL_GADGETS_H */

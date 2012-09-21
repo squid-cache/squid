@@ -293,10 +293,10 @@ private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
 };
 
-extern int httpHeaderParseQuotedString(const char *start, const int len, String *val);
-extern int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
-extern void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
-extern void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
+int httpHeaderParseQuotedString(const char *start, const int len, String *val);
+int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
+void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
+void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
 
 inline bool
 HttpHeader::chunked() const
@@ -305,7 +305,7 @@ HttpHeader::chunked() const
            hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
 }
 
-extern void httpHeaderInitModule(void);
-extern void httpHeaderCleanModule(void);
+void httpHeaderInitModule(void);
+void httpHeaderCleanModule(void);
 
 #endif /* SQUID_HTTPHEADER_H */

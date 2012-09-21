@@ -125,11 +125,11 @@ private:
     CBDATA_CLASS(store_client);
 };
 
-extern void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
-extern store_client* storeClientListAdd(StoreEntry * e, void *data);
-extern int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
-extern int storeUnregister(store_client * sc, StoreEntry * e, void *data);
-extern int storePendingNClients(const StoreEntry * e);
-extern int storeClientIsThisAClient(store_client * sc, void *someClient);
+void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
+store_client* storeClientListAdd(StoreEntry * e, void *data);
+int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
+int storeUnregister(store_client * sc, StoreEntry * e, void *data);
+int storePendingNClients(const StoreEntry * e);
+int storeClientIsThisAClient(store_client * sc, void *someClient);
 
 #endif /* SQUID_STORECLIENT_H */

@@ -34,9 +34,9 @@
 
 class StoreEntry;
 
-extern void storeLog(int tag, const StoreEntry * e);
-extern void storeLogRotate(void);
-extern void storeLogClose(void);
-extern void storeLogOpen(void);
+void storeLog(int tag, const StoreEntry * e);
+void storeLogRotate(void);
+void storeLogClose(void);
+void storeLogOpen(void);
 
 #endif /* SQUID_STORE_LOG_H_ */

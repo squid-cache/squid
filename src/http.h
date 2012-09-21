@@ -132,8 +132,8 @@ private:
     CBDATA_CLASS2(HttpStateData);
 };
 
-extern int httpCachable(const HttpRequestMethod&);
-extern void httpStart(FwdState *);
-extern const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
+int httpCachable(const HttpRequestMethod&);
+void httpStart(FwdState *);
+const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #endif /* SQUID_HTTP_H */

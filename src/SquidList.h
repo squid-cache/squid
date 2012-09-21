@@ -39,7 +39,7 @@ class link_list
     link_list *next;
 };
 
-extern void linklistPush(link_list **, void *);
-extern void *linklistShift(link_list **);
+void linklistPush(link_list **, void *);
+void *linklistShift(link_list **);
 
 #endif /* SQUID_SQUIDLIST_H_ */

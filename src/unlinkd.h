@@ -33,10 +33,10 @@
  */
 
 #if USE_UNLINKD
-extern bool unlinkdNeeded(void);
-extern void unlinkdInit(void);
-extern void unlinkdClose(void);
-extern void unlinkdUnlink(const char *);
+bool unlinkdNeeded(void);
+void unlinkdInit(void);
+void unlinkdClose(void);
+void unlinkdUnlink(const char *);
 #else /* USE_UNLINKD */
 
 #if HAVE_UNISTD_H

@@ -57,7 +57,7 @@ class ConnStateData;
 
 /*  Http Request */
 //DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
-extern void httpRequestPack(void *obj, Packer *p);
+void httpRequestPack(void *obj, Packer *p);
 
 class HttpHdrRange;
 class DnsLookupDetails;
