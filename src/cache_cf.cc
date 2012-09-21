@@ -1735,7 +1735,7 @@ parse_http_header_access(HeaderManglers **pm)
     if (!*pm)
         *pm = new HeaderManglers;
     HeaderManglers *manglers = *pm;
-    header_mangler *mangler = manglers->track(t);
+    headerMangler *mangler = manglers->track(t);
     assert(mangler);
     parse_acl_access(&mangler->access_list);
 }

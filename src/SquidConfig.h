@@ -60,6 +60,7 @@ namespace AnyP {
 class PortCfg;
 }
 
+/// the representation of the configuration. POD.
 class SquidConfig
 {
 public:

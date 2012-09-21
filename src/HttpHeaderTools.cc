@@ -327,7 +327,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
     if (!hms)
         return 1;
 
-    const header_mangler *hm = hms->find(*e);
+    const headerMangler *hm = hms->find(*e);
 
     /* mangler or checklist went away. default allow */
     if (!hm || !hm->access_list) {
@@ -371,7 +371,7 @@ httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
 }
 
 static
-void header_mangler_clean(header_mangler &m)
+void header_mangler_clean(headerMangler &m)
 {
     aclDestroyAccessList(&m.access_list);
     safe_free(m.replacement);
@@ -379,7 +379,7 @@ void header_mangler_clean(header_mangler &m)
 
 static
 void header_mangler_dump_access(StoreEntry * entry, const char *option,
-                                const header_mangler &m, const char *name)
+                                const headerMangler &m, const char *name)
 {
     if (m.access_list != NULL) {
         storeAppendPrintf(entry, "%s ", option);
@@ -389,7 +389,7 @@ void header_mangler_dump_access(StoreEntry * entry, const char *option,
 
 static
 void header_mangler_dump_replacement(StoreEntry * entry, const char *option,
-                                     const header_mangler &m, const char *name)
+                                     const headerMangler &m, const char *name)
 {
     if (m.replacement)
         storeAppendPrintf(entry, "%s %s %s\n", option, name, m.replacement);
@@ -445,7 +445,7 @@ HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
     header_mangler_dump_replacement(entry, name, all, "All");
 }
 
-header_mangler *
+headerMangler *
 HeaderManglers::track(const char *name)
 {
     int id = httpHeaderIdByNameDef(name, strlen(name));
@@ -457,7 +457,7 @@ HeaderManglers::track(const char *name)
             id = HDR_OTHER;
     }
 
-    header_mangler *m = NULL;
+    headerMangler *m = NULL;
     if (id == HDR_ENUM_END) {
         m = &all;
     } else if (id == HDR_BAD_HDR) {
@@ -475,13 +475,13 @@ HeaderManglers::setReplacement(const char *name, const char *value)
 {
     // for backword compatibility, we allow replacements to be configured
     // for headers w/o access rules, but such replacements are ignored
-    header_mangler *m = track(name);
+    headerMangler *m = track(name);
 
     safe_free(m->replacement); // overwrite old value if any
     m->replacement = xstrdup(value);
 }
 
-const header_mangler *
+const headerMangler *
 HeaderManglers::find(const HttpHeaderEntry &e) const
 {
     // a known header with a configured ACL list

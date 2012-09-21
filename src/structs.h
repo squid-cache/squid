@@ -29,23 +29,24 @@
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
+#define PEER_MULTICAST_SIBLINGS 1
+
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
 #include "hash.h"
-#include "ip/Address.h"
-
-/* needed for the global config */
 #include "HttpHeader.h"
 #include "HttpHeaderTools.h"
-
-#define PEER_MULTICAST_SIBLINGS 1
+#include "ip/Address.h"
 
 class ACLChecklist;
+class ACLList;
+class PeerDigest;
 
 #if SQUID_SNMP
 
 #include "snmp_session.h"
+// POD
 class snmp_request_t
 {
 public:
@@ -65,9 +66,7 @@ public:
     struct snmp_session session;
 };
 
-#endif
-
-class ACLList;
+#endif /* SQUID_SNMP */
 
 struct acl_tos {
     acl_tos *next;
@@ -98,10 +97,9 @@ struct acl_size_t {
 
 #include "HelperChildConfig.h"
 
-/* forward decl for SquidConfig, see RemovalPolicy.h */
-
 class CpuAffinityMap;
 
+// POD
 class close_handler
 {
 public:
@@ -110,6 +108,7 @@ public:
     close_handler *next;
 };
 
+// POD
 class dread_ctrl
 {
 public:
@@ -122,6 +121,7 @@ public:
     void *client_data;
 };
 
+// POD
 class dwrite_q
 {
 public:
@@ -141,6 +141,7 @@ struct _fde_disk {
     off_t offset;
 };
 
+// POD
 class http_state_flags
 {
 public:
@@ -161,6 +162,7 @@ public:
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
+// POD
 class domain_ping
 {
 public:
@@ -169,6 +171,7 @@ public:
     domain_ping *next;
 };
 
+// POD
 class domain_type
 {
 public:
@@ -176,8 +179,6 @@ public:
     peer_t type;
     domain_type *next;
 };
-
-class PeerDigest;
 
 #if USE_SSL
 struct _sslproxy_cert_sign {
