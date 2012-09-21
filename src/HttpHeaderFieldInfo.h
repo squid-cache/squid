@@ -32,7 +32,7 @@
 #include "SquidString.h"
 #include "HttpHeaderFieldStat.h"
 
-/* compiled version of HttpHeaderFieldAttrs plus stats */
+/// compiled version of HttpHeaderFieldAttrs plus stats. Currently a POD.
 class HttpHeaderFieldInfo
 {
 public:

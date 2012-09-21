@@ -32,6 +32,7 @@
 #include "ip/Address.h"
 #include "acl/Acl.h"
 
+/// list of address-based ACLs. Currently a POD.
 class AclAddress
 {
 public:

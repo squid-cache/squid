@@ -37,6 +37,7 @@ namespace Format {
 class Format;
 }
 
+/// representaiton of a custom log directive. Currently a POD.
 class CustomLog
 {
 public:

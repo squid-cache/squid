@@ -38,6 +38,7 @@
 class CacheDigestGuessStats;
 class StoreEntry;
 
+// currently a POD
 class CacheDigest
 {
 public:
@@ -50,18 +51,18 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-extern CacheDigest *cacheDigestCreate(int capacity, int bpe);
-extern void cacheDigestDestroy(CacheDigest * cd);
-extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
-extern void cacheDigestClear(CacheDigest * cd);
-extern void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
-extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
-extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
-extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
-extern size_t cacheDigestCalcMaskSize(int cap, int bpe);
-extern int cacheDigestBitUtil(const CacheDigest * cd);
-extern void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
-extern void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
-extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
+CacheDigest *cacheDigestCreate(int capacity, int bpe);
+void cacheDigestDestroy(CacheDigest * cd);
+CacheDigest *cacheDigestClone(const CacheDigest * cd);
+void cacheDigestClear(CacheDigest * cd);
+void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
+int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
+void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
+void cacheDigestDel(CacheDigest * cd, const cache_key * key);
+size_t cacheDigestCalcMaskSize(int cap, int bpe);
+int cacheDigestBitUtil(const CacheDigest * cd);
+void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
+void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
+void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
 #endif /* SQUID_CACHEDIGEST_H_ */

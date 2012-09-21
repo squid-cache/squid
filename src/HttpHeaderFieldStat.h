@@ -29,7 +29,7 @@
  *
  */
 
-/// per field statistics
+/// per field statistics. Currently a POD.
 class HttpHeaderFieldStat
 {
 public:

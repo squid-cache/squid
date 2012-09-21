@@ -30,8 +30,10 @@
  */
 
 #include "err_type.h"
-#include "acl/AclNameList.h"
 
+class AclNameList;
+
+/// deny_info representation. Currently a POD.
 class AclDenyInfoList
 {
 public:

@@ -29,6 +29,7 @@
  *
  */
 
+/// IO statistics. Currently a POD.
 class IoStats
 {
 public:
@@ -41,7 +42,6 @@ public:
         int writes;
         int write_hist[histSize];
     }
-
     Http, Ftp, Gopher;
 };
 

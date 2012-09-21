@@ -44,7 +44,6 @@ class HttpHdrRange;
 class HttpHdrSc;
 class Packer;
 class StoreEntry;
-class String;
 
 /* constant attributes of http header fields */
 
@@ -180,6 +179,7 @@ typedef enum {
     hoEnd
 } http_hdr_owner_type;
 
+// currently a POD
 class HttpHeaderFieldAttrs
 {
 public:

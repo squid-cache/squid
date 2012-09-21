@@ -42,6 +42,7 @@ class domain_type;
 class acl_access;
 class PeerDigest;
 
+// currently a POD
 class CachePeer
 {
 public:
