@@ -162,15 +162,6 @@ public:
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
-// POD
-class domain_ping
-{
-public:
-    char *domain;
-    int do_ping;		/* boolean */
-    domain_ping *next;
-};
-
 #if USE_SSL
 struct _sslproxy_cert_sign {
     int alg;

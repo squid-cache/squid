@@ -42,6 +42,7 @@
 #include "base/RunnersRegistry.h"
 #include "mgr/ActionPasswordList.h"
 #include "CachePeer.h"
+#include "CachePeerDomainList.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -1976,7 +1977,7 @@ peer_type_str(const peer_t type)
 static void
 dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
-    domain_ping *d;
+    CachePeerDomainList *d;
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
@@ -2514,8 +2515,8 @@ parse_hostdomain(void)
         self_destruct();
 
     while ((domain = strtok(NULL, list_sep))) {
-        domain_ping *l = NULL;
-        domain_ping **L = NULL;
+        CachePeerDomainList *l = NULL;
+        CachePeerDomainList **L = NULL;
         CachePeer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
@@ -2523,11 +2524,11 @@ parse_hostdomain(void)
             continue;
         }
 
-        l = static_cast<domain_ping *>(xcalloc(1, sizeof(domain_ping)));
-        l->do_ping = 1;
+        l = static_cast<CachePeerDomainList *>(xcalloc(1, sizeof(CachePeerDomainList)));
+        l->do_ping = true;
 
         if (*domain == '!') {	/* check for !.edu */
-            l->do_ping = 0;
+            l->do_ping = false;
             ++domain;
         }
 
