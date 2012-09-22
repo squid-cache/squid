@@ -37,9 +37,9 @@
 #include <openssl/ssl.h>
 #endif
 
-class domain_ping;
-class domain_type;
 class acl_access;
+class domain_ping;
+class NeighborTypeDomainList;
 class PeerDigest;
 
 // currently a POD
@@ -86,7 +86,7 @@ public:
 
     unsigned short http_port;
     domain_ping *peer_domain;
-    domain_type *typelist;
+    NeighborTypeDomainList *typelist;
     acl_access *access;
 
     struct {

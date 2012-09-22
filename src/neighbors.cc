@@ -51,6 +51,7 @@
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "multicast.h"
+#include "NeighborTypeDomainList.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
@@ -132,7 +133,7 @@ peer_t
 neighborType(const CachePeer * p, const HttpRequest * request)
 {
 
-    const domain_type *d = NULL;
+    const NeighborTypeDomainList *d = NULL;
 
     for (d = p->typelist; d; d = d->next) {
         if (0 == matchDomainName(request->GetHost(), d->domain))
