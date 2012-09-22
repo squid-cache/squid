@@ -1432,7 +1432,11 @@ clientReplyContext::buildReplyHeader()
 
 #endif
 
-    const bool maySendChunkedReply = !request->multipartRangeRequest() &&
+    // XXX: chunking a Content-Range response may not violate specs, but our
+    // ClientSocketContext::writeComplete() confuses the end of ClientStream
+    // with the end of to-client writing and may quit before writing last-chunk
+    const bool maySendChunkedReply = !reply->content_range &&
+                                     !request->multipartRangeRequest() &&
                                      reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
                                      (request->http_ver >= HttpVersion(1, 1));
 
