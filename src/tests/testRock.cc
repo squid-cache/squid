@@ -21,12 +21,17 @@
 #if HAVE_STDEXCEPT
 #include <stdexcept>
 #endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #define TESTDIR "testRock__testRockSearch"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
 
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
+
+static char cwd[MAXPATHLEN];
 
 static void
 addSwapDir(testRock::SwapDirPointer aStore)
@@ -45,7 +50,9 @@ testRock::setUp()
         throw std::runtime_error("Failed to clean test work directory");
 
     // use current directory for shared segments (on path-based OSes)
-    Ipc::Mem::Segment::BasePath = ".";
+    Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
+    if (Ipc::Mem::Segment::BasePath == NULL)
+        Ipc::Mem::Segment::BasePath = ".";
 
     Store::Root(new StoreController);
 
