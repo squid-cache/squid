@@ -33,6 +33,7 @@
 #define SQUID_HTTP_H
 
 #include "comm.h"
+#include "HttpStateFlags.h"
 #include "Server.h"
 
 class ChunkedCodingParser;
@@ -49,7 +50,7 @@ public:
                                        StoreEntry * entry,
                                        const AccessLogEntryPointer &al,
                                        HttpHeader * hdr_out,
-                                       const http_state_flags flags);
+                                       const HttpStateFlags &flags);
 
     virtual const Comm::ConnectionPointer & dataConnection() const;
     /* should be private */
@@ -63,7 +64,7 @@ public:
     CachePeer *_peer;		/* CachePeer request made to */
     int eof;			/* reached end-of-object? */
     int lastChunk;		/* reached last chunk of a chunk-encoded reply */
-    http_state_flags flags;
+    HttpStateFlags flags;
     size_t read_sz;
     int header_bytes_read;	// to find end of response,
     int64_t reply_bytes_read;	// without relying on StoreEntry

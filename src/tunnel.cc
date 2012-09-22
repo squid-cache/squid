@@ -45,6 +45,7 @@
 #include "fde.h"
 #include "http.h"
 #include "HttpRequest.h"
+#include "HttpStateFlags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
@@ -692,7 +693,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpHeader hdr_out(hoRequest);
     Packer p;
-    http_state_flags flags;
+    HttpStateFlags flags;
     debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
     memset(&flags, '\0', sizeof(flags));
     flags.proxying = tunnelState->request->flags.proxying;

@@ -141,27 +141,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-// POD
-class http_state_flags
-{
-public:
-    unsigned int proxying:1;
-    unsigned int keepalive:1;
-    unsigned int only_if_cached:1;
-    unsigned int handling1xx:1; ///< we are ignoring or forwarding 1xx response
-    unsigned int headers_parsed:1;
-    unsigned int front_end_https:2;
-    unsigned int originpeer:1;
-    unsigned int keepalive_broken:1;
-    unsigned int abuse_detected:1;
-    unsigned int request_sent:1;
-    unsigned int do_next_read:1;
-    unsigned int consume_body_data:1;
-    unsigned int chunked:1; ///< reading a chunked response; TODO: rename
-    unsigned int chunked_request:1; ///< writing a chunked request
-    unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
-};
-
 #if USE_SSL
 struct _sslproxy_cert_sign {
     int alg;
