@@ -49,7 +49,6 @@ public:
         // some result codes for backward compatibility with NTLM/Negotiate
         // TODO: migrate these into variants of the above results with key-pair parameters
         TT,
-        AF,
         NA
     } result;
 
@@ -59,6 +58,7 @@ public:
     MemBuf password;
     MemBuf message;
     MemBuf log;
+    MemBuf authToken;
 
 // TODO other (custom) key=pair values. when the callbacks actually use this object.
 // for now they retain their own parsing routines handling other()

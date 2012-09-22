@@ -291,10 +291,9 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
         break;
 
-    case HelperReply::AF:
     case HelperReply::Okay:
     {
-        if (arg == NULL) {
+        if (!reply.user.hasContent()) {
             // XXX: handle a success with no username better
             /* protocol error */
             fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
@@ -302,10 +301,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
 
         /* we're finished, release the helper */
-        auth_user_request->user()->username(arg);
+        auth_user_request->user()->username(reply.user.content());
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(blob);
+        lm_request->server_blob = xstrdup(reply.authToken.content());
         lm_request->releaseAuthServer();
 
         /* connection is authenticated */
@@ -334,7 +333,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << arg << "'");
+        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << reply.user << "'");
     }
         break;
 
