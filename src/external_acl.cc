@@ -1321,11 +1321,26 @@ externalAclHandleReply(void *data, const HelperReply &reply)
         entryData.result = ACCESS_ALLOWED;
     // XXX: handle other non-DENIED results better
 
+    if (reply.tag.hasContent())
+        entryData.tag = reply.tag;
+    if (reply.message.hasContent())
+        entryData.message = reply.message;
+    if (reply.log.hasContent())
+        entryData.log = reply.log;
+#if USE_AUTH
+    if (reply.user.hasContent())
+        entryData.user = reply.user;
+    if (reply.password.hasContent())
+        entryData.password = reply.password;
+#endif
+
+    // legacy reply parser
     if (reply.other().hasContent()) {
         char *temp = reply.modifiableOther().content();
         char *token = strwordtok(temp, &t);
 
         while ((token = strwordtok(NULL, &t))) {
+            debugs(82, DBG_IMPORTANT, "WARNING: key '" << token << "' is not supported by this Squid.");
             char *value = strchr(token, '=');
 
             if (value) {
@@ -1335,24 +1350,15 @@ externalAclHandleReply(void *data, const HelperReply &reply)
                 if (state->def->quote == external_acl::QUOTE_METHOD_URL)
                     rfc1738_unescape(value);
 
-                if (strcmp(token, "message") == 0)
+                if (strcmp(token, "error") == 0) {
                     entryData.message = value;
-                else if (strcmp(token, "error") == 0)
-                    entryData.message = value;
-                else if (strcmp(token, "tag") == 0)
-                    entryData.tag = value;
-                else if (strcmp(token, "log") == 0)
-                    entryData.log = value;
 #if USE_AUTH
-                else if (strcmp(token, "user") == 0)
-                    entryData.user = value;
-                else if (strcmp(token, "password") == 0)
+                } else if (strcmp(token, "passwd") == 0) {
                     entryData.password = value;
-                else if (strcmp(token, "passwd") == 0)
-                    entryData.password = value;
-                else if (strcmp(token, "login") == 0)
+                } else if (strcmp(token, "login") == 0) {
                     entryData.user = value;
 #endif
+                }
             }
         }
     }
@@ -1511,6 +1517,9 @@ externalAclInit(void)
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
 
         p->theHelper->addr = p->local_addr;
+
+        if (p->quote == external_acl::QUOTE_METHOD_URL)
+            p->theHelper->url_quoting = true;
 
         helperOpenServers(p->theHelper);
     }

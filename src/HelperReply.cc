@@ -1,16 +1,13 @@
+/*
+ * DEBUG: section 84    Helper process maintenance
+ * AUTHOR: Amos Jeffries
+ */
 #include "squid.h"
 #include "HelperReply.h"
 #include "helper.h"
+#include "SquidString.h"
 
-#if 0
-HelperReply::HelperReply(const HelperReply &r) :
-        result(r.result)
-        other_(r.other()),
-{
-}
-#endif
-
-HelperReply::HelperReply(const char *buf, size_t len) :
+HelperReply::HelperReply(const char *buf, size_t len, bool urlQuoting) :
         result(HelperReply::Unknown),
         whichServer(NULL)
 {
@@ -56,6 +53,47 @@ HelperReply::HelperReply(const char *buf, size_t len) :
 
     // NULL-terminate so the helper callback handlers do not buffer-overrun
     other_.terminate();
+
+    bool found;
+    do {
+        found = false;
+        found |= parseKeyValue("tag=", 4, tag);
+        found |= parseKeyValue("user=", 5, user);
+        found |= parseKeyValue("password=", 9, password);
+        found |= parseKeyValue("message=", 8, message);
+        found |= parseKeyValue("log=", 8, log);
+    } while(found);
+
+    if (urlQuoting) {
+        // unescape the reply values
+        if (tag.hasContent())
+            rfc1738_unescape(tag.buf());
+        if (user.hasContent())
+            rfc1738_unescape(user.buf());
+        if (password.hasContent())
+            rfc1738_unescape(password.buf());
+        if (message.hasContent())
+            rfc1738_unescape(message.buf());
+        if (log.hasContent())
+            rfc1738_unescape(log.buf());
+    }
+}
+
+bool
+HelperReply::parseKeyValue(const char *key, size_t key_len, MemBuf &value)
+{
+    if (other().contentSize() > static_cast<mb_size_t>(key_len) && memcmp(other().content(), key, key_len) == 0) {
+        // parse the value out of the string. may be double-quoted
+        char *tmp = modifiableOther().content() + key_len;
+        const char *token = strwordtok(NULL, &tmp);
+        value.reset();
+        value.append(token,strlen(token));
+        const mb_size_t keyPairSize = tmp - other().content();
+        modifiableOther().consume(keyPairSize);
+        modifiableOther().consumeWhitespace();
+        return true;
+    }
+    return false;
 }
 
 std::ostream &
@@ -69,7 +107,7 @@ operator <<(std::ostream &os, const HelperReply &r)
         break;
     case HelperReply::Error:
         os << "ERR";
-        break;	
+        break;
     case HelperReply::BrokenHelper:
         os << "BH";
         break;
