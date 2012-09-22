@@ -834,7 +834,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
 
         void *cbdata = NULL;
         if (cbdataReferenceValidDone(r->data, &cbdata))
-            callback(cbdata, HelperReply(msg, (msg_end-msg)));
+            callback(cbdata, HelperReply(msg, (msg_end-msg), hlp->url_quoting));
 
         -- srv->stats.pending;
 
