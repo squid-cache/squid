@@ -3687,8 +3687,10 @@ ConnStateData::sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply)
 void
 ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
 {
-    if (!reply.other().hasContent()) {
-        debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper return <NULL> reply");
+    if (reply.result == HelperReply::BrokenHelper) {
+        debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
+    } else if (!reply.other().hasContent()) {
+        debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
     } else {
         Ssl::CrtdMessage reply_message;
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
