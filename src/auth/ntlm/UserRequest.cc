@@ -265,10 +265,10 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         safe_free(lm_request->server_blob);
         lm_request->request->flags.must_keepalive = 1;
         if (lm_request->request->flags.proxy_keepalive) {
-            lm_request->server_blob = xstrdup(blob);
+            lm_request->server_blob = xstrdup(reply.authToken.content());
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server blob '" << blob << "'");
+            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << reply.authToken << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
