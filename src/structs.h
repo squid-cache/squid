@@ -171,15 +171,6 @@ public:
     domain_ping *next;
 };
 
-// POD
-class domain_type
-{
-public:
-    char *domain;
-    peer_t type;
-    domain_type *next;
-};
-
 #if USE_SSL
 struct _sslproxy_cert_sign {
     int alg;

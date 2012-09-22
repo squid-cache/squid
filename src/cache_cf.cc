@@ -62,6 +62,7 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "NeighborTypeDomainList.h"
 #include "Parsing.h"
 #include "PeerDigest.h"
 #include "RefreshPattern.h"
@@ -1976,7 +1977,7 @@ static void
 dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
     domain_ping *d;
-    domain_type *t;
+    NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
     while (p != NULL) {
@@ -2551,8 +2552,8 @@ parse_hostdomaintype(void)
         self_destruct();
 
     while ((domain = strtok(NULL, list_sep))) {
-        domain_type *l = NULL;
-        domain_type **L = NULL;
+        NeighborTypeDomainList *l = NULL;
+        NeighborTypeDomainList **L = NULL;
         CachePeer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
@@ -2560,7 +2561,7 @@ parse_hostdomaintype(void)
             return;
         }
 
-        l = static_cast<domain_type *>(xcalloc(1, sizeof(domain_type)));
+        l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
