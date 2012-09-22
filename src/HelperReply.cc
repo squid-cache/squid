@@ -34,6 +34,10 @@ HelperReply::HelperReply(const char *buf, size_t len, bool urlQuoting) :
             // NTLM challenge token
             result = HelperReply::TT;
             p+=2;
+            // followed by an auth token
+            char *token = strwordtok(NULL, &p);
+            authToken.init();
+            authToken.append(token, strlen(token));
         } else if (!strncmp(p,"AF ",3)) {
             // NTLM/Negotate OK response
             result = HelperReply::OK;
