@@ -25,7 +25,7 @@ private:
 
 public:
     // create/parse details from the msg buffer provided
-    HelperReply(const char *buf, size_t len);
+    HelperReply(const char *buf, size_t len, bool urlQuoting = false);
     ~HelperReply() {}
 
     const MemBuf &other() const { return other_; }
@@ -35,6 +35,8 @@ public:
     /// and by urlParse() in ClientRequestContext::clientRedirectDone()
     /// and by token blob/arg parsing in Negotiate auth handler
     MemBuf &modifiableOther() const { return *const_cast<MemBuf*>(&other_); }
+
+    bool parseKeyValue(const char *key, size_t key_len, MemBuf &);
 
 public:
     /// The helper response 'result' field.
@@ -51,7 +53,14 @@ public:
         NA
     } result;
 
-// TODO other key=pair values. when the callbacks actually use this object.
+    // some pre-determined keys
+    MemBuf tag;
+    MemBuf user;
+    MemBuf password;
+    MemBuf message;
+    MemBuf log;
+
+// TODO other (custom) key=pair values. when the callbacks actually use this object.
 // for now they retain their own parsing routines handling other()
 
     /// for stateful replies the responding helper 'server' needs to be preserved across callbacks

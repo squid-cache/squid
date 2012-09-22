@@ -48,7 +48,7 @@ typedef void HLPCB(void *, const HelperReply &reply);
 class helper
 {
 public:
-    inline helper(const char *name) : cmdline(NULL), id_name(name), eom('\n') {}
+    inline helper(const char *name) : cmdline(NULL), id_name(name), eom('\n'), url_quoting(false) {}
     ~helper();
 
 public:
@@ -62,6 +62,7 @@ public:
     time_t last_queue_warn;
     time_t last_restart;
     char eom;   ///< The char which marks the end of (response) message, normally '\n'
+    bool url_quoting;
 
     struct _stats {
         int requests;
