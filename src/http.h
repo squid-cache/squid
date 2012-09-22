@@ -38,6 +38,7 @@
 
 class ChunkedCodingParser;
 class FwdState;
+class HttpHeader;
 
 class HttpStateData : public ServerStateData
 {

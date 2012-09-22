@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "format/Format.h"
 #include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/Formats.h"

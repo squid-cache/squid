@@ -61,6 +61,7 @@ public:
     int reserved[32 - 6];
 };
 
+class PeerDigest;
 class DigestFetchState
 {
 public:

@@ -44,6 +44,8 @@
 
 #include "acl/Acl.h"
 #include "cbdata.h"
+#include "hash.h"
+#include "SquidString.h"
 
 class external_acl;
 /******************************************************************

@@ -41,18 +41,18 @@
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
-
 class HttpMsg;
 #endif
+
+class acl_access;
+class ACLFilledChecklist;
+class ClientRequestContext;
+class ConnStateData;
+class MemObject;
 
 /* client_side_request.c - client side request related routines (pure logic) */
 int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
-class MemObject;
-
-class ConnStateData;
-
-class ClientRequestContext;
 
 class ClientHttpRequest
 #if USE_ADAPTATION
@@ -202,7 +202,6 @@ private:
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-class ACLFilledChecklist;
 ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
 int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 void clientAccessCheck(ClientHttpRequest *);
