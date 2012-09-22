@@ -42,16 +42,19 @@ HelperReply::HelperReply(const char *buf, size_t len, bool urlQuoting) :
             // NTLM/Negotate OK response
             result = HelperReply::OK;
             p+=3;
-            // followed by an auth token
-            char *token = strwordtok(NULL, &p);
-            authToken.init();
-            authToken.append(token, strlen(token));
-            // ... and an optional username field
-            for(;xisspace(*p);p++); // skip whitespace
-            if (*p) {
-                 user.init();
-                 user.append(p,strlen(p));
-                 p += user.size();
+            // followed by:
+            //  an auth token and user field
+            // or, an optional username field
+            char *blob = strwordtok(NULL, &p);
+            char *arg = strwordtok(NULL, &p);
+            if (arg != NULL) {
+                authToken.init();
+                authToken.append(blob, strlen(blob));
+                user.init();
+                user.append(arg,strlen(arg));
+            } else if (blob != NULL) {
+                user.init();
+                user.append(blob, strlen(blob));
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
