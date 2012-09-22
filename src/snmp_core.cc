@@ -43,6 +43,7 @@
 #include "snmp_agent.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"
+#include "SnmpRequest.h"
 #include "SquidConfig.h"
 #include "tools.h"
 
@@ -64,8 +65,8 @@ static oid *static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_P
 static oid *time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
-static void snmpDecodePacket(snmp_request_t * rq);
-static void snmpConstructReponse(snmp_request_t * rq);
+static void snmpDecodePacket(SnmpRequest * rq);
+static void snmpConstructReponse(SnmpRequest * rq);
 
 static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen);
 static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
@@ -363,7 +364,7 @@ snmpHandleUdp(int sock, void *not_used)
 {
     LOCAL_ARRAY(char, buf, SNMP_REQUEST_SIZE);
     Ip::Address from;
-    snmp_request_t *snmp_rq;
+    SnmpRequest *snmp_rq;
     int len;
 
     debugs(49, 5, "snmpHandleUdp: Called.");
@@ -382,7 +383,7 @@ snmpHandleUdp(int sock, void *not_used)
         buf[len] = '\0';
         debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
 
-        snmp_rq = (snmp_request_t *)xcalloc(1, sizeof(snmp_request_t));
+        snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
         snmp_rq->buf = (u_char *) buf;
         snmp_rq->len = len;
         snmp_rq->sock = sock;
@@ -400,7 +401,7 @@ snmpHandleUdp(int sock, void *not_used)
  * Turn SNMP packet into a PDU, check available ACL's
  */
 static void
-snmpDecodePacket(snmp_request_t * rq)
+snmpDecodePacket(SnmpRequest * rq)
 {
     struct snmp_pdu *PDU;
     u_char *Community;
@@ -447,7 +448,7 @@ snmpDecodePacket(snmp_request_t * rq)
  * Packet OK, ACL Check OK, Create reponse.
  */
 static void
-snmpConstructReponse(snmp_request_t * rq)
+snmpConstructReponse(SnmpRequest * rq)
 {
 
     struct snmp_pdu *RespPDU;

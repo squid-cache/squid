@@ -57,6 +57,7 @@ endif
 DIST_SUBDIRS += ssl
 
 SNMP_ALL_SOURCE = \
+	SnmpRequest.h \
 	snmp_core.h \
 	snmp_core.cc \
 	snmp_agent.h \

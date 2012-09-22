@@ -43,31 +43,6 @@ class ACLChecklist;
 class ACLList;
 class PeerDigest;
 
-#if SQUID_SNMP
-
-#include "snmp_session.h"
-// POD
-class snmp_request_t
-{
-public:
-    u_char *buf;
-    u_char *outbuf;
-    int len;
-    int sock;
-    long reqid;
-    int outlen;
-
-    Ip::Address from;
-
-    struct snmp_pdu *PDU;
-    ACLChecklist *acl_checklist;
-    u_char *community;
-
-    struct snmp_session session;
-};
-
-#endif /* SQUID_SNMP */
-
 struct acl_tos {
     acl_tos *next;
     ACLList *aclList;
