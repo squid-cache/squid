@@ -31,12 +31,13 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
+#include "CommRead.h"
+#include "dlink.h"
+#include "HttpRequestMethod.h"
+#include "RemovalPolicy.h"
+#include "stmem.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
-#include "stmem.h"
-#include "CommRead.h"
-#include "RemovalPolicy.h"
-#include "HttpRequestMethod.h"
 
 #if USE_DELAY_POOLS
 #include "DelayId.h"

@@ -32,6 +32,7 @@
 #include "acl/AclAddress.h"
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
+#include "HelperChildConfig.h"
 #include "HttpHeaderTools.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
@@ -50,6 +51,7 @@ namespace Mgr {
 class ActionPasswordList;
 } // namespace Mgr
 class CustomLog;
+class CpuAffinityMap;
 class external_acl;
 class HeaderManglers;
 class RefreshPattern;
