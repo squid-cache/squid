@@ -38,7 +38,7 @@
 #endif
 
 class acl_access;
-class domain_ping;
+class CachePeerDomainList;
 class NeighborTypeDomainList;
 class PeerDigest;
 
@@ -85,7 +85,7 @@ public:
 #endif
 
     unsigned short http_port;
-    domain_ping *peer_domain;
+    CachePeerDomainList *peer_domain;
     NeighborTypeDomainList *typelist;
     acl_access *access;
 

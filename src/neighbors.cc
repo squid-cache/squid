@@ -35,6 +35,7 @@
 #include "anyp/PortCfg.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
+#include "CachePeerDomainList.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
@@ -156,7 +157,7 @@ bool
 peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 {
 
-    const domain_ping *d = NULL;
+    const CachePeerDomainList *d = NULL;
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
@@ -1163,9 +1164,9 @@ peerDestroy(void *data)
     if (p == NULL)
         return;
 
-    domain_ping *nl = NULL;
+    CachePeerDomainList *nl = NULL;
 
-    for (domain_ping *l = p->peer_domain; l; l = nl) {
+    for (CachePeerDomainList *l = p->peer_domain; l; l = nl) {
         nl = l->next;
         safe_free(l->domain);
         xfree(l);
@@ -1585,7 +1586,7 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
 {
     CachePeer *e = NULL;
     char ntoabuf[MAX_IPSTRLEN];
-    domain_ping *d = NULL;
+    CachePeerDomainList *d = NULL;
     icp_opcode op;
     int i;
 
