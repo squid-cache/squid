@@ -9,6 +9,7 @@
 
 #include "SquidTime.h"
 #include "CacheManager.h"
+#include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
 #if HAVE_MAP

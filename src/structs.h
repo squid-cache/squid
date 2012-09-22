@@ -31,17 +31,11 @@
 
 #define PEER_MULTICAST_SIBLINGS 1
 
-#include "cbdata.h"
+//#include "cbdata.h"
 #include "defines.h"
-#include "dlink.h"
-#include "hash.h"
-#include "HttpHeader.h"
-#include "HttpHeaderTools.h"
-#include "ip/Address.h"
+#include "typedefs.h"
 
-class ACLChecklist;
 class ACLList;
-class PeerDigest;
 
 struct acl_tos {
     acl_tos *next;
@@ -60,19 +54,6 @@ struct acl_size_t {
     ACLList *aclList;
     int64_t size;
 };
-
-#if USE_DELAY_POOLS
-#include "DelayConfig.h"
-#include "ClientDelayConfig.h"
-#endif
-
-#if USE_ICMP
-#include "icmp/IcmpConfig.h"
-#endif
-
-#include "HelperChildConfig.h"
-
-class CpuAffinityMap;
 
 // POD
 class close_handler
