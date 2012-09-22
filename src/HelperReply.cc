@@ -35,9 +35,20 @@ HelperReply::HelperReply(const char *buf, size_t len, bool urlQuoting) :
             result = HelperReply::TT;
             p+=2;
         } else if (!strncmp(p,"AF ",3)) {
-            // NTLM OK response
-            result = HelperReply::AF;
-            p+=2;
+            // NTLM/Negotate OK response
+            result = HelperReply::OK;
+            p+=3;
+            // followed by an auth token
+            char *token = strwordtok(NULL, &p);
+            authToken.init();
+            authToken.append(token, strlen(token));
+            // ... and an optional username field
+            for(;xisspace(*p);p++); // skip whitespace
+            if (*p) {
+                 user.init();
+                 user.append(p,strlen(p));
+                 p += user.size();
+            }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
             result = HelperReply::NA;
@@ -62,6 +73,7 @@ HelperReply::HelperReply(const char *buf, size_t len, bool urlQuoting) :
         found |= parseKeyValue("password=", 9, password);
         found |= parseKeyValue("message=", 8, message);
         found |= parseKeyValue("log=", 8, log);
+        found |= parseKeyValue("token=", 8, authToken);
     } while(found);
 
     if (urlQuoting) {
@@ -113,9 +125,6 @@ operator <<(std::ostream &os, const HelperReply &r)
         break;
     case HelperReply::TT:
         os << "TT";
-        break;
-    case HelperReply::AF:
-        os << "AF";
         break;
     case HelperReply::NA:
         os << "NA";
