@@ -58,6 +58,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "HttpStateFlags.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -98,7 +99,7 @@ static const char *const crlf = "\r\n";
 
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
-        HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
+        HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &);
 //Declared in HttpHeaderTools.cc
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
@@ -622,7 +623,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
                 && reply->bodySize(request->method) == -1 && !flags.chunked) {
             debugs(11, DBG_IMPORTANT, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
-            flags.keepalive_broken = 1;
+            flags.keepalive_broken = true;
         }
     }
 }
@@ -678,7 +679,7 @@ HttpStateData::processReplyHeader()
     } else {
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
-            flags.headers_parsed = 1;
+            flags.headers_parsed = true;
             newrep->sline.version = HttpVersion(1,1);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
@@ -710,9 +711,9 @@ HttpStateData::processReplyHeader()
         return;
     }
 
-    flags.chunked = 0;
+    flags.chunked = false;
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
-        flags.chunked = 1;
+        flags.chunked = true;
         httpChunkDecoder = new ChunkedCodingParser;
     }
 
@@ -720,7 +721,7 @@ HttpStateData::processReplyHeader()
         request->flags.connectionAuthDisabled = 1;
 
     HttpReply *vrep = setVirginReply(newrep);
-    flags.headers_parsed = 1;
+    flags.headers_parsed = true;
 
     keepaliveAccounting(vrep);
 
@@ -1068,7 +1069,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     int clen;
     int len = io.size;
 
-    flags.do_next_read = 0;
+    flags.do_next_read = false;
 
     debugs(11, 5, HERE << io.conn << ": len " << len << ".");
 
@@ -1088,12 +1089,12 @@ HttpStateData::readReply(const CommIoCbParams &io)
         debugs(11, 2, HERE << io.conn << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(io.xerrno)) {
-            flags.do_next_read = 1;
+            flags.do_next_read = true;
         } else {
             ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
             err->xerrno = io.xerrno;
             fwd->fail(err);
-            flags.do_next_read = 0;
+            flags.do_next_read = false;
             serverConnection->close();
         }
 
@@ -1136,7 +1137,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     if (len == 0) { // reached EOF?
         eof = 1;
-        flags.do_next_read = 0;
+        flags.do_next_read = false;
 
         /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
          * Ensure here that we have at minimum two \r\n when EOF is seen.
@@ -1200,7 +1201,7 @@ HttpStateData::continueAfterParsingHeader()
 
     if (!flags.headers_parsed && !eof) {
         debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
-        flags.do_next_read = 1;
+        flags.do_next_read = true;
         /** \retval false If we have not finished parsing the headers and may get more data.
          *                Schedules more reads to retrieve the missing data.
          */
@@ -1246,7 +1247,7 @@ HttpStateData::continueAfterParsingHeader()
     assert(error != ERR_NONE);
     entry->reset();
     fwd->fail(new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request));
-    flags.do_next_read = 0;
+    flags.do_next_read = false;
     serverConnection->close();
     return false; // quit on error
 }
@@ -1309,7 +1310,7 @@ HttpStateData::decodeAndWriteReplyBody()
     addVirginReplyBody(data, len);
     if (doneParsing) {
         lastChunk = 1;
-        flags.do_next_read = 0;
+        flags.do_next_read = false;
     }
     SQUID_EXIT_THROWING_CODE(wasThereAnException);
     return wasThereAnException;
@@ -1329,7 +1330,7 @@ HttpStateData::processReplyBody()
     bool ispinned = false;
 
     if (!flags.headers_parsed) {
-        flags.do_next_read = 1;
+        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
     }
@@ -1349,7 +1350,7 @@ HttpStateData::processReplyBody()
     if (entry->isAccepting()) {
         if (flags.chunked) {
             if (!decodeAndWriteReplyBody()) {
-                flags.do_next_read = 0;
+                flags.do_next_read = false;
                 serverComplete();
                 return;
             }
@@ -1373,7 +1374,7 @@ HttpStateData::processReplyBody()
                 commSetConnTimeout(serverConnection, Config.Timeout.read, nil);
             }
 
-            flags.do_next_read = 1;
+            flags.do_next_read = true;
         }
         break;
 
@@ -1381,7 +1382,7 @@ HttpStateData::processReplyBody()
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
             /* yes we have to clear all these! */
             commUnsetConnTimeout(serverConnection);
-            flags.do_next_read = 0;
+            flags.do_next_read = false;
 
             comm_remove_close_handler(serverConnection->fd, closeHandler);
             closeHandler = NULL;
@@ -1442,7 +1443,7 @@ HttpStateData::maybeReadVirginBody()
         return;
 
     if (flags.do_next_read) {
-        flags.do_next_read = 0;
+        flags.do_next_read = false;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         entry->delayAwareRead(serverConnection, readBuf->space(read_size), read_size,
                               JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
@@ -1496,9 +1497,7 @@ HttpStateData::sendComplete()
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
 
     commSetConnTimeout(serverConnection, Config.Timeout.read, timeoutCall);
-
-    flags.request_sent = 1;
-
+    flags.request_sent = true;
     request->hier.peer_http_request_sent = current_time;
 }
 
@@ -1526,7 +1525,7 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, http_state_flags flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const HttpStateFlags &flags)
 {
     http_hdr_type header = flags.originpeer ? HDR_AUTHORIZATION : HDR_PROXY_AUTHORIZATION;
 
@@ -1622,7 +1621,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
-                                      const http_state_flags flags)
+                                      const HttpStateFlags &flags)
 {
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
@@ -1808,7 +1807,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
  * to our outgoing fetch request.
  */
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request, HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request, HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &flags)
 {
     debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
@@ -2055,7 +2054,7 @@ HttpStateData::sendRequest()
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
     commSetConnTimeout(serverConnection, Config.Timeout.lifetime, timeoutCall);
-    flags.do_next_read = 1;
+    flags.do_next_read = true;
     maybeReadVirginBody();
 
     if (request->body_pipe != NULL) {
@@ -2068,7 +2067,7 @@ HttpStateData::sendRequest()
         Must(!flags.chunked_request);
         // use chunked encoding if we do not know the length
         if (request->content_length < 0)
-            flags.chunked_request = 1;
+            flags.chunked_request = true;
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
@@ -2078,31 +2077,31 @@ HttpStateData::sendRequest()
 
     if (_peer != NULL) {
         if (_peer->options.originserver) {
-            flags.proxying = 0;
-            flags.originpeer = 1;
+            flags.proxying = false;
+            flags.originpeer = true;
         } else {
-            flags.proxying = 1;
-            flags.originpeer = 0;
+            flags.proxying = false;
+            flags.originpeer = false;
         }
     } else {
-        flags.proxying = 0;
-        flags.originpeer = 0;
+        flags.proxying = false;
+        flags.originpeer = false;
     }
 
     /*
      * Is keep-alive okay for all request methods?
      */
     if (request->flags.mustKeepalive)
-        flags.keepalive = 1;
+        flags.keepalive = true;
     else if (!Config.onoff.server_pconns)
-        flags.keepalive = 0;
+        flags.keepalive = false;
     else if (_peer == NULL)
-        flags.keepalive = 1;
+        flags.keepalive = true;
     else if (_peer->stats.n_keepalives_sent < 10)
-        flags.keepalive = 1;
+        flags.keepalive = true;
     else if ((double) _peer->stats.n_keepalives_recv /
              (double) _peer->stats.n_keepalives_sent > 0.50)
-        flags.keepalive = 1;
+        flags.keepalive = true;
 
     if (_peer) {
         /*The old code here was
@@ -2118,7 +2117,7 @@ HttpStateData::sendRequest()
          */
         if (neighborType(_peer, request) == PEER_SIBLING &&
                 !_peer->options.allow_miss)
-            flags.only_if_cached = 1;
+            flags.only_if_cached = true;
 
         flags.front_end_https = _peer->front_end_https;
     }
@@ -2278,7 +2277,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
         // XXX: why does not this trigger a debug message on every request?
 
         if (flags.headers_parsed && !flags.abuse_detected) {
-            flags.abuse_detected = 1;
+            flags.abuse_detected = true;
             debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
