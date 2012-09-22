@@ -31,13 +31,14 @@
  *
  */
 
-namespace Auth {
+namespace Auth
+{
 
 #if USE_AUTH
-    /// Initialize Auth subsystem
-    extern void Init(void);
+/// Initialize Auth subsystem
+extern void Init(void);
 #else /* USE_AUTH */
-    inline void Init(void) {} /* NOP if not USE_AUTH */
+inline void Init(void) {} /* NOP if not USE_AUTH */
 #endif /* USE_AUTH */
 
 } // namespace Auth
