@@ -42,7 +42,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Store.h"
-#include "structs.h"
 
 bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;

@@ -38,7 +38,6 @@
 #include "log/File.h"
 #include "log/ModUdp.h"
 #include "Parsing.h"
-#include "structs.h"
 #include "SquidConfig.h"
 
 #if HAVE_ERRNO_H

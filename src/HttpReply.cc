@@ -45,6 +45,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
+#include "structs.h"
 
 /* local constants */
 

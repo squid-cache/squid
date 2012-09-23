@@ -32,7 +32,6 @@
 #define SQUID_HTTPREQUESTMETHOD_H
 
 #include "SquidString.h"
-#include "structs.h"
 
 class SquidConfig;
 

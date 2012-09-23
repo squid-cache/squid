@@ -29,9 +29,6 @@
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
-#define PEER_MULTICAST_SIBLINGS 1
-
-//#include "cbdata.h"
 #include "defines.h"
 #include "typedefs.h"
 

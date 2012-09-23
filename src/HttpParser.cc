@@ -3,7 +3,6 @@
 #include "HttpParser.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
-#include "structs.h"
 
 void
 HttpParser::clear()

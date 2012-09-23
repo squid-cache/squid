@@ -12,7 +12,6 @@
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "structs.h"
 
 /** \cond AUTODOCS-IGNORE */
 cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;

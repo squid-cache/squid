@@ -4,7 +4,6 @@
 #include "Debug.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "structs.h"
 
 Auth::Basic::User::User(Auth::Config *aConfig) :
         Auth::User(aConfig),
