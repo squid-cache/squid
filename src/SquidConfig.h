@@ -41,6 +41,8 @@
 
 #if USE_SSL
 #include <openssl/ssl.h>
+class sslproxy_cert_sign;
+class sslproxy_cert_adapt;
 #endif
 
 class acl_access;

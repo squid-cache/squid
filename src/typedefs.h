@@ -47,12 +47,6 @@ typedef struct {
 
 typedef struct _CommWriteStateData CommWriteStateData;
 
-#if USE_SSL
-typedef struct _sslproxy_cert_sign sslproxy_cert_sign;
-
-typedef struct _sslproxy_cert_adapt sslproxy_cert_adapt;
-#endif
-
 #if SQUID_SNMP
 #include "snmp_vars.h"
 #include "cache_snmp.h"

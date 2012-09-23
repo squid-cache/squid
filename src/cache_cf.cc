@@ -70,6 +70,7 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
+#include "ssl/ProxyCerts.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "structs.h"
