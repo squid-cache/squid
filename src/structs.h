@@ -53,15 +53,6 @@ struct acl_size_t {
 };
 
 // POD
-class close_handler
-{
-public:
-    PF *handler;
-    void *data;
-    close_handler *next;
-};
-
-// POD
 class dread_ctrl
 {
 public:
