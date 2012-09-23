@@ -114,7 +114,6 @@ static void commSetTcpNoDelay(int);
 #endif
 static void commSetTcpRcvbuf(int, int);
 
-static MemAllocator *conn_close_pool = NULL;
 fd_debug_t *fdd_table = NULL;
 
 bool
@@ -1461,8 +1460,6 @@ comm_init(void)
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = min(100, Squid_MaxFD / 4);
-
-    conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 
     TheHalfClosed = new DescriptorSet;
 
