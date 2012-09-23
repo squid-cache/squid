@@ -42,8 +42,7 @@
 #endif /* INT_MAX */
 #endif /* HAVE_STDINT_H */
 
-
-String::String() : size_(0), len_(0), buf_ (NULL)
+String::String() : size_(0), len_(0), buf_(NULL)
 {
 #if DEBUGSTRINGS
     StringRegistry::Instance().add(this);
@@ -107,7 +106,7 @@ String::nilCmp(const bool thisIsNilOrEmpty, const bool otherIsNilOrEmpty, int &r
 
 
 int
-String::cmp (char const *aString) const
+String::cmp(char const *aString) const
 {
     int result = 0;
     if (nilCmp(!size(), (!aString || !*aString), result))
@@ -117,7 +116,7 @@ String::cmp (char const *aString) const
 }
 
 int
-String::cmp (char const *aString, String::size_type count) const
+String::cmp(char const *aString, String::size_type count) const
 {
     int result = 0;
     if (nilCmp((!size() || !count), (!aString || !*aString || !count), result))
@@ -127,7 +126,7 @@ String::cmp (char const *aString, String::size_type count) const
 }
 
 int
-String::cmp (String const &aString) const
+String::cmp(String const &aString) const
 {
     int result = 0;
     if (nilCmp(!size(), !aString.size(), result))
