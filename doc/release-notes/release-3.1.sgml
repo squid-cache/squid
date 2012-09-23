@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.20 release notes</title>
+<title>Squid 3.1.21 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.20
+The Squid Team are pleased to announce the release of Squid-3.1.21
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -899,9 +899,13 @@ logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size
         RFC2475, and RFC3260.
 
         The TOS/DSCP byte must be exactly that - octet value 0x00-0xFF.
-        Note that in practice often only values up to 0x3F are usable
-        as the two highest bits have been redefined for use by ECN
-        (RFC3168).
+        Note that in practice often only multiples of 4 is usable as the
+        two rightmost bits have been redefined for use by ECN (RFC 3168
+        section 23.1).
+
+        Note that in practice often only values up to 0xFC are usable,
+        and only in multiple of 4, as the two rightmost bits have been
+        redefined for use by ECN (RFC3168).
 
         This setting is configured by setting the source TOS values:
 

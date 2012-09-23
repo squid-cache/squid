@@ -293,7 +293,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The man(8) and man(1) pages bundled with Squid are now provided online for all
    versions and beginning with 3.2 they are available in languages other than English (where translated).
 
-<p>Details in <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
 <p>3.1 began the Internationalization of Squid with the public facing error pages.
    This move begins the Localization of the internal administrator facing manuals.
@@ -341,7 +341,8 @@ Most user-facing changes are reflected in squid.conf (see below).
   direct filesystem logging (stdio, daemon) to network logging (syslog, UDP and TCP). The daemon logging
   interface allows for a custom helper to be written to process logs in real-time.
 
-<p>Upgrading: the <em>access_log</em> was previously logged via what is now called the <em>stdio</em> module.
+<p>Upgrading: the <em>access_log</em> and <em>cache_store_log</em> were previously logged via what is
+  now called the <em>stdio</em> module.
   This is still supported and used by default if no module is named. For best performance particularly in SMP
   environments we recommend the <em>daemon</em> be used. The provided <em>log_file_daemon</em> helper
   performs the traditional logging to local filesystem.
@@ -353,8 +354,8 @@ Most user-facing changes are reflected in squid.conf (see below).
   logging a single cache.log at relatively high debug levels on a high-traffic system. Or one which is
   required to store a long period of access.log and needs to conserve disk space.
 
-<p>The referer_log and useragent_log directives have been converted to built-in log formats.
-  These logs are now created using an access_log line with the format "referrer" or "useragent".
+<p>The <em>referer_log</em> and <em>useragent_log</em> directives have been converted to built-in log formats.
+  These logs are now created using an <em>access_log</em> line with the format "referrer" or "useragent".
   They also now log all client requests, if there was no Referer or User-Agent header a dash (-) is logged.
 
 <p>Known Issue: The TCP logging module does not recover from broken connections well.
@@ -609,6 +610,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>cache_peer</tag>
 	<p><em>htcp-*</em> options collapsed into <em>htcp=</em> taking an optional comma-separated list of flags.
 	   The old form is deprecated but still accepted.
+
+	<tag>cache_store_log</tag>
+	<p>Now uses logging modules. Example: stdio:/file/path
+	   see <em>access_log</em> for a list of supported modules and their parameters.
 
 	<tag>clientside_mark</tag>
 	<p>New configuration parameter <em>clientside_mark</em>

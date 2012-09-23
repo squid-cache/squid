@@ -3357,12 +3357,16 @@ LOC: Config.Log.store
 DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
-	saved and for how long.  To disable, enter "none" or remove the line.
+	saved and for how long.
 	There are not really utilities to analyze this data, so you can safely
-	disable it.
-
+	disable it (the default).
+	
+	Store log uses modular logging outputs. See access_log for the list
+	of modules supported.
+	
 	Example:
-		cache_store_log @DEFAULT_STORE_LOG@
+		cache_store_log stdio:@DEFAULT_STORE_LOG@
+		cache_store_log daemon:@DEFAULT_STORE_LOG@
 DOC_END
 
 NAME: cache_swap_state cache_swap_log
