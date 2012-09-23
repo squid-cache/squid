@@ -1840,7 +1840,7 @@ MainSafe(int argc, char **argv)
                 if (x != LDAP_ERR_SUCCESS) {
                     /* Unable to bind */
                     debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-                    local_printfx("ERR message="(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                    local_printfx("ERR message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
                     continue;
                 } else
                     debug("BindLDAP(-, -, -, (LDAP_AUTH_NONE)) -> %s\n", ErrLDAP(x));
