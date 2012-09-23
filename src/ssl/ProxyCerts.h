@@ -1,3 +1,5 @@
+#ifndef SQUID_SSLPROXYCERTS_H_
+#define SQUID_SSLPROXYCERTS_H_
 /*
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -26,63 +28,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_STRUCTS_H
-#define SQUID_STRUCTS_H
 
-#include "defines.h"
-#include "typedefs.h"
-
+#if USE_SSL
 class ACLList;
 
-struct acl_tos {
-    acl_tos *next;
-    ACLList *aclList;
-    tos_t tos;
-};
-
-struct acl_nfmark {
-    acl_nfmark *next;
-    ACLList *aclList;
-    nfmark_t nfmark;
-};
-
-struct acl_size_t {
-    acl_size_t *next;
-    ACLList *aclList;
-    int64_t size;
-};
-
-// POD
-class dread_ctrl
-{
+class sslproxy_cert_sign {
 public:
-    int fd;
-    off_t offset;
-    int req_len;
-    char *buf;
-    int end_of_file;
-    DRCB *handler;
-    void *client_data;
+    int alg;
+    ACLList *aclList;
+    sslproxy_cert_sign *next;
 };
 
-// POD
-class dwrite_q
-{
+class sslproxy_cert_adapt {
 public:
-    off_t file_offset;
-    char *buf;
-    size_t len;
-    size_t buf_offset;
-    dwrite_q *next;
-    FREE *free_func;
+    int alg;
+    char *param;
+    ACLList *aclList;
+    sslproxy_cert_adapt *next;
 };
+#endif
 
-struct _fde_disk {
-    DWCB *wrt_handle;
-    void *wrt_handle_data;
-    dwrite_q *write_q;
-    dwrite_q *write_q_tail;
-    off_t offset;
-};
-
-#endif /* SQUID_STRUCTS_H */
+#endif /* SQUID_SSLPROXYCERTS_H_ */
