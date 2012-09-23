@@ -39,7 +39,6 @@
 #include "log/File.h"
 #include "log/ModTcp.h"
 #include "Parsing.h"
-#include "structs.h"
 #include "SquidConfig.h"
 
 #if HAVE_ERRNO_H

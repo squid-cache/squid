@@ -37,6 +37,8 @@
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
 #include "mgr/forward.h"
+#include "typedefs.h"
+
 #include <vector>
 
 /**

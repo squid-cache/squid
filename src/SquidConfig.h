@@ -37,7 +37,6 @@
 #include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
 #include "RefCount.h"
-#include "structs.h"
 #include "YesNoNone.h"
 
 #if USE_SSL

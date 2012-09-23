@@ -33,6 +33,9 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 
+//TODO: remove, it is unconditionally defined and always used.
+#define PEER_MULTICAST_SIBLINGS 1
+
 #if USE_SSL
 #include <openssl/ssl.h>
 #endif
