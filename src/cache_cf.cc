@@ -2698,13 +2698,13 @@ dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_BYTES_STR);
+    storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_BYTES_STR);
 }
 
 static void
 dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_KBYTES_STR);
+    storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
 }
 
 static void

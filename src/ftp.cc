@@ -1152,7 +1152,7 @@ FtpStateData::htmlifyListEntry(const char *line)
         snprintf(icon, 2048, "<IMG border=\"0\" SRC=\"%s\" ALT=\"%-6s\">",
                  mimeGetIconURL(parts->name),
                  "[FILE]");
-        snprintf(size, 2048, " %6"PRId64"k", parts->size);
+        snprintf(size, 2048, " %6" PRId64 "k", parts->size);
         break;
     }
 
@@ -3259,7 +3259,7 @@ ftpSendRest(FtpStateData * ftpState)
 
     debugs(9, 3, HERE);
 
-    snprintf(cbuf, 1024, "REST %"PRId64"\r\n", ftpState->restart_offset);
+    snprintf(cbuf, 1024, "REST %" PRId64 "\r\n", ftpState->restart_offset);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_REST;
 }
