@@ -8,7 +8,6 @@
 #include "ipc/Kids.h"
 #include "tools.h"
 #include "SquidConfig.h"
-#include "structs.h"
 
 Kids TheKids;
 KidName TheKidName;

@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "base/AsyncJob.h"
-#include "structs.h"
 
 #define STUB_API "comm/libcomm.la"
 #include "tests/STUB.h"
