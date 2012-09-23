@@ -3094,7 +3094,6 @@ AC_CHECK_FUNCS(\
 	seteuid \
 	setgroups \
 	setpgrp \
-	setrlimit \
 	setsid \
 	sigaction \
 	snprintf \
@@ -3486,6 +3485,7 @@ AC_DEFINE_UNQUOTED(DEFAULT_FD_SETSIZE, $DEFAULT_FD_SETSIZE, [Default FD_SETSIZE 
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Maximum number of filedescriptors we can open)
+AC_CHECK_FUNCS(setrlimit)
 dnl damn! FreeBSD's pthreads breaks dup2().
 TLDFLAGS="$LDFLAGS"
 if test -n "$squid_filedescriptors_num" ; then
