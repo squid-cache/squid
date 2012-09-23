@@ -412,9 +412,10 @@ peerClearRRLoop(void *data)
 void
 peerClearRRStart(void)
 {
-    static int event_added = 0;
+    static bool event_added = false;
     if (!event_added) {
         peerClearRRLoop(NULL);
+        event_added=true;
     }
 }
 
