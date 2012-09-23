@@ -137,6 +137,7 @@
 #include "ClientInfo.h"
 #endif
 #if USE_SSL
+#include "ssl/ProxyCerts.h"
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
 #include "ssl/ServerBump.h"
