@@ -35,6 +35,7 @@
 #include "acl/AclNameList.h"
 #include "CacheDigest.h"
 #include "ClientInfo.h"
+#include "disk.h"
 #include "event.h"
 #include "md5.h"
 #include "Mem.h"

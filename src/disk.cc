@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "disk.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
