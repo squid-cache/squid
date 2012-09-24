@@ -34,18 +34,6 @@
 
 class ACLList;
 
-struct acl_tos {
-    acl_tos *next;
-    ACLList *aclList;
-    tos_t tos;
-};
-
-struct acl_nfmark {
-    acl_nfmark *next;
-    ACLList *aclList;
-    nfmark_t nfmark;
-};
-
 struct acl_size_t {
     acl_size_t *next;
     ACLList *aclList;
