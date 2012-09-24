@@ -41,19 +41,6 @@ struct acl_size_t {
 };
 
 // POD
-class dread_ctrl
-{
-public:
-    int fd;
-    off_t offset;
-    int req_len;
-    char *buf;
-    int end_of_file;
-    DRCB *handler;
-    void *client_data;
-};
-
-// POD
 class dwrite_q
 {
 public:
