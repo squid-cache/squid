@@ -17,8 +17,26 @@
 #include <limits>
 #endif
 
-// Forward-declaration
+class ACLList;
 class fde;
+
+// TODO: move to new ACL framework
+// POD
+class acl_tos {
+public:
+    acl_tos *next;
+    ACLList *aclList;
+    tos_t tos;
+};
+// TODO: move to new ACL framework
+// POD
+class acl_nfmark {
+public:
+    acl_nfmark *next;
+    ACLList *aclList;
+    nfmark_t nfmark;
+};
+
 
 namespace Ip
 {
