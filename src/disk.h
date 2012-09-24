@@ -36,6 +36,20 @@
 #include "typedefs.h"
 
 class MemBuf;
+// POD
+
+class dread_ctrl
+{
+public:
+    int fd;
+    off_t offset;
+    int req_len;
+    char *buf;
+    int end_of_file;
+    DRCB *handler;
+    void *client_data;
+};
+
 
 int file_open(const char *path, int mode);
 void file_close(int fd);
