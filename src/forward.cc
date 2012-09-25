@@ -214,6 +214,12 @@ FwdState::completed()
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
+#if USE_SSL
+            if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
+                CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                             ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
+            }
+#endif
         } else {
             EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             entry->complete();
@@ -369,14 +375,6 @@ FwdState::startConnectionOrFail()
             ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
             fail(anErr);
         } // else use actual error from last connection attempt
-#if USE_SSL
-        if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
-            errorAppendEntry(entry, err); // will free err
-            err = NULL;
-            CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
-                         ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
-        }
-#endif
         self = NULL;       // refcounted
     }
 }
@@ -828,7 +826,6 @@ FwdState::initiateSSL()
     // The list is used in ssl_verify_cb() and is freed in ssl_free().
     if (acl_access *acl = Config.ssl_client.cert_error) {
         ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
-        check->fd(fd);
         SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
     }
 
