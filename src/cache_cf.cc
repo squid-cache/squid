@@ -35,6 +35,7 @@
 #include "acl/AclAddress.h"
 #include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
+#include "acl/AclSizeLimit.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
@@ -73,7 +74,6 @@
 #include "ssl/ProxyCerts.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
-#include "structs.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 #include "neighbors.h"
@@ -1565,12 +1565,12 @@ free_acl_nfmark(acl_nfmark ** head)
 }
 #endif /* SO_MARK */
 
-CBDATA_TYPE(acl_size_t);
+CBDATA_TYPE(AclSizeLimit);
 
 static void
-dump_acl_b_size_t(StoreEntry * entry, const char *name, acl_size_t * head)
+dump_acl_b_size_t(StoreEntry * entry, const char *name, AclSizeLimit * head)
 {
-    acl_size_t *l;
+    AclSizeLimit *l;
 
     for (l = head; l; l = l->next) {
         if (l->size != -1)
@@ -1587,19 +1587,19 @@ dump_acl_b_size_t(StoreEntry * entry, const char *name, acl_size_t * head)
 static void
 freed_acl_b_size_t(void *data)
 {
-    acl_size_t *l = static_cast<acl_size_t *>(data);
+    AclSizeLimit *l = static_cast<AclSizeLimit *>(data);
     aclDestroyAclList(&l->aclList);
 }
 
 static void
-parse_acl_b_size_t(acl_size_t ** head)
+parse_acl_b_size_t(AclSizeLimit ** head)
 {
-    acl_size_t *l;
-    acl_size_t **tail = head;	/* sane name below */
+    AclSizeLimit *l;
+    AclSizeLimit **tail = head;	/* sane name below */
 
-    CBDATA_INIT_TYPE_FREECB(acl_size_t, freed_acl_b_size_t);
+    CBDATA_INIT_TYPE_FREECB(AclSizeLimit, freed_acl_b_size_t);
 
-    l = cbdataAlloc(acl_size_t);
+    l = cbdataAlloc(AclSizeLimit);
 
     parse_b_int64_t(&l->size);
 
@@ -1612,10 +1612,10 @@ parse_acl_b_size_t(acl_size_t ** head)
 }
 
 static void
-free_acl_b_size_t(acl_size_t ** head)
+free_acl_b_size_t(AclSizeLimit ** head)
 {
     while (*head) {
-        acl_size_t *l = *head;
+        AclSizeLimit *l = *head;
         *head = l->next;
         l->next = NULL;
         cbdataFree(l);

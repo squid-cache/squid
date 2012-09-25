@@ -529,7 +529,6 @@ squid_SOURCES = \
 	StoreSwapLogData.h \
 	Server.cc \
 	Server.h \
-	structs.h \
 	swap_log_op.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -718,7 +717,6 @@ recv_announce_SOURCES = recv-announce.cc
 ## mem.cc wants ClientInfo.h
 ## libbase.la wants cbdata.*
 ## libbase.la wants MemBuf.*
-## structs.h wants HelperChildConfig.* (stub it)
 ufsdump_SOURCES = \
 	ClientInfo.h \
 	cbdata.h \
@@ -2488,7 +2486,6 @@ tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
-
 tests_testHttpParser_SOURCES = \
 	Debug.h \
 	HttpParser.cc \
@@ -2498,7 +2495,6 @@ tests_testHttpParser_SOURCES = \
 	Mem.h \
 	mem.cc \
 	String.cc \
-	structs.h \
 	cache_cf.h \
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \

@@ -49,7 +49,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
-#include "structs.h"
 
 #if HAVE_IOMANIP
 #include <iomanip>
