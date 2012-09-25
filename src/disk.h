@@ -36,8 +36,8 @@
 #include "typedefs.h"
 
 class MemBuf;
-// POD
 
+// POD
 class dread_ctrl
 {
 public:
@@ -50,6 +50,17 @@ public:
     void *client_data;
 };
 
+// POD
+class dwrite_q
+{
+public:
+    off_t file_offset;
+    char *buf;
+    size_t len;
+    size_t buf_offset;
+    dwrite_q *next;
+    FREE *free_func;
+};
 
 int file_open(const char *path, int mode);
 void file_close(int fd);

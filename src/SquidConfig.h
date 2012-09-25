@@ -46,7 +46,7 @@ class sslproxy_cert_adapt;
 #endif
 
 class acl_access;
-class acl_size_t;
+class AclSizeLimit;
 class AclDenyInfoList;
 namespace Mgr {
 class ActionPasswordList;
@@ -123,7 +123,7 @@ public:
     int64_t maxChunkedRequestBodySize;
     size_t maxRequestBufferSize;
     size_t maxReplyHeaderSize;
-    acl_size_t *ReplyBodySize;
+    AclSizeLimit *ReplyBodySize;
 
     struct {
         unsigned short icp;
@@ -456,7 +456,7 @@ public:
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
-    acl_size_t *rangeOffsetLimit;
+    AclSizeLimit *rangeOffsetLimit;
 #if MULTICAST_MISS_STREAM
 
     struct {

@@ -31,8 +31,8 @@
 #define SQUID_FDE_H
 
 #include "comm.h"
+#include "defines.h"
 #include "ip/Address.h"
-#include "structs.h"
 
 #if USE_SSL
 #include <openssl/ssl.h>
@@ -41,7 +41,17 @@
 #if USE_DELAY_POOLS
 class ClientInfo;
 #endif
+
 class PconnPool;
+class dwrite_q;
+class _fde_disk {
+public:
+    DWCB *wrt_handle;
+    void *wrt_handle_data;
+    dwrite_q *write_q;
+    dwrite_q *write_q_tail;
+    off_t offset;
+};
 
 class fde
 {

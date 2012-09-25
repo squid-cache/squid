@@ -3,7 +3,6 @@
 
 #include "hier_code.h"
 #include "ip/forward.h"
-#include "structs.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
@@ -21,6 +20,7 @@ class ACLList;
 class fde;
 
 // TODO: move to new ACL framework
+// not integrated in namespace, as this class uses a strange CBDATA definition
 // POD
 class acl_tos {
 public:
@@ -29,6 +29,7 @@ public:
     tos_t tos;
 };
 // TODO: move to new ACL framework
+// not integrated in namespace, as this class uses a strange CBDATA definition
 // POD
 class acl_nfmark {
 public:
@@ -36,7 +37,6 @@ public:
     ACLList *aclList;
     nfmark_t nfmark;
 };
-
 
 namespace Ip
 {
