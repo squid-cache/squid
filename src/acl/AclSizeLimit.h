@@ -1,3 +1,5 @@
+#ifndef SQUID_ACLSIZELIMIT_H_
+#define SQUID_ACLSIZELIMIT_H_
 /*
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -26,38 +28,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_STRUCTS_H
-#define SQUID_STRUCTS_H
-
-#include "defines.h"
-#include "typedefs.h"
 
 class ACLList;
-
-struct acl_size_t {
-    acl_size_t *next;
+/// representation of a class of Size-limit ACLs
+// a POD. TODO: convert to new ACL framework
+class AclSizeLimit {
+public:
+    AclSizeLimit *next;
     ACLList *aclList;
     int64_t size;
 };
 
-// POD
-class dwrite_q
-{
-public:
-    off_t file_offset;
-    char *buf;
-    size_t len;
-    size_t buf_offset;
-    dwrite_q *next;
-    FREE *free_func;
-};
-
-struct _fde_disk {
-    DWCB *wrt_handle;
-    void *wrt_handle_data;
-    dwrite_q *write_q;
-    dwrite_q *write_q_tail;
-    off_t offset;
-};
-
-#endif /* SQUID_STRUCTS_H */
+#endif /* SQUID_ACLSIZELIMIT_H_ */
