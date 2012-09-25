@@ -53,7 +53,6 @@ class MemObject;
 /* client_side_request.c - client side request related routines (pure logic) */
 int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
-
 class ClientHttpRequest
 #if USE_ADAPTATION
         : public Adaptation::Initiator, // to start adaptation transactions
