@@ -26,6 +26,7 @@ while (<>) {
     }
 
     my $response;
+    my $haserror = 0;
     my $code = $line_args[0];
     my $bodylen = $line_args[1];
     my $body = $line_args[2] . "\n";
@@ -62,6 +63,7 @@ while (<>) {
 
         # Echo back the errors: fill the responseErrors array  with the errors we read.
         foreach $err (@errors) {
+            $haserror = 1;
             appendError (\@responseErrors, 
                          $err, #The error name
                          "Checked by Cert Validator", # An error reason
@@ -71,9 +73,13 @@ while (<>) {
 
         $response = createResponse(\@responseErrors);
         my $len = length($response);
-        $response = "OK ".$len." ".$response."\1";
+        if ($haserror) {
+            $response = "ERR ".$len." ".$response."\1";
+        } else {
+            $response = "OK ".$len." ".$response."\1";
+        }
     } else {
-        $response = "ERROR 0 \1";
+        $response = "BH 0 \1";
     }
 
     print $response;

@@ -838,16 +838,19 @@ FwdState::sslCrtvdHandleReply(const char *reply)
             debugs(83, 5, HERE << "Reply from ssl_crtvd for " << request->GetHost() << " is incorrect");
             validatorFailed = true;
         } else {
-            if (replyMsg.getCode() != "OK") {
+            if (replyMsg.getCode() == "OK") {
+                debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " was successfully validated from ssl_crtvd");
+            } else if (replyMsg.getCode() == "ERR") {
+                debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " found buggy by ssl_crtvd");
+                errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
+            } else {
                 debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
                 validatorFailed = true;
-            } else {
-                debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " was successfully validated from ssl_crtvd");
-                errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-                if (!errDetails) {
-                    dispatch();
-                    return;
-                }
+            }
+
+            if (!errDetails && !validatorFailed) {
+                dispatch();
+                return;
             }
         }
     }
