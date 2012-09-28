@@ -7,7 +7,8 @@ DIST_SUBDIRS = \
 	log_daemon \
 	negotiate_auth \
 	ntlm_auth \
-	url_rewrite
+	url_rewrite \
+	ssl
 
 SUBDIRS = \
 	basic_auth \
