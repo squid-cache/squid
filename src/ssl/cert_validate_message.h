@@ -9,55 +9,92 @@
 #include "ssl/crtd_message.h"
 #include <vector>
 
-namespace Ssl 
+namespace Ssl
 {
 
-
-class ValidateCertificate {
+/**
+ * This class is used to hold the required informations to build
+ * a request message for the certificate validator helper
+ */
+class CertValidationRequest
+{
 public:
-    STACK_OF(X509) *peerCerts;
-    Errors *errors;
-    std::string domainName;
-    ValidateCertificate() : peerCerts(NULL), errors(NULL) {}
+    STACK_OF(X509) *peerCerts; ///< The list of sent by SSL server
+    Errors *errors; ///< The list of errors detected
+    std::string domainName; ///< The server name
+    CertValidationRequest() : peerCerts(NULL), errors(NULL) {}
 };
 
-class ValidateCertificateResponse {
+/**
+ * This class is used to store informations found in certificate validation
+ * response messages read from certificate validator helper
+ */
+class CertValidationResponse
+{
 public:
-    class  ErrorItem{
+    /**
+     * This class used to hold error informations returned from
+     * cert validator helper.
+     */
+    class  RecvdError
+    {
     public:
-        ErrorItem(): error_no(SSL_ERROR_NONE), certId(0), cert(NULL) {}
-        ErrorItem(const ErrorItem &);
-        ~ErrorItem();
-        ErrorItem & operator = (const ErrorItem &);
-        void setCert(X509 *);
-        void clear();
-        ssl_error_t error_no;
-        std::string error_reason;
-        int certId;
-        X509 *cert;
+        RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL) {}
+        RecvdError(const RecvdError &);
+        ~RecvdError();
+        RecvdError & operator = (const RecvdError &);
+        void setCert(X509 *);  ///< Sets cert to the given certificate
+        int id; ///<  The id of the error
+        ssl_error_t error_no; ///< The OpenSSL error code
+        std::string error_reason; ///< A string describing the error
+        X509 *cert; ///< The broken certificate
     };
 
-    class CertItem {
+    typedef std::vector<RecvdError> RecvdErrors;
+
+    /// Search in errors list for the error item with id=errorId.
+    /// If none found a new RecvdError item added with the given id;
+    RecvdError &getError(int errorId);
+    RecvdErrors errors; ///< The list of parsed errors
+};
+
+/**
+ * This class is responsible for composing or parsing messages destined to
+ * or comming from a cert validator helper.
+ * The messages format is:
+ *   <response/request code> <whitespace> <body length> <whitespace> <key=value> ...\1
+ */
+class CertValidationMsg: public CrtdMessage
+{
+private:
+    /**
+     * This class used to hold the certId/cert pairs found
+     * in cert validation messages.
+     */
+    class CertItem
+    {
     public:
-        std::string name;
-        X509 *cert;
+        std::string name; ///< The certificate Id to use
+        X509 *cert;       ///< A pointer to certificate
         CertItem(): cert(NULL) {}
         CertItem(const CertItem &);
         CertItem & operator = (const CertItem &);
         ~CertItem();
-        void setCert(X509 *);
+        void setCert(X509 *); ///< Sets cert to the given certificate
     };
 
-    std::vector<ErrorItem> errors;
-    ValidateCertificateResponse() {}
-    ~ValidateCertificateResponse() {/*Maybe needs to release Errors*/};
-};
-
-class CertValidateMessage: public CrtdMessage {
 public:
-    CertValidateMessage(): CrtdMessage() {}
-    void composeRequest(ValidateCertificate const &vcert);
-    bool parseResponse(ValidateCertificateResponse &resp, std::string &error);
+    CertValidationMsg(): CrtdMessage() {}
+
+    /// Build a request message for the cert validation helper
+    /// using informations provided by vcert object
+    void composeRequest(CertValidationRequest const &vcert);
+
+    /// Parse a response message and fill the resp object with parsed informations
+    bool parseResponse(CertValidationResponse &resp, STACK_OF(X509) *peerCerts, std::string &error);
+
+    /// Search a CertItems list for the certificate with ID "name"
+    X509 *getCertByName(std::vector<CertItem> const &, std::string const & name);
 
     /// String code for "cert_validate" messages
     static const std::string code_cert_validate;
@@ -66,11 +103,11 @@ public:
     /// Parameter name for passing SSL errors
     static const std::string param_error;
     /// Parameter name for passing SSL certificates
-    static const std::string param_cert; 
+    static const std::string param_cert;
     /// Parameter name for passing the major SSL error
-    static const std::string param_error_name; 
+    static const std::string param_error_name;
     /// Parameter name for passing the error reason
-    static const std::string param_error_reason; 
+    static const std::string param_error_reason;
     /// Parameter name for passing the error cert ID
     static const std::string param_error_cert;
 };
