@@ -724,10 +724,6 @@ HttpStateData::processReplyHeader()
 
     processSurrogateControl (vrep);
 
-    /** \todo IF the reply is a 1.0 reply, AND it has a Connection: Header
-     * Parse the header and remove all referenced headers
-     */
-
     request->hier.peer_reply_status = newrep->sline.status;
 
     ctx_exit(ctx);
