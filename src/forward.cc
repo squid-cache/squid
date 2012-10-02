@@ -826,7 +826,7 @@ FwdState::sslCrtvdHandleReply(const char *reply)
     SSL *ssl = fd_table[serverConnection()->fd].ssl;
 
     if (!reply) {
-        debugs(83, 1, HERE << "\"ssl_crtd\" helper return <NULL> reply");
+        debugs(83, 1, HERE << "\"ssl_crtvd\" helper return <NULL> reply");
         validatorFailed = true;
     } else {
         Ssl::CertValidationMsg replyMsg;
@@ -936,6 +936,8 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse &resp, Ssl::ErrorDe
         else
             errs->push_back_unique(i->error_no);
     }
+    if (check)
+        delete check;
 
     return errs;
 }
