@@ -178,7 +178,7 @@ void Ssl::CertValidationHelper::sslSubmit(CrtdMessage const & message, HLPCB * c
             first_warn = squid_curtime;
         if (squid_curtime - first_warn > 3 * 60)
             fatal("SSL servers not responding for 3 minutes");
-        debugs(34, 1, HERE << "Queue overload, rejecting");
+        debugs(83, 1, HERE << "Queue overload, rejecting");
         callback(data, (char *)"error 45 Temporary network problem, please retry later");
         return;
     }
