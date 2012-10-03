@@ -35,17 +35,17 @@
 
 class wordlist;
 
-extern void configFreeMemory(void);
-extern void self_destruct(void);
-extern void add_http_port(char *portspec);
+void configFreeMemory(void);
+void self_destruct(void);
+void add_http_port(char *portspec);
 
 /* extra functions from cache_cf.c useful for lib modules */
-extern void parse_int(int *var);
-extern void parse_onoff(int *var);
-extern void parse_eol(char *volatile *var);
-extern void parse_wordlist(wordlist ** list);
-extern void requirePathnameExists(const char *name, const char *path);
-extern void parse_time_t(time_t * var);
-extern char *strtokFile(void);
+void parse_int(int *var);
+void parse_onoff(int *var);
+void parse_eol(char *volatile *var);
+void parse_wordlist(wordlist ** list);
+void requirePathnameExists(const char *name, const char *path);
+void parse_time_t(time_t * var);
+char *strtokFile(void);
 
 #endif /* SQUID_CACHE_CF_H_ */

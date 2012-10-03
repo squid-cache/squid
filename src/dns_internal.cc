@@ -45,6 +45,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc3596.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"

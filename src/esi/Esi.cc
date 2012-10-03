@@ -60,6 +60,7 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to

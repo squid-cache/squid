@@ -38,12 +38,11 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
+#include "HttpStatusCode.h"
 #include "ip/Address.h"
-#include "MemBuf.h"
 #include "SquidString.h"
-#if USE_AUTH
+/* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#endif
 #if USE_SSL
 #include "ssl/ErrorDetail.h"
 #endif

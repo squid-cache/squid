@@ -42,6 +42,7 @@
 #include "ip/QosConfig.h"
 #include "MemBuf.h"
 #include "anyp/PortCfg.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "ipc/Kids.h"

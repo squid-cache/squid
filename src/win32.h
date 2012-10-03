@@ -48,13 +48,13 @@
 #include <sys/types.h>
 #endif
 
-extern int WIN32_pipe(int[2]);
+int WIN32_pipe(int[2]);
 
-extern int WIN32_getrusage(int, struct rusage *);
-extern void WIN32_ExceptionHandlerInit(void);
+int WIN32_getrusage(int, struct rusage *);
+void WIN32_ExceptionHandlerInit(void);
 
-extern int Win32__WSAFDIsSet(int fd, fd_set* set);
-extern DWORD WIN32_IpAddrChangeMonitorInit();
+int Win32__WSAFDIsSet(int fd, fd_set* set);
+DWORD WIN32_IpAddrChangeMonitorInit();
 
 #endif
 

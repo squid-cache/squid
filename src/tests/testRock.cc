@@ -8,6 +8,8 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
@@ -169,7 +171,7 @@ testRock::storeInit()
 StoreEntry *
 testRock::createEntry(const int i)
 {
-    request_flags flags;
+    RequestFlags flags;
     flags.cachable = 1;
     char url[64];
     snprintf(url, sizeof(url), "dummy url %i", i);

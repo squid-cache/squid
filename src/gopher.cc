@@ -43,6 +43,7 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"

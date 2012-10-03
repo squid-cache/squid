@@ -33,10 +33,10 @@
 #ifndef SQUID_CARP_H_
 #define SQUID_CARP_H_
 
-class peer;
+class CachePeer;
 class HttpRequest;
 
-extern void carpInit(void);
-extern peer *carpSelectParent(HttpRequest *);
+void carpInit(void);
+CachePeer *carpSelectParent(HttpRequest *);
 
 #endif /* SQUID_CARP_H_ */

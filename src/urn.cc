@@ -1,4 +1,3 @@
-
 /*
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
@@ -40,6 +39,7 @@
 #include "icmp/net_db.h"
 #include "MemBuf.h"
 #include "mime_header.h"
+#include "RequestFlags.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -256,7 +256,7 @@ UrnState::created(StoreEntry *newEntry)
     urlres_e = newEntry;
 
     if (urlres_e->isNull()) {
-        urlres_e = storeCreateEntry(urlres, urlres, request_flags(), METHOD_GET);
+        urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r);
     } else {

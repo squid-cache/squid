@@ -7,7 +7,7 @@
 #include "globals.h"
 #include "ipc/Kids.h"
 #include "tools.h"
-#include "structs.h"
+#include "SquidConfig.h"
 
 Kids TheKids;
 KidName TheKidName;

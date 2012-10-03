@@ -7,7 +7,7 @@
 #define SQUID_MGR_IO_ACTION_H
 
 #include "mgr/Action.h"
-#include "structs.h" /* _iostats::histSize */
+#include "IoStats.h"
 
 namespace Mgr
 {
@@ -23,9 +23,9 @@ public:
     double http_reads;
     double ftp_reads;
     double gopher_reads;
-    double http_read_hist[_iostats::histSize];
-    double ftp_read_hist[_iostats::histSize];
-    double gopher_read_hist[_iostats::histSize];
+    double http_read_hist[IoStats::histSize];
+    double ftp_read_hist[IoStats::histSize];
+    double gopher_read_hist[IoStats::histSize];
 };
 
 /// implement aggregated 'io' action

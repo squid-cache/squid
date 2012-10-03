@@ -43,6 +43,8 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "MemObject.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -430,7 +432,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     int n;
 
-    request_flags flags;
+    RequestFlags flags;
 
     struct stat sb;
 

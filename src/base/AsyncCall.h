@@ -5,10 +5,9 @@
 #ifndef SQUID_ASYNCCALL_H
 #define SQUID_ASYNCCALL_H
 
-//#include "cbdata.h"
 #include "base/InstanceId.h"
 #include "event.h"
-//#include "TextException.h"
+#include "RefCount.h"
 
 /**
  \defgroup AsynCallsAPI Async-Calls API
@@ -157,7 +156,7 @@ asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
 }
 
 /** Call scheduling helper. Use ScheduleCallHere if you can. */
-extern bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
+bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
 
 /** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))

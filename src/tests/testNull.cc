@@ -9,6 +9,8 @@
 #include "MemObject.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "StoreFileSystem.h"
 #include "testStoreSupport.h"
 
@@ -158,7 +160,7 @@ testNull::testNullSearch()
     /* add an entry */
     {
         /* Create "vary" base object */
-        request_flags flags;
+        RequestFlags flags;
         flags.cachable = 1;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
         /* We are allowed to do this typecast */

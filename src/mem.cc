@@ -31,13 +31,20 @@
  */
 
 #include "squid.h"
-#include "event.h"
+#include "acl/AclDenyInfoList.h"
+#include "acl/AclNameList.h"
+#include "CacheDigest.h"
 #include "ClientInfo.h"
-#include "Mem.h"
+#include "disk.h"
+#include "event.h"
 #include "md5.h"
+#include "Mem.h"
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
+#include "icmp/net_db.h"
+#include "RegexList.h"
+#include "SquidConfig.h"
 #include "SquidList.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -448,9 +455,9 @@ Mem::Init(void)
     memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10, false);
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
-    memDataInit(MEM_ACL_DENY_INFO_LIST, "acl_deny_info_list",
-                sizeof(acl_deny_info_list), 0);
-    memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(acl_name_list), 0);
+    memDataInit(MEM_ACL_DENY_INFO_LIST, "AclDenyInfoList",
+                sizeof(AclDenyInfoList), 0);
+    memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(AclNameList), 0);
 #if USE_CACHE_DIGESTS
 
     memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
@@ -463,7 +470,7 @@ Mem::Init(void)
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
-    memDataInit(MEM_RELIST, "relist", sizeof(relist), 0);
+    memDataInit(MEM_RELIST, "RegexList", sizeof(RegexList), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
     MemPools[MEM_MD5_DIGEST]->setChunkSize(512 * 1024);

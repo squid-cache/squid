@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "tools.h"
 #include "URL.h"

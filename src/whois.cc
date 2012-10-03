@@ -39,6 +39,7 @@
 #include "HttpRequest.h"
 #include "HttpRequest.h"
 #include "forward.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
