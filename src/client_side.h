@@ -53,6 +53,9 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
+namespace AnyP {
+    class PortCfg;
+} // namespace Anyp
 
 /**
  * Badly named.
@@ -259,7 +262,7 @@ public:
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
         bool auth;               /* pinned for www authentication */
-        struct peer *peer;             /* peer the connection goes via */
+        CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
@@ -290,23 +293,23 @@ public:
     /**
      * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
      */
-    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, struct peer *peer, bool auth);
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth);
     /**
-     * Decorrelate the ConnStateData object from its pinned peer
+     * Decorrelate the ConnStateData object from its pinned CachePeer
      */
     void unpinConnection();
     /**
      * Checks if there is pinning info if it is valid. It can close the server side connection
      * if pinned info is not valid.
      \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
-     \param peer      if it is not NULL also check if the peer is the pinning peer
+     \param CachePeer      if it is not NULL also check if the CachePeer is the pinning CachePeer
      \return          The details of the server side connection (may be closed if failures were present).
      */
-    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const struct peer *peer);
+    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const CachePeer *peer);
     /**
-     * returts the pinned peer if exists, NULL otherwise
+     * returts the pinned CachePeer if exists, NULL otherwise
      */
-    struct peer *pinnedPeer() const {return pinning.peer;}
+    CachePeer *pinnedPeer() const {return pinning.peer;}
     bool pinnedAuth() const {return pinning.auth;}
 
     // pining related comm callbacks
@@ -405,19 +408,14 @@ private:
     CBDATA_CLASS2(ConnStateData);
 };
 
-/* convenience class while splitting up body handling */
-/* temporary existence only - on stack use expected */
-
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
 
-/* Vary support functions */
-extern int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
+int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
-/* client_side.c - FD related client side routines */
-extern void clientOpenListenSockets(void);
-extern void clientHttpConnectionsClose(void);
-extern void httpRequestFree(void *);
+void clientOpenListenSockets(void);
+void clientHttpConnectionsClose(void);
+void httpRequestFree(void *);
 
 #endif /* SQUID_CLIENTSIDE_H */

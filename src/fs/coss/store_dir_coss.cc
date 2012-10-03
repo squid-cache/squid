@@ -52,6 +52,7 @@
 #include "store_key_md5.h"
 #include "swap_log_op.h"
 #include "store_rebuild.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 
 #if HAVE_ERRNO_H
@@ -76,7 +77,7 @@ struct _RebuildState {
         unsigned int clean:1;
     } flags;
 
-    struct _store_rebuild_data counts;
+    StoreRebuildData counts;
 };
 
 static char *storeCossDirSwapLogFile(SwapDir *, const char *);

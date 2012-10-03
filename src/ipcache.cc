@@ -41,6 +41,7 @@
 #include "Mem.h"
 #include "mgr/Registration.h"
 #include "rfc3596.h"
+#include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

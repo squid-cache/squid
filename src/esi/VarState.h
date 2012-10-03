@@ -37,6 +37,8 @@
 #include "Array.h"
 #include "HttpHeader.h"
 
+class HttpReply;
+
 /* esi variable replacement logic */
 
 typedef enum {

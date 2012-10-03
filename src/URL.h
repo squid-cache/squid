@@ -79,20 +79,20 @@ MEMPROXY_CLASS_INLINE(URL);
 class HttpRequest;
 class HttpRequestMethod;
 
-extern AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
-extern void urlInitialize(void);
-extern HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
-extern const char *urlCanonical(HttpRequest *);
-extern char *urlCanonicalClean(const HttpRequest *);
-extern const char *urlCanonicalFakeHttps(const HttpRequest * request);
-extern bool urlIsRelative(const char *);
-extern char *urlMakeAbsolute(const HttpRequest *, const char *);
-extern char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
-extern char *urlInternal(const char *dir, const char *name);
-extern int matchDomainName(const char *host, const char *domain);
-extern int urlCheckRequest(const HttpRequest *);
-extern int urlDefaultPort(AnyP::ProtocolType p);
-extern char *urlHostname(const char *url);
-extern void urlExtMethodConfigure(void);
+AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
+void urlInitialize(void);
+HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
+const char *urlCanonical(HttpRequest *);
+char *urlCanonicalClean(const HttpRequest *);
+const char *urlCanonicalFakeHttps(const HttpRequest * request);
+bool urlIsRelative(const char *);
+char *urlMakeAbsolute(const HttpRequest *, const char *);
+char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
+char *urlInternal(const char *dir, const char *name);
+int matchDomainName(const char *host, const char *domain);
+int urlCheckRequest(const HttpRequest *);
+int urlDefaultPort(AnyP::ProtocolType p);
+char *urlHostname(const char *url);
+void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_URL_H_H */

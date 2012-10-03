@@ -37,6 +37,7 @@
 #include "globals.h"
 #include "log/File.h"
 #include "log/ModStdio.h"
+#include "SquidConfig.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

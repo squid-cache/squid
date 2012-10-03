@@ -39,18 +39,18 @@
 class HttpRequestMethod;
 class HttpRequest;
 
-extern cache_key *storeKeyDup(const cache_key *);
-extern cache_key *storeKeyCopy(cache_key *, const cache_key *);
-extern void storeKeyFree(const cache_key *);
-extern const cache_key *storeKeyScan(const char *);
-extern const char *storeKeyText(const cache_key *);
-extern const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&);
-extern const cache_key *storeKeyPublicByRequest(HttpRequest *);
-extern const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&);
-extern const cache_key *storeKeyPrivate(const char *, const HttpRequestMethod&, int);
-extern int storeKeyHashBuckets(int);
-extern int storeKeyNull(const cache_key *);
-extern void storeKeyInit(void);
+cache_key *storeKeyDup(const cache_key *);
+cache_key *storeKeyCopy(cache_key *, const cache_key *);
+void storeKeyFree(const cache_key *);
+const cache_key *storeKeyScan(const char *);
+const char *storeKeyText(const cache_key *);
+const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&);
+const cache_key *storeKeyPublicByRequest(HttpRequest *);
+const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&);
+const cache_key *storeKeyPrivate(const char *, const HttpRequestMethod&, int);
+int storeKeyHashBuckets(int);
+int storeKeyNull(const cache_key *);
+void storeKeyInit(void);
 
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;

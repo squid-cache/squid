@@ -37,6 +37,8 @@
 #include "squid.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldInfo.h"
+#include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "Store.h"

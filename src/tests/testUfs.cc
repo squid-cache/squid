@@ -8,6 +8,8 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "testStoreSupport.h"
@@ -139,7 +141,7 @@ testUfs::testUfsSearch()
     /* add an entry */
     {
         /* Create "vary" base object */
-        request_flags flags;
+        RequestFlags flags;
         flags.cachable = 1;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const

@@ -17,9 +17,10 @@ libstate_la_SOURCES = \
 	Strategy.h \
 	Strategised.cc \
 	Strategised.h \
-	\
 	FilledChecklist.cc \
-	FilledChecklist.h
+	FilledChecklist.h \
+	AclAddress.h \
+	AclAddress.cc
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
@@ -33,7 +34,6 @@ libacls_la_SOURCES = \
 	Time.h \
 	TimeData.cc \
 	TimeData.h \
-	\
 	Asn.cc \
 	Asn.h \
 	Browser.cc \
@@ -104,9 +104,11 @@ libacls_la_SOURCES = \
 	UrlPort.h \
 	UserData.cc \
 	UserData.h \
-	\
+	AclNameList.h \
+	AclDenyInfoList.h \
 	Gadgets.cc \
-	Gadgets.h
+	Gadgets.h \
+	AclSizeLimit.h
 
 ## Add conditional sources
 ## TODO: move these to their respectful dirs when those dirs are created

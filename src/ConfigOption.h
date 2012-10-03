@@ -30,10 +30,10 @@
 #ifndef SQUID_CONFIGOPTION_H
 #define SQUID_CONFIGOPTION_H
 
-class StoreEntry;
-
 /* for Vector<> */
 #include "Array.h"
+
+class StoreEntry;
 
 /* cache option parsers */
 

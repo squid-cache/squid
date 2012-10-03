@@ -83,6 +83,7 @@
 #include "send-announce.h"
 #include "store_log.h"
 #include "tools.h"
+#include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "stat.h"

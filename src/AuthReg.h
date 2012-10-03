@@ -1,8 +1,7 @@
 #ifndef SQUID_AUTHREG_H_
 #define SQUID_AUTHREG_H_
 /*
- * DEBUG: section
- * AUTHOR:
+ * DEBUG: section 29    Authenticator
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

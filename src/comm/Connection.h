@@ -56,7 +56,7 @@
 #include <ostream>
 #endif
 
-struct peer;
+class CachePeer;
 
 namespace Comm
 {
@@ -108,16 +108,16 @@ public:
     /** determine whether this object describes an active connection or not. */
     bool isOpen() const { return (fd >= 0); }
 
-    /** retrieve the peer pointer for use.
+    /** retrieve the CachePeer pointer for use.
      * The caller is responsible for all CBDATA operations regarding the
      * used of the pointer returned.
      */
-    peer * getPeer() const;
+    CachePeer * getPeer() const;
 
-    /** alter the stored peer pointer.
-     * Perform appropriate CBDATA operations for locking the peer pointer
+    /** alter the stored CachePeer pointer.
+     * Perform appropriate CBDATA operations for locking the CachePeer pointer
      */
-    void setPeer(peer * p);
+    void setPeer(CachePeer * p);
 
 private:
     /** These objects may not be exactly duplicated. Use copyDetails() instead. */
@@ -156,12 +156,8 @@ public:
 #endif
 
 private:
-    // XXX: we need to call this member peer_ but the struct peer_ global type
-    //      behind peer* clashes despite our private Comm:: namespace
-    //      (it being global gets inherited here too).
-
     /** cache_peer data object (if any) */
-    peer *_peer;
+    CachePeer *peer_;
 };
 
 }; // namespace Comm

@@ -1,7 +1,3 @@
-/*
- * 2008/11/14
- */
-
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "ssl/Config.h"
@@ -10,6 +6,7 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "wordlist.h"
+#include "SquidConfig.h"
 
 Ssl::Helper * Ssl::Helper::GetInstance()
 {

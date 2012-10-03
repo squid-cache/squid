@@ -46,6 +46,7 @@
 #include "fde.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "URL.h"
 #include "URLScheme.h"
 #include "URL.h"
@@ -630,7 +631,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     if (err->page_id == TCP_RESET) {
         if (err->request) {
             debugs(4, 2, "RSTing this reply");
-            err->request->flags.setResetTCP();
+            err->request->flags.resetTcp=true;
         }
     }
 

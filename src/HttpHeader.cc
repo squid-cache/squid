@@ -36,6 +36,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
@@ -45,6 +46,7 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "TimeOrTag.h"
 

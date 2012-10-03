@@ -51,6 +51,7 @@
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "refresh.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreSearch.h"
@@ -376,7 +377,7 @@ storeDigestRebuildStep(void *datanotused)
 static void
 storeDigestRewriteStart(void *datanotused)
 {
-    request_flags flags;
+    RequestFlags flags;
     char *url;
     StoreEntry *e;
 

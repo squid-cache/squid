@@ -32,8 +32,8 @@
 
 #include "RefCount.h"
 #include "UFSSwapDir.h"
-#include "structs.h"
 #include "UFSSwapLogParser.h"
+#include "store_rebuild.h"
 
 class StoreEntry;
 
@@ -76,7 +76,7 @@ public:
     char fullpath[MAXPATHLEN];
     char fullfilename[MAXPATHLEN];
 
-    struct _store_rebuild_data counts;
+    StoreRebuildData counts;
 
 private:
     CBDATA_CLASS2(RebuildState);

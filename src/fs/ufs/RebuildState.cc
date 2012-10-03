@@ -34,6 +34,7 @@
 #include "disk.h"
 #include "globals.h"
 #include "RebuildState.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"

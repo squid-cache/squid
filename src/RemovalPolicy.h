@@ -97,7 +97,7 @@ private:
     CBDATA_CLASS2(RemovalPurgeWalker);
 };
 
-extern RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
+RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
 
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 

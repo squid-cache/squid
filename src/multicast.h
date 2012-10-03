@@ -1,6 +1,6 @@
 /*
- * DEBUG: section
- * AUTHOR:
+ * DEBUG: section 07    Multicast
+ * AUTHOR: Martin Hamilton
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -35,7 +35,7 @@
 
 #include "ipcache.h"
 
-extern int mcastSetTtl(int, int);
+int mcastSetTtl(int, int);
 extern IPH mcastJoinGroups;
 
 #endif /* SQUID_MULTICAST_H_ */

@@ -32,12 +32,14 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "format/Format.h"
+#include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "MemBuf.h"
 
 void
-Log::Format::SquidCustom(const AccessLogEntry::Pointer &al, customlog * log)
+Log::Format::SquidCustom(const AccessLogEntry::Pointer &al, CustomLog * log)
 {
     static MemBuf mb;
     mb.reset();
