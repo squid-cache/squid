@@ -2519,8 +2519,6 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 
             ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
             check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
-            if (Comm::IsConnOpen(pinning.serverConnection))
-                check.fd(pinning.serverConnection->fd);
             const bool allowDomainMismatch =
                 check.fastCheck() == ACCESS_ALLOWED;
             delete check.sslErrors;

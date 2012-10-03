@@ -85,6 +85,15 @@ CBDATA_CLASS_INIT(statefulhelper);
 CBDATA_TYPE(helper_stateful_server);
 
 void
+HelperServerBase::initStats()
+{
+    stats.uses=0;
+    stats.replies=0;
+    stats.pending=0;
+    stats.releases=0;
+}
+
+void
 HelperServerBase::closePipesSafely()
 {
 #if _SQUID_MSWIN_
@@ -217,6 +226,7 @@ helperOpenServers(helper * hlp)
         srv = cbdataAlloc(helper_server);
         srv->hIpc = hIpc;
         srv->pid = pid;
+        srv->initStats();
         srv->index = k;
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
@@ -338,8 +348,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->flags.reserved = 0;
-        srv->stats.submits = 0;
-        srv->stats.releases = 0;
+        srv->initStats();
         srv->index = k;
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
@@ -500,11 +509,12 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%s\t%7s\t%7s\t%7s\n",
                       "#",
                       "FD",
                       "PID",
                       "# Requests",
+                      "# Replies",
                       "Flags",
                       "Time",
                       "Offset",
@@ -513,11 +523,12 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
         double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
+                          srv->stats.replies,
                           srv->stats.pending ? 'B' : ' ',
                           srv->flags.writing ? 'W' : ' ',
                           srv->flags.closing ? 'C' : ' ',
@@ -553,11 +564,12 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%6s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%6s\t%7s\t%7s\t%7s\n",
                       "#",
                       "FD",
                       "PID",
                       "# Requests",
+                      "# Replies",
                       "Flags",
                       "Time",
                       "Offset",
@@ -566,11 +578,12 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_stateful_server *srv = (helper_stateful_server *)link->data;
         double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->flags.busy ? current_time : srv->answer_time);
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
+                          srv->stats.replies,
                           srv->flags.busy ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
                           srv->flags.reserved ? 'R' : ' ',
@@ -725,8 +738,12 @@ helperServerFree(helper_server *srv)
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
-            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
-                fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30) {
+                if (srv->stats.replies < 1)
+                    fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+                else
+                    debugs(80, DBG_CRITICAL, "ERROR: The " << hlp->id_name << " helpers are crashing too rapidly, need help!");
+            }
 
             debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperOpenServers(hlp);
@@ -786,8 +803,12 @@ helperStatefulServerFree(helper_stateful_server *srv)
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
-            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
-                fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30) {
+                if (srv->stats.replies < 1)
+                    fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+                else
+                    debugs(80, DBG_CRITICAL, "ERROR: The " << hlp->id_name << " helpers are crashing too rapidly, need help!");
+            }
 
             debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperStatefulOpenServers(hlp);
@@ -829,6 +850,7 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
             callback(cbdata, msg);
 
         -- srv->stats.pending;
+        ++ srv->stats.replies;
 
         ++ hlp->stats.replies;
 
@@ -1005,6 +1027,10 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         srv->roffset = 0;
         helperStatefulRequestFree(r);
         srv->request = NULL;
+
+        -- srv->stats.pending;
+        ++ srv->stats.replies;
+
         ++ hlp->stats.replies;
         srv->answer_time = current_time;
         hlp->stats.avg_svc_time =
@@ -1272,7 +1298,6 @@ helperDispatch(helper_server * srv, helper_request * r)
 
     assert(ptr);
     *ptr = r;
-    srv->stats.pending += 1;
     r->dispatch_time = current_time;
 
     if (srv->wqueue->isNull())
@@ -1296,6 +1321,7 @@ helperDispatch(helper_server * srv, helper_request * r)
     debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << strlen(r->buf) << " bytes");
 
     ++ srv->stats.uses;
+    ++ srv->stats.pending;
     ++ hlp->stats.requests;
 }
 
@@ -1348,6 +1374,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
            (int) strlen(r->buf) << " bytes");
 
     ++ srv->stats.uses;
+    ++ srv->stats.pending;
     ++ hlp->stats.requests;
 }
 

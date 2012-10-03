@@ -88,7 +88,7 @@ private:
     CBDATA_CLASS2(statefulhelper);
 };
 
-/*
+/**
  * Fields shared between stateless and stateful helper servers.
  */
 class HelperServerBase
@@ -130,6 +130,13 @@ public:
         unsigned int reserved:1;
     } flags;
 
+    struct {
+        uint64_t uses;     //< requests sent to this helper
+        uint64_t replies;  //< replies received from this helper
+        uint64_t pending;  //< queued lookups waiting to be sent to this helper
+        uint64_t releases; //< times release() has been called on this helper (if stateful)
+    } stats;
+    void initStats();
 };
 
 class MemBuf;
@@ -142,11 +149,6 @@ public:
 
     helper *parent;
     helper_request **requests;
-
-    struct {
-        int uses;
-        unsigned int pending;
-    } stats;
 
 private:
     CBDATA_CLASS2(helper_server);
@@ -163,11 +165,6 @@ public:
     statefulhelper *parent;
     helper_stateful_request *request;
 
-    struct {
-        int uses;
-        int submits;
-        int releases;
-    } stats;
     void *data;			/* State data used by the calling routines */
 
 private:

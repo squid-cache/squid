@@ -405,6 +405,24 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.21 (23 Sep 2012):
+
+	- Bug 3622: peerClearRRStart scheduling multiple events
+	- Bug 3615: configure check for default max number of FDs is broken
+	- Bug 3607: --enable-auth documented default action incorrect
+	- Bug 3593: socket failure: Address family not supported by protocol
+	- Bug 3584: Detection of setresuid() is broken
+	- Bug 3568: Consolidate external_acl_type config dumping and add missing %%
+	- Bug 3564: eCAP not supporting CoAP URI schemes
+	- Bug 3484: Docs: sslproxy_cert_error example flawed
+	- Bug 3462: Delay Pools and ICAP
+	- Bug 3133: better fix: Memory leak handling requests for sites that don't exist
+	- Bug 2976: ERR_INVALID_URL for transparently captured requests when reconfiguring
+	- Silence IOS 15.1 unknown capabilities messages.
+	- Account for Store disk client quota when bandwidth-limiting the server.
+	- ... and several documentation fixes
+	- ... and several compile fixes
+
 Changes to squid-3.1.20 (08 Jun 2012):
 
 	- Regression Bug 3545: FreeBSD dnsserver segfaults
