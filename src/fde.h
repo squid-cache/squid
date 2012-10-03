@@ -192,7 +192,7 @@ private:
     }
 };
 
-SQUIDCEXTERN int fdNFree(void);
+int fdNFree(void);
 
 #define FD_READ_METHOD(fd, buf, len) (*fd_table[fd].read_method)(fd, buf, len)
 #define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)
