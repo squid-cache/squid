@@ -168,7 +168,7 @@ public:
 #if USE_ICMP
 
 /// pinger helper contains one of these as a global object.
-SQUIDCEXTERN Icmp4 icmp4;
+extern Icmp4 icmp4;
 
 #endif /* USE_ICMP && SQUID_HELPER */
 
