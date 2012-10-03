@@ -30,14 +30,15 @@ public:
     ~ACLFilledChecklist();
 
 public:
+    /// The client connection manager
     ConnStateData * conn() const;
 
-    /// uses conn() if available
+    /// The client side fd. It uses conn() if available
     int fd() const;
 
     /// set either conn
     void conn(ConnStateData *);
-    /// set FD
+    /// set the client side FD
     void fd(int aDescriptor);
 
     //int authenticated();
