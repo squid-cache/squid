@@ -48,6 +48,8 @@
 #include "mgr/StoreIoAction.h"
 #include "profiler/Profiler.h"
 #include "repl_modules.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Stack.h"
 #include "StatCounters.h"
@@ -816,7 +818,7 @@ StoreEntry::setPublicKey()
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *log_url, request_flags flags, const HttpRequestMethod& method)
+storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
@@ -1965,7 +1967,7 @@ StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
 {
     const String reqETags = request.header.getList(HDR_IF_NONE_MATCH);
     // weak comparison is allowed only for HEAD or full-body GET requests
-    const bool allowWeakMatch = !request.flags.range &&
+    const bool allowWeakMatch = !request.flags.isRanged &&
                                 (request.method == METHOD_GET || request.method == METHOD_HEAD);
     return hasOneOfEtags(reqETags, allowWeakMatch);
 }

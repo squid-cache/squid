@@ -32,11 +32,12 @@
  */
 
 #include "squid.h"
+#include "helper.h"
+#include "mgr/Registration.h"
+#include "SquidConfig.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
-#include "SquidTime.h"
-#include "mgr/Registration.h"
-#include "helper.h"
 
 /* MS VisualStudio Projects are monolitich, so we need the following
    #if to include the external DNS code in compile process when

@@ -2,6 +2,7 @@
 #define SQUID_ACLFILLED_CHECKLIST_H
 
 #include "acl/Checklist.h"
+#include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -9,9 +10,11 @@
 #include "ssl/support.h"
 #endif
 
-class ExternalACLEntry;
+class CachePeer;
 class ConnStateData;
+class ExternalACLEntry;
 class HttpRequest;
+class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
@@ -53,7 +56,7 @@ public:
     Ip::Address src_addr;
     Ip::Address dst_addr;
     Ip::Address my_addr;
-    struct peer *dst_peer;
+    CachePeer *dst_peer;
     char *dst_rdns;
 
     HttpRequest *request;

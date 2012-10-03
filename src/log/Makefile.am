@@ -27,5 +27,7 @@ liblog_la_SOURCES = \
 	ModTcp.cc \
 	ModTcp.h \
 	ModUdp.cc \
-	ModUdp.h
+	ModUdp.h \
+	CustomLog.h \
+	CustomLog.cc
 

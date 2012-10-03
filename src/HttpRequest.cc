@@ -33,6 +33,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "DnsLookupDetails.h"
@@ -45,6 +46,7 @@
 #include "HttpRequest.h"
 #include "log/Config.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 
@@ -419,27 +421,6 @@ HttpRequest::hdrCacheInit()
     range = header.getRange();
 }
 
-/* request_flags */
-bool
-request_flags::resetTCP() const
-{
-    return reset_tcp != 0;
-}
-
-void
-request_flags::setResetTCP()
-{
-    debugs(73, 9, "request_flags::setResetTCP");
-    reset_tcp = 1;
-}
-
-void
-request_flags::clearResetTCP()
-{
-    debugs(73, 9, "request_flags::clearResetTCP");
-    reset_tcp = 0;
-}
-
 #if ICAP_CLIENT
 Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
@@ -490,27 +471,6 @@ bool
 HttpRequest::multipartRangeRequest() const
 {
     return (range && range->specs.count > 1);
-}
-
-void
-request_flags::destinationIPLookupCompleted()
-{
-    destinationIPLookedUp_ = true;
-}
-
-bool
-request_flags::destinationIPLookedUp() const
-{
-    return destinationIPLookedUp_;
-}
-
-request_flags
-request_flags::cloneAdaptationImmune() const
-{
-    // At the time of writing, all flags where either safe to copy after
-    // adaptation or were not set at the time of the adaptation. If there
-    // are flags that are different, they should be cleared in the clone.
-    return *this;
 }
 
 bool
@@ -622,7 +582,7 @@ HttpRequest::cacheable() const
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the reponse for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.spoof_client_ip))
+    if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
         return false;
 
     if (protocol == AnyP::PROTO_HTTP)
@@ -683,7 +643,7 @@ HttpRequest::getRangeOffsetLimit()
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
-    for (acl_size_t *l = Config.rangeOffsetLimit; l; l = l -> next) {
+    for (AclSizeLimit *l = Config.rangeOffsetLimit; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this limit value */
         if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
             debugs(58, 4, HERE << "rangeOffsetLimit=" << rangeOffsetLimit);

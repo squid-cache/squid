@@ -14,10 +14,10 @@ public:
 };
 
 /* ETag */
-SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
+int etagParseInit(ETag * etag, const char *str);
 /// whether etags are strong-equal
-SQUIDCEXTERN bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
+bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
 /// whether etags are weak-equal
-SQUIDCEXTERN bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
+bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
 
 #endif /* _SQUIDETAG_H */

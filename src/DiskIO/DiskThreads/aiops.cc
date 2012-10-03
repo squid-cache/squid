@@ -36,16 +36,17 @@
 
 #include "squid.h"
 #include "DiskThreads.h"
+#include "SquidConfig.h"
 
-#include	<stdio.h>
-#include	<sys/stat.h>
-#include	<fcntl.h>
-#include	<pthread.h>
-#include	<errno.h>
-#include	<dirent.h>
-#include	<signal.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <errno.h>
+#include <dirent.h>
+#include <signal.h>
 #if HAVE_SCHED_H
-#include	<sched.h>
+#include <sched.h>
 #endif
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "SquidTime.h"

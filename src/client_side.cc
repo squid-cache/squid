@@ -83,6 +83,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_db.h"
 #include "client_side_reply.h"
@@ -120,6 +121,7 @@
 #include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
@@ -135,6 +137,7 @@
 #include "ClientInfo.h"
 #endif
 #if USE_SSL
+#include "ssl/ProxyCerts.h"
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
 #include "ssl/ServerBump.h"
@@ -831,7 +834,7 @@ ConnStateData::~ConnStateData()
 }
 
 /**
- * clientSetKeepaliveFlag() sets request->flags.proxy_keepalive.
+ * clientSetKeepaliveFlag() sets request->flags.proxyKeepalive.
  * This is the client-side persistent connection flag.  We need
  * to set this relatively early in the request processing
  * to handle hacks for broken servers and clients.
@@ -847,7 +850,7 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
            RequestMethodStr(request->method));
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
-    request->flags.proxy_keepalive = request->persistent() ? 1 : 0;
+    request->flags.proxyKeepalive = request->persistent() ? 1 : 0;
 }
 
 static int
@@ -983,7 +986,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 {
     assert(rep == NULL);
 
-    if (!multipartRangeRequest() && !http->request->flags.chunked_reply) {
+    if (!multipartRangeRequest() && !http->request->flags.chunkedReply) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
@@ -1267,7 +1270,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     else if (rep->content_length != http->memObject()->getReply()->content_length)
         range_err = "INCONSISTENT length";	/* a bug? */
 
-    /* hits only - upstream peer determines correct behaviour on misses, and client_side_reply determines
+    /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
      */
     else if (logTypeIsATcpHit(http->logType) && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
@@ -1392,7 +1395,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     if (bodyData.data && bodyData.length) {
         if (multipartRangeRequest())
             packRange(bodyData, mb);
-        else if (http->request->flags.chunked_reply) {
+        else if (http->request->flags.chunkedReply) {
             packChunk(bodyData, *mb);
         } else {
             size_t length = lengthToSend(bodyData.range());
@@ -1447,8 +1450,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
-    const bool mustSendLastChunk = http->request->flags.chunked_reply &&
-                                   !http->request->flags.stream_error && !context->startOfOutput();
+    const bool mustSendLastChunk = http->request->flags.chunkedReply &&
+                                   !http->request->flags.streamError && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(context->clientConnection, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
@@ -1736,7 +1739,7 @@ ClientSocketContext::socketState()
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
                        "range sequence on " << clientConnection);
 
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1753,7 +1756,7 @@ ClientSocketContext::socketState()
             // did we get at least what we expected, based on range specs?
 
             if (bytesSent == bytesExpected) { // got everything
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -1763,7 +1766,7 @@ ClientSocketContext::socketState()
             // expected why would persistency matter? Should not this
             // always be an error?
             if (bytesSent > bytesExpected) { // got extra
-                if (http->request->flags.proxy_keepalive)
+                if (http->request->flags.proxyKeepalive)
                     return STREAM_COMPLETE;
                 else
                     return STREAM_UNPLANNED_COMPLETE;
@@ -2469,7 +2472,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     // at the client-side, but many such errors do require closure and the
     // client-side code is bad at handling errors so we play it safe.
     if (request)
-        request->flags.proxy_keepalive = 0;
+        request->flags.proxyKeepalive = 0;
     flags.readMore = false;
     debugs(33,4, HERE << "Will close after error: " << clientConnection);
 }
@@ -2648,11 +2651,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->clientConnectionManager = conn;
 
     request->flags.accelerated = http->flags.accel;
-    request->flags.sslBumped = conn->switchedToHttps();
+    request->flags.sslBumped=conn->switchedToHttps();
     request->flags.canRePin = request->flags.sslBumped && conn->pinning.pinned;
-    request->flags.ignore_cc = conn->port->ignore_cc;
+    request->flags.ignoreCc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
-    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
+    request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
                                !conn->port->allow_direct : 0;
 #if USE_AUTH
     if (request->flags.sslBumped) {
@@ -2667,7 +2670,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      */
     if (http->clientConnection != NULL) {
         request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
-        request->flags.spoof_client_ip = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        request->flags.spoofClientIp = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -2819,7 +2822,7 @@ finish:
      * be freed and the above connNoteUseOfBuffer() would hit an
      * assertion, not to mention that we were accessing freed memory.
      */
-    if (request && request->flags.resetTCP() && Comm::IsConnOpen(conn->clientConnection)) {
+    if (request && request->flags.resetTcp && Comm::IsConnOpen(conn->clientConnection)) {
         debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);
@@ -3144,7 +3147,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         repContext->setReplyToError(error, scode,
                                     repContext->http->request->method,
                                     repContext->http->uri,
-                                    peer,
+                                    CachePeer,
                                     repContext->http->request,
                                     in.buf, NULL);
         context->pullData();
@@ -3213,7 +3216,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &peer.sin_addr,
+                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &CachePeer.sin_addr,
                                     NULL, NULL, NULL);
         /* No requests can be outstanded */
         assert(chr == NULL);
@@ -3576,7 +3579,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
         fakeRequest->indirect_client_addr = connState->clientConnection->remote;
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
-        fakeRequest->flags.spoof_client_ip = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        fakeRequest->flags.spoofClientIp = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
         fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
         connState->switchToHttps(fakeRequest, bumpMode);
@@ -3887,7 +3890,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 
     // commSetConnTimeout() was called for this request before we switched.
 
-    // Disable the client read handler until peer selection is complete
+    // Disable the client read handler until CachePeer selection is complete
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
@@ -4414,7 +4417,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 }
 
 void
-ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, struct peer *aPeer, bool auth)
+ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
 {
     char desc[FD_DESC_SZ];
 
@@ -4460,7 +4463,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
 }
 
 const Comm::ConnectionPointer
-ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
+ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *aPeer)
 {
     debugs(33, 7, HERE << pinning.serverConnection);
 

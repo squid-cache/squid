@@ -16,20 +16,20 @@ namespace Comm
 {
 
 /// Initialize the module on Squid startup
-extern void SelectLoopInit(void);
+void SelectLoopInit(void);
 
 /// Mark an FD to be watched for its IO status.
-extern void SetSelect(int, unsigned int, PF *, void *, time_t);
+void SetSelect(int, unsigned int, PF *, void *, time_t);
 
 /// reset/undo/unregister the watch for an FD which was set by Comm::SetSelect()
-extern void ResetSelect(int);
+void ResetSelect(int);
 
 /** Perform a select() or equivalent call.
  * This is used by the main select loop engine to check for FD with IO available.
  */
-extern comm_err_t DoSelect(int);
+comm_err_t DoSelect(int);
 
-extern void QuickPollRequired(void);
+void QuickPollRequired(void);
 
 /**
  * Max number of UDP messages to receive per call to the UDP receive poller.

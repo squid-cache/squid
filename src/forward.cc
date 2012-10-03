@@ -32,9 +32,11 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/AclAddress.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "CachePeer.h"
 #include "CacheManager.h"
 #include "client_side.h"
 #include "comm/Connection.h"
@@ -63,6 +65,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -144,7 +147,7 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoof_client_ip);
+    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoofClientIp);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
@@ -560,12 +563,6 @@ FwdState::checkRetry()
 bool
 FwdState::checkRetriable()
 {
-    // Optimize: A compliant proxy may retry PUTs, but Squid lacks the [rather
-    // complicated] code required to protect the PUT request body from being
-    // nibbled during the first try. Thus, Squid cannot retry some PUTs today.
-    if (request->body_pipe != NULL)
-        return false;
-
     /* RFC2616 9.1 Safe and Idempotent Methods */
     switch (request->method.id()) {
         /* 9.1.1 Safe Methods */
@@ -765,7 +762,7 @@ FwdState::initiateSSL()
 {
     SSL *ssl;
     SSL_CTX *sslContext = NULL;
-    const peer *peer = serverConnection()->getPeer();
+    const CachePeer *peer = serverConnection()->getPeer();
     int fd = serverConnection()->fd;
 
     if (peer) {
@@ -953,7 +950,7 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped == true) {
+    if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
         fail(anErr);
@@ -1251,7 +1248,7 @@ FwdState::reforward()
 ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
-    return new ErrorState(type, request->flags.need_validation ?
+    return new ErrorState(type, request->flags.needValidation ?
                           HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
@@ -1397,7 +1394,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         conn->local.SetIPv4();
 
     // maybe use TPROXY client address
-    if (request && request->flags.spoof_client_ip) {
+    if (request && request->flags.spoofClientIp) {
         if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
 #if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
             if (Config.onoff.tproxy_uses_indirect_client)
@@ -1424,7 +1421,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     // TODO use the connection details in ACL.
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
-    acl_address *l;
+    AclAddress *l;
     for (l = Config.accessList.outgoing_address; l; l = l->next) {
 
         /* check if the outgoing address is usable to the destination */

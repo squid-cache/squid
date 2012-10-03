@@ -35,6 +35,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
+#include "icp_opcode.h"
 #include "ip/Address.h"
 #include "HttpRequestMethod.h"
 #if ICAP_CLIENT
@@ -48,6 +49,7 @@
 /* forward decls */
 class HttpReply;
 class HttpRequest;
+class CustomLog;
 
 class AccessLogEntry: public RefCountable
 {
@@ -274,11 +276,11 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-extern void accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
-extern void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
-extern void accessLogRotate(void);
-extern void accessLogClose(void);
-extern void accessLogInit(void);
-extern const char *accessLogTime(time_t);
+void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
+void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
+void accessLogRotate(void);
+void accessLogClose(void);
+void accessLogInit(void);
+const char *accessLogTime(time_t);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */

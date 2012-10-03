@@ -37,6 +37,7 @@
 #include "Debug.h"
 #include "dlink.h"
 #include "globals.h"
+#include "SquidConfig.h"
 
 const char *AclMatchedName = NULL;
 

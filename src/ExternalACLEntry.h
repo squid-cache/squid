@@ -44,7 +44,10 @@
 
 #include "acl/Acl.h"
 #include "cbdata.h"
+#include "hash.h"
+#include "SquidString.h"
 
+class external_acl;
 /******************************************************************
  * ExternalACLEntryData
  * Core data that ExternalACLEntry manages.

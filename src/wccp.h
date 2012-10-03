@@ -34,9 +34,9 @@
 #define SQUID_WCCP_H_
 
 #if USE_WCCP
-extern void wccpInit(void);
-extern void wccpConnectionOpen(void);
-extern void wccpConnectionClose(void);
+void wccpInit(void);
+void wccpConnectionOpen(void);
+void wccpConnectionClose(void);
 #endif /* USE_WCCP */
 
 #endif /* SQUID_WCCP_H_ */
