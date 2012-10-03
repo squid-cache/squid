@@ -107,7 +107,7 @@ struct squidaio_thread_t {
 
 static void squidaio_queue_request(squidaio_request_t *);
 static void squidaio_cleanup_request(squidaio_request_t *);
-SQUIDCEXTERN void *squidaio_thread_loop(void *);
+void *squidaio_thread_loop(void *);
 static void squidaio_do_open(squidaio_request_t *);
 static void squidaio_do_read(squidaio_request_t *);
 static void squidaio_do_write(squidaio_request_t *);

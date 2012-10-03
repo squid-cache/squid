@@ -173,8 +173,8 @@ private:
 #endif
 
 /** returns free() function to be used, _freezes_ the object! */
-SQUIDCEXTERN void memBufReport(MemBuf * mb);
+void memBufReport(MemBuf * mb);
 /** pack content into a mem buf. */
-SQUIDCEXTERN void packerToMemInit(Packer * p, MemBuf * mb);
+void packerToMemInit(Packer * p, MemBuf * mb);
 
 #endif /* SQUID_MEM_H */
