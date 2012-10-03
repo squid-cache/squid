@@ -767,7 +767,6 @@ FwdState::initiateSSL()
     // The list is used in ssl_verify_cb() and is freed in ssl_free().
     if (acl_access *acl = Config.ssl_client.cert_error) {
         ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
-        check->fd(fd);
         SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
     }
 
