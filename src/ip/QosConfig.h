@@ -22,7 +22,8 @@ class fde;
 // TODO: move to new ACL framework
 // not integrated in namespace, as this class uses a strange CBDATA definition
 // POD
-class acl_tos {
+class acl_tos
+{
 public:
     acl_tos *next;
     ACLList *aclList;
@@ -31,7 +32,8 @@ public:
 // TODO: move to new ACL framework
 // not integrated in namespace, as this class uses a strange CBDATA definition
 // POD
-class acl_nfmark {
+class acl_nfmark
+{
 public:
     acl_nfmark *next;
     ACLList *aclList;

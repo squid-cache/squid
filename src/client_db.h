@@ -36,7 +36,8 @@
 #include "anyp/ProtocolType.h"
 #include "enums.h"
 #include "ip/Address.h"
-namespace Ip {
+namespace Ip
+{
 class Address;
 }
 
