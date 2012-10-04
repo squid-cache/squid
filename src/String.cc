@@ -303,7 +303,7 @@ StringRegistry::remove(String const *entry)
 
 StringRegistry StringRegistry::Instance_;
 
-extern String::size_type memStringCount();
+String::size_type memStringCount();
 
 void
 StringRegistry::Stat(StoreEntry *entry)

@@ -101,7 +101,7 @@ static const char *const crlf = "\r\n";
 static void clientFollowXForwardedForCheck(allow_t answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-extern ErrorState *clientBuildError(err_type, http_status, char const *url, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, http_status, char const *url, Ip::Address &, HttpRequest *);
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -131,9 +131,9 @@ static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static RH clientRedirectDoneWrapper;
 static void checkNoCacheDoneWrapper(allow_t, void *);
-extern "C" CSR clientGetMoreData;
-extern "C" CSS clientReplyStatus;
-extern "C" CSD clientReplyDetach;
+SQUIDCEXTERN CSR clientGetMoreData;
+SQUIDCEXTERN CSS clientReplyStatus;
+SQUIDCEXTERN CSD clientReplyDetach;
 static void checkFailureRatio(err_type, hier_code);
 
 ClientRequestContext::~ClientRequestContext()
@@ -1533,8 +1533,8 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  * the callout.  This is strictly for convenience.
  */
 
-extern tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-extern nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
+tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
+nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()

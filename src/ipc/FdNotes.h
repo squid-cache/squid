@@ -19,7 +19,7 @@ typedef enum { fdnNone, fdnHttpSocket, fdnHttpsSocket,
                fdnInIcpSocket, fdnInHtcpSocket, fdnEnd
              } FdNoteId;
 
-extern const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
+const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
 
 } // namespace Ipc;
 

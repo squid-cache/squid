@@ -1936,7 +1936,7 @@ statCPUUsage(int minutes)
                                tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
 }
 
-extern double
+double
 statRequestHitRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1946,7 +1946,7 @@ statRequestHitRatio(int minutes)
                                CountHist[minutes].client_http.requests);
 }
 
-extern double
+double
 statRequestHitMemoryRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1956,7 +1956,7 @@ statRequestHitMemoryRatio(int minutes)
                                CountHist[minutes].client_http.hits);
 }
 
-extern double
+double
 statRequestHitDiskRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1966,7 +1966,7 @@ statRequestHitDiskRatio(int minutes)
                                CountHist[minutes].client_http.hits);
 }
 
-extern double
+double
 statByteHitRatio(int minutes)
 {
     size_t s;

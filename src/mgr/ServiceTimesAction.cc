@@ -11,8 +11,8 @@
 #include "Store.h"
 #include "tools.h"
 
-extern void GetServiceTimesStats(Mgr::ServiceTimesActionData& stats);
-extern void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry);
+void GetServiceTimesStats(Mgr::ServiceTimesActionData& stats);
+void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry);
 
 Mgr::ServiceTimesActionData::ServiceTimesActionData()
 {

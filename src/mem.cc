@@ -257,7 +257,6 @@ memAllocString(size_t net_size, size_t * gross_size)
     return pool ? pool->alloc() : xcalloc(1, net_size);
 }
 
-extern size_t memStringCount();
 size_t
 memStringCount()
 {
