@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "base/TextException.h"
 #include "SquidTime.h"

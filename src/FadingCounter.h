@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_FADING_COUNTER_H
 #define SQUID_FADING_COUNTER_H
 

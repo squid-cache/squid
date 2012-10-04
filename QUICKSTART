@@ -1,8 +1,6 @@
 
 Squid QUICKSTART
 
-$Id$
-
 This document is intended only for people who want to get Squid running
 quickly It is not a substitute for the real documentation.  Squid has
 many features, but only a few of them are useful at the beginning.  Use

@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef _INC_XUSLEEP_H
 #define _INC_XUSLEEP_H
 

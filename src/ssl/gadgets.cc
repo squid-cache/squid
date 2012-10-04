@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "ssl/gadgets.h"
 #if HAVE_OPENSSL_X509V3_H

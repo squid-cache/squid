@@ -1,8 +1,4 @@
 /*
- * $Id$
- */
-
-/*
  * COMPILE WITH:
  *      gcc -Wall md5-test.c -I../include md5.o
  */

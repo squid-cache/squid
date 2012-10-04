@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_MEMSTORE_H
 #define SQUID_MEMSTORE_H
 

@@ -1,7 +1,4 @@
 #  Makefile for storage modules in the Squid Object Cache server
-#
-#  $Id$
-#
 
 include $(top_srcdir)/src/Common.am
 

@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef SQUID_IDENT_H
 #define SQUID_IDENT_H
 
