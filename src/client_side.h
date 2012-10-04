@@ -53,8 +53,9 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
-namespace AnyP {
-    class PortCfg;
+namespace AnyP
+{
+class PortCfg;
 } // namespace Anyp
 
 /**
