@@ -207,6 +207,7 @@ HttpRequest::clone() const
     copy->hier = hier; // Is it safe to copy? Should we?
 
     copy->errType = errType;
+    copy->errDetail = errDetail;
 
     // XXX: what to do with copy->peer_login?
 
@@ -526,6 +527,14 @@ HttpRequest::detailError(err_type aType, int aDetail)
         errType = aType;
     if (!errDetail)
         errDetail = aDetail;
+}
+
+void
+HttpRequest::clearError()
+{
+    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
+    errType = ERR_NONE;
+    errDetail = ERR_DETAIL_NONE;
 }
 
 const char *HttpRequest::packableURI(bool full_uri) const

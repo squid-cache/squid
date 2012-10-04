@@ -121,6 +121,8 @@ public:
 
     /// sets error detail if no earlier detail was available
     void detailError(err_type aType, int aDetail);
+    /// clear error details, useful for retries/repeats
+    void clearError();
 
 protected:
     void clean();

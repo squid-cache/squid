@@ -345,6 +345,7 @@ FwdState::startConnectionOrFail()
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
         request->hier.note(serverDestinations[0], request->GetHost());
+        request->clearError();
 
         connectStart();
     } else {
