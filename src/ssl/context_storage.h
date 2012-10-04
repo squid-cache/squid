@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SSL_CONTEXT_STORAGE_H
 #define SQUID_SSL_CONTEXT_STORAGE_H
 

@@ -14,8 +14,6 @@
  *                      - use xinet_ntop instead of inet_ntop
  *                      - use SQUIDHOSTNAMELEN instead of MAXHOSTNAMELEN
  *
- * Squid CVS $Id$
- *
  *  Original License and code follows.
  */
 #include "squid.h"

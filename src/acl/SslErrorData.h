@@ -1,8 +1,3 @@
-
-/*
- * $Id$
- */
-
 #ifndef SQUID_ACLSSL_ERRORDATA_H
 #define SQUID_ACLSSL_ERRORDATA_H
 #include "acl/Acl.h"
