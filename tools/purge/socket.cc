@@ -1,8 +1,4 @@
 #include "squid.h"
-
-//
-// $Id$
-//
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    socket.hh

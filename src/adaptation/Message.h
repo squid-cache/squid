@@ -1,8 +1,3 @@
-
-/*
- * $Id$
- */
-
 #ifndef SQUID__ADAPTATION__MESSAGE_H
 #define SQUID__ADAPTATION__MESSAGE_H
 

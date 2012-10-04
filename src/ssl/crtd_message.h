@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SSL_CRTD_MESSAGE_H
 #define SQUID_SSL_CRTD_MESSAGE_H
 

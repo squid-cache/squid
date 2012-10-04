@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-# $Id$
 # Convert hexadecimal cache file numbers (from swap log) into full pathnames.  
 # Duane Wessels 6/30/97
 

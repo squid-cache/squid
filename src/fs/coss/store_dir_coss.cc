@@ -1,7 +1,4 @@
 /*
- * $Id$
- * vim: set et :
- *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
  *
