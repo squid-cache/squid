@@ -2656,7 +2656,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.ignoreCc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
-                               !conn->port->allow_direct : 0;
+                              !conn->port->allow_direct : 0;
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->auth_user_request != NULL)

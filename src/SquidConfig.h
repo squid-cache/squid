@@ -48,7 +48,8 @@ class sslproxy_cert_adapt;
 class acl_access;
 class AclSizeLimit;
 class AclDenyInfoList;
-namespace Mgr {
+namespace Mgr
+{
 class ActionPasswordList;
 } // namespace Mgr
 class CustomLog;
@@ -59,7 +60,8 @@ class RefreshPattern;
 class RemovalPolicySettings;
 class SwapDir;
 
-namespace AnyP {
+namespace AnyP
+{
 class PortCfg;
 }
 

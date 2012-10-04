@@ -44,7 +44,8 @@ class ClientInfo;
 
 class PconnPool;
 class dwrite_q;
-class _fde_disk {
+class _fde_disk
+{
 public:
     DWCB *wrt_handle;
     void *wrt_handle_data;
