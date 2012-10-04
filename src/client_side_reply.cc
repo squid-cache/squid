@@ -76,7 +76,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-extern ErrorState *clientBuildError(err_type, http_status, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, http_status, char const *, Ip::Address &, HttpRequest *);
 
 /* privates */
 
@@ -433,8 +433,8 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     }
 }
 
-extern "C" CSR clientGetMoreData;
-extern "C" CSD clientReplyDetach;
+SQUIDCEXTERN CSR clientGetMoreData;
+SQUIDCEXTERN CSD clientReplyDetach;
 
 /**
  * clientReplyContext::cacheHit Should only be called until the HTTP reply headers

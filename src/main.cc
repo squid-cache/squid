@@ -160,7 +160,7 @@ static int opt_install_service = FALSE;
 static int opt_remove_service = FALSE;
 static int opt_signal_service = FALSE;
 static int opt_command_line = FALSE;
-extern void WIN32_svcstatusupdate(DWORD, DWORD);
+void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
 
 #endif
@@ -196,8 +196,8 @@ static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
 #if MEM_GEN_TRACE
-extern void log_trace_done();
-extern void log_trace_init(char *);
+void log_trace_done();
+void log_trace_init(char *);
 #endif
 static void SquidShutdown(void);
 static void mainSetCwd(void);

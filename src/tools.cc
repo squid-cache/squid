@@ -82,8 +82,8 @@ static void fatal_common(const char *);
 static void fatalvf(const char *fmt, va_list args);
 static void mail_warranty(void);
 #if MEM_GEN_TRACE
-extern void log_trace_done();
-extern void log_trace_init(char *);
+void log_trace_done();
+void log_trace_init(char *);
 #endif
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;

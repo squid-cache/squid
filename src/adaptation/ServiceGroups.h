@@ -142,8 +142,8 @@ std::ostream &operator <<(std::ostream &os, const ServicePlan &p)
 }
 
 typedef Vector<ServiceGroupPointer> Groups;
-extern Groups &AllGroups();
-extern ServiceGroupPointer FindGroup(const ServiceGroup::Id &id);
+Groups &AllGroups();
+ServiceGroupPointer FindGroup(const ServiceGroup::Id &id);
 
 } // namespace Adaptation
 

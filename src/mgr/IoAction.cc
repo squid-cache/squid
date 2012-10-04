@@ -13,8 +13,8 @@
 #include "Store.h"
 #include "tools.h"
 
-extern void GetIoStats(Mgr::IoActionData& stats);
-extern void DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry);
+void GetIoStats(Mgr::IoActionData& stats);
+void DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry);
 
 Mgr::IoActionData::IoActionData()
 {

@@ -49,15 +49,15 @@ private:
 };
 
 /// register loaded eCAP module service
-extern void RegisterAdapterService(const ServiceRep::AdapterService& adapterService);
+void RegisterAdapterService(const ServiceRep::AdapterService& adapterService);
 /// unregister loaded eCAP module service by service uri
-extern void UnregisterAdapterService(const String& serviceUri);
+void UnregisterAdapterService(const String& serviceUri);
 
 /// returns loaded eCAP module service by service uri
-extern ServiceRep::AdapterService FindAdapterService(const String& serviceUri);
+ServiceRep::AdapterService FindAdapterService(const String& serviceUri);
 
 /// check for loaded eCAP services without matching ecap_service in squid.conf
-extern void CheckUnusedAdapterServices(const Services& services);
+void CheckUnusedAdapterServices(const Services& services);
 } // namespace Ecap
 } // namespace Adaptation
 

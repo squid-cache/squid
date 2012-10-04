@@ -1896,9 +1896,9 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
     }
 }
 
-extern "C" CSR clientGetMoreData;
-extern "C" CSS clientReplyStatus;
-extern "C" CSD clientReplyDetach;
+SQUIDCEXTERN CSR clientGetMoreData;
+SQUIDCEXTERN CSS clientReplyStatus;
+SQUIDCEXTERN CSD clientReplyDetach;
 
 static ClientSocketContext *
 parseHttpRequestAbort(ConnStateData * csd, const char *uri)
