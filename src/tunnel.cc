@@ -623,8 +623,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
 
-extern tos_t GetTosToServer(HttpRequest * request);
-extern nfmark_t GetNfmarkToServer(HttpRequest * request);
+tos_t GetTosToServer(HttpRequest * request);
+nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 void
 tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)

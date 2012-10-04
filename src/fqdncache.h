@@ -41,15 +41,12 @@ class wordlist;
 
 void fqdncache_init(void);
 void fqdnStats(StoreEntry *);
-//extern void fqdncacheReleaseInvalid(const char *);
-//extern int fqdncacheQueueDrain(void);
 void fqdncacheFreeMemory(void);
 void fqdncache_restart(void);
 void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
-//extern const char *fqdnFromAddr(const Ip::Address &);
 void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
 
 #endif /* SQUID_FQDNCACHE_H_ */
