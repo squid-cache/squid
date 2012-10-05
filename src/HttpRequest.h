@@ -56,7 +56,6 @@
 class ConnStateData;
 
 /*  Http Request */
-//DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
 void httpRequestPack(void *obj, Packer *p);
 
 class HttpHdrRange;

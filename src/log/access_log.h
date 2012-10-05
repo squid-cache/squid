@@ -33,13 +33,13 @@
 #ifndef SQUID_LOG_ACCESS_LOG_H_
 #define SQUID_LOG_ACCESS_LOG_H_
 
-extern int logTypeIsATcpHit(log_type);
-extern void fvdbCountVia(const char *key);
-extern void fvdbCountForw(const char *key);
+int logTypeIsATcpHit(log_type);
+void fvdbCountVia(const char *key);
+void fvdbCountForw(const char *key);
 
 #if HEADERS_LOG
 class HttpRequestMethod;
-extern void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
+void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
 
 #endif /* SQUID_LOG_ACCESS_LOG_H_ */

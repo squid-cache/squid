@@ -116,7 +116,7 @@ void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequest(HttpRequest * request) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method) STUB_RETVAL(NULL)
-extern StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
+StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 void storeInit(void) STUB
 void storeConfigure(void) STUB
 void storeFreeMemory(void) STUB

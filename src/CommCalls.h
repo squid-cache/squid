@@ -1,8 +1,3 @@
-
-/*
- * $Id$
- */
-
 #ifndef SQUID_COMMCALLS_H
 #define SQUID_COMMCALLS_H
 

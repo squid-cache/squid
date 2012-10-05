@@ -1448,7 +1448,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-extern ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void

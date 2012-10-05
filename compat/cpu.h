@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef SQUID_COMPAT_CPU_H
 #define SQUID_COMPAT_CPU_H
 

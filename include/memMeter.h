@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef _MEM_METER_H_
 #define _MEM_METER_H_
 

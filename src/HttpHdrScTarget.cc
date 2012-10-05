@@ -37,7 +37,7 @@
 #include "HttpHdrSc.h"
 #include "StatHist.h"
 
-extern http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
+http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
 /* copies non-extant fields from new_sc to this sc */
 void
 HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)
