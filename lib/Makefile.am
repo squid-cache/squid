@@ -69,8 +69,7 @@ libmiscutil_la_SOURCES = \
 	Splay.cc \
 	stub_memaccount.c \
 	util.c \
-	xusleep.c \
-	fatal.cc
+	xusleep.c
 
 # $(top_srcdir)/include/version.h should be a dependency
 libsspwin32_la_SOURCES = \
