@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_HTTP_CONTROL_MSG_H
 #define SQUID_HTTP_CONTROL_MSG_H
 

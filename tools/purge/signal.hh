@@ -1,6 +1,3 @@
-//
-// $Id$
-//
 // Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 // File:     signal.hh
 // Date:     Sat Feb 28 1998

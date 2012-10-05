@@ -5,7 +5,7 @@ namespace Ip
 {
 
 /// Probe to discover IPv6 capabilities
-extern void ProbeTransport(void);
+void ProbeTransport(void);
 
 /* Squids notion of IPv6 stack types and state */
 #define IPV6_OFF  0

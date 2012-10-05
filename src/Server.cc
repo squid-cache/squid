@@ -57,7 +57,7 @@
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent
-extern void purgeEntriesByUrl(HttpRequest * req, const char *url);
+void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),
         requestSender(NULL),

@@ -23,8 +23,6 @@
  * 			- xtables_strtoui renamed to xstrtoui
  * 			- xtables_strtoul renamed to xstrtoul
  *
- * Squid VCS $Id$
- *
  *  Original License and code follows.
  */
 

@@ -199,15 +199,15 @@ public:
 MEMPROXY_CLASS_INLINE(helper_stateful_request);
 
 /* helper.c */
-SQUIDCEXTERN void helperOpenServers(helper * hlp);
-SQUIDCEXTERN void helperStatefulOpenServers(statefulhelper * hlp);
-SQUIDCEXTERN void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
-SQUIDCEXTERN void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
-SQUIDCEXTERN void helperStats(StoreEntry * sentry, helper * hlp, const char *label = NULL);
-SQUIDCEXTERN void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
-SQUIDCEXTERN void helperShutdown(helper * hlp);
-SQUIDCEXTERN void helperStatefulShutdown(statefulhelper * hlp);
-SQUIDCEXTERN void helperStatefulReleaseServer(helper_stateful_server * srv);
-SQUIDCEXTERN void *helperStatefulServerGetData(helper_stateful_server * srv);
+void helperOpenServers(helper * hlp);
+void helperStatefulOpenServers(statefulhelper * hlp);
+void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
+void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
+void helperStats(StoreEntry * sentry, helper * hlp, const char *label = NULL);
+void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
+void helperShutdown(helper * hlp);
+void helperStatefulShutdown(statefulhelper * hlp);
+void helperStatefulReleaseServer(helper_stateful_server * srv);
+void *helperStatefulServerGetData(helper_stateful_server * srv);
 
 #endif /* SQUID_HELPER_H */
