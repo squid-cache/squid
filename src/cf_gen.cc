@@ -621,7 +621,7 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
         fout << "debugs(0, DBG_CRITICAL, \"ERROR: Directive '" << aName << "' is obsolete.\");\n";
         for (LineList::const_iterator l = doc.begin(); l != doc.end(); ++l) {
             // offset line to strip initial whitespace tab byte
-            fout << "        debugs(0, opt_parse_cfg_only?0:1, \"" << aName << " : " << &(*l)[1] << "\");" << std::endl;
+            fout << "        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"" << aName << " : " << &(*l)[1] << "\");" << std::endl;
         }
         fout << "        parse_obsolete(token);";
     } else if (!loc.size() || loc.compare("none") == 0) {
