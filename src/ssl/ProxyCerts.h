@@ -32,14 +32,16 @@
 #if USE_SSL
 class ACLList;
 
-class sslproxy_cert_sign {
+class sslproxy_cert_sign
+{
 public:
     int alg;
     ACLList *aclList;
     sslproxy_cert_sign *next;
 };
 
-class sslproxy_cert_adapt {
+class sslproxy_cert_adapt
+{
 public:
     int alg;
     char *param;

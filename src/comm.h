@@ -8,7 +8,8 @@
 #include "comm/IoCallback.h"
 #include "StoreIOBuffer.h"
 
-namespace Ip {
+namespace Ip
+{
 class Address;
 }
 

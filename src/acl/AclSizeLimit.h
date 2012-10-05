@@ -32,7 +32,8 @@
 class ACLList;
 /// representation of a class of Size-limit ACLs
 // a POD. TODO: convert to new ACL framework
-class AclSizeLimit {
+class AclSizeLimit
+{
 public:
     AclSizeLimit *next;
     ACLList *aclList;

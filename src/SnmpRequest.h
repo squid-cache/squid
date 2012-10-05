@@ -1,8 +1,8 @@
 #ifndef SQUID_SNMPREQUEST_H_
 #define SQUID_SNMPREQUEST_H_
 /*
- * DEBUG: section 
- * AUTHOR: 
+ * DEBUG: section
+ * AUTHOR:
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
