@@ -47,8 +47,8 @@ class ErrorState;
 
 typedef void PSC(Comm::ConnectionList *, ErrorState *, void *);
 
-SQUIDCEXTERN void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
-SQUIDCEXTERN void peerSelectInit(void);
+void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
+void peerSelectInit(void);
 
 /**
  * A CachePeer which has been selected as a possible destination.

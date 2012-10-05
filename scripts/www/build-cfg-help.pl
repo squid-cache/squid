@@ -9,8 +9,6 @@ use File::Basename;
 # cf.data.pre and generate a set of HTML pages to use as documentation.
 #
 # Adrian Chadd <adrian@squid-cache.org>
-#
-# $Id$
 
 #
 # The template file is reasonably simple to parse. There's a number of

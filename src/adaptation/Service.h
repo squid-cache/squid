@@ -61,11 +61,11 @@ private:
 typedef Service::Pointer ServicePointer;
 
 typedef Vector<Adaptation::ServicePointer> Services;
-extern Services &AllServices();
-extern ServicePointer FindService(const Service::Id &key);
+Services &AllServices();
+ServicePointer FindService(const Service::Id &key);
 
 /// detach all adaptation services from current configuration
-extern void DetachServices();
+void DetachServices();
 
 } // namespace Adaptation
 

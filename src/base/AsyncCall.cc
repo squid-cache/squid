@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "AsyncCall.h"
 #include "base/AsyncCall.h"

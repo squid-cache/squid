@@ -1,9 +1,6 @@
 -- SQUID-MIB  { iso org(3) dod(6) internet(1) private(4) enterprises(1) 3495 }
 
 SQUID-MIB DEFINITIONS ::= BEGIN
---
--- $Id$
---
 
 IMPORTS
 	enterprises, Unsigned32, TimeTicks, Gauge32, Counter32,

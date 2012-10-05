@@ -402,6 +402,6 @@ public:
 
 } // namespace Ip
 
-extern void parse_IpAddress_list_token(Ip::Address_list **, char *);
+void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
 #endif /* _SQUID_IP_IPADDRESS_H */

@@ -36,7 +36,7 @@ namespace Auth
 
 #if USE_AUTH
 /// Initialize Auth subsystem
-extern void Init(void);
+void Init(void);
 #else /* USE_AUTH */
 inline void Init(void) {} /* NOP if not USE_AUTH */
 #endif /* USE_AUTH */

@@ -12,8 +12,8 @@
 #include "Store.h"
 #include "tools.h"
 
-extern void GetCountersStats(Mgr::CountersActionData& stats);
-extern void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);
+void GetCountersStats(Mgr::CountersActionData& stats);
+void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);
 
 Mgr::CountersActionData::CountersActionData()
 {
