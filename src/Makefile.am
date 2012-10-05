@@ -342,6 +342,8 @@ squid_SOURCES = \
 	ExternalACLEntry.h \
 	FadingCounter.h \
 	FadingCounter.cc \
+	fatal.h \
+	fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -1116,6 +1118,8 @@ tests_testHttpReply_SOURCES=\
 	cbdata.cc \
 	cbdata.h \
 	ETag.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpHeaderFieldStat.h \
@@ -1217,6 +1221,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	DiskIO/WriteRequest.cc \
 	ETag.cc \
 	event.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
 	HelperChildConfig.h \
@@ -1423,6 +1429,8 @@ tests_testCacheManager_SOURCES = \
 	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -1616,6 +1624,8 @@ tests_testDiskIO_SOURCES = \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	FileMap.h \
@@ -1821,6 +1831,8 @@ tests_testEvent_SOURCES = \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -2061,6 +2073,8 @@ tests_testEventLoop_SOURCES = \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -2298,6 +2312,8 @@ tests_test_http_range_SOURCES = \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -2586,6 +2602,8 @@ tests_testHttpRequest_SOURCES = \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -2775,6 +2793,8 @@ tests_testStore_SOURCES= \
 	ETag.cc \
 	event.cc \
 	EventLoop.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
 	HttpHeaderFieldStat.h \
@@ -3001,6 +3021,8 @@ tests_testUfs_SOURCES = \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	client_db.h \
@@ -3162,6 +3184,8 @@ tests_testRock_SOURCES = \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	FileMap.h \
@@ -3320,6 +3344,8 @@ tests_testCoss_SOURCES = \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	disk.h \
@@ -3655,6 +3681,8 @@ tests_testURL_SOURCES = \
 	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.cc \
@@ -3856,6 +3884,8 @@ tests_testConfigParser_SOURCES = \
 	MemBuf.cc \
 	String.cc \
 	ConfigParser.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	tests/testMain.cc \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
