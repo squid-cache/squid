@@ -31,7 +31,8 @@
 
 class wordlist;
 
-namespace Mgr {
+namespace Mgr
+{
 //TODO: refactor into a std::list
 /// list of cachemgr password authorization definitions. Currently a POD.
 class ActionPasswordList
