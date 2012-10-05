@@ -3918,6 +3918,8 @@ tests_testConfigParser_DEPENDENCIES = \
 	
 tests_testStatHist_SOURCES = \
 	cbdata.cc \
+	fatal.h \
+	tests/stub_fatal.cc \
 	MemBuf.cc \
 	StatHist.cc \
 	StatHist.h \
