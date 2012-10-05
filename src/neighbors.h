@@ -48,11 +48,11 @@ CachePeer *getNextPeer(CachePeer *);
 CachePeer *getSingleParent(HttpRequest *);
 int neighborsCount(HttpRequest *);
 int neighborsUdpPing(HttpRequest *,
-                StoreEntry *,
-                IRCB * callback,
-                void *data,
-                int *exprep,
-                int *timeout);
+                     StoreEntry *,
+                     IRCB * callback,
+                     void *data,
+                     int *exprep,
+                     int *timeout);
 void neighborAddAcl(const char *, const char *);
 
 void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);

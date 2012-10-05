@@ -33,7 +33,8 @@
 
 class ACLList;
 class Logfile;
-namespace Format {
+namespace Format
+{
 class Format;
 }
 

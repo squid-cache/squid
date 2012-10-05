@@ -50,7 +50,8 @@
  */
 
 class HttpRequest;
-namespace Mgr {
+namespace Mgr
+{
 class ActionPasswordList;
 } //namespace Mgr
 /**
