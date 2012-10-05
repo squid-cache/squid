@@ -53,7 +53,7 @@ check_PROGRAMS += debug \
 tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
 
-DEBUG_SOURCE = test_tools.cc stub_debug.cc stub_tools.cc
+DEBUG_SOURCE = test_tools.cc stub_debug.cc stub_tools.cc stub_fatal.cc
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc .
@@ -61,7 +61,10 @@ stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 stub_tools.cc: $(top_srcdir)/src/tests/stub_tools.cc
 	cp $(top_srcdir)/src/tests/stub_tools.cc .
 
-CLEANFILES += stub_debug.cc stub_tools.cc
+stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
+	cp $(top_srcdir)/src/tests/stub_fatal.cc .
+
+CLEANFILES += stub_debug.cc stub_tools.cc stub_fatal.cc
 
 ## XXX: somewhat broken. Its meant to test our debugs() implementation.
 ## but it has never been linked to the actual src/debug.cc implementation !!
