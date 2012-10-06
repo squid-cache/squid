@@ -1,3 +1,22 @@
+Changes to squid-3.2.1 (06 Oct 2012):
+
+	- Regression: Make login=PASS send no credentials when none available
+	- Regression: Handle dstdomain duplicates and overlapping names better
+	- Bug 3661: Segmentation fault when using more than 1 worker
+	- Bug 3660: ACLFilledChecklist::fd set with wrong fd for sslproxy_cert_error
+	- Bug 3658: ERR_ZERO_SIZE_OBJECT propagates out even after successful retry
+	- Bug 3648: polish String class files
+	- Bug 3647: parsing hier_code acl fails
+	- Bug 3626: forwarding loops on intercepted traffic
+	- Bug 3616: retrieve client connection for ACL checks from the related HttpRequest object
+	- Bug 3609: several RADIUS helper improvements
+	- Bug 3605: memory leak in Negotiate authentication
+	- Fix small memory leak in src ACL parse
+	- Fix maximum_single_addr_tries upgrade
+	- Fix chunked encoding on responses carrying a Content-Range header.
+	- Do not reuse persistent connections for PUTs to avoid ERR_ZERO_SIZE_OBJECT
+	- ... and several compile errors
+
 Changes to squid-3.2.1 (15 Aug 2012):
 
 	- Bug 3605: memory leak in peer selection
