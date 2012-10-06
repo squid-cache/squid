@@ -218,6 +218,11 @@ extern "C" {
 #include "compat/xstrto.h"
 #include "compat/xis.h"
 
+/*
+ * strtoll() is needed. Squid provides a portable definition.
+ */
+#include "compat/strtoll.h"
+
 #if !HAVE_MEMCPY
 #if HAVE_BCOPY
 #define memcpy(d,s,n) bcopy((s),(d),(n))
