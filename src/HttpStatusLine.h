@@ -66,12 +66,12 @@ void httpStatusLineInit(HttpStatusLine * sline);
 void httpStatusLineClean(HttpStatusLine * sline);
 /* set/get values */
 void httpStatusLineSet(HttpStatusLine * sline, HttpVersion version,
-                                    http_status status, const char *reason);
+                       http_status status, const char *reason);
 const char *httpStatusLineReason(const HttpStatusLine * sline);
 /* parse/pack */
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
 int httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix,
-                                     const char *start, const char *end);
+                        const char *start, const char *end);
 /* pack fields using Packer */
 void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 
