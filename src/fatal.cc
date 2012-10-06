@@ -63,7 +63,6 @@ fatal_common(const char *message)
     dumpMallocStats();
 }
 
-
 void
 fatal(const char *message)
 {
