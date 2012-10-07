@@ -2,7 +2,7 @@
 #include "format/Config.h"
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
-#include "global.h"
+#include "globals.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
