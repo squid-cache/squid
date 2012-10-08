@@ -901,7 +901,7 @@ CossSwapDir::create()
 
     if (::stat(path, &swap_sb) < 0) {
         debugs (47, 2, "COSS swap space space being allocated.");
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
         mkdir(path);
 #else

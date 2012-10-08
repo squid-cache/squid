@@ -368,7 +368,7 @@ death(int sig)
 #endif
 #endif /* PRINT_STACK_TRACE */
 
-#if SA_RESETHAND == 0 && !_SQUID_MSWIN_
+#if SA_RESETHAND == 0 && !_SQUID_WINDOWS_
     signal(SIGSEGV, SIG_DFL);
 
     signal(SIGBUS, SIG_DFL);
@@ -456,7 +456,7 @@ debug_trap(const char *message)
 void
 sig_child(int sig)
 {
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if _SQUID_NEXT_
     union wait status;
 #else
@@ -995,7 +995,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
         debugs(50, DBG_CRITICAL, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     /*
     On Windows, only SIGINT, SIGILL, SIGFPE, SIGTERM, SIGBREAK, SIGABRT and SIGSEGV signals
     are supported, so we must care of don't call signal() for other value.

@@ -236,7 +236,7 @@ static void idnsAddPathComponent(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static void idnsParseNameservers(void);
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static void idnsParseResolvConf(void);
 #endif
 #if _SQUID_WINDOWS_
@@ -365,7 +365,7 @@ idnsParseNameservers(void)
     }
 }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static void
 idnsParseResolvConf(void)
 {
@@ -1534,7 +1534,7 @@ dnsInit(void)
 
     assert(0 == nns);
     idnsParseNameservers();
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 
     if (0 == nns)
         idnsParseResolvConf();

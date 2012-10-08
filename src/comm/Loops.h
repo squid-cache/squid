@@ -36,7 +36,7 @@ void QuickPollRequired(void);
  * This is a per-port limit for ICP/HTCP ports.
  * DNS has a separate limit.
  */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #define INCOMING_UDP_MAX 1
 #else
 #define INCOMING_UDP_MAX 15
@@ -45,7 +45,7 @@ void QuickPollRequired(void);
 /**
  * Max number of DNS messages to receive per call to DNS read handler
  */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #define INCOMING_DNS_MAX 1
 #else
 #define INCOMING_DNS_MAX 15
@@ -55,7 +55,7 @@ void QuickPollRequired(void);
  * Max number of new TCP connections to accept per call to the TCP listener poller.
  * This is a per-port limit for HTTP/HTTPS ports.
  */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #define INCOMING_TCP_MAX 1
 #else
 #define INCOMING_TCP_MAX 10
