@@ -387,8 +387,8 @@ export enable_inline
 dnl
 dnl Check for atomic operations support in the compiler
 dnl
-AC_MSG_CHECKING([for atomic operations support])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_MSG_CHECKING([for GNU atomic operations support])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     int n = 0;
 ]],[[
     __sync_add_and_fetch(&n, 10); // n becomes 10
@@ -399,8 +399,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     return (n == 200) ? 0 : -1;
 ]])],
 [
-    AC_DEFINE(HAVE_ATOMIC_OPS,1,
-        [Define to 1 if you have __sync_add_and_fetch() and such])
+    AC_DEFINE(HAVE_ATOMIC_OPS,1,[Define to 1 if you have __sync_add_and_fetch() and such])
     AC_MSG_RESULT(yes)
 ],[
     AC_MSG_RESULT(no)
