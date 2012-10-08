@@ -296,7 +296,7 @@ getgrnam(char *unused) {
     return &grp;
 }
 
-#if defined(__MINGW32__)	/* MinGW environment */
+#if _SQUID_MINGW_
 int
 _free_osfhnd(int filehandle)
 {
