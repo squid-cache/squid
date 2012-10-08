@@ -46,9 +46,15 @@
 #include "SquidTime.h"
 #include "unlinkd.h"
 
+#if HAVE_SYS_IPC_H
 #include <sys/ipc.h>
+#endif
+#if HAVE_SYS_MSG_H
 #include <sys/msg.h>
+#endif
+#if HAVE_SYS_SHM_H
 #include <sys/shm.h>
+#endif
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
