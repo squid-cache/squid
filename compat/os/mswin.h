@@ -107,7 +107,6 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define mkdir(p,F) mkdir((p))
 #endif
 #define pclose _pclose
-#define pipe WIN32_pipe
 #define popen _popen
 #define putenv _putenv
 #define setmode _setmode
@@ -651,6 +650,13 @@ int socket(int f, int t, int p)
         return _open_osfhandle(result, 0);
 }
 #define socket(f,t,p) Squid::socket(f,t,p)
+
+inline int
+pipe(int pipefd[2])
+{
+    return _pipe(pipefd,4096,_O_BINARY);
+}
+using Squid::pipe;
 
 inline
 int WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
