@@ -132,7 +132,7 @@ public:
     SSL *ssl;
     SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
 #endif
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     struct {
         long handle;
     } win32;
@@ -185,7 +185,7 @@ private:
         ssl = NULL;
         dynamicSslContext = NULL;
 #endif
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         win32.handle = NULL;
 #endif
         tosFromServer = '\0';
