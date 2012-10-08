@@ -104,6 +104,14 @@ fi
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
+# pre-define DEFAULT_PREFIX, some modules need it.
+if test "${prefix}" = "NONE" ; then
+  squid_prefix=$ac_default_prefix
+else
+  squid_prefix=$prefix
+fi
+AC_DEFINE_UNQUOTED(DEFAULT_PREFIX,[$squid_prefix],[The install prefix])
+
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
