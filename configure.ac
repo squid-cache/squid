@@ -1143,9 +1143,15 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
   esac
   #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
+    windows.h \
     net/if_dl.h \
     sys/sockio.h \
-    sys/param.h
+    sys/param.h,
+  [], [], [[
+#if HAVE_WINDOWS_H
+include <windows.h>
+endif
+]]
   )
   AC_CHECK_HEADERS( \
     net/if_arp.h \
@@ -2409,8 +2415,7 @@ AC_CHECK_HEADERS( \
   inttypes.h \
   db.h \
   db_185.h \
-  wchar.h \
-  ws2tcpip.h
+  wchar.h
 )
 
 CHECK_STRUCT_PAM_CONV
@@ -2621,7 +2626,13 @@ AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
-  AC_CHECK_HEADERS(Iphlpapi.h,,,[
+  AC_CHECK_HEADERS( \
+    windows.h \
+    ws2tcpip.h \
+    Iphlpapi.h ,,,[
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif])
