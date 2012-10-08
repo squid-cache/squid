@@ -1,6 +1,8 @@
 include $(top_srcdir)/src/Common.am
 
+if !ENABLE_WIN32SPECIFIC
 bin_PROGRAMS = purge
+endif
 
 purge_SOURCES = \
 	convert.cc \
