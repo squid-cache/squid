@@ -2386,6 +2386,7 @@ AC_CHECK_HEADERS( \
   sys/endian.h \
   sys/file.h \
   sys/ioctl.h \
+  sys/ipc.cc \
   sys/param.h \
   sys/prctl.h \
   sys/md5.h \
@@ -2393,6 +2394,7 @@ AC_CHECK_HEADERS( \
   sys/msg.h \
   sys/resource.h \
   sys/select.h \
+  sys/shm.h \
   sys/socket.h \
   sys/stat.h \
   sys/statvfs.h \
