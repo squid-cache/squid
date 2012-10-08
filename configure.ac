@@ -2405,7 +2405,8 @@ AC_CHECK_HEADERS( \
   inttypes.h \
   db.h \
   db_185.h \
-  wchar.h
+  wchar.h \
+  ws2tcpip.h
 )
 
 CHECK_STRUCT_PAM_CONV

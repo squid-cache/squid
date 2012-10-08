@@ -115,7 +115,7 @@ extern size_t store_pages_max;	/* 0 */
 extern int64_t store_maxobjsize;	/* -1 */
 extern hash_table *proxy_auth_username_cache;	/* NULL */
 extern int incoming_sockets_accepted;
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #endif
 #if _SQUID_WINDOWS_

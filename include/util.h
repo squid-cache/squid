@@ -111,7 +111,7 @@ SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int wha
 
 /* Windows Port */
 /* win32lib.c */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 SQUIDCEXTERN int chroot (const char *);
 #if !HAVE_GETTIMEOFDAY
 SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);

@@ -35,7 +35,7 @@
 #include "squid_windows.h"
 #include "win32.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #if HAVE_WIN32_PSAPI
 #include <psapi.h>
 #endif

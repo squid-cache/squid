@@ -23,7 +23,7 @@
 
 Ssl::Lock::Lock(std::string const &aFilename) :
         filename(aFilename),
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         hFile(INVALID_HANDLE_VALUE)
 #else
         fd(-1)
@@ -33,7 +33,7 @@ Ssl::Lock::Lock(std::string const &aFilename) :
 
 bool Ssl::Lock::locked() const
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     return hFile != INVALID_HANDLE_VALUE;
 #else
     return fd != -1;
@@ -43,7 +43,7 @@ bool Ssl::Lock::locked() const
 void Ssl::Lock::lock()
 {
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
 #else
@@ -52,7 +52,7 @@ void Ssl::Lock::lock()
 #endif
         throw std::runtime_error("Failed to open file " + filename);
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (!LockFile(hFile, 0, 0, 1, 0))
 #else
     if (flock(fd, LOCK_EX) != 0)
@@ -62,7 +62,7 @@ void Ssl::Lock::lock()
 
 void Ssl::Lock::unlock()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hFile != INVALID_HANDLE_VALUE) {
         UnlockFile(hFile, 0, 0, 1, 0);
         CloseHandle(hFile);

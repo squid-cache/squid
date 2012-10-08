@@ -8080,7 +8080,7 @@ DOC_START
 DOC_END
 
 NAME: windows_ipaddrchangemonitor
-IFDEF: _SQUID_MSWIN_
+IFDEF: _SQUID_WINDOWS_
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on

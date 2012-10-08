@@ -88,7 +88,7 @@ static void
 debug(char *format,...)
 {
 #ifdef DEBUG
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (debug_enabled) {
         va_list args;
 
@@ -97,7 +97,7 @@ debug(char *format,...)
         vfprintf(stderr, format, args);
         va_end(args);
     }
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 #endif /* DEBUG */
 }
 #endif /* __GNUC__ */
