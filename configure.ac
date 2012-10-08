@@ -1150,7 +1150,7 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
   [], [], [[
 #if HAVE_WINDOWS_H
 include <windows.h>
-endif
+#endif
 ]]
   )
   AC_CHECK_HEADERS( \
@@ -1161,9 +1161,9 @@ endif
 #include <sys/socket.h>
 ]])
 
-  # openbsd requires sys/param.h to be included before sysctl.h
-  AC_CHECK_HEADERS(sys/sysctl.h, [], [],
-  [[#if HAVE_SYS_PARAM_H
+  # OpenBSD, FreeBSD and NetBSD requires sys/param.h to be included before sysctl.h
+  AC_CHECK_HEADERS(sys/sysctl.h, [], [], [[
+#if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
   ]])
