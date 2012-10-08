@@ -153,7 +153,6 @@
 #endif
 
 #if USE_WIN32_SERVICE
-#include "squid_windows.h"
 #include <process.h>
 
 static int opt_install_service = FALSE;
@@ -162,7 +161,6 @@ static int opt_signal_service = FALSE;
 static int opt_command_line = FALSE;
 void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
-
 #endif
 
 #if !defined(SQUID_BUILD_INFO)

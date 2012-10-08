@@ -46,7 +46,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include "squid_windows.h"
 #include <string.h>
 #include <sys/timeb.h>
 #if HAVE_WIN32_PSAPI
