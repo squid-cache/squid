@@ -29,8 +29,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_OS_MSWIN_H
-#define SQUID_OS_MSWIN_H
+#ifndef SQUID_OS_MSWINDOWS_H
+#define SQUID_OS_MSWINDOWS_H
 
 #if _SQUID_WINDOWS_
 
@@ -771,5 +771,21 @@ SQUIDCEXTERN size_t getpagesize(void);
 #define PRINTF_FORMAT_ARG3
 #endif
 
+/* XXX: the logic around this is a bit warped:
+ *   we #define ACL unconditionally at the top of this file,
+ *   then #undef ACL unconditionally hafway down,
+ *   then here re-define ACL to the same value as at the top,
+ *   then include windows.h and #undef ACL again.
+ */
+#ifndef ACL
+#define ACL WindowsACL
+#define _MSWIN_ACL_WAS_NOT_DEFINED 1
+#endif
+#include <windows.h>
+#if _MSWIN_ACL_WAS_NOT_DEFINED
+#undef ACL
+#undef _MSWIN_ACL_WAS_NOT_DEFINED
+#endif
+
 #endif /* _SQUID_WINDOWS_ */
-#endif /* SQUID_OS_MSWIN_H */
+#endif /* SQUID_OS_MSWINDOWS_H */

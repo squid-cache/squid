@@ -32,7 +32,6 @@
  */
 
 #include "squid.h"
-#include "squid_windows.h"
 #include "win32.h"
 
 #if _SQUID_WINDOWS_

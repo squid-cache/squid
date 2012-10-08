@@ -34,10 +34,6 @@
 
 #if USE_DISKIO_AIO
 
-#if _SQUID_CYGWIN_
-#include "squid_windows.h"
-#endif
-
 #ifndef off64_t
 typedef int64_t	off64_t;
 #endif
