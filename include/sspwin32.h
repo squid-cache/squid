@@ -32,6 +32,10 @@
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if _SQUID_WINDOWS_
 
 #define SECURITY_WIN32
@@ -64,7 +68,7 @@ typedef char * SSP_blobP;
 #define SSP_OK 1
 #define SSP_ERROR 2
 
-HMODULE LoadSecurityDll(int, char *);
+HMODULE LoadSecurityDll(int, const char *);
 void UnloadSecurityDll(void);
 BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
 BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
@@ -75,5 +79,8 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 extern BOOL Use_Unicode;
 extern BOOL NTLM_LocalCall;
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _SQUID_WINDOWS_ */
 #endif /* LIBSSPWIN32_H_ */
