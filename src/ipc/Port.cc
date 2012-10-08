@@ -21,10 +21,10 @@ Ipc::Port::Port(const String& aListenAddr):
 void Ipc::Port::start()
 {
     UdsOp::start();
-    listen();
+    doListen();
 }
 
-void Ipc::Port::listen()
+void Ipc::Port::doListen()
 {
     debugs(54, 6, HERE);
     buf.prepForReading();
@@ -60,5 +60,5 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
     // TODO: if there was a fatal error on our socket, close the socket before
     // trying to listen again and print a level-1 error message.
 
-    listen();
+    doListen();
 }
