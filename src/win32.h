@@ -50,7 +50,6 @@
 
 int WIN32_pipe(int[2]);
 
-int WIN32_getrusage(int, struct rusage *);
 void WIN32_ExceptionHandlerInit(void);
 
 int Win32__WSAFDIsSet(int fd, fd_set* set);
