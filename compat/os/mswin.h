@@ -340,7 +340,7 @@ typedef struct {
 SQUIDCEXTERN _CRTIMP ioinfo * __pioinfo[];
 SQUIDCEXTERN int __cdecl _free_osfhnd(int);
 
-#elif defined(__MINGW32__) /* MinGW environment */
+#elif _SQUID_MINGW_	/* MinGW environment */
 
 __MINGW_IMPORT ioinfo * __pioinfo[];
 SQUIDCEXTERN int _free_osfhnd(int);
