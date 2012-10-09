@@ -1144,7 +1144,6 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
   #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
     windows.h \
-    net/if_dl.h \
     sys/sockio.h \
     sys/param.h,
   [], [], [[
@@ -1161,8 +1160,11 @@ include <windows.h>
 #include <sys/socket.h>
 ]])
 
-  # OpenBSD, FreeBSD and NetBSD requires sys/param.h to be included before sysctl.h
-  AC_CHECK_HEADERS(sys/sysctl.h, [], [], [[
+  # OpenBSD, FreeBSD and NetBSD requires sys/param.h to be included before sysctl.h and net/if_dl.h
+  AC_CHECK_HEADERS( \
+    net/if_dl.h \
+    sys/sysctl.h,
+  [], [], [[
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
