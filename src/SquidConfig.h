@@ -548,7 +548,9 @@ public:
 
 extern SquidConfig Config;
 
-struct SquidConfig2 {
+class SquidConfig2
+{
+public:
     struct {
         int enable_purge;
         int mangle_request_headers;
