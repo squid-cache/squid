@@ -1,4 +1,3 @@
-
 /*
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -33,13 +32,12 @@
  */
 
 #include "squid.h"
-#include "util.h"
 
-/* The following code section is part of an EXPERIMENTAL native */
-/* Windows NT/2000 Squid port - Compiles only on MS Visual C++ or MinGW */
+// The following code section is part of an EXPERIMENTAL native Windows NT/2000 Squid port.
+// Compiles only on MS Visual C++ or MinGW
+// CygWin appears not to need any of these
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
-#undef strerror
 #define sys_nerr _sys_nerr
 
 #undef assert
@@ -51,13 +49,17 @@
 #if HAVE_WIN32_PSAPI
 #include <psapi.h>
 #endif
+#ifndef _MSWSOCK_
+#include <mswsock.h>
+#endif
+
 
 THREADLOCAL int ws32_result;
 LPCRITICAL_SECTION dbg_mutex = NULL;
 
 void GetProcessName(pid_t, char *);
 
-#if defined(_MSC_VER)		/* Microsoft C Compiler ONLY */
+#if HAVE_GETPAGESIZE > 1
 size_t
 getpagesize()
 {
@@ -69,55 +71,7 @@ getpagesize()
     }
     return system_pagesize;
 }
-#endif
-
-uid_t
-geteuid(void)
-{
-    return 100;
-}
-
-uid_t
-getuid(void)
-{
-    return 100;
-}
-
-int
-setuid(uid_t uid)
-{
-    return 0;
-}
-
-int
-seteuid(uid_t euid)
-{
-    return 0;
-}
-
-gid_t
-getegid(void)
-{
-    return 100;
-}
-
-gid_t
-getgid(void)
-{
-    return 100;
-}
-
-int
-setgid(gid_t gid)
-{
-    return 0;
-}
-
-int
-setegid(gid_t egid)
-{
-    return 0;
-}
+#endif /* HAVE_GETPAGESIZE > 1 */
 
 int
 chroot(const char *dirname)
@@ -131,14 +85,10 @@ chroot(const char *dirname)
 void
 GetProcessName(pid_t pid, char *ProcessName)
 {
-    HANDLE hProcess;
-
     strcpy(ProcessName, "unknown");
 #if HAVE_WIN32_PSAPI
     /* Get a handle to the process. */
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-                           PROCESS_VM_READ,
-                           FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     /* Get the process name. */
     if (NULL != hProcess) {
         HMODULE hMod;
@@ -153,7 +103,7 @@ GetProcessName(pid_t pid, char *ProcessName)
     } else
         return;
     CloseHandle(hProcess);
-#endif
+#endif /* HAVE_WIN32_PSAPI */
 }
 
 int
@@ -192,12 +142,12 @@ gettimeofday(struct timeval *pcur_time, void *tzp)
     pcur_time->tv_sec = current.time;
     pcur_time->tv_usec = current.millitm * 1000L;
     if (tz) {
-        tz->tz_minuteswest = current.timezone;	/* minutes west of Greenwich  */
-        tz->tz_dsttime = current.dstflag;	/* type of dst correction  */
+        tz->tz_minuteswest = current.timezone; /* minutes west of Greenwich  */
+        tz->tz_dsttime = current.dstflag;      /* type of dst correction  */
     }
     return 0;
 }
-#endif
+#endif /* !HAVE_GETTIMEOFDAY */
 
 int
 statfs(const char *path, struct statfs *sfs)
@@ -321,7 +271,7 @@ _free_osfhnd(int filehandle)
         return -1;
     }
 }
-#endif
+#endif /* _SQUID_MINGW_ */
 
 struct errorentry {
     unsigned long WIN32_code;
@@ -385,10 +335,8 @@ static struct errorentry errortable[] = {
 void
 WIN32_maperror(unsigned long WIN32_oserrno)
 {
-    int i;
-
     _doserrno = WIN32_oserrno;
-    for (i = 0; i < (sizeof(errortable) / sizeof(struct errorentry)); ++i) {
+    for (size_t i = 0; i < (sizeof(errortable) / sizeof(struct errorentry)); ++i) {
         if (WIN32_oserrno == errortable[i].WIN32_code) {
             errno = errortable[i].POSIX_errno;
             return;
@@ -401,4 +349,67 @@ WIN32_maperror(unsigned long WIN32_oserrno)
     else
         errno = EINVAL;
 }
-#endif
+
+/* syslog emulation layer derived from git */
+static HANDLE ms_eventlog;
+
+void
+openlog(const char *ident, int logopt, int facility)
+{
+        if (ms_eventlog)
+                return;
+
+        ms_eventlog = RegisterEventSourceA(NULL, ident);
+
+		// note: RegisterEventAtSourceA may fail and return NULL.
+        //   in that case we'll just retry at the next message or not log
+}
+#define SYSLOG_MAX_MSG_SIZE 1024
+
+void
+syslog(int priority, const char *fmt, ...)
+{
+        WORD logtype;
+        char *str=static_cast<char *>(xmalloc(SYSLOG_MAX_MSG_SIZE));
+        int str_len;
+        va_list ap;
+
+        if (!ms_eventlog)
+                return;
+
+        va_start(ap, fmt);
+        str_len = vsnprintf(str, SYSLOG_MAX_MSG_SIZE-1, fmt, ap);
+        va_end(ap);
+
+        if (str_len < 0) {
+        	/* vsnprintf failed */
+            return;
+        }
+
+        switch (priority) {
+        case LOG_EMERG:
+        case LOG_ALERT:
+        case LOG_CRIT:
+        case LOG_ERR:
+                logtype = EVENTLOG_ERROR_TYPE;
+                break;
+
+        case LOG_WARNING:
+                logtype = EVENTLOG_WARNING_TYPE;
+                break;
+
+        case LOG_NOTICE:
+        case LOG_INFO:
+        case LOG_DEBUG:
+        default:
+                logtype = EVENTLOG_INFORMATION_TYPE;
+                break;
+        }
+
+        //Windows API suck. They are overengineered
+        ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
+            const_cast<const char **>(&str), NULL);
+}
+
+/* note: this is all MSWindows-specific code; all of it should be conditional */
+#endif /* _SQUID_WINDOWS_ */
