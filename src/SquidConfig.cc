@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "SquidConfig.h"
 
-struct SquidConfig Config;
+class SquidConfig Config;
 
-struct SquidConfig2 Config2;
+class SquidConfig2 Config2;
 
