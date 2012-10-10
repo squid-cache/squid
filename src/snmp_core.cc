@@ -1062,6 +1062,7 @@ snmpCreateOid(int length,...)
         }
     }
 
+    va_end(args);
     return (new_oid);
 }
 
