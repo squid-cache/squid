@@ -3774,6 +3774,7 @@ FtpStateData::printfReplyBody(const char *fmt, ...)
     buf[0] = '\0';
     vsnprintf(buf, 4096, fmt, args);
     writeReplyBody(buf, strlen(buf));
+    va_end(args);
 }
 
 /**
