@@ -498,8 +498,7 @@ connect(int s, const struct sockaddr * n, socklen_t l)
 }
 
 inline struct hostent *
-gethostbyname(const char *n)
-{
+gethostbyname(const char *n) {
     HOSTENT FAR * result;
     if ((result = ::gethostbyname(n)) == NULL)
         errno = WSAGetLastError();
@@ -812,42 +811,42 @@ SQUIDCEXTERN struct group * getgrnam(char *unused);
 static inline uid_t
 geteuid(void)
 {
-       return 100;
+    return 100;
 }
 static inline int
 seteuid (uid_t euid)
 {
-       return 0;
+    return 0;
 }
 static inline uid_t
 getuid(void)
 {
-       return 100;
+    return 100;
 }
 static inline int
 setuid (uid_t uid)
 {
-       return 0;
+    return 0;
 }
 static inline gid_t
 getegid(void)
 {
-       return 100;
+    return 100;
 }
 static inline int
 setegid (gid_t egid)
 {
-       return 0;
+    return 0;
 }
 static inline int
 getgid(void)
 {
-       return 100;
+    return 100;
 }
 static inline int
 setgid (gid_t gid)
 {
-       return 0;
+    return 0;
 }
 
 /* for some reason autoconf misdetects getpagesize.. */

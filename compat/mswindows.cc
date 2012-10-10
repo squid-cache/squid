@@ -53,7 +53,6 @@
 #include <mswsock.h>
 #endif
 
-
 THREADLOCAL int ws32_result;
 LPCRITICAL_SECTION dbg_mutex = NULL;
 
@@ -356,59 +355,59 @@ static HANDLE ms_eventlog;
 void
 openlog(const char *ident, int logopt, int facility)
 {
-        if (ms_eventlog)
-                return;
+    if (ms_eventlog)
+        return;
 
-        ms_eventlog = RegisterEventSourceA(NULL, ident);
+    ms_eventlog = RegisterEventSourceA(NULL, ident);
 
-		// note: RegisterEventAtSourceA may fail and return NULL.
-        //   in that case we'll just retry at the next message or not log
+    // note: RegisterEventAtSourceA may fail and return NULL.
+    //   in that case we'll just retry at the next message or not log
 }
 #define SYSLOG_MAX_MSG_SIZE 1024
 
 void
 syslog(int priority, const char *fmt, ...)
 {
-        WORD logtype;
-        char *str=static_cast<char *>(xmalloc(SYSLOG_MAX_MSG_SIZE));
-        int str_len;
-        va_list ap;
+    WORD logtype;
+    char *str=static_cast<char *>(xmalloc(SYSLOG_MAX_MSG_SIZE));
+    int str_len;
+    va_list ap;
 
-        if (!ms_eventlog)
-                return;
+    if (!ms_eventlog)
+        return;
 
-        va_start(ap, fmt);
-        str_len = vsnprintf(str, SYSLOG_MAX_MSG_SIZE-1, fmt, ap);
-        va_end(ap);
+    va_start(ap, fmt);
+    str_len = vsnprintf(str, SYSLOG_MAX_MSG_SIZE-1, fmt, ap);
+    va_end(ap);
 
-        if (str_len < 0) {
-        	/* vsnprintf failed */
-            return;
-        }
+    if (str_len < 0) {
+        /* vsnprintf failed */
+        return;
+    }
 
-        switch (priority) {
-        case LOG_EMERG:
-        case LOG_ALERT:
-        case LOG_CRIT:
-        case LOG_ERR:
-                logtype = EVENTLOG_ERROR_TYPE;
-                break;
+    switch (priority) {
+    case LOG_EMERG:
+    case LOG_ALERT:
+    case LOG_CRIT:
+    case LOG_ERR:
+        logtype = EVENTLOG_ERROR_TYPE;
+        break;
 
-        case LOG_WARNING:
-                logtype = EVENTLOG_WARNING_TYPE;
-                break;
+    case LOG_WARNING:
+        logtype = EVENTLOG_WARNING_TYPE;
+        break;
 
-        case LOG_NOTICE:
-        case LOG_INFO:
-        case LOG_DEBUG:
-        default:
-                logtype = EVENTLOG_INFORMATION_TYPE;
-                break;
-        }
+    case LOG_NOTICE:
+    case LOG_INFO:
+    case LOG_DEBUG:
+    default:
+        logtype = EVENTLOG_INFORMATION_TYPE;
+        break;
+    }
 
-        //Windows API suck. They are overengineered
-        ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
-            const_cast<const char **>(&str), NULL);
+    //Windows API suck. They are overengineered
+    ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
+                 const_cast<const char **>(&str), NULL);
 }
 
 /* note: this is all MSWindows-specific code; all of it should be conditional */
