@@ -684,10 +684,16 @@ for module in $squid_disk_module_candidates none; do
       ;;
 
     Mmapped)
-      AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
-      DISK_LIBS="$DISK_LIBS libMmapped.a"
-      DISK_MODULES="$DISK_MODULES Mmapped"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      dnl TODO: use availability of sys/mman.h and/or mmap to define
+      dnl  OR support windows mmap functions
+      if test "x$squid_host_os" = "xmingw" ; then
+        AC_MSG_NOTICE([Mmapped DiskIO is not available on Mingw])
+      else
+        AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
+        DISK_LIBS="$DISK_LIBS libMmapped.a"
+        DISK_MODULES="$DISK_MODULES Mmapped"
+        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      fi
       ;;
 
     IpcIo)
