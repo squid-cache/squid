@@ -3665,7 +3665,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         if (t) {
             ++t;
             s->tcp_keepalive.timeout = atoi(t);
-            t = strchr(t, ',');
+            // t = strchr(t, ','); // not really needed, left in as documentation
         }
 #if USE_SSL
     } else if (strcasecmp(token, "sslBump") == 0) {
