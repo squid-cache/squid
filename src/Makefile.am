@@ -3951,6 +3951,7 @@ tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 tests_testStatHist_LDADD = \
 	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(top_builddir)/lib/libmisccontainers.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
