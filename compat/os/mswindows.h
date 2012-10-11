@@ -388,7 +388,7 @@ SQUIDCEXTERN int _free_osfhnd(int);
 
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 
 inline int
 close(int fd)
