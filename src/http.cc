@@ -1393,7 +1393,7 @@ HttpStateData::processReplyBody()
                 ispinned = true;
             }
 
-            if (request->clientConnectionManager.valid() && ispinned) {
+            if (ispinned && request->clientConnectionManager.valid()) {
                 request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
                         (request->flags.connectionAuth != 0));
             } else {
