@@ -32,11 +32,11 @@
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
 
-#ifdef __cplusplus
+#if _SQUID_WINDOWS_
+
+#if defined(__cplusplus)
 extern "C" {
 #endif
-
-#if _SQUID_WINDOWS_
 
 #define SECURITY_WIN32
 #define NTLM_PACKAGE_NAME "NTLM"
@@ -79,8 +79,9 @@ extern "C" {
     extern BOOL Use_Unicode;
     extern BOOL NTLM_LocalCall;
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
+
 #endif /* _SQUID_WINDOWS_ */
 #endif /* LIBSSPWIN32_H_ */
