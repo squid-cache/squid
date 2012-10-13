@@ -1715,7 +1715,7 @@ if test "x$enable_auth_basic" != "xno" ; then
     for helper in $enable_auth_basic
     do
     dir="$srcdir/helpers/basic_auth/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
       BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
       # special case
       if test "x$helper" = "xSASL" ; then
@@ -1761,7 +1761,7 @@ if test "x$enable_auth_ntlm" != "xno" ; then
     AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
     for helper in $enable_auth_ntlm ; do
         dir="$srcdir/helpers/ntlm_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
             NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
         elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
             AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
@@ -1806,7 +1806,7 @@ if test "x$enable_auth_negotiate" != "xno" ; then
     AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
     for helper in $enable_auth_negotiate ; do
         dir="$srcdir/helpers/negotiate_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
             NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
         elif test -d "$srcdir/helpers/negotiate_auth/$helper" ; then
             AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
@@ -1849,7 +1849,7 @@ if test "x$enable_auth_digest" != "xno" ; then
     AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
     for helper in $enable_auth_digest ; do
         dir="$srcdir/helpers/digest_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
             DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
         elif test -d "$srcdir/helpers/digest_auth/$helper" ; then
             AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
@@ -1890,7 +1890,7 @@ if test "x$squid_opt_logdaemon_helpers" = "xauto" ; then
 fi
 for helper in $squid_opt_logdaemon_helpers ; do
   dir="$srcdir/helpers/log_daemon/$helper"
-  if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+  if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
     LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $helper"
   elif test -d "$srcdir/helpers/log_daemon/$helper" ; then
     AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
@@ -2056,7 +2056,7 @@ enable_external_acl_helpers="`echo $enable_external_acl_helpers| sed -e 's/,/ /g
 if test "x$enable_external_acl_helpers" != "xno" ; then
   for helper in $enable_external_acl_helpers ; do
     dir="$srcdir/helpers/external_acl/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
       EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
       # special case
       if test "x$helper" = "xkerberos_ldap_group" ; then
@@ -2092,7 +2092,7 @@ URL_REWRITE_HELPERS=""
 if test "x$enable_url_rewrite_helpers" != "xno" ; then
   for helper in $enable_url_rewrite_helpers; do
     dir="$srcdir/helpers/url_rewrite/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
       URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
     elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
       AC_MSG_NOTICE([URL rewrite helper $helper ... found but cannot be built])
