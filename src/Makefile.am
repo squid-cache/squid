@@ -1700,6 +1700,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
+	client_side_request.h \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
