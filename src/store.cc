@@ -993,9 +993,6 @@ StoreEntry::checkCachable()
                    mem_obj->endOffset() > Config.Store.maxObjectSize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
-        } else if (getReply()->content_length > Config.Store.maxObjectSize) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
-            ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too small");
             ++store_check_cachable_hist.no.too_small;
