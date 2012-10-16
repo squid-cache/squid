@@ -1046,12 +1046,12 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         request->flags.ims = 1;
 
     if (!request->flags.ignoreCc) {
-        if (request->cache_control)
+        if (request->cache_control) {
             if (request->cache_control->noCache())
                 no_cache=true;
 
         // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing
-        else if (req_hdr->has(HDR_PRAGMA))
+        } else if (req_hdr->has(HDR_PRAGMA))
             no_cache = req_hdr->hasListMember(HDR_PRAGMA,"no-cache",',');
 
         /*
