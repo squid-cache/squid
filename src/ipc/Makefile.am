@@ -46,6 +46,7 @@ libipc_la_SOURCES = \
 	Request.h \
 	Response.h \
 	\
+	mem/FlexibleArray.h \
 	mem/Page.cc \
 	mem/Page.h \
 	mem/PagePool.cc \
