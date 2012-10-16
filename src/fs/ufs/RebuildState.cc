@@ -346,7 +346,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
             currentEntry()->lastmod = swapData.lastmod;
             currentEntry()->flags = swapData.flags;
             currentEntry()->refcount += swapData.refcount;
-            sd->dereference(*currentEntry());
+            sd->dereference(*currentEntry(), false);
         } else {
             debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
             debugs(47, DBG_IMPORTANT, HERE << "bad condition");
