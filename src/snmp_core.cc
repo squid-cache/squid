@@ -1039,6 +1039,7 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
         }
     }
 
+    va_end(args);
     return (entry);
 }
 /* End of tree utility functions */
@@ -1062,6 +1063,7 @@ snmpCreateOid(int length,...)
         }
     }
 
+    va_end(args);
     return (new_oid);
 }
 
