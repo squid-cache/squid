@@ -84,7 +84,7 @@ public:
 
     virtual void reference(StoreEntry &);	/* Reference this object */
 
-    virtual bool dereference(StoreEntry &);	/* Unreference this object */
+    virtual bool dereference(StoreEntry &, bool);	/* Unreference this object */
 
     /* the number of store dirs being rebuilt. */
     static int store_dirs_rebuilding;
@@ -206,7 +206,7 @@ public:
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
     /* These two are notifications */
     virtual void reference(StoreEntry &);	/* Reference this object */
-    virtual bool dereference(StoreEntry &);	/* Unreference this object */
+    virtual bool dereference(StoreEntry &, bool);	/* Unreference this object */
     virtual int callback();	/* Handle pending callbacks */
     virtual void sync();	/* Sync the store prior to shutdown */
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;

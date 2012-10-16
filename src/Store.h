@@ -341,7 +341,7 @@ public:
     virtual void reference(StoreEntry &) = 0;	/* Reference this object */
 
     /// Undo reference(), returning false iff idle e should be destroyed
-    virtual bool dereference(StoreEntry &e) = 0;
+    virtual bool dereference(StoreEntry &e, bool wantsLocalMemory) = 0;
 
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
 
