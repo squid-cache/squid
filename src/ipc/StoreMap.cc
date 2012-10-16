@@ -255,14 +255,14 @@ void
 Ipc::StoreMap::freeLocked(Slot &s, bool keepLocked)
 {
     if (s.state == Slot::Readable && cleaner)
-        cleaner->cleanReadable(&s - shared->slots);
+        cleaner->cleanReadable(&s - shared->slots.raw());
 
     s.waitingToBeFreed = false;
     s.state = Slot::Empty;
     if (!keepLocked)
         s.lock.unlockExclusive();
     --shared->count;
-    debugs(54, 5, HERE << " freed slot at " << (&s - shared->slots) <<
+    debugs(54, 5, HERE << " freed slot at " << (&s - shared->slots.raw()) <<
            " in map [" << path << ']');
 }
 
@@ -304,14 +304,8 @@ Ipc::StoreMapSlot::set(const StoreEntry &from)
 /* Ipc::StoreMap::Shared */
 
 Ipc::StoreMap::Shared::Shared(const int aLimit, const size_t anExtrasSize):
-        limit(aLimit), extrasSize(anExtrasSize), count(0)
+        limit(aLimit), extrasSize(anExtrasSize), count(0), slots(aLimit)
 {
-    slots=new Slot[limit];
-}
-
-Ipc::StoreMap::Shared::~Shared()
-{
-    delete[] slots;
 }
 
 size_t
