@@ -66,7 +66,7 @@ public:
     virtual void maintain();
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual void reference(StoreEntry &);
-    virtual bool dereference(StoreEntry &);
+    virtual bool dereference(StoreEntry &, bool);
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void openLog();

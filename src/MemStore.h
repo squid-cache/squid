@@ -44,7 +44,7 @@ public:
     virtual void stat(StoreEntry &) const;
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual void reference(StoreEntry &);
-    virtual bool dereference(StoreEntry &);
+    virtual bool dereference(StoreEntry &, bool);
     virtual void maintain();
 
     static int64_t EntryLimit();

@@ -427,7 +427,7 @@ UFSSwapDir::reference(StoreEntry &e)
  * removed, to maintain replacement information within the storage fs.
  */
 bool
-UFSSwapDir::dereference(StoreEntry & e)
+UFSSwapDir::dereference(StoreEntry & e, bool)
 {
     debugs(47, 3, "UFSSwapDir::dereference: referencing " << &e << " " << e.swap_dirn << "/" << e.swap_filen);
 
