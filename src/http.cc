@@ -1385,8 +1385,8 @@ HttpStateData::processReplyBody()
                 ispinned = true;
             }
 
-            if (request->pinnedConnection() && ispinned) {
-                request->pinnedConnection()->pinConnection(serverConnection, request, _peer,
+            if (ispinned && request->clientConnectionManager.valid()) {
+                request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
                         (request->flags.connection_auth != 0));
             } else {
                 fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
