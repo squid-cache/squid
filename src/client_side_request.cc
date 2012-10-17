@@ -1030,18 +1030,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         request->flags.ims = 1;
 
     if (!request->flags.ignore_cc) {
-        if (req_hdr->has(HDR_PRAGMA)) {
-            String s = req_hdr->getList(HDR_PRAGMA);
-
-            if (strListIsMember(&s, "no-cache", ','))
-                no_cache=true;
-
-            s.clean();
-        }
-
-        if (request->cache_control)
+        if (request->cache_control) {
             if (request->cache_control->noCache())
                 no_cache=true;
+
+        // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing
+        } else if (req_hdr->has(HDR_PRAGMA))
+            no_cache = req_hdr->hasListMember(HDR_PRAGMA,"no-cache",',');
 
         /*
         * Work around for supporting the Reload button in IE browsers when Squid
