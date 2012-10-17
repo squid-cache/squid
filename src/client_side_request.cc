@@ -1050,7 +1050,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             if (request->cache_control->noCache())
                 no_cache=true;
 
-        // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing
+            // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing
         } else if (req_hdr->has(HDR_PRAGMA))
             no_cache = req_hdr->hasListMember(HDR_PRAGMA,"no-cache",',');
 
