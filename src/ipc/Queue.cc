@@ -49,7 +49,7 @@ Ipc::QueueReader::QueueReader(): popBlocked(1), popSignal(0),
 /* QueueReaders */
 
 Ipc::QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity),
-    theReaders(theCapacity)
+        theReaders(theCapacity)
 {
     Must(theCapacity > 0);
 }
