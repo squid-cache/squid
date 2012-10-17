@@ -310,7 +310,8 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         port = urlDefaultPort(protocol);
 
         /* Is there any login information? (we should eventually parse it above) */
-        if ((t = strrchr(host, '@'))) {
+        t = strrchr(host, '@');
+        if (t != NULL) {
             strcpy((char *) login, (char *) host);
             t = strrchr(login, '@');
             *t = 0;

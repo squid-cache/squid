@@ -105,8 +105,7 @@ int64_t
 mem_hdr::freeDataUpto(int64_t target_offset)
 {
     /* keep the last one to avoid change to other part of code */
-
-    SplayNode<mem_node*> const * theStart = nodes.start();
+    SplayNode<mem_node*> const * theStart;
 
     while ((theStart = nodes.start())) {
         if (theStart == nodes.finish())
