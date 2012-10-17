@@ -5,7 +5,7 @@
 #define SQUID_IPC_MEM_FLEXIBLE_ARRAY_H
 
 // sometimes required for placement-new operator to be declared
-#include <new> 
+#include <new>
 
 namespace Ipc
 {
