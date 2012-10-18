@@ -26,7 +26,9 @@
 
 #include "squid.h"
 #include "helpers/defines.h"
+#include "rfc1738.h"
 #include "util.h"
+#include "valid.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -41,8 +43,6 @@
 #error NON WINDOWS PLATFORM
 #endif
 
-#include "valid.h"
-
 static char NTGroup[256];
 char * NTAllowedGroup;
 char * NTDisAllowedGroup;
@@ -56,10 +56,8 @@ int debug_enabled = 0;
  * -D can specify a Windows Local Group name not allowed to authenticate.
  * -O can specify the default Domain against to authenticate.
  */
-char *my_program_name = NULL;
-
-void
-usage()
+static void
+usage(const char *name)
 {
     fprintf(stderr, "Usage:\n%s [-A|D UserGroup][-O DefaultDomain][-d]\n"
             "-A can specify a Windows Local Group name allowed to authenticate\n"
@@ -67,7 +65,7 @@ usage()
             "-O can specify the default Domain against to authenticate\n"
             "-d enable debugging.\n"
             "-h this message\n\n",
-            my_program_name);
+            name);
 }
 
 void
@@ -100,7 +98,7 @@ process_options(int argc, char *argv[])
             /* fall thru to default */
         default:
             fprintf(stderr, "FATAL: Unknown option: -%c\n", opt);
-            usage();
+            usage(argv[0]);
             exit(1);
         }
     }
@@ -118,7 +116,6 @@ main(int argc, char **argv)
     char *p;
     int err = 0;
 
-    my_program_name = argv[0];
     process_options(argc, argv);
 
     if (LoadSecurityDll(SSP_BASIC, NTLM_PACKAGE_NAME) == NULL) {
