@@ -4034,11 +4034,8 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.serverConnection->fd == pinServer->fd)
             return;
-
-        unpinConnection(); // clears fields ready for re-use. Prevent close() scheduling our close handler.
-        pinning.serverConnection->close();
-    } else
-        unpinConnection(); // clears fields ready for re-use.
+    }
+    unpinConnection(); // clears fields ready for re-use. Prevent close() scheduling our close handler.
 
     pinning.serverConnection = pinServer;
     pinning.host = xstrdup(request->GetHost());
@@ -4096,7 +4093,8 @@ ConnStateData::unpinConnection()
         pinning.closeHandler = NULL;
     }
     /// also close the server side socket, we should not use it for any future requests...
-    pinning.serverConnection->close();
+    if (Comm::IsConnOpen(pinning.serverConnection))
+        pinning.serverConnection->close();
     safe_free(pinning.host);
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
