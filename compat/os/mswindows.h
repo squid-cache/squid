@@ -475,6 +475,7 @@ accept(int s, struct sockaddr * a, socklen_t * l)
     } else
         return _open_osfhandle(result, 0);
 }
+#define accept(s,a,l) Squid::accept(s,a,l)
 
 inline int
 bind(int s, const struct sockaddr * n, socklen_t l)
@@ -485,6 +486,7 @@ bind(int s, const struct sockaddr * n, socklen_t l)
     } else
         return 0;
 }
+#define bind(s,n,l) Squid::bind(s,n,l)
 
 inline int
 connect(int s, const struct sockaddr * n, socklen_t l)
@@ -496,9 +498,11 @@ connect(int s, const struct sockaddr * n, socklen_t l)
     } else
         return 0;
 }
+#define connect(s,n,l) Squid::connect(s,n,l)
 
 inline struct hostent *
-gethostbyname(const char *n) {
+gethostbyname(const char *n)
+{
     HOSTENT FAR * result;
     if ((result = ::gethostbyname(n)) == NULL)
         errno = WSAGetLastError();
@@ -524,11 +528,10 @@ gethostbyaddr(const void * a, size_t l, int t)
         errno = WSAGetLastError();
     return result;
 }
-using Squid::gethostbyaddr;
-//#define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
+#define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
 
 inline int
-getsockname(int s, struct sockaddr * n, size_t * l)
+getsockname(int s, struct sockaddr * n, socklen_t * l)
 {
     int i=*l;
     if (::getsockname(_get_osfhandle(s), n, &i) == SOCKET_ERROR) {
@@ -537,8 +540,7 @@ getsockname(int s, struct sockaddr * n, size_t * l)
     } else
         return 0;
 }
-using Squid::getsockname;
-//#define getsockname(s,a,l) Squid::getsockname(s,a,l)
+#define getsockname(s,a,l) Squid::getsockname(s,a,l)
 
 inline int
 gethostname(char * n, size_t l)
@@ -549,8 +551,7 @@ gethostname(char * n, size_t l)
     } else
         return 0;
 }
-using Squid::gethostname;
-//#define gethostname(n,l) Squid::gethostname(n,l)
+#define gethostname(n,l) Squid::gethostname(n,l)
 
 inline int
 getsockopt(int s, int l, int o, void * v, socklen_t * n)
@@ -562,6 +563,7 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
     } else
         return 0;
 }
+#define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
 
 /* Simple ioctl() emulation */
 inline int
@@ -573,6 +575,7 @@ ioctl(int s, int c, void * a)
     } else
         return 0;
 }
+#define ioctl(s,c,a) Squid::ioctl(s,c,a)
 
 inline int
 ioctlsocket(int s, long c, u_long FAR * a)
@@ -583,6 +586,7 @@ ioctlsocket(int s, long c, u_long FAR * a)
     } else
         return 0;
 }
+#define ioctlsocket(s,c,a) Squid::ioctlsocket(s,c,a)
 
 inline int
 listen(int s, int b)
@@ -594,8 +598,7 @@ listen(int s, int b)
     } else
         return 0;
 }
-using Squid::listen;
-//#define listen(s,b) Squid::listen(s,b)
+#define listen(s,b) Squid::listen(s,b)
 
 inline ssize_t
 recv(int s, void * b, size_t l, int f)
@@ -610,7 +613,7 @@ recv(int s, void * b, size_t l, int f)
 #define recv(s,b,l,f) Squid::recv(s,b,l,f)
 
 inline ssize_t
-recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, size_t * fl)
+recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
 {
     ssize_t result;
     int ifl=*fl;
@@ -620,7 +623,7 @@ recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, size_t * fl)
     } else
         return result;
 }
-using Squid::recvfrom;
+#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,n)
 
 inline int
 select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
@@ -644,8 +647,7 @@ send(int s, const char * b, size_t l, int f)
     } else
         return result;
 }
-using Squid::send;
-//#define send(s,b,l,f) Squid::send(s,b,l,f)
+#define send(s,b,l,f) Squid::send(s,b,l,f)
 
 inline ssize_t
 sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
@@ -657,6 +659,7 @@ sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, sockle
     } else
         return result;
 }
+#define sendto(a,b,l,f,t,n) Squid::sendto(a,b,l,f,t,n)
 
 inline int
 setsockopt(SOCKET s, int l, int o, const void * v, socklen_t n)
@@ -682,6 +685,7 @@ shutdown(int s, int h)
     } else
         return 0;
 }
+#define shutdown(s,h) Squid::shutdown(s,h)
 
 inline int
 socket(int f, int t, int p)
@@ -701,7 +705,7 @@ pipe(int pipefd[2])
 {
     return _pipe(pipefd,4096,_O_BINARY);
 }
-using Squid::pipe;
+#define pipe(a) Squid::pipe(a)
 
 inline int
 WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
