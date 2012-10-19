@@ -501,8 +501,7 @@ connect(int s, const struct sockaddr * n, socklen_t l)
 #define connect(s,n,l) Squid::connect(s,n,l)
 
 inline struct hostent *
-gethostbyname(const char *n)
-{
+gethostbyname(const char *n) {
     HOSTENT FAR * result;
     if ((result = ::gethostbyname(n)) == NULL)
         errno = WSAGetLastError();
