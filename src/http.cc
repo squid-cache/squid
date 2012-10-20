@@ -422,7 +422,7 @@ HttpStateData::cacheableReply()
 
 #if 0 // waiting on HTTPbis WG agreement before we do this
             // NP: given the must-revalidate exception we should also be able to exempt no-cache.
-        } else if (rep->cache_control->noCache() && !REFRESH_OVERRIDE(ignore_no_cache)) {
+        } else if (rep->cache_control->noCache()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache");
             mayStore = true;
 #endif
