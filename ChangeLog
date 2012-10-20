@@ -1,4 +1,34 @@
-Changes to squid-3.2.1 (06 Oct 2012):
+Changes to squid-3.3.0.1 (21 Oct 2012):
+
+	- Bug 3610: Add peername_regex ACL
+	- Bug 3239: rename myip/myport as localip/localport
+	- Bug 3130: helpers are crashing too rapidly
+	- Add log_db_daemon SQL Database Logging Daemon
+	- Add ext_time_quota_acl helper managing sessions by bandwidth usage
+	- Add request_header_add option
+	- Support C++11 features where possible
+	- Support bump-ssl-server-first
+	- Support mimic SSL server certificates
+	- Remove --enable-ntlm-fail-open
+	- Fix TLS/SSL Options does not apply to the dynamically generated certificates
+	- Fix SslBump stuck after error
+	- Polish: display ACL enumeration text in debugs
+	- ... and many portability fixes for MacOS X, Windows and others
+	- ... and many compile error fixes
+	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.3 (21 Oct 2012):
+
+	- Regression: SMP crashes on startup with workers > 1
+	- Bug 3655: pinning failure breaks NTLM and Negotiate authentication
+	- SMP: Allow a UFS cache_dir entry to coexist with a shared memory cache entry
+	- HTTP/1.1: honour Cache-Control before Pragma:no-cache
+	- HTTP/1.1: Cache-Control compliance upgrade
+	- Remove obsoleted refresh_pattern ignore-no-cache option
+	- Fix IPv6 enabled squidclient
+	- ... and several compile fixes
+
+Changes to squid-3.2.2 (06 Oct 2012):
 
 	- Regression: Make login=PASS send no credentials when none available
 	- Regression: Handle dstdomain duplicates and overlapping names better
