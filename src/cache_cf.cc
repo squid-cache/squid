@@ -754,15 +754,6 @@ configDoConfigure(void)
         }
 
         for (R = Config.Refresh; R; R = R->next) {
-            if (!R->flags.ignore_no_cache)
-                continue;
-
-            debugs(22, 1, "WARNING: use of 'ignore-no-cache' in 'refresh_pattern' violates HTTP");
-
-            break;
-        }
-
-        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_no_store)
                 continue;
 
@@ -2640,9 +2631,6 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
         if (head->flags.ignore_reload)
             storeAppendPrintf(entry, " ignore-reload");
 
-        if (head->flags.ignore_no_cache)
-            storeAppendPrintf(entry, " ignore-no-cache");
-
         if (head->flags.ignore_no_store)
             storeAppendPrintf(entry, " ignore-no-store");
 
@@ -2681,7 +2669,6 @@ parse_refreshpattern(refresh_t ** head)
     int override_lastmod = 0;
     int reload_into_ims = 0;
     int ignore_reload = 0;
-    int ignore_no_cache = 0;
     int ignore_no_store = 0;
     int ignore_must_revalidate = 0;
     int ignore_private = 0;
@@ -2760,8 +2747,6 @@ parse_refreshpattern(refresh_t ** head)
             override_expire = 1;
         else if (!strcmp(token, "override-lastmod"))
             override_lastmod = 1;
-        else if (!strcmp(token, "ignore-no-cache"))
-            ignore_no_cache = 1;
         else if (!strcmp(token, "ignore-no-store"))
             ignore_no_store = 1;
         else if (!strcmp(token, "ignore-must-revalidate"))
@@ -2780,6 +2765,8 @@ parse_refreshpattern(refresh_t ** head)
             /* tell client_side.c that this is used */
 #endif
 
+        } else if (!strcmp(token, "ignore-no-cache")) {
+            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-no-cache' is obsolete. Remove it.");
         } else
             debugs(22, 0, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
@@ -2825,9 +2812,6 @@ parse_refreshpattern(refresh_t ** head)
 
     if (ignore_reload)
         t->flags.ignore_reload = 1;
-
-    if (ignore_no_cache)
-        t->flags.ignore_no_cache = 1;
 
     if (ignore_no_store)
         t->flags.ignore_no_store = 1;

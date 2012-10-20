@@ -3943,7 +3943,6 @@ DOC_START
 		 override-lastmod
 		 reload-into-ims
 		 ignore-reload
-		 ignore-no-cache
 		 ignore-no-store
 		 ignore-must-revalidate
 		 ignore-private
@@ -3975,12 +3974,6 @@ DOC_START
 		header. Doing this VIOLATES the HTTP standard. Enabling
 		this feature could make you liable for problems which
 		it causes.
-
-		ignore-no-cache ignores any ``Pragma: no-cache'' and
-		``Cache-control: no-cache'' headers received from a server.
-		The HTTP RFC never allows the use of this (Pragma) header
-		from a server, only a client, though plenty of servers
-		send it anyway.
 
 		ignore-no-store ignores any ``Cache-control: no-store''
 		headers received from a server. Doing this VIOLATES

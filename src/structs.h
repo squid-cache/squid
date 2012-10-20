@@ -1053,7 +1053,6 @@ struct _refresh_t {
         unsigned int override_lastmod:1;
         unsigned int reload_into_ims:1;
         unsigned int ignore_reload:1;
-        unsigned int ignore_no_cache:1;
         unsigned int ignore_no_store:1;
         unsigned int ignore_must_revalidate:1;
         unsigned int ignore_private:1;
