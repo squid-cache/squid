@@ -1,4 +1,15 @@
-Changes to squid-3.2.1 (06 Oct 2012):
+Changes to squid-3.2.3 (21 Oct 2012):
+
+	- Regression: SMP crashes on startup with workers > 1
+	- Bug 3655: pinning failure breaks NTLM and Negotiate authentication
+	- SMP: Allow a UFS cache_dir entry to coexist with a shared memory cache entry
+	- HTTP/1.1: honour Cache-Control before Pragma:no-cache
+	- HTTP/1.1: Cache-Control compliance upgrade
+	- Remove obsoleted refresh_pattern ignore-no-cache option
+	- Fix IPv6 enabled squidclient
+	- ... and several compile fixes
+
+Changes to squid-3.2.2 (06 Oct 2012):
 
 	- Regression: Make login=PASS send no credentials when none available
 	- Regression: Handle dstdomain duplicates and overlapping names better
