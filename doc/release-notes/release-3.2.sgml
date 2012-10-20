@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.2 release notes</title>
+<title>Squid 3.2.3 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.2 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.3 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -691,6 +691,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>refresh_pattern</tag>
 	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't
 	   serve objects more stale than this even if it failed to validate the object.
+	<p>Removed option <em>ignore-no-cache</em>. Its commonly desired behaviour is obsoleted
+	   by correct HTTP/1.1 Cache-Control:no-cache handling.
 
 	<tag>reply_header_access</tag>
 	<p>Added support for custom response header names.</p>
