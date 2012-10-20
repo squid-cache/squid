@@ -61,6 +61,8 @@ public:
     void processReplyBody();
     void readReply(const CommIoCbParams &io);
     virtual void maybeReadVirginBody(); // read response data from the network
+
+    // Determine whether the response is a cacheable representation
     int cacheableReply();
 
     peer *_peer;		/* peer request made to */
