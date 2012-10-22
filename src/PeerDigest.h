@@ -61,7 +61,10 @@ public:
     int reserved[32 - 6];
 };
 
+class HttpRequest;
 class PeerDigest;
+class store_client;
+
 class DigestFetchState
 {
 public:
