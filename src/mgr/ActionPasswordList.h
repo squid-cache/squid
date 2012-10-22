@@ -38,6 +38,9 @@ namespace Mgr
 class ActionPasswordList
 {
 public:
+    ActionPasswordList() : passwd(NULL), actions(NULL), next(NULL) {}
+    ~ActionPasswordList();
+
     char *passwd;
     wordlist *actions;
     ActionPasswordList *next;
