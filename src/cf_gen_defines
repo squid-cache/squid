@@ -14,6 +14,7 @@ BEGIN {
 	define["ICAP_CLIENT"]="--enable-icap-client"
 	define["SQUID_SNMP"]="--enable-snmp"
 	define["USE_ADAPTATION"]="--enable-ecap or --enable-icap-client"
+	define["USE_AUTH"]="--enable-auth"
 	define["USE_CACHE_DIGESTS"]="--enable-cache-digests"
 	define["USE_DNSHELPER"]="--disable-internal-dns"
 	define["!USE_DNSHELPER"]="--enable-internal-dns"
@@ -24,6 +25,8 @@ BEGIN {
 	define["USE_IDENT"]="--enable-ident-lookups"
 	define["USE_LOADABLE_MODULES"]="--enable-loadable-modules"
 	define["USE_SQUID_ESI"]="--enable-esi"
+	define["USE_SQUID_EUI"]="--enable-eui"
+	define["USE_SSL_CRTD"]="--enable-ssl-crtd"
 	define["USE_SSL"]="--enable-ssl"
 	define["USE_UNLINKD"]="--enable-unlinkd"
 	define["USE_WCCP"]="--enable-wccp"
@@ -34,8 +37,8 @@ BEGIN {
 }
 /^IFDEF:/ {
 	if (define[$2] != "")
-	    DEFINE=define[$2] " option"
-	else  
+	    DEFINE=define[$2]
+	else
 	    DEFINE="-D" $2 " define"
 	print "{\"" $2 "\", \"" DEFINE "\", "
 	print "#if " $2
