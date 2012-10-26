@@ -1040,6 +1040,23 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 #endif
+        case LFT_NOTE:
+            if (fmt->data.string) {
+                sb = al->notes.getByName(fmt->data.string);                
+                out = sb.termedBuf();
+                quote = 1;
+            } else {
+                HttpHeaderPos pos = HttpHeaderInitPos;
+                while (const HttpHeaderEntry *e = al->notes.getEntry(&pos)) {
+                    sb.append(e->name);
+                    sb.append(": ");
+                    sb.append(e->value);
+                    sb.append("\r\n");
+                }
+                out = sb.termedBuf();
+                quote = 1;
+            }
+            break;
 
         case LFT_PERCENT:
             out = "%";

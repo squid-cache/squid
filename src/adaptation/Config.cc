@@ -49,53 +49,24 @@ int Adaptation::Config::service_iteration_limit = 16;
 int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
 int Adaptation::Config::use_indirect_client = true;
-Adaptation::Config::MetaHeaders Adaptation::Config::metaHeaders;
-
-Adaptation::Config::MetaHeader::Value::~Value()
-{
-    aclDestroyAclList(&aclList);
-}
-
-Adaptation::Config::MetaHeader::Value::Pointer
-Adaptation::Config::MetaHeader::addValue(const String &value)
-{
-    Value::Pointer v = new Value(value);
-    values.push_back(v);
-    return v;
-}
-
-const char *
-Adaptation::Config::MetaHeader::match(HttpRequest *request, HttpReply *reply)
-{
-
-    typedef Values::iterator VLI;
-    ACLFilledChecklist ch(NULL, request, NULL);
-    if (reply)
-        ch.reply = HTTPMSGLOCK(reply);
-
-    for (VLI i = values.begin(); i != values.end(); ++i ) {
-        const int ret= ch.fastCheck((*i)->aclList);
-        debugs(93, 5, HERE << "Check for header name: " << name << ": " << (*i)->value
-               <<", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
-        if (ret == ACCESS_ALLOWED)
-            return (*i)->value.termedBuf();
-    }
-    return NULL;
-}
-
-Adaptation::Config::MetaHeader::Pointer
-Adaptation::Config::addMetaHeader(const String &headerName)
-{
-    typedef MetaHeaders::iterator AMLI;
-    for (AMLI i = metaHeaders.begin(); i != metaHeaders.end(); ++i) {
-        if ((*i)->name == headerName)
-            return (*i);
-    }
-
-    MetaHeader::Pointer meta = new MetaHeader(headerName);
-    metaHeaders.push_back(meta);
-    return meta;
-}
+const char *metasBlacklist[] = {
+    "Methods",
+    "Service",
+    "ISTag",
+    "Encapsulated",
+    "Opt-body-type",
+    "Max-Connections",
+    "Options-TTL",
+    "Date",
+    "Service-ID",
+    "Allow",
+    "Preview",
+    "Transfer-Preview",
+    "Transfer-Ignore",
+    "Transfer-Complete",
+    NULL
+};
+Notes Adaptation::Config::metaHeaders("ICAP header", metasBlacklist);
 
 Adaptation::ServiceConfig*
 Adaptation::Config::newServiceConfig() const
@@ -180,8 +151,6 @@ Adaptation::Config::freeService()
     DetachServices();
 
     serviceConfigs.clean();
-
-    FreeMetaHeader();
 }
 
 void
@@ -253,64 +222,6 @@ Adaptation::Config::Finalize(bool enabled)
     FinalizeEach(AllServices(), "message adaptation services");
     FinalizeEach(AllGroups(), "message adaptation service groups");
     FinalizeEach(AllRules(), "message adaptation access rules");
-}
-
-void
-Adaptation::Config::ParseMetaHeader(ConfigParser &parser)
-{
-    String name, value;
-    const char *warnFor[] = {
-        "Methods",
-        "Service",
-        "ISTag",
-        "Encapsulated",
-        "Opt-body-type",
-        "Max-Connections",
-        "Options-TTL",
-        "Date",
-        "Service-ID",
-        "Allow",
-        "Preview",
-        "Transfer-Preview",
-        "Transfer-Ignore",
-        "Transfer-Complete",
-        NULL
-    };
-    ConfigParser::ParseString(&name);
-    ConfigParser::ParseQuotedString(&value);
-
-    // TODO: Find a way to move this check to ICAP
-    for (int i = 0; warnFor[i] != NULL; ++i) {
-        if (name.caseCmp(warnFor[i]) == 0) {
-            fatalf("%s:%d: meta name \"%s\" is a reserved ICAP header name",
-                   cfg_filename, config_lineno, name.termedBuf());
-        }
-    }
-
-    MetaHeader::Pointer meta = addMetaHeader(name);
-    MetaHeader::Value::Pointer headValue = meta->addValue(value);
-    aclParseAclList(parser, &headValue->aclList);
-}
-
-void
-Adaptation::Config::DumpMetaHeader(StoreEntry *entry, const char *name)
-{
-    typedef MetaHeaders::iterator AMLI;
-    for (AMLI m = metaHeaders.begin(); m != metaHeaders.end(); ++m) {
-        typedef MetaHeader::Values::iterator VLI;
-        for (VLI v =(*m)->values.begin(); v != (*m)->values.end(); ++v ) {
-            storeAppendPrintf(entry, "%s " SQUIDSTRINGPH " %s",
-                              name, SQUIDSTRINGPRINT((*m)->name), ConfigParser::QuoteString((*v)->value));
-            dump_acl_list(entry, (*v)->aclList);
-            storeAppendPrintf(entry, "\n");
-        }
-    }
-}
-
-void
-Adaptation::Config::FreeMetaHeader()
-{
-    metaHeaders.clean();
 }
 
 void

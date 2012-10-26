@@ -134,9 +134,6 @@
 static void parse_adaptation_service_set_type();
 static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
-static void parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
-static void dump_adaptation_meta_type(StoreEntry *, const char *, Adaptation::Config::MetaHeaders &);
-static void free_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
 #endif
 
 #if ICAP_CLIENT
@@ -219,6 +216,9 @@ static void parse_http_header_replace(HeaderManglers **manglers);
 static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderWithAclList *headers);
 static void parse_HeaderWithAclList(HeaderWithAclList **header);
 static void free_HeaderWithAclList(HeaderWithAclList **header);
+static void parse_note(Notes *);
+static void dump_note(StoreEntry *, const char *, Notes &);
+static void free_note(Notes *);
 static void parse_denyinfo(AclDenyInfoList ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var);
 static void free_denyinfo(AclDenyInfoList ** var);
@@ -4211,24 +4211,6 @@ parse_adaptation_access_type()
 {
     Adaptation::Config::ParseAccess(LegacyParser);
 }
-
-static void
-parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
-{
-    Adaptation::Config::ParseMetaHeader(LegacyParser);
-}
-
-static void
-dump_adaptation_meta_type(StoreEntry *entry, const char *name, Adaptation::Config::MetaHeaders &)
-{
-    Adaptation::Config::DumpMetaHeader(entry, name);
-}
-
-static void
-free_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
-{
-    // Nothing to do, it is released inside Adaptation::Config::freeService()
-}
 #endif /* USE_ADAPTATION */
 
 #if ICAP_CLIENT
@@ -4659,4 +4641,20 @@ static void free_HeaderWithAclList(HeaderWithAclList **header)
     }
     delete *header;
     *header = NULL;
+}
+
+static void parse_note(Notes *notes)
+{
+    assert(notes);
+    notes->parse(LegacyParser);
+}
+
+static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
+{
+    notes.dump(entry, name);
+}
+
+static void free_note(Notes *notes)
+{
+    notes->clean();
 }
