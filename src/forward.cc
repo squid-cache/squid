@@ -563,29 +563,14 @@ FwdState::checkRetry()
 bool
 FwdState::checkRetriable()
 {
-    /* RFC2616 9.1 Safe and Idempotent Methods */
-    switch (request->method.id()) {
-        /* 9.1.1 Safe Methods */
-
-    case METHOD_GET:
-
-    case METHOD_HEAD:
-        /* 9.1.2 Idempotent Methods */
-
-    case METHOD_PUT:
-
-    case METHOD_DELETE:
-
-    case METHOD_OPTIONS:
-
-    case METHOD_TRACE:
-        break;
-
-    default:
+    // Optimize: A compliant proxy may retry PUTs, but Squid lacks the [rather
+    // complicated] code required to protect the PUT request body from being
+    // nibbled during the first try. Thus, Squid cannot retry some PUTs today.
+    if (request->body_pipe != NULL)
         return false;
-    }
 
-    return true;
+    // RFC2616 9.1 Safe and Idempotent Methods
+    return (request->method.isHttpSafe() || request->method.isIdempotent());
 }
 
 void

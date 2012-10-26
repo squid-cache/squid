@@ -748,7 +748,7 @@ htcpUnpackSpecifier(char *buf, int sz)
      */
     method = HttpRequestMethod(s->method, NULL);
 
-    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? HttpRequestMethod(METHOD_GET) : method);
+    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
 
     if (s->request)
         HTTPMSGLOCK(s->request);

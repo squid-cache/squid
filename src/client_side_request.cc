@@ -581,7 +581,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
     // IP address validation for Host: failed. Admin wants to ignore them.
     // NP: we do not yet handle CONNECT tunnels well, so ignore for them
-    if (!Config.onoff.hostStrictVerify && http->request->method != METHOD_CONNECT) {
+    if (!Config.onoff.hostStrictVerify && http->request->method != Http::METHOD_CONNECT) {
         debugs(85, 3, "SECURITY ALERT: Host header forgery detected on " << http->getConn()->clientConnection <<
                " (" << A << " does not match " << B << ") on URL: " << urlCanonical(http->request));
 
@@ -691,7 +691,7 @@ ClientRequestContext::hostHeaderVerify()
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
-    } else if (!portStr && http->request->method != METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
+    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
         debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
@@ -942,10 +942,10 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->flags.auth)
         return 0;
 
-    if (method == METHOD_TRACE)
+    if (method == Http::METHOD_TRACE)
         return 1;
 
-    if (method != METHOD_GET)
+    if (method != Http::METHOD_GET)
         return 0;
 
     /* scan hierarchy_stoplist */
@@ -957,7 +957,7 @@ clientHierarchical(ClientHttpRequest * http)
         return 0;
 
     if (request->protocol == AnyP::PROTO_HTTP)
-        return httpCachable(method);
+        return method.respMaybeCacheable();
 
     if (request->protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
@@ -1077,7 +1077,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
     }
 
-    if (request->method == METHOD_OTHER) {
+    if (request->method == Http::METHOD_OTHER) {
         no_cache=true;
     }
 
@@ -1095,7 +1095,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
     /* ignore range header in non-GETs or non-HEADs */
-    if (request->method == METHOD_GET || request->method == METHOD_HEAD) {
+    if (request->method == Http::METHOD_GET || request->method == Http::METHOD_HEAD) {
         // XXX: initialize if we got here without HttpRequest::parseHeader()
         if (!request->range)
             request->range = req_hdr->getRange();
@@ -1166,7 +1166,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #endif
 
-    request->flags.cachable = http->request->cacheable();
+    request->flags.cachable = http->request->maybeCacheable();
 
     if (clientHierarchical(http))
         request->flags.hierarchical = 1;
@@ -1308,7 +1308,7 @@ ClientRequestContext::sslBumpAccessCheck()
     // Bumping here can only start with a CONNECT request on a bumping port
     // (bumping of intercepted SSL conns is decided before we get 1st request).
     // We also do not bump redirected CONNECT requests.
-    if (http->request->method != METHOD_CONNECT || http->redirect.status ||
+    if (http->request->method != Http::METHOD_CONNECT || http->redirect.status ||
             !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "cannot SslBump this request");
@@ -1369,7 +1369,7 @@ ClientHttpRequest::processRequest()
 {
     debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
 
-    if (request->method == METHOD_CONNECT && !redirect.status) {
+    if (request->method == Http::METHOD_CONNECT && !redirect.status) {
 #if USE_SSL
         if (sslBumpNeeded()) {
             sslBumpStart();

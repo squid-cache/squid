@@ -858,9 +858,9 @@ clientIsContentLengthValid(HttpRequest * r)
 {
     switch (r->method.id()) {
 
-    case METHOD_GET:
+    case Http::METHOD_GET:
 
-    case METHOD_HEAD:
+    case Http::METHOD_HEAD:
         /* We do not want to see a request entity on GET/HEAD requests */
         return (r->content_length <= 0 || Config.onoff.request_entities);
 
@@ -2149,7 +2149,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     int r;
 
     /* pre-set these values to make aborting simpler */
-    *method_p = METHOD_NONE;
+    *method_p = Http::METHOD_NONE;
 
     /* NP: don't be tempted to move this down or remove again.
      * It's the only DDoS protection old-String has against long URL */
@@ -2211,7 +2211,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     *method_p = HttpRequestMethod(&hp->buf[hp->req.m_start], &hp->buf[hp->req.m_end]+1);
 
     /* deny CONNECT via accelerated ports */
-    if (*method_p == METHOD_CONNECT && csd && csd->port && csd->port->accel) {
+    if (*method_p == Http::METHOD_CONNECT && csd && csd->port && csd->port->accel) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
@@ -2219,7 +2219,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         return parseHttpRequestAbort(csd, "error:method-not-allowed");
     }
 
-    if (*method_p == METHOD_NONE) {
+    if (*method_p == Http::METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
         hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
@@ -2445,7 +2445,7 @@ ConnStateData::checkHeaderLimits()
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
     repContext->setReplyToError(ERR_TOO_BIG,
-                                HTTP_BAD_REQUEST, METHOD_NONE, NULL,
+                                HTTP_BAD_REQUEST, Http::METHOD_NONE, NULL,
                                 clientConnection->remote, NULL, NULL, NULL);
     context->registerWithConn();
     context->pullData();
@@ -2713,7 +2713,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         unsupportedTe = te.size() && te != "identity";
     } // else implied identity coding
 
-    mustReplyToOptions = (method == METHOD_OPTIONS) &&
+    mustReplyToOptions = (method == Http::METHOD_OPTIONS) &&
                          (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
@@ -2760,7 +2760,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     clientSetKeepaliveFlag(http);
 
     // Let tunneling code be fully responsible for CONNECT requests
-    if (http->request->method == METHOD_CONNECT) {
+    if (http->request->method == Http::METHOD_CONNECT) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
     }
@@ -2788,7 +2788,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             assert (repContext);
             conn->quitAfterError(request);
             repContext->setReplyToError(ERR_TOO_BIG,
-                                        HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
+                                        HTTP_REQUEST_ENTITY_TOO_LARGE, Http::METHOD_NONE, NULL,
                                         conn->clientConnection->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -3216,7 +3216,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    HTTP_REQUEST_TIMEOUT, METHOD_NONE, "N/A", &CachePeer.sin_addr,
+                                    HTTP_REQUEST_TIMEOUT, Http::METHOD_NONE, "N/A", &CachePeer.sin_addr,
                                     NULL, NULL, NULL);
         /* No requests can be outstanded */
         assert(chr == NULL);

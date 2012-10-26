@@ -143,7 +143,7 @@ testUfs::testUfsSearch()
         /* Create "vary" base object */
         RequestFlags flags;
         flags.cachable = 1;
-        StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
+        StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
         rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
 

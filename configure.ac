@@ -3565,6 +3565,7 @@ AC_CONFIG_FILES([\
 	src/esi/Makefile \
 	src/eui/Makefile \
 	src/format/Makefile \
+	src/http/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \
