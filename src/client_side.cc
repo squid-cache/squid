@@ -598,6 +598,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
             packerToMemInit(&p, &mb);
             ah->lastMeta.packInto(&p);
             aLogEntry->adapt.last_meta = xstrdup(mb.buf);
+            aLogEntry->notes.append(&ah->metaHeaders);
         }
 #endif
 
@@ -692,6 +693,15 @@ ClientHttpRequest::logRequest()
         al->cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
 #endif
+
+    /*Add meta headers*/
+    typedef Notes::iterator ACAMLI;
+    for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
+        if (const char *value = (*i)->match(request, al->reply)) {
+            al->notes.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), value));
+            debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
+        }
+    }
 
     ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 

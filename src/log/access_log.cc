@@ -33,7 +33,11 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
 #include "CachePeer.h"
+#include "errorpage.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "errorpage.h"
@@ -326,7 +330,8 @@ accessLogInit(void)
                     curr_token->type == Format::LFT_ADAPTATION_ALL_XACT_TIMES ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
-                    curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS) {
+                    curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS||
+                    (curr_token->type == Format::LFT_NOTE && !Adaptation::Config::metaHeaders.empty())) {
                 Log::TheConfig.hasAdaptToken = true;
             }
 #if ICAP_CLIENT

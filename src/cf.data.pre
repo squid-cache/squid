@@ -3273,6 +3273,10 @@ DOC_START
 		err_code    The ID of an error response served by Squid or
 				a similar internal error identifier.
 		err_detail  Additional err_code-dependent error information.
+		note	The meta header specified by the argument. Also
+			logs the adaptation meta headers set by the
+			adaptation_meta configuration parameter.
+			If no argument given all meta headers logged.
 
 	Connection related format codes:
 
@@ -4919,6 +4923,22 @@ DOC_START
 	ACLs in an option ACL list must be satisfied for the insertion
 	to happen. The request_header_add option supports fast ACLs
 	only.
+DOC_END
+
+NAME: note
+TYPE: note
+LOC: Config.notes
+DEFAULT: none
+DOC_START
+	This option used to log custom information about the master
+	transaction. For example, an admin may configure Squid to log
+	which "user group" the transaction belongs to, where "user group"
+	will be determined based on a set of ACLs and not [just]
+	authentication information.
+	Values of key/value pairs can be logged using %{key}note macros:
+
+	    note key value acl ...
+	    logformat myFormat ... %{key}note ...
 DOC_END
 
 NAME: relaxed_header_parser
@@ -7399,7 +7419,7 @@ adaptation_masterx_shared_names X-Subscriber-ID
 DOC_END
 
 NAME: adaptation_meta
-TYPE: adaptation_meta_type
+TYPE: note
 IFDEF: USE_ADAPTATION
 LOC: Adaptation::Config::metaHeaders
 DEFAULT: none
@@ -7431,6 +7451,12 @@ DOC_START
 	any character, which is currently only useful for escaping backslashes
 	and double quotes. For example,
 	    "this string has one backslash (\\) and two \"quotes\""
+
+	Used adaptation_meta header values may be logged via %note
+	logformat code. If multiple adaptation_meta headers with the same name
+	are used during master transaction lifetime, the header values are
+	logged in the order they were used and duplicate values are ignored
+	(only the first repeated value will be logged).
 DOC_END
 
 NAME: icap_retry

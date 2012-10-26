@@ -36,6 +36,7 @@
 #include "HttpHeaderTools.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
+#include "Notes.h"
 #include "RefCount.h"
 #include "YesNoNone.h"
 
@@ -476,6 +477,8 @@ public:
     HeaderManglers *reply_header_access;
     ///request_header_add access list
     HeaderWithAclList *request_header_add;
+    ///note
+    Notes notes;
     char *coredump_dir;
     char *chroot_dir;
 #if USE_CACHE_DIGESTS

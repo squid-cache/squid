@@ -177,9 +177,9 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
     if (name.known()) { // must check to avoid empty names matching unset cfg
-        typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
+        typedef Notes::iterator ACAMLI;
         for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-            if (name == (*i)->name.termedBuf()) {
+            if (name == (*i)->key.termedBuf()) {
                 if (const char *value = (*i)->match(request, reply))
                     return libecap::Area::FromTempString(value);
                 else
@@ -199,11 +199,11 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
     Must(request);
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
-    typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
+    typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
         const char *v = (*i)->match(request, reply);
         if (v) {
-            const libecap::Name name((*i)->name.termedBuf());
+            const libecap::Name name((*i)->key.termedBuf());
             const libecap::Area value = libecap::Area::FromTempString(v);
             visitor.visit(name, value);
         }
@@ -218,13 +218,23 @@ Adaptation::Ecap::XactionRep::start()
     if (!theVirginRep.raw().body_pipe)
         makingVb = opNever; // there is nothing to deliver
 
-    const HttpRequest *request = dynamic_cast<const HttpRequest*> (theCauseRep ?
+    HttpRequest *request = dynamic_cast<HttpRequest*> (theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
+
+    HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
+
     Adaptation::History::Pointer ah = request->adaptLogHistory();
     if (ah != NULL) {
         // retrying=false because ecap never retries transactions
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
+        typedef Notes::iterator ACAMLI;
+        for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+            const char *v = (*i)->match(request, reply);
+            if (v && !ah->metaHeaders.hasByNameListMember((*i)->key.termedBuf(), v, ',')) {
+                ah->metaHeaders.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), v));
+            }
+        }
     }
 
     theMaster->start();
