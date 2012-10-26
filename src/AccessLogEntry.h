@@ -32,6 +32,7 @@
 
 #include "anyp/PortCfg.h"
 #include "comm/Connection.h"
+#include "HttpHeader.h"
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
@@ -41,6 +42,7 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
+#include "Notes.h"
 #include "RefCount.h"
 #if USE_SSL
 #include "ssl/gadgets.h"
@@ -229,6 +231,8 @@ public:
     HttpReply *reply;
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
+    /// key:value pairs set by note and adaptation_meta
+    NotePairs notes;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request

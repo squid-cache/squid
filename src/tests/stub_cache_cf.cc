@@ -48,5 +48,7 @@ void requirePathnameExists(const char *name, const char *path) STUB_NOP
 void parse_time_t(time_t * var) STUB
 char * strtokFile(void) STUB_RETVAL(NULL)
 void ConfigParser::ParseUShort(unsigned short *var) STUB
+void ConfigParser::ParseString(String*) STUB
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
+void dump_acl_list(StoreEntry*, ACLList*) STUB
 YesNoNone::operator void*() const { STUB_NOP; return NULL; }
