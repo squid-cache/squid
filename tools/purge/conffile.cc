@@ -60,7 +60,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
     // try to open file
     if ( debug ) fprintf( debug, "# trying to open %s\n", fn ? fn : "(null)" );
     std::ifstream cfgin(fn);
-    if (cfgin) {
+    if (!cfgin) {
         fprintf( stderr, "fopen %s: %s\n", fn, strerror(errno) );
         return -1;
     }
