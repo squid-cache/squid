@@ -43,8 +43,8 @@ check_PROGRAMS+= tests/testACLMaxUserIP
 endif
 DIST_SUBDIRS += auth
 
-SUBDIRS	+= ip icmp ident log ipc mgr
-DIST_SUBDIRS += ip icmp ident log ipc mgr
+SUBDIRS	+= http ip icmp ident log ipc mgr
+DIST_SUBDIRS += http ip icmp ident log ipc mgr
 
 if ENABLE_SSL
 SUBDIRS += ssl
@@ -628,6 +628,7 @@ squid_LDADD = \
 	anyp/libanyp.la \
 	comm/libcomm.la \
 	eui/libeui.la \
+	http/libsquid-http.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	format/libformat.la \
@@ -1324,6 +1325,7 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
+	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -1569,6 +1571,7 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
+	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -1746,6 +1749,7 @@ nodist_tests_testDiskIO_SOURCES= \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
+	http/libsquid-http.la \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
@@ -1986,6 +1990,7 @@ nodist_tests_testEvent_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_testEvent_LDADD = \
+	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -2228,6 +2233,7 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_testEventLoop_LDADD = \
+	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -2464,6 +2470,7 @@ nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_test_http_range_LDADD = \
+	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -2530,6 +2537,7 @@ tests_testHttpParser_SOURCES = \
 nodist_tests_testHttpParser_SOURCES = \
 	$(TESTSOURCES)
 tests_testHttpParser_LDADD= \
+	http/libsquid-http.la \
 	SquidConfig.o \
 	base/libbase.la \
 	ip/libip.la \
@@ -2757,6 +2765,7 @@ tests_testHttpRequest_LDADD = \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
+	http/libsquid-http.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2916,6 +2925,7 @@ nodist_tests_testStore_SOURCES= \
 	swap_log_op.cc
 
 tests_testStore_LDADD= \
+	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3138,6 +3148,7 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
+	http/libsquid-http.la \
 	CommCalls.o \
 	DnsLookupDetails.o \
 	$(AUTH_ACL_LIBS) \
@@ -3299,6 +3310,7 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.h \
 	$(TESTSOURCES)
 tests_testRock_LDADD = \
+	http/libsquid-http.la \
 	libsquid.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
@@ -3838,6 +3850,7 @@ tests_testURL_SOURCES = \
 nodist_tests_testURL_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testURL_LDADD = \
+	http/libsquid-http.la \
 	anyp/libanyp.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \

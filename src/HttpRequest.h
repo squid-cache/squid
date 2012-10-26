@@ -82,8 +82,10 @@ public:
 
     virtual HttpRequest *clone() const;
 
-    /* are responses to this request potentially cachable */
-    bool cacheable() const;
+    /// Whether response to this request is potentially cachable
+    /// \retval false  Not cacheable.
+    /// \retval true   Possibly cacheable. Response factors will determine.
+    bool maybeCacheable();
 
     bool conditional() const; ///< has at least one recognized If-* header
 

@@ -534,7 +534,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    if (r->method == METHOD_PURGE) {
+    if (r->method == Http::METHOD_PURGE) {
         removeClientStoreReference(&sc, http);
         e = NULL;
         purgeRequest();
@@ -635,13 +635,13 @@ clientReplyContext::processMiss()
     }
 
     /** Check if its a PURGE request to be actioned. */
-    if (r->method == METHOD_PURGE) {
+    if (r->method == Http::METHOD_PURGE) {
         purgeRequest();
         return;
     }
 
     /** Check if its an 'OTHER' request. Purge all cached entries if so and continue. */
-    if (r->method == METHOD_OTHER) {
+    if (r->method == Http::METHOD_OTHER) {
         purgeAllCached();
     }
 
@@ -779,7 +779,7 @@ clientReplyContext::purgeRequestFindObjectToPurge()
 
     // TODO: can we use purgeAllCached() here instead of doing the
     // getPublicByRequestMethod() dance?
-    StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_GET);
+    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_GET);
 }
 
 // Purges all entries with a given url
@@ -795,13 +795,13 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
     bool get_or_head_sent = false;
 #endif
 
-    for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
-        if (m.isCacheble()) {
+    for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
+        if (m.respMaybeCacheable()) {
             if (StoreEntry *entry = storeGetPublic(url, m)) {
                 debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
-                if (m == METHOD_GET || m == METHOD_HEAD) {
+                if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
                     get_or_head_sent = true;
                 }
 #endif
@@ -812,7 +812,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
 
 #if USE_HTCP
     if (!get_or_head_sent) {
-        neighborsHtcpClear(NULL, url, req, HttpRequestMethod(METHOD_GET), HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(NULL, url, req, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_INVALIDATION);
     }
 #endif
 }
@@ -844,7 +844,7 @@ clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 {
     if (newEntry->isNull()) {
         lookingforstore = 2;
-        StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_HEAD);
+        StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
     } else
         purgeFoundObject (newEntry);
 }
@@ -923,7 +923,7 @@ clientReplyContext::purgeDoMissPurge()
 {
     http->logType = LOG_TCP_MISS;
     lookingforstore = 3;
-    StoreEntry::getPublicByRequestMethod(this,http->request, METHOD_GET);
+    StoreEntry::getPublicByRequestMethod(this,http->request, Http::METHOD_GET);
 }
 
 void
@@ -937,14 +937,14 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
-        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(METHOD_GET), HTCP_CLR_PURGE);
+        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
 
     lookingforstore = 4;
-    StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_HEAD);
+    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
 }
 
 void
@@ -953,7 +953,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     if (newEntry && !newEntry->isNull()) {
         debugs(88, 4, "clientPurgeRequest: HEAD '" << newEntry->url() << "'" );
 #if USE_HTCP
-        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_PURGE);
+        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
         newEntry->release();
         purgeStatus = HTTP_OK;
@@ -963,23 +963,23 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     if (http->request->vary_headers
             && !strstr(http->request->vary_headers, "=")) {
-        StoreEntry *entry = storeGetPublic(urlCanonical(http->request), METHOD_GET);
+        StoreEntry *entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_GET);
 
         if (entry) {
             debugs(88, 4, "clientPurgeRequest: Vary GET '" << entry->url() << "'" );
 #if USE_HTCP
-            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(METHOD_GET), HTCP_CLR_PURGE);
+            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
             entry->release();
             purgeStatus = HTTP_OK;
         }
 
-        entry = storeGetPublic(urlCanonical(http->request), METHOD_HEAD);
+        entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_HEAD);
 
         if (entry) {
             debugs(88, 4, "clientPurgeRequest: Vary HEAD '" << entry->url() << "'" );
 #if USE_HTCP
-            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_PURGE);
+            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
             entry->release();
             purgeStatus = HTTP_OK;
@@ -1697,14 +1697,14 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
         return;
     }
 
-    if (context->http->request->method == METHOD_PURGE) {
+    if (context->http->request->method == Http::METHOD_PURGE) {
         context->purgeRequest();
         return;
     }
 
     // OPTIONS with Max-Forwards:0 handled in clientProcessRequest()
 
-    if (context->http->request->method == METHOD_TRACE) {
+    if (context->http->request->method == Http::METHOD_TRACE) {
         if (context->http->request->header.getInt64(HDR_MAX_FORWARDS) == 0) {
             context->traceReply(aNode);
             return;
@@ -1908,8 +1908,8 @@ clientReplyContext::sendNotModified()
 void
 clientReplyContext::sendNotModifiedOrPreconditionFailedError()
 {
-    if (http->request->method == METHOD_GET ||
-            http->request->method == METHOD_HEAD)
+    if (http->request->method == Http::METHOD_GET ||
+            http->request->method == Http::METHOD_HEAD)
         sendNotModified();
     else
         sendPreconditionFailedError();
@@ -2015,7 +2015,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 
 #endif
 
-    if (http->request->method == METHOD_HEAD) {
+    if (http->request->method == Http::METHOD_HEAD) {
         /* do not forward body for HEAD replies */
         body_size = 0;
         http->flags.done_copying = 1;

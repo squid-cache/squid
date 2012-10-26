@@ -1,94 +1,29 @@
-/*
- *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- */
-
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
 
+#include "http/MethodType.h"
+#include "SquidString.h"
 #include "SquidString.h"
 
 class SquidConfig;
 
 #include <iosfwd>
 
-enum _method_t {
-    METHOD_NONE,		/* 000 */
-    METHOD_GET,			/* 001 */
-    METHOD_POST,		/* 010 */
-    METHOD_PUT,			/* 011 */
-    METHOD_HEAD,		/* 100 */
-    METHOD_CONNECT,		/* 101 */
-    METHOD_TRACE,		/* 110 */
-    METHOD_PURGE,		/* 111 */
-    METHOD_OPTIONS,
-    METHOD_DELETE,		/* RFC2616 section 9.7 */
-    METHOD_PROPFIND,
-    METHOD_PROPPATCH,
-    METHOD_MKCOL,
-    METHOD_COPY,
-    METHOD_MOVE,
-    METHOD_LOCK,
-    METHOD_UNLOCK,
-    METHOD_BMOVE,
-    METHOD_BDELETE,
-    METHOD_BPROPFIND,
-    METHOD_BPROPPATCH,
-    METHOD_BCOPY,
-    METHOD_SEARCH,
-    METHOD_SUBSCRIBE,
-    METHOD_UNSUBSCRIBE,
-    METHOD_POLL,
-    METHOD_REPORT,
-    METHOD_MKACTIVITY,
-    METHOD_CHECKOUT,
-    METHOD_MERGE,
-    METHOD_OTHER,
-    METHOD_ENUM_END  // MUST be last, (yuck) this is used as an array-initialization index constant!
-};
-
 /**
  * This class represents an HTTP Request METHOD
  * - i.e. PUT, POST, GET etc.
  * It has a runtime extension facility to allow it to
  * efficiently support new methods
- \ingroup POD
  */
 class HttpRequestMethod
 {
 
 public:
-    static void AddExtension(const char *methodString);
-    static void Configure(SquidConfig &Config);
+//    static void Configure(SquidConfig &Config);
 
-    HttpRequestMethod() : theMethod(METHOD_NONE), theImage() {}
+    HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
 
-    HttpRequestMethod(_method_t const aMethod) : theMethod(aMethod), theImage() {}
+    HttpRequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
 
     /**
      \param begin    string to convert to request method.
@@ -104,19 +39,19 @@ public:
         return *this;
     }
 
-    HttpRequestMethod & operator = (_method_t const aMethod) {
+    HttpRequestMethod & operator = (Http::MethodType const aMethod) {
         theMethod = aMethod;
         theImage.clean();
         return *this;
     }
 
-    bool operator == (_method_t const & aMethod) const { return theMethod == aMethod; }
+    bool operator == (Http::MethodType const & aMethod) const { return theMethod == aMethod; }
     bool operator == (HttpRequestMethod const & aMethod) const {
         return theMethod == aMethod.theMethod &&
-               (theMethod != METHOD_OTHER || theImage == aMethod.theImage);
+               (theMethod != Http::METHOD_OTHER || theImage == aMethod.theImage);
     }
 
-    bool operator != (_method_t const & aMethod) const { return theMethod != aMethod; }
+    bool operator != (Http::MethodType const & aMethod) const { return theMethod != aMethod; }
     bool operator != (HttpRequestMethod const & aMethod) const {
         return !operator==(aMethod);
     }
@@ -125,30 +60,62 @@ public:
     HttpRequestMethod& operator++() {
         // TODO: when this operator is used in more than one place,
         // replace it with HttpRequestMethods::Iterator API
-        // XXX: this interface can create METHOD_OTHER without an image
-        assert(theMethod < METHOD_ENUM_END);
-        theMethod = (_method_t)(1 + (int)theMethod);
+        // XXX: this interface can create Http::METHOD_OTHER without an image
+        assert(theMethod < Http::METHOD_ENUM_END);
+        theMethod = (Http::MethodType)(1 + (int)theMethod);
         return *this;
     }
 
     /** Get an ID representation of the method.
-     \retval METHOD_NONE   the method is unset
-     \retval METHOD_OTHER  the method is not recognized and has no unique ID
-     \retval *             the method is on of the recognized HTTP methods.
+     * \retval Http::METHOD_NONE   the method is unset
+     * \retval Http::METHOD_OTHER  the method is not recognized and has no unique ID
+     * \retval *                   the method is on of the recognized HTTP methods.
      */
-    _method_t id() const { return theMethod; }
+    Http::MethodType id() const { return theMethod; }
 
     /** Get a char string representation of the method. */
     char const * image() const;
 
-    bool isCacheble() const;
+    /// Whether this method is defined as a "safe" in HTTP/1.1
+    /// see RFC 2616 section 9.1.1
+    bool isHttpSafe() const;
+
+    /// Whether this method is defined as "idempotent" in HTTP/1.1
+    /// see RFC 2616 section 9.1.2
+    bool isIdempotent() const;
+
+    /** Whether responses to this method MAY be cached.
+     * \retval false  Not cacheable.
+     * \retval true   Possibly cacheable. Other details will determine.
+     */
+    bool respMaybeCacheable() const;
+
+    /** Whether this method SHOULD (or MUST) invalidate existing cached entries.
+     * Invalidation is always determined by the response
+     *
+     * RFC 2616 defines invalidate as either immediate purge
+     * or delayed explicit revalidate all stored copies on next use.
+     *
+     * \retval true   SHOULD invalidate. Response details can raise this to a MUST.
+     * \retval false  Other details will determine. Method is not a factor.
+     */
+    bool shouldInvalidate() const;
+
+    /* Whether this method invalidates existing cached entries.
+     * Kept for backward-compatibility. This is the old 2.x-3.2 invalidation behaviour.
+     *
+     * NOTE:
+     *    purgesOthers differs from shouldInvalidate() in that purgesOthers() returns
+     *    true on any methods the MAY invalidate (Squid opts to do so).
+     *    shouldInvalidate() only returns true on methods which SHOULD invalidate.
+     */
     bool purgesOthers() const;
 
 private:
     static const char *RequestMethodStr[];
 
-    _method_t theMethod; ///< Method type
-    String theImage;     ///< Used for store METHOD_OTHER only
+    Http::MethodType theMethod; ///< Method type
+    String theImage;     ///< Used for storing the Http::METHOD_OTHER only. A copy of the parsed method text.
 };
 
 inline std::ostream &
@@ -159,7 +126,7 @@ operator << (std::ostream &os, HttpRequestMethod const &method)
 }
 
 inline const char*
-RequestMethodStr(const _method_t m)
+RequestMethodStr(const Http::MethodType m)
 {
     return HttpRequestMethod(m).image();
 }

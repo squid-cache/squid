@@ -393,7 +393,7 @@ storeDigestRewriteStart(void *datanotused)
     /* make new store entry */
     url = internalLocalUri("/squid-internal-periodic/", StoreDigestFileName);
     flags.cachable = 1;
-    e = storeCreateEntry(url, url, flags, METHOD_GET);
+    e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());

@@ -87,7 +87,7 @@ HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProt
 void
 HttpRequest::init()
 {
-    method = METHOD_NONE;
+    method = Http::METHOD_NONE;
     protocol = AnyP::PROTO_NONE;
     urlpath = NULL;
     login[0] = '\0';
@@ -293,7 +293,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
     }
 
     /* See if the request buffer starts with a known HTTP request method. */
-    if (HttpRequestMethod(buf->content(),NULL) == METHOD_NONE) {
+    if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = HTTP_INVALID_HEADER;
         return false;
@@ -308,7 +308,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     const char *t = start + strcspn(start, w_space);
     method = HttpRequestMethod(start, t);
 
-    if (method == METHOD_NONE)
+    if (method == Http::METHOD_NONE)
         return false;
 
     start = t + strspn(t, w_space);
@@ -568,15 +568,15 @@ HttpRequest::CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method)
 HttpRequest *
 HttpRequest::CreateFromUrl(char * url)
 {
-    return urlParse(METHOD_GET, url, NULL);
+    return urlParse(Http::METHOD_GET, url, NULL);
 }
 
-/*
+/**
  * Are responses to this request possible cacheable ?
  * If false then no matter what the response must not be cached.
  */
 bool
-HttpRequest::cacheable() const
+HttpRequest::maybeCacheable()
 {
     // Intercepted request with Host: header which cannot be trusted.
     // Because it failed verification, or someone bypassed the security tests
@@ -585,26 +585,28 @@ HttpRequest::cacheable() const
     if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
         return false;
 
-    if (protocol == AnyP::PROTO_HTTP)
-        return httpCachable(method);
+    switch(protocol)
+    {
+    case AnyP::PROTO_HTTP:
+        if (!method.respMaybeCacheable())
+            return false;
 
-    /*
-     * The below looks questionable: what non HTTP protocols use connect,
-     * trace, put and post? RC
-     */
+        // XXX: this would seem the correct place to detect request cache-controls
+        //      no-store, private and related which block cacheability
+        break;
 
-    if (!method.isCacheble())
+    case AnyP::PROTO_GOPHER:
+        if (!gopherCachable(this))
+            return false;
+        break;
+
+    case AnyP::PROTO_CACHE_OBJECT:
         return false;
 
-    /*
-     * XXX POST may be cached sometimes.. ignored
-     * for now
-     */
-    if (protocol == AnyP::PROTO_GOPHER)
-        return gopherCachable(this);
-
-    if (protocol == AnyP::PROTO_CACHE_OBJECT)
-        return false;
+    //case AnyP::PROTO_FTP:
+    default:
+        break;
+    }
 
     return true;
 }

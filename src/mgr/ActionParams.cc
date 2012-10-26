@@ -8,7 +8,7 @@
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionParams.h"
 
-Mgr::ActionParams::ActionParams(): httpMethod(METHOD_NONE)
+Mgr::ActionParams::ActionParams(): httpMethod(Http::METHOD_NONE)
 {
 }
 
@@ -17,8 +17,10 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
     msg.getString(httpUri);
 
     const int m = msg.getInt();
-    Must(METHOD_NONE <= m && m < METHOD_ENUM_END);
-    httpMethod = static_cast<_method_t>(m);
+    Must(Http::METHOD_NONE <= m && m < Http::METHOD_ENUM_END);
+    String method;
+    msg.getString(method);
+    httpMethod = HttpRequestMethod(method.termedBuf(), NULL);
 
     msg.getPod(httpFlags);
     msg.getString(httpOrigin);
@@ -33,7 +35,8 @@ void
 Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
 {
     msg.putString(httpUri);
-    msg.putInt(httpMethod);
+    String foo(httpMethod.image());
+    msg.putString(foo);
     msg.putPod(httpFlags);
     msg.putString(httpOrigin);
 

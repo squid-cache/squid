@@ -913,7 +913,6 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-    HttpRequestMethod::Configure(Config);
 #if USE_SSL
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
