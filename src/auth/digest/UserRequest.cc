@@ -104,7 +104,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
             return;
         }
 
-        if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
+        if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->PostWorkaround && request->method != Http::METHOD_GET) {
             /* Ugly workaround for certain very broken browsers using the
              * wrong method to calculate the request-digest on POST request.
              * This should be deleted once Digest authentication becomes more
@@ -113,7 +113,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
              */
             DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
-                               RequestMethodStr(METHOD_GET), digest_request->uri, HA2, Response);
+                               RequestMethodStr(Http::METHOD_GET), digest_request->uri, HA2, Response);
 
             if (strcasecmp(digest_request->response, Response)) {
                 auth_user->credentials(Auth::Failed);

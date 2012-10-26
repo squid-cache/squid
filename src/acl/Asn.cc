@@ -248,8 +248,8 @@ asnCacheStart(int as)
     assert(NULL != req);
     asState->request = HTTPMSGLOCK(req);
 
-    if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
-        e = storeCreateEntry(asres, asres, RequestFlags(), METHOD_GET);
+    if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
+        e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request);
     } else {

@@ -177,7 +177,7 @@ testRock::createEntry(const int i)
     snprintf(url, sizeof(url), "dummy url %i", i);
     url[sizeof(url) - 1] = '\0';
     StoreEntry *const pe =
-        storeCreateEntry(url, "dummy log url", flags, METHOD_GET);
+        storeCreateEntry(url, "dummy log url", flags, Http::METHOD_GET);
     HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
     rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test",
                     -1, -1, squid_curtime + 100000);

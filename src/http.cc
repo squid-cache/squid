@@ -176,19 +176,6 @@ HttpStateData::httpStateConnClosed(const CommCloseCbParams &params)
     mustStop("HttpStateData::httpStateConnClosed");
 }
 
-int
-httpCachable(const HttpRequestMethod& method)
-{
-    /* GET and HEAD are cachable. Others are not. */
-
-    // TODO: replase to HttpRequestMethod::isCachable() ?
-    if (method != METHOD_GET && method != METHOD_HEAD)
-        return 0;
-
-    /* else cachable */
-    return 1;
-}
-
 void
 HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
 {
@@ -283,14 +270,14 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
      * changed.
      */
     if (e->mem_obj->request)
-        pe = storeGetPublicByRequestMethod(e->mem_obj->request, METHOD_HEAD);
+        pe = storeGetPublicByRequestMethod(e->mem_obj->request, Http::METHOD_HEAD);
     else
-        pe = storeGetPublic(e->mem_obj->url, METHOD_HEAD);
+        pe = storeGetPublic(e->mem_obj->url, Http::METHOD_HEAD);
 
     if (pe != NULL) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
         pe->release();
     }
@@ -1952,7 +1939,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_MAX_FORWARDS:
         /** \par Max-Forwards:
          * pass only on TRACE or OPTIONS requests */
-        if (request->method == METHOD_TRACE || request->method == METHOD_OPTIONS) {
+        if (request->method == Http::METHOD_TRACE || request->method == Http::METHOD_OPTIONS) {
             const int64_t hops = e->getInt64();
 
             if (hops > 0)

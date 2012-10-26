@@ -428,7 +428,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
 {
     if (sline.version.major < 1)
         return -1;
-    else if (method.id() == METHOD_HEAD)
+    else if (method.id() == Http::METHOD_HEAD)
         return 0;
     else if (sline.status == HTTP_OK)
         (void) 0;		/* common case, continue */
@@ -532,7 +532,7 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
 {
     bool expectBody = true;
 
-    if (req_method == METHOD_HEAD)
+    if (req_method == Http::METHOD_HEAD)
         expectBody = false;
     else if (sline.status == HTTP_NO_CONTENT)
         expectBody = false;

@@ -227,7 +227,7 @@ Adaptation::Ecap::RequestLineRep::method(const Name &aMethod)
         const int id = aMethod.hostId();
         Must(METHOD_NONE < id && id < METHOD_ENUM_END);
         Must(id != METHOD_OTHER);
-        theMessage.method = HttpRequestMethod(static_cast<_method_t>(id));
+        theMessage.method = HttpRequestMethod(static_cast<Http::MethodType>(id));
     } else {
         const std::string &image = aMethod.image();
         theMessage.method = HttpRequestMethod(image.data(),

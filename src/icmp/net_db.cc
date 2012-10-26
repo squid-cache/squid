@@ -1335,7 +1335,7 @@ netdbExchangeStart(void *data)
     assert(NULL != ex->r);
     ex->r->http_ver = HttpVersion(1,1);
     ex->connstate = STATE_HEADER;
-    ex->e = storeCreateEntry(uri, uri, RequestFlags(), METHOD_GET);
+    ex->e = storeCreateEntry(uri, uri, RequestFlags(), Http::METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;
     assert(NULL != ex->e);
     ex->sc = storeClientListAdd(ex->e, ex);
