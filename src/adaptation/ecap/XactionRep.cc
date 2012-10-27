@@ -219,7 +219,7 @@ Adaptation::Ecap::XactionRep::start()
         makingVb = opNever; // there is nothing to deliver
 
     HttpRequest *request = dynamic_cast<HttpRequest*> (theCauseRep ?
-                                 theCauseRep->raw().header : theVirginRep.raw().header);
+                           theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
 
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);

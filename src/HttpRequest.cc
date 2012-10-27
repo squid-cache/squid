@@ -585,8 +585,7 @@ HttpRequest::maybeCacheable()
     if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
         return false;
 
-    switch(protocol)
-    {
+    switch (protocol) {
     case AnyP::PROTO_HTTP:
         if (!method.respMaybeCacheable())
             return false;
@@ -603,7 +602,7 @@ HttpRequest::maybeCacheable()
     case AnyP::PROTO_CACHE_OBJECT:
         return false;
 
-    //case AnyP::PROTO_FTP:
+        //case AnyP::PROTO_FTP:
     default:
         break;
     }
