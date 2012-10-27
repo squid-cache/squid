@@ -4,7 +4,7 @@
 namespace Http
 {
 
-// see IANA registry: 
+// see IANA registry:
 // also: https://datatracker.ietf.org/doc/draft-ietf-httpbis-method-registrations
 typedef enum _method_t {
     METHOD_NONE = 0,

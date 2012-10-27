@@ -78,11 +78,10 @@ HttpRequestMethod::isHttpSafe() const
 
     // NOTE:
     // All known RFCs which register methods are listed in comments.
-    // if there is one not listed which defines methods, it needs 
+    // if there is one not listed which defines methods, it needs
     // checking and adding. If only to say it is known to define none.
 
-    switch(theMethod)
-    {
+    switch (theMethod) {
         // RFC 2068 - none
 
         // RFC 2616 section 9.1.1
@@ -121,11 +120,10 @@ HttpRequestMethod::isIdempotent() const
 
     // NOTE:
     // All known RFCs which register methods are listed in comments.
-    // if there is one not listed which defines methods, it needs 
+    // if there is one not listed which defines methods, it needs
     // checking and adding. If only to say it is known to define none.
 
-    switch(theMethod)
-    {
+    switch (theMethod) {
         // RFC 2068 - TODO check LINK/UNLINK definition
 
         // RFC 2616 section 9.1.2
@@ -166,8 +164,7 @@ HttpRequestMethod::respMaybeCacheable() const
 {
     // Only a few methods are defined as cacheable.
     // All other methods from the below RFC are "MUST NOT cache"
-    switch(theMethod)
-    {
+    switch (theMethod) {
         // RFC 2616 section 9
     case Http::METHOD_GET:
     case Http::METHOD_HEAD:
