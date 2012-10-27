@@ -1042,7 +1042,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
         case LFT_NOTE:
             if (fmt->data.string) {
-                sb = al->notes.getByName(fmt->data.string);                
+                sb = al->notes.getByName(fmt->data.string);
                 out = sb.termedBuf();
                 quote = 1;
             } else {

@@ -9,7 +9,6 @@
 #include <string>
 #endif
 
-
 class HttpRequest;
 class HttpReply;
 
@@ -57,7 +56,8 @@ class ConfigParser;
 /**
  * Used to store a notes list.
  */
-class Notes {
+class Notes
+{
 public:
     typedef Vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
@@ -95,7 +95,8 @@ private:
     Note::Pointer add(const String &noteKey);
 };
 
-class NotePairs : public HttpHeader {
+class NotePairs : public HttpHeader
+{
 public:
     NotePairs() : HttpHeader(hoNote) {}
 };
