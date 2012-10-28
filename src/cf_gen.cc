@@ -151,6 +151,7 @@ static void gen_dump(const EntryList &, std::ostream&);
 static void gen_free(const EntryList &, std::ostream&);
 static void gen_conf(const EntryList &, std::ostream&, bool verbose_output);
 static void gen_default_if_none(const EntryList &, std::ostream&);
+static const char *available_if(const std::string &name);
 
 static void
 checkDepend(const std::string &directive, const char *name, const TypeList &types, const EntryList &entries)
@@ -520,7 +521,9 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
 {
     fout << "static void" << std::endl <<
     "defaults_if_none(void)" << std::endl <<
-    "{" << std::endl;
+    "{" << std::endl <<
+    "    cfg_filename = \"Default Configuration (if absent)\";" << std::endl <<
+    "    config_lineno = 0;" << std::endl;
 
     for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
         assert(entry->name.size());
@@ -548,13 +551,16 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
             fout << "#endif" << std::endl;
     }
 
-    fout << "}" << std::endl << std::endl;
+    fout << "    cfg_filename = NULL;" << std::endl <<
+    "}" << std::endl << std::endl;
 }
 
 void
 Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
 {
     fout << "    if (!strcmp(token, \"" << aName << "\")) {" << std::endl;
+    if (ifdef.size())
+        fout << "#if " << ifdef << std::endl;
     fout << "        ";
     if (type.compare("obsolete") == 0) {
         fout << "debugs(0, DBG_CRITICAL, \"ERROR: Directive '" << aName << "' is obsolete.\");\n";
@@ -569,6 +575,12 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
         fout << "parse_" << type << "(&" << loc << (array_flag ? "[0]" : "") << ");";
     }
     fout << std::endl;
+    if (ifdef.size()) {
+        fout <<
+        "#else" << std::endl <<
+        "    debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"ERROR: '" << name << "' requires " << available_if(ifdef) << "\");" << std::endl <<
+        "#endif" << std::endl;
+    }
     fout << "        return 1;" << std::endl;
     fout << "    };" << std::endl;
 }
@@ -579,9 +591,6 @@ Entry::genParse(std::ostream &fout) const
     if (name.compare("comment") == 0)
         return;
 
-    if (ifdef.size())
-        fout << "#if " << ifdef << std::endl;
-
     // Once for the current directive name
     genParseAlias(name, fout);
 
@@ -589,9 +598,6 @@ Entry::genParse(std::ostream &fout) const
     for (EntryAliasList::const_iterator a = alias.begin(); a != alias.end(); ++a) {
         genParseAlias(*a, fout);
     }
-
-    if (ifdef.size())
-        fout << "#endif\n";
 }
 
 static void
