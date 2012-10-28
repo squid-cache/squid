@@ -64,6 +64,10 @@ public:
     int reserved[32 - 6];
 };
 
+class HttpRequest;
+class PeerDigest;
+class store_client;
+
 struct _DigestFetchState {
     PeerDigest *pd;
     StoreEntry *entry;
