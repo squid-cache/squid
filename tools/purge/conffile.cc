@@ -48,6 +48,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
@@ -61,8 +62,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
 
     // try to open file
     if ( debug ) fprintf( debug, "# trying to open %s\n", fn ? fn : "(null)" );
-    FILE* in = fopen( fn, "r" );
-    if ( in == NULL ) {
+    std::ifstream cfgin(fn);
+    if (!cfgin) {
         fprintf( stderr, "fopen %s: %s\n", fn, strerror(errno) );
         return -1;
     }
@@ -84,7 +85,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
     regmatch_t subs[8];
     char *s, line[1024];
     CacheDir cd;
-    while ( fgets( line, sizeof(line), in ) ) {
+    while ( cfgin.getline( line, sizeof(line)) ) {
         // FIXME: overly long lines
 
         // terminate line at start of comment
@@ -102,7 +103,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                 fprintf( stderr, "while matching \"%s\" against %s%s\n",
                          expression, line, buffer );
                 regfree(&rexp);
-                fclose(in);
+                cfgin.close();
                 return -1;
             }
         } else {
@@ -179,7 +180,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
         }
     }
 
-    fclose(in);
+    cfgin.close();
     regfree(&rexp);
     return cachedir.size();
 }
