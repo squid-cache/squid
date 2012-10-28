@@ -69,7 +69,8 @@
 
 #include "squid.h"
 #include "helpers/defines.h"
-#include "include/util.h"
+#include "rfc1738.h"
+#include "util.h"
 
 
 #if _SQUID_CYGWIN_
