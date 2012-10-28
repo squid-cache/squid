@@ -29,4 +29,11 @@
 
 #include "squid.h"
 #include "mgr/ActionPasswordList.h"
+#include "wordlist.h"
 
+Mgr::ActionPasswordList::~ActionPasswordList()
+{
+    safe_free(passwd);
+    wordlistDestroy(&actions);
+    delete next;
+}
