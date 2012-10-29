@@ -6,8 +6,8 @@
 #ifndef SQUID_IPC_REQUEST_H
 #define SQUID_IPC_REQUEST_H
 
+#include "base/RefCount.h"
 #include "ipc/forward.h"
-#include "RefCount.h"
 
 namespace Ipc
 {

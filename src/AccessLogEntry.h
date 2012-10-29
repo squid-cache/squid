@@ -31,6 +31,7 @@
 #define SQUID_HTTPACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
+#include "base/RefCount.h"
 #include "comm/Connection.h"
 #include "HttpHeader.h"
 #include "HttpVersion.h"
@@ -43,7 +44,6 @@
 #include "adaptation/icap/Elements.h"
 #endif
 #include "Notes.h"
-#include "RefCount.h"
 #if USE_SSL
 #include "ssl/gadgets.h"
 #endif

@@ -30,7 +30,7 @@
 #ifndef SQUID_FS_UFS_REBUILDSTATE_H
 #define SQUID_FS_UFS_REBUILDSTATE_H
 
-#include "RefCount.h"
+#include "base/RefCount.h"
 #include "UFSSwapDir.h"
 #include "UFSSwapLogParser.h"
 #include "store_rebuild.h"

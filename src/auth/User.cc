@@ -151,7 +151,7 @@ Auth::User::absorb(Auth::User::Pointer from)
 Auth::User::~User()
 {
     debugs(29, 5, HERE << "Freeing auth_user '" << this << "'.");
-    assert(RefCountCount() == 0);
+    assert(LockCount() == 0);
 
     /* free cached acl results */
     aclCacheMatchFlush(&proxy_match_cache);
@@ -223,7 +223,7 @@ Auth::User::cacheCleanup(void *datanotused)
                auth_user->auth_type << "\n\tUsername: " << username <<
                "\n\texpires: " <<
                (long int) (auth_user->expiretime + ::Config.authenticateTTL) <<
-               "\n\treferences: " << (long int) auth_user->RefCountCount());
+               "\n\treferences: " << auth_user->LockCount());
 
         if (auth_user->expiretime + ::Config.authenticateTTL <= current_time.tv_sec) {
             debugs(29, 5, HERE << "Removing user " << username << " from cache due to timeout.");

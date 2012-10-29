@@ -4,9 +4,9 @@
 #ifndef SQUID_IPC_MEM_POINTER_H
 #define SQUID_IPC_MEM_POINTER_H
 
+#include "base/RefCount.h"
 #include "base/TextException.h"
 #include "ipc/mem/Segment.h"
-#include "RefCount.h"
 
 namespace Ipc
 {

@@ -2,7 +2,7 @@
 #define ICAP_LOG_H_
 
 #include "AccessLogEntry.h"
-#include "RefCount.h"
+#include "base/RefCount.h"
 
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class AccessLogEntry;

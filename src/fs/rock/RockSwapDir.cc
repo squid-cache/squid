@@ -217,7 +217,7 @@ Rock::SwapDir::init()
 
     // XXX: SwapDirs aren't refcounted. We make IORequestor calls, which
     // are refcounted. We up our count once to avoid implicit delete's.
-    RefCountReference();
+    lock();
 
     Must(!map);
     map = new DirMap(path);

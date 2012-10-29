@@ -32,8 +32,8 @@
 #ifndef SQUID_WRITEREQUEST_H
 #define SQUID_WRITEREQUEST_H
 
+#include "base/RefCount.h"
 #include "cbdata.h"
-#include "RefCount.h"
 
 class WriteRequest : public RefCountable
 {

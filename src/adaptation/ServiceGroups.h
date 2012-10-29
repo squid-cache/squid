@@ -3,9 +3,9 @@
 
 #include "SquidString.h"
 #include "Array.h"
-#include "RefCount.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
+#include "base/RefCount.h"
 
 namespace Adaptation
 {
