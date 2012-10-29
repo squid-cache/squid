@@ -57,6 +57,7 @@
 #include "fde.h"
 #include "format/Token.h"
 #include "gopher.h"
+#include "helper.h"
 #include "http.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
@@ -67,6 +68,7 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
+#include "redirect.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -129,7 +131,7 @@ static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
 #endif
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
-static RH clientRedirectDoneWrapper;
+static HLPCB clientRedirectDoneWrapper;
 static void checkNoCacheDoneWrapper(allow_t, void *);
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSS clientReplyStatus;
@@ -900,7 +902,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
     if (answer == ACCESS_ALLOWED)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else
-        context->clientRedirectDone(NULL);
+        context->clientRedirectDone(HelperReply(NULL,0));
 }
 
 void
@@ -1181,7 +1183,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 }
 
 void
-clientRedirectDoneWrapper(void *data, char *result)
+clientRedirectDoneWrapper(void *data, const HelperReply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
@@ -1192,14 +1194,19 @@ clientRedirectDoneWrapper(void *data, char *result)
 }
 
 void
-ClientRequestContext::clientRedirectDone(char *result)
+ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 {
     HttpRequest *old_request = http->request;
-    debugs(85, 5, "clientRedirectDone: '" << http->uri << "' result=" << (result ? result : "NULL"));
+    debugs(85, 5, HERE << "'" << http->uri << "' result=" << reply);
     assert(redirect_state == REDIRECT_PENDING);
     redirect_state = REDIRECT_DONE;
 
-    if (result) {
+    if (reply.other().hasContent()) {
+        /* 2012-06-28: This cast is due to urlParse() truncating too-long URLs itself.
+         * At this point altering the helper buffer in that way is not harmful, but annoying.
+         * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
+         */
+        char * result = const_cast<char*>(reply.other().content());
         http_status status = (http_status) atoi(result);
 
         if (status == HTTP_MOVED_PERMANENTLY
@@ -1207,7 +1214,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 || status == HTTP_SEE_OTHER
                 || status == HTTP_PERMANENT_REDIRECT
                 || status == HTTP_TEMPORARY_REDIRECT) {
-            char *t = result;
+            char *t = NULL;
 
             if ((t = strchr(result, ':')) != NULL) {
                 http->redirect.status = status;

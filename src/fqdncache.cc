@@ -34,6 +34,7 @@
 #include "cbdata.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
+#include "HelperReply.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
@@ -497,7 +498,7 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
  */
 static void
 #if USE_DNSHELPER
-fqdncacheHandleReply(void *data, char *reply)
+fqdncacheHandleReply(void *data, const HelperReply &reply)
 #else
 fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
 #endif
@@ -509,7 +510,7 @@ fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char 
     statCounter.dns.svcTime.count(age);
 #if USE_DNSHELPER
 
-    fqdncacheParse(f, reply);
+    fqdncacheParse(f, reply.other().content());
 #else
 
     fqdncacheParse(f, answers, na, error_message);
