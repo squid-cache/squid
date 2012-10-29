@@ -3689,23 +3689,23 @@ httpsAccept(const CommAcceptCbParams &params)
 }
 
 void
-ConnStateData::sslCrtdHandleReplyWrapper(void *data, char *reply)
+ConnStateData::sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply)
 {
     ConnStateData * state_data = (ConnStateData *)(data);
     state_data->sslCrtdHandleReply(reply);
 }
 
 void
-ConnStateData::sslCrtdHandleReply(const char * reply)
+ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
 {
-    if (!reply) {
+    if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper return <NULL> reply");
     } else {
         Ssl::CrtdMessage reply_message;
-        if (reply_message.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK) {
+        if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
             debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
-            if (reply_message.getCode() != "OK") {
+            if (reply.result != HelperReply::Okay) {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");

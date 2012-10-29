@@ -364,6 +364,8 @@ squid_SOURCES = \
 	helper.h \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
@@ -1452,6 +1454,8 @@ tests_testCacheManager_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	$(HTCPSOURCE) \
 	HttpStateFlags.h \
 	http.cc \
@@ -1858,6 +1862,8 @@ tests_testEvent_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2103,6 +2109,8 @@ tests_testEventLoop_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2345,6 +2353,8 @@ tests_test_http_range_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2637,6 +2647,8 @@ tests_testHttpRequest_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -3724,6 +3736,8 @@ tests_testURL_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HelperReply.cc \
+	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \

@@ -37,7 +37,7 @@
 #include "auth/User.h"
 #include "dlink.h"
 #include "ip/Address.h"
-#include "typedefs.h"
+#include "helper.h"
 #include "HttpHeader.h"
 
 class ConnStateData;
