@@ -41,13 +41,16 @@
 void
 CommIO::Initialise()
 {
+    if (CommIO::Initialised)
+        return;
+
     /* Initialize done pipe signal */
     int DonePipe[2];
     if (pipe(DonePipe)) {}
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
-    fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
-    fd_open(DoneFD, FD_PIPE, "async-io completetion event: threads");
+    fd_open(DoneReadFD, FD_PIPE, "async-io completion event: main");
+    fd_open(DoneFD, FD_PIPE, "async-io completion event: threads");
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
     Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
