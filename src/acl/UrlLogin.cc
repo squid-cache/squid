@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid-old.h"
+#include "squid.h"
 #include "acl/UrlLogin.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"

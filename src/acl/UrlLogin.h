@@ -35,6 +35,7 @@
 
 #ifndef SQUID_ACLURLLOGIN_H
 #define SQUID_ACLURLLOGIN_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/Strategy.h"
