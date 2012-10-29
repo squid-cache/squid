@@ -98,6 +98,8 @@ libacls_la_SOURCES = \
 	Tag.h \
 	Url.cc \
 	Url.h \
+	UrlLogin.cc \
+	UrlLogin.h \
 	UrlPath.cc \
 	UrlPath.h \
 	UrlPort.cc \
