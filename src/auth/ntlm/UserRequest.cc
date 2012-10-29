@@ -19,7 +19,7 @@ Auth::Ntlm::UserRequest::UserRequest()
 
 Auth::Ntlm::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
     safe_free(server_blob);
     safe_free(client_blob);
 

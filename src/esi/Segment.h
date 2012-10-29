@@ -35,9 +35,9 @@
  * or perhaps use membuffers here?
  */
 
+#include "base/RefCount.h"
 #include "cbdata.h"
 #include "defines.h"
-#include "RefCount.h"
 #include "SquidString.h"
 
 class ESISegment : public RefCountable

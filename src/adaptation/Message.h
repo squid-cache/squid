@@ -1,7 +1,7 @@
 #ifndef SQUID__ADAPTATION__MESSAGE_H
 #define SQUID__ADAPTATION__MESSAGE_H
 
-#include "RefCount.h"
+#include "base/RefCount.h"
 
 class HttpMsg;
 class BodyPipe;

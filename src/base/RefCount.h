@@ -33,10 +33,19 @@
 #ifndef SQUID_REFCOUNT_H_
 #define SQUID_REFCOUNT_H_
 
+// reference counting requires the Lock API on base classes
+#include "base/Lock.h"
+
 #if HAVE_IOSTREAM
 #include <iostream>
 #endif
 
+/**
+ * Template for Reference Counting pointers.
+ *
+ * Objects of type 'C' must inherit from 'Lockable' in base/Lock.h
+ * which provides the locking interface used by reference counting.
+ */
 template <class C>
 class RefCount
 {
@@ -90,54 +99,24 @@ private:
         C const (*tempP_) (p_);
         p_ = newP;
 
-        if (tempP_ && tempP_->RefCountDereference() == 0)
+        if (tempP_ && tempP_->unlock() == 0)
             delete tempP_;
     }
 
     void reference (const RefCount& p) {
         if (p.p_)
-            p.p_->RefCountReference();
+            p.p_->lock();
     }
 
     C const *p_;
 
 };
 
-struct RefCountable_ {
-    RefCountable_():count_(0) {}
-
-    virtual ~RefCountable_() { assert(count_ == 0); }
-
-    /* Not private, to allow class hierarchies */
-    void RefCountReference() const {
-#if REFCOUNT_DEBUG
-        old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
-#endif
-
-        ++count_;
-    }
-
-    unsigned RefCountDereference() const {
-#if REFCOUNT_DEBUG
-        old_debug(0,1)("Decrementing this %p from count %u\n",this,count_);
-#endif
-
-        return --count_;
-    }
-
-    unsigned RefCountCount() const { return count_; } // for debugging only
-
-private:
-    mutable unsigned count_;
-};
-
-#define RefCountable virtual RefCountable_
-
 template <class C>
 inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
 {
     if (p != NULL)
-        return os << p.getRaw() << '*' << p->RefCountCount();
+        return os << p.getRaw() << '*' << p->LockCount();
     else
         return os << "NULL";
 }

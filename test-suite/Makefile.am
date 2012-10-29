@@ -30,7 +30,6 @@ TESTS += debug \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	StackTest \
-	refcount\
 	splay\
 	MemPoolTest\
 	mem_node_test\
@@ -43,7 +42,6 @@ check_PROGRAMS += debug \
 		MemPoolTest\
 		mem_node_test\
 		mem_hdr_test \
-		refcount\
 		splay \
 		StackTest \
 		syntheticoperators \
@@ -85,8 +83,6 @@ mem_hdr_test_LDADD = \
 	$(LDADD)
 
 MemPoolTest_SOURCES = MemPoolTest.cc
-
-refcount_SOURCES = refcount.cc
 
 splay_SOURCES = splay.cc
 

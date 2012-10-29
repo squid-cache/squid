@@ -32,8 +32,8 @@
 #ifndef SQUID_CLIENTSTREAM_H
 #define SQUID_CLIENTSTREAM_H
 
+#include "base/RefCount.h"
 #include "dlink.h"
-#include "RefCount.h"
 #include "StoreIOBuffer.h"
 
 /**
@@ -96,7 +96,7 @@
  */
 
 /// \ingroup ClientStreamAPI
-typedef RefCount<RefCountable_> ClientStreamData;
+typedef RefCount<Lock> ClientStreamData;
 
 class clientStreamNode;
 class ClientHttpRequest;
