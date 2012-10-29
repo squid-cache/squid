@@ -40,7 +40,6 @@
 #include "fqdncache.h"
 #include "globals.h"
 #include "HttpRequest.h"
-#include "helper.h"
 #include "mgr/Registration.h"
 #include "redirect.h"
 #include "rfc1738.h"
@@ -63,7 +62,7 @@ typedef struct {
     Ip::Address client_addr;
     const char *client_ident;
     const char *method_s;
-    RH *handler;
+    HLPCB *handler;
 } redirectStateData;
 
 static HLPCB redirectHandleReply;
@@ -74,21 +73,36 @@ static int n_bypassed = 0;
 CBDATA_TYPE(redirectStateData);
 
 static void
-redirectHandleReply(void *data, char *reply)
+redirectHandleReply(void *data, const HelperReply &reply)
 {
     redirectStateData *r = static_cast<redirectStateData *>(data);
-    char *t;
-    void *cbdata;
-    debugs(61, 5, "redirectHandleRead: {" << (reply && *reply != '\0' ? reply : "<NULL>") << "}");
+    debugs(61, 5, HERE << "reply=" << reply);
 
-    if (reply) {
-        if ((t = strchr(reply, ' ')))
-            *t = '\0';
+    // XXX: This funtion is now kept only to check for and display this garbage use-case
+    // it can be removed when the helpers are all updated to the normalized "OK/ERR key-pairs" format
 
-        if (*reply == '\0')
-            reply = NULL;
+    if (reply.result == HelperReply::Unknown) {
+        // BACKWARD COMPATIBILITY 2012-06-15:
+        // Some nasty old helpers send back the entire input line including extra format keys.
+        // This is especially bad for simple perl search-replace filter scripts.
+        //
+        // * trim all but the first word off the response.
+        // * warn once every 50 responses that this will stop being fixed-up soon.
+        //
+        if (const char * res = reply.other().content()) {
+            if (const char *t = strchr(res, ' ')) {
+                static int warn = 0;
+                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "UPGRADE WARNING: URL rewriter reponded with garbage '" << t <<
+                           "'. Future Squid will treat this as part of the URL.");
+                const mb_size_t garbageLength = reply.other().contentSize() - (t-res);
+                reply.modifiableOther().truncate(garbageLength);
+            }
+            if (reply.other().hasContent() && *res == '\0')
+                reply.modifiableOther().clean(); // drop the whole buffer of garbage.
+        }
     }
 
+    void *cbdata;
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata, reply);
 
@@ -120,7 +134,7 @@ redirectStats(StoreEntry * sentry)
 /**** PUBLIC FUNCTIONS ****/
 
 void
-redirectStart(ClientHttpRequest * http, RH * handler, void *data)
+redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
 {
     ConnStateData * conn = http->getConn();
     redirectStateData *r = NULL;
@@ -137,7 +151,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++n_bypassed;
-        handler(data, NULL);
+        handler(data, HelperReply(NULL,0));
         return;
     }
 

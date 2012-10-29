@@ -206,7 +206,6 @@ int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-void redirectStart(ClientHttpRequest *, RH *, void *);
 void tunnelStart(ClientHttpRequest *, int64_t *, int *);
 
 #if _USE_INLINE_

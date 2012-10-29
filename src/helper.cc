@@ -398,7 +398,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
-        callback(data, NULL);
+        callback(data, HelperReply(NULL,0));
         return;
     }
 
@@ -419,11 +419,11 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 
 /// lastserver = "server last used as part of a reserved request sequence"
 void
-helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
+helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
-        callback(data, 0, NULL);
+        callback(data, HelperReply(NULL,0));
         return;
     }
 
@@ -751,11 +751,12 @@ helperServerFree(helper_server *srv)
     }
 
     for (i = 0; i < concurrency; ++i) {
+        // XXX: re-schedule these on another helper?
         if ((r = srv->requests[i])) {
             void *cbdata;
 
             if (cbdataReferenceValidDone(r->data, &cbdata))
-                r->callback(cbdata, NULL);
+                r->callback(cbdata, HelperReply(NULL,0));
 
             helperRequestFree(r);
 
@@ -818,8 +819,11 @@ helperStatefulServerFree(helper_stateful_server *srv)
     if ((r = srv->request)) {
         void *cbdata;
 
-        if (cbdataReferenceValidDone(r->data, &cbdata))
-            r->callback(cbdata, srv, NULL);
+        if (cbdataReferenceValidDone(r->data, &cbdata)) {
+            HelperReply nilReply(NULL,0);
+            nilReply.whichServer = srv;
+            r->callback(cbdata, nilReply);
+        }
 
         helperStatefulRequestFree(r);
 
@@ -835,10 +839,14 @@ helperStatefulServerFree(helper_stateful_server *srv)
 }
 
 /// Calls back with a pointer to the buffer with the helper output
-static void helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
+static void
+helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
 {
     helper_request *r = srv->requests[request_number];
     if (r) {
+// TODO: parse the reply into new helper reply object
+// pass that to the callback instead of msg
+
         HLPCB *callback = r->callback;
 
         srv->requests[request_number] = NULL;
@@ -847,7 +855,7 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
 
         void *cbdata = NULL;
         if (cbdataReferenceValidDone(r->data, &cbdata))
-            callback(cbdata, msg);
+            callback(cbdata, HelperReply(msg, (msg_end-msg)));
 
         -- srv->stats.pending;
         ++ srv->stats.replies;
@@ -1017,7 +1025,9 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         *t = '\0';
 
         if (r && cbdataReferenceValid(r->data)) {
-            r->callback(r->data, srv, srv->rbuf);
+            HelperReply res(srv->rbuf, (t - srv->rbuf));
+            res.whichServer = srv;
+            r->callback(r->data, res);
         } else {
             debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
@@ -1350,11 +1360,13 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         /* a callback is needed before this request can _use_ a helper. */
         /* we don't care about releasing this helper. The request NEVER
          * gets to the helper. So we throw away the return code */
-        r->callback(r->data, srv, NULL);
+        HelperReply nilReply(NULL,0);
+        nilReply.whichServer = srv;
+        r->callback(r->data, nilReply);
         /* throw away the placeholder */
         helperStatefulRequestFree(r);
         /* and push the queue. Note that the callback may have submitted a new
-         * request to the helper which is why we test for the request*/
+         * request to the helper which is why we test for the request */
 
         if (srv->request == NULL)
             helperStatefulServerDone(srv);

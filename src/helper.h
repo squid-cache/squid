@@ -39,10 +39,11 @@
 #include "dlink.h"
 #include "ip/Address.h"
 #include "HelperChildConfig.h"
+#include "HelperReply.h"
 
 class helper_request;
 
-typedef void HLPSCB(void *, void *lastserver, char *buf);
+typedef void HLPCB(void *, const HelperReply &reply);
 
 class helper
 {
@@ -191,7 +192,7 @@ class helper_stateful_request
 public:
     MEMPROXY_CLASS(helper_stateful_request);
     char *buf;
-    HLPSCB *callback;
+    HLPCB *callback;
     int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
     void *data;
 };
@@ -202,7 +203,7 @@ MEMPROXY_CLASS_INLINE(helper_stateful_request);
 void helperOpenServers(helper * hlp);
 void helperStatefulOpenServers(statefulhelper * hlp);
 void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
-void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver);
+void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
 void helperStats(StoreEntry * sentry, helper * hlp, const char *label = NULL);
 void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
 void helperShutdown(helper * hlp);
