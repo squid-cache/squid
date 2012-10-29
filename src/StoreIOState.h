@@ -32,8 +32,8 @@
 #ifndef SQUID_STOREIOSTATE_H
 #define SQUID_STOREIOSTATE_H
 
+#include "base/RefCount.h"
 #include "cbdata.h"
-#include "RefCount.h"
 
 class StoreIOState : public RefCountable
 {

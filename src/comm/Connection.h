@@ -37,12 +37,12 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
+#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "defines.h"
 #include "hier_code.h"
 #include "ip/Address.h"
 #include "MemPool.h"
-#include "RefCount.h"
 #include "typedefs.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"

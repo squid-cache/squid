@@ -28,7 +28,7 @@ Auth::Digest::UserRequest::UserRequest() :
  */
 Auth::Digest::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
 
     safe_free(nonceb64);
     safe_free(cnonce);

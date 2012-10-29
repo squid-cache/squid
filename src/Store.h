@@ -35,13 +35,13 @@
  \ingroup FileSystems
  */
 
+#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "CommRead.h"
 #include "hash.h"
 #include "HttpReply.h"
 #include "HttpRequestMethod.h"
 #include "Range.h"
-#include "RefCount.h"
 #include "RemovalPolicy.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"

@@ -386,7 +386,7 @@ DiskdFile::readDone(diomsg * M)
     assert (M->requestor);
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
     /* remove the free protection */
-    readRequest->RefCountDereference();
+    readRequest->unlock();
 
     if (M->status < 0) {
         ++diskd_stats.read.fail;
@@ -410,7 +410,7 @@ DiskdFile::writeDone(diomsg *M)
     assert (M->requestor);
     WriteRequest::Pointer writeRequest = dynamic_cast<WriteRequest *>(M->requestor);
     /* remove the free protection */
-    writeRequest->RefCountDereference();
+    writeRequest->unlock();
 
     if (M->status < 0) {
         errorOccured = true;

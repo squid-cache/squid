@@ -30,6 +30,7 @@
  */
 
 #include "acl/AclAddress.h"
+#include "base/RefCount.h"
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
 #include "HelperChildConfig.h"
@@ -37,7 +38,6 @@
 #include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
 #include "Notes.h"
-#include "RefCount.h"
 #include "YesNoNone.h"
 
 #if USE_SSL

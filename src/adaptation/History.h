@@ -3,9 +3,9 @@
 
 #include "adaptation/DynamicGroupCfg.h"
 #include "Array.h"
+#include "base/RefCount.h"
 #include "HttpHeader.h"
 #include "Notes.h"
-#include "RefCount.h"
 #include "SquidString.h"
 
 namespace Adaptation

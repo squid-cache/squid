@@ -2,13 +2,13 @@
 #define SQUID_FORWARD_H
 
 #include "Array.h"
+#include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_type.h"
 #include "fde.h"
 #include "HttpStatusCode.h"
 #include "ip/Address.h"
-#include "RefCount.h"
 
 /* forward decls */
 

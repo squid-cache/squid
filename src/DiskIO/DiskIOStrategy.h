@@ -31,8 +31,8 @@
 #ifndef SQUID_DISKIOSTRATEGY_H
 #define SQUID_DISKIOSTRATEGY_H
 
+#include "base/RefCount.h"
 #include "Store.h"
-#include "RefCount.h"
 
 class DiskFile;
 

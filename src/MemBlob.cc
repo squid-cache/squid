@@ -142,6 +142,6 @@ MemBlob::dump(std::ostream &os) const
     << "mem:" << static_cast<void*>(mem)
     << ",capacity:" << capacity
     << ",size:" << size
-    << ",refs:" << RefCountCount() << "; ";
+    << ",refs:" << LockCount() << "; ";
     return os;
 }
