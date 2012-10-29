@@ -271,9 +271,6 @@ This section gives an account of those changes in three categories:
 <sect1>Missing squid.conf options available in Squid-2.7
 <p>
 <descrip>
-	<tag>acl</tag>
-	<p><em>urllogin</em> option not yet ported from 2.6
-
 	<tag>broken_vary_encoding</tag>
 	<p>Not yet ported from 2.6
 
