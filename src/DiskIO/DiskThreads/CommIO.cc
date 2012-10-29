@@ -39,9 +39,9 @@
 #include "globals.h"
 
 void
-CommIO::Initialise()
+CommIO::Initialize()
 {
-    if (CommIO::Initialised)
+    if (CommIO::Initialized)
         return;
 
     /* Initialize done pipe signal */
@@ -54,7 +54,7 @@ CommIO::Initialise()
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
     Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
-    Initialised = true;
+    Initialized = true;
 }
 
 void
@@ -66,10 +66,10 @@ CommIO::NotifyIOClose()
     close(DoneReadFD);
     fd_close(DoneFD);
     fd_close(DoneReadFD);
-    Initialised = false;
+    Initialized = false;
 }
 
-bool CommIO::Initialised = false;
+bool CommIO::Initialized = false;
 bool CommIO::DoneSignalled = false;
 int CommIO::DoneFD = -1;
 int CommIO::DoneReadFD = -1;

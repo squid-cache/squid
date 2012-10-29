@@ -10,13 +10,13 @@ class CommIO
 public:
     static inline void NotifyIOCompleted();
     static void ResetNotifications();
-    static void Initialise();
+    static void Initialize();
     static void NotifyIOClose();
 
 private:
     static void NULLFDHandler(int, void *);
     static void FlushPipe();
-    static bool Initialised;
+    static bool Initialized;
     static bool DoneSignalled;
     static int DoneFD;
     static int DoneReadFD;
@@ -26,7 +26,7 @@ private:
 void
 CommIO::NotifyIOCompleted()
 {
-    if (!Initialised) {
+    if (!Initialized) {
         fatalf("Disk Threads I/O pipes not initialized before first use.");
     }
 
