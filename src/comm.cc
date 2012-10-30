@@ -233,7 +233,7 @@ comm_has_pending_read_callback(int fd)
 bool
 comm_monitors_read(int fd)
 {
-    assert(isOpen(fd));
+    assert(isOpen(fd) && COMMIO_FD_READCB(fd));
     // Being active is usually the same as monitoring because we always
     // start monitoring the FD when we configure Comm::IoCallback for I/O
     // and we usually configure Comm::IoCallback for I/O when we starting
@@ -362,7 +362,7 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 bool
 comm_has_incomplete_write(int fd)
 {
-    assert(isOpen(fd));
+    assert(isOpen(fd) && COMMIO_FD_WRITECB(fd));
     return COMMIO_FD_WRITECB(fd)->active();
 }
 
@@ -1235,7 +1235,7 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 void
 comm_remove_close_handler(int fd, CLCB * handler, void *data)
 {
-    assert (isOpen(fd));
+    assert(isOpen(fd));
     /* Find handler in list */
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", handler=" <<
            handler << ", data=" << data);
@@ -1264,7 +1264,7 @@ comm_remove_close_handler(int fd, CLCB * handler, void *data)
 void
 comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
 {
-    assert (isOpen(fd));
+    assert(isOpen(fd));
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", AsyncCall=" << call);
 
     // comm_close removes all close handlers so our handler may be gone
@@ -1835,8 +1835,7 @@ void
 commStartHalfClosedMonitor(int fd)
 {
     debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
-    assert(isOpen(fd));
-    assert(!commHasHalfClosedMonitor(fd));
+    assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
     commPlanHalfClosedCheck(); // may schedule check if we added the first FD
 }
