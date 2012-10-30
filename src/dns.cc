@@ -131,7 +131,8 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
         debugs(34, DBG_IMPORTANT, "dnsSubmit: queue overload, rejecting " << lookup);
 
         const char *t = "$fail Temporary network problem, please retry later";
-        callback(data, HelperReply(t, strlen(t)));
+        HelperReply failReply(t, strlen(t));
+        callback(data, failReply);
         return;
     }
 
