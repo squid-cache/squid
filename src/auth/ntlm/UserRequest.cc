@@ -258,8 +258,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     /* seperate out the useful data */
     const char *blob = reply.other().content();
 
-    switch(reply.result)
-    {
+    switch (reply.result) {
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
@@ -276,8 +275,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         break;
 
     case HelperReply::AF:
-    case HelperReply::Okay:
-    {
+    case HelperReply::Okay: {
         /* we're finished, release the helper */
         auth_user_request->user()->username(blob);
         auth_user_request->denyMessage("Login successful");
@@ -313,7 +311,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << blob << "'");
     }
-        break;
+    break;
 
     case HelperReply::NA:
     case HelperReply::Error:

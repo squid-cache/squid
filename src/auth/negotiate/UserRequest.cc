@@ -274,8 +274,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     const char *blob = modifiableBlob;
 
-    switch(reply.result)
-    {
+    switch (reply.result) {
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
@@ -292,8 +291,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         break;
 
     case HelperReply::AF:
-    case HelperReply::Okay:
-    {
+    case HelperReply::Okay: {
         if (arg == NULL) {
             // XXX: handle a success with no username better
             /* protocol error */
@@ -336,7 +334,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << arg << "'");
     }
-        break;
+    break;
 
     case HelperReply::NA:
     case HelperReply::Error:
