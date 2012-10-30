@@ -901,8 +901,10 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
 
     if (answer == ACCESS_ALLOWED)
         redirectStart(http, clientRedirectDoneWrapper, context);
-    else
-        context->clientRedirectDone(HelperReply(NULL,0));
+    else {
+        HelperReply nilReply(NULL,0);
+        context->clientRedirectDone(nilReply);
+    }
 }
 
 void
