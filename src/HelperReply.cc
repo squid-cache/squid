@@ -45,7 +45,7 @@ HelperReply::HelperReply(const char *buf, size_t len) :
             p+=3;
         }
 
-        for(;xisspace(*p);++p); // skip whitespace
+        for (; xisspace(*p); ++p); // skip whitespace
     }
 
     const mb_size_t blobSize = (buf+len-p);
@@ -60,8 +60,7 @@ std::ostream &
 operator <<(std::ostream &os, const HelperReply &r)
 {
     os << "{result=";
-    switch(r.result)
-    {
+    switch (r.result) {
     case HelperReply::Okay:
         os << "OK";
         break;

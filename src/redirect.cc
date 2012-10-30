@@ -93,7 +93,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
                 debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "UPGRADE WARNING: URL rewriter reponded with garbage '" << t <<
-                           "'. Future Squid will treat this as part of the URL.");
+                       "'. Future Squid will treat this as part of the URL.");
                 const mb_size_t garbageLength = reply.other().contentSize() - (t-res);
                 reply.modifiableOther().truncate(garbageLength);
             }
