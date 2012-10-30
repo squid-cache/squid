@@ -151,7 +151,8 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++n_bypassed;
-        handler(data, HelperReply(NULL,0));
+        HelperReply nilReply(NULL,0);
+        handler(data, nilReply);
         return;
     }
 

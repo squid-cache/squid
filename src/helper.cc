@@ -398,7 +398,8 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
-        callback(data, HelperReply(NULL,0));
+        HelperReply nilReply(NULL, 0);
+        callback(data, nilReply);
         return;
     }
 
@@ -423,7 +424,8 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
-        callback(data, HelperReply(NULL,0));
+        HelperReply nilReply(NULL, 0);
+        callback(data, nilReply);
         return;
     }
 
@@ -755,8 +757,10 @@ helperServerFree(helper_server *srv)
         if ((r = srv->requests[i])) {
             void *cbdata;
 
-            if (cbdataReferenceValidDone(r->data, &cbdata))
-                r->callback(cbdata, HelperReply(NULL,0));
+            if (cbdataReferenceValidDone(r->data, &cbdata)) {
+                HelperReply nilReply(NULL, 0);
+                r->callback(cbdata, nilReply);
+            }
 
             helperRequestFree(r);
 
@@ -854,8 +858,10 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
         r->callback = NULL;
 
         void *cbdata = NULL;
-        if (cbdataReferenceValidDone(r->data, &cbdata))
-            callback(cbdata, HelperReply(msg, (msg_end-msg)));
+        if (cbdataReferenceValidDone(r->data, &cbdata)) {
+            HelperReply response(msg, (msg_end-msg));
+            callback(cbdata, response);
+        }
 
         -- srv->stats.pending;
         ++ srv->stats.replies;
