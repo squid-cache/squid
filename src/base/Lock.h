@@ -14,7 +14,8 @@
  * Build with -DLOCKCOUNT_DEBUG flag to enable lock debugging.
  * It is disabled by default due to the cost of debug output.
  */
-class Lock {
+class Lock
+{
 public:
     Lock():count_(0) {}
 
