@@ -3210,6 +3210,20 @@ tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
+check_PROGRAMS += testRefCount
+testRefCount_SOURCES= \
+	base/Lock.h \
+	base/RefCount.h \
+	tests/stub_cbdata.cc \
+	tests/stub_debug.cc \
+	tests/stub_MemBuf.cc \
+	tests/testRefCount.cc
+testRefCount_LDADD = \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+
 tests_testRock_SOURCES = \
 	cbdata.cc \
 	CacheDigest.h \
