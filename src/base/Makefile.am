@@ -1,4 +1,3 @@
-
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
@@ -23,17 +22,3 @@ libbase_la_SOURCES = \
 	TextException.cc \
 	TextException.h \
 	StringArea.h
-
-check_PROGRAMS += testRefCount
-
-testRefCount_SOURCES= \
-	Lock.h \
-	RefCount.h \
-	testRefCount.cc
-
-testRefCount_LDADD = \
-	libbase.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
