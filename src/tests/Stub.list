@@ -5,6 +5,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_MemBuf.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_Port.cc \
@@ -14,6 +15,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_client_db.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
