@@ -117,7 +117,7 @@ Auth::UserRequest::UserRequest():
 
 Auth::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
     debugs(29, 5, HERE << "freeing request " << this);
 
     if (user() != NULL) {

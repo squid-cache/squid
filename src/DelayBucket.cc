@@ -39,6 +39,7 @@
 #if USE_DELAY_POOLS
 #include "DelayBucket.h"
 #include "DelaySpec.h"
+#include "SquidConfig.h"
 #include "Store.h"
 
 void

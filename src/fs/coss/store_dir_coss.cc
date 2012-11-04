@@ -1,7 +1,4 @@
 /*
- * $Id$
- * vim: set et :
- *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
  *
@@ -52,6 +49,7 @@
 #include "store_key_md5.h"
 #include "swap_log_op.h"
 #include "store_rebuild.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 
 #if HAVE_ERRNO_H
@@ -76,7 +74,7 @@ struct _RebuildState {
         unsigned int clean:1;
     } flags;
 
-    struct _store_rebuild_data counts;
+    StoreRebuildData counts;
 };
 
 static char *storeCossDirSwapLogFile(SwapDir *, const char *);
@@ -903,14 +901,7 @@ CossSwapDir::create()
 
     if (::stat(path, &swap_sb) < 0) {
         debugs (47, 2, "COSS swap space space being allocated.");
-#if _SQUID_MSWIN_
-
-        mkdir(path);
-#else
-
         mkdir(path, 0700);
-#endif
-
     }
 
     /* should check here for directories instead of files, and for file size

@@ -1,4 +1,3 @@
-
 /*
  * DEBUG: section --    Refcount allocator
  * AUTHOR:  Robert Collins
@@ -32,14 +31,14 @@
  */
 
 #include "squid.h"
-#include "RefCount.h"
+#include "base/RefCount.h"
 
-class _ToRefCount :public RefCountable
+// XXX: upgrade these tests to CPPUnit testing framework
+
+class _ToRefCount : public RefCountable
 {
-
 public:
     _ToRefCount () {++Instances;}
-
     ~_ToRefCount() {--Instances;}
 
     int someMethod() {
@@ -50,8 +49,6 @@ public:
     }
 
     static int Instances;
-
-private:
 };
 
 typedef RefCount<_ToRefCount> ToRefCount;
@@ -61,7 +58,6 @@ int _ToRefCount::Instances = 0;
 
 class AlsoRefCountable : public RefCountable, public _ToRefCount
 {
-
 public:
     typedef RefCount<AlsoRefCountable> Pointer;
 

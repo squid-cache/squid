@@ -40,6 +40,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
 

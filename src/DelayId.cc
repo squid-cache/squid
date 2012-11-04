@@ -48,6 +48,7 @@
 #include "DelayPool.h"
 #include "DelayPools.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 
 DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
 {}

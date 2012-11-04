@@ -151,10 +151,10 @@ public:
 };
 
 /// \ingroup SwapStoreAPI
-SQUIDCEXTERN char *storeSwapMetaPack(tlv * tlv_list, int *length);
+char *storeSwapMetaPack(tlv * tlv_list, int *length);
 /// \ingroup SwapStoreAPI
-SQUIDCEXTERN tlv *storeSwapMetaBuild(StoreEntry * e);
+tlv *storeSwapMetaBuild(StoreEntry * e);
 /// \ingroup SwapStoreAPI
-SQUIDCEXTERN void storeSwapTLVFree(tlv * n);
+void storeSwapTLVFree(tlv * n);
 
 #endif /* SQUID_TYPELENGTHVALUE_H */

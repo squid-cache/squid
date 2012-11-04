@@ -2,11 +2,13 @@
 #define SQUID_FORWARD_H
 
 #include "Array.h"
+#include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "err_type.h"
 #include "fde.h"
+#include "HttpStatusCode.h"
 #include "ip/Address.h"
-#include "RefCount.h"
 
 /* forward decls */
 
@@ -123,6 +125,6 @@ private:
     CBDATA_CLASS2(FwdState);
 };
 
-extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 
 #endif /* SQUID_FORWARD_H */

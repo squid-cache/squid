@@ -39,6 +39,8 @@
 #include "base64.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "CachePeer.h"
+#include "ChunkedCodingParser.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
@@ -56,6 +58,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "HttpStateFlags.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -64,7 +67,9 @@
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
 #include "refresh.h"
+#include "RefreshPattern.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -94,7 +99,7 @@ static const char *const crlf = "\r\n";
 
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
-        HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
+        HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &);
 //Declared in HttpHeaderTools.cc
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
@@ -169,19 +174,6 @@ HttpStateData::httpStateConnClosed(const CommCloseCbParams &params)
 {
     debugs(11, 5, "httpStateFree: FD " << params.fd << ", httpState=" << params.data);
     mustStop("HttpStateData::httpStateConnClosed");
-}
-
-int
-httpCachable(const HttpRequestMethod& method)
-{
-    /* GET and HEAD are cachable. Others are not. */
-
-    // TODO: replase to HttpRequestMethod::isCachable() ?
-    if (method != METHOD_GET && method != METHOD_HEAD)
-        return 0;
-
-    /* else cachable */
-    return 1;
 }
 
 void
@@ -278,14 +270,14 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
      * changed.
      */
     if (e->mem_obj->request)
-        pe = storeGetPublicByRequestMethod(e->mem_obj->request, METHOD_HEAD);
+        pe = storeGetPublicByRequestMethod(e->mem_obj->request, Http::METHOD_HEAD);
     else
-        pe = storeGetPublic(e->mem_obj->url, METHOD_HEAD);
+        pe = storeGetPublic(e->mem_obj->url, Http::METHOD_HEAD);
 
     if (pe != NULL) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
         pe->release();
     }
@@ -335,7 +327,7 @@ HttpStateData::cacheableReply()
     const char *v;
 #if USE_HTTP_VIOLATIONS
 
-    const refresh_t *R = NULL;
+    const RefreshPattern *R = NULL;
 
     /* This strange looking define first looks up the refresh pattern
      * and then checks if the specified flag is set. The main purpose
@@ -349,67 +341,103 @@ HttpStateData::cacheableReply()
 #define REFRESH_OVERRIDE(flag) 0
 #endif
 
-    if (surrogateNoStore)
+    // Check for Surrogate/1.0 protocol conditions
+    // NP: reverse-proxy traffic our parent server has instructed us never to cache
+    if (surrogateNoStore) {
+        debugs(22, 3, HERE << "NO because Surrogate-Control:no-store");
         return 0;
-
-    // RFC 2616: do not cache replies to responses with no-store CC directive
-    if (request && request->cache_control &&
-            request->cache_control->noStore() &&
-            !REFRESH_OVERRIDE(ignore_no_store))
-        return 0;
-
-    if (!ignoreCacheControl && request->cache_control != NULL) {
-        const HttpHdrCc* cc=request->cache_control;
-        if (cc->Private()) {
-            if (!REFRESH_OVERRIDE(ignore_private))
-                return 0;
-        }
-
-        if (cc->noCache()) {
-            if (!REFRESH_OVERRIDE(ignore_no_cache))
-                return 0;
-        }
-
-        if (cc->noStore()) {
-            if (!REFRESH_OVERRIDE(ignore_no_store))
-                return 0;
-        }
     }
 
-    if (request->flags.auth || request->flags.auth_sent) {
-        /*
-         * Responses to requests with authorization may be cached
-         * only if a Cache-Control: public reply header is present.
-         * RFC 2068, sec 14.9.4
-         */
+    // RFC 2616: HTTP/1.1 Cache-Control conditions
+    if (!ignoreCacheControl) {
+        // XXX: check to see if the request headers alone were enough to prevent caching earlier
+        // (ie no-store request header) no need to check those all again here if so.
+        // for now we are not reliably doing that so we waste CPU re-checking request CC
 
-        if (!request->cache_control || !request->cache_control->Public()) {
-            if (!REFRESH_OVERRIDE(ignore_auth))
-                return 0;
+        // RFC 2616 section 14.9.2 - MUST NOT cache any response with request CC:no-store
+        if (request && request->cache_control && request->cache_control->noStore() &&
+                !REFRESH_OVERRIDE(ignore_no_store)) {
+            debugs(22, 3, HERE << "NO because client request Cache-Control:no-store");
+            return 0;
         }
+
+        // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
+        // NP: request CC:private is undefined. We ignore.
+        // NP: other request CC flags are limiters on HIT/MISS. We don't care about here.
+
+        // RFC 2616 section 14.9.2 - MUST NOT cache any response with CC:no-store
+        if (rep->cache_control && rep->cache_control->noStore() &&
+                !REFRESH_OVERRIDE(ignore_no_store)) {
+            debugs(22, 3, HERE << "NO because server reply Cache-Control:no-store");
+            return 0;
+        }
+
+        // RFC 2616 section 14.9.1 - MUST NOT cache any response with CC:private in a shared cache like Squid.
+        // TODO: add a shared/private cache configuration possibility.
+        if (rep->cache_control &&
+                rep->cache_control->Private() &&
+                !REFRESH_OVERRIDE(ignore_private)) {
+            debugs(22, 3, HERE << "NO because server reply Cache-Control:private");
+            return 0;
+        }
+        // NP: being conservative; CC:private overrides CC:public when both are present in a response.
+
+    }
+    // RFC 2068, sec 14.9.4 - MUST NOT cache any response with Authentication UNLESS certain CC controls are present
+    // allow HTTP violations to IGNORE those controls (ie re-block caching Auth)
+    if (request && (request->flags.auth || request->flags.authSent) && !REFRESH_OVERRIDE(ignore_auth)) {
+        if (!rep->cache_control) {
+            debugs(22, 3, HERE << "NO because Authenticated and server reply missing Cache-Control");
+            return 0;
+        }
+
+        if (ignoreCacheControl) {
+            debugs(22, 3, HERE << "NO because Authenticated and ignoring Cache-Control");
+            return 0;
+        }
+
+        // HTTPbis pt7 section 4.1 clause 3: a response CC:public is present
+        bool mayStore = false;
+        if (rep->cache_control->Public()) {
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
+            mayStore = true;
+
+            // HTTPbis pt7 section 4.1 clause 2: a response CC:must-revalidate is present
+        } else if (rep->cache_control->mustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
+            mayStore = true;
+
+#if 0 // waiting on HTTPbis WG agreement before we do this
+            // NP: given the must-revalidate exception we should also be able to exempt no-cache.
+        } else if (rep->cache_control->noCache()) {
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache");
+            mayStore = true;
+#endif
+
+            // HTTPbis pt7 section 4.1 clause 1: a response CC:s-maxage is present
+        } else if (rep->cache_control->sMaxAge()) {
+            debugs(22, 3, HERE << " Authenticated but server reply Cache-Control:s-maxage");
+            mayStore = true;
+        }
+
+        if (!mayStore) {
+            debugs(22, 3, HERE << "NO because Authenticated transaction");
+            return 0;
+        }
+
+        // NP: response CC:no-cache is equivalent to CC:must-revalidate,max-age=0. We MAY cache, and do so.
+        // NP: other request CC flags are limiters on HIT/MISS/REFRESH. We don't care about here.
     }
 
-    /* Pragma: no-cache in _replies_ is not documented in HTTP,
-     * but servers like "Active Imaging Webcast/2.0" sure do use it */
-    if (hdr->has(HDR_PRAGMA)) {
-        String s = hdr->getList(HDR_PRAGMA);
-        const int no_cache = strListIsMember(&s, "no-cache", ',');
-        s.clean();
-
-        if (no_cache) {
-            if (!REFRESH_OVERRIDE(ignore_no_cache))
-                return 0;
-        }
-    }
-
-    /*
-     * The "multipart/x-mixed-replace" content type is used for
+    /* HACK: The "multipart/x-mixed-replace" content type is used for
      * continuous push replies.  These are generally dynamic and
      * probably should not be cachable
      */
     if ((v = hdr->getStr(HDR_CONTENT_TYPE)))
-        if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
+        if (!strncasecmp(v, "multipart/x-mixed-replace", 25)) {
+            debugs(22, 3, HERE << "NO because Content-Type:multipart/x-mixed-replace");
             return 0;
+        }
 
     switch (rep->sline.status) {
         /* Responses that are cacheable */
@@ -430,11 +458,12 @@ HttpStateData::cacheableReply()
          */
 
         if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
-            debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
+            debugs(22, 3, "NO because refreshIsCachable() returned non-cacheable..");
             return 0;
-        } else
+        } else {
+            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status);
             return 1;
-
+        }
         /* NOTREACHED */
         break;
 
@@ -442,11 +471,17 @@ HttpStateData::cacheableReply()
 
     case HTTP_MOVED_TEMPORARILY:
     case HTTP_TEMPORARY_REDIRECT:
-        if (rep->expires > rep->date && rep->date > 0)
-            return 1;
-        else
+        if (rep->date <= 0) {
+            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status << " and Date missing/invalid");
             return 0;
-
+        }
+        if (rep->expires > rep->date) {
+            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status << " and Expires > Date");
+            return 1;
+        } else {
+            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status << " and Expires <= Date");
+            return 0;
+        }
         /* NOTREACHED */
         break;
 
@@ -475,6 +510,7 @@ HttpStateData::cacheableReply()
     case HTTP_SERVICE_UNAVAILABLE:
 
     case HTTP_GATEWAY_TIMEOUT:
+        debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status);
         return -1;
 
         /* NOTREACHED */
@@ -511,12 +547,12 @@ HttpStateData::cacheableReply()
     case HTTP_REQUESTED_RANGE_NOT_SATISFIABLE:
     case HTTP_EXPECTATION_FAILED:
 
+        debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status);
         return 0;
 
     default:
         /* RFC 2616 section 6.1.1: an unrecognized response MUST NOT be cached. */
-        debugs (11, 3, HERE << "Unknown HTTP status code " << rep->sline.status << ". Not cacheable.");
-
+        debugs (11, 3, HERE << "NO because unknown HTTP status code " << rep->sline.status);
         return 0;
 
         /* NOTREACHED */
@@ -618,7 +654,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
                 && reply->bodySize(request->method) == -1 && !flags.chunked) {
             debugs(11, DBG_IMPORTANT, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
-            flags.keepalive_broken = 1;
+            flags.keepalive_broken = true;
         }
     }
 }
@@ -674,7 +710,7 @@ HttpStateData::processReplyHeader()
     } else {
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
-            flags.headers_parsed = 1;
+            flags.headers_parsed = true;
             newrep->sline.version = HttpVersion(1,1);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
@@ -706,27 +742,23 @@ HttpStateData::processReplyHeader()
         return;
     }
 
-    flags.chunked = 0;
+    flags.chunked = false;
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
-        flags.chunked = 1;
+        flags.chunked = true;
         httpChunkDecoder = new ChunkedCodingParser;
     }
 
     if (!peerSupportsConnectionPinning())
-        request->flags.connection_auth_disabled = 1;
+        request->flags.connectionAuthDisabled = 1;
 
     HttpReply *vrep = setVirginReply(newrep);
-    flags.headers_parsed = 1;
+    flags.headers_parsed = true;
 
     keepaliveAccounting(vrep);
 
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    /** \todo IF the reply is a 1.0 reply, AND it has a Connection: Header
-     * Parse the header and remove all referenced headers
-     */
 
     request->hier.peer_reply_status = newrep->sline.status;
 
@@ -926,12 +958,25 @@ HttpStateData::haveParsedReplyHeaders()
 
 no_cache:
 
-    if (!ignoreCacheControl && rep->cache_control) {
-        if (rep->cache_control->proxyRevalidate() ||
-                rep->cache_control->mustRevalidate() ||
-                rep->cache_control->hasSMaxAge()
-           )
-            EBIT_SET(entry->flags, ENTRY_REVALIDATE);
+    if (!ignoreCacheControl) {
+        if (rep->cache_control) {
+            if (rep->cache_control->proxyRevalidate() ||
+                    rep->cache_control->mustRevalidate() ||
+                    rep->cache_control->noCache() ||
+                    rep->cache_control->hasSMaxAge())
+                EBIT_SET(entry->flags, ENTRY_REVALIDATE);
+        }
+#if USE_HTTP_VIOLATIONS // response header Pragma::no-cache is undefined in HTTP
+        else {
+            // Expensive calculation. So only do it IF the CC: header is not present.
+
+            /* HACK: Pragma: no-cache in _replies_ is not documented in HTTP,
+             * but servers like "Active Imaging Webcast/2.0" sure do use it */
+            if (rep->header.has(HDR_PRAGMA) &&
+                    rep->header.hasListMember(HDR_PRAGMA,"no-cache",','))
+                EBIT_SET(entry->flags, ENTRY_REVALIDATE);
+        }
+#endif
     }
 
 #if HEADERS_LOG
@@ -1064,7 +1109,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     int clen;
     int len = io.size;
 
-    flags.do_next_read = 0;
+    flags.do_next_read = false;
 
     debugs(11, 5, HERE << io.conn << ": len " << len << ".");
 
@@ -1084,12 +1129,12 @@ HttpStateData::readReply(const CommIoCbParams &io)
         debugs(11, 2, HERE << io.conn << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(io.xerrno)) {
-            flags.do_next_read = 1;
+            flags.do_next_read = true;
         } else {
             ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
             err->xerrno = io.xerrno;
             fwd->fail(err);
-            flags.do_next_read = 0;
+            flags.do_next_read = false;
             serverConnection->close();
         }
 
@@ -1132,7 +1177,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     if (len == 0) { // reached EOF?
         eof = 1;
-        flags.do_next_read = 0;
+        flags.do_next_read = false;
 
         /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
          * Ensure here that we have at minimum two \r\n when EOF is seen.
@@ -1196,7 +1241,7 @@ HttpStateData::continueAfterParsingHeader()
 
     if (!flags.headers_parsed && !eof) {
         debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
-        flags.do_next_read = 1;
+        flags.do_next_read = true;
         /** \retval false If we have not finished parsing the headers and may get more data.
          *                Schedules more reads to retrieve the missing data.
          */
@@ -1242,7 +1287,7 @@ HttpStateData::continueAfterParsingHeader()
     assert(error != ERR_NONE);
     entry->reset();
     fwd->fail(new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request));
-    flags.do_next_read = 0;
+    flags.do_next_read = false;
     serverConnection->close();
     return false; // quit on error
 }
@@ -1305,7 +1350,7 @@ HttpStateData::decodeAndWriteReplyBody()
     addVirginReplyBody(data, len);
     if (doneParsing) {
         lastChunk = 1;
-        flags.do_next_read = 0;
+        flags.do_next_read = false;
     }
     SQUID_EXIT_THROWING_CODE(wasThereAnException);
     return wasThereAnException;
@@ -1325,7 +1370,7 @@ HttpStateData::processReplyBody()
     bool ispinned = false;
 
     if (!flags.headers_parsed) {
-        flags.do_next_read = 1;
+        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
     }
@@ -1345,7 +1390,7 @@ HttpStateData::processReplyBody()
     if (entry->isAccepting()) {
         if (flags.chunked) {
             if (!decodeAndWriteReplyBody()) {
-                flags.do_next_read = 0;
+                flags.do_next_read = false;
                 serverComplete();
                 return;
             }
@@ -1369,7 +1414,7 @@ HttpStateData::processReplyBody()
                 commSetConnTimeout(serverConnection, Config.Timeout.read, nil);
             }
 
-            flags.do_next_read = 1;
+            flags.do_next_read = true;
         }
         break;
 
@@ -1377,24 +1422,24 @@ HttpStateData::processReplyBody()
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
             /* yes we have to clear all these! */
             commUnsetConnTimeout(serverConnection);
-            flags.do_next_read = 0;
+            flags.do_next_read = false;
 
             comm_remove_close_handler(serverConnection->fd, closeHandler);
             closeHandler = NULL;
             fwd->unregister(serverConnection);
 
-            if (request->flags.spoof_client_ip)
+            if (request->flags.spoofClientIp)
                 client_addr = request->client_addr;
 
             if (request->flags.pinned) {
                 ispinned = true;
-            } else if (request->flags.connection_auth && request->flags.auth_sent) {
+            } else if (request->flags.connectionAuth && request->flags.authSent) {
                 ispinned = true;
             }
 
-            if (request->pinnedConnection() && ispinned) {
-                request->pinnedConnection()->pinConnection(serverConnection, request, _peer,
-                        (request->flags.connection_auth != 0));
+            if (ispinned && request->clientConnectionManager.valid()) {
+                request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
+                        (request->flags.connectionAuth != 0));
             } else {
                 fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
             }
@@ -1438,7 +1483,7 @@ HttpStateData::maybeReadVirginBody()
         return;
 
     if (flags.do_next_read) {
-        flags.do_next_read = 0;
+        flags.do_next_read = false;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         entry->delayAwareRead(serverConnection, readBuf->space(read_size), read_size,
                               JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
@@ -1492,9 +1537,7 @@ HttpStateData::sendComplete()
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
 
     commSetConnTimeout(serverConnection, Config.Timeout.read, timeoutCall);
-
-    flags.request_sent = 1;
-
+    flags.request_sent = true;
     request->hier.peer_http_request_sent = current_time;
 }
 
@@ -1522,7 +1565,7 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, http_state_flags flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const HttpStateFlags &flags)
 {
     http_hdr_type header = flags.originpeer ? HDR_AUTHORIZATION : HDR_PROXY_AUTHORIZATION;
 
@@ -1618,7 +1661,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
-                                      const http_state_flags flags)
+                                      const HttpStateFlags &flags)
 {
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
@@ -1649,7 +1692,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* pretend it's not a range request */
         delete request->range;
         request->range = NULL;
-        request->flags.range = 0;
+        request->flags.isRanged=false;
     }
 
     /* append Via */
@@ -1804,7 +1847,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
  * to our outgoing fetch request.
  */
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request, HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request, HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &flags)
 {
     debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
@@ -1896,7 +1939,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_MAX_FORWARDS:
         /** \par Max-Forwards:
          * pass only on TRACE or OPTIONS requests */
-        if (request->method == METHOD_TRACE || request->method == METHOD_OPTIONS) {
+        if (request->method == Http::METHOD_TRACE || request->method == Http::METHOD_OPTIONS) {
             const int64_t hops = e->getInt64();
 
             if (hops > 0)
@@ -1985,7 +2028,7 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
     int64_t roffLimit = request->getRangeOffsetLimit();
 
     if (NULL == request->range || !request->flags.cachable
-            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connection_auth)
+            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
@@ -2018,10 +2061,10 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
-        if (request->flags.pinned && request->flags.connection_auth)
-            request->flags.auth_sent = 1;
+        if (request->flags.pinned && request->flags.connectionAuth)
+            request->flags.authSent = 1;
         else if (hdr.has(HDR_AUTHORIZATION))
-            request->flags.auth_sent = 1;
+            request->flags.authSent = 1;
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
@@ -2051,7 +2094,7 @@ HttpStateData::sendRequest()
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
     commSetConnTimeout(serverConnection, Config.Timeout.lifetime, timeoutCall);
-    flags.do_next_read = 1;
+    flags.do_next_read = true;
     maybeReadVirginBody();
 
     if (request->body_pipe != NULL) {
@@ -2064,7 +2107,7 @@ HttpStateData::sendRequest()
         Must(!flags.chunked_request);
         // use chunked encoding if we do not know the length
         if (request->content_length < 0)
-            flags.chunked_request = 1;
+            flags.chunked_request = true;
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
@@ -2074,31 +2117,31 @@ HttpStateData::sendRequest()
 
     if (_peer != NULL) {
         if (_peer->options.originserver) {
-            flags.proxying = 0;
-            flags.originpeer = 1;
+            flags.proxying = false;
+            flags.originpeer = true;
         } else {
-            flags.proxying = 1;
-            flags.originpeer = 0;
+            flags.proxying = false;
+            flags.originpeer = false;
         }
     } else {
-        flags.proxying = 0;
-        flags.originpeer = 0;
+        flags.proxying = false;
+        flags.originpeer = false;
     }
 
     /*
      * Is keep-alive okay for all request methods?
      */
-    if (request->flags.must_keepalive)
-        flags.keepalive = 1;
+    if (request->flags.mustKeepalive)
+        flags.keepalive = true;
     else if (!Config.onoff.server_pconns)
-        flags.keepalive = 0;
+        flags.keepalive = false;
     else if (_peer == NULL)
-        flags.keepalive = 1;
+        flags.keepalive = true;
     else if (_peer->stats.n_keepalives_sent < 10)
-        flags.keepalive = 1;
+        flags.keepalive = true;
     else if ((double) _peer->stats.n_keepalives_recv /
              (double) _peer->stats.n_keepalives_sent > 0.50)
-        flags.keepalive = 1;
+        flags.keepalive = true;
 
     if (_peer) {
         /*The old code here was
@@ -2114,7 +2157,7 @@ HttpStateData::sendRequest()
          */
         if (neighborType(_peer, request) == PEER_SIBLING &&
                 !_peer->options.allow_miss)
-            flags.only_if_cached = 1;
+            flags.only_if_cached = true;
 
         flags.front_end_https = _peer->front_end_https;
     }
@@ -2274,7 +2317,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
         // XXX: why does not this trigger a debug message on every request?
 
         if (flags.headers_parsed && !flags.abuse_detected) {
-            flags.abuse_detected = 1;
+            flags.abuse_detected = true;
             debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {

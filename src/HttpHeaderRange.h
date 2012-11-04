@@ -32,10 +32,10 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
-#include "MemPool.h"
-#include "Range.h"
 #include "Array.h"
+#include "MemPool.h"
 #include "Packer.h"
+#include "Range.h"
 #include "SquidString.h"
 
 class HttpReply;

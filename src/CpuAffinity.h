@@ -5,12 +5,12 @@
 #define SQUID_CPU_AFFINITY_H
 
 /// set CPU affinity for this process on startup
-SQUIDCEXTERN void CpuAffinityInit();
+void CpuAffinityInit();
 
 /// reconfigure CPU affinity for this process
-SQUIDCEXTERN void CpuAffinityReconfigure();
+void CpuAffinityReconfigure();
 
 /// check CPU affinity configuration and print warnings if needed
-SQUIDCEXTERN void CpuAffinityCheck();
+void CpuAffinityCheck();
 
 #endif // SQUID_CPU_AFFINITY_H

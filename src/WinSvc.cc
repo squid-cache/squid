@@ -33,9 +33,8 @@
 
 #include "squid.h"
 #include "protos.h"
-#include "squid_windows.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #ifndef _MSWSOCK_
 #include <mswsock.h>
 #endif

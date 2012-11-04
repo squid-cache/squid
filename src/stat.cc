@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "CacheDigest.h"
+#include "CachePeer.h"
 #include "client_side_request.h"
 #include "client_side.h"
 #include "comm/Connection.h"
@@ -41,6 +42,7 @@
 #include "format/Token.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "IoStats.h"
 #include "MemObject.h"
 #include "mem_node.h"
 #include "MemBuf.h"
@@ -53,6 +55,7 @@
 #include "mgr/ServiceTimesAction.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -219,19 +222,19 @@ GetIoStats(Mgr::IoActionData& stats)
 
     stats.http_reads = IOStats.Http.reads;
 
-    for (i = 0; i < _iostats::histSize; ++i) {
+    for (i = 0; i < IoStats::histSize; ++i) {
         stats.http_read_hist[i] = IOStats.Http.read_hist[i];
     }
 
     stats.ftp_reads = IOStats.Ftp.reads;
 
-    for (i = 0; i < _iostats::histSize; ++i) {
+    for (i = 0; i < IoStats::histSize; ++i) {
         stats.ftp_read_hist[i] = IOStats.Ftp.read_hist[i];
     }
 
     stats.gopher_reads = IOStats.Gopher.reads;
 
-    for (i = 0; i < _iostats::histSize; ++i) {
+    for (i = 0; i < IoStats::histSize; ++i) {
         stats.gopher_read_hist[i] = IOStats.Gopher.read_hist[i];
     }
 }
@@ -245,7 +248,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.http_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; ++i) {
+    for (i = 0; i < IoStats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -258,7 +261,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.ftp_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; ++i) {
+    for (i = 0; i < IoStats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -271,7 +274,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; ++i) {
+    for (i = 0; i < IoStats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -1810,7 +1813,7 @@ statPeerSelect(StoreEntry * sentry)
 {
 #if USE_CACHE_DIGESTS
     StatCounters *f = &statCounter;
-    peer *peer;
+    CachePeer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
@@ -1933,7 +1936,7 @@ statCPUUsage(int minutes)
                                tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
 }
 
-extern double
+double
 statRequestHitRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1943,7 +1946,7 @@ statRequestHitRatio(int minutes)
                                CountHist[minutes].client_http.requests);
 }
 
-extern double
+double
 statRequestHitMemoryRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1953,7 +1956,7 @@ statRequestHitMemoryRatio(int minutes)
                                CountHist[minutes].client_http.hits);
 }
 
-extern double
+double
 statRequestHitDiskRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
@@ -1963,7 +1966,7 @@ statRequestHitDiskRatio(int minutes)
                                CountHist[minutes].client_http.hits);
 }
 
-extern double
+double
 statByteHitRatio(int minutes)
 {
     size_t s;

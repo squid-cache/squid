@@ -70,7 +70,6 @@ configuration file.
 modes of operation
 ==================
 
-$Id$
 Usage:  purge   [-a] [-c cf] [-d l] [-(f|F) fn | -(e|E) re] [-p h[:p]]
                 [-P #] [-s] [-v] [-C dir [-H]] [-n]
 

@@ -6,8 +6,6 @@
 # - i.e. those for which there is a "Content-length:" HTTP header,
 #   and this does not match the size of the cached object
 
-# $Id$
-
 require "getopts.pl";
 require "stat.pl";
 &Getopts("cd");

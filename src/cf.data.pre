@@ -754,6 +754,8 @@ DOC_START
 
 	acl aclname url_regex [-i] ^http:// ...
 	  # regex matching on whole URL [fast]
+	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
+	  # regex matching on URL login field
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # regex matching on URL path [fast]
 
@@ -3273,6 +3275,10 @@ DOC_START
 		err_code    The ID of an error response served by Squid or
 				a similar internal error identifier.
 		err_detail  Additional err_code-dependent error information.
+		note	The meta header specified by the argument. Also
+			logs the adaptation meta headers set by the
+			adaptation_meta configuration parameter.
+			If no argument given all meta headers logged.
 
 	Connection related format codes:
 
@@ -3642,12 +3648,16 @@ LOC: Config.Log.store
 DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
-	saved and for how long.  To disable, enter "none" or remove the line.
+	saved and for how long.
 	There are not really utilities to analyze this data, so you can safely
-	disable it.
-
+	disable it (the default).
+	
+	Store log uses modular logging outputs. See access_log for the list
+	of modules supported.
+	
 	Example:
-		cache_store_log @DEFAULT_STORE_LOG@
+		cache_store_log stdio:@DEFAULT_STORE_LOG@
+		cache_store_log daemon:@DEFAULT_STORE_LOG@
 DOC_END
 
 NAME: cache_swap_state cache_swap_log
@@ -4224,7 +4234,6 @@ DOC_START
 		 override-lastmod
 		 reload-into-ims
 		 ignore-reload
-		 ignore-no-cache
 		 ignore-no-store
 		 ignore-must-revalidate
 		 ignore-private
@@ -4256,12 +4265,6 @@ DOC_START
 		header. Doing this VIOLATES the HTTP standard. Enabling
 		this feature could make you liable for problems which
 		it causes.
-
-		ignore-no-cache ignores any ``Pragma: no-cache'' and
-		``Cache-control: no-cache'' headers received from a server.
-		The HTTP RFC never allows the use of this (Pragma) header
-		from a server, only a client, though plenty of servers
-		send it anyway.
 
 		ignore-no-store ignores any ``Cache-control: no-store''
 		headers received from a server. Doing this VIOLATES
@@ -4922,6 +4925,22 @@ DOC_START
 	ACLs in an option ACL list must be satisfied for the insertion
 	to happen. The request_header_add option supports fast ACLs
 	only.
+DOC_END
+
+NAME: note
+TYPE: note
+LOC: Config.notes
+DEFAULT: none
+DOC_START
+	This option used to log custom information about the master
+	transaction. For example, an admin may configure Squid to log
+	which "user group" the transaction belongs to, where "user group"
+	will be determined based on a set of ACLs and not [just]
+	authentication information.
+	Values of key/value pairs can be logged using %{key}note macros:
+
+	    note key value acl ...
+	    logformat myFormat ... %{key}note ...
 DOC_END
 
 NAME: relaxed_header_parser
@@ -7402,7 +7421,7 @@ adaptation_masterx_shared_names X-Subscriber-ID
 DOC_END
 
 NAME: adaptation_meta
-TYPE: adaptation_meta_type
+TYPE: note
 IFDEF: USE_ADAPTATION
 LOC: Adaptation::Config::metaHeaders
 DEFAULT: none
@@ -7434,6 +7453,12 @@ DOC_START
 	any character, which is currently only useful for escaping backslashes
 	and double quotes. For example,
 	    "this string has one backslash (\\) and two \"quotes\""
+
+	Used adaptation_meta header values may be logged via %note
+	logformat code. If multiple adaptation_meta headers with the same name
+	are used during master transaction lifetime, the header values are
+	logged in the order they were used and duplicate values are ignored
+	(only the first repeated value will be logged).
 DOC_END
 
 NAME: icap_retry
@@ -8076,7 +8101,7 @@ DOC_START
 DOC_END
 
 NAME: windows_ipaddrchangemonitor
-IFDEF: _SQUID_MSWIN_
+IFDEF: _SQUID_WINDOWS_
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on

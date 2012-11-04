@@ -9,7 +9,7 @@
 #include "CpuAffinitySet.h"
 #include "Debug.h"
 #include "globals.h"
-#include "structs.h"
+#include "SquidConfig.h"
 #include "tools.h"
 
 #include <algorithm>

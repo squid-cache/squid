@@ -33,12 +33,12 @@
  */
 
 #if _SQUID_WINDOWS_
-extern int WIN32_Subsystem_Init(int *, char ***);
-extern void WIN32_sendSignal(int);
-extern void WIN32_SetServiceCommandLine(void);
-extern void WIN32_InstallService(void);
-extern void WIN32_RemoveService(void);
-extern int SquidMain(int, char **);
+int WIN32_Subsystem_Init(int *, char ***);
+void WIN32_sendSignal(int);
+void WIN32_SetServiceCommandLine(void);
+void WIN32_InstallService(void);
+void WIN32_RemoveService(void);
+int SquidMain(int, char **);
 #else /* _SQUID_WINDOWS_ */
 inline int WIN32_Subsystem_Init(int *foo, char ***bar) {return 0; } /* NOP */
 inline void WIN32_sendSignal(int foo) { return; } /* NOP */

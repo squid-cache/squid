@@ -1,8 +1,3 @@
-dnl
-dnl  $Id$
-dnl
-dnl
-dnl
 AC_INIT([Squid Web Proxy],[3.HEAD-BZR],[http://www.squid-cache.org/bugs/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
@@ -108,6 +103,14 @@ if test "x$AR" = "x"; then
 fi
 AR_R="$AR r"
 AC_SUBST(AR_R)
+
+# pre-define DEFAULT_PREFIX, some modules need it.
+if test "${prefix}" = "NONE" ; then
+  squid_prefix=$ac_default_prefix
+else
+  squid_prefix=$prefix
+fi
+AC_DEFINE_UNQUOTED(DEFAULT_PREFIX,[$squid_prefix],[The install prefix])
 
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
@@ -384,8 +387,8 @@ export enable_inline
 dnl
 dnl Check for atomic operations support in the compiler
 dnl
-AC_MSG_CHECKING([for atomic operations support])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_MSG_CHECKING([for GNU atomic operations support])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     int n = 0;
 ]],[[
     __sync_add_and_fetch(&n, 10); // n becomes 10
@@ -396,8 +399,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     return (n == 200) ? 0 : -1;
 ]])],
 [
-    AC_DEFINE(HAVE_ATOMIC_OPS,1,
-        [Define to 1 if you have __sync_add_and_fetch() and such])
+    AC_DEFINE(HAVE_ATOMIC_OPS,1,[Define to 1 if you have __sync_add_and_fetch() and such])
     AC_MSG_RESULT(yes)
 ],[
     AC_MSG_RESULT(no)
@@ -689,10 +691,16 @@ for module in $squid_disk_module_candidates none; do
       ;;
 
     Mmapped)
-      AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
-      DISK_LIBS="$DISK_LIBS libMmapped.a"
-      DISK_MODULES="$DISK_MODULES Mmapped"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      dnl TODO: use availability of sys/mman.h and/or mmap to define
+      dnl  OR support windows mmap functions
+      if test "x$squid_host_os" = "xmingw" ; then
+        AC_MSG_NOTICE([Mmapped DiskIO is not available on Mingw])
+      else
+        AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
+        DISK_LIBS="$DISK_LIBS libMmapped.a"
+        DISK_MODULES="$DISK_MODULES Mmapped"
+        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      fi
       ;;
 
     IpcIo)
@@ -993,19 +1001,23 @@ dnl Necessary if the first PKG_CHECK_MODULES call is conditional
 PKG_PROG_PKG_CONFIG
 
 dnl Perform configuration consistency checks for eCAP
-if test "x$squid_opt_use_ecap" = "xyes";
+if test "x$squid_opt_use_ecap" != "xno";
 then
-    dnl eCAP support requires loadable modules, which are enabled by default
-    if test "x$enable_loadable_modules" != "xyes"
-    then
-        AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
-    fi
+  dnl eCAP support requires loadable modules, which are enabled by default
+  if test "x$enable_loadable_modules" != "xyes"
+  then
+    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.])
+  fi
 
+  if test -n "$PKG_CONFIG"; then
     dnl eCAP support requires libecap.
     dnl This Squid supports libecap v0.2.x.
     dnl Use EXT_ prefix to distinguish external libecap (that we check for
     dnl here) from our own convenience ecap library in Makefiles.
-    PKG_CHECK_MODULES(EXT_LIBECAP, [libecap > 0.2 libecap < 0.3])
+    PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 0.2.0 libecap < 0.3])
+  else
+    AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
+  fi
 fi
 
 AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
@@ -1131,9 +1143,14 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
   esac
   #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
-    net/if_dl.h \
+    windows.h \
     sys/sockio.h \
-    sys/param.h
+    sys/param.h,
+  [], [], [[
+#if HAVE_WINDOWS_H
+include <windows.h>
+#endif
+]]
   )
   AC_CHECK_HEADERS( \
     net/if_arp.h \
@@ -1143,9 +1160,12 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
 #include <sys/socket.h>
 ]])
 
-  # openbsd requires sys/param.h to be included before sysctl.h
-  AC_CHECK_HEADERS(sys/sysctl.h, [], [],
-  [[#if HAVE_SYS_PARAM_H
+  # OpenBSD, FreeBSD and NetBSD requires sys/param.h to be included before sysctl.h and net/if_dl.h
+  AC_CHECK_HEADERS( \
+    net/if_dl.h \
+    sys/sysctl.h,
+  [], [], [[
+#if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
   ]])
@@ -1700,7 +1720,7 @@ if test "x$enable_auth_basic" != "xno" ; then
     for helper in $enable_auth_basic
     do
     dir="$srcdir/helpers/basic_auth/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
       BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
       # special case
       if test "x$helper" = "xSASL" ; then
@@ -1746,7 +1766,7 @@ if test "x$enable_auth_ntlm" != "xno" ; then
     AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
     for helper in $enable_auth_ntlm ; do
         dir="$srcdir/helpers/ntlm_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
             NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
         elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
             AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
@@ -1791,7 +1811,7 @@ if test "x$enable_auth_negotiate" != "xno" ; then
     AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
     for helper in $enable_auth_negotiate ; do
         dir="$srcdir/helpers/negotiate_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
             NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
         elif test -d "$srcdir/helpers/negotiate_auth/$helper" ; then
             AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
@@ -1834,7 +1854,7 @@ if test "x$enable_auth_digest" != "xno" ; then
     AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
     for helper in $enable_auth_digest ; do
         dir="$srcdir/helpers/digest_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
             DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
         elif test -d "$srcdir/helpers/digest_auth/$helper" ; then
             AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
@@ -1875,7 +1895,7 @@ if test "x$squid_opt_logdaemon_helpers" = "xauto" ; then
 fi
 for helper in $squid_opt_logdaemon_helpers ; do
   dir="$srcdir/helpers/log_daemon/$helper"
-  if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+  if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
     LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $helper"
   elif test -d "$srcdir/helpers/log_daemon/$helper" ; then
     AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
@@ -2041,7 +2061,7 @@ enable_external_acl_helpers="`echo $enable_external_acl_helpers| sed -e 's/,/ /g
 if test "x$enable_external_acl_helpers" != "xno" ; then
   for helper in $enable_external_acl_helpers ; do
     dir="$srcdir/helpers/external_acl/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
       EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
       # special case
       if test "x$helper" = "xkerberos_ldap_group" ; then
@@ -2077,7 +2097,7 @@ URL_REWRITE_HELPERS=""
 if test "x$enable_url_rewrite_helpers" != "xno" ; then
   for helper in $enable_url_rewrite_helpers; do
     dir="$srcdir/helpers/url_rewrite/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
+    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
       URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
     elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
       AC_MSG_NOTICE([URL rewrite helper $helper ... found but cannot be built])
@@ -2368,6 +2388,7 @@ AC_CHECK_HEADERS( \
   sys/endian.h \
   sys/file.h \
   sys/ioctl.h \
+  sys/ipc.cc \
   sys/param.h \
   sys/prctl.h \
   sys/md5.h \
@@ -2375,6 +2396,7 @@ AC_CHECK_HEADERS( \
   sys/msg.h \
   sys/resource.h \
   sys/select.h \
+  sys/shm.h \
   sys/socket.h \
   sys/stat.h \
   sys/statvfs.h \
@@ -2608,7 +2630,13 @@ AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
-  AC_CHECK_HEADERS(Iphlpapi.h,,,[
+  AC_CHECK_HEADERS( \
+    windows.h \
+    ws2tcpip.h \
+    Iphlpapi.h ,,,[
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif])
@@ -3429,6 +3457,7 @@ SQUID_DETECT_UDP_RECV_BUFSIZE
 SQUID_DETECT_TCP_SND_BUFSIZE
 SQUID_DETECT_TCP_RECV_BUFSIZE
 
+SQUID_CHECK_RECV_ARG_TYPE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
@@ -3536,6 +3565,7 @@ AC_CONFIG_FILES([\
 	src/esi/Makefile \
 	src/eui/Makefile \
 	src/format/Makefile \
+	src/http/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \

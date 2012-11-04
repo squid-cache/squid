@@ -37,8 +37,8 @@
 
 class ClientHttpRequest;
 
-extern void redirectInit(void);
-extern void redirectShutdown(void);
-extern void redirectStart(ClientHttpRequest *, HLPCB *, void *);
+void redirectInit(void);
+void redirectShutdown(void);
+void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 
 #endif /* SQUID_REDIRECT_H_ */

@@ -1420,7 +1420,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         makeUsernameHeader(request, buf);
 
     // Adaptation::Config::metaHeaders
-    typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
+    typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
         HttpRequest *r = virgin.cause ?
                          virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
@@ -1428,8 +1428,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
         HttpReply *reply = dynamic_cast<HttpReply*>(virgin.header);
 
-        if (const char *value = (*i)->match(r, reply))
-            buf.Printf("%s: %s\r\n", (*i)->name.termedBuf(), value);
+        if (const char *value = (*i)->match(r, reply)) {
+            buf.Printf("%s: %s\r\n", (*i)->key.termedBuf(), value);
+            Adaptation::History::Pointer ah = request->adaptHistory(false);
+            if (ah != NULL && !ah->metaHeaders.hasByNameListMember((*i)->key.termedBuf(), value, ','))
+                ah->metaHeaders.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), value));
+        }
     }
 
     // fprintf(stderr, "%s\n", buf.content());
@@ -1746,12 +1750,12 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
     else if (HttpRequest *req = dynamic_cast<HttpRequest*>(msg))
         method = req->method;
     else
-        method = METHOD_NONE;
+        method = Http::METHOD_NONE;
 
     int64_t size;
     // expectingBody returns true for zero-sized bodies, but we will not
     // get a pipe for that body, so we treat the message as bodyless
-    if (method != METHOD_NONE && msg->expectingBody(method, size) && size) {
+    if (method != Http::METHOD_NONE && msg->expectingBody(method, size) && size) {
         debugs(93, 6, HERE << "expects virgin body from " <<
                virgin.body_pipe << "; size: " << size);
 

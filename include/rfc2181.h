@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef _SQUID_INCLUDE_RFC1123_H
 #define _SQUID_INCLUDE_RFC1123_H
 

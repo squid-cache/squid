@@ -71,7 +71,7 @@ class FileNameHashCacheUser
                                          (FileNameHashCached(__FILE__)<<14) | (__LINE__ & 0x3FFF))
 #endif
 
-extern void Throw(const char *message, const char *fileName, int lineNo, unsigned int id);
+void Throw(const char *message, const char *fileName, int lineNo, unsigned int id);
 
 // Must(condition) is like assert(condition) but throws an exception instead
 #if !defined(Must)

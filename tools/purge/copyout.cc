@@ -1,6 +1,3 @@
-//
-// $Id$
-//
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    copyout.cc

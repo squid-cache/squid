@@ -7,7 +7,7 @@ libexec_PROGRAMS = ntlm_sspi_auth
 ntlm_sspi_auth_SOURCES = ntlm_sspi_auth.cc
 
 LDADD = \
-	-L$(top_builddir)/libntlmauth -lntlmauth \
+	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	-L$(top_builddir)/lib -lsspwin32 \
 	$(COMPAT_LIB) \
 	-lnetapi32 \

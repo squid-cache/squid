@@ -18,15 +18,13 @@ class helper_stateful_server;
 class HelperReply
 {
 private:
-    // implicit creation and copy are prohibited explicitly
-    HelperReply();
+    // copy are prohibited for now
     HelperReply(const HelperReply &r);
     HelperReply &operator =(const HelperReply &r);
 
 public:
     // create/parse details from the msg buffer provided
     HelperReply(const char *buf, size_t len, bool urlQuoting = false);
-    ~HelperReply() {}
 
     const MemBuf &other() const { return other_; }
 

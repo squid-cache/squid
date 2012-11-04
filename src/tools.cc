@@ -42,6 +42,7 @@
 #include "ip/QosConfig.h"
 #include "MemBuf.h"
 #include "anyp/PortCfg.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "ipc/Kids.h"
@@ -53,6 +54,9 @@
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
+#endif
+#if HAVE_WIN32_PSAPI
+#include <psapi.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -77,12 +81,10 @@ and report the trace back to squid-bugs@squid-cache.org.\n\
 \n\
 Thanks!\n"
 
-static void fatal_common(const char *);
-static void fatalvf(const char *fmt, va_list args);
 static void mail_warranty(void);
 #if MEM_GEN_TRACE
-extern void log_trace_done();
-extern void log_trace_init(char *);
+void log_trace_done();
+void log_trace_init(char *);
 #endif
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
@@ -245,22 +247,59 @@ dumpMallocStats(void)
 }
 
 void
-
 squid_getrusage(struct rusage *r)
 {
-
     memset(r, '\0', sizeof(struct rusage));
-#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
+#if HAVE_GETRUSAGE && defined(RUSAGE_SELF) && !_SQUID_WINDOWS_
 #if _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
     enter_suid();
 #endif
 
     getrusage(RUSAGE_SELF, r);
-#if _SQUID_SOLARIS_
 
+#if _SQUID_SOLARIS_
     leave_suid();
 #endif
+
+#elif _SQUID_WINDOWS_ && HAVE_WIN32_PSAPI
+    // Windows has an alternative method if there is no POSIX getrusage defined.
+    if (WIN32_OS_version >= _WIN_OS_WINNT) {
+        /* On Windows NT and later call PSAPI.DLL for process Memory */
+        /* informations -- Guido Serassio                       */
+        HANDLE hProcess;
+        PROCESS_MEMORY_COUNTERS pmc;
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+                               PROCESS_VM_READ,
+                               FALSE, GetCurrentProcessId());
+        {
+            /* Microsoft CRT doesn't have getrusage function,  */
+            /* so we get process CPU time information from PSAPI.DLL. */
+            FILETIME ftCreate, ftExit, ftKernel, ftUser;
+            if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
+                int64_t *ptUser = (int64_t *)&ftUser;
+                int64_t tUser64 = *ptUser / 10;
+                int64_t *ptKernel = (int64_t *)&ftKernel;
+                int64_t tKernel64 = *ptKernel / 10;
+                r->ru_utime.tv_sec =(long)(tUser64 / 1000000);
+                r->ru_stime.tv_sec =(long)(tKernel64 / 1000000);
+                r->ru_utime.tv_usec =(long)(tUser64 % 1000000);
+                r->ru_stime.tv_usec =(long)(tKernel64 % 1000000);
+            } else {
+                CloseHandle( hProcess );
+                return;
+            }
+        }
+        if (GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc))) {
+            r->ru_maxrss=(DWORD)(pmc.WorkingSetSize / getpagesize());
+            r->ru_majflt=pmc.PageFaultCount;
+        } else {
+            CloseHandle( hProcess );
+            return;
+        }
+
+        CloseHandle( hProcess );
+    }
 #endif
 }
 
@@ -369,7 +408,7 @@ death(int sig)
 #endif
 #endif /* PRINT_STACK_TRACE */
 
-#if SA_RESETHAND == 0 && !_SQUID_MSWIN_
+#if SA_RESETHAND == 0 && !_SQUID_WINDOWS_
     signal(SIGSEGV, SIG_DFL);
 
     signal(SIGBUS, SIG_DFL);
@@ -445,107 +484,6 @@ sigusr2_handle(int sig)
 #endif
 }
 
-static void
-fatal_common(const char *message)
-{
-#if HAVE_SYSLOG
-    syslog(LOG_ALERT, "%s", message);
-#endif
-
-    fprintf(debug_log, "FATAL: %s\n", message);
-
-    if (Debug::log_stderr > 0 && debug_log != stderr)
-        fprintf(stderr, "FATAL: %s\n", message);
-
-    fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",
-            version_string);
-
-    fflush(debug_log);
-
-    PrintRusage();
-
-    dumpMallocStats();
-}
-
-/* fatal */
-void
-fatal(const char *message)
-{
-    /* suppress secondary errors from the dying */
-    shutting_down = 1;
-
-    releaseServerSockets();
-    /* check for store_dirs_rebuilding because fatal() is often
-     * used in early initialization phases, long before we ever
-     * get to the store log. */
-
-    /* XXX: this should be turned into a callback-on-fatal, or
-     * a mandatory-shutdown-event or something like that.
-     * - RBC 20060819
-     */
-
-    /*
-     * DPW 2007-07-06
-     * Call leave_suid() here to make sure that swap.state files
-     * are written as the effective user, rather than root.  Squid
-     * may take on root privs during reconfigure.  If squid.conf
-     * contains a "Bungled" line, fatal() will be called when the
-     * process still has root privs.
-     */
-    leave_suid();
-
-    if (0 == StoreController::store_dirs_rebuilding)
-        storeDirWriteCleanLogs(0);
-
-    fatal_common(message);
-
-    exit(1);
-}
-
-/* printf-style interface for fatal */
-void
-fatalf(const char *fmt,...)
-{
-    va_list args;
-    va_start(args, fmt);
-    fatalvf(fmt, args);
-    va_end(args);
-}
-
-/* used by fatalf */
-static void
-fatalvf(const char *fmt, va_list args)
-{
-    static char fatal_str[BUFSIZ];
-    vsnprintf(fatal_str, sizeof(fatal_str), fmt, args);
-    fatal(fatal_str);
-}
-
-/* fatal with dumping core */
-void
-fatal_dump(const char *message)
-{
-    failure_notify = NULL;
-    releaseServerSockets();
-
-    if (message)
-        fatal_common(message);
-
-    /*
-     * Call leave_suid() here to make sure that swap.state files
-     * are written as the effective user, rather than root.  Squid
-     * may take on root privs during reconfigure.  If squid.conf
-     * contains a "Bungled" line, fatal() will be called when the
-     * process still has root privs.
-     */
-    leave_suid();
-
-    if (opt_catch_signals)
-        storeDirWriteCleanLogs(0);
-
-    abort();
-}
-
 void
 debug_trap(const char *message)
 {
@@ -558,7 +496,7 @@ debug_trap(const char *message)
 void
 sig_child(int sig)
 {
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if _SQUID_NEXT_
     union wait status;
 #else
@@ -1097,7 +1035,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
         debugs(50, DBG_CRITICAL, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     /*
     On Windows, only SIGINT, SIGILL, SIGFPE, SIGTERM, SIGBREAK, SIGABRT and SIGSEGV signals
     are supported, so we must care of don't call signal() for other value.

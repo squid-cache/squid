@@ -39,6 +39,6 @@
  */
 
 /// \ingroup ServerProtocolWhoisAPI
-extern void whoisStart(FwdState *);
+void whoisStart(FwdState *);
 
 #endif /* SQUID_WHOIS_H_ */

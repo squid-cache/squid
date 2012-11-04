@@ -32,21 +32,23 @@
  */
 
 #include "squid.h"
-#include "mgr/Registration.h"
-#include "radix.h"
-#include "HttpRequest.h"
-#include "StoreClient.h"
-#include "Store.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
 #include "acl/Checklist.h"
-#include "acl/SourceAsn.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "acl/SourceAsn.h"
 #include "cache_cf.h"
-#include "HttpReply.h"
-#include "ipcache.h"
 #include "forward.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "ipcache.h"
+#include "mgr/Registration.h"
+#include "radix.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
+#include "Store.h"
+#include "StoreClient.h"
 #include "StoreClient.h"
 #include "wordlist.h"
 
@@ -246,8 +248,8 @@ asnCacheStart(int as)
     assert(NULL != req);
     asState->request = HTTPMSGLOCK(req);
 
-    if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
-        e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
+    if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
+        e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request);
     } else {
@@ -639,7 +641,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
 
         return 0;
 
-    } else if (!checklist->request->flags.destinationIPLookedUp()) {
+    } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
         /* XXX FIXME: allow accessing the acl name here */
         debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");

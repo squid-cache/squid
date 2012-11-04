@@ -37,6 +37,7 @@
 #include "HelperReply.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
+#include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

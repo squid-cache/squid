@@ -31,9 +31,9 @@
 #ifndef SQUID_ESIELEMENT_H
 #define SQUID_ESIELEMENT_H
 
+#include "base/RefCount.h"
 #include "Debug.h"
 #include "esi/Segment.h"
-#include "RefCount.h"
 
 typedef enum {
     ESI_PROCESS_COMPLETE = 0,

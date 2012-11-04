@@ -41,7 +41,9 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "RefreshPattern.h"
 #include "SquidTime.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 
@@ -108,16 +110,16 @@ refreshCounts[rcCount];
 #define REFRESH_DEFAULT_PCT	0.20
 #define REFRESH_DEFAULT_MAX	(time_t)259200
 
-static const refresh_t *refreshUncompiledPattern(const char *);
+static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
-static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const refresh_t * R, stale_flags * sf);
+static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static refresh_t DefaultRefresh;
+static RefreshPattern DefaultRefresh;
 
-const refresh_t *
+const RefreshPattern *
 refreshLimits(const char *url)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
 
     for (R = Config.Refresh; R; R = R->next) {
         if (!regexec(&(R->compiled_pattern), url, 0, 0, 0))
@@ -127,10 +129,10 @@ refreshLimits(const char *url)
     return NULL;
 }
 
-static const refresh_t *
+static const RefreshPattern *
 refreshUncompiledPattern(const char *pat)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
 
     for (R = Config.Refresh; R; R = R->next) {
         if (0 == strcmp(R->pattern, pat))
@@ -156,7 +158,7 @@ refreshUncompiledPattern(const char *pat)
  * times.
  */
 static int
-refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const refresh_t * R, stale_flags * sf)
+refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf)
 {
     /** \par
      * Check for an explicit expiration time (Expires: header).
@@ -230,7 +232,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
 static int
 refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
     const char *uri = NULL;
     time_t age = 0;
     time_t check_time = squid_curtime + delta;
@@ -265,7 +267,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
 
-    if (request && !request->flags.ignore_cc) {
+    if (request && !request->flags.ignoreCc) {
         const HttpHdrCc *const cc = request->cache_control;
         if (cc && cc->hasMinFresh()) {
             const int32_t minFresh=cc->minFresh();
@@ -291,7 +293,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
-        request->flags.fail_on_validation_err = 1;
+        request->flags.failOnValidationError = 1;
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
@@ -301,12 +303,12 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
        ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
         if (request)
-            request->flags.fail_on_validation_err = 1;
+            request->flags.failOnValidationError = 1;
         return STALE_MUST_REVALIDATE;
     }
 
     /* request-specific checks */
-    if (request && !request->flags.ignore_cc) {
+    if (request && !request->flags.ignoreCc) {
         HttpHdrCc *cc = request->cache_control;
 
         if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
@@ -317,7 +319,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #if USE_HTTP_VIOLATIONS
 
-        if (!request->flags.nocache_hack) {
+        if (!request->flags.noCacheHack()) {
             (void) 0;
         } else if (R->flags.ignore_reload) {
             /* The clients no-cache header is ignored */
@@ -329,7 +331,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         } else {
             /* The clients no-cache header is not overridden on this request */
             debugs(22, 3, "refreshCheck: YES: client reload");
-            request->flags.nocache = 1;
+            request->flags.noCache = 1;
             return STALE_FORCED_RELOAD;
         }
 
@@ -396,7 +398,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if ( max_stale >= 0 && staleness > max_stale) {
         debugs(22, 3, "refreshCheck: YES: max-stale limit");
         if (request)
-            request->flags.fail_on_validation_err = 1;
+            request->flags.failOnValidationError = 1;
         return STALE_MAX_STALE;
     }
 
@@ -492,7 +494,7 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     int reason = refreshCheck(entry, request, 0);
     ++ refreshCounts[rcHTTP].total;
     ++ refreshCounts[rcHTTP].status[reason];
-    request->flags.stale_if_hit = refreshIsStaleIfHit(reason);
+    request->flags.staleIfHit = refreshIsStaleIfHit(reason);
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 
@@ -534,7 +536,7 @@ refreshCheckDigest(const StoreEntry * entry, time_t delta)
 time_t
 getMaxAge(const char *url)
 {
-    const refresh_t *R;
+    const RefreshPattern *R;
     debugs(22, 3, "getMaxAge: '" << url << "'");
 
     if ((R = refreshLimits(url)))

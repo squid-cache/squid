@@ -38,8 +38,8 @@
 #define DELAYIDCOMPOSITE_H
 
 #if USE_DELAY_POOLS
+#include "base/RefCount.h"
 #include "fatal.h"
-#include "RefCount.h"
 
 class DeferredRead;
 

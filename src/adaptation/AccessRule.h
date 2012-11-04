@@ -35,9 +35,9 @@ private:
 };
 
 typedef Vector<Adaptation::AccessRule*> AccessRules;
-extern AccessRules &AllRules();
-extern AccessRule *FindRule(const AccessRule::Id &id);
-extern AccessRule *FindRuleByGroupId(const String &groupId);
+AccessRules &AllRules();
+AccessRule *FindRule(const AccessRule::Id &id);
+AccessRule *FindRuleByGroupId(const String &groupId);
 
 } // namespace Adaptation
 

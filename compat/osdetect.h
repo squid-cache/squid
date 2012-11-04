@@ -73,10 +73,6 @@
 #define _SQUID_WINDOWS_ 1
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
-/* We are using _SQUID_MSWIN_ define in cf.data.pre, so
-   it must be defined to 1 to avoid the build failure of cfgen.
- */
-#define _SQUID_MSWIN_ 1
 #define _SQUID_WINDOWS_ 1
 
 #elif defined(__APPLE__)

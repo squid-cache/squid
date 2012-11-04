@@ -12,8 +12,8 @@
 #include "Store.h"
 #include "tools.h"
 
-extern void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
-extern void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
+void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
+void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
 
 Mgr::IntervalActionData::IntervalActionData()
 {

@@ -59,6 +59,7 @@
 #include "MemBuf.h"
 #include "pconn.h"
 #include "profiler/Profiler.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"
@@ -113,7 +114,6 @@ static void commSetTcpNoDelay(int);
 #endif
 static void commSetTcpRcvbuf(int, int);
 
-static MemAllocator *conn_close_pool = NULL;
 fd_debug_t *fdd_table = NULL;
 
 bool
@@ -233,7 +233,7 @@ comm_has_pending_read_callback(int fd)
 bool
 comm_monitors_read(int fd)
 {
-    assert(isOpen(fd));
+    assert(isOpen(fd) && COMMIO_FD_READCB(fd));
     // Being active is usually the same as monitoring because we always
     // start monitoring the FD when we configure Comm::IoCallback for I/O
     // and we usually configure Comm::IoCallback for I/O when we starting
@@ -362,7 +362,7 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 bool
 comm_has_incomplete_write(int fd)
 {
-    assert(isOpen(fd));
+    assert(isOpen(fd) && COMMIO_FD_WRITECB(fd));
     return COMMIO_FD_WRITECB(fd)->active();
 }
 
@@ -655,7 +655,7 @@ comm_apply_flags(int new_socket,
         commSetReuseAddr(new_socket);
 
     if (addr.GetPort() > (unsigned short) 0) {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
             commSetNoLinger(new_socket);
@@ -714,7 +714,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
         fd_table[conn->fd].flags.close_on_exec = 1;
 
     if (conn->local.GetPort() > (unsigned short) 0) {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
             fd_table[conn->fd].flags.nolinger = 1;
@@ -1235,7 +1235,7 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 void
 comm_remove_close_handler(int fd, CLCB * handler, void *data)
 {
-    assert (isOpen(fd));
+    assert(isOpen(fd));
     /* Find handler in list */
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", handler=" <<
            handler << ", data=" << data);
@@ -1264,7 +1264,7 @@ comm_remove_close_handler(int fd, CLCB * handler, void *data)
 void
 comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
 {
-    assert (isOpen(fd));
+    assert(isOpen(fd));
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", AsyncCall=" << call);
 
     // comm_close removes all close handlers so our handler may be gone
@@ -1315,7 +1315,7 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
     int flags;
     int dummy = 0;
 #endif
@@ -1335,7 +1335,7 @@ commSetNonBlocking(int fd)
     } else {
 #endif
 #endif
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
@@ -1359,7 +1359,7 @@ commSetNonBlocking(int fd)
 int
 commUnsetNonBlocking(int fd)
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int nonblocking = FALSE;
 
     if (ioctlsocket(fd, FIONBIO, (unsigned long *) &nonblocking) < 0) {
@@ -1460,8 +1460,6 @@ comm_init(void)
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = min(100, Squid_MaxFD / 4);
-
-    conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 
     TheHalfClosed = new DescriptorSet;
 
@@ -1837,8 +1835,7 @@ void
 commStartHalfClosedMonitor(int fd)
 {
     debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
-    assert(isOpen(fd));
-    assert(!commHasHalfClosedMonitor(fd));
+    assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
     commPlanHalfClosedCheck(); // may schedule check if we added the first FD
 }

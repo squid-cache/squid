@@ -9,6 +9,7 @@
 #include "HttpRequestMethod.h"
 #include "ipc/forward.h"
 #include "mgr/QueryParams.h"
+#include "RequestFlags.h"
 
 namespace Mgr
 {
@@ -25,8 +26,8 @@ public:
 public:
     /* details of the client HTTP request that caused the action */
     String httpUri; ///< HTTP request URI
-    _method_t httpMethod; ///< HTTP request method
-    request_flags httpFlags; ///< HTTP request flags
+    HttpRequestMethod httpMethod; ///< HTTP request method
+    RequestFlags httpFlags; ///< HTTP request flags
     String httpOrigin;       ///< HTTP Origin: header (if any)
 
     /* action parameters extracted from the client HTTP request */
