@@ -62,7 +62,7 @@ public:
 class DiskFile;
 
 class DiskdFile;
-
+class Lock;
 class ReadRequest;
 
 /// \ingroup diskd
@@ -80,8 +80,8 @@ public:
     virtual void init();
     virtual void sync();
     virtual int callback();
-    virtual void statfs(StoreEntry & sentry)const;
-    int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, RefCountable_ *requestor);
+    virtual void statfs(StoreEntry & sentry) const;
+    int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, Lock *requestor);
 
     /** public for accessing return address's */
     SharedMemory shm;

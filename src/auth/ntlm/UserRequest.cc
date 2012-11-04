@@ -19,7 +19,7 @@ Auth::Ntlm::UserRequest::UserRequest()
 
 Auth::Ntlm::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
     safe_free(server_blob);
     safe_free(client_blob);
 
@@ -253,18 +253,17 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     if (lm_request->authserver == NULL)
         lm_request->authserver = reply.whichServer.get(); // XXX: no locking?
     else
-        assert(lm_request->authserver == reply.whichServer.raw());
+        assert(reply.whichServer == lm_request->authserver);
 
     /* seperate out the useful data */
     const char *blob = reply.other().content();
 
-    switch(reply.result)
-    {
+    switch (reply.result) {
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.must_keepalive = 1;
-        if (lm_request->request->flags.proxy_keepalive) {
+        lm_request->request->flags.mustKeepalive = 1;
+        if (lm_request->request->flags.proxyKeepalive) {
             lm_request->server_blob = xstrdup(reply.authToken.content());
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
@@ -275,8 +274,8 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
         break;
 
-    case HelperReply::Okay:
-    {
+    case HelperReply::AF:
+    case HelperReply::Okay: {
         /* we're finished, release the helper */
         auth_user_request->user()->username(reply.user.content());
         auth_user_request->denyMessage("Login successful");
@@ -312,7 +311,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << reply.user << "'");
     }
-        break;
+    break;
 
     case HelperReply::NA:
     case HelperReply::Error:

@@ -91,6 +91,7 @@ static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
     {"response", (http_hdr_type)DIGEST_RESPONSE},
 };
 
+class HttpHeaderFieldInfo;
 static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
 
 /*

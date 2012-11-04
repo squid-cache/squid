@@ -28,7 +28,7 @@ Auth::Digest::UserRequest::UserRequest() :
  */
 Auth::Digest::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
 
     safe_free(nonceb64);
     safe_free(cnonce);
@@ -104,7 +104,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
             return;
         }
 
-        if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
+        if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->PostWorkaround && request->method != Http::METHOD_GET) {
             /* Ugly workaround for certain very broken browsers using the
              * wrong method to calculate the request-digest on POST request.
              * This should be deleted once Digest authentication becomes more
@@ -113,7 +113,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
              */
             DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
-                               RequestMethodStr(METHOD_GET), digest_request->uri, HA2, Response);
+                               RequestMethodStr(Http::METHOD_GET), digest_request->uri, HA2, Response);
 
             if (strcasecmp(digest_request->response, Response)) {
                 auth_user->credentials(Auth::Failed);
@@ -280,10 +280,8 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
     assert(replyData->auth_user_request != NULL);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
 
-    switch(reply.result)
-    {
-    case HelperReply::Error:
-    {
+    switch (reply.result) {
+    case HelperReply::Error: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());
         assert(digest_request);
@@ -294,11 +292,10 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
         if (reply.other().hasContent())
             digest_request->setDenyMessage(reply.other().content());
     }
-        break;
+    break;
 
     case HelperReply::Unknown: // Squid 3.2 and older the digest helper only returns a HA1 hash (no "OK")
-    case HelperReply::Okay:
-    {
+    case HelperReply::Okay: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         assert(digest_user != NULL);
@@ -306,7 +303,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
         CvtBin(reply.other().content(), digest_user->HA1);
         digest_user->HA1created = 1;
     }
-        break;
+    break;
 
     default:
         ; // XXX: handle other states properly.

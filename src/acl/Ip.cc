@@ -469,6 +469,7 @@ acl_ip_data::FactoryParse(const char *t)
     /* ignore IPv6 addresses when built with IPv4-only */
     if ( iptype == AF_INET6 && !Ip::EnableIpv6) {
         debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled.");
+        delete q;
         return NULL;
     }
 

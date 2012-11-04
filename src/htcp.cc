@@ -35,6 +35,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -44,11 +45,13 @@
 #include "htcp.h"
 #include "http.h"
 #include "HttpRequest.h"
+#include "HttpStateFlags.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
 #include "md5.h"
 #include "MemBuf.h"
 #include "refresh.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
@@ -745,7 +748,7 @@ htcpUnpackSpecifier(char *buf, int sz)
      */
     method = HttpRequestMethod(s->method, NULL);
 
-    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == METHOD_NONE ? HttpRequestMethod(METHOD_GET) : method);
+    s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
 
     if (s->request)
         HTTPMSGLOCK(s->request);
@@ -1307,7 +1310,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 static void
 htcpForwardClr(char *buf, int sz)
 {
-    peer *p;
+    CachePeer *p;
 
     for (p = Config.peers; p; p = p->next) {
         if (!p->options.htcp) {
@@ -1550,7 +1553,7 @@ htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
 }
 
 int
-htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
+htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
 {
     cache_key *save_key;
     static char pkt[8192];
@@ -1560,7 +1563,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     HttpHeader hdr(hoRequest);
     Packer pa;
     MemBuf mb;
-    http_state_flags flags;
+    HttpStateFlags flags;
 
     if (!Comm::IsConnOpen(htcpIncomingConn))
         return 0;
@@ -1603,10 +1606,10 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 }
 
 /*
- * Send an HTCP CLR message for a specified item to a given peer.
+ * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, peer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;
@@ -1615,7 +1618,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     HttpHeader hdr(hoRequest);
     Packer pa;
     MemBuf mb;
-    http_state_flags flags;
+    HttpStateFlags flags;
 
     if (!Comm::IsConnOpen(htcpIncomingConn))
         return;

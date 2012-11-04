@@ -36,13 +36,13 @@ namespace Ip
 {
 class Address;
 }
-extern pid_t ipcCreate(int type,
-                       const char *prog,
-                       const char *const args[],
-                       const char *name,
-                       Ip::Address &local_addr,
-                       int *rfd,
-                       int *wfd,
-                       void **hIpc);
+pid_t ipcCreate(int type,
+                const char *prog,
+                const char *const args[],
+                const char *name,
+                Ip::Address &local_addr,
+                int *rfd,
+                int *wfd,
+                void **hIpc);
 
 #endif /* SQUID_SQUIDIPC_H_ */

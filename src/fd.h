@@ -33,12 +33,12 @@
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 
-extern void fd_close(int fd);
-extern void fd_open(int fd, unsigned int type, const char *);
-extern void fd_note(int fd, const char *);
-extern void fd_bytes(int fd, int len, unsigned int type);
-extern void fdDumpOpen(void);
-extern int fdUsageHigh(void);
-extern void fdAdjustReserved(void);
+void fd_close(int fd);
+void fd_open(int fd, unsigned int type, const char *);
+void fd_note(int fd, const char *);
+void fd_bytes(int fd, int len, unsigned int type);
+void fdDumpOpen(void);
+int fdUsageHigh(void);
+void fdAdjustReserved(void);
 
 #endif /* SQUID_FD_H_ */

@@ -32,12 +32,13 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "wordlist.h"
-#include "SquidTime.h"
-#include "mgr/Registration.h"
 #include "helper.h"
 #include "HelperReply.h"
+#include "mgr/Registration.h"
+#include "SquidConfig.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "wordlist.h"
 
 /* MS VisualStudio Projects are monolitich, so we need the following
    #if to include the external DNS code in compile process when
@@ -130,7 +131,8 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
         debugs(34, DBG_IMPORTANT, "dnsSubmit: queue overload, rejecting " << lookup);
 
         const char *t = "$fail Temporary network problem, please retry later";
-        callback(data, HelperReply(t, strlen(t)));
+        HelperReply failReply(t, strlen(t));
+        callback(data, failReply);
         return;
     }
 

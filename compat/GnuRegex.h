@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef SQUID_REGEXP_LIBRARY_H
 #define SQUID_REGEXP_LIBRARY_H
 

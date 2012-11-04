@@ -37,10 +37,12 @@
 #if USE_AUTH
 
 #include "auth/UserRequest.h"
+#include "CachePeer.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "SquidConfig.h"
 #include "Store.h"
 
 #if HAVE_MATH_H
@@ -50,15 +52,15 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_userhash_peers = 0;
-static peer **userhash_peers = NULL;
+static CachePeer **userhash_peers = NULL;
 static OBJH peerUserHashCachemgr;
 static void peerUserHashRegisterWithCacheManager(void);
 
 static int
 peerSortWeight(const void *a, const void *b)
 {
-    const peer *const *p1 = (const peer *const *)a;
-    const peer *const *p2 = (const peer *const *)b;
+    const CachePeer *const *p1 = (const CachePeer *const *)a;
+    const CachePeer *const *p2 = (const CachePeer *const *)b;
     return (*p1)->weight - (*p2)->weight;
 }
 
@@ -69,8 +71,8 @@ peerUserHashInit(void)
     int K;
     int k;
     double P_last, X_last, Xn;
-    peer *p;
-    peer **P;
+    CachePeer *p;
+    CachePeer **P;
     char *t;
     /* Clean up */
 
@@ -101,7 +103,7 @@ peerUserHashInit(void)
     if (n_userhash_peers == 0)
         return;
 
-    userhash_peers = (peer **)xcalloc(n_userhash_peers, sizeof(*userhash_peers));
+    userhash_peers = (CachePeer **)xcalloc(n_userhash_peers, sizeof(*userhash_peers));
 
     /* Build a list of the found peers and calculate hashes and load factors */
     for (P = userhash_peers, p = Config.peers; p; p = p->next) {
@@ -169,13 +171,13 @@ peerUserHashRegisterWithCacheManager(void)
                         0, 1);
 }
 
-peer *
+CachePeer *
 peerUserHashSelectParent(HttpRequest * request)
 {
     int k;
     const char *c;
-    peer *p = NULL;
-    peer *tp;
+    CachePeer *p = NULL;
+    CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
@@ -197,7 +199,7 @@ peerUserHashSelectParent(HttpRequest * request)
     for (c = key; *c != 0; ++c)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
 
-    /* select peer */
+    /* select CachePeer */
     for (k = 0; k < n_userhash_peers; ++k) {
         tp = userhash_peers[k];
         combined_hash = (user_hash ^ tp->userhash.hash);
@@ -222,7 +224,7 @@ peerUserHashSelectParent(HttpRequest * request)
 static void
 peerUserHashCachemgr(StoreEntry * sentry)
 {
-    peer *p;
+    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",

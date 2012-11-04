@@ -33,7 +33,7 @@
  *
  */
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -48,13 +48,10 @@
 #include <sys/types.h>
 #endif
 
-extern int WIN32_pipe(int[2]);
+void WIN32_ExceptionHandlerInit(void);
 
-extern int WIN32_getrusage(int, struct rusage *);
-extern void WIN32_ExceptionHandlerInit(void);
-
-extern int Win32__WSAFDIsSet(int fd, fd_set* set);
-extern DWORD WIN32_IpAddrChangeMonitorInit();
+int Win32__WSAFDIsSet(int fd, fd_set* set);
+DWORD WIN32_IpAddrChangeMonitorInit();
 
 #endif
 

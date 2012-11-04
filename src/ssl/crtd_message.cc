@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "ssl/gadgets.h"
 #include "ssl/crtd_message.h"

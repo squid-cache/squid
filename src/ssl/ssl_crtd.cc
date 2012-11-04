@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "helpers/defines.h"
 #include "ssl/gadgets.h"

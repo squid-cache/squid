@@ -22,7 +22,7 @@ Auth::Negotiate::UserRequest::UserRequest()
 
 Auth::Negotiate::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
     safe_free(server_blob);
     safe_free(client_blob);
 
@@ -260,7 +260,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     if (lm_request->authserver == NULL)
         lm_request->authserver = reply.whichServer.get(); // XXX: no locking?
     else
-        assert(lm_request->authserver == reply.whichServer.raw());
+        assert(reply.whichServer == lm_request->authserver);
 
     /* seperate out the useful data */
     char *modifiableBlob = reply.modifiableOther().content();
@@ -274,13 +274,12 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     const char *blob = modifiableBlob;
 
-    switch(reply.result)
-    {
+    switch (reply.result) {
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.must_keepalive = 1;
-        if (lm_request->request->flags.proxy_keepalive) {
+        lm_request->request->flags.mustKeepalive = 1;
+        if (lm_request->request->flags.proxyKeepalive) {
             lm_request->server_blob = xstrdup(reply.authToken.content());
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
@@ -291,8 +290,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
         break;
 
-    case HelperReply::Okay:
-    {
+    case HelperReply::Okay: {
         if (!reply.user.hasContent()) {
             // XXX: handle a success with no username better
             /* protocol error */
@@ -335,7 +333,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << reply.user << "'");
     }
-        break;
+    break;
 
     case HelperReply::NA:
     case HelperReply::Error:

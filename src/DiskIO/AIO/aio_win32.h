@@ -34,15 +34,11 @@
 
 #if USE_DISKIO_AIO
 
-#if _SQUID_CYGWIN_
-#include "squid_windows.h"
-#endif
-
 #ifndef off64_t
 typedef int64_t	off64_t;
 #endif
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
 union sigval {
     int sival_int; /* integer value */
@@ -104,6 +100,6 @@ int aio_error64(const struct aiocb64 *);
 int aio_open(const char *, int);
 void aio_close(int);
 
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 #endif /* USE_DISKIO_AIO */
 #endif /* __WIN32_AIO_H__ */

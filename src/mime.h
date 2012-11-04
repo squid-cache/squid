@@ -1,6 +1,6 @@
 /*
- * DEBUG: section
- * AUTHOR:
+ * DEBUG: section 25    MIME Parsing and Internal Icons
+ * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,12 +33,12 @@
 #ifndef SQUID_MIME_H_
 #define SQUID_MIME_H_
 
-extern void mimeInit(char *filename);
-extern char *mimeGetContentEncoding(const char *fn);
-extern char *mimeGetContentType(const char *fn);
-extern const char *mimeGetIconURL(const char *fn);
-extern char mimeGetTransferMode(const char *fn);
-extern int mimeGetDownloadOption(const char *fn);
-extern int mimeGetViewOption(const char *fn);
+void mimeInit(char *filename);
+char *mimeGetContentEncoding(const char *fn);
+char *mimeGetContentType(const char *fn);
+const char *mimeGetIconURL(const char *fn);
+char mimeGetTransferMode(const char *fn);
+int mimeGetDownloadOption(const char *fn);
+int mimeGetViewOption(const char *fn);
 
 #endif /* SQUID_MIME_H_ */

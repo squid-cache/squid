@@ -51,6 +51,7 @@
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "refresh.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreSearch.h"
@@ -376,7 +377,7 @@ storeDigestRebuildStep(void *datanotused)
 static void
 storeDigestRewriteStart(void *datanotused)
 {
-    request_flags flags;
+    RequestFlags flags;
     char *url;
     StoreEntry *e;
 
@@ -392,7 +393,7 @@ storeDigestRewriteStart(void *datanotused)
     /* make new store entry */
     url = internalLocalUri("/squid-internal-periodic/", StoreDigestFileName);
     flags.cachable = 1;
-    e = storeCreateEntry(url, url, flags, METHOD_GET);
+    e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());

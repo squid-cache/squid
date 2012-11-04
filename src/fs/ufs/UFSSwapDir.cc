@@ -46,6 +46,7 @@
 #include "store_key_md5.h"
 #include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "tools.h"
@@ -490,7 +491,7 @@ Fs::Ufs::UFSSwapDir::reference(StoreEntry &e)
 }
 
 bool
-Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
+Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e, bool)
 {
     debugs(47, 3, HERE << "dereferencing " << &e << " " <<
            e.swap_dirn << "/" << e.swap_filen);
@@ -573,14 +574,7 @@ Fs::Ufs::UFSSwapDir::createDirectory(const char *aPath, int should_exist)
         } else {
             fatalf("Swap directory %s is not a directory.", aPath);
         }
-
-#if _SQUID_MSWIN_
-
-    } else if (0 == mkdir(aPath)) {
-#else
-
     } else if (0 == mkdir(aPath, 0755)) {
-#endif
         debugs(47, (should_exist ? DBG_IMPORTANT : 3), aPath << " created");
         created = 1;
     } else {
@@ -1306,14 +1300,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     if (dir_pointer == NULL) {
         if (errno == ENOENT) {
             debugs(36, DBG_CRITICAL, HERE << "WARNING: Creating " << p1);
-#if _SQUID_MSWIN_
-
-            if (mkdir(p1) == 0)
-#else
-
             if (mkdir(p1, 0777) == 0)
-#endif
-
                 return 0;
         }
 

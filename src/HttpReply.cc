@@ -32,6 +32,7 @@
  */
 
 #include "squid.h"
+#include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
 #include "globals.h"
 #include "HttpBody.h"
@@ -41,6 +42,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
@@ -426,7 +428,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
 {
     if (sline.version.major < 1)
         return -1;
-    else if (method.id() == METHOD_HEAD)
+    else if (method.id() == Http::METHOD_HEAD)
         return 0;
     else if (sline.status == HTTP_OK)
         (void) 0;		/* common case, continue */
@@ -530,7 +532,7 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
 {
     bool expectBody = true;
 
-    if (req_method == METHOD_HEAD)
+    if (req_method == Http::METHOD_HEAD)
         expectBody = false;
     else if (sline.status == HTTP_NO_CONTENT)
         expectBody = false;
@@ -596,7 +598,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
 
     ACLFilledChecklist ch(NULL, &request, NULL);
     ch.reply = HTTPMSGLOCK(this); // XXX: this lock makes method non-const
-    for (acl_size_t *l = Config.ReplyBodySize; l; l = l -> next) {
+    for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
             debugs(58, 4, HERE << "bodySizeMax=" << bodySizeMax);

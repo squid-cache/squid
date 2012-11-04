@@ -34,8 +34,8 @@
 #define MEMBLOB_DEBUGSECTION 24
 
 #include "base/InstanceId.h"
+#include "base/RefCount.h"
 #include "MemPool.h"
-#include "RefCount.h"
 
 /// Various MemBlob class-wide statistics.
 class MemBlobStats

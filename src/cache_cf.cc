@@ -32,11 +32,18 @@
 
 #include "squid.h"
 #include "acl/Acl.h"
+#include "acl/AclAddress.h"
+#include "acl/AclDenyInfoList.h"
+#include "acl/AclNameList.h"
+#include "acl/AclSizeLimit.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
 #include "anyp/PortCfg.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
+#include "mgr/ActionPasswordList.h"
+#include "CachePeer.h"
+#include "CachePeerDomainList.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -53,16 +60,20 @@
 #include "ip/tools.h"
 #include "ipc/Kids.h"
 #include "log/Config.h"
+#include "log/CustomLog.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "NeighborTypeDomainList.h"
 #include "Parsing.h"
 #include "PeerDigest.h"
+#include "RefreshPattern.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
+#include "ssl/ProxyCerts.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
-#include "structs.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 #include "neighbors.h"
@@ -123,9 +134,6 @@
 static void parse_adaptation_service_set_type();
 static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
-static void parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
-static void dump_adaptation_meta_type(StoreEntry *, const char *, Adaptation::Config::MetaHeaders &);
-static void free_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
 #endif
 
 #if ICAP_CLIENT
@@ -148,7 +156,7 @@ static void free_ecap_service_type(Adaptation::Ecap::Config *);
 
 static peer_t parseNeighborType(const char *s);
 
-CBDATA_TYPE(peer);
+CBDATA_TYPE(CachePeer);
 
 static const char *const T_MILLISECOND_STR = "millisecond";
 static const char *const T_SECOND_STR = "second";
@@ -168,14 +176,14 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-static void parse_access_log(customlog ** customlog_definitions);
-static int check_null_access_log(customlog *customlog_definitions);
-static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
-static void free_access_log(customlog ** definitions);
+static void parse_access_log(CustomLog ** customlog_definitions);
+static int check_null_access_log(CustomLog *customlog_definitions);
+static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * definitions);
+static void free_access_log(CustomLog ** definitions);
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
-static void parse_refreshpattern(refresh_t **);
+static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
 static void parse_u_short(unsigned short * var);
@@ -208,9 +216,12 @@ static void parse_http_header_replace(HeaderManglers **manglers);
 static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderWithAclList *headers);
 static void parse_HeaderWithAclList(HeaderWithAclList **header);
 static void free_HeaderWithAclList(HeaderWithAclList **header);
-static void parse_denyinfo(acl_deny_info_list ** var);
-static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
-static void free_denyinfo(acl_deny_info_list ** var);
+static void parse_note(Notes *);
+static void dump_note(StoreEntry *, const char *, Notes &);
+static void free_note(Notes *);
+static void parse_denyinfo(AclDenyInfoList ** var);
+static void dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var);
+static void free_denyinfo(AclDenyInfoList ** var);
 
 #if USE_WCCPv2
 static void parse_IpAddress_list(Ip::Address_list **);
@@ -759,7 +770,7 @@ configDoConfigure(void)
 #if USE_HTTP_VIOLATIONS
 
     {
-        const refresh_t *R;
+        const RefreshPattern *R;
 
         for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.override_expire)
@@ -793,15 +804,6 @@ configDoConfigure(void)
                 continue;
 
             debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-reload' in 'refresh_pattern' violates HTTP");
-
-            break;
-        }
-
-        for (R = Config.Refresh; R; R = R->next) {
-            if (!R->flags.ignore_no_cache)
-                continue;
-
-            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-no-cache' in 'refresh_pattern' violates HTTP");
 
             break;
         }
@@ -911,14 +913,13 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-    HttpRequestMethod::Configure(Config);
 #if USE_SSL
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
-    for (peer *p = Config.peers; p != NULL; p = p->next) {
+    for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
         if (p->use_ssl) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
             p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
@@ -1360,13 +1361,13 @@ free_address(Ip::Address *addr)
     addr->SetEmpty();
 }
 
-CBDATA_TYPE(acl_address);
+CBDATA_TYPE(AclAddress);
 
 static void
-dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
+dump_acl_address(StoreEntry * entry, const char *name, AclAddress * head)
 {
     char buf[MAX_IPSTRLEN];
-    acl_address *l;
+    AclAddress *l;
 
     for (l = head; l; l = l->next) {
         if (!l->addr.IsAnyAddr())
@@ -1383,17 +1384,17 @@ dump_acl_address(StoreEntry * entry, const char *name, acl_address * head)
 static void
 freed_acl_address(void *data)
 {
-    acl_address *l = static_cast<acl_address *>(data);
+    AclAddress *l = static_cast<AclAddress *>(data);
     aclDestroyAclList(&l->aclList);
 }
 
 static void
-parse_acl_address(acl_address ** head)
+parse_acl_address(AclAddress ** head)
 {
-    acl_address *l;
-    acl_address **tail = head;	/* sane name below */
-    CBDATA_INIT_TYPE_FREECB(acl_address, freed_acl_address);
-    l = cbdataAlloc(acl_address);
+    AclAddress *l;
+    AclAddress **tail = head;	/* sane name below */
+    CBDATA_INIT_TYPE_FREECB(AclAddress, freed_acl_address);
+    l = cbdataAlloc(AclAddress);
     parse_address(&l->addr);
     aclParseAclList(LegacyParser, &l->aclList);
 
@@ -1404,10 +1405,10 @@ parse_acl_address(acl_address ** head)
 }
 
 static void
-free_acl_address(acl_address ** head)
+free_acl_address(AclAddress ** head)
 {
     while (*head) {
-        acl_address *l = *head;
+        AclAddress *l = *head;
         *head = l->next;
         cbdataFree(l);
     }
@@ -1554,12 +1555,12 @@ free_acl_nfmark(acl_nfmark ** head)
 }
 #endif /* SO_MARK */
 
-CBDATA_TYPE(acl_size_t);
+CBDATA_TYPE(AclSizeLimit);
 
 static void
-dump_acl_b_size_t(StoreEntry * entry, const char *name, acl_size_t * head)
+dump_acl_b_size_t(StoreEntry * entry, const char *name, AclSizeLimit * head)
 {
-    acl_size_t *l;
+    AclSizeLimit *l;
 
     for (l = head; l; l = l->next) {
         if (l->size != -1)
@@ -1576,19 +1577,19 @@ dump_acl_b_size_t(StoreEntry * entry, const char *name, acl_size_t * head)
 static void
 freed_acl_b_size_t(void *data)
 {
-    acl_size_t *l = static_cast<acl_size_t *>(data);
+    AclSizeLimit *l = static_cast<AclSizeLimit *>(data);
     aclDestroyAclList(&l->aclList);
 }
 
 static void
-parse_acl_b_size_t(acl_size_t ** head)
+parse_acl_b_size_t(AclSizeLimit ** head)
 {
-    acl_size_t *l;
-    acl_size_t **tail = head;	/* sane name below */
+    AclSizeLimit *l;
+    AclSizeLimit **tail = head;	/* sane name below */
 
-    CBDATA_INIT_TYPE_FREECB(acl_size_t, freed_acl_b_size_t);
+    CBDATA_INIT_TYPE_FREECB(AclSizeLimit, freed_acl_b_size_t);
 
-    l = cbdataAlloc(acl_size_t);
+    l = cbdataAlloc(AclSizeLimit);
 
     parse_b_int64_t(&l->size);
 
@@ -1601,10 +1602,10 @@ parse_acl_b_size_t(acl_size_t ** head)
 }
 
 static void
-free_acl_b_size_t(acl_size_t ** head)
+free_acl_b_size_t(AclSizeLimit ** head)
 {
     while (*head) {
-        acl_size_t *l = *head;
+        AclSizeLimit *l = *head;
         *head = l->next;
         l->next = NULL;
         cbdataFree(l);
@@ -1727,7 +1728,7 @@ parse_http_header_access(HeaderManglers **pm)
     if (!*pm)
         *pm = new HeaderManglers;
     HeaderManglers *manglers = *pm;
-    header_mangler *mangler = manglers->track(t);
+    headerMangler *mangler = manglers->track(t);
     assert(mangler);
     parse_acl_access(&mangler->access_list);
 }
@@ -1965,10 +1966,10 @@ peer_type_str(const peer_t type)
 }
 
 static void
-dump_peer(StoreEntry * entry, const char *name, peer * p)
+dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
-    domain_ping *d;
-    domain_type *t;
+    CachePeerDomainList *d;
+    NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
     while (p != NULL) {
@@ -2065,12 +2066,12 @@ GetUdpService(void)
 }
 
 static void
-parse_peer(peer ** head)
+parse_peer(CachePeer ** head)
 {
     char *token = NULL;
-    peer *p;
-    CBDATA_INIT_TYPE_FREECB(peer, peerDestroy);
-    p = cbdataAlloc(peer);
+    CachePeer *p;
+    CBDATA_INIT_TYPE_FREECB(CachePeer, peerDestroy);
+    p = cbdataAlloc(CachePeer);
     p->http_port = CACHE_HTTP_PORT;
     p->icp.port = CACHE_ICP_PORT;
     p->weight = 1;
@@ -2344,9 +2345,9 @@ parse_peer(peer ** head)
 }
 
 static void
-free_peer(peer ** P)
+free_peer(CachePeer ** P)
 {
-    peer *p;
+    CachePeer *p;
 
     while ((p = *P) != NULL) {
         *P = p->next;
@@ -2362,7 +2363,7 @@ free_peer(peer ** P)
 }
 
 static void
-dump_cachemgrpasswd(StoreEntry * entry, const char *name, cachemgr_passwd * list)
+dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordList * list)
 {
     wordlist *w;
 
@@ -2382,15 +2383,15 @@ dump_cachemgrpasswd(StoreEntry * entry, const char *name, cachemgr_passwd * list
 }
 
 static void
-parse_cachemgrpasswd(cachemgr_passwd ** head)
+parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
     char *passwd = NULL;
     wordlist *actions = NULL;
-    cachemgr_passwd *p;
-    cachemgr_passwd **P;
+    Mgr::ActionPasswordList *p;
+    Mgr::ActionPasswordList **P;
     parse_string(&passwd);
     parse_wordlist(&actions);
-    p = static_cast<cachemgr_passwd *>(xcalloc(1, sizeof(cachemgr_passwd)));
+    p = new Mgr::ActionPasswordList;
     p->passwd = passwd;
     p->actions = actions;
 
@@ -2399,7 +2400,7 @@ parse_cachemgrpasswd(cachemgr_passwd ** head)
          * See if any of the actions from this line already have a
          * password from previous lines.  The password checking
          * routines in cache_manager.c take the the password from
-         * the first cachemgr_passwd struct that contains the
+         * the first Mgr::ActionPasswordList that contains the
          * requested action.  Thus, we should warn users who might
          * think they can have two passwords for the same action.
          */
@@ -2420,9 +2421,9 @@ parse_cachemgrpasswd(cachemgr_passwd ** head)
 }
 
 static void
-free_cachemgrpasswd(cachemgr_passwd ** head)
+free_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
-    cachemgr_passwd *p;
+    Mgr::ActionPasswordList *p;
 
     while ((p = *head) != NULL) {
         *head = p->next;
@@ -2433,9 +2434,9 @@ free_cachemgrpasswd(cachemgr_passwd ** head)
 }
 
 static void
-dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
+dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var)
 {
-    acl_name_list *a;
+    AclNameList *a;
 
     while (var != NULL) {
         storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
@@ -2450,18 +2451,18 @@ dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var)
 }
 
 static void
-parse_denyinfo(acl_deny_info_list ** var)
+parse_denyinfo(AclDenyInfoList ** var)
 {
     aclParseDenyInfoLine(var);
 }
 
 void
-free_denyinfo(acl_deny_info_list ** list)
+free_denyinfo(AclDenyInfoList ** list)
 {
-    acl_deny_info_list *a = NULL;
-    acl_deny_info_list *a_next = NULL;
-    acl_name_list *l = NULL;
-    acl_name_list *l_next = NULL;
+    AclDenyInfoList *a = NULL;
+    AclDenyInfoList *a_next = NULL;
+    AclNameList *l = NULL;
+    AclNameList *l_next = NULL;
 
     for (a = *list; a; a = a_next) {
         for (l = a->acl_list; l; l = l_next) {
@@ -2482,7 +2483,7 @@ static void
 parse_peer_access(void)
 {
     char *host = NULL;
-    peer *p;
+    CachePeer *p;
 
     if (!(host = strtok(NULL, w_space)))
         self_destruct();
@@ -2505,20 +2506,20 @@ parse_hostdomain(void)
         self_destruct();
 
     while ((domain = strtok(NULL, list_sep))) {
-        domain_ping *l = NULL;
-        domain_ping **L = NULL;
-        peer *p;
+        CachePeerDomainList *l = NULL;
+        CachePeerDomainList **L = NULL;
+        CachePeer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
             debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
             continue;
         }
 
-        l = static_cast<domain_ping *>(xcalloc(1, sizeof(domain_ping)));
-        l->do_ping = 1;
+        l = static_cast<CachePeerDomainList *>(xcalloc(1, sizeof(CachePeerDomainList)));
+        l->do_ping = true;
 
         if (*domain == '!') {	/* check for !.edu */
-            l->do_ping = 0;
+            l->do_ping = false;
             ++domain;
         }
 
@@ -2543,16 +2544,16 @@ parse_hostdomaintype(void)
         self_destruct();
 
     while ((domain = strtok(NULL, list_sep))) {
-        domain_type *l = NULL;
-        domain_type **L = NULL;
-        peer *p;
+        NeighborTypeDomainList *l = NULL;
+        NeighborTypeDomainList **L = NULL;
+        CachePeer *p;
 
         if ((p = peerFindByName(host)) == NULL) {
             debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
             return;
         }
 
-        l = static_cast<domain_type *>(xcalloc(1, sizeof(domain_type)));
+        l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
@@ -2637,7 +2638,7 @@ parse_tristate(int *var)
 #define free_tristate free_int
 
 static void
-dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
+dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
     while (head != NULL) {
         storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
@@ -2671,9 +2672,6 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
         if (head->flags.ignore_reload)
             storeAppendPrintf(entry, " ignore-reload");
 
-        if (head->flags.ignore_no_cache)
-            storeAppendPrintf(entry, " ignore-no-cache");
-
         if (head->flags.ignore_no_store)
             storeAppendPrintf(entry, " ignore-no-store");
 
@@ -2695,7 +2693,7 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 }
 
 static void
-parse_refreshpattern(refresh_t ** head)
+parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
     char *pattern;
@@ -2712,7 +2710,6 @@ parse_refreshpattern(refresh_t ** head)
     int override_lastmod = 0;
     int reload_into_ims = 0;
     int ignore_reload = 0;
-    int ignore_no_cache = 0;
     int ignore_no_store = 0;
     int ignore_must_revalidate = 0;
     int ignore_private = 0;
@@ -2720,7 +2717,7 @@ parse_refreshpattern(refresh_t ** head)
 #endif
 
     int i;
-    refresh_t *t;
+    RefreshPattern *t;
     regex_t comp;
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
@@ -2791,8 +2788,6 @@ parse_refreshpattern(refresh_t ** head)
             override_expire = 1;
         else if (!strcmp(token, "override-lastmod"))
             override_lastmod = 1;
-        else if (!strcmp(token, "ignore-no-cache"))
-            ignore_no_cache = 1;
         else if (!strcmp(token, "ignore-no-store"))
             ignore_no_store = 1;
         else if (!strcmp(token, "ignore-must-revalidate"))
@@ -2811,6 +2806,8 @@ parse_refreshpattern(refresh_t ** head)
             /* tell client_side.c that this is used */
 #endif
 
+        } else if (!strcmp(token, "ignore-no-cache")) {
+            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-no-cache' is obsolete. Remove it.");
         } else
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
@@ -2825,7 +2822,7 @@ parse_refreshpattern(refresh_t ** head)
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = static_cast<refresh_t *>(xcalloc(1, sizeof(refresh_t)));
+    t = static_cast<RefreshPattern *>(xcalloc(1, sizeof(RefreshPattern)));
     t->pattern = (char *) xstrdup(pattern);
     t->compiled_pattern = comp;
     t->min = min;
@@ -2857,9 +2854,6 @@ parse_refreshpattern(refresh_t ** head)
     if (ignore_reload)
         t->flags.ignore_reload = 1;
 
-    if (ignore_no_cache)
-        t->flags.ignore_no_cache = 1;
-
     if (ignore_no_store)
         t->flags.ignore_no_store = 1;
 
@@ -2885,9 +2879,9 @@ parse_refreshpattern(refresh_t ** head)
 }
 
 static void
-free_refreshpattern(refresh_t ** head)
+free_refreshpattern(RefreshPattern ** head)
 {
-    refresh_t *t;
+    RefreshPattern *t;
 
     while ((t = *head) != NULL) {
         *head = t->next;
@@ -3294,18 +3288,6 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
     storeAppendPrintf(entry, "\n");
 }
 
-void
-YesNoNone::configure(bool beSet)
-{
-    option = beSet ? +1 : -1;
-}
-
-YesNoNone::operator void*() const
-{
-    assert(option != 0); // must call configure() first
-    return option > 0 ? (void*)this : NULL;
-}
-
 inline void
 free_YesNoNone(YesNoNone *)
 {
@@ -3666,7 +3648,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         if (t) {
             ++t;
             s->tcp_keepalive.timeout = atoi(t);
-            t = strchr(t, ',');
+            // t = strchr(t, ','); // not really needed, left in as documentation
         }
 #if USE_SSL
     } else if (strcasecmp(token, "sslBump") == 0) {
@@ -3981,11 +3963,11 @@ strtokFile(void)
 #include "AccessLogEntry.h"
 
 static void
-parse_access_log(customlog ** logs)
+parse_access_log(CustomLog ** logs)
 {
     const char *filename, *logdef_name;
 
-    customlog *cl = (customlog *)xcalloc(1, sizeof(*cl));
+    CustomLog *cl = (CustomLog *)xcalloc(1, sizeof(*cl));
 
     if ((filename = strtok(NULL, w_space)) == NULL) {
         self_destruct();
@@ -4055,15 +4037,15 @@ parse_access_log(customlog ** logs)
 }
 
 static int
-check_null_access_log(customlog *customlog_definitions)
+check_null_access_log(CustomLog *customlog_definitions)
 {
     return customlog_definitions == NULL;
 }
 
 static void
-dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
+dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
 {
-    customlog *log;
+    CustomLog *log;
 
     for (log = logs; log; log = log->next) {
         storeAppendPrintf(entry, "%s ", name);
@@ -4115,10 +4097,10 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 }
 
 static void
-free_access_log(customlog ** definitions)
+free_access_log(CustomLog ** definitions)
 {
     while (*definitions) {
-        customlog *log = *definitions;
+        CustomLog *log = *definitions;
         *definitions = log->next;
 
         log->logFormat = NULL;
@@ -4228,24 +4210,6 @@ static void
 parse_adaptation_access_type()
 {
     Adaptation::Config::ParseAccess(LegacyParser);
-}
-
-static void
-parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
-{
-    Adaptation::Config::ParseMetaHeader(LegacyParser);
-}
-
-static void
-dump_adaptation_meta_type(StoreEntry *entry, const char *name, Adaptation::Config::MetaHeaders &)
-{
-    Adaptation::Config::DumpMetaHeader(entry, name);
-}
-
-static void
-free_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
-{
-    // Nothing to do, it is released inside Adaptation::Config::freeService()
 }
 #endif /* USE_ADAPTATION */
 
@@ -4677,4 +4641,20 @@ static void free_HeaderWithAclList(HeaderWithAclList **header)
     }
     delete *header;
     *header = NULL;
+}
+
+static void parse_note(Notes *notes)
+{
+    assert(notes);
+    notes->parse(LegacyParser);
+}
+
+static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
+{
+    notes.dump(entry, name);
+}
+
+static void free_note(Notes *notes)
+{
+    notes->clean();
 }

@@ -55,13 +55,11 @@ class StringRegistry
 public:
     static StringRegistry &Instance();
 
-    void add
-    (String const *);
+    void add(String const *);
 
     StringRegistry();
 
-    void remove
-    (String const *);
+    void remove(String const *);
 
 private:
     static OBJH Stat;
@@ -84,8 +82,8 @@ class String
 
 public:
     _SQUID_INLINE_ String();
-    String (char const *);
-    String (String const &);
+    String(char const *);
+    String(String const &);
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
@@ -131,7 +129,7 @@ public:
     void append(char const *buf, int len);
     void append(char const *buf);
     void append(char const);
-    void append (String const &);
+    void append(String const &);
     void absorb(String &old);
     const char * pos(char const *aString) const;
     const char * pos(char const ch) const;
@@ -141,19 +139,19 @@ public:
     size_type find(char const *aString) const;
     const char * rpos(char const ch) const;
     size_type rfind(char const ch) const;
-    _SQUID_INLINE_ int cmp (char const *) const;
-    _SQUID_INLINE_ int cmp (char const *, size_type count) const;
-    _SQUID_INLINE_ int cmp (String const &) const;
-    _SQUID_INLINE_ int caseCmp (char const *) const;
-    _SQUID_INLINE_ int caseCmp (char const *, size_type count) const;
-    _SQUID_INLINE_ int caseCmp (String const &) const;
+    _SQUID_INLINE_ int cmp(char const *) const;
+    _SQUID_INLINE_ int cmp(char const *, size_type count) const;
+    _SQUID_INLINE_ int cmp(String const &) const;
+    _SQUID_INLINE_ int caseCmp(char const *) const;
+    _SQUID_INLINE_ int caseCmp(char const *, size_type count) const;
+    _SQUID_INLINE_ int caseCmp(String const &) const;
 
     String substr(size_type from, size_type to) const;
 
     _SQUID_INLINE_ void cut(size_type newLength);
 
 #if DEBUGSTRINGS
-    void stat (StoreEntry *) const;
+    void stat(StoreEntry *) const;
 #endif
 
 private:
@@ -183,9 +181,9 @@ _SQUID_INLINE_ bool operator<(const String &a, const String &b);
 #include "String.cci"
 #endif
 
-extern const char *checkNullString(const char *p);
-extern int stringHasWhitespace(const char *);
-extern int stringHasCntl(const char *);
-extern char *strwordtok(char *buf, char **t);
+const char *checkNullString(const char *p);
+int stringHasWhitespace(const char *);
+int stringHasCntl(const char *);
+char *strwordtok(char *buf, char **t);
 
 #endif /* SQUID_STRING_H */

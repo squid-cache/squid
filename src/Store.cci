@@ -31,6 +31,7 @@
  */
 
 #include "MemObject.h"
+#include "HttpReply.h"
 
 /**
  \retval true	Store contains 0 bytes of data.

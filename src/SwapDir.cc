@@ -36,6 +36,7 @@
 #include "ConfigOption.h"
 #include "globals.h"
 #include "Parsing.h"
+#include "SquidConfig.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "tools.h"
@@ -117,7 +118,7 @@ void
 SwapDir::reference(StoreEntry &) {}
 
 bool
-SwapDir::dereference(StoreEntry &)
+SwapDir::dereference(StoreEntry &, bool)
 {
     return true; // keep in global store_table
 }

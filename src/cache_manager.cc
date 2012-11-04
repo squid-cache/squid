@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "mgr/ActionPasswordList.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "Debug.h"
@@ -49,6 +50,7 @@
 #include "mgr/QueryParams.h"
 #include "protos.h"
 #include "tools.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -458,12 +460,12 @@ CacheManager::ActionProtection(const Mgr::ActionProfile::Pointer &profile)
 }
 
 /*
- \ingroup CacheManagerInternal
+ * \ingroup CacheManagerInternal
  * gets from the global Config the password the user would need to supply
  * for the action she queried
  */
 char *
-CacheManager::PasswdGet(cachemgr_passwd * a, const char *action)
+CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
 {
     wordlist *w;
 

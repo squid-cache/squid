@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SSL_CERTIFICATE_DB_H
 #define SQUID_SSL_CERTIFICATE_DB_H
 
@@ -27,7 +23,7 @@ public:
     const char *name() const { return filename.c_str(); }
 private:
     std::string filename;
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     HANDLE hFile; ///< Windows file handle.
 #else
     int fd; ///< Linux file descriptor.

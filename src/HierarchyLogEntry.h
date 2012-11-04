@@ -34,6 +34,7 @@
 
 #include "comm/Connection.h"
 #include "hier_code.h"
+#include "HttpStatusCode.h"
 #include "lookup_t.h"
 #include "rfc2181.h"
 #include "PingData.h"

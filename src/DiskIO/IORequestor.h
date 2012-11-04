@@ -32,7 +32,7 @@
 #ifndef SQUID_IOREQUESTOR_H
 #define SQUID_IOREQUESTOR_H
 
-#include "RefCount.h"
+#include "base/RefCount.h"
 
 class ReadRequest;
 

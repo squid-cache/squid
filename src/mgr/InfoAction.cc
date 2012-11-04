@@ -19,9 +19,9 @@
 #include "Store.h"
 #include "tools.h"
 
-extern void GetInfo(Mgr::InfoActionData& stats);
-extern void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
-extern void DumpMallocStatistics(StoreEntry* sentry);
+void GetInfo(Mgr::InfoActionData& stats);
+void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
+void DumpMallocStatistics(StoreEntry* sentry);
 
 Mgr::InfoActionData::InfoActionData()
 {

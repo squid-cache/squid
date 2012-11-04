@@ -1,7 +1,3 @@
-/*
- * 2008/11/14
- */
-
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "ssl/Config.h"
@@ -10,6 +6,7 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "wordlist.h"
+#include "SquidConfig.h"
 
 Ssl::Helper * Ssl::Helper::GetInstance()
 {
@@ -97,7 +94,8 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
             fatal("SSL servers not responding for 3 minutes");
         debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
         const char *errMsg = "BH message=\"error 45 Temporary network problem, please retry later\"";
-        callback(data, HelperReply(errMsg,strlen(errMsg)));
+        HelperReply failReply(errMsg,strlen(errMsg));
+        callback(data, failReply);
         return;
     }
 

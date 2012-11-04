@@ -164,7 +164,7 @@ static const char *make_auth_header(const cachemgr_request * req);
 
 static int check_target_acl(const char *hostname, int port);
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 static int s_iInitCount = 0;
 
 int Win32SockInit(void)
@@ -607,7 +607,7 @@ static int
 read_reply(int s, cachemgr_request * req)
 {
     char buf[4 * 1024];
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     int reply;
     char *tmpfile = tempnam(NULL, "tmp0000");
@@ -631,7 +631,7 @@ read_reply(int s, cachemgr_request * req)
         parse_menu = 1;
 
     if (fp == NULL) {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         perror(tmpfile);
         xfree(tmpfile);
 #else
@@ -643,7 +643,7 @@ read_reply(int s, cachemgr_request * req)
         return 1;
     }
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     while ((reply=recv(s, buf , sizeof(buf), 0)) > 0)
         fwrite(buf, 1, reply, fp);
@@ -782,7 +782,7 @@ read_reply(int s, cachemgr_request * req)
     }
 
     fclose(fp);
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     remove(tmpfile);
     xfree(tmpfile);
@@ -897,7 +897,7 @@ main(int argc, char *argv[])
     cachemgr_request *req;
 
     now = time(NULL);
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     Win32SockInit();
     atexit(Win32SockCleanup);
@@ -1005,7 +1005,7 @@ read_request(void)
     else
         return NULL;
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     if (strlen(buf) == 0 || strlen(buf) == 4000)
 #else
