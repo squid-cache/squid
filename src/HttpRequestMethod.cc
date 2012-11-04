@@ -1,89 +1,25 @@
-
 /*
  * DEBUG: section 73    HTTP Request
- * AUTHOR: Duane Wessels
- *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
 #include "HttpRequestMethod.h"
 #include "wordlist.h"
 
-const char* HttpRequestMethod::RequestMethodStr[] = {
-    "NONE",
-    "GET",
-    "POST",
-    "PUT",
-    "HEAD",
-    "CONNECT",
-    "TRACE",
-    "PURGE",
-    "OPTIONS",
-    "DELETE",
-    "PROPFIND",
-    "PROPPATCH",
-    "MKCOL",
-    "COPY",
-    "MOVE",
-    "LOCK",
-    "UNLOCK",
-    "BMOVE",
-    "BDELETE",
-    "BPROPFIND",
-    "BPROPPATCH",
-    "BCOPY",
-    "SEARCH",
-    "SUBSCRIBE",
-    "UNSUBSCRIBE",
-    "POLL",
-    "REPORT",
-    "MKACTIVITY",
-    "CHECKOUT",
-    "MERGE",
-    "ERROR"
-};
-
-static
-_method_t &operator++ (_method_t &aMethod)
+static Http::MethodType &
+operator++ (Http::MethodType &aMethod)
 {
     int tmp = (int)aMethod;
-    aMethod = (_method_t)(++tmp);
+    aMethod = (Http::MethodType)(++tmp);
     return aMethod;
 }
 
-/*
+/**
  * Construct a HttpRequestMethod from a NULL terminated string such as "GET"
  * or from a range of chars, * such as "GET" from "GETFOOBARBAZ"
  * (pass in pointer to G and pointer to F.)
  */
-HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod (METHOD_NONE)
+HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod (Http::METHOD_NONE)
 {
     if (begin == NULL)
         return;
@@ -106,73 +42,26 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
         end = begin + strcspn(begin, w_space);
 
     if (end == begin) {
-        theMethod = METHOD_NONE;
+        theMethod = Http::METHOD_NONE;
         return;
     }
 
-    for (++theMethod; theMethod < METHOD_ENUM_END; ++theMethod) {
-        if (0 == strncasecmp(begin, RequestMethodStr[theMethod], end-begin)) {
+    for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
+        if (0 == strncasecmp(begin, Http::MethodType_str[theMethod], end-begin)) {
             return;
         }
     }
 
     // if method not found and method string is not null then it is other method
-    theMethod = METHOD_OTHER;
+    theMethod = Http::METHOD_OTHER;
     theImage.limitInit(begin,end-begin);
-}
-
-/** \todo AYJ: this _should_ be obsolete. Since all such methods fit nicely into METHOD_OTHER now. */
-void
-HttpRequestMethod::AddExtension(const char *mstr)
-{
-#if 0 /* obsolete now that we have METHOD_OTHER always enabled */
-    _method_t method = METHOD_NONE;
-
-    for (++method; method < METHOD_ENUM_END; ++method) {
-        if (0 == strcmp(mstr, RequestMethodStr[method])) {
-            debugs(23, 2, "Extension method '" << mstr << "' already exists");
-            return;
-        }
-
-        if (0 != strncmp("%EXT", RequestMethodStr[method], 4))
-            continue;
-
-        /* Don't free statically allocated "%EXTnn" string */
-        RequestMethodStr[method] = xstrdup(mstr);
-
-        debugs(23, DBG_IMPORTANT, "Extension method '" << mstr << "' added, enum=" << method);
-
-        return;
-    }
-
-    debugs(23, DBG_IMPORTANT, "WARNING: Could not add new extension method '" << mstr << "' due to lack of array space");
-#endif
-}
-
-void
-HttpRequestMethod::Configure(SquidConfig &cfg)
-{
-#if 0 /* extension methods obsolete now that we have METHOD_OTHER always enabled */
-    wordlist *w = cfg.ext_methods;
-
-    while (w) {
-        char *s;
-
-        for (s = w->key; *s; ++s)
-            *s = xtoupper(*s);
-
-        AddExtension(w->key);
-
-        w = w->next;
-    }
-#endif
 }
 
 char const*
 HttpRequestMethod::image() const
 {
-    if (METHOD_OTHER != theMethod) {
-        return RequestMethodStr[theMethod];
+    if (Http::METHOD_OTHER != theMethod) {
+        return Http::MethodType_str[theMethod];
     } else {
         if (theImage.size()>0) {
             return theImage.termedBuf();
@@ -183,60 +72,160 @@ HttpRequestMethod::image() const
 }
 
 bool
-HttpRequestMethod::isCacheble() const
+HttpRequestMethod::isHttpSafe() const
 {
-    // TODO: optimize the lookup with a precomputed flags array
-    // XXX: the list seems wrong; e.g., Is METHOD_DELETE really cachable?
-    // see also http.cc::httpCachable()
+    // Only a few methods are defined as safe. All others are "unsafe"
 
-    if (theMethod == METHOD_CONNECT)
+    // NOTE:
+    // All known RFCs which register methods are listed in comments.
+    // if there is one not listed which defines methods, it needs
+    // checking and adding. If only to say it is known to define none.
+
+    switch (theMethod) {
+        // RFC 2068 - none
+
+        // RFC 2616 section 9.1.1
+    case Http::METHOD_GET:
+    case Http::METHOD_HEAD:
+    case Http::METHOD_OPTIONS:
+
+        // RFC 3253 section 3.6
+    case Http::METHOD_REPORT:
+
+        // RFC 3648 - none
+        // RFC 3744 - none
+        // RFC 4437 - none
+        // RFC 4791 - none
+
+        // RFC 4918 section 9.1
+    case Http::METHOD_PROPFIND:
+
+        // RFC 5323 section 2
+    case Http::METHOD_SEARCH:
+
+        // RFC 5789 - none
+        // RFC 5842 - none
+
+        return true;
+
+    default:
         return false;
-
-    if (theMethod == METHOD_TRACE)
-        return false;
-
-    if (theMethod == METHOD_PUT)
-        return false;
-
-    if (theMethod == METHOD_POST)
-        return false;
-
-    if (theMethod == METHOD_OTHER)
-        return false;
-
-    return true;
+    }
 }
 
 bool
-HttpRequestMethod::purgesOthers() const
+HttpRequestMethod::isIdempotent() const
 {
-    // TODO: optimize the lookup with a precomputed flags array
+    // Only a few methods are defined as idempotent.
+
+    // NOTE:
+    // All known RFCs which register methods are listed in comments.
+    // if there is one not listed which defines methods, it needs
+    // checking and adding. If only to say it is known to define none.
 
     switch (theMethod) {
-        /* common sense suggests purging is not required? */
-    case METHOD_GET:     // XXX: but we do purge HEAD on successful GET
-    case METHOD_HEAD:
-    case METHOD_NONE:
-    case METHOD_CONNECT:
-    case METHOD_TRACE:
-    case METHOD_OPTIONS:
-    case METHOD_PROPFIND:
-    case METHOD_BPROPFIND:
-    case METHOD_COPY:
-    case METHOD_BCOPY:
-    case METHOD_LOCK:
-    case METHOD_UNLOCK:
-    case METHOD_SEARCH:
-        return false;
+        // RFC 2068 - TODO check LINK/UNLINK definition
 
-        /* purging mandated by RFC 2616 */
-    case METHOD_POST:
-    case METHOD_PUT:
-    case METHOD_DELETE:
+        // RFC 2616 section 9.1.2
+    case Http::METHOD_GET:
+    case Http::METHOD_HEAD:
+    case Http::METHOD_PUT:
+    case Http::METHOD_DELETE:
+    case Http::METHOD_OPTIONS:
+    case Http::METHOD_TRACE:
+
+        // RFC 3253 - TODO check
+        // RFC 3648 - TODO check
+        // RFC 3744 - TODO check
+        // RFC 4437 - TODO check
+        // RFC 4791 - TODO check
+
+        // RFC 4918 section 9
+    case Http::METHOD_PROPFIND:
+    case Http::METHOD_PROPPATCH:
+    case Http::METHOD_MKCOL:
+    case Http::METHOD_COPY:
+    case Http::METHOD_MOVE:
+    case Http::METHOD_UNLOCK:
+
+        // RFC 5323 - TODO check
+        // RFC 5789 - TODO check
+        // RFC 5842 - TODO check
+
         return true;
 
-        /* purging suggested by common sense */
-    case METHOD_PURGE:
+    default:
+        return false;
+    }
+}
+
+bool
+HttpRequestMethod::respMaybeCacheable() const
+{
+    // Only a few methods are defined as cacheable.
+    // All other methods from the below RFC are "MUST NOT cache"
+    switch (theMethod) {
+        // RFC 2616 section 9
+    case Http::METHOD_GET:
+    case Http::METHOD_HEAD:
+        return true;
+#if WHEN_POST_CACHE_SUPPORTED
+    case Http::METHOD_POST: // Special case.
+        // RFC 2616 specifies POST as possibly cacheable
+        // However, Squid does not implement the required checks yet
+        return true;
+#endif
+
+        // RFC 4918 section 9
+#if WHEN_PROPFIND_CACHE_SUPPORTED
+    case Http::METHOD_PROPFIND: // Special case.
+        // RFC 4918 specifies PROPFIND as possibly cacheable
+        // However, Squid does not implement the required checks yet
+        return true;
+#endif
+
+        // RFC 5323 section 2 - defines no cacheable methods
+
+        // RFC 3253
+#if WHEN_CC_NOCACHE_DOES_REVALIDATES_IS_CONFIRMED
+    case Http::METHOD_CHECKOUT:
+    case Http::METHOD_CHECKIN:
+    case Http::METHOD_UNCHECKOUT:
+    case Http::METHOD_MKWORKSPACE:
+    case Http::METHOD_VERSION_CONTROL:
+    case Http::METHOD_UPDATE:
+    case Http::METHOD_LABEL:
+    case Http::METHOD_MERGE:
+    case Http::METHOD_BASELINE_CONTROL:
+    case Http::METHOD_MKACTIVITY:
+        // RFC 3253 defines these methods using "MUST include Cache-Control: no-cache".
+        //
+        // XXX: follow RFC 2616 definition of "no-cache" meaning "MAY cache, always revalidate"
+        // XXX: or treat as unregistered/undefined methods ??
+        // However, Squid may not implement the required revalidation checks yet
+        return ??;
+#endif
+
+        // Special Squid method tokens are not cacheable.
+        // RFC 2616 defines all unregistered or unspecified methods as non-cacheable
+        // until such time as an RFC defines them cacheable.
+    default:
+        return false;
+    }
+}
+
+bool
+HttpRequestMethod::shouldInvalidate() const
+{
+    switch (theMethod) {
+        /* RFC 2616 section 13.10 - "MUST invalidate" */
+    case Http::METHOD_POST:
+    case Http::METHOD_PUT:
+    case Http::METHOD_DELETE:
+        return true;
+
+        /* Squid extension to force invalidation */
+    case Http::METHOD_PURGE:
         return true;
 
         /*
@@ -245,10 +234,37 @@ HttpRequestMethod::purgesOthers() const
          * understand SHOULD invalidate any entities referred to by the
          * Request-URI.
          */
-    case METHOD_OTHER:
+    case Http::METHOD_OTHER:
+        return true;
+
+    default:
+        // Methods which are known but not required to invalidate.
+        return false;
+    }
+}
+
+bool
+HttpRequestMethod::purgesOthers() const
+{
+    if (shouldInvalidate())
+        return true;
+
+    switch (theMethod) {
+        /* common sense suggests purging is not required? */
+    case Http::METHOD_GET:     // XXX: but we do purge HEAD on successful GET
+    case Http::METHOD_HEAD:
+    case Http::METHOD_NONE:
+    case Http::METHOD_CONNECT:
+    case Http::METHOD_TRACE:
+    case Http::METHOD_OPTIONS:
+    case Http::METHOD_PROPFIND:
+    case Http::METHOD_COPY:
+    case Http::METHOD_LOCK:
+    case Http::METHOD_UNLOCK:
+    case Http::METHOD_SEARCH:
+        return false;
+
     default:
         return true;
     }
-
-    return true; // not reached, but just in case
 }

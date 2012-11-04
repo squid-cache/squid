@@ -13,8 +13,6 @@
  *
  *    28-Oct-2007: drop some dead code. now tested working without.
  *
- * Squid CVS $Id$
- *
  *  Original License and code follows.
  */
 

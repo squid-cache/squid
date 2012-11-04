@@ -1,5 +1,8 @@
+#ifndef SQUID_SNMPREQUEST_H_
+#define SQUID_SNMPREQUEST_H_
 /*
- * AUTHOR: Guido Serassio <serassio@squid-cache.org>
+ * DEBUG: section
+ * AUTHOR:
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,20 +31,30 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_OS_WINDOWS_H
-#define SQUID_OS_WINDOWS_H
 
-#if _SQUID_WINDOWS_
+#if SQUID_SNMP
+#include "snmp_session.h"
 
-#ifndef ACL
-#define ACL WindowsACL
-#define _MSWIN_ACL_WAS_NOT_DEFINED 1
-#endif
-#include <windows.h>
-#if _MSWIN_ACL_WAS_NOT_DEFINED
-#undef ACL
-#undef _MSWIN_ACL_WAS_NOT_DEFINED
-#endif
+// POD
+class SnmpRequest
+{
+public:
+    u_char *buf;
+    u_char *outbuf;
+    int len;
+    int sock;
+    long reqid;
+    int outlen;
 
-#endif /* _SQUID_WINDOWS_ */
-#endif /* SQUID_OS_WINDOWS_H */
+    Ip::Address from;
+
+    struct snmp_pdu *PDU;
+    ACLChecklist *acl_checklist;
+    u_char *community;
+
+    struct snmp_session session;
+};
+
+#endif /* SQUID_SNMP */
+
+#endif /* SQUID_SNMPREQUEST_H_ */

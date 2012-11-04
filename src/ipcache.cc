@@ -41,6 +41,7 @@
 #include "Mem.h"
 #include "mgr/Registration.h"
 #include "rfc3596.h"
+#include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -433,7 +434,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
         memset(i->addrs.bad_mask, 0, sizeof(unsigned char) * ipcount);
 
         for (j = 0, k = 0; k < ipcount; ++k) {
-            if ( i->addrs.in_addrs[j] = A[k] )
+            if ((i->addrs.in_addrs[j] = A[k]))
                 ++j;
             else
                 debugs(14, DBG_IMPORTANT, "ipcacheParse: Invalid IP address '" << A[k] << "' in response to '" << name << "'");

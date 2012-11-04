@@ -14,8 +14,6 @@
  *                      - use xinet_ntop instead of inet_ntop
  *                      - use SQUIDHOSTNAMELEN instead of MAXHOSTNAMELEN
  *
- * Squid CVS $Id$
- *
  *  Original License and code follows.
  */
 #include "squid.h"
@@ -114,7 +112,7 @@
 #include <inttypes.h>
 #endif
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #undef IN_ADDR
 #include <ws2tcpip.h>
 #endif
@@ -160,7 +158,6 @@ int flags;
     int family, i;
     const char *addr;
     uint32_t v4a;
-    int h_error;
     char numserv[512];
 
     if (sa == NULL)
@@ -262,14 +259,17 @@ found:
         goto numeric;
     } else {
 #if USE_GETIPNODEBY
+        int h_error = 0;
         hp = getipnodebyaddr(addr, afd->a_addrlen, afd->a_af, &h_error);
 #else
         hp = gethostbyaddr(addr, afd->a_addrlen, afd->a_af);
+#if 0 // getnameinfo.c:161:9: error: variable 'h_error' set but not used
 #if HAVE_H_ERRNO
         h_error = h_errno;
 #else
         h_error = EINVAL;
 #endif
+#endif /* 0 */
 #endif
 
         if (hp) {

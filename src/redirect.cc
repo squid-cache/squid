@@ -43,6 +43,7 @@
 #include "mgr/Registration.h"
 #include "redirect.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -92,7 +93,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
                 debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "UPGRADE WARNING: URL rewriter reponded with garbage '" << t <<
-                           "'. Future Squid will treat this as part of the URL.");
+                       "'. Future Squid will treat this as part of the URL.");
                 const mb_size_t garbageLength = reply.other().contentSize() - (t-res);
                 reply.modifiableOther().truncate(garbageLength);
             }
@@ -150,7 +151,8 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++n_bypassed;
-        handler(data, HelperReply(NULL,0));
+        HelperReply nilReply(NULL,0);
+        handler(data, nilReply);
         return;
     }
 

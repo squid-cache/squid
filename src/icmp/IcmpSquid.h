@@ -60,6 +60,6 @@ public:
 };
 
 // global engine within squid.
-SQUIDCEXTERN IcmpSquid icmpEngine;
+extern IcmpSquid icmpEngine;
 
 #endif /* _INCLUDE_ICMPSQUID_H */

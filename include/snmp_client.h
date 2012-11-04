@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SNMP_CLIENT_H
 #define SQUID_SNMP_CLIENT_H
 

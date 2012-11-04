@@ -32,6 +32,6 @@
  *
  */
 
-extern int isPowTen(int); //int.cc
+int isPowTen(int); //int.cc
 
 #endif /* SQUID_INT_H_ */

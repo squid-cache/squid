@@ -35,6 +35,7 @@
 #define   SQUID_TESTSTORESUPPORT_H
 
 #include "EventLoop.h"
+#include "SquidTime.h"
 
 /* construct a stock loop with event dispatching, a time service that advances
  * 1 second a tick

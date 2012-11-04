@@ -45,11 +45,13 @@ public:
 
 MEMPROXY_CLASS_INLINE(wordlist);
 
-extern const char *wordlistAdd(wordlist **, const char *);
-extern void wordlistCat(const wordlist *, MemBuf * mb);
-extern void wordlistAddWl(wordlist **, wordlist *);
-extern void wordlistJoin(wordlist **, wordlist **);
-extern wordlist *wordlistDup(const wordlist *);
-extern void wordlistDestroy(wordlist **);
+class MemBuf;
+
+const char *wordlistAdd(wordlist **, const char *);
+void wordlistCat(const wordlist *, MemBuf * mb);
+void wordlistAddWl(wordlist **, wordlist *);
+void wordlistJoin(wordlist **, wordlist **);
+wordlist *wordlistDup(const wordlist *);
+void wordlistDestroy(wordlist **);
 
 #endif /* SQUID_WORDLIST_H */

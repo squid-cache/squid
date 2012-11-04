@@ -6,8 +6,8 @@
 #ifndef SQUID_MGR_QUERY_PARAM_H
 #define SQUID_MGR_QUERY_PARAM_H
 
+#include "base/RefCount.h"
 #include "ipc/forward.h"
-#include "RefCount.h"
 
 namespace Mgr
 {

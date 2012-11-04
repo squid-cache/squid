@@ -1,8 +1,8 @@
 #ifndef SQUID_CLIENTREQUESTCONTEXT_H
 #define SQUID_CLIENTREQUESTCONTEXT_H
 
+#include "base/RefCount.h"
 #include "cbdata.h"
-#include "RefCount.h"
 #include "ipcache.h"
 
 #if USE_ADAPTATION

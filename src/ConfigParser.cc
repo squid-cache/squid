@@ -35,6 +35,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "fatal.h"
 #include "globals.h"
 
 void

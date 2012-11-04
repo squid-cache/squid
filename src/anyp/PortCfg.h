@@ -11,7 +11,9 @@
 namespace AnyP
 {
 
-struct PortCfg {
+class PortCfg
+{
+public:
     PortCfg(const char *aProtocol);
     ~PortCfg();
     AnyP::PortCfg *clone() const;

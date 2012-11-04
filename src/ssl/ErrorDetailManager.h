@@ -1,9 +1,9 @@
 #ifndef _SQUID_SSL_ERRORDETAILMANAGER_H
 #define _SQUID_SSL_ERRORDETAILMANAGER_H
 
+#include "base/RefCount.h"
 #include "ssl/gadgets.h"
 #include "ssl/support.h"
-#include "RefCount.h"
 #include "SquidString.h"
 
 #if HAVE_MAP

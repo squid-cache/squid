@@ -80,7 +80,7 @@ public:
 #if USE_ICMP
 
 /// pinger helper contains one of these as a global object.
-SQUIDCEXTERN Icmp6 icmp6;
+extern Icmp6 icmp6;
 
 #endif /* USE_ICMP && SQUID_HELPER */
 #endif /* _INCLUDE_ICMPV6_H */

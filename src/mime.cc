@@ -43,6 +43,8 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "MemObject.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -415,7 +417,7 @@ MimeIcon::load()
     if (type == NULL)
         fatal("Unknown icon format while reading mime.conf\n");
 
-    StoreEntry::getPublic(this, url, METHOD_GET);
+    StoreEntry::getPublic(this, url, Http::METHOD_GET);
 }
 
 void
@@ -430,7 +432,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     int n;
 
-    request_flags flags;
+    RequestFlags flags;
 
     struct stat sb;
 
@@ -454,10 +456,7 @@ MimeIcon::created (StoreEntry *newEntry)
     }
 
     flags.cachable = 1;
-    StoreEntry *e = storeCreateEntry(url,
-                                     url,
-                                     flags,
-                                     METHOD_GET);
+    StoreEntry *e = storeCreateEntry(url,url,flags,Http::METHOD_GET);
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     e->setPublicKey();

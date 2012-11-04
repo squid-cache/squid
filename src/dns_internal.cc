@@ -45,6 +45,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc3596.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
@@ -71,7 +72,6 @@
  */
 #if !USE_DNSHELPER
 #if _SQUID_WINDOWS_
-#include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
 #define REG_VXD_MSTCP "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
@@ -235,7 +235,7 @@ static void idnsAddPathComponent(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static void idnsParseNameservers(void);
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static void idnsParseResolvConf(void);
 #endif
 #if _SQUID_WINDOWS_
@@ -364,7 +364,7 @@ idnsParseNameservers(void)
     }
 }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static void
 idnsParseResolvConf(void)
 {
@@ -1533,7 +1533,7 @@ dnsInit(void)
 
     assert(0 == nns);
     idnsParseNameservers();
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 
     if (0 == nns)
         idnsParseResolvConf();

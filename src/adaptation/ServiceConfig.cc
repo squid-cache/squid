@@ -82,11 +82,11 @@ Adaptation::ServiceConfig::parse()
         if (strcmp(option, "0") == 0) { // backward compatibility
             name = "bypass";
             value = "off";
-            debugs(3, opt_parse_cfg_only?0:1, "UPGRADE: Please use 'bypass=off' option to disable service bypass");
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: Please use 'bypass=off' option to disable service bypass");
         }  else if (strcmp(option, "1") == 0) { // backward compatibility
             name = "bypass";
             value = "on";
-            debugs(3, opt_parse_cfg_only?0:1, "UPGRADE: Please use 'bypass=on' option to enable service bypass");
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: Please use 'bypass=on' option to enable service bypass");
         } else {
             char *eq = strstr(option, "=");
             const char *sffx = strstr(option, "://");
@@ -117,7 +117,7 @@ Adaptation::ServiceConfig::parse()
         else if (strcmp(name, "ipv6") == 0) {
             grokked = grokBool(ipv6, name, value);
             if (grokked && ipv6 && !Ip::EnableIpv6)
-                debugs(3, DBG_IMPORTANT, "WARNING: IPv6 is disabled. ICAP service option ignored.");
+                debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: IPv6 is disabled. ICAP service option ignored.");
         } else if (strcmp(name, "max-conn") == 0)
             grokked = grokLong(maxConn, name, value);
         else if (strcmp(name, "on-overload") == 0) {

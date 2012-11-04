@@ -53,6 +53,7 @@
 #include "mime.h"
 #include "rfc1738.h"
 #include "Server.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -506,7 +507,7 @@ FtpStateData::FtpStateData(FwdState *theFwdState, const Comm::ConnectionPointer 
     AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this, FtpStateData::ctrlClosed);
     ctrl.opened(conn, closer);
 
-    if (request->method == METHOD_PUT)
+    if (request->method == Http::METHOD_PUT)
         flags.put = 1;
 }
 
@@ -1335,7 +1336,7 @@ FtpStateData::processReplyBody()
 {
     debugs(9, 3, HERE << "FtpStateData::processReplyBody starting.");
 
-    if (request->method == METHOD_HEAD && (flags.isdir || theSize != -1)) {
+    if (request->method == Http::METHOD_HEAD && (flags.isdir || theSize != -1)) {
         serverComplete();
         return;
     }
@@ -2536,7 +2537,7 @@ ftpSendPassive(FtpStateData * ftpState)
 
     /** \par
       * Checks for 'HEAD' method request and passes off for special handling by FtpStateData::processHeadResponse(). */
-    if (ftpState->request->method == METHOD_HEAD && (ftpState->flags.isdir || ftpState->theSize != -1)) {
+    if (ftpState->request->method == Http::METHOD_HEAD && (ftpState->flags.isdir || ftpState->theSize != -1)) {
         ftpState->processHeadResponse(); // may call serverComplete
         return;
     }
@@ -3773,6 +3774,7 @@ FtpStateData::printfReplyBody(const char *fmt, ...)
     buf[0] = '\0';
     vsnprintf(buf, 4096, fmt, args);
     writeReplyBody(buf, strlen(buf));
+    va_end(args);
 }
 
 /**

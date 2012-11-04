@@ -33,9 +33,11 @@
 
 #include "base/CbcPointer.h"
 #include "Debug.h"
+#include "err_type.h"
 #include "HierarchyLogEntry.h"
 #include "HttpMsg.h"
 #include "HttpRequestMethod.h"
+#include "RequestFlags.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -54,8 +56,7 @@
 class ConnStateData;
 
 /*  Http Request */
-//DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
-extern void httpRequestPack(void *obj, Packer *p);
+void httpRequestPack(void *obj, Packer *p);
 
 class HttpHdrRange;
 class DnsLookupDetails;
@@ -81,8 +82,10 @@ public:
 
     virtual HttpRequest *clone() const;
 
-    /* are responses to this request potentially cachable */
-    bool cacheable() const;
+    /// Whether response to this request is potentially cachable
+    /// \retval false  Not cacheable.
+    /// \retval true   Possibly cacheable. Response factors will determine.
+    bool maybeCacheable();
 
     bool conditional() const; ///< has at least one recognized If-* header
 
@@ -161,7 +164,7 @@ public:
 
     char *canonical;
 
-    request_flags flags;
+    RequestFlags flags;
 
     HttpHdrRange *range;
 

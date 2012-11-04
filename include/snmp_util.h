@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef SQUID_SNMP_UTIL_H
 #define SQUID_SNMP_UTIL_H
 

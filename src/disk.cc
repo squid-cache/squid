@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
+#include "disk.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -166,7 +167,7 @@ file_close(int fd)
  * select() loop.       --SLF
  */
 static void
-diskCombineWrites(struct _fde_disk *fdd)
+diskCombineWrites(_fde_disk *fdd)
 {
     /*
      * We need to combine multiple write requests on an FD's write
@@ -219,7 +220,7 @@ diskHandleWrite(int fd, void *notused)
     int len = 0;
     fde *F = &fd_table[fd];
 
-    struct _fde_disk *fdd = &F->disk;
+    _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
     int do_close;

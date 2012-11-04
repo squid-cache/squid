@@ -93,8 +93,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#if _SQUID_MSWIN_		/* Native Windows port and MinGW */
-
+#if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 #define snprintf _snprintf
 #include <windows.h>
 #include <winldap.h>
@@ -554,7 +553,7 @@ main(int argc, char **argv)
     /* On Windows ldap_start_tls_s is available starting from Windows XP,
      * so we need to bind at run-time with the function entry point
      */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (use_tls) {
 
         HMODULE WLDAP32Handle;

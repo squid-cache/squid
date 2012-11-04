@@ -71,7 +71,7 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
@@ -105,7 +105,7 @@ Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 /* non-windows use STDOUT for feedback to squid */
 #define LINK_TO_SQUID	1
 
-#endif	/* _SQUID_MSWIN_ */
+#endif	/* _SQUID_WINDOWS_ */
 
 // ICMP Engines are declared global here so they can call each other easily.
 IcmpPinger control;

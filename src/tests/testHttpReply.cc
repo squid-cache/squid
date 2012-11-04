@@ -7,10 +7,11 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "mime_header.h"
+#include "SquidConfig.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 
-struct SquidConfig Config;
+class SquidConfig Config;
 
 /* stub functions to link successfully */
 
@@ -22,12 +23,6 @@ MemObject::endOffset() const
 }
 
 #include "ConfigParser.h"
-void
-ConfigParser::destruct()
-{
-// CALLED as shutdown no-op
-//    fatal("ConfigParser::destruct. Not implemented.");
-}
 
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)

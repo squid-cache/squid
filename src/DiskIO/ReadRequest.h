@@ -32,8 +32,8 @@
 #ifndef SQUID_READREQUEST_H
 #define SQUID_READREQUEST_H
 
+#include "base/RefCount.h"
 #include "cbdata.h"
-#include "RefCount.h"
 
 class ReadRequest : public RefCountable
 {
