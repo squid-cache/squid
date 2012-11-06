@@ -61,6 +61,7 @@ class Notes
 public:
     typedef Vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
+    typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
     Notes(const char *aDescr, const char **metasBlacklist): descr(aDescr), blacklisted(metasBlacklist) {}
     Notes(): descr(NULL), blacklisted(NULL) {}
@@ -93,6 +94,18 @@ private:
      * returns a pointer to the existing object.
      */
     Note::Pointer add(const String &noteKey);
+
+public:
+    /**
+     * Adds a note key and value to the notes list.
+     * If the key name already exists in list, add the given value to its set of values.
+     */
+    void add(const String &noteKey, const String &noteValue);
+
+    /**
+     * Looks up a note by key name and returns a Note::Pointer to it
+     */
+    Note::Pointer findByName(const String &noteKey) const;
 };
 
 class NotePairs : public HttpHeader
