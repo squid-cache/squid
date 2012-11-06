@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "ip/IpAddress.h"
+#include "ip/tools.h"
 #include "util.h"
 #include "squid_types.h"
 
@@ -206,6 +207,7 @@ main(int argc, char *argv[])
     pcount = 0;
     ping_int = 1 * 1000;
 
+    Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
     if (argc < 2) {
         usage(argv[0]);		/* need URL */
     } else if (argc >= 2) {
