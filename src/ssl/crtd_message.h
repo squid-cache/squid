@@ -27,7 +27,11 @@ public:
         INCOMPLETE,
         ERROR
     };
-    CrtdMessage();
+    enum MessageKind {
+        REPLY,
+        REQUEST
+    };
+    CrtdMessage(MessageKind kind);
     /**Parse buffer of length len
      \retval OK          if parsing completes
      \retval INCOMPLETE  if more data required
