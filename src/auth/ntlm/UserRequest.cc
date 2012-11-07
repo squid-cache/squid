@@ -255,34 +255,32 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     else
         assert(reply.whichServer == lm_request->authserver);
 
-    /* seperate out the useful data */
-    const char *blob = reply.other().content();
-
     switch (reply.result) {
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = 1;
         if (lm_request->request->flags.proxyKeepalive) {
-            lm_request->server_blob = xstrdup(reply.authToken.content());
+            Note::Pointer serverBlob = reply.responseKeys.findByName("token");
+            lm_request->server_blob = xstrdup(serverBlob->values[0]->value.termedBuf());
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << reply.authToken << "'");
+            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << serverBlob->values[0]->value << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
         }
         break;
 
-    case HelperReply::AF:
     case HelperReply::Okay: {
         /* we're finished, release the helper */
-        auth_user_request->user()->username(reply.user.content());
+        Note::Pointer userLabel = reply.responseKeys.findByName("user");
+        auth_user_request->user()->username(userLabel->values[0]->value.termedBuf());
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
 
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << reply.user << "'");
+        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << userLabel->values[0]->value << "'");
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user with a different proxy_auth
@@ -309,37 +307,47 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << reply.user << "'");
+        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
     }
     break;
 
-    case HelperReply::NA:
-    case HelperReply::Error:
+    case HelperReply::Error: {
         /* authentication failure (wrong password, etc.) */
-        auth_user_request->denyMessage(blob);
+        Note::Pointer errNote = reply.responseKeys.findByName("message");
+        if (errNote != NULL)
+            auth_user_request->denyMessage(errNote->values[0]->value.termedBuf());
+        else
+            auth_user_request->denyMessage("NTLM Authentication denied with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
-        debugs(29, 4, HERE << "Failed validating user via NTLM. Error returned '" << blob << "'");
-        break;
+        debugs(29, 4, HERE << "Failed validating user via NTLM. Error returned '" << errNote->values[0]->value << "'");
+    }
+    break;
 
     case HelperReply::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
-        blob = "Internal error";
         /* continue to the next case */
 
-    case HelperReply::BrokenHelper:
+    case HelperReply::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate NTLM start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
-        auth_user_request->denyMessage(blob);
+        Note::Pointer errNote = reply.responseKeys.findByName("message");
+        if (reply.result == HelperReply::Unknown)
+            auth_user_request->denyMessage("Internal Error");
+        else if (errNote != NULL)
+            auth_user_request->denyMessage(errNote->values[0]->value.termedBuf());
+        else
+            auth_user_request->denyMessage("NTLM Authentication failed with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication validating user. Error returned '" << reply << "'");
-        break;
+    }
+    break;
     }
 
     if (lm_request->request) {
