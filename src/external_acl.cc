@@ -1311,7 +1311,6 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 {
     externalAclState *state = static_cast<externalAclState *>(data);
     externalAclState *next;
-    char *t = NULL;
     ExternalACLEntryData entryData;
     entryData.result = ACCESS_DENIED;
     external_acl_entry *entry = NULL;
@@ -1322,47 +1321,29 @@ externalAclHandleReply(void *data, const HelperReply &reply)
         entryData.result = ACCESS_ALLOWED;
     // XXX: handle other non-DENIED results better
 
-    if (reply.tag.hasContent())
-        entryData.tag = reply.tag;
-    if (reply.message.hasContent())
-        entryData.message = reply.message;
-    if (reply.log.hasContent())
-        entryData.log = reply.log;
+    // XXX: make entryData store a proper helperReply object.
+
+    Note::Pointer label = reply.responseKeys.findByName("tag");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.tag = label->values[0]->value;
+
+    label = reply.responseKeys.findByName("message");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.message = label->values[0]->value;
+
+    label = reply.responseKeys.findByName("log");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.log = label->values[0]->value;
+
 #if USE_AUTH
-    if (reply.user.hasContent())
-        entryData.user = reply.user;
-    if (reply.password.hasContent())
-        entryData.password = reply.password;
+    label = reply.responseKeys.findByName("user");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.user = label->values[0]->value;
+
+    label = reply.responseKeys.findByName("password");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.password = label->values[0]->value;
 #endif
-
-    // legacy reply parser
-    if (reply.other().hasContent()) {
-        char *temp = reply.modifiableOther().content();
-        char *token = strwordtok(temp, &t);
-
-        while ((token = strwordtok(NULL, &t))) {
-            debugs(82, DBG_IMPORTANT, "WARNING: key '" << token << "' is not supported by this Squid.");
-            char *value = strchr(token, '=');
-
-            if (value) {
-                *value = '\0';	/* terminate the token, and move up to the value */
-                ++value;
-
-                if (state->def->quote == external_acl::QUOTE_METHOD_URL)
-                    rfc1738_unescape(value);
-
-                if (strcmp(token, "error") == 0) {
-                    entryData.message = value;
-#if USE_AUTH
-                } else if (strcmp(token, "passwd") == 0) {
-                    entryData.password = value;
-                } else if (strcmp(token, "login") == 0) {
-                    entryData.user = value;
-#endif
-                }
-            }
-        }
-    }
 
     dlinkDelete(&state->list, &state->def->queue);
 
