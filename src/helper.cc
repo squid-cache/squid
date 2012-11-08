@@ -398,7 +398,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
-        HelperReply nilReply(NULL, 0);
+        HelperReply nilReply;
         callback(data, nilReply);
         return;
     }
@@ -424,7 +424,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
-        HelperReply nilReply(NULL, 0);
+        HelperReply nilReply;
         callback(data, nilReply);
         return;
     }
@@ -758,7 +758,7 @@ helperServerFree(helper_server *srv)
             void *cbdata;
 
             if (cbdataReferenceValidDone(r->data, &cbdata)) {
-                HelperReply nilReply(NULL, 0);
+                HelperReply nilReply;
                 r->callback(cbdata, nilReply);
             }
 
@@ -824,7 +824,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
         void *cbdata;
 
         if (cbdataReferenceValidDone(r->data, &cbdata)) {
-            HelperReply nilReply(NULL,0);
+            HelperReply nilReply;
             nilReply.whichServer = srv;
             r->callback(cbdata, nilReply);
         }
@@ -1366,7 +1366,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         /* a callback is needed before this request can _use_ a helper. */
         /* we don't care about releasing this helper. The request NEVER
          * gets to the helper. So we throw away the return code */
-        HelperReply nilReply(NULL,0);
+        HelperReply nilReply;
         nilReply.whichServer = srv;
         r->callback(r->data, nilReply);
         /* throw away the placeholder */

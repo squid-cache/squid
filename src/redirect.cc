@@ -151,8 +151,10 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++n_bypassed;
-        HelperReply nilReply(NULL,0);
-        handler(data, nilReply);
+        HelperReply bypassReply;
+        bypassReply.result = HelperReply::Okay;
+        bypassReply.responseKeys.add("message","URL rewrite/redirect queue too long. Bypassed.");
+        handler(data, bypassReply);
         return;
     }
 
