@@ -902,7 +902,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
     if (answer == ACCESS_ALLOWED)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
-        HelperReply nilReply(NULL,0);
+        HelperReply nilReply;
         context->clientRedirectDone(nilReply);
     }
 }
