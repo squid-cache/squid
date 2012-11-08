@@ -24,6 +24,11 @@ private:
     HelperReply &operator =(const HelperReply &r);
 
 public:
+    HelperReply() : result(HelperReply::Unknown), responseKeys(), whichServer(NULL) {
+        other_.init(1,1);
+        other_.terminate();
+    }
+
     // create/parse details from the msg buffer provided
     // XXX: buf should be const but parse() needs non-const for now
     HelperReply(char *buf, size_t len, bool urlQuoting = false);
