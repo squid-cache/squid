@@ -3703,7 +3703,7 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
     } else if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
     } else {
-        Ssl::CrtdMessage reply_message;
+        Ssl::CrtdMessage reply_message(Ssl::CrtdMessage::REPLY);
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
             debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
@@ -3839,7 +3839,7 @@ ConnStateData::getSslContextStart()
 #if USE_SSL_CRTD
         try {
             debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
-            Ssl::CrtdMessage request_message;
+            Ssl::CrtdMessage request_message(Ssl::CrtdMessage::REQUEST);
             request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
             request_message.composeRequest(certProperties);
             debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());

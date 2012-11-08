@@ -11,8 +11,8 @@
 #include <stdexcept>
 #endif
 
-Ssl::CrtdMessage::CrtdMessage()
-        :   body_size(0), state(BEFORE_CODE)
+Ssl::CrtdMessage::CrtdMessage(MessageKind kind)
+        :   body_size(0), state(kind == REPLY ? BEFORE_LENGTH: BEFORE_CODE)
 {}
 
 Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_t len)
