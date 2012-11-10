@@ -363,9 +363,6 @@ parse_externalAclHelper(external_acl ** list)
         } else if (strcmp(token, "protocol=3.0") == 0) {
             debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option protocol=3.0 is deprecated. Remove this from your config.");
             a->quote = external_acl::QUOTE_METHOD_URL;
-        } else if (strcmp(token, "protocol=3.4") == 0) {
-            debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option protocol=3.4 is the default. Remove this from your config.");
-            a->quote = external_acl::QUOTE_METHOD_URL;
         } else if (strcmp(token, "quote=url") == 0) {
             debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option quote=url is deprecated. Remove this from your config.");
             a->quote = external_acl::QUOTE_METHOD_URL;
@@ -1507,9 +1504,6 @@ externalAclInit(void)
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
 
         p->theHelper->addr = p->local_addr;
-
-        if (p->quote == external_acl::QUOTE_METHOD_URL)
-            p->theHelper->url_quoting = true;
 
         helperOpenServers(p->theHelper);
     }
