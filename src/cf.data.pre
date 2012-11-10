@@ -630,25 +630,33 @@ DOC_START
 
 	General result syntax:
 
-	  OK/ERR keyword=value ...
+	  [channel-ID] OK/ERR/BH keyword=value ...
 
 	Defined keywords:
 
 	  user=		The users name (login)
 	  password=	The users password (for login= cache_peer option)
-	  message=	Message describing the reason. Available as %o
-	  		in error pages
-	  tag=		Apply a tag to a request (for both ERR and OK results)
-	  		Only sets a tag, does not alter existing tags.
+	  message=	Message describing the reason for this response.
+			Available as %o in error pages. Useful on (ERR and BH results).
+	  tag=		Apply a tag to a request. Only sets a tag once,
+			does not alter existing tags.
 	  log=		String to be logged in access.log. Available as
 	  		%ea in logformat specifications
 
-	If protocol=3.0 (the default) then URL escaping is used to protect
-	each value in both requests and responses.
+	Any keywords may be sent on any response whether OK, ERR or BH.
 
-	If using protocol=2.5 then all values need to be enclosed in quotes
-	if they may contain whitespace, or the whitespace escaped using \.
-	And quotes or \ characters within the keyword value must be \ escaped.
+	All response keyword values need to be a single token with URL
+	escaping, or enclosed in double quotes (") and escaped using \ on
+	any quotes, whitespace or \ characters within the value
+	For example:  user="John\ Smith" or "J.\ O\'Brien"
+
+	Request values sent to the helper are URL escaped to protect
+	each value in requests against whitespaces.
+
+	If using protocol=2.5 then the request sent to the helper is not
+	URL escaped to protect against whitespace.
+
+	NOTE: protocol=3.0 is deprecated as no longer necessary.
 
 	When using the concurrency= option the protocol is changed by
 	introducing a query channel tag infront of the request/response.
