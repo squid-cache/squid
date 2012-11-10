@@ -63,6 +63,7 @@
 #include "acl/TimeData.h"
 #include "acl/Time.h"
 #include "acl/Url.h"
+#include "acl/UrlLogin.h"
 #include "acl/UrlPath.h"
 #include "acl/UrlPort.h"
 #include "acl/UserData.h"
@@ -130,6 +131,8 @@ ACL::Prototype ACLTime::RegistryProtoype(&ACLTime::RegistryEntry_, "time");
 ACLStrategised<time_t> ACLTime::RegistryEntry_(new ACLTimeData, ACLTimeStrategy::Instance(), "time");
 ACL::Prototype ACLUrl::RegistryProtoype(&ACLUrl::RegistryEntry_, "url_regex");
 ACLStrategised<char const *> ACLUrl::RegistryEntry_(new ACLRegexData, ACLUrlStrategy::Instance(), "url_regex");
+ACL::Prototype ACLUrlLogin::RegistryProtoype(&ACLUrlLogin::RegistryEntry_, "urllogin");
+ACLStrategised<char const *> ACLUrlLogin::RegistryEntry_(new ACLRegexData, ACLUrlLoginStrategy::Instance(), "urllogin");
 ACL::Prototype ACLUrlPath::LegacyRegistryProtoype(&ACLUrlPath::RegistryEntry_, "pattern");
 ACL::Prototype ACLUrlPath::RegistryProtoype(&ACLUrlPath::RegistryEntry_, "urlpath_regex");
 ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrlPathStrategy::Instance(), "urlpath_regex");
