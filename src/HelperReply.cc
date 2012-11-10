@@ -147,7 +147,7 @@ std::ostream &
 operator <<(std::ostream &os, const HelperReply &r)
 {
     os << "{result=";
-    switch(r.result) {
+    switch (r.result) {
     case HelperReply::Okay:
         os << "OK";
         break;
