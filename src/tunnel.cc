@@ -318,6 +318,14 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         commSetConnTimeout(from.conn, Config.Timeout.read, timeoutCall);
     }
 
+    /* Bump the dest connection read timeout on any activity */
+    /* see Bug 3659: tunnels can be weird, with very long one-way transfers */
+    if (Comm::IsConnOpen(to.conn)) {
+        AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                         CommTimeoutCbPtrFun(tunnelTimeout, this));
+        commSetConnTimeout(to.conn, Config.Timeout.read, timeoutCall);
+    }
+
     if (errcode)
         from.error (xerrno);
     else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
