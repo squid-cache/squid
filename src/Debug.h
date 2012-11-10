@@ -108,7 +108,7 @@ const char * SkipBuildPrefix(const char* path);
    do { \
         if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \
             std::ostream &_dbo=Debug::getDebugOut(); \
-            if (LEVEL > DBG_IMPORTANT) \
+            if (Debug::level > DBG_IMPORTANT) \
                 _dbo << SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "; \
             _dbo << CONTENT; \
             Debug::finishDebug(); \
