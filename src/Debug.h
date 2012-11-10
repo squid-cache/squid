@@ -107,8 +107,11 @@ const char * SkipBuildPrefix(const char* path);
 #define debugs(SECTION, LEVEL, CONTENT) \
    do { \
         if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \
-                Debug::getDebugOut() << CONTENT; \
-                Debug::finishDebug(); \
+            std::ostream &_dbo=Debug::getDebugOut(); \
+            if (LEVEL > DBG_IMPORTANT) \
+                _dbo << SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "; \
+            _dbo << CONTENT; \
+            Debug::finishDebug(); \
         } \
    } while (/*CONSTCOND*/ 0)
 
@@ -117,7 +120,8 @@ const char * SkipBuildPrefix(const char* path);
  *
  * debugs(1,2, HERE << "some message");
  */
-#define HERE SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+//TODO: just before branching Squid 3.4, blanket-remove HERE from the source
+#define HERE ""
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
