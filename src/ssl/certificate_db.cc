@@ -310,7 +310,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
             pkey.reset(findPkey.release());
             return true;
         }
-        // pure_find may fail because the entry is expired, or because the 
+        // pure_find may fail because the entry is expired, or because the
         // certs file is corrupted. Remove any entry with given hostname
         deleteByHostname(useName.empty() ? subject.get() : useName);
     }
