@@ -50,10 +50,16 @@ HelperReply::parse(char *buf, size_t len, bool urlQuoting)
             p+=3;
             // followed by an auth token
             char *w1 = strwordtok(NULL, &p);
-            MemBuf authToken;
-            authToken.init();
-            authToken.append(w1, strlen(w1));
-            responseKeys.add("token",authToken.content());
+            if (w1 != NULL) {
+                MemBuf authToken;
+                authToken.init();
+                authToken.append(w1, strlen(w1));
+                responseKeys.add("token",authToken.content());
+            } else {
+                // token field is mandatory on this response code
+                result = HelperReply::BrokenHelper;
+                responseKeys.add("message","Missing 'token' data");
+            }
 
         } else if (!strncmp(p,"AF ",3)) {
             // NTLM/Negotate OK response
@@ -126,10 +132,9 @@ HelperReply::parseResponseKeys(bool urlQuotingValues)
         // the value may be a quoted string or a token
         // XXX: eww. update strwordtok() to be zero-copy
         char *v = strwordtok(NULL, &p);
-        if ((p-v) > 2) // 1-octet %-escaped requires 3 bytes
+        if (v != NULL && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
         String value = v;
-        safe_free(v);
 
         responseKeys.add(key, value);
 
