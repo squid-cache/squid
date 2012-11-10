@@ -308,6 +308,10 @@ squidaio_init(void)
 
     done_queue.blocked = 0;
 
+    // Initialize the thread I/O pipes before creating any threads
+    // see bug 3189 comment 5 about race conditions.
+    CommIO::Initialize();
+
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
 
