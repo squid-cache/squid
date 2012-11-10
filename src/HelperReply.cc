@@ -9,15 +9,15 @@
 #include "rfc1738.h"
 #include "SquidString.h"
 
-HelperReply::HelperReply(char *buf, size_t len, bool urlQuoting) :
+HelperReply::HelperReply(char *buf, size_t len) :
         result(HelperReply::Unknown),
         whichServer(NULL)
 {
-    parse(buf,len,urlQuoting);
+    parse(buf,len);
 }
 
 void
-HelperReply::parse(char *buf, size_t len, bool urlQuoting)
+HelperReply::parse(char *buf, size_t len)
 {
     // check we have something to parse
     if (!buf || len < 1) {
@@ -105,7 +105,7 @@ HelperReply::parse(char *buf, size_t len, bool urlQuoting)
     // NULL-terminate so the helper callback handlers do not buffer-overrun
     other_.terminate();
 
-    parseResponseKeys(urlQuoting);
+    parseResponseKeys();
 
     // Hack for backward-compatibility: BH used to be a text message...
     if (other().hasContent() && result == HelperReply::BrokenHelper) {
@@ -115,7 +115,7 @@ HelperReply::parse(char *buf, size_t len, bool urlQuoting)
 }
 
 void
-HelperReply::parseResponseKeys(bool urlQuotingValues)
+HelperReply::parseResponseKeys()
 {
     // parse a "key=value" pair off the 'other()' buffer.
     while(other().hasContent()) {
@@ -130,9 +130,9 @@ HelperReply::parseResponseKeys(bool urlQuotingValues)
         String key(other().content());
 
         // the value may be a quoted string or a token
-        // XXX: eww. update strwordtok() to be zero-copy
+        const bool urlDecode = (*p != '"'); // check before moving p.
         char *v = strwordtok(NULL, &p);
-        if (v != NULL && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
+        if (v != NULL && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
         String value = v;
 

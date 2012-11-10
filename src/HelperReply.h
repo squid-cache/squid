@@ -31,7 +31,7 @@ public:
 
     // create/parse details from the msg buffer provided
     // XXX: buf should be const but parse() needs non-const for now
-    HelperReply(char *buf, size_t len, bool urlQuoting = false);
+    HelperReply(char *buf, size_t len);
 
     const MemBuf &other() const { return other_; }
 
@@ -45,10 +45,11 @@ public:
      *   line     := [ result ] *#( key-pair )
      *   key-pair := OWS token '=' ( quoted-string | token )
      *
-     * \param urlQuoting  decode note values using RFC 1738 decoder. (default: use quoted-string instead)
+     * token are URL-decoded.
+     * quoted-string are \-escape decoded and the quotes are stripped.
      */
     // XXX: buf should be const but we may need strwordtok() and rfc1738_unescape()
-    void parse(char *buf, size_t len, bool urlQuoting = false);
+    void parse(char *buf, size_t len);
 
 public:
     /// The helper response 'result' field.
@@ -70,7 +71,7 @@ public:
     CbcPointer<helper_stateful_server> whichServer;
 
 private:
-    void parseResponseKeys(bool urlQuotingValues);
+    void parseResponseKeys();
 
     /// the remainder of the line
     MemBuf other_;
