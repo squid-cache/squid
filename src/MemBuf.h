@@ -81,7 +81,7 @@ public:
     /// \note there is currently no stretch() method to grow without appending
 
     void consume(mb_size_t sz);  // removes sz bytes, moving content left
-    void consumeWhitespace();    // removes all prefix whitespace, moving content left
+    void consumeWhitespacePrefix();    ///< removes all prefix whitespace, moving content left
 
     void append(const char *c, mb_size_t sz); // grows if needed and possible
     void appended(mb_size_t sz); // updates content size after external append

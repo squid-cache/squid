@@ -124,10 +124,15 @@ HelperReply::parseResponseKeys()
         if (*p != '=')
             return; // done. Not a key.
 
+        // whitespace between key and value is prohibited.
+        // workaround strwordtok() which skips whitespace prefix.
+        if (xisspace(*(p+1)))
+            return; // done. Not a key.
+
         *p = '\0';
         ++p;
 
-        String key(other().content());
+        const String key(other().content());
 
         // the value may be a quoted string or a token
         const bool urlDecode = (*p != '"'); // check before moving p.
@@ -139,7 +144,7 @@ HelperReply::parseResponseKeys()
         responseKeys.add(key, value);
 
         modifiableOther().consume(p - other().content());
-        modifiableOther().consumeWhitespace();
+        modifiableOther().consumeWhitespacePrefix();
     }
 }
 
