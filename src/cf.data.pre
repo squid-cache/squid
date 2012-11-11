@@ -715,11 +715,15 @@ DOC_START
 
 	All response keyword values need to be a single token with URL
 	escaping, or enclosed in double quotes (") and escaped using \ on
-	any quotes, whitespace or \ characters within the value
-	For example:
-		user="John\ Smith"
-		user="J.\ O\'Brien"
+	any double quotes or \ characters within the value. The wrapping
+	double quotes are removed before the value is interpreted by Squid.
+	\r and \n are also replace by CR and LF.
+
+	Some example key values:
+
 		user=John%20Smith
+		user="John Smith"
+		user="J. \"Bob\" Smith"
 DOC_END
 
 NAME: acl
@@ -4131,12 +4135,12 @@ DOC_START
 
 	For each requested URL, the rewriter will receive on line with the format
 
-	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kvpairs]<NL>
+	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kv-pairs]<NL>
 
 
 	After processing the request the helper must reply using the following format:
 
-	  [channel-ID <SP>] result [<SP> kvpairs]
+	  [channel-ID <SP>] result [<SP> kv-pairs]
 
 	The result code can be:
 
@@ -4161,7 +4165,7 @@ DOC_START
 
 
 	In the future, the interface protocol will be extended with
-	key=value pairs ("kvpairs" shown above).  Helper programs
+	key=value pairs ("kv-pairs" shown above).  Helper programs
 	should be prepared to receive and possibly ignore additional
 	whitespace-separated tokens on each input line.
 
