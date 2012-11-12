@@ -115,13 +115,20 @@ const char * SkipBuildPrefix(const char* path);
         } \
    } while (/*CONSTCOND*/ 0)
 
-/*
- * HERE is a macro that you can use like this:
+/** stream manipulator which does nothing.
+ * \deprecated Do not add to new code, and remove when editing old code
  *
+ * Its purpose is to inactivate calls made following previous debugs()
+ * guidelines such as
  * debugs(1,2, HERE << "some message");
+ *
+ * His former objective is now absorbed in the debugs call itself
  */
-//TODO: just before branching Squid 3.4, blanket-remove HERE from the source
-#define HERE ""
+inline std::ostream&
+HERE(std::ostream& s)
+{
+    return s;
+}
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
