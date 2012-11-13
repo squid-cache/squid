@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
  *
@@ -46,12 +44,17 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc3596.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 #include "util.h"
 #include "wordlist.h"
+
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
@@ -69,7 +72,6 @@
  */
 #if !USE_DNSHELPER
 #if _SQUID_WINDOWS_
-#include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
 #define REG_VXD_MSTCP "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
@@ -233,7 +235,7 @@ static void idnsAddPathComponent(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static void idnsParseNameservers(void);
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static void idnsParseResolvConf(void);
 #endif
 #if _SQUID_WINDOWS_
@@ -362,7 +364,7 @@ idnsParseNameservers(void)
     }
 }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static void
 idnsParseResolvConf(void)
 {
@@ -1531,7 +1533,7 @@ dnsInit(void)
 
     assert(0 == nns);
     idnsParseNameservers();
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 
     if (0 == nns)
         idnsParseResolvConf();

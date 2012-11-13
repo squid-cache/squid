@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Alex Rousskov
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -54,8 +52,8 @@ public:
     VectorIteratorBase(C &);
     VectorIteratorBase(size_t, C &);
     VectorIteratorBase & operator =(VectorIteratorBase const &);
-    bool operator != (VectorIteratorBase const &rhs);
-    bool operator == (VectorIteratorBase const &rhs);
+    bool operator != (VectorIteratorBase const &rhs) const;
+    bool operator == (VectorIteratorBase const &rhs) const;
     VectorIteratorBase & operator ++();
     VectorIteratorBase operator ++(int);
     typename C::value_type & operator *() const {
@@ -388,14 +386,14 @@ template<class C>
 VectorIteratorBase<C>::VectorIteratorBase(size_t aPos, C &container) : pos(aPos), theVector(&container) {}
 
 template<class C>
-bool VectorIteratorBase<C>:: operator != (VectorIteratorBase<C> const &rhs)
+bool VectorIteratorBase<C>:: operator != (VectorIteratorBase<C> const &rhs) const
 {
     assert (theVector);
     return pos != rhs.pos;
 }
 
 template<class C>
-bool VectorIteratorBase<C>:: operator == (VectorIteratorBase<C> const &rhs)
+bool VectorIteratorBase<C>:: operator == (VectorIteratorBase<C> const &rhs) const
 {
     assert (theVector);
     return pos == rhs.pos;

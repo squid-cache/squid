@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -37,9 +35,10 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
+#include "cache_cf.h"
 #include "client_db.h"
 #include "Debug.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "wordlist.h"
 
 ACL *

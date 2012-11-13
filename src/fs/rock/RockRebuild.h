@@ -2,7 +2,8 @@
 #define SQUID_FS_ROCK_REBUILD_H
 
 #include "base/AsyncJob.h"
-#include "structs.h"
+#include "cbdata.h"
+#include "store_rebuild.h"
 
 namespace Rock
 {
@@ -39,7 +40,7 @@ private:
     int64_t dbOffset;
     int filen;
 
-    struct _store_rebuild_data counts;
+    StoreRebuildData counts;
 
     static void Steps(void *data);
 

@@ -5,11 +5,11 @@
 namespace Math
 {
 
-extern int intPercent(const int a, const int b);
-extern int64_t int64Percent(const int64_t a, const int64_t b);
-extern double doublePercent(const double, const double);
-extern int intAverage(const int, const int, int, const int);
-extern double doubleAverage(const double, const double, int, const int);
+int intPercent(const int a, const int b);
+int64_t int64Percent(const int64_t a, const int64_t b);
+double doublePercent(const double, const double);
+int intAverage(const int, const int, int, const int);
+double doubleAverage(const double, const double, int, const int);
 
 } // namespace Math
 

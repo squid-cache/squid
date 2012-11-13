@@ -38,12 +38,11 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
+#include "HttpStatusCode.h"
 #include "ip/Address.h"
-#include "MemBuf.h"
 #include "SquidString.h"
-#if USE_AUTH
+/* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#endif
 #if USE_SSL
 #include "ssl/ErrorDetail.h"
 #endif
@@ -204,10 +203,10 @@ private:
  \par Global effects:
  *            error_text[] - is modified
  */
-SQUIDCEXTERN void errorInitialize(void);
+void errorInitialize(void);
 
 /// \ingroup ErrorPageAPI
-SQUIDCEXTERN void errorClean(void);
+void errorClean(void);
 
 /**
  * \ingroup ErrorPageAPI
@@ -229,7 +228,7 @@ SQUIDCEXTERN void errorClean(void);
  \param clientConn  socket where page object is to be written
  \param err         This object is destroyed after use in this function.
  */
-SQUIDCEXTERN void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err);
+void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err);
 
 /**
  \ingroup ErrorPageAPI
@@ -247,12 +246,12 @@ SQUIDCEXTERN void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err
  \param entry   ??
  \param err     This object is destroyed after use in this function.
  */
-SQUIDCEXTERN void errorAppendEntry(StoreEntry *entry, ErrorState *err);
+void errorAppendEntry(StoreEntry *entry, ErrorState *err);
 
 /// \ingroup ErrorPageAPI
-SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
+err_type errorReservePageId(const char *page_name);
 
-SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
+const char *errorPageName(int pageId); ///< error ID to string
 
 /**
  \ingroup ErrorPageAPI

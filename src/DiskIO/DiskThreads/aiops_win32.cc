@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 43    Windows AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
@@ -35,18 +33,18 @@
  */
 
 #include "squid.h"
-#include "squid_windows.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 
-#include	<stdio.h>
-#include	<sys/stat.h>
-#include	<fcntl.h>
-#include	<errno.h>
-#include	<dirent.h>
-#include	<signal.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <dirent.h>
+#include <signal.h>
 
 #define RIDICULOUS_LENGTH	4096
 

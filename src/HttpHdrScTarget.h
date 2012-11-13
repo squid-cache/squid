@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -128,6 +126,6 @@ private:
 
 MEMPROXY_CLASS_INLINE(HttpHdrScTarget);
 
-extern void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 #endif /* SQUID_HTTPHDRSURROGATECONTROLTARGET_H */

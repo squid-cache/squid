@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov
  *
@@ -36,15 +34,17 @@
 #include "squid.h"
 #if USE_CACHE_DIGESTS
 #include "CacheDigest.h"
+#include "CachePeer.h"
 #include "event.h"
 #include "forward.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
 #include "MemObject.h"
 #include "neighbors.h"
+#include "mime_header.h"
 #include "PeerDigest.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "store_key_md5.h"
@@ -91,7 +91,7 @@ static time_t pd_last_req_time = 0;	/* last call to Check */
 
 /* initialize peer digest */
 static void
-peerDigestInit(PeerDigest * pd, peer * p)
+peerDigestInit(PeerDigest * pd, CachePeer * p)
 {
     assert(pd && p);
 
@@ -138,7 +138,7 @@ PeerDigest::operator delete (void *address)
 
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *
-peerDigestCreate(peer * p)
+peerDigestCreate(CachePeer * p)
 {
     PeerDigest *pd;
     assert(p);
@@ -165,7 +165,7 @@ peerDigestDestroy(PeerDigest * pd)
      * tell it that the digest is gone.
      */
     if (cbdataReferenceValidDone(peerTmp, &p))
-        peerNoteDigestGone((peer *)p);
+        peerNoteDigestGone((CachePeer *)p);
 
     peerDigestClean(pd);
 
@@ -313,7 +313,7 @@ CBDATA_TYPE(DigestFetchState);
 static void
 peerDigestRequest(PeerDigest * pd)
 {
-    peer *p = pd->peer;
+    CachePeer *p = pd->peer;
     StoreEntry *e, *old_e;
     char *url;
     const cache_key *key;

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 16    Cache Manager API
  *
  */
@@ -8,7 +6,7 @@
 #ifndef SQUID_MGR_FORWARD_H
 #define SQUID_MGR_FORWARD_H
 
-#include "RefCount.h"
+#include "base/RefCount.h"
 
 namespace Mgr
 {

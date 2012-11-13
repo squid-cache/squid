@@ -60,7 +60,7 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
+#include "SquidConfig.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to
@@ -1448,7 +1448,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-extern ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void

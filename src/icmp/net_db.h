@@ -1,34 +1,72 @@
 #ifndef ICMP_NET_DB_H
 #define ICMP_NET_DB_H
 
+#include "hash.h"
+
+class CachePeer;
+class HttpRequest;
+class netdbEntry;
+class StoreEntry;
 namespace Ip
 {
 class Address;
 };
 
-class StoreEntry;
-class HttpRequest;
+// POD
+class net_db_name
+{
+public:
+    hash_link hash;     /* must be first */
+    net_db_name *next;
+    netdbEntry *net_db_entry;
+};
 
-/* for struct peer */
-#include "structs.h"
+// POD
+class net_db_peer
+{
+public:
+    const char *peername;
+    double hops;
+    double rtt;
+    time_t expires;
+};
 
-SQUIDCEXTERN void netdbInit(void);
+// POD
+class netdbEntry
+{
+public:
+    hash_link hash;     /* must be first */
+    char network[MAX_IPSTRLEN];
+    int pings_sent;
+    int pings_recv;
+    double hops;
+    double rtt;
+    time_t next_ping_time;
+    time_t last_use_time;
+    int link_count;
+    net_db_name *hosts;
+    net_db_peer *peers;
+    int n_peers_alloc;
+    int n_peers;
+};
 
-SQUIDCEXTERN void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);
-SQUIDCEXTERN void netdbPingSite(const char *hostname);
+void netdbInit(void);
+
+void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);
+void netdbPingSite(const char *hostname);
 void netdbDump(StoreEntry *);
 
-SQUIDCEXTERN void netdbFreeMemory(void);
-SQUIDCEXTERN int netdbHostHops(const char *host);
-SQUIDCEXTERN int netdbHostRtt(const char *host);
-SQUIDCEXTERN void netdbUpdatePeer(HttpRequest *, peer * e, int rtt, int hops);
+void netdbFreeMemory(void);
+int netdbHostHops(const char *host);
+int netdbHostRtt(const char *host);
+void netdbUpdatePeer(HttpRequest *, CachePeer * e, int rtt, int hops);
 
-SQUIDCEXTERN void netdbDeleteAddrNetwork(Ip::Address &addr);
-SQUIDCEXTERN void netdbBinaryExchange(StoreEntry *);
-SQUIDCEXTERN void netdbExchangeStart(void *);
+void netdbDeleteAddrNetwork(Ip::Address &addr);
+void netdbBinaryExchange(StoreEntry *);
+void netdbExchangeStart(void *);
 
-SQUIDCEXTERN void netdbExchangeUpdatePeer(Ip::Address &, peer *, double, double);
-SQUIDCEXTERN peer *netdbClosestParent(HttpRequest *);
-SQUIDCEXTERN void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
+void netdbExchangeUpdatePeer(Ip::Address &, CachePeer *, double, double);
+CachePeer *netdbClosestParent(HttpRequest *);
+void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
 #endif /* ICMP_NET_DB_H */

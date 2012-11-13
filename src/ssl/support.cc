@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support
  *
@@ -45,6 +43,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "protos.h"
+#include "SquidConfig.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"

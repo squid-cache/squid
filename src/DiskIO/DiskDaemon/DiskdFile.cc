@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
  *
@@ -43,9 +41,15 @@
 #include "DiskIO/WriteRequest.h"
 #include "StatCounters.h"
 
+#if HAVE_SYS_IPC_H
 #include <sys/ipc.h>
+#endif
+#if HAVE_SYS_MSG_H
 #include <sys/msg.h>
+#endif
+#if HAVE_SYS_SHM_H
 #include <sys/shm.h>
+#endif
 
 CBDATA_CLASS_INIT(DiskdFile);
 
@@ -382,7 +386,7 @@ DiskdFile::readDone(diomsg * M)
     assert (M->requestor);
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
     /* remove the free protection */
-    readRequest->RefCountDereference();
+    readRequest->unlock();
 
     if (M->status < 0) {
         ++diskd_stats.read.fail;
@@ -406,7 +410,7 @@ DiskdFile::writeDone(diomsg *M)
     assert (M->requestor);
     WriteRequest::Pointer writeRequest = dynamic_cast<WriteRequest *>(M->requestor);
     /* remove the free protection */
-    writeRequest->RefCountDereference();
+    writeRequest->unlock();
 
     if (M->status < 0) {
         errorOccured = true;

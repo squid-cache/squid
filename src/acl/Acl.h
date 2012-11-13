@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -40,7 +38,6 @@
 #include "defines.h"
 #include "dlink.h"
 #include "MemPool.h"
-#include "structs.h"
 
 #if HAVE_OSTREAM
 #include <ostream>
@@ -48,6 +45,7 @@
 
 class ConfigParser;
 class ACLChecklist;
+class ACLList;
 
 /// \ingroup ACLAPI
 class ACL

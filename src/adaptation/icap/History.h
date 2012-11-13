@@ -1,8 +1,8 @@
 #ifndef SQUID_ICAPHISTORY_H
 #define SQUID_ICAPHISTORY_H
 
+#include "base/RefCount.h"
 #include "enums.h"
-#include "RefCount.h"
 #include "SquidString.h"
 
 namespace Adaptation

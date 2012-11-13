@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 46    Access Log - Squid ICAP Logging
  * AUTHOR: Alex Rousskov
  *
@@ -42,7 +40,7 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 void

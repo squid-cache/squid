@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -116,8 +114,8 @@
 /* temp hack: needs to be pre-defined for now. */
 #define SQUID_MAXPATHLEN 256
 
-// TODO: determine if this is required. OR if compat/os/mswin.h works
-#if _SQUID_MSWIN_
+// TODO: determine if this is required. OR if compat/os/mswindows.h works
+#if _SQUID_WINDOWS_ && defined(__cplusplus)
 /** \cond AUTODOCS-IGNORE */
 using namespace Squid;
 /** \endcond */

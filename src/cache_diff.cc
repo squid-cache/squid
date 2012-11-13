@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: Alex Rousskov
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

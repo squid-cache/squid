@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Alan Barrett
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -78,7 +76,7 @@ public:
 
     virtual void reference(StoreEntry&);
 
-    virtual bool dereference(StoreEntry&);
+    virtual bool dereference(StoreEntry&, bool);
 
     virtual void maintain();
 

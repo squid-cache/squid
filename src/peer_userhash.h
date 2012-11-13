@@ -34,10 +34,10 @@
 #ifndef SQUID_PEER_USERHASH_H_
 #define SQUID_PEER_USERHASH_H_
 
-class peer;
+class CachePeer;
 class HttpRequest;
 
-extern void peerUserHashInit(void);
-extern peer * peerUserHashSelectParent(HttpRequest * request);
+void peerUserHashInit(void);
+CachePeer * peerUserHashSelectParent(HttpRequest * request);
 
 #endif /* SQUID_PEER_USERHASH_H_ */

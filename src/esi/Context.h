@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -38,6 +36,7 @@
 #include "esi/Element.h"
 #include "clientStream.h"
 #include "err_type.h"
+#include "HttpStatusCode.h"
 
 class ESIVarState;
 class ClientHttpRequest;

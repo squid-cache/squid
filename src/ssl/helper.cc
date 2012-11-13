@@ -1,16 +1,12 @@
-/*
- * 2008/11/14
- */
-
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "protos.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
+#include "SquidString.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "wordlist.h"
-#include "protos.h"
+#include "SquidConfig.h"
 
 Ssl::Helper * Ssl::Helper::GetInstance()
 {
@@ -97,7 +93,9 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
         if (squid_curtime - first_warn > 3 * 60)
             fatal("SSL servers not responding for 3 minutes");
         debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
-        callback(data, (char *)"error 45 Temporary network problem, please retry later");
+        const char *errMsg = "BH error 45 Temporary network problem, please retry later"; // XXX: upgrade to message=""
+        HelperReply failReply(errMsg,strlen(errMsg));
+        callback(data, failReply);
         return;
     }
 
@@ -178,8 +176,10 @@ void Ssl::CertValidationHelper::sslSubmit(CrtdMessage const & message, HLPCB * c
             first_warn = squid_curtime;
         if (squid_curtime - first_warn > 3 * 60)
             fatal("SSL servers not responding for 3 minutes");
-        debugs(34, 1, HERE << "Queue overload, rejecting");
-        callback(data, (char *)"error 45 Temporary network problem, please retry later");
+        debugs(83, 1, HERE << "Queue overload, rejecting");
+        const char *errMsg = "BH error 45 Temporary network problem, please retry later";
+        HelperReply failReply(errMsg,strlen(errMsg));
+        callback(data, failReply);
         return;
     }
 

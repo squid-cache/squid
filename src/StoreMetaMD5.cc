@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
  *
@@ -34,9 +32,9 @@
  */
 
 #include "squid.h"
+#include "int.h"
 #include "md5.h"
 #include "MemObject.h"
-#include "protos.h"
 #include "Store.h"
 #include "StoreMetaMD5.h"
 

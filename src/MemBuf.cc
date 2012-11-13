@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov
  *
@@ -103,7 +101,6 @@
 #include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 
 #ifdef VA_COPY
 #undef VA_COPY

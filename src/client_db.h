@@ -36,20 +36,28 @@
 #include "anyp/ProtocolType.h"
 #include "enums.h"
 #include "ip/Address.h"
+namespace Ip
+{
+class Address;
+}
 
 class StoreEntry;
 class ClientInfo;
 
-extern void clientdbInit(void);
-extern void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
-extern int clientdbCutoffDenied(const Ip::Address &);
-extern void clientdbDump(StoreEntry *);
-extern void clientdbFreeMemory(void);
-extern int clientdbEstablished(const Ip::Address &, int);
+void clientdbInit(void);
+void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
+int clientdbCutoffDenied(const Ip::Address &);
+void clientdbDump(StoreEntry *);
+void clientdbFreeMemory(void);
+int clientdbEstablished(const Ip::Address &, int);
 
 #if USE_DELAY_POOLS
-extern void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
-extern ClientInfo * clientdbGetInfo(const Ip::Address &addr);
+void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
+ClientInfo * clientdbGetInfo(const Ip::Address &addr);
+#endif
+
+#if SQUID_SNMP
+Ip::Address *client_entry(Ip::Address *current);
 #endif
 
 #endif /* SQUID_CLIENT_DB_H_ */

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,17 +30,16 @@
 #ifndef SQUID_GLOBALS_H
 #define SQUID_GLOBALS_H
 
+#include "acl/AclDenyInfoList.h"
+#include "CacheDigest.h"
+#include "defines.h"
+#include "hash.h"
+#include "IoStats.h"
+#include "rfc2181.h"
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-
-#include "rfc2181.h"
-
-/* for ERROR_BUF_SZ, BUFSIZ */
-#include "defines.h"
-
-/* for iostats */
-#include "structs.h"
 
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
@@ -87,9 +84,9 @@ extern int syslog_enable;	/* 0 */
 extern int DnsSocketA;		/* -1 */
 extern int DnsSocketB;		/* -1 */
 extern int n_disk_objects;	/* 0 */
-extern iostats IOStats;
+extern IoStats IOStats;
 
-extern struct acl_deny_info_list *DenyInfoList;	/* NULL */
+extern AclDenyInfoList *DenyInfoList;	/* NULL */
 
 extern struct timeval squid_start;
 extern int starting_up;	/* 1 */
@@ -118,7 +115,7 @@ extern size_t store_pages_max;	/* 0 */
 extern int64_t store_maxobjsize;	/* -1 */
 extern hash_table *proxy_auth_username_cache;	/* NULL */
 extern int incoming_sockets_accepted;
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #endif
 #if _SQUID_WINDOWS_

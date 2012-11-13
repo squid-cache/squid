@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,9 +35,9 @@
  * or perhaps use membuffers here?
  */
 
+#include "base/RefCount.h"
 #include "cbdata.h"
 #include "defines.h"
-#include "RefCount.h"
 #include "SquidString.h"
 
 class ESISegment : public RefCountable
@@ -74,6 +72,6 @@ private:
     void dumpOne() const;
 };
 
-extern void ESISegmentFreeList (ESISegment::Pointer &head);
+void ESISegmentFreeList (ESISegment::Pointer &head);
 
 #endif /* SQUID_ESISEGMENT_H */

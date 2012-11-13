@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -64,19 +62,19 @@ public:
 };
 
 /* init/clean */
-SQUIDCEXTERN void httpStatusLineInit(HttpStatusLine * sline);
-SQUIDCEXTERN void httpStatusLineClean(HttpStatusLine * sline);
+void httpStatusLineInit(HttpStatusLine * sline);
+void httpStatusLineClean(HttpStatusLine * sline);
 /* set/get values */
-SQUIDCEXTERN void httpStatusLineSet(HttpStatusLine * sline, HttpVersion version,
-                                    http_status status, const char *reason);
-SQUIDCEXTERN const char *httpStatusLineReason(const HttpStatusLine * sline);
+void httpStatusLineSet(HttpStatusLine * sline, HttpVersion version,
+                       http_status status, const char *reason);
+const char *httpStatusLineReason(const HttpStatusLine * sline);
 /* parse/pack */
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
-SQUIDCEXTERN int httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix,
-                                     const char *start, const char *end);
+int httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix,
+                        const char *start, const char *end);
 /* pack fields using Packer */
-SQUIDCEXTERN void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
+void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 
-SQUIDCEXTERN const char *httpStatusString(http_status status);
+const char *httpStatusString(http_status status);
 
 #endif /* SQUID_HTTPSTATUSLINE_H */

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Windows Interprocess Communication
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
@@ -40,7 +38,10 @@
 #include "fde.h"
 #include "ip/Address.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
+#include "tools.h"
 
 #ifndef _MSWSOCK_
 #include <mswsock.h>

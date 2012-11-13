@@ -33,7 +33,6 @@
 #include "Debug.h"
 #include "Mem.h"
 #include "MemBlob.h"
-#include "protos.h"
 
 #if HAVE_IOSTREAM
 #include <iostream>
@@ -143,6 +142,6 @@ MemBlob::dump(std::ostream &os) const
     << "mem:" << static_cast<void*>(mem)
     << ",capacity:" << capacity
     << ",size:" << size
-    << ",refs:" << RefCountCount() << "; ";
+    << ",refs:" << LockCount() << "; ";
     return os;
 }

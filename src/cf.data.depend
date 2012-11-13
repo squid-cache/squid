@@ -35,7 +35,6 @@ HeaderWithAclList	acl
 adaptation_access_type	adaptation_service_set adaptation_service_chain acl icap_service icap_class
 adaptation_service_set_type	icap_service ecap_service
 adaptation_service_chain_type	icap_service ecap_service
-adaptation_meta_type	acl
 icap_access_type	icap_class acl
 icap_class_type		icap_service
 icap_service_type
@@ -47,6 +46,7 @@ kb_size_t
 logformat
 YesNoNone
 memcachemode
+note			acl
 obsolete
 onoff
 peer

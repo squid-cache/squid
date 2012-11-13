@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,6 +30,7 @@
 #ifndef SQUID_SWAPDIR_H
 #define SQUID_SWAPDIR_H
 
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreIOState.h"
 
@@ -85,7 +84,7 @@ public:
 
     virtual void reference(StoreEntry &);	/* Reference this object */
 
-    virtual bool dereference(StoreEntry &);	/* Unreference this object */
+    virtual bool dereference(StoreEntry &, bool);	/* Unreference this object */
 
     /* the number of store dirs being rebuilt. */
     static int store_dirs_rebuilding;
@@ -99,25 +98,25 @@ private:
 };
 
 /* migrating from the Config based list of swapdirs */
-extern void allocate_new_swapdir(SquidConfig::_cacheSwap *);
-extern void free_cachedir(SquidConfig::_cacheSwap * swap);
-SQUIDCEXTERN OBJH storeDirStats;
-SQUIDCEXTERN char *storeDirSwapLogFile(int, const char *);
-SQUIDCEXTERN char *storeSwapFullPath(int, char *);
-SQUIDCEXTERN char *storeSwapSubSubDir(int, char *);
-SQUIDCEXTERN const char *storeSwapPath(int);
-SQUIDCEXTERN int storeDirWriteCleanLogs(int reopen);
-SQUIDCEXTERN STDIRSELECT *storeDirSelectSwapDir;
-SQUIDCEXTERN int storeVerifySwapDirs(void);
-SQUIDCEXTERN void storeDirCloseSwapLogs(void);
-SQUIDCEXTERN void storeDirCloseTmpSwapLog(int dirn);
-SQUIDCEXTERN void storeDirDiskFull(sdirno);
-SQUIDCEXTERN void storeDirOpenSwapLogs(void);
-SQUIDCEXTERN void storeDirSwapLog(const StoreEntry *, int op);
-SQUIDCEXTERN void storeDirLRUDelete(StoreEntry *);
-SQUIDCEXTERN void storeDirLRUAdd(StoreEntry *);
-SQUIDCEXTERN int storeDirGetBlkSize(const char *path, int *blksize);
-SQUIDCEXTERN int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
+void allocate_new_swapdir(SquidConfig::_cacheSwap *);
+void free_cachedir(SquidConfig::_cacheSwap * swap);
+extern OBJH storeDirStats;
+char *storeDirSwapLogFile(int, const char *);
+char *storeSwapFullPath(int, char *);
+char *storeSwapSubSubDir(int, char *);
+const char *storeSwapPath(int);
+int storeDirWriteCleanLogs(int reopen);
+extern STDIRSELECT *storeDirSelectSwapDir;
+int storeVerifySwapDirs(void);
+void storeDirCloseSwapLogs(void);
+void storeDirCloseTmpSwapLog(int dirn);
+void storeDirDiskFull(sdirno);
+void storeDirOpenSwapLogs(void);
+void storeDirSwapLog(const StoreEntry *, int op);
+void storeDirLRUDelete(StoreEntry *);
+void storeDirLRUAdd(StoreEntry *);
+int storeDirGetBlkSize(const char *path, int *blksize);
+int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
 
 /// manages a single cache_dir
 class SwapDir : public Store
@@ -207,7 +206,7 @@ public:
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
     /* These two are notifications */
     virtual void reference(StoreEntry &);	/* Reference this object */
-    virtual bool dereference(StoreEntry &);	/* Unreference this object */
+    virtual bool dereference(StoreEntry &, bool);	/* Unreference this object */
     virtual int callback();	/* Handle pending callbacks */
     virtual void sync();	/* Sync the store prior to shutdown */
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;

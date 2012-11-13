@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SPLAY_H
 #define SQUID_SPLAY_H
 

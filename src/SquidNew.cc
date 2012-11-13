@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          Memory Allocation
  * AUTHOR: Robert Collins
  *

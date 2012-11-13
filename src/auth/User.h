@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -38,9 +36,9 @@
 
 #include "auth/CredentialState.h"
 #include "auth/Type.h"
+#include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
-#include "RefCount.h"
 
 class AuthUserHashPointer;
 class StoreEntry;

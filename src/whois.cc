@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis
  *
@@ -41,7 +39,7 @@
 #include "HttpRequest.h"
 #include "HttpRequest.h"
 #include "forward.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"

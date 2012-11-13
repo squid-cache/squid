@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: none          Common Removal Policy
  * AUTHOR: Robert Collins
  *

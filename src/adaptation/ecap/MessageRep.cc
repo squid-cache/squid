@@ -5,7 +5,6 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "BodyPipe.h"
-#include "protos.h"
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
@@ -226,9 +225,9 @@ Adaptation::Ecap::RequestLineRep::method(const Name &aMethod)
 {
     if (aMethod.assignedHostId()) {
         const int id = aMethod.hostId();
-        Must(METHOD_NONE < id && id < METHOD_ENUM_END);
-        Must(id != METHOD_OTHER);
-        theMessage.method = HttpRequestMethod(static_cast<_method_t>(id));
+        Must(Http::METHOD_NONE < id && id < Http::METHOD_ENUM_END);
+        Must(id != Http::METHOD_OTHER);
+        theMessage.method = HttpRequestMethod(static_cast<Http::MethodType>(id));
     } else {
         const std::string &image = aMethod.image();
         theMessage.method = HttpRequestMethod(image.data(),
@@ -240,19 +239,19 @@ Adaptation::Ecap::RequestLineRep::Name
 Adaptation::Ecap::RequestLineRep::method() const
 {
     switch (theMessage.method.id()) {
-    case METHOD_GET:
+    case Http::METHOD_GET:
         return libecap::methodGet;
-    case METHOD_POST:
+    case Http::METHOD_POST:
         return libecap::methodPost;
-    case METHOD_PUT:
+    case Http::METHOD_PUT:
         return libecap::methodPut;
-    case METHOD_HEAD:
+    case Http::METHOD_HEAD:
         return libecap::methodHead;
-    case METHOD_CONNECT:
+    case Http::METHOD_CONNECT:
         return libecap::methodConnect;
-    case METHOD_DELETE:
+    case Http::METHOD_DELETE:
         return libecap::methodDelete;
-    case METHOD_TRACE:
+    case Http::METHOD_TRACE:
         return libecap::methodTrace;
     default:
         return Name(theMessage.method.image());

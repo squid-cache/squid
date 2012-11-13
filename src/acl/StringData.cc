@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -37,7 +35,8 @@
 #include "squid.h"
 #include "acl/StringData.h"
 #include "acl/Checklist.h"
-#include "protos.h"
+#include "cache_cf.h"
+#include "Debug.h"
 #include "wordlist.h"
 
 ACLStringData::ACLStringData() : values (NULL)

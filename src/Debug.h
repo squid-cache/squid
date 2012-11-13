@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 00    Debug Routines
  * AUTHOR: Harvest Derived
  *
@@ -61,8 +59,8 @@
 
 /* context-based debugging, the actual type is subject to change */
 typedef int Ctx;
-extern Ctx ctx_enter(const char *descr);
-extern void ctx_exit(Ctx ctx);
+Ctx ctx_enter(const char *descr);
+void ctx_exit(Ctx ctx);
 
 /* defined debug section limits */
 #define MAX_DEBUG_SECTIONS 100
@@ -109,17 +107,28 @@ const char * SkipBuildPrefix(const char* path);
 #define debugs(SECTION, LEVEL, CONTENT) \
    do { \
         if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \
-                Debug::getDebugOut() << CONTENT; \
-                Debug::finishDebug(); \
+            std::ostream &_dbo=Debug::getDebugOut(); \
+            if (Debug::level > DBG_IMPORTANT) \
+                _dbo << SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "; \
+            _dbo << CONTENT; \
+            Debug::finishDebug(); \
         } \
    } while (/*CONSTCOND*/ 0)
 
-/*
- * HERE is a macro that you can use like this:
+/** stream manipulator which does nothing.
+ * \deprecated Do not add to new code, and remove when editing old code
  *
+ * Its purpose is to inactivate calls made following previous debugs()
+ * guidelines such as
  * debugs(1,2, HERE << "some message");
+ *
+ * His former objective is now absorbed in the debugs call itself
  */
-#define HERE SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+inline std::ostream&
+HERE(std::ostream& s)
+{
+    return s;
+}
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
@@ -143,9 +152,9 @@ inline std::ostream& operator <<(std::ostream &os, const uint8_t d)
 #define old_debug(SECTION, LEVEL)  if do_debug((SECTION), (LEVEL)) _db_print
 
 /* Legacy debug function definitions */
-extern void _db_init(const char *logfile, const char *options);
-extern void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
-extern void _db_set_syslog(const char *facility);
-extern void _db_rotate_log(void);
+void _db_init(const char *logfile, const char *options);
+void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
+void _db_set_syslog(const char *facility);
+void _db_rotate_log(void);
 
 #endif /* SQUID_DEBUG_H */

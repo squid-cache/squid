@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
@@ -38,27 +36,27 @@
 
 #include "ip/Address.h"
 
-extern double xatof(const char *token);
-extern int xatoi(const char *token);
-extern long xatol(const char *token);
-extern unsigned short xatos(const char *token);
+double xatof(const char *token);
+int xatoi(const char *token);
+long xatol(const char *token);
+unsigned short xatos(const char *token);
 
 /**
  * Parse a 64-bit integer value.
  */
-extern int64_t GetInteger64(void);
+int64_t GetInteger64(void);
 
 /**
  * Parses an integer value.
  * Uses a method that obeys hexadecimal 0xN syntax needed for certain bitmasks.
  */
-extern int GetInteger(void);
+int GetInteger(void);
 
-extern unsigned short GetShort(void);
+unsigned short GetShort(void);
 
 // on success, returns true and sets *p (if any) to the end of the integer
-extern bool StringToInt(const char *str, int &result, const char **p, int base);
-extern bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
+bool StringToInt(const char *str, int &result, const char **p, int base);
+bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
 
 /**
  * Parse a socket address (host:port), fill the given Ip::Address object
@@ -66,6 +64,6 @@ extern bool StringToInt64(const char *str, int64_t &result, const char **p, int 
  * \retval true      Success.
  * Destroys token during parse.
  */
-extern bool GetHostWithPort(char *token, Ip::Address *ipa);
+bool GetHostWithPort(char *token, Ip::Address *ipa);
 
 #endif /* SQUID_PARSING_H */
