@@ -1,8 +1,6 @@
+#ifndef SQUID_IOSTATS_H_
+#define SQUID_IOSTATS_H_
 /*
- * $Id$
- *
- * AUTHOR: Guido Serassio <serassio@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -30,20 +28,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef _INC_SQUID_WINDOWS_H
-#define _INC_SQUID_WINDOWS_H
 
-#if _SQUID_WINDOWS_
+/// IO statistics. Currently a POD.
+class IoStats
+{
+public:
+    static const int histSize=16;
 
-#ifndef ACL
-#define ACL WindowsACL
-#define _MSWIN_ACL_WAS_NOT_DEFINED 1
-#endif
-#include <windows.h>
-#if _MSWIN_ACL_WAS_NOT_DEFINED
-#undef ACL
-#undef _MSWIN_ACL_WAS_NOT_DEFINED
-#endif
+    struct {
+        int reads;
+        int reads_deferred;
+        int read_hist[histSize];
+        int writes;
+        int write_hist[histSize];
+    }
+    Http, Ftp, Gopher;
+};
 
-#endif /* _SQUID_WINDOWS_ */
-#endif /* _INC_SQUID_WINDOWS_H */
+#endif /* SQUID_IOSTATS_H_ */

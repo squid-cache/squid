@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -84,7 +82,7 @@ class StoreEntry;
 typedef void AUTHSSTATS(StoreEntry *);
 
 /// \ingroup AuthAPI
-extern void authenticateInit(Auth::ConfigVector *);
+void authenticateInit(Auth::ConfigVector *);
 
 /** \ingroup AuthAPI
  * Remove all idle authentication state. Intended for use by reconfigure.
@@ -96,19 +94,19 @@ extern void authenticateInit(Auth::ConfigVector *);
  * authentication unless something causes the global config to be rebuilt.
  * Such as a configure load action adding config and re-running authenticateInit().
  */
-extern void authenticateReset(void);
+void authenticateReset(void);
 
-extern void authenticateRotate(void);
-
-/// \ingroup AuthAPI
-extern void authenticateFreeProxyAuthUserACLResults(void *data);
-/// \ingroup AuthAPI
-extern int authenticateActiveSchemeCount(void);
-/// \ingroup AuthAPI
-extern int authenticateSchemeCount(void);
+void authenticateRotate(void);
 
 /// \ingroup AuthAPI
-extern void authenticateOnCloseConnection(ConnStateData * conn);
+void authenticateFreeProxyAuthUserACLResults(void *data);
+/// \ingroup AuthAPI
+int authenticateActiveSchemeCount(void);
+/// \ingroup AuthAPI
+int authenticateSchemeCount(void);
+
+/// \ingroup AuthAPI
+void authenticateOnCloseConnection(ConnStateData * conn);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_GADGETS_H */

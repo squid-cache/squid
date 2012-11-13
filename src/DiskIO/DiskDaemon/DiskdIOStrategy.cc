@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels
  *
@@ -41,14 +39,22 @@
 #include "DiskdFile.h"
 #include "diomsg.h"
 #include "fd.h"
-#include "protos.h"
 #include "Store.h"
 #include "StatCounters.h"
+#include "SquidConfig.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
+#include "unlinkd.h"
 
+#if HAVE_SYS_IPC_H
 #include <sys/ipc.h>
+#endif
+#if HAVE_SYS_MSG_H
 #include <sys/msg.h>
+#endif
+#if HAVE_SYS_SHM_H
 #include <sys/shm.h>
+#endif
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
@@ -120,14 +126,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
     if (shedLoad()) {
         /* Damn, we need to issue a sync unlink here :( */
         debugs(79, 2, "storeDiskUnlink: Out of queue space, sync unlink");
-#if USE_UNLINKD
-
         unlinkdUnlink(path);
-#else
-
-        unlink(path);
-#endif
-
         return;
     }
 
@@ -325,7 +324,7 @@ DiskdIOStrategy::handle(diomsg * M)
 
     if (M->newstyle) {
         DiskdFile *theFile = (DiskdFile *)M->callback_data;
-        theFile->RefCountDereference();
+        theFile->unlock();
         theFile->completed (M);
     } else
         switch (M->mtype) {
@@ -355,16 +354,16 @@ DiskdIOStrategy::handle(diomsg * M)
 }
 
 int
-DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, RefCountable_ *requestor)
+DiskdIOStrategy::send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, Lock *requestor)
 {
     diomsg M;
     M.callback_data = cbdataReference(theFile);
-    theFile->RefCountReference();
+    theFile->lock();
     M.requestor = requestor;
     M.newstyle = true;
 
     if (requestor)
-        requestor->RefCountReference();
+        requestor->lock();
 
     return SEND(&M, mtype, id, size, offset, shm_offset);
 }

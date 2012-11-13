@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins, Henrik Nordstrom
  *

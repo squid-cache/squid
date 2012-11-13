@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -35,6 +33,6 @@
 /* big mask for http headers */
 typedef char HttpHeaderMask[12];
 
-SQUIDCEXTERN void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
+void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
 
 #endif /* SQUID_HTTPHEADERMASK_H */

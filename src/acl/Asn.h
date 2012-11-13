@@ -38,13 +38,13 @@
 #include "acl/Checklist.h"
 #include "ip/Address.h"
 
-SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, Ip::Address &);
+int asnMatchIp(CbDataList<int> *, Ip::Address &);
 
 /// \ingroup ACLAPI
-SQUIDCEXTERN void asnInit(void);
+void asnInit(void);
 
 /// \ingroup ACLAPI
-SQUIDCEXTERN void asnFreeMemory(void);
+void asnFreeMemory(void);
 
 /// \ingroup ACLAPI
 class ACLASN : public ACLData<Ip::Address>

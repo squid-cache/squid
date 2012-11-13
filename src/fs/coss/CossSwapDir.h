@@ -105,11 +105,11 @@ private:
 };
 
 /// \ingroup COSS
-extern void storeCossAdd(CossSwapDir *, StoreEntry *);
+void storeCossAdd(CossSwapDir *, StoreEntry *);
 /// \ingroup COSS
-extern void storeCossRemove(CossSwapDir *, StoreEntry *);
+void storeCossRemove(CossSwapDir *, StoreEntry *);
 /// \ingroup COSS
-extern void storeCossStartMembuf(CossSwapDir * SD);
+void storeCossStartMembuf(CossSwapDir * SD);
 
 #include "StoreSearch.h"
 

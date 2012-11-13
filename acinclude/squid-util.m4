@@ -196,12 +196,12 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
     yes)
       if test -d "${srcdir}/.bzr"; then
         AC_PATH_PROG(BZR,bzr,$FALSE)
-        squid_bzr_branch_nick=`${BZR} nick 2>/dev/null`
+        squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
         if test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"; then
-          squid_bzr_branch_revno=`${BZR} revno 2>/dev/null | sed 's/\"//g'`
+          squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
         fi
         if test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"; then
-          ${BZR} diff 2>&1 >/dev/null
+          sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
           if test $? -eq 1; then
               squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
           fi

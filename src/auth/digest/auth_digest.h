@@ -50,12 +50,12 @@ struct _digest_nonce_h : public hash_link {
     } flags;
 };
 
-extern void authDigestNonceUnlink(digest_nonce_h * nonce);
-extern int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
-extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
-extern int authDigestNonceLastRequest(digest_nonce_h * nonce);
-extern void authenticateDigestNonceShutdown(void);
-extern void authDigestNoncePurge(digest_nonce_h * nonce);
+void authDigestNonceUnlink(digest_nonce_h * nonce);
+int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
+const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
+int authDigestNonceLastRequest(digest_nonce_h * nonce);
+void authenticateDigestNonceShutdown(void);
+void authDigestNoncePurge(digest_nonce_h * nonce);
 
 namespace Auth
 {

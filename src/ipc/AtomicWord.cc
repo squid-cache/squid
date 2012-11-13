@@ -1,13 +1,10 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
- *
  */
 
 #include "squid.h"
 #include "ipc/AtomicWord.h"
-#include "protos.h"
+#include "tools.h"
 
 bool Ipc::Atomic::Enabled()
 {

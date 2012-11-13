@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins
  *
@@ -53,9 +51,9 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
+#include "StrList.h"
 
 /* Digest Scheme */
 
@@ -93,6 +91,7 @@ static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
     {"response", (http_hdr_type)DIGEST_RESPONSE},
 };
 
+class HttpHeaderFieldInfo;
 static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
 
 /*

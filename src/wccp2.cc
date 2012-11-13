@@ -43,7 +43,6 @@
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"
-#include "protos.h"
 #include "Store.h"
 #include "SwapDir.h"
 

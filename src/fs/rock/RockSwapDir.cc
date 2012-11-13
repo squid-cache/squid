@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  */
 
@@ -15,11 +13,14 @@
 #include "fs/rock/RockIoState.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockRebuild.h"
+#include "globals.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "Parsing.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
+#include "tools.h"
+
 #include <cstdlib>
 #include <iomanip>
 
@@ -216,7 +217,7 @@ Rock::SwapDir::init()
 
     // XXX: SwapDirs aren't refcounted. We make IORequestor calls, which
     // are refcounted. We up our count once to avoid implicit delete's.
-    RefCountReference();
+    lock();
 
     Must(!map);
     map = new DirMap(path);
@@ -745,7 +746,7 @@ Rock::SwapDir::reference(StoreEntry &e)
 }
 
 bool
-Rock::SwapDir::dereference(StoreEntry &e)
+Rock::SwapDir::dereference(StoreEntry &e, bool)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
     if (repl && repl->Dereferenced)

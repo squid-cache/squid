@@ -1,12 +1,11 @@
 /*
- * $Id$
- *
  */
 
 #ifndef SQUID_IPC_MEM_PAGE_STACK_H
 #define SQUID_IPC_MEM_PAGE_STACK_H
 
 #include "ipc/AtomicWord.h"
+#include "ipc/mem/FlexibleArray.h"
 
 namespace Ipc
 {
@@ -25,7 +24,6 @@ public:
     typedef uint32_t Value; ///< stack item type (a free page number)
 
     PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize);
-    ~PageStack();
 
     unsigned int capacity() const { return theCapacity; }
     size_t pageSize() const { return thePageSize; }
@@ -68,7 +66,7 @@ private:
     Atomic::WordT<Offset> theFirstWritable;
 
     typedef Atomic::WordT<Value> Item;
-    Item *theItems; ///< page number storage
+    Ipc::Mem::FlexibleArray<Item> theItems; ///< page number storage
 };
 
 } // namespace Mem

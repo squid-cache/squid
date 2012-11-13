@@ -6,6 +6,7 @@
 #include "base/AsyncCall.h"
 #include "adaptation/forward.h"
 #include "adaptation/Elements.h"
+#include "Notes.h"
 #include "SquidString.h"
 
 class acl_access;
@@ -23,9 +24,6 @@ public:
 
     static void ParseServiceSet(void);
     static void ParseServiceChain(void);
-    static void ParseMetaHeader(ConfigParser &parser);
-    static void FreeMetaHeader();
-    static void DumpMetaHeader(StoreEntry *, const char *);
 
     static void ParseAccess(ConfigParser &parser);
     static void FreeAccess(void);
@@ -50,53 +48,7 @@ public:
     time_t oldest_service_failure;
     int service_revival_delay;
 
-    /**
-     * Used to store meta headers. The meta headers are custom
-     * ICAP request headers or ECAP options used to pass custom
-     * transaction-state related meta information to a service.
-     */
-    class MetaHeader: public RefCountable
-    {
-    public:
-        typedef RefCount<MetaHeader> Pointer;
-        /// Stores a value for the meta header.
-        class Value: public RefCountable
-        {
-        public:
-            typedef RefCount<Value> Pointer;
-            String value; ///< a header value
-            ACLList *aclList; ///< The access list used to determine if this value is valid for a request
-            explicit Value(const String &aVal) : value(aVal), aclList(NULL) {}
-            ~Value();
-        };
-        typedef Vector<Value::Pointer> Values;
-
-        explicit MetaHeader(const String &aName): name(aName) {}
-
-        /**
-         * Adds a value to the meta header and returns a  pointer to the
-         * related Value object.
-         */
-        Value::Pointer addValue(const String &value);
-
-        /**
-         * Walks through the  possible values list of the  meta and selects
-         * the first value which matches the given HttpRequest and HttpReply
-         * or NULL if none matches.
-         */
-        const char *match(HttpRequest *request, HttpReply *reply);
-        String name; ///< The meta header name
-        Values values; ///< The possible values list for the meta header
-    };
-    typedef Vector<MetaHeader::Pointer> MetaHeaders;
-    static MetaHeaders metaHeaders; ///< The list of configured meta headers
-
-    /**
-     * Adds a header to the meta headers list and returns a pointer to the
-     * related metaHeaders object. If the header name already exists in list,
-     * returns a pointer to the existing object.
-     */
-    static MetaHeader::Pointer addMetaHeader(const String &header);
+    static Notes metaHeaders; ///< The list of configured meta headers
 
     typedef Vector<ServiceConfigPointer> ServiceConfigs;
     ServiceConfigs serviceConfigs;

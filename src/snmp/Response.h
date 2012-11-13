@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 49    SNMP Interface
  *
  */
@@ -33,7 +31,7 @@ public:
     Pdu pdu; ///< SNMP protocol data unit
 };
 
-extern std::ostream& operator << (std::ostream& os, const Response& response);
+std::ostream& operator << (std::ostream& os, const Response& response);
 
 } // namespace Snmp
 

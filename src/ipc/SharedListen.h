@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  *
  */
@@ -71,10 +69,10 @@ public:
 };
 
 /// prepare and send SharedListenRequest to Coordinator
-extern void JoinSharedListen(const OpenListenerParams &, AsyncCall::Pointer &);
+void JoinSharedListen(const OpenListenerParams &, AsyncCall::Pointer &);
 
 /// process Coordinator response to SharedListenRequest
-extern void SharedListenJoined(const SharedListenResponse &response);
+void SharedListenJoined(const SharedListenResponse &response);
 
 } // namespace Ipc;
 

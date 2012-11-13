@@ -12,8 +12,6 @@
  *
  *    06-Oct-2007 : Various fixes to allow the build on MinGW
  *
- * Squid CVS $Id$
- *
  *  Original License and code follows.
  */
 #include "squid.h"

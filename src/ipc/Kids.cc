@@ -1,14 +1,13 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
- *
  */
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "globals.h"
 #include "ipc/Kids.h"
-#include "protos.h"
+#include "tools.h"
+#include "SquidConfig.h"
 
 Kids TheKids;
 KidName TheKidName;

@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_BASE_TIDYPOINTER_H
 #define SQUID_BASE_TIDYPOINTER_H
 

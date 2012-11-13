@@ -28,23 +28,16 @@
 #ifndef _VALID_H_
 #define _VALID_H_
 
-#if _SQUID_CYGWIN_
+#include "sspwin32.h"
+
+#if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
 #include <lm.h>
-#include "sspwin32.h"
+#include <sys/types.h>
 #undef debug
 
 /************* CONFIGURATION ***************/
-/*
- * define this if you want debugging
- */
-#ifndef DEBUG
-#define DEBUG
-#endif
-
-#define safe_free(x)	if (x) { free(x); x = NULL; }
-
 /* SMB User verification function */
 
 #define NTV_NO_ERROR 0
@@ -66,12 +59,8 @@ extern int debug_enabled;
 extern char Default_NTDomain[DNLEN+1];
 extern const char * errormsg;
 
-#include <sys/types.h>
-
 /* Debugging stuff */
-
-#ifdef __GNUC__			/* this is really a gcc-ism */
-#ifdef DEBUG
+#if defined(__GNUC__)			/* this is really a gcc-ism */
 #include <stdio.h>
 #include <unistd.h>
 static char *__foo;
@@ -80,15 +69,10 @@ static char *__foo;
                     ((__foo=strrchr(__FILE__,'/'))==NULL?__FILE__:__foo+1),\
                     __LINE__);\
                     fprintf(stderr,X); }
-#else /* DEBUG */
-#define debug(X...)		/* */
-#endif /* DEBUG */
 #else /* __GNUC__ */
 static void
 debug(char *format,...)
 {
-#ifdef DEBUG
-#if _SQUID_MSWIN_
     if (debug_enabled) {
         va_list args;
 
@@ -97,8 +81,6 @@ debug(char *format,...)
         vfprintf(stderr, format, args);
         va_end(args);
     }
-#endif /* _SQUID_MSWIN_ */
-#endif /* DEBUG */
 }
 #endif /* __GNUC__ */
 

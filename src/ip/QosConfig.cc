@@ -10,7 +10,6 @@
 #include "ip/tools.h"
 #include "ip/QosConfig.h"
 #include "Parsing.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

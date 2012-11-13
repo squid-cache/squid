@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,8 +35,8 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "fatal.h"
 #include "globals.h"
-#include "protos.h"
 
 void
 ConfigParser::destruct()

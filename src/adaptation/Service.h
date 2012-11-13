@@ -2,10 +2,10 @@
 #define SQUID_ADAPTATION__SERVICE_H
 
 #include "SquidString.h"
-#include "RefCount.h"
 #include "adaptation/forward.h"
 #include "adaptation/Elements.h"
 #include "adaptation/ServiceConfig.h"
+#include "base/RefCount.h"
 
 // TODO: Move src/ICAP/ICAPServiceRep.h API comments here and update them
 
@@ -61,11 +61,11 @@ private:
 typedef Service::Pointer ServicePointer;
 
 typedef Vector<Adaptation::ServicePointer> Services;
-extern Services &AllServices();
-extern ServicePointer FindService(const Service::Id &key);
+Services &AllServices();
+ServicePointer FindService(const Service::Id &key);
 
 /// detach all adaptation services from current configuration
-extern void DetachServices();
+void DetachServices();
 
 } // namespace Adaptation
 

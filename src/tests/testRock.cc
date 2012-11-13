@@ -8,7 +8,8 @@
 #include "HttpReply.h"
 #include "Mem.h"
 #include "MemObject.h"
-#include "protos.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
@@ -22,12 +23,17 @@
 #if HAVE_STDEXCEPT
 #include <stdexcept>
 #endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #define TESTDIR "testRock__testRockSearch"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
 
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
+
+static char cwd[MAXPATHLEN];
 
 static void
 addSwapDir(testRock::SwapDirPointer aStore)
@@ -46,7 +52,9 @@ testRock::setUp()
         throw std::runtime_error("Failed to clean test work directory");
 
     // use current directory for shared segments (on path-based OSes)
-    Ipc::Mem::Segment::BasePath = ".";
+    Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
+    if (Ipc::Mem::Segment::BasePath == NULL)
+        Ipc::Mem::Segment::BasePath = ".";
 
     Store::Root(new StoreController);
 
@@ -163,13 +171,13 @@ testRock::storeInit()
 StoreEntry *
 testRock::createEntry(const int i)
 {
-    request_flags flags;
+    RequestFlags flags;
     flags.cachable = 1;
     char url[64];
     snprintf(url, sizeof(url), "dummy url %i", i);
     url[sizeof(url) - 1] = '\0';
     StoreEntry *const pe =
-        storeCreateEntry(url, "dummy log url", flags, METHOD_GET);
+        storeCreateEntry(url, "dummy log url", flags, Http::METHOD_GET);
     HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
     rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test",
                     -1, -1, squid_curtime + 100000);

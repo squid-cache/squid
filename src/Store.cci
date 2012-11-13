@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
  *
@@ -33,6 +31,7 @@
  */
 
 #include "MemObject.h"
+#include "HttpReply.h"
 
 /**
  \retval true	Store contains 0 bytes of data.

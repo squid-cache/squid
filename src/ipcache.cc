@@ -40,13 +40,17 @@
 #include "ipcache.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc3596.h"
+#include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "wordlist.h"
+
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 /**
  \defgroup IPCacheAPI IP Cache API
@@ -430,7 +434,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
         memset(i->addrs.bad_mask, 0, sizeof(unsigned char) * ipcount);
 
         for (j = 0, k = 0; k < ipcount; ++k) {
-            if ( i->addrs.in_addrs[j] = A[k] )
+            if ((i->addrs.in_addrs[j] = A[k]))
                 ++j;
             else
                 debugs(14, DBG_IMPORTANT, "ipcacheParse: Invalid IP address '" << A[k] << "' in response to '" << name << "'");
@@ -591,7 +595,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
 /// \ingroup IPCacheInternal
 static void
 #if USE_DNSHELPER
-ipcacheHandleReply(void *data, char *reply)
+ipcacheHandleReply(void *data, const HelperReply &reply)
 #else
 ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
 #endif
@@ -603,7 +607,7 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
     statCounter.dns.svcTime.count(age);
 
 #if USE_DNSHELPER
-    ipcacheParse(i, reply);
+    ipcacheParse(i, reply.other().content());
 #else
 
     int done = ipcacheParse(i, answers, na, error_message);

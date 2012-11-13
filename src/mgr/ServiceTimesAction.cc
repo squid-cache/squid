@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 16    Cache Manager API
  *
  */
@@ -10,11 +8,11 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ServiceTimesAction.h"
-#include "protos.h"
 #include "Store.h"
+#include "tools.h"
 
-extern void GetServiceTimesStats(Mgr::ServiceTimesActionData& stats);
-extern void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry);
+void GetServiceTimesStats(Mgr::ServiceTimesActionData& stats);
+void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry);
 
 Mgr::ServiceTimesActionData::ServiceTimesActionData()
 {

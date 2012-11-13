@@ -2,6 +2,7 @@
 #define SQUID_IPC_STORE_MAP_H
 
 #include "ipc/ReadWriteLock.h"
+#include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "typedefs.h"
 
@@ -62,16 +63,11 @@ public:
         Shared(const int aLimit, const size_t anExtrasSize);
         size_t sharedMemorySize() const;
         static size_t SharedMemorySize(const int limit, const size_t anExtrasSize);
-        ~Shared();
 
         const int limit; ///< maximum number of map slots
         const size_t extrasSize; ///< size of slot extra data
         Atomic::Word count; ///< current number of map slots
-        Slot *slots; ///< slots storage
-    private:
-        Shared(); //disabled
-        Shared &operator=(const Shared&); //disabled
-        Shared(const Shared&); //disabled
+        Ipc::Mem::FlexibleArray<Slot> slots; ///< slots storage
     };
 
 public:

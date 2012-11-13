@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "ssl/gadgets.h"
 #if HAVE_OPENSSL_X509V3_H
@@ -439,7 +435,7 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     serial.reset(x509Pubkeydigest(properties.signWithX509));
     if (!serial.get()) {
         serial.reset(BN_new());
-        BN_is_zero(serial.get());
+        BN_zero(serial.get());
     }
 
     if (!generateFakeSslCertificate(fakeCert, fakePkey, properties, serial))

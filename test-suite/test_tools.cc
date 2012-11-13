@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 // XXX: This file is made of large pieces of src/tools.cc
 // with only a few minor modifications. TODO: redesign or delete.
 
