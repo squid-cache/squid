@@ -66,7 +66,7 @@ public:
 
     virtual void reference(StoreEntry &) {}	/* Reference this object */
 
-    virtual bool dereference(StoreEntry &) { return true; }
+    virtual bool dereference(StoreEntry &, bool) { return true; }
 
     virtual StoreSearch *search(String const url, HttpRequest *);
 };

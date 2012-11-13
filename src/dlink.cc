@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #include "squid.h"
 #include "dlink.h"
 

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels
  *
@@ -38,7 +36,6 @@
 #include "Mem.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "Store.h"
 
 #if HAVE_LIMITS_H
@@ -75,7 +72,7 @@ String::setBuffer(char *aBuf, String::size_type aSize)
     size_ = aSize;
 }
 
-String::String (char const *aString) : size_(0), len_(0), buf_(NULL)
+String::String(char const *aString) : size_(0), len_(0), buf_(NULL)
 {
     if (aString)
         allocAndFill(aString, strlen(aString));
@@ -93,7 +90,7 @@ String::operator =(char const *aString)
 }
 
 String &
-String::operator = (String const &old)
+String::operator =(String const &old)
 {
     clean(); // TODO: optimize to avoid cleaning the buffer we can use
     if (old.size() > 0)
@@ -102,7 +99,7 @@ String::operator = (String const &old)
 }
 
 bool
-String::operator == (String const &that) const
+String::operator ==(String const &that) const
 {
     if (0 == this->cmp(that))
         return true;
@@ -111,7 +108,7 @@ String::operator == (String const &that) const
 }
 
 bool
-String::operator != (String const &that) const
+String::operator !=(String const &that) const
 {
     if (0 == this->cmp(that))
         return false;
@@ -141,7 +138,7 @@ String::allocAndFill(const char *str, int len)
     PROF_stop(StringAllocAndFill);
 }
 
-String::String (String const &old) : size_(0), len_(0), buf_(NULL)
+String::String(String const &old) : size_(0), len_(0), buf_(NULL)
 {
     if (old.size() > 0)
         allocAndFill(old.rawBuf(), old.size());
@@ -179,7 +176,7 @@ String::~String()
 }
 
 void
-String::reset(const char *str)
+String::reset(char const *str)
 {
     PROF_start(StringReset);
     clean(); // TODO: optimize to avoid cleaning the buffer if we can reuse it
@@ -189,7 +186,7 @@ String::reset(const char *str)
 }
 
 void
-String::append(const char *str, int len)
+String::append( char const *str, int len)
 {
     assert(this);
     assert(str && len >= 0);
@@ -221,23 +218,23 @@ String::append(const char *str, int len)
 void
 String::append(char const *str)
 {
-    assert (str);
-    append (str, strlen(str));
+    assert(str);
+    append(str, strlen(str));
 }
 
 void
-String::append (char chr)
+String::append(char const chr)
 {
     char myString[2];
     myString[0]=chr;
     myString[1]='\0';
-    append (myString, 1);
+    append(myString, 1);
 }
 
 void
 String::append(String const &old)
 {
-    append (old.rawBuf(), old.len_);
+    append(old.rawBuf(), old.len_);
 }
 
 void
@@ -306,7 +303,7 @@ StringRegistry::remove(String const *entry)
 
 StringRegistry StringRegistry::Instance_;
 
-extern String::size_type memStringCount();
+String::size_type memStringCount();
 
 void
 StringRegistry::Stat(StoreEntry *entry)

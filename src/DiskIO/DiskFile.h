@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -33,9 +31,8 @@
 #ifndef SQUID_DISKFILE_H
 #define SQUID_DISKFILE_H
 
+#include "base/RefCount.h"
 #include "typedefs.h"
-
-#include "RefCount.h"
 
 class IORequestor;
 

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis
  *

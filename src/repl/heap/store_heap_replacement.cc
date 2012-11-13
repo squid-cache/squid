@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Heap-based replacement
  * AUTHOR: John Dilley
  *

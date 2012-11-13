@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  *
  */
@@ -57,7 +55,7 @@ private:
 };
 
 /// converts human-readable filename path into UDS address
-extern struct sockaddr_un PathToAddress(const String &pathAddr);
+struct sockaddr_un PathToAddress(const String &pathAddr);
 
 // XXX: move UdsSender code to UdsSender.{cc,h}
 /// attempts to send an IPC message a few times, with a timeout

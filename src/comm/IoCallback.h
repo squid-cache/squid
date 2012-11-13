@@ -63,8 +63,8 @@ public:
 /// Callbacks which might be scheduled in future are stored in fd_table.
 extern CbEntry *iocb_table;
 
-extern void CallbackTableInit();
-extern void CallbackTableDestruct();
+void CallbackTableInit();
+void CallbackTableDestruct();
 
 #define COMMIO_FD_READCB(fd)    (&Comm::iocb_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&Comm::iocb_table[(fd)].writecb)

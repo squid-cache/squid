@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -39,7 +37,8 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
-#include "protos.h"
+#include "SquidConfig.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
 
 #if HAVE_ERRNO_H
@@ -264,11 +263,11 @@ IcmpSquid::Open(void)
     if (localhost.SetIPv4())
         SendEcho(localhost, S_ICMP_ECHO, "localhost");
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     debugs(37, 4, HERE << "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
     return icmp_sock;
 #else /* USE_ICMP */
     return -1;
@@ -285,7 +284,7 @@ IcmpSquid::Close(void)
 
     debugs(37, DBG_IMPORTANT, HERE << "Closing Pinger socket on FD " << icmp_sock);
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     send(icmp_sock, (const void *) "$shutdown\n", 10, 0);
 
@@ -293,7 +292,7 @@ IcmpSquid::Close(void)
 
     comm_close(icmp_sock);
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {

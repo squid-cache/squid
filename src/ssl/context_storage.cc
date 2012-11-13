@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #include "squid.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
@@ -8,6 +5,9 @@
 #include "mgr/Registration.h"
 #if HAVE_LIMITS
 #include <limits>
+#endif
+#if USE_SSL
+#include <openssl/ssl.h>
 #endif
 
 Ssl::CertificateStorageAction::CertificateStorageAction(const Mgr::Command::Pointer &cmd)

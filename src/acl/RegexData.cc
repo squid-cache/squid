@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  * AUTHOR: Marcus Kool
@@ -43,13 +41,13 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "Mem.h"
-#include "protos.h"
+#include "RegexList.h"
 #include "wordlist.h"
 
 static void
-aclDestroyRegexList(relist * data)
+aclDestroyRegexList(RegexList * data)
 {
-    relist *next = NULL;
+    RegexList *next = NULL;
 
     for (; data; data = next) {
         next = data->next;
@@ -72,13 +70,13 @@ ACLRegexData::match(char const *word)
 
     debugs(28, 3, "aclRegexData::match: checking '" << word << "'");
 
-    relist *first, *prev;
+    RegexList *first, *prev;
 
     first = data;
 
     prev = NULL;
 
-    relist *current = first;
+    RegexList *current = first;
 
     while (current) {
         debugs(28, 3, "aclRegexData::match: looking for '" << current->pattern << "'");
@@ -107,7 +105,7 @@ wordlist *
 ACLRegexData::dump()
 {
     wordlist *W = NULL;
-    relist *temp = data;
+    RegexList *temp = data;
     int flags = REG_EXTENDED | REG_NOSUB;
 
     while (temp != NULL) {
@@ -155,11 +153,11 @@ removeUnnecessaryWildcards(char * t)
     return t;
 }
 
-static relist **
-compileRE(relist **Tail, char * RE, int flags)
+static RegexList **
+compileRE(RegexList **Tail, char * RE, int flags)
 {
     int errcode;
-    relist *q;
+    RegexList *q;
     regex_t comp;
 
     if (RE == NULL  ||  *RE == '\0')
@@ -174,7 +172,7 @@ compileRE(relist **Tail, char * RE, int flags)
     }
     debugs(28, 2, "compileRE: compiled '" << RE << "' with flags " << flags );
 
-    q = (relist *) memAllocate(MEM_RELIST);
+    q = (RegexList *) memAllocate(MEM_RELIST);
     q->pattern = xstrdup(RE);
     q->regex = comp;
     q->flags = flags;
@@ -189,11 +187,11 @@ compileRE(relist **Tail, char * RE, int flags)
  * called only once per ACL.
  */
 static int
-compileOptimisedREs(relist **curlist, wordlist * wl)
+compileOptimisedREs(RegexList **curlist, wordlist * wl)
 {
-    relist **Tail;
-    relist *newlist;
-    relist **newlistp;
+    RegexList **Tail;
+    RegexList *newlist;
+    RegexList **newlistp;
     int numREs = 0;
     int flags = REG_EXTENDED | REG_NOSUB;
     int largeREindex = 0;
@@ -291,10 +289,10 @@ compileOptimisedREs(relist **curlist, wordlist * wl)
 }
 
 static void
-compileUnoptimisedREs(relist **curlist, wordlist * wl)
+compileUnoptimisedREs(RegexList **curlist, wordlist * wl)
 {
-    relist **Tail;
-    relist **newTail;
+    RegexList **Tail;
+    RegexList **newTail;
     int flags = REG_EXTENDED | REG_NOSUB;
 
     for (Tail = curlist; *Tail != NULL; Tail = &((*Tail)->next))
@@ -317,7 +315,7 @@ compileUnoptimisedREs(relist **curlist, wordlist * wl)
 }
 
 static void
-aclParseRegexList(relist **curlist)
+aclParseRegexList(RegexList **curlist)
 {
     char *t;
     wordlist *wl = NULL;

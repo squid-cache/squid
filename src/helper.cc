@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
  *
@@ -42,7 +40,7 @@
 #include "helper.h"
 #include "Mem.h"
 #include "MemBuf.h"
-#include "protos.h"
+#include "SquidIpc.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -87,9 +85,18 @@ CBDATA_CLASS_INIT(statefulhelper);
 CBDATA_TYPE(helper_stateful_server);
 
 void
+HelperServerBase::initStats()
+{
+    stats.uses=0;
+    stats.replies=0;
+    stats.pending=0;
+    stats.releases=0;
+}
+
+void
 HelperServerBase::closePipesSafely()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int no = index + 1;
 
     shutdown(writePipe->fd, SD_BOTH);
@@ -102,7 +109,7 @@ HelperServerBase::closePipesSafely()
         readPipe->close();
     writePipe->close();
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
@@ -118,7 +125,7 @@ HelperServerBase::closePipesSafely()
 void
 HelperServerBase::closeWritePipeSafely()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int no = index + 1;
 
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
@@ -129,7 +136,7 @@ HelperServerBase::closeWritePipeSafely()
         readPipe->fd = -1;
     writePipe->close();
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
@@ -219,6 +226,7 @@ helperOpenServers(helper * hlp)
         srv = cbdataAlloc(helper_server);
         srv->hIpc = hIpc;
         srv->pid = pid;
+        srv->initStats();
         srv->index = k;
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
@@ -340,8 +348,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->flags.reserved = 0;
-        srv->stats.submits = 0;
-        srv->stats.releases = 0;
+        srv->initStats();
         srv->index = k;
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
@@ -391,7 +398,8 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
-        callback(data, NULL);
+        HelperReply nilReply(NULL, 0);
+        callback(data, nilReply);
         return;
     }
 
@@ -412,11 +420,12 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 
 /// lastserver = "server last used as part of a reserved request sequence"
 void
-helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
+helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
-        callback(data, 0, NULL);
+        HelperReply nilReply(NULL, 0);
+        callback(data, nilReply);
         return;
     }
 
@@ -502,11 +511,12 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%s\t%7s\t%7s\t%7s\n",
                       "#",
                       "FD",
                       "PID",
                       "# Requests",
+                      "# Replies",
                       "Flags",
                       "Time",
                       "Offset",
@@ -515,11 +525,12 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
         double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
+                          srv->stats.replies,
                           srv->stats.pending ? 'B' : ' ',
                           srv->flags.writing ? 'W' : ' ',
                           srv->flags.closing ? 'C' : ' ',
@@ -555,11 +566,12 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%6s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%6s\t%7s\t%7s\t%7s\n",
                       "#",
                       "FD",
                       "PID",
                       "# Requests",
+                      "# Replies",
                       "Flags",
                       "Time",
                       "Offset",
@@ -568,11 +580,12 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_stateful_server *srv = (helper_stateful_server *)link->data;
         double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->flags.busy ? current_time : srv->answer_time);
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
+                          srv->stats.replies,
                           srv->flags.busy ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
                           srv->flags.reserved ? 'R' : ' ',
@@ -727,8 +740,12 @@ helperServerFree(helper_server *srv)
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
-            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
-                fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30) {
+                if (srv->stats.replies < 1)
+                    fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+                else
+                    debugs(80, DBG_CRITICAL, "ERROR: The " << hlp->id_name << " helpers are crashing too rapidly, need help!");
+            }
 
             debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperOpenServers(hlp);
@@ -736,11 +753,14 @@ helperServerFree(helper_server *srv)
     }
 
     for (i = 0; i < concurrency; ++i) {
+        // XXX: re-schedule these on another helper?
         if ((r = srv->requests[i])) {
             void *cbdata;
 
-            if (cbdataReferenceValidDone(r->data, &cbdata))
-                r->callback(cbdata, NULL);
+            if (cbdataReferenceValidDone(r->data, &cbdata)) {
+                HelperReply nilReply(NULL, 0);
+                r->callback(cbdata, nilReply);
+            }
 
             helperRequestFree(r);
 
@@ -788,8 +808,12 @@ helperStatefulServerFree(helper_stateful_server *srv)
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
-            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
-                fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30) {
+                if (srv->stats.replies < 1)
+                    fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
+                else
+                    debugs(80, DBG_CRITICAL, "ERROR: The " << hlp->id_name << " helpers are crashing too rapidly, need help!");
+            }
 
             debugs(80, DBG_IMPORTANT, "Starting new helpers");
             helperStatefulOpenServers(hlp);
@@ -799,8 +823,11 @@ helperStatefulServerFree(helper_stateful_server *srv)
     if ((r = srv->request)) {
         void *cbdata;
 
-        if (cbdataReferenceValidDone(r->data, &cbdata))
-            r->callback(cbdata, srv, NULL);
+        if (cbdataReferenceValidDone(r->data, &cbdata)) {
+            HelperReply nilReply(NULL,0);
+            nilReply.whichServer = srv;
+            r->callback(cbdata, nilReply);
+        }
 
         helperStatefulRequestFree(r);
 
@@ -816,10 +843,14 @@ helperStatefulServerFree(helper_stateful_server *srv)
 }
 
 /// Calls back with a pointer to the buffer with the helper output
-static void helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
+static void
+helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
 {
     helper_request *r = srv->requests[request_number];
     if (r) {
+// TODO: parse the reply into new helper reply object
+// pass that to the callback instead of msg
+
         HLPCB *callback = r->callback;
 
         srv->requests[request_number] = NULL;
@@ -827,10 +858,13 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
         r->callback = NULL;
 
         void *cbdata = NULL;
-        if (cbdataReferenceValidDone(r->data, &cbdata))
-            callback(cbdata, msg);
+        if (cbdataReferenceValidDone(r->data, &cbdata)) {
+            HelperReply response(msg, (msg_end-msg));
+            callback(cbdata, response);
+        }
 
         -- srv->stats.pending;
+        ++ srv->stats.replies;
 
         ++ hlp->stats.replies;
 
@@ -997,7 +1031,9 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         *t = '\0';
 
         if (r && cbdataReferenceValid(r->data)) {
-            r->callback(r->data, srv, srv->rbuf);
+            HelperReply res(srv->rbuf, (t - srv->rbuf));
+            res.whichServer = srv;
+            r->callback(r->data, res);
         } else {
             debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
@@ -1007,6 +1043,10 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         srv->roffset = 0;
         helperStatefulRequestFree(r);
         srv->request = NULL;
+
+        -- srv->stats.pending;
+        ++ srv->stats.replies;
+
         ++ hlp->stats.replies;
         srv->answer_time = current_time;
         hlp->stats.avg_svc_time =
@@ -1274,7 +1314,6 @@ helperDispatch(helper_server * srv, helper_request * r)
 
     assert(ptr);
     *ptr = r;
-    srv->stats.pending += 1;
     r->dispatch_time = current_time;
 
     if (srv->wqueue->isNull())
@@ -1298,6 +1337,7 @@ helperDispatch(helper_server * srv, helper_request * r)
     debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << strlen(r->buf) << " bytes");
 
     ++ srv->stats.uses;
+    ++ srv->stats.pending;
     ++ hlp->stats.requests;
 }
 
@@ -1326,11 +1366,13 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         /* a callback is needed before this request can _use_ a helper. */
         /* we don't care about releasing this helper. The request NEVER
          * gets to the helper. So we throw away the return code */
-        r->callback(r->data, srv, NULL);
+        HelperReply nilReply(NULL,0);
+        nilReply.whichServer = srv;
+        r->callback(r->data, nilReply);
         /* throw away the placeholder */
         helperStatefulRequestFree(r);
         /* and push the queue. Note that the callback may have submitted a new
-         * request to the helper which is why we test for the request*/
+         * request to the helper which is why we test for the request */
 
         if (srv->request == NULL)
             helperStatefulServerDone(srv);
@@ -1350,6 +1392,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
            (int) strlen(r->buf) << " bytes");
 
     ++ srv->stats.uses;
+    ++ srv->stats.pending;
     ++ hlp->stats.requests;
 }
 

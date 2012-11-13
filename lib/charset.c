@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG:
  * AUTHOR: Henrik Nordstrom <henrik@henriknordstrom.net>
  *

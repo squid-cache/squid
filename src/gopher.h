@@ -42,9 +42,9 @@ class HttpRequest;
  */
 
 /// \ingroup ServerProtocolGopherAPI
-extern void gopherStart(FwdState *);
+void gopherStart(FwdState *);
 
 /// \ingroup ServerProtocolGopherAPI
-extern int gopherCachable(const HttpRequest *);
+int gopherCachable(const HttpRequest *);
 
 #endif /* SQUID_GOPHER_H_ */

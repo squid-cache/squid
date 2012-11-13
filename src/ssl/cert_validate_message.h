@@ -84,7 +84,7 @@ private:
     };
 
 public:
-    CertValidationMsg(): CrtdMessage() {}
+    CertValidationMsg(MessageKind kind): CrtdMessage(kind) {}
 
     /// Build a request message for the cert validation helper
     /// using informations provided by vcert object

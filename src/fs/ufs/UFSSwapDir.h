@@ -95,7 +95,7 @@ public:
      * This routine is called whenever the last reference to an object is
      * removed, to maintain replacement information within the storage fs.
      */
-    virtual bool dereference(StoreEntry &);
+    virtual bool dereference(StoreEntry &, bool);
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void openLog();

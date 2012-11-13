@@ -31,16 +31,19 @@
 #define SQUID_HTTPACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
+#include "base/RefCount.h"
 #include "comm/Connection.h"
+#include "HttpHeader.h"
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
+#include "icp_opcode.h"
 #include "ip/Address.h"
 #include "HttpRequestMethod.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#include "RefCount.h"
+#include "Notes.h"
 #if USE_SSL
 #include "ssl/gadgets.h"
 #endif
@@ -48,6 +51,7 @@
 /* forward decls */
 class HttpReply;
 class HttpRequest;
+class CustomLog;
 
 class AccessLogEntry: public RefCountable
 {
@@ -79,7 +83,7 @@ public:
     {
 
     public:
-        HttpDetails() : method(METHOD_NONE), code(0), content_type(NULL),
+        HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
                 timedout(false), aborted(false) {}
 
         HttpRequestMethod method;
@@ -227,6 +231,8 @@ public:
     HttpReply *reply;
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
+    /// key:value pairs set by note and adaptation_meta
+    NotePairs notes;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request
@@ -274,11 +280,11 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-extern void accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
-extern void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
-extern void accessLogRotate(void);
-extern void accessLogClose(void);
-extern void accessLogInit(void);
-extern const char *accessLogTime(time_t);
+void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
+void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
+void accessLogRotate(void);
+void accessLogClose(void);
+void accessLogInit(void);
+const char *accessLogTime(time_t);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */

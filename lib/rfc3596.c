@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Low level DNS protocol routines
  * AUTHOR: Amos Jeffries, Rafael Martinez Torres
  *

@@ -9,8 +9,6 @@ use File::Basename;
 # cf.data.pre and split it into separare files, one per option
 #
 # Henrik Nordstrom <henrik@henriknordstrom.net>
-#
-# $Id$
 
 #
 # The template file is reasonably simple to parse. There's a number of

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived
  *
@@ -40,6 +38,7 @@
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
+#include "globals.h"
 #include "http.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -48,19 +47,26 @@
 #include "mgr/Registration.h"
 #include "mgr/StoreIoAction.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
+#include "repl_modules.h"
+#include "RequestFlags.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Stack.h"
 #include "StatCounters.h"
 #include "stmem.h"
-#include "StoreClient.h"
-#include "Store.h"
+#include "store_digest.h"
 #include "store_key_md5.h"
+#include "store_key_md5.h"
+#include "store_log.h"
+#include "store_rebuild.h"
+#include "Store.h"
+#include "StoreClient.h"
 #include "StoreIOState.h"
 #include "StoreMeta.h"
-#include "store_key_md5.h"
-#include "SwapDir.h"
+#include "StrList.h"
 #include "swap_log_op.h"
+#include "SwapDir.h"
+#include "tools.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -636,9 +642,9 @@ storeGetPublicByRequest(HttpRequest * req)
 {
     StoreEntry *e = storeGetPublicByRequestMethod(req, req->method);
 
-    if (e == NULL && req->method == METHOD_HEAD)
+    if (e == NULL && req->method == Http::METHOD_HEAD)
         /* We can generate a HEAD reply from a cached GET object */
-        e = storeGetPublicByRequestMethod(req, METHOD_GET);
+        e = storeGetPublicByRequestMethod(req, Http::METHOD_GET);
 
     return e;
 }
@@ -682,7 +688,7 @@ StoreEntry::setPrivateKey()
         mem_obj->id = getKeyCounter();
         newkey = storeKeyPrivate(mem_obj->url, mem_obj->method, mem_obj->id);
     } else {
-        newkey = storeKeyPrivate("JUNK", METHOD_NONE, getKeyCounter());
+        newkey = storeKeyPrivate("JUNK", Http::METHOD_NONE, getKeyCounter());
     }
 
     assert(hash_lookup(store_table, newkey) == NULL);
@@ -812,7 +818,7 @@ StoreEntry::setPublicKey()
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *log_url, request_flags flags, const HttpRequestMethod& method)
+storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
     MemObject *mem = NULL;
@@ -976,7 +982,7 @@ StoreEntry::checkCachable()
 {
 #if CACHE_ALL_METHODS
 
-    if (mem_obj->method != METHOD_GET) {
+    if (mem_obj->method != Http::METHOD_GET) {
         debugs(20, 2, "StoreEntry::checkCachable: NO: non-GET method");
         ++store_check_cachable_hist.no.non_get;
     } else
@@ -995,9 +1001,6 @@ StoreEntry::checkCachable()
                     getReply()->content_length
                     > Config.Store.maxObjectSize) ||
                    mem_obj->endOffset() > Config.Store.maxObjectSize) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
-            ++store_check_cachable_hist.no.too_big;
-        } else if (getReply()->content_length > Config.Store.maxObjectSize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
@@ -1380,7 +1383,7 @@ StoreEntry::validLength() const
         return 1;
     }
 
-    if (mem_obj->method == METHOD_HEAD) {
+    if (mem_obj->method == Http::METHOD_HEAD) {
         debugs(20, 5, "storeEntryValidLength: HEAD request: " << getMD5Text());
         return 1;
     }
@@ -1961,8 +1964,8 @@ StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
 {
     const String reqETags = request.header.getList(HDR_IF_NONE_MATCH);
     // weak comparison is allowed only for HEAD or full-body GET requests
-    const bool allowWeakMatch = !request.flags.range &&
-                                (request.method == METHOD_GET || request.method == METHOD_HEAD);
+    const bool allowWeakMatch = !request.flags.isRanged &&
+                                (request.method == Http::METHOD_GET || request.method == Http::METHOD_HEAD);
     return hasOneOfEtags(reqETags, allowWeakMatch);
 }
 

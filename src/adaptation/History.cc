@@ -2,8 +2,8 @@
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
 #include "base/TextException.h"
+#include "Debug.h"
 #include "globals.h"
-#include "protos.h"
 #include "SquidTime.h"
 
 /// impossible services value to identify unset theNextServices

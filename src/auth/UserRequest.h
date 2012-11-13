@@ -1,9 +1,4 @@
 /*
- * $Id$
- *
- * DO NOT MODIFY NEXT 2 LINES:
- * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -42,7 +37,7 @@
 #include "auth/User.h"
 #include "dlink.h"
 #include "ip/Address.h"
-#include "typedefs.h"
+#include "helper.h"
 #include "HttpHeader.h"
 
 class ConnStateData;
@@ -232,20 +227,20 @@ private:
 /* AuthUserRequest */
 
 /// \ingroup AuthAPI
-extern void authenticateFixHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int);
+void authenticateFixHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int);
 /// \ingroup AuthAPI
-extern void authenticateAddTrailer(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int);
+void authenticateAddTrailer(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int);
 
 /// \ingroup AuthAPI
-extern void authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer, Ip::Address const &);
+void authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer, Ip::Address const &);
 /// \ingroup AuthAPI
-extern void authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer);
+void authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer);
 /// \ingroup AuthAPI
-extern int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer);
+int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer);
 
 /// \ingroup AuthAPI
 /// See Auth::UserRequest::authenticated()
-extern int authenticateUserAuthenticated(Auth::UserRequest::Pointer);
+int authenticateUserAuthenticated(Auth::UserRequest::Pointer);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTHUSERREQUEST_H */

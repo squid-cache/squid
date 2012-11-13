@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: John Dilley, Hewlett Packard
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

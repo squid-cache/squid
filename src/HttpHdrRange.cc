@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov
  *
@@ -38,7 +36,8 @@
 #include "HttpHeaderRange.h"
 #include "client_side_request.h"
 #include "HttpReply.h"
-#include "protos.h"
+#include "HttpHeaderTools.h"
+#include "StrList.h"
 
 /*
  *    Currently only byte ranges are supported

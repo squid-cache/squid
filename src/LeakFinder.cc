@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels
  *

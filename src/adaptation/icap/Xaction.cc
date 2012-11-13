@@ -15,6 +15,7 @@
 #include "CommCalls.h"
 #include "err_detail_type.h"
 #include "fde.h"
+#include "forward.h"
 #include "globals.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
@@ -23,7 +24,7 @@
 #include "ipcache.h"
 #include "Mem.h"
 #include "pconn.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 //CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);

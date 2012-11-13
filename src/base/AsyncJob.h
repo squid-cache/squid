@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
 

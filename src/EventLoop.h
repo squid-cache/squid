@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,10 +32,11 @@
 #define SQUID_EVENTLOOP_H
 
 #include "Array.h"
-#include "AsyncEngine.h"
-#include "SquidTime.h"
 
 #define EVENT_LOOP_TIMEOUT	1000 /* 1s timeout */
+
+class AsyncEngine;
+class TimeEngine;
 
 /** An event loop. An event loop is the core inner loop of squid.
  * The event loop can be run until exit, or once. After it finishes control

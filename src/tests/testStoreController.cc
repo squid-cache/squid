@@ -6,6 +6,7 @@
 #include "SwapDir.h"
 #include "TestSwapDir.h"
 #include "Mem.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StoreSearch.h"
 

@@ -1,3 +1,52 @@
+Changes to squid-3.3.0.1 (21 Oct 2012):
+
+	- Bug 3610: Add peername_regex ACL
+	- Bug 3239: rename myip/myport as localip/localport
+	- Bug 3130: helpers are crashing too rapidly
+	- Add log_db_daemon SQL Database Logging Daemon
+	- Add ext_time_quota_acl helper managing sessions by bandwidth usage
+	- Add request_header_add option
+	- Support C++11 features where possible
+	- Support bump-ssl-server-first
+	- Support mimic SSL server certificates
+	- Remove --enable-ntlm-fail-open
+	- Fix TLS/SSL Options does not apply to the dynamically generated certificates
+	- Fix SslBump stuck after error
+	- Polish: display ACL enumeration text in debugs
+	- ... and many portability fixes for MacOS X, Windows and others
+	- ... and many compile error fixes
+	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.3 (21 Oct 2012):
+
+	- Regression: SMP crashes on startup with workers > 1
+	- Bug 3655: pinning failure breaks NTLM and Negotiate authentication
+	- SMP: Allow a UFS cache_dir entry to coexist with a shared memory cache entry
+	- HTTP/1.1: honour Cache-Control before Pragma:no-cache
+	- HTTP/1.1: Cache-Control compliance upgrade
+	- Remove obsoleted refresh_pattern ignore-no-cache option
+	- Fix IPv6 enabled squidclient
+	- ... and several compile fixes
+
+Changes to squid-3.2.2 (06 Oct 2012):
+
+	- Regression: Make login=PASS send no credentials when none available
+	- Regression: Handle dstdomain duplicates and overlapping names better
+	- Bug 3661: Segmentation fault when using more than 1 worker
+	- Bug 3660: ACLFilledChecklist::fd set with wrong fd for sslproxy_cert_error
+	- Bug 3658: ERR_ZERO_SIZE_OBJECT propagates out even after successful retry
+	- Bug 3648: polish String class files
+	- Bug 3647: parsing hier_code acl fails
+	- Bug 3626: forwarding loops on intercepted traffic
+	- Bug 3616: retrieve client connection for ACL checks from the related HttpRequest object
+	- Bug 3609: several RADIUS helper improvements
+	- Bug 3605: memory leak in Negotiate authentication
+	- Fix small memory leak in src ACL parse
+	- Fix maximum_single_addr_tries upgrade
+	- Fix chunked encoding on responses carrying a Content-Range header.
+	- Do not reuse persistent connections for PUTs to avoid ERR_ZERO_SIZE_OBJECT
+	- ... and several compile errors
+
 Changes to squid-3.2.1 (15 Aug 2012):
 
 	- Bug 3605: memory leak in peer selection
@@ -404,6 +453,24 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.21 (23 Sep 2012):
+
+	- Bug 3622: peerClearRRStart scheduling multiple events
+	- Bug 3615: configure check for default max number of FDs is broken
+	- Bug 3607: --enable-auth documented default action incorrect
+	- Bug 3593: socket failure: Address family not supported by protocol
+	- Bug 3584: Detection of setresuid() is broken
+	- Bug 3568: Consolidate external_acl_type config dumping and add missing %%
+	- Bug 3564: eCAP not supporting CoAP URI schemes
+	- Bug 3484: Docs: sslproxy_cert_error example flawed
+	- Bug 3462: Delay Pools and ICAP
+	- Bug 3133: better fix: Memory leak handling requests for sites that don't exist
+	- Bug 2976: ERR_INVALID_URL for transparently captured requests when reconfiguring
+	- Silence IOS 15.1 unknown capabilities messages.
+	- Account for Store disk client quota when bandwidth-limiting the server.
+	- ... and several documentation fixes
+	- ... and several compile fixes
 
 Changes to squid-3.1.20 (08 Jun 2012):
 

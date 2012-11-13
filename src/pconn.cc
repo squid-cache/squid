@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
  *
@@ -40,7 +38,7 @@
 #include "globals.h"
 #include "mgr/Registration.h"
 #include "pconn.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "Store.h"
 
 #define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */

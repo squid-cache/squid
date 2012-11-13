@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 43    AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>
  *
@@ -38,16 +36,17 @@
 
 #include "squid.h"
 #include "DiskThreads.h"
+#include "SquidConfig.h"
 
-#include	<stdio.h>
-#include	<sys/stat.h>
-#include	<fcntl.h>
-#include	<pthread.h>
-#include	<errno.h>
-#include	<dirent.h>
-#include	<signal.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <errno.h>
+#include <dirent.h>
+#include <signal.h>
 #if HAVE_SCHED_H
-#include	<sched.h>
+#include <sched.h>
 #endif
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "SquidTime.h"
@@ -108,7 +107,7 @@ struct squidaio_thread_t {
 
 static void squidaio_queue_request(squidaio_request_t *);
 static void squidaio_cleanup_request(squidaio_request_t *);
-SQUIDCEXTERN void *squidaio_thread_loop(void *);
+void *squidaio_thread_loop(void *);
 static void squidaio_do_open(squidaio_request_t *);
 static void squidaio_do_read(squidaio_request_t *);
 static void squidaio_do_write(squidaio_request_t *);
@@ -306,6 +305,10 @@ squidaio_init(void)
     done_queue.requests = 0;
 
     done_queue.blocked = 0;
+
+    // Initialize the thread I/O pipes before creating any threads
+    // see bug 3189 comment 5 about race conditions.
+    CommIO::Initialize();
 
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));

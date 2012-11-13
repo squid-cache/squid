@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 02    Unlink Daemon
  * AUTHOR: Duane Wessels
  *
@@ -34,15 +31,18 @@
  */
 
 #include "squid.h"
+
+#if USE_UNLINKD
 #include "disk.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "xusleep.h"
-#include "protos.h"
+#include "SquidIpc.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "SwapDir.h"
+#include "tools.h"
 
 /* This code gets linked to Squid */
 
@@ -149,7 +149,7 @@ unlinkdUnlink(const char *path)
 
 void
 unlinkdClose(void)
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 {
 
     if (unlinkd_wfd > -1) {
@@ -224,7 +224,7 @@ unlinkdInit(void)
 #if USE_POLL && _SQUID_OSF_
               /* pipes and poll() don't get along on DUNIX -DW */
               IPC_STREAM,
-#elif _SQUID_MSWIN_
+#elif _SQUID_WINDOWS_
               /* select() will fail on a pipe */
               IPC_TCP_SOCKET,
 #else
@@ -265,10 +265,11 @@ unlinkdInit(void)
 
     debugs(2, DBG_IMPORTANT, "Unlinkd pipe opened on FD " << unlinkd_wfd);
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     debugs(2, 4, "Unlinkd handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 
 #endif
 
 }
+#endif /* USE_UNLINKD */

@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "base/AsyncJob.h"
-#include "structs.h"
 
 #define STUB_API "comm/libcomm.la"
 #include "tests/STUB.h"
@@ -17,8 +16,8 @@ Comm::Connection::Connection() STUB
 Comm::Connection::~Connection() STUB
 Comm::ConnectionPointer Comm::Connection::copyDetails() const STUB_RETVAL(NULL)
 void Comm::Connection::close() STUB
-peer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
-void Comm::Connection::setPeer(peer * p) STUB
+CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
+void Comm::Connection::setPeer(CachePeer * p) STUB
 
 #include "comm/ConnOpener.h"
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);

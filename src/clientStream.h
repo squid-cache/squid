@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,8 +32,8 @@
 #ifndef SQUID_CLIENTSTREAM_H
 #define SQUID_CLIENTSTREAM_H
 
+#include "base/RefCount.h"
 #include "dlink.h"
-#include "RefCount.h"
 #include "StoreIOBuffer.h"
 
 /**
@@ -98,7 +96,7 @@
  */
 
 /// \ingroup ClientStreamAPI
-typedef RefCount<RefCountable_> ClientStreamData;
+typedef RefCount<Lock> ClientStreamData;
 
 class clientStreamNode;
 class ClientHttpRequest;
@@ -138,13 +136,13 @@ public:
 };
 
 /// \ingroup ClientStreamAPI
-SQUIDCEXTERN void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, ClientStreamData, CSCB *, CSD *, ClientStreamData, StoreIOBuffer tailBuffer);
+void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, ClientStreamData, CSCB *, CSD *, ClientStreamData, StoreIOBuffer tailBuffer);
 
 /// \ingroup ClientStreamAPI
-SQUIDCEXTERN void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
+void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
 
 /// \ingroup ClientStreamAPI
-SQUIDCEXTERN clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
+clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
 
 /**
  \ingroup ClientStreamAPI
@@ -159,7 +157,7 @@ SQUIDCEXTERN clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, Clie
  			Each node may alter the reply if appropriate.
  \param replyBuffer	- buffer, length - where and how much.
  */
-SQUIDCEXTERN void clientStreamCallback(clientStreamNode *thisObject, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer replyBuffer);
+void clientStreamCallback(clientStreamNode *thisObject, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer replyBuffer);
 
 /**
  \ingroup ClientStreamAPI
@@ -172,7 +170,7 @@ SQUIDCEXTERN void clientStreamCallback(clientStreamNode *thisObject, ClientHttpR
  \param http		Superset of request data, being winnowed down over time. MUST NOT be NULL.
  \param readBuffer	- offset, length, buffer - what, how much and where.
  */
-SQUIDCEXTERN void clientStreamRead(clientStreamNode *thisObject, ClientHttpRequest *http, StoreIOBuffer readBuffer);
+void clientStreamRead(clientStreamNode *thisObject, ClientHttpRequest *http, StoreIOBuffer readBuffer);
 
 /**
  \ingroup ClientStreamAPI
@@ -184,7 +182,7 @@ SQUIDCEXTERN void clientStreamRead(clientStreamNode *thisObject, ClientHttpReque
  \param thisObject	'this' reference for the client stream
  \param http		MUST NOT be NULL.
  */
-SQUIDCEXTERN void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
+void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
 
 /**
  \ingroup ClientStreamAPI
@@ -195,7 +193,7 @@ SQUIDCEXTERN void clientStreamDetach(clientStreamNode *thisObject, ClientHttpReq
  \param thisObject	'this' reference for the client stream
  \param http		MUST NOT be NULL.
  */
-SQUIDCEXTERN void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequest *http);
+void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequest *http);
 
 /**
  \ingroup ClientStreamAPI
@@ -209,6 +207,6 @@ SQUIDCEXTERN void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequ
  \param thisObject	'this' reference for the client stream
  \param http		MUST NOT be NULL.
  */
-SQUIDCEXTERN clientStream_status_t clientStreamStatus(clientStreamNode *thisObject, ClientHttpRequest *http);
+clientStream_status_t clientStreamStatus(clientStreamNode *thisObject, ClientHttpRequest *http);
 
 #endif /* SQUID_CLIENTSTREAM_H */

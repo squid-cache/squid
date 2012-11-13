@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins
  *

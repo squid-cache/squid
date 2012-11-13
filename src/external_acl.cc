@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
  *
@@ -46,8 +44,8 @@
 #include "cache_cf.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "ExternalACLEntry.h"
 #include "ExternalACL.h"
+#include "ExternalACLEntry.h"
 #include "fde.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
@@ -56,13 +54,14 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "protos.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
+#include "SquidString.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "URLScheme.h"
 #include "tools.h"
 #include "URL.h"
+#include "URLScheme.h"
 #include "wordlist.h"
 #if USE_SSL
 #include "ssl/support.h"
@@ -1307,30 +1306,28 @@ free_externalAclState(void *data)
  * the whitespace escaped using \ (\ escaping obviously also applies to
  * any " characters)
  */
-
 static void
-externalAclHandleReply(void *data, char *reply)
+externalAclHandleReply(void *data, const HelperReply &reply)
 {
     externalAclState *state = static_cast<externalAclState *>(data);
     externalAclState *next;
-    char *status;
-    char *token;
-    char *value;
     char *t = NULL;
     ExternalACLEntryData entryData;
     entryData.result = ACCESS_DENIED;
     external_acl_entry *entry = NULL;
 
-    debugs(82, 2, "externalAclHandleReply: reply=\"" << reply << "\"");
+    debugs(82, 2, HERE << "reply=" << reply);
 
-    if (reply) {
-        status = strwordtok(reply, &t);
+    if (reply.result == HelperReply::Okay)
+        entryData.result = ACCESS_ALLOWED;
+    // XXX: handle other non-DENIED results better
 
-        if (status && strcmp(status, "OK") == 0)
-            entryData.result = ACCESS_ALLOWED;
+    if (reply.other().hasContent()) {
+        char *temp = reply.modifiableOther().content();
+        char *token = strwordtok(temp, &t);
 
         while ((token = strwordtok(NULL, &t))) {
-            value = strchr(token, '=');
+            char *value = strchr(token, '=');
 
             if (value) {
                 *value = '\0';	/* terminate the token, and move up to the value */
@@ -1364,7 +1361,8 @@ externalAclHandleReply(void *data, char *reply)
     dlinkDelete(&state->list, &state->def->queue);
 
     if (cbdataReferenceValid(state->def)) {
-        if (reply)
+        // only cache OK and ERR results.
+        if (reply.result == HelperReply::Okay || reply.result == HelperReply::Error)
             entry = external_acl_cache_add(state->def, state->key, entryData);
         else {
             external_acl_entry *oldentry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);

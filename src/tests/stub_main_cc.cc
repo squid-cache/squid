@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Francesco Chemolli
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

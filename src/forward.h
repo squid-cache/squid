@@ -2,11 +2,14 @@
 #define SQUID_FORWARD_H
 
 #include "Array.h"
+#include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "err_type.h"
 #include "fde.h"
+#include "HelperReply.h"
+#include "HttpStatusCode.h"
 #include "ip/Address.h"
-#include "RefCount.h"
 #if USE_SSL
 #include "ssl/support.h"
 #endif
@@ -82,9 +85,9 @@ public:
 
 #if USE_SSL //&& USE_SSL_CERT_VALIDATOR
     /// Callback function called when squid receive message from cert validator helper
-    static void sslCrtvdHandleReplyWrapper(void *data, char *reply);
+    static void sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply);
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(const char *reply);
+    void sslCrtvdHandleReply(const HelperReply &reply);
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Ssl::Errors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse &, Ssl::ErrorDetail *&);
 #endif
@@ -141,5 +144,7 @@ private:
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);
 };
+
+void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 
 #endif /* SQUID_FORWARD_H */

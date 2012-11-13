@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom
  * BASED ON: carp.c by Eric Stern and draft-vinod-carp-v1-03.txt
@@ -35,10 +33,11 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 #include "URLScheme.h"
@@ -50,14 +49,14 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_carp_peers = 0;
-static peer **carp_peers = NULL;
+static CachePeer **carp_peers = NULL;
 static OBJH carpCachemgr;
 
 static int
 peerSortWeight(const void *a, const void *b)
 {
-    const peer *const *p1 = (const peer *const *)a;
-    const peer *const *p2 = (const peer *const *)b;
+    const CachePeer *const *p1 = (const CachePeer *const *)a;
+    const CachePeer *const *p2 = (const CachePeer *const *)b;
     return (*p1)->weight - (*p2)->weight;
 }
 
@@ -74,8 +73,8 @@ carpInit(void)
     int K;
     int k;
     double P_last, X_last, Xn;
-    peer *p;
-    peer **P;
+    CachePeer *p;
+    CachePeer **P;
     char *t;
     /* Clean up */
 
@@ -108,7 +107,7 @@ carpInit(void)
     if (n_carp_peers == 0)
         return;
 
-    carp_peers = (peer **)xcalloc(n_carp_peers, sizeof(*carp_peers));
+    carp_peers = (CachePeer **)xcalloc(n_carp_peers, sizeof(*carp_peers));
 
     /* Build a list of the found peers and calculate hashes and load factors */
     for (P = carp_peers, p = Config.peers; p; p = p->next) {
@@ -170,12 +169,12 @@ carpInit(void)
     }
 }
 
-peer *
+CachePeer *
 carpSelectParent(HttpRequest * request)
 {
     int k;
-    peer *p = NULL;
-    peer *tp;
+    CachePeer *p = NULL;
+    CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
@@ -187,7 +186,7 @@ carpSelectParent(HttpRequest * request)
     /* calculate hash key */
     debugs(39, 2, "carpSelectParent: Calculating hash for " << urlCanonical(request));
 
-    /* select peer */
+    /* select CachePeer */
     for (k = 0; k < n_carp_peers; ++k) {
         String key;
         tp = carp_peers[k];
@@ -253,7 +252,7 @@ carpSelectParent(HttpRequest * request)
 static void
 carpCachemgr(StoreEntry * sentry)
 {
-    peer *p;
+    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",

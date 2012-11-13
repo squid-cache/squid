@@ -15,19 +15,26 @@
 #include <string>
 #endif
 
+class acl_access;
+class ACLList;
 class HeaderWithAcl;
+class HttpHeader;
+class HttpHeaderFieldInfo;
+class HttpRequest;
+class StoreEntry;
+class String;
+
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
-class acl_access;
-struct _header_mangler {
+// Currently a POD
+class headerMangler
+{
+public:
     acl_access *access_list;
     char *replacement;
 };
-typedef struct _header_mangler header_mangler;
 
-class StoreEntry;
-
-/// A collection of header_mangler objects for a given message kind.
+/// A collection of headerMangler objects for a given message kind.
 class HeaderManglers
 {
 public:
@@ -35,10 +42,10 @@ public:
     ~HeaderManglers();
 
     /// returns a header mangler for field e or nil if none was specified
-    const header_mangler *find(const HttpHeaderEntry &e) const;
+    const headerMangler *find(const HttpHeaderEntry &e) const;
 
     /// returns a mangler for the named header (known or custom)
-    header_mangler *track(const char *name);
+    headerMangler *track(const char *name);
 
     /// updates mangler for the named header with a replacement value
     void setReplacement(const char *name, const char *replacementValue);
@@ -50,16 +57,16 @@ public:
 
 private:
     /// a name:mangler map; optimize: use unordered map or some such
-    typedef std::map<std::string, header_mangler> ManglersByName;
+    typedef std::map<std::string, headerMangler> ManglersByName;
 
     /// one mangler for each known header
-    header_mangler known[HDR_ENUM_END];
+    headerMangler known[HDR_ENUM_END];
 
     /// one mangler for each custom header
     ManglersByName custom;
 
     /// configured if some mangling ACL applies to all header names
-    header_mangler all;
+    headerMangler all;
 
 private:
     /* not implemented */
@@ -67,7 +74,6 @@ private:
     HeaderManglers &operator =(const HeaderManglers &);
 };
 
-class ACLList;
 class HeaderWithAcl
 {
 public:
@@ -92,18 +98,19 @@ public:
     bool quoted;
 };
 
-extern int httpHeaderParseOffset(const char *start, int64_t * off);
+int httpHeaderParseOffset(const char *start, int64_t * off);
 
-class HttpHeaderFieldInfo;
-class String;
+HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
+void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
+http_hdr_type httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * attrs, int end);
+http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
+const char *httpHeaderNameById(int id);
+int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
+int httpHeaderParseInt(const char *start, int *val);
+void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
-extern HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
-extern void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
-extern http_hdr_type httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * attrs, int end);
-extern http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
-extern const char *httpHeaderNameById(int id);
-extern int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
-extern int httpHeaderParseInt(const char *start, int *val);
-extern void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
+const char *getStringPrefix(const char *str, const char *end);
+
+void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 
 #endif
