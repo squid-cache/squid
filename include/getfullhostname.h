@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef _SQUID_GETFULLHOSTNAME_H
 #define _SQUID_GETFULLHOSTNAME_H
 

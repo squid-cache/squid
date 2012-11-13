@@ -12,8 +12,6 @@
  * 			- added squid_ prefix for uniqueness
  * 			  so we can use it where OS copy is broken.
  *
- * Squid VCS $Id$
- *
  *  Original License and code follows.
  */
 

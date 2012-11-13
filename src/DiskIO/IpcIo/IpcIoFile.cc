@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  */
 
@@ -20,9 +18,10 @@
 #include "ipc/Queue.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "tools.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

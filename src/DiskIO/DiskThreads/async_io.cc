@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>
  * AUTHOR: Stewart Forster <slf@connect.com.au>

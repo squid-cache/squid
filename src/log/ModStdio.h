@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
  *
@@ -36,6 +34,6 @@
 
 class Logfile;
 
-extern int logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
+int logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
 
 #endif /* _SQUID_SRC_LOG_MODSTDIO_H */

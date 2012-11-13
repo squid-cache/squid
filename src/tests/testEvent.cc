@@ -7,7 +7,6 @@
 #include "CapturingStoreEntry.h"
 #include "event.h"
 #include "Mem.h"
-#include "protos.h"
 #include "stat.h"
 #include "testEvent.h"
 

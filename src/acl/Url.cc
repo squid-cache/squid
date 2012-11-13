@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -38,7 +36,6 @@
 #include "acl/Url.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "URL.h"
 

@@ -1,10 +1,9 @@
 #include "squid.h"
-#include "structs.h"
-#include "ConfigParser.h"
 #include "acl/Gadgets.h"
 #include "adaptation/AccessRule.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 
 int Adaptation::AccessRule::LastId = 0;

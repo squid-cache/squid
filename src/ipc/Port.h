@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  *
  */
@@ -27,7 +25,7 @@ protected:
     virtual bool doneAll() const; // UdsOp (AsyncJob) API
 
     /// read the next incoming message
-    void listen();
+    void doListen();
 
     /// handle IPC message just read
     virtual void receive(const TypedMsgHdr& message) = 0;

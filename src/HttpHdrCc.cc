@@ -33,12 +33,13 @@
 #include "squid.h"
 #include "base/StringArea.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "HttpHdrCc.h"
 #include "StatHist.h"
 #include "Store.h"
-#include "protos.h"
+#include "StrList.h"
 
 #if HAVE_MAP
 #include <map>

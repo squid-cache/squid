@@ -13,8 +13,6 @@
  *    16-Aug-2007 : Altered configure checks
  *                  Un-hacked slightly to use system gethostbyname()
  *
- * Squid CVS $Id$
- *
  *  Original License and code follows.
  */
 

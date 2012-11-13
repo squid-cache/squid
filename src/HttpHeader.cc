@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 55    HTTP Header
  * AUTHOR: Alex Rousskov
  *
@@ -30,24 +27,27 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
 
 #include "squid.h"
 #include "base64.h"
+#include "globals.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
 #include "rfc1123.h"
 #include "StatHist.h"
 #include "Store.h"
+#include "StrList.h"
+#include "SquidConfig.h"
+#include "SquidString.h"
 #include "TimeOrTag.h"
 
 /*
@@ -279,15 +279,19 @@ static int HttpHeaderStatCount = countof(HttpHeaderStats);
 static int HeaderEntryParsedCount = 0;
 
 /*
- * local routines
+ * forward declarations and local routines
  */
 
+class StoreEntry;
 #define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
 
 static void httpHeaderNoteParsedEntry(http_hdr_type id, String const &value, int error);
 
 static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
+
+/** store report about current header usage and other stats */
+static void httpHeaderStoreReport(StoreEntry * e);
 
 /*
  * Module initialization routines

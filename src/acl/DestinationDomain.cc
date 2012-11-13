@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -42,7 +40,6 @@
 #include "fqdncache.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
-#include "protos.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 

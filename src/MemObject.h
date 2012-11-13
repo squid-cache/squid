@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,20 +31,23 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
+#include "CommRead.h"
+#include "dlink.h"
+#include "HttpRequestMethod.h"
+#include "RemovalPolicy.h"
+#include "stmem.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
-#include "stmem.h"
-#include "CommRead.h"
-#include "RemovalPolicy.h"
-#include "HttpRequestMethod.h"
+
+#if USE_DELAY_POOLS
+#include "DelayId.h"
+#endif
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
 class store_client;
 class HttpRequest;
-#if USE_DELAY_POOLS
-#include "DelayId.h"
-#endif
+class HttpReply;
 
 class MemObject
 {

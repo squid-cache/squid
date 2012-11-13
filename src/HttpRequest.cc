@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
  *
@@ -36,10 +33,12 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "DnsLookupDetails.h"
 #include "err_detail_type.h"
+#include "globals.h"
 #include "gopher.h"
 #include "http.h"
 #include "HttpHdrCc.h"
@@ -47,7 +46,7 @@
 #include "HttpRequest.h"
 #include "log/Config.h"
 #include "MemBuf.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
 
@@ -88,7 +87,7 @@ HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProt
 void
 HttpRequest::init()
 {
-    method = METHOD_NONE;
+    method = Http::METHOD_NONE;
     protocol = AnyP::PROTO_NONE;
     urlpath = NULL;
     login[0] = '\0';
@@ -294,7 +293,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
     }
 
     /* See if the request buffer starts with a known HTTP request method. */
-    if (HttpRequestMethod(buf->content(),NULL) == METHOD_NONE) {
+    if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = HTTP_INVALID_HEADER;
         return false;
@@ -309,7 +308,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     const char *t = start + strcspn(start, w_space);
     method = HttpRequestMethod(start, t);
 
-    if (method == METHOD_NONE)
+    if (method == Http::METHOD_NONE)
         return false;
 
     start = t + strspn(t, w_space);
@@ -422,27 +421,6 @@ HttpRequest::hdrCacheInit()
     range = header.getRange();
 }
 
-/* request_flags */
-bool
-request_flags::resetTCP() const
-{
-    return reset_tcp != 0;
-}
-
-void
-request_flags::setResetTCP()
-{
-    debugs(73, 9, "request_flags::setResetTCP");
-    reset_tcp = 1;
-}
-
-void
-request_flags::clearResetTCP()
-{
-    debugs(73, 9, "request_flags::clearResetTCP");
-    reset_tcp = 0;
-}
-
 #if ICAP_CLIENT
 Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
@@ -493,27 +471,6 @@ bool
 HttpRequest::multipartRangeRequest() const
 {
     return (range && range->specs.count > 1);
-}
-
-void
-request_flags::destinationIPLookupCompleted()
-{
-    destinationIPLookedUp_ = true;
-}
-
-bool
-request_flags::destinationIPLookedUp() const
-{
-    return destinationIPLookedUp_;
-}
-
-request_flags
-request_flags::cloneAdaptationImmune() const
-{
-    // At the time of writing, all flags where either safe to copy after
-    // adaptation or were not set at the time of the adaptation. If there
-    // are flags that are different, they should be cleared in the clone.
-    return *this;
 }
 
 bool
@@ -611,43 +568,44 @@ HttpRequest::CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method)
 HttpRequest *
 HttpRequest::CreateFromUrl(char * url)
 {
-    return urlParse(METHOD_GET, url, NULL);
+    return urlParse(Http::METHOD_GET, url, NULL);
 }
 
-/*
+/**
  * Are responses to this request possible cacheable ?
  * If false then no matter what the response must not be cached.
  */
 bool
-HttpRequest::cacheable() const
+HttpRequest::maybeCacheable()
 {
     // Intercepted request with Host: header which cannot be trusted.
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the reponse for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.spoof_client_ip))
+    if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
         return false;
 
-    if (protocol == AnyP::PROTO_HTTP)
-        return httpCachable(method);
+    switch (protocol) {
+    case AnyP::PROTO_HTTP:
+        if (!method.respMaybeCacheable())
+            return false;
 
-    /*
-     * The below looks questionable: what non HTTP protocols use connect,
-     * trace, put and post? RC
-     */
+        // XXX: this would seem the correct place to detect request cache-controls
+        //      no-store, private and related which block cacheability
+        break;
 
-    if (!method.isCacheble())
+    case AnyP::PROTO_GOPHER:
+        if (!gopherCachable(this))
+            return false;
+        break;
+
+    case AnyP::PROTO_CACHE_OBJECT:
         return false;
 
-    /*
-     * XXX POST may be cached sometimes.. ignored
-     * for now
-     */
-    if (protocol == AnyP::PROTO_GOPHER)
-        return gopherCachable(this);
-
-    if (protocol == AnyP::PROTO_CACHE_OBJECT)
-        return false;
+        //case AnyP::PROTO_FTP:
+    default:
+        break;
+    }
 
     return true;
 }
@@ -686,7 +644,7 @@ HttpRequest::getRangeOffsetLimit()
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
-    for (acl_size_t *l = Config.rangeOffsetLimit; l; l = l -> next) {
+    for (AclSizeLimit *l = Config.rangeOffsetLimit; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this limit value */
         if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
             debugs(58, 4, HERE << "rangeOffsetLimit=" << rangeOffsetLimit);

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli
  *
@@ -50,7 +48,6 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "protos.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 
@@ -208,7 +205,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         return;
 
     /* Need keep-alive */
-    if (!request->flags.proxy_keepalive && request->flags.must_keepalive)
+    if (!request->flags.proxyKeepalive && request->flags.mustKeepalive)
         return;
 
     /* New request, no user details */
@@ -218,7 +215,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
 
         if (!keep_alive) {
             /* drop the connection */
-            request->flags.proxy_keepalive = 0;
+            request->flags.proxyKeepalive = 0;
         }
     } else {
         Auth::Ntlm::UserRequest *ntlm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
@@ -229,7 +226,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         case Auth::Failed:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
-            request->flags.proxy_keepalive = 0;
+            request->flags.proxyKeepalive = 0;
             /* fall through */
 
         case Auth::Ok:

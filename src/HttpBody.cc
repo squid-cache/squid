@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov
  *

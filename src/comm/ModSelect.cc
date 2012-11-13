@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 05    Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,6 +43,7 @@
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
+#include "SquidConfig.h"
 
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 01    Startup and Main Loop
  * AUTHOR: Harvest Derived
  *
@@ -36,6 +34,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
+#include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
@@ -57,6 +56,7 @@
 #include "forward.h"
 #include "fs/Module.h"
 #include "fqdncache.h"
+#include "globals.h"
 #include "htcp.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
@@ -64,21 +64,26 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ident/Ident.h"
+#include "ipcache.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
 #include "ip/tools.h"
 #include "Mem.h"
 #include "MemPool.h"
+#include "mime.h"
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
+#include "redirect.h"
 #include "refresh.h"
+#include "send-announce.h"
+#include "store_log.h"
 #include "tools.h"
+#include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "stat.h"
@@ -86,9 +91,11 @@
 #include "StoreFileSystem.h"
 #include "Store.h"
 #include "SwapDir.h"
+#include "unlinkd.h"
 #include "URL.h"
 #include "wccp.h"
 #include "wccp2.h"
+#include "WinSvc.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -131,6 +138,9 @@
 #if USE_SQUID_ESI
 #include "esi/Module.h"
 #endif
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 #if HAVE_PATHS_H
 #include <paths.h>
@@ -143,16 +153,14 @@
 #endif
 
 #if USE_WIN32_SERVICE
-#include "squid_windows.h"
 #include <process.h>
 
 static int opt_install_service = FALSE;
 static int opt_remove_service = FALSE;
 static int opt_signal_service = FALSE;
 static int opt_command_line = FALSE;
-extern void WIN32_svcstatusupdate(DWORD, DWORD);
+void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
-
 #endif
 
 #if !defined(SQUID_BUILD_INFO)
@@ -186,14 +194,14 @@ static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
 #if MEM_GEN_TRACE
-extern void log_trace_done();
-extern void log_trace_init(char *);
+void log_trace_done();
+void log_trace_init(char *);
 #endif
 static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static const char *squid_start_script = "squid_start";
 #endif
 
@@ -608,7 +616,7 @@ rotate_logs(int sig)
 {
     do_rotate = 1;
     RotateSignal = sig;
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if !HAVE_SIGACTION
 
     signal(sig, rotate_logs);
@@ -622,7 +630,7 @@ reconfigure(int sig)
 {
     do_reconfigure = 1;
     ReconfigureSignal = sig;
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if !HAVE_SIGACTION
 
     signal(sig, reconfigure);
@@ -651,7 +659,7 @@ shut_down(int sig)
                    " pid " << ppid << ": " << xstrerror());
     }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if KILL_PARENT_OPT
 
     if (!IamMasterProcess() && ppid > 1) {
@@ -872,10 +880,8 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
-#if USE_UNLINKD
     if (unlinkdNeeded())
         unlinkdInit();
-#endif
 
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
@@ -1017,7 +1023,7 @@ mainInitialize(void)
     setSystemLimits();
     debugs(1, DBG_IMPORTANT, "With " << Squid_MaxFD << " file descriptors available");
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     debugs(1, DBG_IMPORTANT, "With " << _getmaxstdio() << " CRT stdio descriptors available");
 
@@ -1084,10 +1090,8 @@ mainInitialize(void)
 #endif
 
     if (!configured_once) {
-#if USE_UNLINKD
         if (unlinkdNeeded())
             unlinkdInit();
-#endif
 
         urlInitialize();
         statInit();
@@ -1286,12 +1290,7 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#if _SQUID_WINDOWS_
-    int WIN32_init_err;
-#endif
-
 #if HAVE_SBRK
-
     sbrk_start = sbrk(0);
 #endif
 
@@ -1305,10 +1304,10 @@ SquidMain(int argc, char **argv)
 
 #endif
 
-#if _SQUID_WINDOWS_
+    /* NOP under non-windows */
+    int WIN32_init_err=0;
     if ((WIN32_init_err = WIN32_Subsystem_Init(&argc, &argv)))
         return WIN32_init_err;
-#endif
 
     /* call mallopt() before anything else */
 #if HAVE_MALLOPT
@@ -1393,9 +1392,7 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
-#if USE_AUTH
-        Auth::Init();      /* required for config parsing */
-#endif
+        Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
@@ -1554,22 +1551,16 @@ sendSignal(void)
 
     if (pid > 1) {
 #if USE_WIN32_SERVICE
-
         if (opt_signal_service) {
             WIN32_sendSignal(opt_send_signal);
             exit(0);
-        } else
-#if _SQUID_MSWIN_
-        {
+        } else {
             fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal to Squid Service:\n");
             fprintf(stderr, "missing -n command line switch.\n");
             exit(1);
         }
-
         /* NOTREACHED */
-#endif
-
 #endif
 
         if (kill(pid, opt_send_signal) &&
@@ -1594,7 +1585,7 @@ sendSignal(void)
     exit(0);
 }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 /*
  * This function is run when Squid is in daemon mode, just
  * before the parent forks and starts up the child process.
@@ -1637,7 +1628,7 @@ mainStartScript(const char *prog)
     }
 }
 
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 
 static int
 checkRunningPid(void)
@@ -1667,7 +1658,7 @@ checkRunningPid(void)
 static void
 watch_child(char *argv[])
 {
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
     char *prog;
 #if _SQUID_NEXT_
 
@@ -1836,7 +1827,7 @@ watch_child(char *argv[])
     }
 
     /* NOTREACHED */
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 
 }
 
@@ -1899,10 +1890,8 @@ SquidShutdown()
 #endif
 
     Store::Root().sync(); /* Flush pending object writes/unlinks */
-#if USE_UNLINKD
 
-    unlinkdClose();	  /* after sync/flush */
-#endif
+    unlinkdClose();	  /* after sync/flush. NOP if !USE_UNLINKD */
 
     storeDirWriteCleanLogs(0);
     PrintRusage();

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 05    Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -42,7 +40,7 @@
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"

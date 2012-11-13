@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -41,6 +39,6 @@ extern CSR esiStreamRead;
 extern CSCB esiProcessStream;
 extern CSD esiStreamDetach;
 extern CSS esiStreamStatus;
-extern int esiEnableProcessing (HttpReply *);
+int esiEnableProcessing (HttpReply *);
 
 #endif /* SQUID_ESI_H */

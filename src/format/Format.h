@@ -1,7 +1,7 @@
 #ifndef _SQUID_FORMAT_FORMAT_H
 #define _SQUID_FORMAT_FORMAT_H
 
-#include "RefCount.h"
+#include "base/RefCount.h"
 /*
  * Squid configuration allows users to define custom formats in
  * several components.

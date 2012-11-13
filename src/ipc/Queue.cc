@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  *
  */
@@ -47,15 +45,10 @@ Ipc::QueueReader::QueueReader(): popBlocked(1), popSignal(0),
 
 /* QueueReaders */
 
-Ipc::QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity)
+Ipc::QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity),
+        theReaders(theCapacity)
 {
     Must(theCapacity > 0);
-    theReaders=new QueueReader[theCapacity];
-}
-
-Ipc::QueueReaders::~QueueReaders()
-{
-    delete[] theReaders;
 }
 
 size_t

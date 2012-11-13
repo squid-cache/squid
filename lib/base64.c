@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Markus Moeller
  *
  * Encoders adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments.

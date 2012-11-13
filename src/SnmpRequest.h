@@ -1,9 +1,8 @@
-
+#ifndef SQUID_SNMPREQUEST_H_
+#define SQUID_SNMPREQUEST_H_
 /*
- * $Id$
- *
- * DEBUG: none          Linked list functions (deprecated)
- * AUTHOR: Harvest Derived
+ * DEBUG: section
+ * AUTHOR:
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,43 +32,29 @@
  *
  */
 
-#include "squid.h"
-#include "Mem.h"
-#include "protos.h"
-#include "typedefs.h"
+#if SQUID_SNMP
+#include "snmp_session.h"
 
-/* This should go away, in favour of the List template class */
-
-void
-linklistPush(link_list ** L, void *p)
+// POD
+class SnmpRequest
 {
-    link_list *l = (link_list *)memAllocate(MEM_LINK_LIST);
-    l->next = NULL;
-    l->ptr = p;
+public:
+    u_char *buf;
+    u_char *outbuf;
+    int len;
+    int sock;
+    long reqid;
+    int outlen;
 
-    while (*L)
-        L = &(*L)->next;
+    Ip::Address from;
 
-    *L = l;
-}
+    struct snmp_pdu *PDU;
+    ACLChecklist *acl_checklist;
+    u_char *community;
 
-void *
-linklistShift(link_list ** L)
-{
-    void *p;
-    link_list *l;
+    struct snmp_session session;
+};
 
-    if (NULL == *L)
-        return NULL;
+#endif /* SQUID_SNMP */
 
-    l = *L;
-
-    p = l->ptr;
-
-    *L = (*L)->next;
-
-    memFree(l, MEM_LINK_LIST);
-
-    return p;
-}
-
+#endif /* SQUID_SNMPREQUEST_H_ */

@@ -3,8 +3,9 @@
 
 #include "adaptation/DynamicGroupCfg.h"
 #include "Array.h"
+#include "base/RefCount.h"
 #include "HttpHeader.h"
-#include "RefCount.h"
+#include "Notes.h"
 #include "SquidString.h"
 
 namespace Adaptation
@@ -50,6 +51,9 @@ public:
     HttpHeader lastMeta;
     /// All REQMOD and RESPMOD meta headers merged. Last field wins conflicts.
     HttpHeader allMeta;
+    /// key:value pairs set by adaptation_meta, to be added to
+    /// AccessLogEntry::notes when ALE becomes available
+    NotePairs metaHeaders;
 
     /// sets future services for the Adaptation::AccessCheck to notice
     void setFutureServices(const DynamicGroupCfg &services);

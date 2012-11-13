@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
  *

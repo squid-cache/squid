@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins
  *
@@ -34,16 +32,16 @@
 
 #include "squid.h"
 #include "MemBuf.h"
-#include "protos.h"
+#include "store_rebuild.h"
 
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"
 
 void storeRebuildProgress(int sd_index, int total, int sofar) STUB
-void storeRebuildComplete(struct _store_rebuild_data *dc) STUB_NOP
-bool storeRebuildLoadEntry(int, int, MemBuf&, _store_rebuild_data&)
+void storeRebuildComplete(StoreRebuildData *dc) STUB_NOP
+bool storeRebuildLoadEntry(int, int, MemBuf&, StoreRebuildData&)
 {
     return false;
 }
-bool storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, struct _store_rebuild_data &counts) STUB_RETVAL(false)
-bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, struct _store_rebuild_data &, uint64_t) STUB_RETVAL(false)
+bool storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuildData &counts) STUB_RETVAL(false)
+bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)

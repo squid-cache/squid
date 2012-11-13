@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern
  *
@@ -35,13 +33,14 @@
 
 #include "squid.h"
 #include "CossSwapDir.h"
-#include "Store.h"
-#include "store_coss.h"
-#include "MemObject.h"
-#include "fde.h"
-#include "SwapDir.h"
-#include "StoreFScoss.h"
 #include "DiskIO/DiskIOStrategy.h"
+#include "fde.h"
+#include "MemObject.h"
+#include "SquidConfig.h"
+#include "store_coss.h"
+#include "Store.h"
+#include "StoreFScoss.h"
+#include "SwapDir.h"
 
 CBDATA_TYPE(CossMemBuf);
 

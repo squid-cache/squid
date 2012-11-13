@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -36,7 +34,7 @@
 #if USE_AUTH
 
 #include "Array.h"
-#include "RefCount.h"
+#include "base/RefCount.h"
 
 /**
  \defgroup AuthSchemeAPI	Authentication Scheme API

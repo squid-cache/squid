@@ -14,9 +14,10 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "fde.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "ip/tools.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);

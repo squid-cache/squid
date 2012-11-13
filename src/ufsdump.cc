@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 00    UFS Store Dump Tool
  * AUTHOR: Robert Collins
  *

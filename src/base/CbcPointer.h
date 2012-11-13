@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_CBC_POINTER_H
 #define SQUID_CBC_POINTER_H
 
