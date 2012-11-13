@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
  *
@@ -35,11 +33,12 @@
 #include "squid.h"
 #include "BlockingFile.h"
 #include "Debug.h"
+#include "defines.h"
+#include "globals.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
 #include "disk.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

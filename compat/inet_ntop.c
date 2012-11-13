@@ -16,8 +16,6 @@
  *
  *    04-Nov-2010: drop SPRINTF casting macro
  *
- * Squid CVS $Id$
- *
  *  Original License and code follows.
  */
 

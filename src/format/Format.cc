@@ -11,7 +11,6 @@
 #include "fqdncache.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -384,7 +383,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_LOCAL_LISTENING_IP: {
             // avoid logging a dash if we have reliable info
             const bool interceptedAtKnownPort = al->request ?
-                                                (al->request->flags.spoof_client_ip ||
+                                                (al->request->flags.spoofClientIp ||
                                                  al->request->flags.intercepted) && al->cache.port :
                                                 false;
             if (interceptedAtKnownPort) {
@@ -1041,6 +1040,23 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 #endif
+        case LFT_NOTE:
+            if (fmt->data.string) {
+                sb = al->notes.getByName(fmt->data.string);
+                out = sb.termedBuf();
+                quote = 1;
+            } else {
+                HttpHeaderPos pos = HttpHeaderInitPos;
+                while (const HttpHeaderEntry *e = al->notes.getEntry(&pos)) {
+                    sb.append(e->name);
+                    sb.append(": ");
+                    sb.append(e->value);
+                    sb.append("\r\n");
+                }
+                out = sb.termedBuf();
+                quote = 1;
+            }
+            break;
 
         case LFT_PERCENT:
             out = "%";

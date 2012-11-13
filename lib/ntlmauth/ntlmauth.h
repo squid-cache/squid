@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * * * * * * * * Legal stuff * * * * * * *
  *
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>,

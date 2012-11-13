@@ -1,8 +1,3 @@
-
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "acl/SslError.h"
 #include "acl/SslErrorData.h"

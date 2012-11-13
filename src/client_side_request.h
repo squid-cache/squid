@@ -36,22 +36,22 @@
 #include "AccessLogEntry.h"
 #include "dlink.h"
 #include "base/AsyncJob.h"
+#include "HttpHeaderRange.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
-
 class HttpMsg;
 #endif
 
-/* client_side_request.c - client side request related routines (pure logic) */
-extern int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
-
+class acl_access;
+class ACLFilledChecklist;
+class ClientRequestContext;
+class ConnStateData;
 class MemObject;
 
-class ConnStateData;
-
-class ClientRequestContext;
+/* client_side_request.c - client side request related routines (pure logic) */
+int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
 
 class ClientHttpRequest
 #if USE_ADAPTATION
@@ -199,16 +199,14 @@ private:
 };
 
 /* client http based routines */
-extern char *clientConstructTraceEcho(ClientHttpRequest *);
+char *clientConstructTraceEcho(ClientHttpRequest *);
 
-class ACLFilledChecklist;
-extern ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
-extern int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
-extern void clientAccessCheck(ClientHttpRequest *);
+ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
+int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
+void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-extern void redirectStart(ClientHttpRequest *, RH *, void *);
-extern void tunnelStart(ClientHttpRequest *, int64_t *, int *);
+void tunnelStart(ClientHttpRequest *, int64_t *, int *);
 
 #if _USE_INLINE_
 #include "Store.h"

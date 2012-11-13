@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  *
  */
@@ -39,8 +37,8 @@ public:
 
 /// Depending on whether SMP is on, either ask Coordinator to send us
 /// the listening FD or open a listening socket directly.
-extern void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
-                           FdNoteId fdNote, AsyncCall::Pointer &callback);
+void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
+                    FdNoteId fdNote, AsyncCall::Pointer &callback);
 
 } // namespace Ipc;
 

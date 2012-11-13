@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 00    Client Database
  * AUTHOR: Duane Wessels
  *
@@ -42,12 +40,16 @@
 #include "log/access_log.h"
 #include "Mem.h"
 #include "mgr/Registration.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
 
 static hash_table *client_table = NULL;
 

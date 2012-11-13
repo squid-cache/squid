@@ -31,11 +31,12 @@
 #ifndef SQUID_CLIENTSIDEREPLY_H
 #define SQUID_CLIENTSIDEREPLY_H
 
-#include "RefCount.h"
-#include "HttpHeader.h"
-#include "clientStream.h"
-#include "StoreClient.h"
+#include "base/RefCount.h"
 #include "client_side_request.h"
+#include "clientStream.h"
+#include "HttpHeader.h"
+#include "RequestFlags.h"
+#include "StoreClient.h"
 
 class ErrorState;
 #include "ip/forward.h"
@@ -82,7 +83,7 @@ public:
 #endif
     /// creates a store entry for the reply and appends err to it
     void setReplyToError(const HttpRequestMethod& method, ErrorState *err);
-    void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
+    void createStoreEntry(const HttpRequestMethod& m, RequestFlags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);
     void startError(ErrorState * err);

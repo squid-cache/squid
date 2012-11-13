@@ -1,16 +1,9 @@
-/*
- * $Id$
- */
 #ifndef SQUID_CACHE_SNMP_H
 #define SQUID_CACHE_SNMP_H
 
 #if SQUID_SNMP
 
-#if SIZEOF_LONG == 8
-#define snint int
-#else
-#define snint long
-#endif
+typedef int64_t snint;
 
 #ifndef MIN
 #define MIN(a,b) (a<b?a:b)

@@ -1,3 +1,5 @@
+#ifndef SQUID_CACHEDIGEST_H_
+#define SQUID_CACHEDIGEST_H_
 /*
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov
@@ -30,25 +32,37 @@
  *
  */
 
-#ifndef SQUID_CACHEDIGEST_H_
-#define SQUID_CACHEDIGEST_H_
-
+/* for cache_key */
 #include "typedefs.h"
+
 class CacheDigestGuessStats;
 class StoreEntry;
 
-extern CacheDigest *cacheDigestCreate(int capacity, int bpe);
-extern void cacheDigestDestroy(CacheDigest * cd);
-extern CacheDigest *cacheDigestClone(const CacheDigest * cd);
-extern void cacheDigestClear(CacheDigest * cd);
-extern void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
-extern int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
-extern void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
-extern void cacheDigestDel(CacheDigest * cd, const cache_key * key);
-extern size_t cacheDigestCalcMaskSize(int cap, int bpe);
-extern int cacheDigestBitUtil(const CacheDigest * cd);
-extern void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
-extern void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
-extern void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
+// currently a POD
+class CacheDigest
+{
+public:
+    /* public, read-only */
+    char *mask;         /* bit mask */
+    int mask_size;      /* mask size in bytes */
+    int capacity;       /* expected maximum for .count, not a hard limit */
+    int bits_per_entry;     /* number of bits allocated for each entry from capacity */
+    int count;          /* number of digested entries */
+    int del_count;      /* number of deletions performed so far */
+};
+
+CacheDigest *cacheDigestCreate(int capacity, int bpe);
+void cacheDigestDestroy(CacheDigest * cd);
+CacheDigest *cacheDigestClone(const CacheDigest * cd);
+void cacheDigestClear(CacheDigest * cd);
+void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
+int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
+void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
+void cacheDigestDel(CacheDigest * cd, const cache_key * key);
+size_t cacheDigestCalcMaskSize(int cap, int bpe);
+int cacheDigestBitUtil(const CacheDigest * cd);
+void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
+void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
+void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
 #endif /* SQUID_CACHEDIGEST_H_ */

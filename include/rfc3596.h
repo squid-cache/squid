@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Amos Jeffries, Rafael Martinez Torres
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,7 +1,5 @@
 #include "squid.h"
 
-/* $Id$
-
 /*
  * On some systems, FD_SETSIZE is set to something lower than the
  * actual number of files which can be opened.  IRIX is one case,

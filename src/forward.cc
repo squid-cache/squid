@@ -32,9 +32,11 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/AclAddress.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "CachePeer.h"
 #include "CacheManager.h"
 #include "client_side.h"
 #include "comm/Connection.h"
@@ -63,9 +65,11 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "StoreClient.h"
+#include "urn.h"
 #include "whois.h"
 #if USE_SSL
 #include "ssl/cert_validate_message.h"
@@ -146,7 +150,7 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoof_client_ip);
+    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoofClientIp);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
@@ -568,29 +572,8 @@ FwdState::checkRetriable()
     if (request->body_pipe != NULL)
         return false;
 
-    /* RFC2616 9.1 Safe and Idempotent Methods */
-    switch (request->method.id()) {
-        /* 9.1.1 Safe Methods */
-
-    case METHOD_GET:
-
-    case METHOD_HEAD:
-        /* 9.1.2 Idempotent Methods */
-
-    case METHOD_PUT:
-
-    case METHOD_DELETE:
-
-    case METHOD_OPTIONS:
-
-    case METHOD_TRACE:
-        break;
-
-    default:
-        return false;
-    }
-
-    return true;
+    // RFC2616 9.1 Safe and Idempotent Methods
+    return (request->method.isHttpSafe() || request->method.isIdempotent());
 }
 
 void
@@ -779,7 +762,7 @@ FwdState::negotiateSSL(int fd)
             validationRequest.errors = NULL;
         try {
             debugs(83, 5, HERE << "Sending SSL certificate for validation to ssl_crtvd.");
-            Ssl::CertValidationMsg requestMsg;
+            Ssl::CertValidationMsg requestMsg(Ssl::CrtdMessage::REQUEST);
             requestMsg.setCode(Ssl::CertValidationMsg::code_cert_validate);
             requestMsg.composeRequest(validationRequest);
             debugs(83, 5, HERE << "SSL crtvd request: " << requestMsg.compose().c_str());
@@ -808,14 +791,14 @@ FwdState::negotiateSSL(int fd)
 
 #if 1 // USE_SSL_CERT_VALIDATOR
 void
-FwdState::sslCrtvdHandleReplyWrapper(void *data, char *reply)
+FwdState::sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
 {
     FwdState * fwd = (FwdState *)(data);
     fwd->sslCrtvdHandleReply(reply);
 }
 
 void
-FwdState::sslCrtvdHandleReply(const char *reply)
+FwdState::sslCrtvdHandleReply(const HelperReply &reply)
 {
     Ssl::Errors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
@@ -825,22 +808,22 @@ FwdState::sslCrtvdHandleReply(const char *reply)
     }
     SSL *ssl = fd_table[serverConnection()->fd].ssl;
 
-    if (!reply) {
+    if (!reply.other().hasContent()) {
         debugs(83, 1, HERE << "\"ssl_crtvd\" helper return <NULL> reply");
         validatorFailed = true;
     } else {
-        Ssl::CertValidationMsg replyMsg;
+        Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
         Ssl::CertValidationResponse validationResponse;
         std::string error;
         STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(ssl);
-        if (replyMsg.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK ||
+        if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
                 !replyMsg.parseResponse(validationResponse, peerCerts, error) ) {
             debugs(83, 5, HERE << "Reply from ssl_crtvd for " << request->GetHost() << " is incorrect");
             validatorFailed = true;
         } else {
-            if (replyMsg.getCode() == "OK") {
+            if (reply.result == HelperReply::Okay) {
                 debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " was successfully validated from ssl_crtvd");
-            } else if (replyMsg.getCode() == "ERR") {
+            } else if (reply.result == HelperReply::Error) {
                 debugs(83, 5, HERE << "Certificate for " << request->GetHost() << " found buggy by ssl_crtvd");
                 errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
             } else {
@@ -949,7 +932,7 @@ FwdState::initiateSSL()
 {
     SSL *ssl;
     SSL_CTX *sslContext = NULL;
-    const peer *peer = serverConnection()->getPeer();
+    const CachePeer *peer = serverConnection()->getPeer();
     int fd = serverConnection()->fd;
 
     if (peer) {
@@ -1015,8 +998,6 @@ FwdState::initiateSSL()
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
         if (acl_access *acl = Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
-            if (Comm::IsConnOpen(clientConn))
-                check->fd(clientConn->fd);
             SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
         }
 #if 1 // USE_SSL_CERT_VALIDATOR
@@ -1147,7 +1128,7 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped == true) {
+    if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
         fail(anErr);
@@ -1445,7 +1426,7 @@ FwdState::reforward()
 ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
-    return new ErrorState(type, request->flags.need_validation ?
+    return new ErrorState(type, request->flags.needValidation ?
                           HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
@@ -1591,7 +1572,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         conn->local.SetIPv4();
 
     // maybe use TPROXY client address
-    if (request && request->flags.spoof_client_ip) {
+    if (request && request->flags.spoofClientIp) {
         if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
 #if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
             if (Config.onoff.tproxy_uses_indirect_client)
@@ -1618,7 +1599,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     // TODO use the connection details in ACL.
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
-    acl_address *l;
+    AclAddress *l;
     for (l = Config.accessList.outgoing_address; l; l = l->next) {
 
         /* check if the outgoing address is usable to the destination */

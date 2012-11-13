@@ -1,8 +1,6 @@
+#ifndef SQUID_CACHEPEERDOMAINLIST_H_
+#define SQUID_CACHEPEERDOMAINLIST_H_
 /*
- * $Id$
- *
- * AUTHOR: Guido Serassio <serassio@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -30,20 +28,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_OS_WINDOWS_H
-#define SQUID_OS_WINDOWS_H
 
-#if _SQUID_WINDOWS_
+/// representation of the cache_peer_domain list. POD.
+class CachePeerDomainList
+{
+public:
+    char *domain;
+    bool do_ping;
+    CachePeerDomainList *next;
+};
 
-#ifndef ACL
-#define ACL WindowsACL
-#define _MSWIN_ACL_WAS_NOT_DEFINED 1
-#endif
-#include <windows.h>
-#if _MSWIN_ACL_WAS_NOT_DEFINED
-#undef ACL
-#undef _MSWIN_ACL_WAS_NOT_DEFINED
-#endif
-
-#endif /* _SQUID_WINDOWS_ */
-#endif /* SQUID_OS_WINDOWS_H */
+#endif /* SQUID_CACHEPEERDOMAINLIST_H_ */

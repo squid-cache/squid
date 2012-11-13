@@ -1,7 +1,5 @@
 #!/usr/local/bin/perl
 
-# $Id$
-
 select(STDERR); $|=1;
 select(STDOUT); $|=1;
 

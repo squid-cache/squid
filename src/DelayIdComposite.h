@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  * Based upon original delay pools code by
@@ -40,8 +38,8 @@
 #define DELAYIDCOMPOSITE_H
 
 #if USE_DELAY_POOLS
+#include "base/RefCount.h"
 #include "fatal.h"
-#include "RefCount.h"
 
 class DeferredRead;
 

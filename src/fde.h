@@ -31,13 +31,29 @@
 #define SQUID_FDE_H
 
 #include "comm.h"
+#include "defines.h"
 #include "ip/Address.h"
-#include "structs.h"
+
+#if USE_SSL
+#include <openssl/ssl.h>
+#endif
 
 #if USE_DELAY_POOLS
 class ClientInfo;
 #endif
+
 class PconnPool;
+class dwrite_q;
+class _fde_disk
+{
+public:
+    DWCB *wrt_handle;
+    void *wrt_handle_data;
+    dwrite_q *write_q;
+    dwrite_q *write_q_tail;
+    off_t offset;
+    _fde_disk() { memset(this, 0, sizeof(_fde_disk)); }
+};
 
 class fde
 {
@@ -98,7 +114,7 @@ public:
 #endif
     unsigned epoll_state;
 
-    struct _fde_disk disk;
+    _fde_disk disk;
     PF *read_handler;
     void *read_data;
     PF *write_handler;
@@ -116,7 +132,7 @@ public:
     SSL *ssl;
     SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
 #endif
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     struct {
         long handle;
     } win32;
@@ -152,7 +168,6 @@ private:
         clientInfo = NULL;
 #endif
         epoll_state = 0;
-        memset(&disk, 0, sizeof(_fde_disk));
         read_handler = NULL;
         read_data = NULL;
         write_handler = NULL;
@@ -170,7 +185,7 @@ private:
         ssl = NULL;
         dynamicSslContext = NULL;
 #endif
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         win32.handle = NULL;
 #endif
         tosFromServer = '\0';
@@ -178,7 +193,7 @@ private:
     }
 };
 
-SQUIDCEXTERN int fdNFree(void);
+int fdNFree(void);
 
 #define FD_READ_METHOD(fd, buf, len) (*fd_table[fd].read_method)(fd, buf, len)
 #define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)

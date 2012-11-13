@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -39,7 +37,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "HttpRequest.h"
-#include "structs.h"
+#include "SquidConfig.h"
 
 char const *
 ACLDestinationIP::typeString() const
@@ -57,7 +55,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     // To resolve this we will force DIRECT and only to the original client destination.
     // In which case, we also need this ACL to accurately match the destination
     if (Config.onoff.client_dst_passthru && checklist->request &&
-            (checklist->request->flags.intercepted || checklist->request->flags.spoof_client_ip)) {
+            (checklist->request->flags.intercepted || checklist->request->flags.spoofClientIp)) {
         assert(checklist->conn() && checklist->conn()->clientConnection != NULL);
         return ACLIP::match(checklist->conn()->clientConnection->local);
     }
@@ -73,7 +71,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
         }
 
         return 0;
-    } else if (!checklist->request->flags.destinationIPLookedUp()) {
+    } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState (DestinationIPLookup::Instance());
@@ -104,7 +102,7 @@ DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &d
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     assert (checklist->asyncState() == DestinationIPLookup::Instance());
-    checklist->request->flags.destinationIPLookupCompleted();
+    checklist->request->flags.destinationIpLookedUp=true;
     checklist->request->recordLookup(details);
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());

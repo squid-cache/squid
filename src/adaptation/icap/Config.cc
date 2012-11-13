@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -40,6 +38,7 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "SquidConfig.h"
 #include "wordlist.h"
 
 Adaptation::Icap::Config Adaptation::Icap::TheConfig;

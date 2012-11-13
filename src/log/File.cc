@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels
  *

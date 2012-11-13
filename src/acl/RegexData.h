@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,8 +35,7 @@
 #include "acl/Data.h"
 #include "MemPool.h"
 
-/** \todo CLEANUP: break out relist, we don't need the rest. */
-#include "structs.h"
+class RegexList;
 
 class ACLRegexData : public ACLData<char const *>
 {
@@ -54,7 +51,7 @@ public:
     virtual ACLData<char const *> *clone() const;
 
 private:
-    relist *data;
+    RegexList *data;
 };
 
 MEMPROXY_CLASS_INLINE(ACLRegexData);

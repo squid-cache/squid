@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -12,12 +13,14 @@
 #include "globals.h"
 #include "icmp/net_db.h"
 #include "ipcache.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
-#include "protos.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+
+class CachePeer;
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 
@@ -204,11 +207,11 @@ Comm::ConnOpener::connected()
 
     /*
      * stats.conn_open is used to account for the number of
-     * connections that we have open to the peer, so we can limit
+     * connections that we have open to the CachePeer, so we can limit
      * based on the max-conn option.  We need to increment here,
      * even if the connection may fail.
      */
-    if (peer *peer=(conn_->getPeer()))
+    if (CachePeer *peer=(conn_->getPeer()))
         ++peer->stats.conn_open;
 
     lookupLocalAddress();

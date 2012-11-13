@@ -4,8 +4,8 @@
 namespace Fs
 {
 
-extern void Init();
-extern void Clean();
+void Init();
+void Clean();
 
 } // namespace Fs
 

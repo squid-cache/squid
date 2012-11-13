@@ -9,8 +9,6 @@ use File::Basename;
 # cf.data.pre and generate a set of HTML pages to use as documentation.
 #
 # Adrian Chadd <adrian@squid-cache.org>
-#
-# $Id$
 
 #
 # The template file is reasonably simple to parse. There's a number of
@@ -19,9 +17,10 @@ use File::Basename;
 # NAME: <name>
 # IFDEF: <the ifdef bit>
 # TYPE: <the config type>
-# DEFAULT: <the default value>
-# DEFAULT_IF_NONE: <alternative default value>
 # LOC: <location in the Config struct>
+# DEFAULT: <the default value(s) - may be multiple lines>
+# DEFAULT_IF_NONE: <alternative default value>
+# DEFAULT_DOC: <the text to display instead of default value(s)>
 # DOC_START
 #   documentation goes here
 # NOCOMMENT_START
@@ -225,6 +224,22 @@ sub section_heading($)
 	print $index $comment;
 	print $index "</pre>\n";
 }
+sub update_defaults()
+{
+	if (defined($data->{"default_doc"})) {
+		# default text description masks out the default value display
+		if($data->{"default_doc"} ne "") {
+			print "REPLACE: default '". $data->{"default"} ."' with '" . $data->{"default_doc"} . "'\n" if $verbose;
+			$data->{"default"} = $data->{"default_doc"};
+		}
+	}
+	# when we have no predefined default use the DEFAULT_IF_NONE
+	if (defined($data->{"default_if_none"})) {
+		print "REPLACE: default '". $data->{"default"} ."' with '" . $data->{"default_if_none"} . "'\n" if $verbose && $data->{"default"} eq "";
+		$data->{"default"} = $data->{"default_if_none"} if $data->{"default"} eq "";
+	}
+}
+
 while (<>) {
 	chomp;
 	last if (/^EOF$/);
@@ -241,8 +256,12 @@ while (<>) {
 		$option{$name} = $data;
 		$data->{'name'} = $name;
 		$data->{'aliases'} = \@aliases;
+		$data->{'default'} = "";
+		$data->{'default_doc'} = "";
+		$data->{'default_if_none'} = "";
 
 		print "DEBUG: new option: $name\n" if $verbose;
+		next;
 	} elsif ($_ =~ /^COMMENT: (.*)$/) {
 		$data->{"comment"} = $1;
 	} elsif ($_ =~ /^TYPE: (.*)$/) {
@@ -250,16 +269,19 @@ while (<>) {
 		start_option($data->{"name"}, $data->{"type"});
 	} elsif ($_ =~ /^DEFAULT: (.*)$/) {
 		if ($1 eq "none") {
-		    $data->{"default"} = "$1";
+		    $data->{"default"} = "$1\n";
 		} else {
-		    $data->{"default"} = "$name $1";
+		    $data->{"default"} .= "$name $1\n";
 		}
+	} elsif ($_ =~ /^DEFAULT_DOC: (.*)$/) {
+		$data->{"default_doc"} .= "$1\n";
 	} elsif ($_ =~ /^DEFAULT_IF_NONE: (.*)$/) {
-		$data->{"default"} = "$name $1";
+		$data->{"default_if_none"} .= "$1\n";
 	} elsif ($_ =~ /^LOC:(.*)$/) {
 		$data->{"loc"} = $1;
 		$data->{"loc"} =~ s/^[\s\t]*//;
 	} elsif ($_ =~ /^DOC_START$/) {
+		update_defaults;
 		$state = "doc";
 	} elsif ($_ =~ /^DOC_END$/) {
 		$state = "";
@@ -269,11 +291,10 @@ while (<>) {
 		}
 		undef @chained;
 	} elsif ($_ =~ /^DOC_NONE$/) {
+		update_defaults;
 		push(@chained, $name);
 	} elsif ($_ =~ /^NOCOMMENT_START$/) {
 		$state = "nocomment";
-	} elsif ($_ =~ /^DEFAULT_IF_NONE: (.*)$/) {
-		$data->{"default_if_none"} = $1;
 	} elsif ($_ =~ /^NOCOMMENT_END$/) {
 		$state = "";
 	} elsif ($_ =~ /^IFDEF: (.*)$/) {

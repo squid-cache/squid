@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -132,7 +130,7 @@ protected:
 
 };
 
-SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
+int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
 
 #define HTTPMSGUNLOCK(a) if(a){(a)->_unlock();(a)=NULL;}
 #define HTTPMSGLOCK(a) (a)->_lock()

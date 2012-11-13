@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 00    Announcement Server
  * AUTHOR: Harvest Derived
  *

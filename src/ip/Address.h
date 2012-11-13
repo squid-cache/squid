@@ -45,7 +45,7 @@
 #if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
-#if _SQUID_MSWIN_
+#if HAVE_WS2TCPIP_H
 #include <ws2tcpip.h>
 #endif
 #if HAVE_NETDB_H
@@ -402,6 +402,6 @@ public:
 
 } // namespace Ip
 
-extern void parse_IpAddress_list_token(Ip::Address_list **, char *);
+void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
 #endif /* _SQUID_IP_IPADDRESS_H */

@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 90    Storage Manager Client-Side Interface
  * AUTHOR: Duane Wessels
  *
@@ -40,11 +38,13 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "MemObject.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreClient.h"
 #include "Store.h"
+#include "store_swapin.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS

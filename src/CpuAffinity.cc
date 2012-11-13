@@ -1,8 +1,5 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
- *
  */
 
 #include "squid.h"
@@ -11,8 +8,9 @@
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
 #include "Debug.h"
-#include "protos.h"
-#include "structs.h"
+#include "globals.h"
+#include "SquidConfig.h"
+#include "tools.h"
 
 #include <algorithm>
 

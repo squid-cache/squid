@@ -26,8 +26,6 @@
  *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  *
- * $Id$
- *
  ***************************************************************************/
 
 #include <asn1.h>		/* Need OID Definition */

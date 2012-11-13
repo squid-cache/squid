@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -36,6 +34,7 @@
 
 #include "squid.h"
 #include "acl/Strategised.h"
+#include "HttpHeader.h"
 
 /*
  *  moved template instantiation into ACLStrategized.cc

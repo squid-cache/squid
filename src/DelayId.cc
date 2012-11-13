@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  * Based upon original delay pools code by
@@ -50,6 +48,7 @@
 #include "DelayPool.h"
 #include "DelayPools.h"
 #include "HttpRequest.h"
+#include "SquidConfig.h"
 
 DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
 {}

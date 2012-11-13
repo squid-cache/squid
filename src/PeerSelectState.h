@@ -47,22 +47,22 @@ class ErrorState;
 
 typedef void PSC(Comm::ConnectionList *, ErrorState *, void *);
 
-SQUIDCEXTERN void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
-SQUIDCEXTERN void peerSelectInit(void);
+void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
+void peerSelectInit(void);
 
 /**
- * A peer which has been selected as a possible destination.
+ * A CachePeer which has been selected as a possible destination.
  * Listed as pointers here so as to prevent duplicates being added but will
  * be converted to a set of IP address path options before handing back out
  * to the caller.
  *
  * Certain connection flags and outgoing settings will also be looked up and
- * set based on the received request and peer settings before handing back.
+ * set based on the received request and CachePeer settings before handing back.
  */
 class FwdServer
 {
 public:
-    peer *_peer;                /* NULL --> origin server */
+    CachePeer *_peer;                /* NULL --> origin server */
     hier_code code;
     FwdServer *next;
 };
@@ -86,21 +86,21 @@ public:
     FwdServer *servers;    ///< temporary linked list of peers we will pass back.
 
     /*
-     * Why are these Ip::Address instead of peer *?  Because a
-     * peer structure can become invalid during the peer selection
+     * Why are these Ip::Address instead of CachePeer *?  Because a
+     * CachePeer structure can become invalid during the CachePeer selection
      * phase, specifically after a reconfigure.  Thus we need to lookup
-     * the peer * based on the address when we are finally ready to
-     * reference the peer structure.
+     * the CachePeer * based on the address when we are finally ready to
+     * reference the CachePeer structure.
      */
 
     Ip::Address first_parent_miss;
 
     Ip::Address closest_parent_miss;
     /*
-     * ->hit can be peer* because it should only be
+     * ->hit can be CachePeer* because it should only be
      * accessed during the thread when it is set
      */
-    peer *hit;
+    CachePeer *hit;
     peer_t hit_type;
     ping_data ping;
     ACLChecklist *acl_checklist;

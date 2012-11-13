@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 16    Cache Manager API
  *
  */
@@ -10,12 +8,12 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/CountersAction.h"
-#include "protos.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 
-extern void GetCountersStats(Mgr::CountersActionData& stats);
-extern void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);
+void GetCountersStats(Mgr::CountersActionData& stats);
+void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);
 
 Mgr::CountersActionData::CountersActionData()
 {

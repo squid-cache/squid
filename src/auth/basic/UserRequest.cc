@@ -5,6 +5,7 @@
 #include "auth/State.h"
 #include "charset.h"
 #include "Debug.h"
+#include "HelperReply.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 
@@ -135,23 +136,12 @@ Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
 }
 
 void
-Auth::Basic::UserRequest::HandleReply(void *data, char *reply)
+Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
     BasicAuthQueueNode *tmpnode;
-    char *t = NULL;
     void *cbdata;
-    debugs(29, 5, HERE << "{" << (reply ? reply : "<NULL>") << "}");
-
-    if (reply) {
-        if ((t = strchr(reply, ' '))) {
-            *t = '\0';
-            ++t;
-        }
-
-        if (*reply == '\0')
-            reply = NULL;
-    }
+    debugs(29, 5, HERE << "reply=" << reply);
 
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);
@@ -162,13 +152,13 @@ Auth::Basic::UserRequest::HandleReply(void *data, char *reply)
 
     assert(basic_auth != NULL);
 
-    if (reply && (strncasecmp(reply, "OK", 2) == 0))
+    if (reply.result == HelperReply::Okay)
         basic_auth->credentials(Auth::Ok);
     else {
         basic_auth->credentials(Auth::Failed);
 
-        if (t && *t)
-            r->auth_user_request->setDenyMessage(t);
+        if (reply.other().hasContent())
+            r->auth_user_request->setDenyMessage(reply.other().content());
     }
 
     basic_auth->expiretime = squid_curtime;

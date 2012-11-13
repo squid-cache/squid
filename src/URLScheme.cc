@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 23    URL Scheme parsing
  * AUTHOR: Robert Collins
  *

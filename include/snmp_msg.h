@@ -26,8 +26,6 @@
  *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  *
- * $Id$
- *
  **********************************************************************/
 
 #include "snmp_pdu.h"

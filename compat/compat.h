@@ -61,7 +61,7 @@
 #include "compat/os/hpux.h"
 #include "compat/os/linux.h"
 #include "compat/os/macosx.h"
-#include "compat/os/mswin.h"
+#include "compat/os/mswindows.h"
 #include "compat/os/netbsd.h"
 #include "compat/os/next.h"
 #include "compat/os/openbsd.h"
@@ -70,7 +70,6 @@
 #include "compat/os/sgi.h"
 #include "compat/os/solaris.h"
 #include "compat/os/sunos.h"
-#include "compat/os/windows.h"
 
 /*****************************************************/
 /* portabilities shared between all platforms and    */

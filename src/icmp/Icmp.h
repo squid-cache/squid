@@ -66,7 +66,7 @@ struct icmpEchoData {
     char payload[MAX_PAYLOAD];
 };
 
-SQUIDCEXTERN int icmp_pkts_sent;
+extern int icmp_pkts_sent;
 
 #endif /* USE_ICMP */
 

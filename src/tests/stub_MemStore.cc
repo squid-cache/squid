@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 84    Helper process maintenance
  *
  */
@@ -30,4 +28,4 @@ uint64_t MemStore::currentSize() const STUB_RETVAL(0)
 uint64_t MemStore::currentCount() const STUB_RETVAL(0)
 int64_t MemStore::maxObjectSize() const STUB_RETVAL(0)
 StoreSearch *MemStore::search(String const, HttpRequest *) STUB_RETVAL(NULL)
-bool MemStore::dereference(StoreEntry &) STUB_RETVAL(false)
+bool MemStore::dereference(StoreEntry &, bool) STUB_RETVAL(false)

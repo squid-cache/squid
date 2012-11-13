@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #ifndef SQUID_HASH_H
 #define SQUID_HASH_H
 

@@ -33,14 +33,16 @@
 #ifndef SQUID_REFRESH_H_
 #define SQUID_REFRESH_H_
 
-extern void refreshAddToList(const char *, int, time_t, int, time_t);
-extern int refreshIsCachable(const StoreEntry *);
-extern int refreshCheckHTTP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckICP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
-extern int refreshCheckDigest(const StoreEntry *, time_t delta);
-extern time_t getMaxAge(const char *url);
-extern void refreshInit(void);
-extern const refresh_t *refreshLimits(const char *url);
+class RefreshPattern;
+
+void refreshAddToList(const char *, int, time_t, int, time_t);
+int refreshIsCachable(const StoreEntry *);
+int refreshCheckHTTP(const StoreEntry *, HttpRequest *);
+int refreshCheckICP(const StoreEntry *, HttpRequest *);
+int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
+int refreshCheckDigest(const StoreEntry *, time_t delta);
+time_t getMaxAge(const char *url);
+void refreshInit(void);
+const RefreshPattern *refreshLimits(const char *url);
 
 #endif /* SQUID_REFRESH_H_ */
