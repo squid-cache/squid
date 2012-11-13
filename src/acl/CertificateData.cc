@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
+#include "Debug.h"
 #include "cache_cf.h"
 #include "wordlist.h"
 
