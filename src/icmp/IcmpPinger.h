@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -74,7 +72,7 @@ private:
 #if USE_ICMP
 
 /// pinger helper contains one of these as a global object.
-SQUIDCEXTERN IcmpPinger control;
+extern IcmpPinger control;
 
 #endif
 

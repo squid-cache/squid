@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins
  *
@@ -36,10 +34,12 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "ConfigOption.h"
+#include "globals.h"
 #include "Parsing.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
+#include "tools.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
         max_size(0),
@@ -118,7 +118,7 @@ void
 SwapDir::reference(StoreEntry &) {}
 
 bool
-SwapDir::dereference(StoreEntry &)
+SwapDir::dereference(StoreEntry &, bool)
 {
     return true; // keep in global store_table
 }

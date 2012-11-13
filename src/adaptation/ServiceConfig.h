@@ -2,7 +2,7 @@
 #define SQUID_ADAPTATION__SERVICE_CONFIG_H
 
 #include "SquidString.h"
-#include "RefCount.h"
+#include "base/RefCount.h"
 #include "adaptation/Elements.h"
 
 namespace Adaptation

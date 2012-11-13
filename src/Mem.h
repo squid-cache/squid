@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
  *
@@ -64,21 +62,21 @@ protected:
 
 extern const size_t squidSystemPageSize;
 
-extern void memClean(void);
-extern void memInitModule(void);
-extern void memCleanModule(void);
-extern void memConfigure(void);
-extern void *memAllocate(mem_type);
-extern void *memAllocString(size_t net_size, size_t * gross_size);
-extern void *memAllocBuf(size_t net_size, size_t * gross_size);
-extern void *memReallocBuf(void *buf, size_t net_size, size_t * gross_size);
-extern void memFree(void *, int type);
-extern void memFreeString(size_t size, void *);
-extern void memFreeBuf(size_t size, void *);
-extern FREE *memFreeBufFunc(size_t size);
-extern int memInUse(mem_type);
-extern void memDataInit(mem_type, const char *, size_t, int, bool zeroOnPush = true);
-extern void memCheckInit(void);
-extern void memConfigure(void);
+void memClean(void);
+void memInitModule(void);
+void memCleanModule(void);
+void memConfigure(void);
+void *memAllocate(mem_type);
+void *memAllocString(size_t net_size, size_t * gross_size);
+void *memAllocBuf(size_t net_size, size_t * gross_size);
+void *memReallocBuf(void *buf, size_t net_size, size_t * gross_size);
+void memFree(void *, int type);
+void memFreeString(size_t size, void *);
+void memFreeBuf(size_t size, void *);
+FREE *memFreeBufFunc(size_t size);
+int memInUse(mem_type);
+void memDataInit(mem_type, const char *, size_t, int, bool zeroOnPush = true);
+void memCheckInit(void);
+void memConfigure(void);
 
 #endif /* SQUID_MEM */

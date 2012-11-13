@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 52    URN Parsing
  * AUTHOR: Kostas Anagnostakis
  *
@@ -35,17 +32,20 @@
 
 #include "squid.h"
 #include "errorpage.h"
-#include "StoreClient.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "MemBuf.h"
 #include "forward.h"
 #include "globals.h"
-#include "SquidTime.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include "icmp/net_db.h"
-#include "protos.h"
+#include "MemBuf.h"
+#include "mime_header.h"
+#include "RequestFlags.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "StoreClient.h"
+#include "tools.h"
 #include "URL.h"
+#include "urn.h"
 
 #define	URN_REQBUF_SZ	4096
 
@@ -247,7 +247,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     if (urlres_r == NULL)
         return;
 
-    StoreEntry::getPublic (this, urlres, METHOD_GET);
+    StoreEntry::getPublic (this, urlres, Http::METHOD_GET);
 }
 
 void
@@ -256,7 +256,7 @@ UrnState::created(StoreEntry *newEntry)
     urlres_e = newEntry;
 
     if (urlres_e->isNull()) {
-        urlres_e = storeCreateEntry(urlres, urlres, request_flags(), METHOD_GET);
+        urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r);
     } else {

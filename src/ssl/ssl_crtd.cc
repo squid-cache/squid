@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #include "squid.h"
 #include "helpers/defines.h"
 #include "ssl/gadgets.h"
@@ -236,7 +232,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     if (!Ssl::writeCertAndPrivateKeyToMemory(cert, pkey, bufferToWrite))
         throw std::runtime_error("Cannot write ssl certificate or/and private key to memory.");
 
-    Ssl::CrtdMessage response_message;
+    Ssl::CrtdMessage response_message(Ssl::CrtdMessage::REPLY);
     response_message.setCode("OK");
     response_message.setBody(bufferToWrite);
 
@@ -305,7 +301,7 @@ int main(int argc, char *argv[])
         // proccess request.
         for (;;) {
             char request[HELPER_INPUT_BUFFER];
-            Ssl::CrtdMessage request_message;
+            Ssl::CrtdMessage request_message(Ssl::CrtdMessage::REQUEST);
             Ssl::CrtdMessage::ParseResult parse_result = Ssl::CrtdMessage::INCOMPLETE;
 
             while (parse_result == Ssl::CrtdMessage::INCOMPLETE) {

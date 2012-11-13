@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov
  *
@@ -44,7 +41,7 @@
 #include "event.h"
 #include "globals.h"
 #include "mgr/Registration.h"
-#include "protos.h"
+#include "store_digest.h"
 
 #if USE_CACHE_DIGESTS
 #include "CacheDigest.h"
@@ -54,6 +51,7 @@
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "refresh.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreSearch.h"
@@ -139,7 +137,6 @@ storeDigestInit(void)
 
     memset(&sd_state, 0, sizeof(sd_state));
 #else
-
     store_digest = NULL;
     debugs(71, 3, "Local cache digest is 'off'");
 #endif
@@ -159,6 +156,7 @@ storeDigestNoteStoreReady(void)
 #endif
 }
 
+//TODO: this seems to be dead code. Is it needed?
 void
 storeDigestDel(const StoreEntry * entry)
 {
@@ -181,8 +179,7 @@ storeDigestDel(const StoreEntry * entry)
             debugs(71, 6, "storeDigestDel: deled entry, key: " << entry->getMD5Text());
         }
     }
-
-#endif
+#endif //USE_CACHE_DIGESTS
 }
 
 void
@@ -208,7 +205,7 @@ storeDigestReport(StoreEntry * e)
         storeAppendPrintf(e, "store digest: disabled.\n");
     }
 
-#endif
+#endif //USE_CACHE_DIGESTS
 }
 
 /*
@@ -380,7 +377,7 @@ storeDigestRebuildStep(void *datanotused)
 static void
 storeDigestRewriteStart(void *datanotused)
 {
-    request_flags flags;
+    RequestFlags flags;
     char *url;
     StoreEntry *e;
 
@@ -396,7 +393,7 @@ storeDigestRewriteStart(void *datanotused)
     /* make new store entry */
     url = internalLocalUri("/squid-internal-periodic/", StoreDigestFileName);
     flags.cachable = 1;
-    e = storeCreateEntry(url, url, flags, METHOD_GET);
+    e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());

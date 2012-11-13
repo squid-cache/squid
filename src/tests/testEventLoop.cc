@@ -4,9 +4,10 @@
 #include <cppunit/TestAssert.h>
 
 #include "testEventLoop.h"
+#include "AsyncEngine.h"
 #include "EventLoop.h"
 #include "Mem.h"
-#include "protos.h"
+#include "SquidTime.h"
 #include "stat.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );

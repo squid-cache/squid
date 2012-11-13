@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -78,6 +76,7 @@ struct _icp_common_t {
     icp_opcode getOpCode() const;
 #endif
 };
+typedef struct _icp_common_t icp_common_t;
 
 #ifdef __cplusplus
 
@@ -133,51 +132,51 @@ extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
 
 /// \ingroup ServerProtocolICPAPI
-extern HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
+HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
-extern bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
+bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
-extern icp_opcode icpGetCommonOpcode();
+icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN int icpUdpSend(int, const Ip::Address &, icp_common_t *, log_type, int);
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, log_type, int);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN log_type icpLogFromICPCode(icp_opcode opcode);
+log_type icpLogFromICPCode(icp_opcode opcode);
 
 /// \ingroup ServerProtocolICPAPI
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN PF icpHandleUdp;
+PF icpHandleUdp;
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN PF icpUdpSendQueue;
+PF icpUdpSendQueue;
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpHandleIcpV3(int, Ip::Address &, char *, int);
+void icpHandleIcpV3(int, Ip::Address &, char *, int);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
+int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpOpenPorts(void);
+void icpOpenPorts(void);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpConnectionShutdown(void);
+void icpConnectionShutdown(void);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpClosePorts(void);
+void icpClosePorts(void);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN int icpSetCacheKey(const cache_key * key);
+int icpSetCacheKey(const cache_key * key);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN const cache_key *icpGetCacheKey(const char *url, int reqnum);
+const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
 #endif /* SQUID_ICP_H */

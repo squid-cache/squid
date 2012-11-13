@@ -62,8 +62,8 @@ libcompat_squid_a_SOURCES = \
 	os/hpux.h \
 	os/linux.h \
 	os/macosx.h \
-	os/mswin.h \
-	mswin.cc \
+	os/mswindows.h \
+	mswindows.cc \
 	os/netbsd.h \
 	os/next.h \
 	os/openbsd.h \
@@ -72,8 +72,7 @@ libcompat_squid_a_SOURCES = \
 	os/qnx.h \
 	os/sgi.h \
 	os/solaris.h \
-	os/sunos.h \
-	os/windows.h
+	os/sunos.h
 
 libcompat_squid_a_LIBADD= $(LIBOBJS)
 

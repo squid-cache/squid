@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  */
 
 #ifndef SQUID_IPC_QUEUE_H
@@ -10,6 +8,7 @@
 #include "Debug.h"
 #include "base/InstanceId.h"
 #include "ipc/AtomicWord.h"
+#include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "util.h"
 
@@ -64,16 +63,11 @@ class QueueReaders
 {
 public:
     QueueReaders(const int aCapacity);
-    ~QueueReaders();
     size_t sharedMemorySize() const;
     static size_t SharedMemorySize(const int capacity);
 
     const int theCapacity; /// number of readers
-    QueueReader *theReaders; /// readers
-private:
-    QueueReaders(); //not implemented
-    QueueReaders& operator =(const QueueReaders&); //not implemented
-    QueueReaders(const QueueReaders&); //not implemented
+    Ipc::Mem::FlexibleArray<QueueReader> theReaders; /// readers
 };
 
 /**

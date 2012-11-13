@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section --    WWW Client
  * AUTHOR: Harvest Derived
  *
@@ -35,6 +33,7 @@
 #include "squid.h"
 #include "base64.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 #include "rfc1123.h"
 #include "SquidTime.h"
 
@@ -245,6 +244,7 @@ main(int argc, char *argv[])
     pcount = 0;
     ping_int = 1 * 1000;
 
+    Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
     if (argc < 2) {
         usage(argv[0]);		/* need URL */
     } else if (argc >= 2) {

@@ -2,6 +2,8 @@
 #include "format/Config.h"
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
+#include "globals.h"
+#include "SquidConfig.h"
 #include "Store.h"
 
 const char *Format::log_tags[] = {
@@ -148,6 +150,7 @@ static TokenTableEntry TokenTableMisc[] = {
     {">eui", LFT_CLIENT_EUI},
     {"err_code", LFT_SQUID_ERROR },
     {"err_detail", LFT_SQUID_ERROR_DETAIL },
+    {"note", LFT_NOTE },
     {NULL, LFT_NONE}		/* this must be last */
 };
 
@@ -526,22 +529,22 @@ done:
         break;
 
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
-        debugs(46, DBG_CRITICAL, "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
         type = LFT_HTTP_SENT_STATUS_CODE;
         break;
 
     case LFT_SERVER_LOCAL_IP_OLD_27:
-        debugs(46, DBG_CRITICAL, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
         type = LFT_SERVER_LOCAL_IP;
         break;
 
     case LFT_REQUEST_URLPATH_OLD_31:
-        debugs(46, DBG_CRITICAL, "WARNING: The \"rp\" formatting code is deprecated. Use the \">rp\" instead.");
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"rp\" formatting code is deprecated. Use the \">rp\" instead.");
         type = LFT_CLIENT_REQ_URLPATH;
         break;
 
     case LFT_REQUEST_VERSION_OLD_2X:
-        debugs(46, DBG_CRITICAL, "WARNING: The \">v\" formatting code is deprecated. Use the \">rv\" instead.");
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \">v\" formatting code is deprecated. Use the \">rv\" instead.");
         type = LFT_REQUEST_VERSION;
         break;
 

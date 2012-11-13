@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SSL_CERTIFICATE_DB_H
 #define SQUID_SSL_CERTIFICATE_DB_H
 
@@ -27,7 +23,7 @@ public:
     const char *name() const { return filename.c_str(); }
 private:
     std::string filename;
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     HANDLE hFile; ///< Windows file handle.
 #else
     int fd; ///< Linux file descriptor.
@@ -81,6 +77,8 @@ public:
     public:
         /// Create row wrapper.
         Row();
+        ///Create row wrapper for row with width items
+        Row(char **row, size_t width);
         /// Delete all row.
         ~Row();
         void setValue(size_t number, char const * value); ///< Set cell's value in row
@@ -121,6 +119,11 @@ private:
     bool deleteInvalidCertificate(); ///< Delete invalid certificate.
     bool deleteOldestCertificate(); ///< Delete oldest certificate.
     bool deleteByHostname(std::string const & host); ///< Delete using host name.
+
+    /// Removes the first matching row from TXT_DB. Ignores failures.
+    static void sq_TXT_DB_delete(TXT_DB *db, const char **row);
+    /// Remove the row on position idx from TXT_DB. Ignores failures.
+    static void sq_TXT_DB_delete_row(TXT_DB *db, int idx);
 
     /// Callback hash function for serials. Used to create TXT_DB index of serials.
     static unsigned long index_serial_hash(const char **a);

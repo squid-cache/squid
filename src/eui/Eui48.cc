@@ -44,9 +44,6 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#if _SQUID_CYGWIN_
-#include <squid_windows.h>
-#endif
 
 /* START Legacy includes pattern */
 /* TODO: clean this up so we dont have per-OS requirements.

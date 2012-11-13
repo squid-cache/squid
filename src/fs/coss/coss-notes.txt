@@ -10,9 +10,6 @@ is very welcome though to resolve this issue.
 
 Adrian Chadd <adrian@creative.net.au>
 
-$Id$
-
-
 COSS is a Cyclic Object storage system originally designed by
 Eric Stern <estern@logisense.com>. The idea has been extended
 and worked into the current framework by myself.

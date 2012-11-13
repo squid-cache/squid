@@ -34,10 +34,10 @@
 #ifndef SQUID_PEER_SOURCEHASH_H_
 #define SQUID_PEER_SOURCEHASH_H_
 
-class peer;
+class CachePeer;
 class HttpRequest;
 
-extern void peerSourceHashInit(void);
-extern peer * peerSourceHashSelectParent(HttpRequest * request);
+void peerSourceHashInit(void);
+CachePeer * peerSourceHashSelectParent(HttpRequest * request);
 
 #endif /* SQUID_PEER_SOURCEHASH_H_ */

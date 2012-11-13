@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

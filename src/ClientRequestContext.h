@@ -1,8 +1,8 @@
 #ifndef SQUID_CLIENTREQUESTCONTEXT_H
 #define SQUID_CLIENTREQUESTCONTEXT_H
 
+#include "base/RefCount.h"
 #include "cbdata.h"
-#include "RefCount.h"
 #include "ipcache.h"
 
 #if USE_ADAPTATION
@@ -13,6 +13,8 @@ class ACLChecklist;
 class ClientHttpRequest;
 class DnsLookupDetails;
 class ErrorState;
+
+class HelperReply;
 
 class ClientRequestContext : public RefCountable
 {
@@ -32,7 +34,7 @@ public:
     void clientAccessCheck2();
     void clientAccessCheckDone(const allow_t &answer);
     void clientRedirectStart();
-    void clientRedirectDone(char *result);
+    void clientRedirectDone(const HelperReply &reply);
     void checkNoCache();
     void checkNoCacheDone(const allow_t &answer);
 #if USE_ADAPTATION

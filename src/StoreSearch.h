@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -33,7 +31,7 @@
 #ifndef SQUID_STORESEARCH_H
 #define SQUID_STORESEARCH_H
 
-#include "RefCount.h"
+#include "base/RefCount.h"
 #include "Store.h"
 
 class StoreSearch : public RefCountable

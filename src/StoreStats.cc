@@ -1,12 +1,10 @@
 /*
- * $Id$
- *
  * DEBUG: section 20    Storage Manager Statistics
  *
  */
 
 #include "squid.h"
-#include "protos.h" /* for xmemset only */
+#include "tools.h"
 #include "StoreStats.h"
 
 /* StoreInfoStats */

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels
  *
@@ -34,10 +32,14 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "Store.h"
+#include "acl/Checklist.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#include "CachePeer.h"
 #include "errorpage.h"
 #include "err_detail_type.h"
-#include "acl/Checklist.h"
+#include "errorpage.h"
 #include "errorpage.h"
 #include "format/Token.h"
 #include "globals.h"
@@ -46,12 +48,15 @@
 #include "HttpRequest.h"
 #include "log/access_log.h"
 #include "log/Config.h"
+#include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
@@ -90,7 +95,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
 
     if (al->url == NULL)
@@ -203,7 +208,7 @@ accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 void
 accessLogRotate(void)
 {
-    customlog *log;
+    CustomLog *log;
 #if USE_FORW_VIA_DB
 
     fvdbClear();
@@ -225,7 +230,7 @@ accessLogRotate(void)
 void
 accessLogClose(void)
 {
-    customlog *log;
+    CustomLog *log;
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
         if (log->logfile) {
@@ -300,7 +305,7 @@ accessLogRegisterWithCacheManager(void)
 void
 accessLogInit(void)
 {
-    customlog *log;
+    CustomLog *log;
 
     accessLogRegisterWithCacheManager();
 
@@ -325,7 +330,8 @@ accessLogInit(void)
                     curr_token->type == Format::LFT_ADAPTATION_ALL_XACT_TIMES ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
-                    curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS) {
+                    curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS||
+                    (curr_token->type == Format::LFT_NOTE && !Adaptation::Config::metaHeaders.empty())) {
                 Log::TheConfig.hasAdaptToken = true;
             }
 #if ICAP_CLIENT

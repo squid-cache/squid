@@ -17,14 +17,14 @@ enum {
     _MQD_UNLINK
 };
 
-struct RefCountable_;
+class Lock;
 
 struct diomsg {
     mtyp_t mtype;
     int id;
     int seq_no;
     void * callback_data;
-    RefCountable_ * requestor;
+    Lock * requestor;
     size_t size;
     off_t offset;
     int status;

@@ -13,8 +13,6 @@
  */
 
 /*
- * $Id$
- *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins
  *

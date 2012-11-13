@@ -37,12 +37,12 @@
 class HttpRequest;
 class StoreEntry;
 
-extern void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
-extern int internalCheck(const char *urlpath);
-extern int internalStaticCheck(const char *urlpath);
-extern char *internalLocalUri(const char *dir, const char *name);
-extern char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
-extern const char *internalHostname(void);
-extern int internalHostnameIs(const char *);
+void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
+int internalCheck(const char *urlpath);
+int internalStaticCheck(const char *urlpath);
+char *internalLocalUri(const char *dir, const char *name);
+char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
+const char *internalHostname(void);
+int internalHostnameIs(const char *);
 
 #endif /* SQUID_INTERNAL_H_ */

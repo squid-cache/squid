@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,8 +32,8 @@
 #ifndef SQUID_STOREIOSTATE_H
 #define SQUID_STOREIOSTATE_H
 
+#include "base/RefCount.h"
 #include "cbdata.h"
-#include "RefCount.h"
 
 class StoreIOState : public RefCountable
 {
@@ -113,8 +111,8 @@ public:
 
 StoreIOState::Pointer storeCreate(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
 StoreIOState::Pointer storeOpen(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
-SQUIDCEXTERN void storeClose(StoreIOState::Pointer, int how);
-SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB *, void *);
-SQUIDCEXTERN void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
+void storeClose(StoreIOState::Pointer, int how);
+void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB *, void *);
+void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
 
 #endif /* SQUID_STOREIOSTATE_H */

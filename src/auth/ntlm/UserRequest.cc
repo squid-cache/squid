@@ -19,7 +19,7 @@ Auth::Ntlm::UserRequest::UserRequest()
 
 Auth::Ntlm::UserRequest::~UserRequest()
 {
-    assert(RefCountCount()==0);
+    assert(LockCount()==0);
     safe_free(server_blob);
     safe_free(client_blob);
 
@@ -225,22 +225,16 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
 }
 
 void
-Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
+Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
-    char *blob;
 
-    debugs(29, 8, HERE << "helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
+    debugs(29, 8, HERE << "helper: '" << reply.whichServer << "' sent us reply=" << reply);
 
     if (!cbdataReferenceValid(r->data)) {
-        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data. helper '" << lastserver << "'.");
+        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data. helper '" << reply.whichServer << "'.");
         delete r;
         return;
-    }
-
-    if (!reply) {
-        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << lastserver << "' crashed!.");
-        reply = (char *)"BH Internal error";
     }
 
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
@@ -257,20 +251,19 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NTLM);
 
     if (lm_request->authserver == NULL)
-        lm_request->authserver = static_cast<helper_stateful_server*>(lastserver);
+        lm_request->authserver = reply.whichServer.get(); // XXX: no locking?
     else
-        assert(lm_request->authserver == lastserver);
+        assert(reply.whichServer == lm_request->authserver);
 
     /* seperate out the useful data */
-    blob = strchr(reply, ' ');
-    if (blob)
-        ++blob;
+    const char *blob = reply.other().content();
 
-    if (strncasecmp(reply, "TT ", 3) == 0) {
+    switch (reply.result) {
+    case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.must_keepalive = 1;
-        if (lm_request->request->flags.proxy_keepalive) {
+        lm_request->request->flags.mustKeepalive = 1;
+        if (lm_request->request->flags.proxyKeepalive) {
             lm_request->server_blob = xstrdup(blob);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
@@ -279,7 +272,10 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
         }
-    } else if (strncasecmp(reply, "AF ", 3) == 0) {
+        break;
+
+    case HelperReply::AF:
+    case HelperReply::Okay: {
         /* we're finished, release the helper */
         auth_user_request->user()->username(blob);
         auth_user_request->denyMessage("Login successful");
@@ -314,15 +310,25 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << blob << "'");
+    }
+    break;
 
-    } else if (strncasecmp(reply, "NA ", 3) == 0) {
+    case HelperReply::NA:
+    case HelperReply::Error:
         /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessage(blob);
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
         debugs(29, 4, HERE << "Failed validating user via NTLM. Error returned '" << blob << "'");
-    } else if (strncasecmp(reply, "BH ", 3) == 0) {
+        break;
+
+    case HelperReply::Unknown:
+        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
+        blob = "Internal error";
+        /* continue to the next case */
+
+    case HelperReply::BrokenHelper:
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate NTLM start.
@@ -333,9 +339,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication validating user. Error returned '" << reply << "'");
-    } else {
-        /* protocol error */
-        fatalf("authenticateNTLMHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
+        break;
     }
 
     if (lm_request->request) {

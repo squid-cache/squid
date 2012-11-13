@@ -21,7 +21,7 @@ public:
     MEMPROXY_CLASS(Auth::Basic::UserRequest);
 
     UserRequest() {}
-    virtual ~UserRequest() { assert(RefCountCount()==0); }
+    virtual ~UserRequest() { assert(LockCount()==0); }
 
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);

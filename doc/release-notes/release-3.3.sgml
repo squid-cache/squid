@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.3.0.0 release notes</title>
+<title>Squid 3.3.0.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.3.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-3.3.0.1 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.3/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -34,13 +34,129 @@ The 3.3 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>SQL Database logging helper
+	<item>Time-Quota session helper
+	<item>SSL-Bump Server First
+	<item>Server Certificate Mimic
+	<item>Custom HTTP request headers
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
-<sect1>
-<p>
+<sect1>SQL Database logging helper
+<p><em>log_db_daemon</em> - Database logging daemon for Squid
+
+<p>This program writes Squid access.log entries to an SQL database.
+   Written in Perl it can utilize any database supported by the Perl
+   database abstraction layer.
+
+<p>NOTE: Presently it only accepts the Squid native log format.
+
+
+<sect1>Time-Quota session helper
+<p><em>ext_time_quota_acl</em> - Time quota external ACL helper.
+
+<p>Allows an administrator to define time budgets (quota) for the
+   users of Squid to limit the time using Squid.
+
+<p>This is useful for corporate lunch time allocations, wifi portal
+   pay-per-minute installations or for parental control of children.
+
+<p>The administrator can define a time budget (e.g. 1 hour per day)
+   which is enforced through this helper using session estimations
+   of their browsing time. A 'pause' threshold is given in seconds
+   and defines the period between two requests to be treated as part
+   of the same session. Pauses shorter than this value will be
+   counted against the quota, longer ones ignored.
+
+
+<sect1>SSL-Bump Server First
+<p>Details at <url url="http://wiki.squid-cache.org/Features/BumpSslServerFirst">.
+
+<p>When an intercepted connection is received, Squid first connects
+   to the server using SSL and receives the server certificate.
+   Squid then uses the host name inside the true server certificate
+   to generate a fake one and impersonates the server while still
+   using the already established secure connection to the server.
+
+<p>Bumping server first is essentially required for handling
+   intercepted HTTPS connections but the same scheme should be used
+   for most HTTP CONNECT requests because it offers a few advantages
+   compared to the old bump-client-first approach:
+
+<itemize>
+<item>When Squid knows valid server certificate details, it can
+   generate its fake server certificate with those details.
+   With the bump-client-first scheme, all those details are lost.
+   In general, browsers do not care about those details but there
+   may be HTTP clients (or even human users) that require or could
+   benefit from knowing them.
+
+<item>When a server sends a bad certificate, Squid may be able to
+   replicate that brokenness in its own fake certificate, giving
+   the HTTP client control whether to ignore the problem or
+   terminate the transaction. With bump-client-furst, it is
+   difficult to support similar dynamic, user-directed opt out; 
+   Squid itself has to decide what to do when the server
+   certificate cannot be validated.
+
+<item>When a server asks for a client certificate, Squid may be
+   able to ask the client and then forward the client certificate
+   to the server. Such client certificate handling may not be
+   possible with the bump-client-first scheme because it would
+   have to be done after the SSL handshake.
+
+<item>Some clients (e.g., Rekonq browser v0.7.x) do not send host
+   names in CONNECT requests. Such clients require bump-server-first
+   even in forward proxying mode. Unfortunately, there are other
+   problems with fully supporting such clients (i.e., Squid does
+   not know whether the IP address in the CONNECT request is what
+   the user have typed into the address bar) so not all features
+   will work well for them until more specialized detection code
+   is added.
+</itemize>
+
+<sect1>Server Certificate Mimic
+<p>Details at <url url="http://wiki.squid-cache.org/Features/MimicSslServerCert">.
+
+<p>One of the SslBump features serious drawbacks is the loss of
+   information embedded in SSL server certificate.
+   This certificate mimic feature passes original SSL server
+   certificate information to the user. Allowing the user to
+   make an informed decision on whether to trust the server
+   certificate.
+
+
+<sect1>Custom HTTP request headers
+<p>The <em>request_header_add</em> option is added to insert
+   HTTP header fields to outgoing HTTP requests (i.e.,
+   request headers sent by Squid to the next HTTP hop such as a
+   cache peer or an origin server). The option has no effect on
+   cache hit traffic or requests serviced by Squid and ICAP.
+
+<p>WARNING: If a standard HTTP header name is used, Squid does not check whether
+   the new header conflicts with any existing headers or violates
+   HTTP rules. If the request to be modified already contains a
+   field with the same name, the old field is preserved but the
+   header field values are not merged.
+
+<p>Field-value set can be either a token or a quoted string. If quoted
+   string format is used, then the surrounding quotes are removed
+   while escape sequences and %macros are processed.
+
+<p>In theory, all of the <em>logformat</em> codes can be used as %macros.
+   However, unlike logging (which happens at the very end of
+   transaction lifetime), the transaction may not yet have enough
+   information to expand a macro when the new header value is needed.
+   And some information may already be available to Squid but not yet
+   committed where the macro expansion code can access it (please report
+   such instances!). The macro will be expanded into a single dash
+   ('-') in such cases. Not all macros have been tested.
+
+<p>One or more Squid ACLs may be specified to restrict header
+   injection to matching requests. As always in squid.conf, all
+   ACLs in an option ACL list must be satisfied for the insertion
+   to happen. The <em>request_header_add</em> option supports fast ACLs only.
 
 
 <sect>Changes to squid.conf since Squid-3.2
@@ -59,19 +175,52 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>request_header_add</tag>
+	<p>New directive to add custom headers on HTTP traffic sent to upstream servers.
+
+	<tag>sslproxy_cert_sign</tag>
+	<p>New option to determine how the client certificate sent to upstream servers is signed.
+
+	<tag>sslproxy_cert_adapt</tag>
+	<p>New option to adapt certain properties of outgoing SSL certificates generated for use when bumping SSL to an upstream server.
+
 
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p><em>myport</em> and <em>myip</em>ACL types replaced with <em>localport</em> and <em>localip</em> respecitively.
+	   To reflect that it matches the TCP connection details and not the squid.conf port.
+	   This matters when dealing with interecepted traffic, where the Squid receiving port differs from the TCP connection IP:port.
+	   Always use <em>myportname</em> type to match the squid.conf port details.
+	<p>New default built-in ACLs for testing SSL certificate properties.
+	<p><em>ssl::certHasExpired</em>,
+	   <em>ssl::certNotYetValid</em>,
+	   <em>ssl::certDomainMismatch</em>,
+	   <em>ssl::certUntrusted</em>,
+	   <em>ssl::certSelfSigned</em>.
+
+	<tag>logformat</tag>
+	<p>New token <em>%ssl::bump_mode</em> to log the SSL-bump mode type performed on a request.
+	  Logs values of: <em>-</em>, <em>none</em>, <em>client-first</em>, or <em>server-first</em>.
+	<p>New token of <em>%ssl::&gt;cert_subject</em> to log the Subject field of a SSL certficate received from the client.
+	<p>New token of <em>%ssl::&gt;cert_issuer</em> to log the Issuer field of a SSL certficate received from the client.
+
+	<tag>ssl_bump</tag>
+	<p>New action types <em>none</em>, <em>client-first</em>, <em>server-first</em>. The default is <em>none</em>.
+	<p>Use of <em>allow</em>/<em>deny</em> is now deprecated and they should be removed as soon as possible.
+	   To retain the exact same behaviour between 3.3 and older releases replace <em>deny</em> with <em>none</em>,
+	   and <em>allow</em> with <em>client-first</em>. However an upgrade to <em>server-first</em> is the recommended.
+	<p><em>NOTE</em>: Mixing of allow/deny with the new action types is prohibited and will cause Squid to exit with a FATAL error.
 
 </descrip>
-
 
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<p><em>There are no removed squid.conf tags in Squid-3.3.</em>
 
 </descrip>
 
@@ -92,12 +241,14 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<p><em>There are no new ./configure options in Squid-3.3.</em>
 
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
+	<p><em>There are no changed ./configure options in Squid-3.3.</em>
 
 </descrip>
 </p>
@@ -106,129 +257,7 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>--enable-ntlm-fail-open</tag>
-	<p>Removed. This has not been supported by Squid for several versions.
-
-</descrip>
-
-
-<sect>Options Removed since Squid-2
-
-<p>Some squid.conf and ./configure options which were available in Squid-2.6 and Squid-2.7 are made obsolete in Squid-3.3.
-
-<sect1>Removed squid.conf options since Squid-2.7
-<p>
-<descrip>
-	<tag>auth_param</tag>
-	<p><em>blankpassword</em> option for basic scheme removed.
-
-	<tag>cache_peer</tag>
-	<p><em>http11</em> Obsolete.
-
-	<tag>external_acl_type</tag>
-	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
-	<p>Format tag <em>%{Header:member}</em> replaced by <em>%>{Header:member}</em>
-
-	<tag>header_access</tag>
-	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
-
-	<tag>http_port</tag>
-	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
-	<p><em>transparent</em> option replaced by <em>intercept</em>
-	<p><em>http11</em> obsolete.
-
-	<tag>http_access2</tag>
-	<p>Replaced by <em>adapted_http_access</em>
-
-	<tag>httpd_accel_no_pmtu_disc</tag>
-	<p>Replaced by <em>http_port disable-pmtu-discovery=</em> option
-
-	<tag>incoming_rate</tag>
-	<p>Obsolete.
-
-	<tag>redirector_bypass</tag>
-	<p>Replaced by <em>url_rewrite_bypass</em>
-
-	<tag>server_http11</tag>
-	<p>Obsolete.
-
-	<tag>upgrade_http0.9</tag>
-	<p>Obsolete.
-
-	<tag>zph_local</tag>
-	<p>Replaced by <em>qos_flows local-hit=</em>
-
-	<tag>zph_mode</tag>
-	<p>Obsolete.
-
-	<tag>zph_option</tag>
-	<p>Obsolete.
-
-	<tag>zph_parent</tag>
-	<p>Replaced by <em>qos_flows parent-hit=</em>
-
-	<tag>zph_sibling</tag>
-	<p>Replaced by <em>qos_flows sibling-hit=</em>
-
-</descrip>
-
-<sect1>Removed squid.conf options since Squid-2.6
-<p>
-<descrip>
-	<tag>cache_dir</tag>
-	<p><em>read-only</em> option replaced by <em>no-store</em>.
-
-</descrip>
-
-<sect1>Removed ./configure options since Squid-2.7
-<p>
-<descrip>
-	<tag>--enable-coss-aio-ops</tag>
-	<p>Obsolete.
-
-	<tag>--enable-devpoll</tag>
-	<p>Replaced by automatic detection.
-
-	<tag>--enable-dlmalloc=LIB</tag>
-	<p>Obsolete.
-
-	<tag>--enable-epoll</tag>
-	<p>Replaced by automatic detection.
-
-	<tag>--enable-forward-log</tag>
-	<p>Obsolete.
-
-	<tag>--enable-heap-replacement</tag>
-	<p>Obsolete.
-
-	<tag>--enable-htcp</tag>
-	<p>Obsolete. Enabled by default.
-
-	<tag>--enable-large-cache-files</tag>
-	<p>Obsolete.
-
-	<tag>--enable-mempool-debug</tag>
-	<p>Obsolete.
-
-	<tag>--enable-multicast-miss</tag>
-	<p>Obsolete.
-
-	<tag>--enable-poll</tag>
-	<p>Replaced by automatic detection.
-
-	<tag>--enable-select</tag>
-	<p>Replaced by automatic detection.
-
-	<tag>--enable-select-simple</tag>
-	<p>Replaced by automatic detection.
-
-	<tag>--enable-snmp</tag>
-	<p>Obsolete. Enabled by default.
-
-	<tag>--enable-truncate</tag>
-	<p>Obsolete.
-
-	<tag>--disable-kqueue</tag>
-	<p>Obsolete. Disabled by default.
+	<p>This has not been supported by Squid for several versions.
 
 </descrip>
 
@@ -242,16 +271,6 @@ This section gives an account of those changes in three categories:
 <sect1>Missing squid.conf options available in Squid-2.7
 <p>
 <descrip>
-	<tag>acl</tag>
-	<p><em>urllogin</em> option not yet ported from 2.6
-	<p><em>urlgroup</em> option not yet ported from 2.6
-
-	<tag>authenticate_ip_shortcircuit_access</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>authenticate_ip_shortcircuit_ttl</tag>
-	<p>Not yet ported from 2.7
-
 	<tag>broken_vary_encoding</tag>
 	<p>Not yet ported from 2.6
 
@@ -287,7 +306,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
-	<p><em>urlgroup=</em> not yet ported from 2.6
 
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
@@ -303,9 +321,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>location_rewrite_program</tag>
 	<p>Not yet ported from 2.6
-
-	<tag>logformat</tag>
-	<p><em>%oa</em> tag not yet ported from 2.7
 
 	<tag>refresh_pattern</tag>
 	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
@@ -329,16 +344,6 @@ This section gives an account of those changes in three categories:
 	
 	<tag>update_headers</tag>
 	<p>Not yet ported from 2.7
-
-	<tag>zero_buffers</tag>
-	<p>Not yet ported from 2.7
-
-</descrip>
-
-<sect1>Missing ./configure options available in Squid-2.7
-<p>
-<descrip>
-	<tag>--without-system-md5</tag>
 
 </descrip>
 

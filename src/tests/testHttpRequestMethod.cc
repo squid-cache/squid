@@ -19,11 +19,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequestMethod );
 void
 testHttpRequestMethod::testConstructCharStart()
 {
-    /* parse an empty string -> METHOD_NONE */
-    CPPUNIT_ASSERT(HttpRequestMethod(NULL,NULL) == METHOD_NONE);
+    /* parse an empty string -> Http::METHOD_NONE */
+    CPPUNIT_ASSERT(HttpRequestMethod(NULL,NULL) == Http::METHOD_NONE);
     /* parsing a literal should work */
-    CPPUNIT_ASSERT(HttpRequestMethod("GET", NULL) == METHOD_GET);
-    CPPUNIT_ASSERT(HttpRequestMethod("QWERTY", NULL) == METHOD_OTHER);
+    CPPUNIT_ASSERT(HttpRequestMethod("GET", NULL) == Http::METHOD_GET);
+    CPPUNIT_ASSERT(HttpRequestMethod("QWERTY", NULL) == Http::METHOD_OTHER);
 }
 
 /*
@@ -33,48 +33,48 @@ void
 testHttpRequestMethod::testConstructCharStartEnd()
 {
     char const * buffer;
-    /* parse an empty string -> METHOD_NONE */
-    CPPUNIT_ASSERT(HttpRequestMethod(NULL, NULL) == METHOD_NONE);
+    /* parse an empty string -> Http::METHOD_NONE */
+    CPPUNIT_ASSERT(HttpRequestMethod(NULL, NULL) == Http::METHOD_NONE);
     /* parsing a literal should work */
-    CPPUNIT_ASSERT(HttpRequestMethod("GET", NULL) == METHOD_GET);
+    CPPUNIT_ASSERT(HttpRequestMethod("GET", NULL) == Http::METHOD_GET);
     /* parsing with an explicit end should work */
     buffer = "POSTPLUS";
-    CPPUNIT_ASSERT(HttpRequestMethod(buffer, buffer + 4) == METHOD_POST);
+    CPPUNIT_ASSERT(HttpRequestMethod(buffer, buffer + 4) == Http::METHOD_POST);
 }
 
 /*
- * we should be able to assign a method_t to a HttpRequestMethod
+ * we should be able to assign a Http::MethodType to a HttpRequestMethod
  */
 void
 testHttpRequestMethod::testAssignFrommethod_t()
 {
     HttpRequestMethod method;
-    method = METHOD_NONE;
-    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(METHOD_NONE), method);
-    method = METHOD_POST;
-    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(METHOD_POST), method);
+    method = Http::METHOD_NONE;
+    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), method);
+    method = Http::METHOD_POST;
+    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_POST), method);
 }
 
 /*
- * a default constructed HttpRequestMethod is == METHOD_NONE
+ * a default constructed HttpRequestMethod is == Http::METHOD_NONE
  */
 void
 testHttpRequestMethod::testDefaultConstructor()
 {
     HttpRequestMethod lhs;
-    HttpRequestMethod rhs(METHOD_NONE);
+    HttpRequestMethod rhs(Http::METHOD_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
 /*
- * we should be able to construct a HttpRequestMethod from a method_t
+ * we should be able to construct a HttpRequestMethod from a Http::MethodType
  */
 void
 testHttpRequestMethod::testConstructmethod_t()
 {
-    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(METHOD_NONE), HttpRequestMethod(METHOD_NONE));
-    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(METHOD_POST), HttpRequestMethod(METHOD_POST));
-    CPPUNIT_ASSERT(HttpRequestMethod(METHOD_NONE) != HttpRequestMethod(METHOD_POST));
+    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), HttpRequestMethod(Http::METHOD_NONE));
+    CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_POST), HttpRequestMethod(Http::METHOD_POST));
+    CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_NONE) != HttpRequestMethod(Http::METHOD_POST));
 }
 
 /*
@@ -87,16 +87,16 @@ testHttpRequestMethod::testImage()
 }
 
 /*
- * an HttpRequestMethod should be comparable to a method_t without false
+ * an HttpRequestMethod should be comparable to a Http::MethodType without false
  * matches
  */
 void
 testHttpRequestMethod::testEqualmethod_t()
 {
-    CPPUNIT_ASSERT(HttpRequestMethod(METHOD_NONE) == METHOD_NONE);
-    CPPUNIT_ASSERT(not (HttpRequestMethod(METHOD_POST) == METHOD_GET));
-    CPPUNIT_ASSERT(HttpRequestMethod(METHOD_GET) == METHOD_GET);
-    CPPUNIT_ASSERT(not (HttpRequestMethod(METHOD_TRACE) == METHOD_SEARCH));
+    CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_NONE) == Http::METHOD_NONE);
+    CPPUNIT_ASSERT(not (HttpRequestMethod(Http::METHOD_POST) == Http::METHOD_GET));
+    CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_GET) == Http::METHOD_GET);
+    CPPUNIT_ASSERT(not (HttpRequestMethod(Http::METHOD_TRACE) == Http::METHOD_SEARCH));
 }
 
 /*
@@ -105,10 +105,10 @@ testHttpRequestMethod::testEqualmethod_t()
 void
 testHttpRequestMethod::testNotEqualmethod_t()
 {
-    CPPUNIT_ASSERT(HttpRequestMethod(METHOD_NONE) != METHOD_GET);
-    CPPUNIT_ASSERT(not (HttpRequestMethod(METHOD_POST) != METHOD_POST));
-    CPPUNIT_ASSERT(HttpRequestMethod(METHOD_GET) != METHOD_NONE);
-    CPPUNIT_ASSERT(not (HttpRequestMethod(METHOD_SEARCH) != METHOD_SEARCH));
+    CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_NONE) != Http::METHOD_GET);
+    CPPUNIT_ASSERT(not (HttpRequestMethod(Http::METHOD_POST) != Http::METHOD_POST));
+    CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_GET) != Http::METHOD_NONE);
+    CPPUNIT_ASSERT(not (HttpRequestMethod(Http::METHOD_SEARCH) != Http::METHOD_SEARCH));
 }
 
 /*

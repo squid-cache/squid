@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -48,15 +46,15 @@ public:
 
 /** \todo CLEANUP: Move httpHdrContRange* functions into the class methods */
 
-SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeCreate(void);
-SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
+HttpHdrContRange *httpHdrContRangeCreate(void);
+HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
 /** returns true if range is valid; inits HttpHdrContRange */
-SQUIDCEXTERN int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
-SQUIDCEXTERN void httpHdrContRangeDestroy(HttpHdrContRange * crange);
-SQUIDCEXTERN HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
-SQUIDCEXTERN void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
+int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
+void httpHdrContRangeDestroy(HttpHdrContRange * crange);
+HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
+void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
 /** inits with given spec */
-SQUIDCEXTERN void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
-SQUIDCEXTERN void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
+void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
+void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
 
 #endif /* SQUID_HTTPHDRCONTRANGE_H */

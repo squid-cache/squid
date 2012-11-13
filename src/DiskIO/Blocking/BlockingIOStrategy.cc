@@ -1,7 +1,4 @@
-
 /*
- * $Id$
- *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
  *
@@ -37,7 +34,7 @@
 #include "squid.h"
 #include "BlockingIOStrategy.h"
 #include "BlockingFile.h"
-#include "protos.h"
+#include "unlinkd.h"
 
 bool
 BlockingIOStrategy::shedLoad()
@@ -67,9 +64,5 @@ BlockingIOStrategy::unlinkdUseful() const
 void
 BlockingIOStrategy::unlinkFile(char const *path)
 {
-#if USE_UNLINKD
     unlinkdUnlink(path);
-#else
-    ::unlink(path);
-#endif
 }

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 54    Interprocess Communication
  */
 

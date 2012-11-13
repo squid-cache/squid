@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -45,6 +43,7 @@
 #endif
 
 class HttpMsg;
+class HttpReply;
 
 /**
  * ServerStateData is a common base for server-side classes such as

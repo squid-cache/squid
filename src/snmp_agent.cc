@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 49    SNMP Interface
  * AUTHOR: Kostas Anagnostakis
  *
@@ -33,17 +31,21 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "cache_snmp.h"
 #include "globals.h"
 #include "mem_node.h"
 #include "neighbors.h"
-#include "protos.h"
+#include "snmp_agent.h"
+#include "snmp_core.h"
 #include "StatCounters.h"
 #include "StatHist.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "stat.h"
 #include "Store.h"
+#include "tools.h"
 
 /************************************************************************
 
@@ -207,7 +209,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 
     Ip::Address laddr;
     char *cp = NULL;
-    peer *p = NULL;
+    CachePeer *p = NULL;
     int cnt = 0;
     debugs(49, 5, "snmp_meshPtblFn: peer " << Var->name[LEN_SQ_MESH + 3] << " requested!");
     *ErrP = SNMP_ERR_NOERROR;

@@ -1,4 +1,3 @@
-
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
@@ -16,6 +15,7 @@ libbase_la_SOURCES = \
 	TidyPointer.h \
 	CbcPointer.h \
 	InstanceId.h \
+	Lock.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
 	Subscription.h \

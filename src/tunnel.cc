@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 26    Secure Sockets Layer Proxy
  * AUTHOR: Duane Wessels
  *
@@ -34,24 +32,25 @@
  */
 
 #include "squid.h"
-#include "errorpage.h"
-#include "HttpRequest.h"
-#include "fde.h"
+#include "acl/FilledChecklist.h"
 #include "Array.h"
+#include "CachePeer.h"
+#include "client_side_request.h"
+#include "client_side.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Write.h"
-#include "client_side_request.h"
-#include "acl/FilledChecklist.h"
-#include "client_side.h"
-#include "MemBuf.h"
+#include "errorpage.h"
+#include "fde.h"
 #include "http.h"
+#include "HttpRequest.h"
+#include "HttpStateFlags.h"
+#include "MemBuf.h"
 #include "PeerSelectState.h"
-#include "protos.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 #include "tools.h"
-
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
@@ -328,6 +327,14 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         commSetConnTimeout(from.conn, Config.Timeout.read, timeoutCall);
     }
 
+    /* Bump the dest connection read timeout on any activity */
+    /* see Bug 3659: tunnels can be weird, with very long one-way transfers */
+    if (Comm::IsConnOpen(to.conn)) {
+        AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                         CommTimeoutCbPtrFun(tunnelTimeout, this));
+        commSetConnTimeout(to.conn, Config.Timeout.read, timeoutCall);
+    }
+
     if (errcode)
         from.error (xerrno);
     else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
@@ -533,7 +540,7 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
 
-    if (tunnelState->request && (tunnelState->request->flags.spoof_client_ip || tunnelState->request->flags.intercepted))
+    if (tunnelState->request && (tunnelState->request->flags.spoofClientIp || tunnelState->request->flags.intercepted))
         tunnelStartShoveling(tunnelState); // ssl-bumped connection, be quiet
     else {
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
@@ -624,8 +631,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
 
-extern tos_t GetTosToServer(HttpRequest * request);
-extern nfmark_t GetNfmarkToServer(HttpRequest * request);
+tos_t GetTosToServer(HttpRequest * request);
+nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 void
 tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
@@ -694,7 +701,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpHeader hdr_out(hoRequest);
     Packer p;
-    http_state_flags flags;
+    HttpStateFlags flags;
     debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
     memset(&flags, '\0', sizeof(flags));
     flags.proxying = tunnelState->request->flags.proxying;

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Robert Collins
  *
