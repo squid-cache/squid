@@ -83,14 +83,17 @@ Read_usersfile(const char *path, usersfile * uf)
      * Clear the allowed user string. Return. */
     if (fstat(fileno(fp), &FileBuf) < 0) {
         syslog(LOG_ERR, "%s: %s", path, strerror(errno));
+        fclose(fp);
         return 1;
     }
     /* If it exists, save the modification time and size */
     uf->LMT = FileBuf.st_mtime;
 
     /* Handle the special case of a zero length file */
-    if (FileBuf.st_size == 0)
+    if (FileBuf.st_size == 0) {
+        fclose(fp);
         return 0;
+    }
 
     /*
      * Read the file into memory
