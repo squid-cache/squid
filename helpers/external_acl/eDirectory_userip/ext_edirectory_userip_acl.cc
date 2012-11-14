@@ -1178,10 +1178,7 @@ SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
     if (l->lm != NULL)
         ldap_msgfree(l->lm);						/* Make sure l->lm is empty */
 
-    if (filter == NULL)							/* if filter is NULL, then return ALL networkAddress */
-        xstrncpy(ft, "(&(objectClass=User)(networkAddress=*))", sizeof(ft));
-    else
-        xstrncpy(ft, filter, sizeof(ft));
+    xstrncpy(ft, filter, sizeof(ft));
 
     /* We have a binded connection, with a free l->lm, so let's get this done */
     switch (scope) {
@@ -1407,14 +1404,6 @@ SearchIPLDAP(edui_ldap_t *l)
     if (l->val != NULL) {
         ldap_value_free_len(l->val);
         l->val = NULL;
-    }
-    if (ber != NULL) {
-        ldap_value_free_len(ber);
-        ber = NULL;
-    }
-    if (ent != NULL) {
-        ldap_msgfree(ent);
-        ent = NULL;
     }
     if (l->lm != NULL) {
         ldap_msgfree(l->lm);
