@@ -17,7 +17,7 @@ TextException::TextException(const TextException& right) :
 }
 
 TextException::TextException(const char *aMsg, const char *aFileName, int aLineNo, unsigned int anId):
-        message(xstrdup(aMsg)), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
+        message(aMsg?xstrdup(aMsg):NULL), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
 {}
 
 TextException::~TextException() throw()
