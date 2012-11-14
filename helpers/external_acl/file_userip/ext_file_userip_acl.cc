@@ -217,7 +217,6 @@ usage(const char *program_name)
 int
 main (int argc, char *argv[])
 {
-    FILE *FH;
     char *filename = NULL;
     char *program_name = argv[0];
     char *cp;
