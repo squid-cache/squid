@@ -409,15 +409,6 @@ acl_ip_data::FactoryParse(const char *t)
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
-        if ( iptype != AF_UNSPEC ) {
-            hints.ai_flags |= AI_NUMERICHOST;
-        }
-
-#if 0
-        if (Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING)
-            hints.ai_flags |= AI_V4MAPPED | AI_ALL;
-#endif
-
         int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
         if (hp == NULL) {
             debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
