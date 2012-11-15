@@ -208,7 +208,8 @@ concat( const char* start, ... )
     // first run: determine size
     unsigned size = strlen(start)+1;
     va_start( ap, start );
-    while ( (s=va_arg(ap,const char*)) != NULL ) size += strlen(s ? s : "");
+    while ( (s=va_arg(ap,const char*)) != NULL )
+        size += strlen(s);
     va_end(ap);
 
     // allocate
