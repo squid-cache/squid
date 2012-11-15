@@ -85,7 +85,7 @@ read_passwd_file(const char *passwdfile)
         exit(1);
     }
     unsigned int lineCount = 0;
-    buf[sizeof(buf)] = '\0';
+    buf[HELPER_INPUT_BUFFER-1] = '\0';
     while (fgets(buf, sizeof(buf)-1, f) != NULL) {
         ++lineCount;
         if ((buf[0] == '#') || (buf[0] == ' ') || (buf[0] == '\t') ||
