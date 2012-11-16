@@ -1224,6 +1224,7 @@ make_auth_header(const cachemgr_request * req)
 
     snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %s\r\n", str64);
 
+    xfree(str64);
     return buf;
 }
 
