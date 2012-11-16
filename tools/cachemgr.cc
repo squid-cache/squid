@@ -1140,37 +1140,49 @@ decode_pub_auth(cachemgr_request * req)
     debug("cmgr: length ok\n");
 
     /* parse ( a lot of memory leaks, but that is cachemgr style :) */
-    if ((host_name = strtok(buf, "|")) == NULL)
+    if ((host_name = strtok(buf, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded host: '%s'\n", host_name);
 
-    if ((time_str = strtok(NULL, "|")) == NULL)
+    if ((time_str = strtok(NULL, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded time: '%s' (now: %d)\n", time_str, (int) now);
 
-    if ((user_name = strtok(NULL, "|")) == NULL)
+    if ((user_name = strtok(NULL, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded uname: '%s'\n", user_name);
 
-    if ((passwd = strtok(NULL, "|")) == NULL)
+    if ((passwd = strtok(NULL, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded passwd: '%s'\n", passwd);
 
     /* verify freshness and validity */
-    if (atoi(time_str) + passwd_ttl < now)
+    if (atoi(time_str) + passwd_ttl < now) {
+        xfree(buf);
         return;
+    }
 
-    if (strcasecmp(host_name, req->hostname))
+    if (strcasecmp(host_name, req->hostname)) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: verified auth. info.\n");
 
     /* ok, accept */
-    xfree(req->user_name);
+    safe_free(req->user_name);
 
     req->user_name = xstrdup(user_name);
 
