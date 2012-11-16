@@ -494,16 +494,20 @@ main(int argc, char **argv)
             cfname = optarg;
             break;
         case 'h':
-            strncpy(server, optarg, sizeof(server));
+            strncpy(server, optarg, sizeof(server)-1);
+            server[sizeof(server)-1] = '\0';
             break;
         case 'p':
-            strncpy(svc_name, optarg, sizeof(svc_name));
+            strncpy(svc_name, optarg, sizeof(svc_name)-1);
+            svc_name[sizeof(svc_name)-1] = '\0';
             break;
         case 'w':
-            strncpy(secretkey, optarg, sizeof(secretkey));
+            strncpy(secretkey, optarg, sizeof(secretkey)-1);
+            secretkey[sizeof(secretkey)-1] = '\0';
             break;
         case 'i':
-            strncpy(identifier, optarg, sizeof(identifier));
+            strncpy(identifier, optarg, sizeof(identifier)-1);
+            identifier[sizeof(identifier)-1] = '\0';
             break;
         case 't':
             retries = atoi(optarg);
