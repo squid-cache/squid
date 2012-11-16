@@ -265,13 +265,11 @@ main(int argc, char *argv[])
                 break;
 
             case 'A':
-                if (optarg != NULL)
-                    useragent = optarg;
+                useragent = optarg;
                 break;
 
             case 'h':		/* remote host */
-                if (optarg != NULL)
-                    hostname = optarg;
+                hostname = optarg;
                 break;
 
             case 'j':
@@ -279,13 +277,11 @@ main(int argc, char *argv[])
                 break;
 
             case 'V':
-                if (optarg != NULL)
-                    version = optarg;
+                version = optarg;
                 break;
 
             case 'l':		/* local host */
-                if (optarg != NULL)
-                    localhost = optarg;
+                localhost = optarg;
                 break;
 
             case 's':		/* silent */
@@ -418,7 +414,9 @@ main(int argc, char *argv[])
         setmode(put_fd, O_BINARY);
 #endif
 
-        fstat(put_fd, &sb);
+        if (fstat(put_fd, &sb) < 0) {
+            fprintf(stderr, "%s: can't identify length of file (%s)\n", argv[0], xstrerror());
+        }
     }
 
     if (!host) {
