@@ -339,10 +339,10 @@ main(int argc, char *const argv[])
     if (create_gd(&margs)) {
         gopt = 0;
         if ( margs.glist != NULL ) {
-        debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
-        SEND_ERR("");
-        clean_args(&margs);
-        exit(1);
+            debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
+            SEND_ERR("");
+            clean_args(&margs);
+            exit(1);
         } else {
             debug((char *) "%s| %s: INFO: no group list given expect it from stdin\n", LogTime(), PROGRAM);
             gopt = 1;
@@ -385,10 +385,10 @@ main(int argc, char *const argv[])
 
         user = strtok(buf, " \n");
         if (!user) {
-	    debug((char *) "%s| %s: INFO: No Username given\n", LogTime(), PROGRAM);
-	    SEND_ERR("Invalid request. No Username");
-	    continue;
-	}
+            debug((char *) "%s| %s: INFO: No Username given\n", LogTime(), PROGRAM);
+            SEND_ERR("Invalid request. No Username");
+            continue;
+        }
         rfc1738_unescape(user);
         nuser = strchr(user, '\\');
         if (!nuser)
@@ -422,7 +422,7 @@ main(int argc, char *const argv[])
         }
         up = xstrdup(rfc1738_escape(user));
         if (domain)
-	    dp = xstrdup(rfc1738_escape(domain));
+            dp = xstrdup(rfc1738_escape(domain));
         if (!domain && margs.ddomain) {
             domain = xstrdup(margs.ddomain);
             if (debug_enabled)
@@ -435,32 +435,32 @@ main(int argc, char *const argv[])
         else
             log((char *) "%s| %s: INFO: Got User: %s Domain: %s\n", LogTime(), PROGRAM, up, domain ? dp : "NULL");
 
-	xfree(up);
+        xfree(up);
         xfree(dp);
         if (!strcmp(user, "QQ") && domain && !strcmp(domain, "QQ")) {
             clean_args(&margs);
             exit(-1);
         }
         if ( gopt && user ) {
-	    if ((group = strtok(NULL, " \n")) != NULL) {
-		debug((char *) "%s| %s: INFO: Read group list %s from stdin\n", LogTime(), PROGRAM,group);
-		rfc1738_unescape(group);
-		if (margs.groups) {
-		    clean_gd(margs.groups);
-		    margs.groups = NULL;
-		}
-		margs.glist = xstrdup(group);
-		if (create_gd(&margs)) {
-		    SEND_ERR("Error in group list");
-		    debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
-		    continue;
-		}
-	    } else {
-		SEND_ERR("No group list received on stdin");
-		debug((char *) "%s| %s: FATAL: No group list received on stdin\n", LogTime(), PROGRAM);
-		continue;
-	    }
-	}
+            if ((group = strtok(NULL, " \n")) != NULL) {
+                debug((char *) "%s| %s: INFO: Read group list %s from stdin\n", LogTime(), PROGRAM,group);
+                rfc1738_unescape(group);
+                if (margs.groups) {
+                    clean_gd(margs.groups);
+                    margs.groups = NULL;
+                }
+                margs.glist = xstrdup(group);
+                if (create_gd(&margs)) {
+                    SEND_ERR("Error in group list");
+                    debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
+                    continue;
+                }
+            } else {
+                SEND_ERR("No group list received on stdin");
+                debug((char *) "%s| %s: FATAL: No group list received on stdin\n", LogTime(), PROGRAM);
+                continue;
+            }
+        }
         if (check_memberof(&margs, user, domain)) {
             SEND_OK("");
             debug((char *) "%s| %s: DEBUG: OK\n", LogTime(), PROGRAM);
