@@ -231,7 +231,7 @@ main(int argc, char *const argv[])
     char *up=NULL, *dp=NULL, *np=NULL;
     char *nuser, *nuser8 = NULL, *netbios;
     char *c;
-    int opt,gopt;
+    int opt;
     struct main_args margs;
 
     setbuf(stdout, NULL);
@@ -336,8 +336,8 @@ main(int argc, char *const argv[])
     }
 
     debug((char *) "%s| %s: INFO: Starting version %s\n", LogTime(), PROGRAM, KERBEROS_LDAP_GROUP_VERSION);
+    int gopt = 0;
     if (create_gd(&margs)) {
-        gopt = 0;
         if ( margs.glist != NULL ) {
             debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
             SEND_ERR("");
@@ -441,9 +441,9 @@ main(int argc, char *const argv[])
             clean_args(&margs);
             exit(-1);
         }
-        if ( gopt && user ) {
+        if (gopt) {
             if ((group = strtok(NULL, " \n")) != NULL) {
-                debug((char *) "%s| %s: INFO: Read group list %s from stdin\n", LogTime(), PROGRAM,group);
+                debug((char *) "%s| %s: INFO: Read group list %s from stdin\n", LogTime(), PROGRAM, group);
                 rfc1738_unescape(group);
                 if (margs.groups) {
                     clean_gd(margs.groups);
