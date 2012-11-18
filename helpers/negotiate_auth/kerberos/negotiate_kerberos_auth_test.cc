@@ -213,14 +213,13 @@ cleanup:
 int
 main(int argc, char *argv[])
 {
-
     const char *Token;
     int count;
 
     if (argc < 2) {
         fprintf(stderr, "%s| %s: Error: No proxy server name given\n",
                 LogTime(), PROGRAM);
-        exit(99);
+        return 99;
     }
     if (argc == 3) {
         count = atoi(argv[2]);
@@ -235,7 +234,7 @@ main(int argc, char *argv[])
         fprintf(stdout, "Token: %s\n", Token ? Token : "NULL");
     }
 
-    exit(0);
+    return 0;
 }
 
 #else
@@ -243,7 +242,7 @@ main(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    exit(-1);
+    return -1;
 }
 
 #endif /* HAVE_GSSAPI */
