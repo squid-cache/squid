@@ -321,7 +321,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
         length = MAXPWNAM;
     }
     *ptr = length + 2;
-    ++ptr;
+    ptr = (unsigned char*)send_buffer + sizeof(AUTH_HDR);
     memcpy(ptr, username, length);
     ptr += length;
     total_length += length + 2;
@@ -424,7 +424,13 @@ authenticate(int socket_fd, const char *username, const char *passwd)
          *    Send the request we've built.
          */
         gettimeofday(&sent, NULL);
-        send(socket_fd, (char *) auth, total_length, 0);
+        if (send(socket_fd, (char *) auth, total_length, 0) < 0) {
+            // EAGAIN is expected at high traffic, just retry
+            // TODO: block/sleep a few ms to let the apparently full buffer drain ?
+            if (errno != EAGAIN && errno != EWOULDBLOCK)
+                fprintf(stderr,"ERROR: RADIUS send() failure: %s\n", xstrerror());
+            continue;
+        }
         while ((time_spent = time_since(&sent)) < 1000000) {
             struct timeval tv;
             int rc, len;
@@ -488,16 +494,20 @@ main(int argc, char **argv)
             cfname = optarg;
             break;
         case 'h':
-            strcpy(server, optarg);
+            strncpy(server, optarg, sizeof(server)-1);
+            server[sizeof(server)-1] = '\0';
             break;
         case 'p':
-            strcpy(svc_name, optarg);
+            strncpy(svc_name, optarg, sizeof(svc_name)-1);
+            svc_name[sizeof(svc_name)-1] = '\0';
             break;
         case 'w':
-            strcpy(secretkey, optarg);
+            strncpy(secretkey, optarg, sizeof(secretkey)-1);
+            secretkey[sizeof(secretkey)-1] = '\0';
             break;
         case 'i':
-            strcpy(identifier, optarg);
+            strncpy(identifier, optarg, sizeof(identifier)-1);
+            identifier[sizeof(identifier)-1] = '\0';
             break;
         case 't':
             retries = atoi(optarg);
@@ -565,7 +575,10 @@ main(int argc, char **argv)
         exit(1);
     }
 #ifdef O_NONBLOCK
-    fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
+    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK) < 0) {
+        fprintf(stderr,"%s| ERROR: fcntl() failure: %s\n", argv[0], xstrerror());
+        exit(1);
+    }
 #endif
     nas_ipaddr = ntohl(salocal.sin_addr.s_addr);
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
