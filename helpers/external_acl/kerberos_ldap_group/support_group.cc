@@ -43,8 +43,9 @@ init_gd(void) {
 }
 
 void
-free_gd(struct gdstruct *gdsp) {
-    while(gdsp) {
+free_gd(struct gdstruct *gdsp)
+{
+    while (gdsp) {
         struct gdstruct *gdspn = gdsp->next;
         xfree(gdsp->group);
         xfree(gdsp->domain);
