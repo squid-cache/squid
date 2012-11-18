@@ -1175,8 +1175,9 @@ parseEtcHosts(void)
             /* For IPV6 addresses also check for a colon */
             if (Config.appendDomain && !strchr(lt, '.') && !strchr(lt, ':')) {
                 /* I know it's ugly, but it's only at reconfig */
-                strncpy(buf2, lt, 512);
-                strncat(buf2, Config.appendDomain, 512 - strlen(lt) - 1);
+                strncpy(buf2, lt, sizeof(buf2)-1);
+                strncat(buf2, Config.appendDomain, sizeof(buf2) - strlen(lt) - 1);
+                buf1[sizeof(buf2)-1] = '\0';
                 host = buf2;
             } else {
                 host = lt;
