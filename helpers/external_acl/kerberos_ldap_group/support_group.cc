@@ -148,15 +148,13 @@ hex_utf_char(struct main_args *margs, int flag)
             ichar = (ival - 48) * 16;
         else {
             debug((char *) "%s| %s: WARNING: Invalid Hex value %c\n", LogTime(), PROGRAM, ival);
-            if (ul)
-                xfree(ul);
+            xfree(ul);
             return NULL;
         }
 
         if (n == a - 1) {
             debug((char *) "%s| %s: WARNING: Invalid Hex UTF-8 string %s\n", LogTime(), PROGRAM, up);
-            if (ul)
-                xfree(ul);
+            xfree(ul);
             return NULL;
         }
         ++n;
@@ -169,8 +167,7 @@ hex_utf_char(struct main_args *margs, int flag)
             ichar = ichar + ival - 48;
         else {
             debug((char *) "%s| %s: WARNING: Invalid Hex value %c\n", LogTime(), PROGRAM, ival);
-            if (ul)
-                xfree(ul);
+            xfree(ul);
             return NULL;
         }
 
@@ -190,8 +187,7 @@ hex_utf_char(struct main_args *margs, int flag)
                 ul[nl] = ichar;
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
-                if (ul)
-                    xfree(ul);
+                xfree(ul);
                 return NULL;
             }
         } else if (iUTF3) {
@@ -220,8 +216,7 @@ hex_utf_char(struct main_args *margs, int flag)
                 ul[nl] = ichar;
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
-                if (ul)
-                    xfree(ul);
+                xfree(ul);
                 return NULL;
             }
         } else if (iUTF4) {
@@ -249,8 +244,7 @@ hex_utf_char(struct main_args *margs, int flag)
                 ul[nl] = ichar;
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
-                if (ul)
-                    xfree(ul);
+                xfree(ul);
                 return NULL;
             }
         } else if (ichar < 0x80) {
@@ -276,8 +270,7 @@ hex_utf_char(struct main_args *margs, int flag)
             ul[nl] = ichar;
             ul[nl + 1] = '\0';
             debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
-            if (ul)
-                xfree(ul);
+            xfree(ul);
             return NULL;
         }
         ++n;
@@ -323,6 +316,10 @@ create_gd(struct main_args *margs)
     char *hp1 = hex_utf_char(margs, 0);
     char *hp2 = hex_utf_char(margs, 1);
     char *up = utf8dup(margs);
+
+    // NP: will point to the start of a temporary assembly buffer used by 'p' and 'gp'
+    //     for catenation of the hp1, hp2, and up buffer contents from above.
+    //     necessary for xfree() because both p and gp move over the assembly area
     char *gpbuf = NULL;
 
     // release the allocated UTF decoding buffers
@@ -330,6 +327,7 @@ create_gd(struct main_args *margs)
     xfree(gpbuf); \
     xfree(hp1); \
     xfree(hp2); \
+    xfree(up); \
     free_gd(gdsp); \
  }
 

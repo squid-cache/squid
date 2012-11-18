@@ -672,22 +672,16 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
     rc = ldap_url_parse(ldapuri, &url);
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error while parsing url: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-        if (ldapuri)
-            xfree(ldapuri);
-        if (url)
-            xfree(url);
+        xfree(ldapuri);
+        xfree(url);
         return NULL;
     }
 #else
 #error "No URL parsing function"
 #endif
-    if (url) {
-        xfree(url);
-        url = NULL;
-    }
+    safe_free(url);
     rc = ldap_initialize(&ld, ldapuri);
-    if (ldapuri)
-        xfree(ldapuri);
+    xfree(ldapuri);
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error while initialising connection to ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
         ldap_unbind(ld);
