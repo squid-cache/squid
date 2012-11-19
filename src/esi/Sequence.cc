@@ -52,8 +52,19 @@ esiSequence::~esiSequence ()
     debugs(86, 5, "esiSequence::~esiSequence " << this);
 }
 
-esiSequence::esiSequence(esiTreeParentPtr aParent, bool incrementalFlag) : elements(), parent (aParent), mayFail_(true), failed (false), provideIncrementalData (incrementalFlag), processing (false), processingResult (ESI_PROCESS_COMPLETE), nextElementToProcess_ (0)
-{}
+esiSequence::esiSequence(esiTreeParentPtr aParent, bool incrementalFlag) :
+        elements(),
+        processedcount(0),
+        parent(aParent),
+        mayFail_(true),
+        failed(false),
+        provideIncrementalData(incrementalFlag),
+        processing(false),
+        processingResult(ESI_PROCESS_COMPLETE),
+        nextElementToProcess_(0)
+{
+    memset(&flags, 0, sizeof(flags));
+}
 
 size_t
 esiSequence::nextElementToProcess() const
@@ -329,11 +340,17 @@ esiSequence::fail (ESIElement *source, char const *anError)
     parent = NULL;
 }
 
-esiSequence::esiSequence(esiSequence const &old)
-        : processedcount (0), mayFail_(old.mayFail_), failed (old.failed), provideIncrementalData (old.provideIncrementalData), processing (false), nextElementToProcess_ (0)
+esiSequence::esiSequence(esiSequence const &old) :
+        processedcount(0),
+        parent(NULL),
+        mayFail_(old.mayFail_),
+        failed(old.failed),
+        provideIncrementalData(old.provideIncrementalData),
+        processing(false),
+        processingResult(ESI_PROCESS_COMPLETE),
+        nextElementToProcess_(0)
 {
     flags.dovars = old.flags.dovars;
-    parent = NULL;
 }
 
 void
