@@ -2394,7 +2394,7 @@ esiWhen::evaluate()
 
 esiWhen::esiWhen(esiWhen const &old) :
         esiSequence(old),
-        testValue(NULL),
+        testValue(false),
         unevaluatedExpression(NULL),
         varState(NULL)
 {
