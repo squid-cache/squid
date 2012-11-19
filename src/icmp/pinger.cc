@@ -183,7 +183,7 @@ main(int argc, char *argv[])
         debugs(42, DBG_CRITICAL, "FATAL: pinger: setgid(" << getgid() << ") failed: " << xstrerror());
         icmp4.Close();
         icmp6.Close();
-	exit (1);
+        exit (1);
     }
     if (setuid(getuid()) < 0) {
         debugs(42, DBG_CRITICAL, "FATAL: pinger: setuid(" << getuid() << ") failed: " << xstrerror());

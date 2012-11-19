@@ -706,7 +706,7 @@ enter_suid(void)
     debugs(21, 3, "enter_suid: PID " << getpid() << " taking root privileges");
 #if HAVE_SETRESUID
     if (setresuid((uid_t)-1, 0, (uid_t)-1) < 0)
-	debugs (21, 3, "enter_suid: setresuid failed: " << xstrerror ());
+        debugs (21, 3, "enter_suid: setresuid failed: " << xstrerror ());
 #else
 
     setuid(0);
@@ -732,7 +732,7 @@ no_suid(void)
     debugs(21, 3, "no_suid: PID " << getpid() << " giving up root priveleges forever");
 
     if (setuid(0) < 0)
-	debugs(50, DBG_IMPORTANT, "WARNING: no_suid: setuid(0): " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "WARNING: no_suid: setuid(0): " << xstrerror());
 
     if (setuid(uid) < 0)
         debugs(50, DBG_IMPORTANT, "ERROR: no_suid: setuid(" << uid << "): " << xstrerror());
