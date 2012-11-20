@@ -969,9 +969,9 @@ ESIContext::ParserState::top()
 }
 
 ESIContext::ParserState::ParserState() :
-stackdepth(0),
-parsing(0),
-inited_(false)
+        stackdepth(0),
+        parsing(0),
+        inited_(false)
 {}
 
 bool
