@@ -300,10 +300,10 @@ ESIInclude::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) con
 }
 
 ESIInclude::ESIInclude(ESIInclude const &old) :
-        parent(NULL),
         varState(NULL),
         srcurl(NULL),
         alturl(NULL),
+        parent(NULL),
         started(false),
         sent(false)
 {
@@ -350,10 +350,10 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
 }
 
 ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) :
-        parent(aParent),
         varState(NULL),
         srcurl(NULL),
         alturl(NULL),
+        parent(aParent),
         started(false),
         sent(false)
 {
