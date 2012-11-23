@@ -320,7 +320,8 @@ ACLChecklist::ACLChecklist() :
         async_(false),
         finished_(false),
         allow_(ACCESS_DENIED),
-        state_(NullState::Instance())
+        state_(NullState::Instance()),
+        checking_(false)
 {
 }
 

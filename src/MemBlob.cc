@@ -43,7 +43,7 @@ InstanceIdDefinitions(MemBlob, "blob");
 
 /* MemBlobStats */
 
-MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0)
+MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
 {}
 
 std::ostream&

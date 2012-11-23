@@ -2135,7 +2135,7 @@ comm_open_uds(int sock_type,
         return -1;
     }
 
-    debugs(50, 3, HERE "Opened UDS FD " << new_socket << " : family=" << AI.ai_family << ", type=" << AI.ai_socktype << ", protocol=" << AI.ai_protocol);
+    debugs(50, 3, "Opened UDS FD " << new_socket << " : family=" << AI.ai_family << ", type=" << AI.ai_socktype << ", protocol=" << AI.ai_protocol);
 
     /* update fdstat */
     debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
