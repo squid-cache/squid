@@ -80,7 +80,12 @@ ACL::Factory (char const *type)
     return result;
 }
 
-ACL::ACL () :cfgline(NULL) {}
+ACL::ACL() :
+        cfgline(NULL),
+        next(NULL)
+{
+    *name = 0;
+}
 
 bool ACL::valid () const
 {

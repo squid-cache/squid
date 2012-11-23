@@ -29,7 +29,7 @@ static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, DBG_CRITICAL, "BUG: Orphan Comm::Connection: " << *this);
+        debugs(5, DBG_CRITICAL, "BUG #3329: Orphan Comm::Connection: " << *this);
         debugs(5, DBG_CRITICAL, "NOTE: " << ++lost_conn << " Orphans since last started.");
         close();
     }
