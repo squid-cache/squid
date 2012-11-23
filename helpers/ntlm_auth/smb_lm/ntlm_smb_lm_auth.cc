@@ -183,8 +183,11 @@ make_challenge(char *domain, char *domain_controller)
 {
     /* trying to circumvent some strange problem wih pointers in SMBLib */
     /* Ugly as hell, but the lib is going to be dropped... */
-    strcpy(my_domain,domain);
-    strcpy(my_domain_controller,domain_controller);
+    strncpy(my_domain, domain, sizeof(my_domain)-1);
+    my_domain[sizeof(my_domain)-1] = '\0';
+    strncpy(my_domain_controller, domain_controller, sizeof(my_domain_controller)-1);
+    my_domain_controller[sizeof(my_domain_controller)-1] = '\0';
+
     if (init_challenge(my_domain, my_domain_controller) > 0) {
         return NULL;
     }

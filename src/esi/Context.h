@@ -50,7 +50,22 @@ public:
     typedef RefCount<ESIContext> Pointer;
     void *operator new (size_t byteCount);
     void operator delete (void *address);
-    ESIContext():reading_(true) {}
+    ESIContext() :
+            thisNode(NULL),
+            http(NULL),
+            errorpage(ERR_NONE),
+            errorstatus(HTTP_STATUS_NONE),
+            errormessage(NULL),
+            rep(NULL),
+            outbound_offset(0),
+            readpos(0),
+            pos(0),
+            varState(NULL),
+            cachedASTInUse(false),
+            reading_(true),
+            processing(false) {
+        memset(&flags, 0, sizeof(flags));
+    }
 
     ~ESIContext();
 

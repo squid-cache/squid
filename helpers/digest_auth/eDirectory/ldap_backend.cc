@@ -286,7 +286,8 @@ retrydnattr:
             value = values;
             while (*value) {
                 if (encrpass) {
-                    if (strcmp(strtok(*value, delimiter), realm) == 0) {
+                    const char *t = strtok(*value, delimiter);
+                    if (t && strcmp(t, realm) == 0) {
                         password = strtok(NULL, delimiter);
                         break;
                     }
