@@ -176,6 +176,11 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
+    if (tmpSocket < 0) {
+        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerror());
+        clear();
+        return false;
+    }
 
     /*
      * The linux kernel 2.2 maintains per interface ARP caches and
@@ -315,6 +320,11 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
+    if (tmpSocket < 0) {
+        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerror());
+        clear();
+        return false;
+    }
 
     /* Set up structures for ARP lookup with blank interface name */
     struct arpreq arpReq;
