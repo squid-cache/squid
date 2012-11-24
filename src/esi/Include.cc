@@ -299,9 +299,15 @@ ESIInclude::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) con
     return result;
 }
 
-ESIInclude::ESIInclude(ESIInclude const &old) : parent (NULL), started (false), sent (false)
+ESIInclude::ESIInclude(ESIInclude const &old) :
+        varState(NULL),
+        srcurl(NULL),
+        alturl(NULL),
+        parent(NULL),
+        started(false),
+        sent(false)
 {
-    varState = NULL;
+    memset(&flags, 0, sizeof(flags));
     flags.onerrorcontinue = old.flags.onerrorcontinue;
 
     if (old.srcurl)
@@ -344,12 +350,18 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
     tempheaders.clean();
 }
 
-ESIInclude::ESIInclude (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), started (false), sent (false)
+ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) :
+        varState(NULL),
+        srcurl(NULL),
+        alturl(NULL),
+        parent(aParent),
+        started(false),
+        sent(false)
 {
-    int i;
     assert (aContext);
+    memset(&flags, 0, sizeof(flags));
 
-    for (i = 0; i < attrcount && attr[i]; i += 2) {
+    for (int i = 0; i < attrcount && attr[i]; i += 2) {
         if (!strcmp(attr[i],"src")) {
             /* Start a request for thisNode url */
             debugs(86, 5, "ESIIncludeNew: Requesting source '" << attr[i+1] << "'");
