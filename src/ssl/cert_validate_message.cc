@@ -166,10 +166,6 @@ Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old)
     setCert(old.cert.get());
 }
 
-Ssl::CertValidationResponse::RecvdError::~RecvdError()
-{
-}
-
 Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdError::operator = (const RecvdError &old)
 {
     error_no = old.error_no;
@@ -195,10 +191,6 @@ Ssl::CertValidationMsg::CertItem & Ssl::CertValidationMsg::CertItem::operator = 
     name = old.name;
     setCert(old.cert.get());
     return *this;
-}
-
-Ssl::CertValidationMsg::CertItem::~CertItem()
-{
 }
 
 void
