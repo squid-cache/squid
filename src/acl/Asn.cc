@@ -509,8 +509,6 @@ destroyRadixNodeInfo(as_info * e_info)
         data = data->next;
         delete prev;
     }
-
-    delete data;
 }
 
 static int
