@@ -7,10 +7,9 @@
 #include "comm/Connection.h"
 #include "err_type.h"
 #include "fde.h"
-#include "HelperReply.h"
 #include "HttpStatusCode.h"
 #include "ip/Address.h"
-#if USE_SSL
+#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
 #include "ssl/support.h"
 #endif
 
@@ -21,7 +20,7 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
-#if USE_SSL
+#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
 namespace Ssl
 {
 class ErrorDetail;
@@ -40,6 +39,8 @@ tos_t GetTosToServer(HttpRequest * request);
  * connection to the server, based on the ACL.
  */
 nfmark_t GetNfmarkToServer(HttpRequest * request);
+
+class HelperReply;
 
 class FwdState : public RefCountable
 {

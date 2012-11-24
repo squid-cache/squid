@@ -1,5 +1,4 @@
 /*
- * $Id$
  */
 
 #ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
@@ -47,7 +46,7 @@ public:
         int id; ///<  The id of the error
         ssl_error_t error_no; ///< The OpenSSL error code
         std::string error_reason; ///< A string describing the error
-        X509 *cert; ///< The broken certificate
+        X509_Pointer cert; ///< The broken certificate
     };
 
     typedef std::vector<RecvdError> RecvdErrors;
@@ -75,7 +74,7 @@ private:
     {
     public:
         std::string name; ///< The certificate Id to use
-        X509 *cert;       ///< A pointer to certificate
+        X509_Pointer cert;       ///< A pointer to certificate
         CertItem(): cert(NULL) {}
         CertItem(const CertItem &);
         CertItem & operator = (const CertItem &);
