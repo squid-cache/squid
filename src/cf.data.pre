@@ -2366,7 +2366,7 @@ DOC_END
 NAME: sslcrtvalidator_children
 TYPE: HelperChildConfig
 IFDEF: USE_SSL
-DEFAULT: 32 startup=5 idle=1 concurrency=0
+DEFAULT: 32 startup=5 idle=1 concurrency=1
 LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
 	The maximum number of processes spawn to service ssl server.
