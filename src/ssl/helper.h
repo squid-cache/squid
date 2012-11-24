@@ -11,6 +11,7 @@ namespace Ssl
  * over GetIntance() static method. This class use helper structure
  * for threads management.
  */
+#if USE_SSL_CRTD
 class Helper
 {
 public:
@@ -25,7 +26,9 @@ private:
 
     helper * ssl_crtd; ///< helper for management of ssl_crtd.
 };
+#endif
 
+#if 1 // USE_SSL_CERT_VALIDATOR
 class CertValidationHelper
 {
 public:
@@ -40,6 +43,7 @@ private:
 
     helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 };
+#endif // USE_SSL_CERT_VALIDATOR
 
 } //namespace Ssl
 #endif // SQUID_SSL_HELPER_H
