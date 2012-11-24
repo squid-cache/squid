@@ -543,6 +543,7 @@ mainParseOptions(int argc, char *argv[])
             /** \par l
              * Stores the syslog facility name in global opt_syslog_facility
              * then performs actions for -s option. */
+            xfree(opt_syslog_facility); // ignore any previous options sent
             opt_syslog_facility = xstrdup(optarg);
 
         case 's':
