@@ -52,7 +52,7 @@ public:
     void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;
-    /// Insert custom values
+    /// Insert a string data value
     void insert(const char *);
 
     SplayNode<char *> *values;

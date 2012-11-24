@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  */
 
 #include "squid.h"
@@ -10,13 +8,12 @@
 #include "acl/ServerCertificate.h"
 #include "acl/Checklist.h"
 #include "acl/CertificateData.h"
-#include "fde.h"
 #include "client_side.h"
+#include "fde.h"
 #include "ssl/ServerBump.h"
 
-
 int
-ACLServerCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     X509 *cert = NULL;
     if (checklist->serverCert.get())

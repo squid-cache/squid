@@ -88,7 +88,7 @@ ACLCertificateData::match(X509 *cert)
         return 0;
 
     char const *value = sslAttributeCall(cert, attribute);
-    debugs(28, 6, HERE << (attribute ? attribute : "value") << "=" << value);
+    debugs(28, 6, (attribute ? attribute : "value") << "=" << value);
     if (value == NULL)
         return 0;
 
@@ -127,7 +127,7 @@ ACLCertificateData::parse()
             if (attributeIsOptional)
                 return;
 
-            debugs(28, DBG_CRITICAL, "required attribute argument missing");
+            debugs(28, DBG_CRITICAL, "FATAL: required attribute argument missing");
             self_destruct();
         }
 
@@ -145,14 +145,14 @@ ACLCertificateData::parse()
             }
 
             if (!valid) {
-                debugs(28, DBG_CRITICAL, "Unknown option. Supported option(s) are: " << validAttributesStr);
+                debugs(28, DBG_CRITICAL, "FATAL: Unknown option. Supported option(s) are: " << validAttributesStr);
                 self_destruct();
             }
             
             /* an acl must use consistent attributes in all config lines */
             if (attribute) {
                 if (strcasecmp(newAttribute, attribute) != 0) {
-                    debugs(28, DBG_CRITICAL, "An acl must use consistent attributes in all config lines (" << newAttribute << "!=" << attribute << ").");
+                    debugs(28, DBG_CRITICAL, "FATAL: An acl must use consistent attributes in all config lines (" << newAttribute << "!=" << attribute << ").");
                     self_destruct();
                 }
             } else
