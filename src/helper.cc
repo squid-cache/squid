@@ -942,7 +942,6 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
             t[-1] = '\0';
 
         *t = '\0';
-        ++t;
 
         if (hlp->childs.concurrency) {
             i = strtol(msg, &msg, 10);
@@ -952,6 +951,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         }
 
         helperReturnBuffer(i, srv, hlp, msg, t);
+        // only skip off the \0 _after_ passing its location to helperReturnBuffer
+        ++t;
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
@@ -1023,10 +1024,16 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     if ((t = strchr(srv->rbuf, hlp->eom))) {
         /* end of reply found */
         int called = 1;
+        int skip = 1;
         debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
-        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
-            t[-1] = '\0';
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n') {
+            *t = '\0';
+            // rewind to the \r octet which is the real terminal now
+            // and remember that we have to skip forward 2 places now.
+            skip = 2;
+            --t;
+        }
 
         *t = '\0';
 
@@ -1038,6 +1045,8 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
             debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
         }
+        // only skip off the \0's _after_ passing its location in HelperReply above
+        t += skip;
 
         srv->flags.busy = 0;
         srv->roffset = 0;
