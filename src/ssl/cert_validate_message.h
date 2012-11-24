@@ -40,7 +40,6 @@ public:
     public:
         RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL) {}
         RecvdError(const RecvdError &);
-        ~RecvdError();
         RecvdError & operator = (const RecvdError &);
         void setCert(X509 *);  ///< Sets cert to the given certificate
         int id; ///<  The id of the error
@@ -78,7 +77,6 @@ private:
         CertItem(): cert(NULL) {}
         CertItem(const CertItem &);
         CertItem & operator = (const CertItem &);
-        ~CertItem();
         void setCert(X509 *); ///< Sets cert to the given certificate
     };
 
