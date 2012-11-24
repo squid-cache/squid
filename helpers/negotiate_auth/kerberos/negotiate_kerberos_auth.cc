@@ -119,7 +119,7 @@ gethost_name(void)
     struct addrinfo *hres = NULL, *hres_list;
     int rc, count;
 
-    rc = gethostname(hostname, sysconf(_SC_HOST_NAME_MAX));
+    rc = gethostname(hostname, sizeof(hostname)-1);
     if (rc) {
         fprintf(stderr, "%s| %s: ERROR: resolving hostname '%s' failed\n",
                 LogTime(), PROGRAM, hostname);
@@ -148,7 +148,7 @@ gethost_name(void)
         return NULL;
     }
     freeaddrinfo(hres);
-    hostname[sysconf(_SC_HOST_NAME_MAX) - 1] = '\0';
+    hostname[sizeof(hostname)-1] = '\0';
     return (xstrdup(hostname));
 }
 
