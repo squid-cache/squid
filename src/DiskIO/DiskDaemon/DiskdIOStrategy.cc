@@ -401,7 +401,8 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     } else {
         debugs(79, DBG_IMPORTANT, "storeDiskdSend: msgsnd: " << xstrerror());
         cbdataReferenceDone(M->callback_data);
-        assert(++send_errors < 100);
+        ++send_errors;
+        assert(send_errors < 100);
         if (shm_offset > -1)
             shm.put(shm_offset);
     }

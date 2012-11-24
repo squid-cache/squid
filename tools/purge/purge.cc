@@ -489,7 +489,8 @@ filelevel( const char* directory, const REList* list )
     if ( ::iamalive ) {
         static char alivelist[4][3] = { "\\\b", "|\b", "/\b", "-\b" };
         static unsigned short alivecount = 0;
-        assert( write( STDOUT_FILENO, alivelist[alivecount++ & 3], 2 ) == 2 );
+        const int write_success = write(STDOUT_FILENO, alivelist[alivecount++ & 3], 2);
+        assert(write_success == 2);
     }
 
     bool flag = true;
@@ -627,13 +628,15 @@ parseCommandline( int argc, char* argv[], REList*& head,
         case 'C':
             if ( optarg && *optarg ) {
                 if ( copydir ) xfree( (void*) copydir );
-                assert( (copydir = xstrdup(optarg)) );
+                copydir = xstrdup(optarg);
+                assert(copydir);
             }
             break;
         case 'c':
             if ( optarg && *optarg ) {
-                if ( *conffile ) xfree((void*) conffile );
-                assert( (conffile = xstrdup(optarg)) );
+                if ( *conffile ) xfree((void*) conffile);
+                conffile = xstrdup(optarg);
+                assert(conffile);
             }
             break;
 
