@@ -2366,7 +2366,7 @@ DOC_END
 NAME: sslcrtvalidator_children
 TYPE: HelperChildConfig
 IFDEF: USE_SSL
-DEFAULT: 32 startup=5 idle=1
+DEFAULT: 32 startup=5 idle=1 concurrency=0
 LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
 	The maximum number of processes spawn to service ssl server.
@@ -2390,6 +2390,18 @@ DOC_START
 	at all times. When traffic begins to rise above what the existing
 	processes can handle this many more will be spawned up to the maximum
 	configured. A minimum setting of 1 is required.
+
+		concurrency=
+	
+	The number of requests each certificate validator helper can handle in
+	parallel. Defaults to 0 which indicates the certficate validator
+	is a old-style single threaded redirector.
+	
+	When this directive is set to a value >= 1 then the protocol
+	used to communicate with the helper is modified to include
+	a request ID in front of the request/response. The request
+	ID from the request must be echoed back with the response
+	to that request.
 	
 	You must have at least one ssl_crt_validator process.
 DOC_END
