@@ -913,7 +913,7 @@ IF USE_SSL
 	  # NOTE: The ssl_error ACL is only supported with sslproxy_cert_error,
 	  # sslproxy_cert_sign, and sslproxy_cert_adapt options.
 
-	acl aclname server_ssl_cert_fingerprint [-sha1] fingerprint
+	acl aclname server_cert_fingerprint [-sha1] fingerprint
 	  # match against server SSL certificate fingerprint [fast]
 	  #
 	  # The fingerprint is the digest of the DER encoded version 

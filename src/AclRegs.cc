@@ -149,8 +149,8 @@ ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistr
 ACLStrategised<X509 *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (Ssl::GetX509UserAttribute, "*"), ACLCertificateStrategy::Instance(), "user_cert");
 ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEntry_, "ca_cert");
 ACLStrategised<X509 *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (Ssl::GetX509CAAttribute, "*"), ACLCertificateStrategy::Instance(), "ca_cert");
-ACL::Prototype ACLServerCertificate::X509FingerprintRegistryProtoype(&ACLServerCertificate::X509FingerprintRegistryEntry_, "server_ssl_cert_fingerprint");
-ACLStrategised<X509 *> ACLServerCertificate::X509FingerprintRegistryEntry_(new ACLCertificateData(Ssl::GetX509Fingerprint, "-sha1", true), ACLServerCertificateStrategy::Instance(), "server_ssl_cert_fingerprint");
+ACL::Prototype ACLServerCertificate::X509FingerprintRegistryProtoype(&ACLServerCertificate::X509FingerprintRegistryEntry_, "server_cert_fingerprint");
+ACLStrategised<X509 *> ACLServerCertificate::X509FingerprintRegistryEntry_(new ACLCertificateData(Ssl::GetX509Fingerprint, "-sha1", true), ACLServerCertificateStrategy::Instance(), "server_cert_fingerprint");
 #endif
 
 #if USE_SQUID_EUI

@@ -1,5 +1,4 @@
 /*
- * $Id$
  */
 
 #ifndef SQUID_ACLSERVERCERTIFICATE_H
@@ -14,7 +13,6 @@
 /// \ingroup ACLAPI
 class ACLServerCertificateStrategy : public ACLStrategy<X509 *>
 {
-
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     static ACLServerCertificateStrategy *Instance();
