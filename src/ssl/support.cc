@@ -42,7 +42,6 @@
 #include "anyp/PortCfg.h"
 #include "fde.h"
 #include "globals.h"
-#include "protos.h"
 #include "SquidConfig.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"

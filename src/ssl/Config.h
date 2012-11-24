@@ -13,6 +13,8 @@ public:
     char *ssl_crtd; ///< Name of external ssl_crtd application.
     /// The number of processes spawn for ssl_crtd.
     HelperChildConfig ssl_crtdChildren;
+#endif
+#if 1 // USE_SSL_CERT_VALIDATOR
     char *ssl_crt_validator;
     HelperChildConfig ssl_crt_validator_Children;
 #endif

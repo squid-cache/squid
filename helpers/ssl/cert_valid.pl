@@ -5,16 +5,58 @@
 #
 
 use warnings;
-# TODO:
-# use strict;
-
+use strict;
+use Getopt::Long;
+use Pod::Usage;
 use Crypt::OpenSSL::X509;
 use FileHandle;
+use POSIX qw(strftime);
 
-my $LOGFILE = "/tmp/ssl_cert_valid.log";
+my $debug = 0;
+my $help = 0;
 
-open(LOG, ">>$LOGFILE") or die("Cannot open logfile $LOGFILE, stopped");
-LOG->autoflush(1);
+=pod
+
+=head1 NAME
+
+cert_valid.pl - A fake cert validation helper for Squid
+
+=head1 SYNOPSIS
+
+cert_valid.pl [-d | --debug] [-h | --help]
+
+=over 8
+
+=item  B<-h | --help>
+
+brief help message
+
+=item B<-d | --debug>
+
+enable debug messages to stderr
+
+=back
+
+=head1 DESCRIPTION
+
+Retrieves the SSL certificate error list from squid and echo back without any change.
+
+=head1 COPYRIGHT
+
+(C) 2012 The Measurement Factory, Author: Tsantilas Christos
+
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at your opinion) any
+later version.
+
+=cut
+
+GetOptions(
+    'help' => \$help,
+    'debug' => \$debug,
+    ) or pod2usage(1);
+
+pod2usage(1) if ($help);
 
 $|=1;
 while (<>) {
@@ -27,10 +69,15 @@ while (<>) {
 
     my $response;
     my $haserror = 0;
-    my $code = $line_args[0];
-    my $bodylen = $line_args[1];
-    my $body = $line_args[2] . "\n";
-    if ($bodylen =~ /\d+/) {
+    my $channelId = $line_args[0];
+    my $code = $line_args[1];
+    my $bodylen = $line_args[2];
+    my $body = $line_args[3] . "\n";
+    if ($channelId !~ /\d+/) {
+        $response = $channelId." BH message=\"This helper is  concurrent and requires the concurrency option to be specified.\"\1";
+    } elsif ($bodylen !~ /\d+/) {
+        $response = $channelId." BH message=\"cert validator request syntax error \" \1";
+    } else {
         my $readlen = length($body);
         my %certs = ();
         my @errors = ();
@@ -44,25 +91,26 @@ while (<>) {
             }
         }
 
-        print LOG "GOT ". "Code=".$code." $bodylen \n"; #.$body;
+        print(STDERR logPrefix()."GOT ". "Code=".$code." $bodylen \n") if ($debug); #.$body;
+        my $hostname;
         parseRequest($body, \$hostname, \@errors, \%certs);
-        print LOG " Parse result: \n";
-        print LOG "\tFOUND host:".$hostname."\n";
-        print LOG "\tFOUND ERRORS:";
-        foreach $err(@errors) {
-            print LOG "$err ,";
+        print(STDERR logPrefix()."Parse result: \n") if ($debug);
+        print(STDERR logPrefix()."\tFOUND host:".$hostname."\n") if ($debug);
+        print(STDERR logPrefix()."\tFOUND ERRORS:") if ($debug);
+        foreach my $err (@errors) {
+            print(STDERR logPrefix()."$err ,")  if ($debug);
         }
-        print LOG "\n";
-        foreach $key (keys %certs) {
+        print(STDERR "\n") if ($debug);
+        foreach my $key (keys %certs) {
             ## Use "perldoc Crypt::OpenSSL::X509" for X509 available methods.
-            print LOG "\tFOUND cert ".$key.": ".$certs{$key}->subject() . "\n";
+            print(STDERR logPrefix()."\tFOUND cert ".$key.": ".$certs{$key}->subject() . "\n") if ($debug);
         }
 
         #got the peer certificate ID. Assume that the peer certificate is the first one.
         my $peerCertId = (keys %certs)[0];
 
         # Echo back the errors: fill the responseErrors array  with the errors we read.
-        foreach $err (@errors) {
+        foreach my $err (@errors) {
             $haserror = 1;
             appendError (\@responseErrors, 
                          $err, #The error name
@@ -74,18 +122,15 @@ while (<>) {
         $response = createResponse(\@responseErrors);
         my $len = length($response);
         if ($haserror) {
-            $response = "ERR ".$len." ".$response."\1";
+            $response = $channelId." ERR ".$len." ".$response."\1";
         } else {
-            $response = "OK ".$len." ".$response."\1";
+            $response = $channelId." OK ".$len." ".$response."\1";
         }
-    } else {
-        $response = "BH 0 \1";
     }
 
     print $response;
-    print LOG ">> ".$response;
+    print(STDERR logPrefix().">> ".$response."\n") if ($debug);
 }
-close(LOG);
 
 sub trim
 {
@@ -109,7 +154,7 @@ sub createResponse
     my ($responseErrors) = shift;
     my $response="";
     my $i = 0;
-    foreach $err (@$responseErrors) {
+    foreach my $err (@$responseErrors) {
         $response=$response."error_name_".$i."=".$err->{"error_name"}."\n".
             "error_reason_".$i."=".$err->{"error_reason"}."\n".
             "error_cert_".$i."=".$err->{"error_cert"}."\n";
@@ -146,8 +191,14 @@ sub parseRequest
             $request = substr($request, $vallen);
         }
         else {
-            print LOG "ParseError on \"".$request."\"\n";
+            print(STDERR logPrefix()."ParseError on \"".$request."\"\n") if ($debug);
             $request = "";# finish processing....
         }
     }
+}
+
+
+sub logPrefix
+{
+  return strftime("%Y/%m/%d %H:%M:%S.0", localtime)." ".$0." ".$$." | " ;
 }
