@@ -179,8 +179,18 @@ main(int argc, char *argv[])
     }
     max_fd = max(max_fd, squid_link);
 
-    setgid(getgid());
-    setuid(getuid());
+    if (setgid(getgid()) < 0) {
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: setgid(" << getgid() << ") failed: " << xstrerror());
+        icmp4.Close();
+        icmp6.Close();
+        exit (1);
+    }
+    if (setuid(getuid()) < 0) {
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: setuid(" << getuid() << ") failed: " << xstrerror());
+        icmp4.Close();
+        icmp6.Close();
+        exit (1);
+    }
 
     last_check_time = squid_curtime;
 

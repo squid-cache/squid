@@ -663,10 +663,10 @@ leave_suid(void)
 void
 enter_suid(void)
 {
-    debugs(21, 3, "enter_suid: PID " << getpid() << " taking root priveleges");
+    debugs(21, 3, "enter_suid: PID " << getpid() << " taking root privileges");
 #if HAVE_SETRESUID
-
-    setresuid((uid_t)-1, 0, (uid_t)-1);
+    if (setresuid((uid_t)-1, 0, (uid_t)-1) < 0)
+        debugs (21, 3, "enter_suid: setresuid failed: " << xstrerror ());
 #else
 
     setuid(0);
@@ -691,10 +691,11 @@ no_suid(void)
     uid = geteuid();
     debugs(21, 3, "no_suid: PID " << getpid() << " giving up root priveleges forever");
 
-    setuid(0);
+    if (setuid(0) < 0)
+        debugs(50, DBG_IMPORTANT, "WARNING: no_suid: setuid(0): " << xstrerror());
 
     if (setuid(uid) < 0)
-        debugs(50, DBG_IMPORTANT, "no_suid: setuid: " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "ERROR: no_suid: setuid(" << uid << "): " << xstrerror());
 
     restoreCapabilities(0);
 
