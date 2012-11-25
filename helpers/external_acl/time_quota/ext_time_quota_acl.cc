@@ -447,7 +447,7 @@ int main(int argc, char **argv)
         // we expect the following line syntax: %LOGIN
         const char *user_key = strtok(request, " \n");
         if (!user_key) {
-            SEND_BH("message=\"User name missing\"");
+            SEND_ERR("User name missing");
             continue;
         }
         processActivity(user_key);
