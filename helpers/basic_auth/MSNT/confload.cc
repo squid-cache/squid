@@ -85,6 +85,7 @@ OpenConfigFile(void)
         Confbuf[2048] = '\0';
         ProcessLine(Confbuf);
     }
+    fclose(ConfigFile);
 
     /*
      * Check that at least one server is being queried. Report error if not.
@@ -95,7 +96,6 @@ OpenConfigFile(void)
         syslog(LOG_ERR, "OpenConfigFile: No servers set in %s. At least one is needed.", CONFIGFILE);
         return 1;
     }
-    fclose(ConfigFile);
     return 0;
 }
 
