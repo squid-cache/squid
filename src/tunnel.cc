@@ -308,9 +308,14 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
      */
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
 
-    /* Bump the server connection timeout on any activity */
-    if (!fd_closed(server.fd()))
-        commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
+    /* Bump the source connection timeout on any activity */
+    if (!fd_closed(from.fd()))
+        commSetTimeout(from.fd(), Config.Timeout.read, tunnelTimeout, this);
+
+    /* Bump the dest connection read timeout on any activity */
+    /* see Bug 3659: tunnels can be weird, with very long one-way transfers */
+    if (!fd_closed(to.fd()))
+        commSetTimeout(to.fd(), Config.Timeout.read, tunnelTimeout, this);
 
     if (errcode)
         from.error (xerrno);
