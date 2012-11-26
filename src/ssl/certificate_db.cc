@@ -108,19 +108,38 @@ Ssl::Locker::~Locker()
 Ssl::CertificateDb::Row::Row()
         :   width(cnlNumber)
 {
-    row = new char *[width + 1];
+    row = (char **)OPENSSL_malloc(sizeof(char *) * (width + 1));
     for (size_t i = 0; i < width + 1; ++i)
         row[i] = NULL;
 }
 
+Ssl::CertificateDb::Row::Row(char **aRow, size_t aWidth): width(aWidth)
+{
+    row = aRow;
+}
+
 Ssl::CertificateDb::Row::~Row()
 {
-    if (row) {
+    if (!row)
+        return;
+
+    void *max;
+    if ((max = (void *)row[width]) != NULL) {
+        // It is an openSSL allocated row. The TXT_DB_read function stores the
+        // index and row items one one memory segment. The row[width] points
+        // to the end of buffer. We have to check for items in the array which
+        // are not stored in this segment. These items should released.
         for (size_t i = 0; i < width + 1; ++i) {
-            delete[](row[i]);
+            if (((row[i] < (char *)row) || (row[i] > max)) && (row[i] != NULL))
+                OPENSSL_free(row[i]);
         }
-        delete[](row);
+    } else {
+        for (size_t i = 0; i < width + 1; ++i) {
+            if (row[i])
+                OPENSSL_free(row[i]);
+        }
     }
+    OPENSSL_free(row);
 }
 
 void Ssl::CertificateDb::Row::reset()
@@ -135,7 +154,7 @@ void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
         free(row[cell]);
     }
     if (value) {
-        row[cell] = static_cast<char *>(malloc(sizeof(char) * (strlen(value) + 1)));
+        row[cell] = static_cast<char *>(OPENSSL_malloc(sizeof(char) * (strlen(value) + 1)));
         memcpy(row[cell], value, sizeof(char) * (strlen(value) + 1));
     } else
         row[cell] = NULL;
@@ -144,6 +163,55 @@ void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
 char ** Ssl::CertificateDb::Row::getRow()
 {
     return row;
+}
+
+void Ssl::CertificateDb::sq_TXT_DB_delete(TXT_DB *db, const char **row)
+{
+    if (!db)
+        return;
+
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db->data); ++i) {
+        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, i));
+#else
+    for (int i = 0; i < sk_num(db->data); ++i) {
+        const char ** current_row = ((const char **)sk_value(db->data, i));
+#endif
+        if (current_row == row) {
+            sq_TXT_DB_delete_row(db, i);
+            return;
+        }
+    }
+}
+
+#define countof(arr) (sizeof(arr)/sizeof(*arr))
+void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx)
+{
+    char **rrow;
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+    rrow = (char **)sk_OPENSSL_PSTRING_delete(db->data, idx);
+#else
+    rrow = (char **)sk_delete(db->data, idx);
+#endif
+
+    if (!rrow)
+        return;
+
+    Row row(rrow, cnlNumber); // row wrapper used to free the rrow
+
+    const Columns db_indexes[]={cnlSerial, cnlName};
+    for (unsigned int i = 0; i < countof(db_indexes); ++i) {
+        void *data = NULL;
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+        if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db->index[db_indexes[i]])
+            data = lh_OPENSSL_STRING_delete(fieldIndex, rrow);
+#else
+        if (LHASH *fieldIndex = db->index[db_indexes[i]])
+            data = lh_delete(fieldIndex, rrow);
+#endif
+        if (data)
+            assert(data == rrow);
+    }
 }
 
 unsigned long Ssl::CertificateDb::index_serial_hash(const char **a)
@@ -219,13 +287,24 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     }
     row.setValue(cnlSerial, serial_string.c_str());
     char ** rrow = TXT_DB_get_by_index(db.get(), cnlSerial, row.getRow());
-    if (rrow != NULL)
-        return false;
+    if (rrow != NULL) {
+        // TODO: check if the stored row is valid.
+        return true;
+    }
 
     {
         TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
-        if (pure_find(subject.get(), cert, pkey))
+        Ssl::X509_Pointer findCert;
+        Ssl::EVP_PKEY_Pointer findPkey;
+        if (pure_find(subject.get(), findCert, findPkey)) {
+            // Replace with database certificate
+            cert.reset(findCert.release());
+            pkey.reset(findPkey.release());
             return true;
+        }
+        // pure_find may fail because the entry is expired, or because the
+        // certs file is corrupted. Remove any entry with given hostname
+        deleteByHostname(subject.get());
     }
 
     // check db size while trying to minimize calls to size()
@@ -235,8 +314,10 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
 
         // there are no more invalid ones, but there must be valid certificates
         do {
-            if (!deleteOldestCertificate())
+            if (!deleteOldestCertificate()) {
+                save(); // Some entries may have been removed. Update the index file.
                 return false; // errors prevented us from freeing enough space
+            }
         } while (size() > max_db_size);
         break;
     }
@@ -250,13 +331,22 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
         row.setValue(cnlName, subject.get());
     }
 
-    if (!TXT_DB_insert(db.get(), row.getRow()))
+    if (!TXT_DB_insert(db.get(), row.getRow())) {
+        // failed to add index (???) but we may have already modified
+        // the database so save before exit
+        save();
         return false;
-
+    }
+    rrow = row.getRow();
     row.reset();
+
     std::string filename(cert_full + "/" + serial_string + ".pem");
-    if (!writeCertAndPrivateKeyToFile(cert, pkey, filename.c_str()))
+    if (!writeCertAndPrivateKeyToFile(cert, pkey, filename.c_str())) {
+        //remove row from txt_db and save
+        sq_TXT_DB_delete(db.get(), (const char **)rrow);
+        save();
         return false;
+    }
     addSize(filename);
 
     save();
@@ -382,10 +472,8 @@ bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Poin
     if (rrow == NULL)
         return false;
 
-    if (!sslDateIsInTheFuture(rrow[cnlExp_date])) {
-        deleteByHostname(rrow[cnlName]);
+    if (!sslDateIsInTheFuture(rrow[cnlExp_date]))
         return false;
-    }
 
     // read cert and pkey from file.
     std::string filename(cert_full + "/" + rrow[cnlSerial] + ".pem");
@@ -485,26 +573,10 @@ void Ssl::CertificateDb::save()
 }
 
 // Normally defined in defines.h file
-#define countof(arr) (sizeof(arr)/sizeof(*arr))
 void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
 {
     const std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    sk_OPENSSL_PSTRING_delete(db.get()->data, rowIndex);
-#else
-    sk_delete(db.get()->data, rowIndex);
-#endif
-
-    const Columns db_indexes[]={cnlSerial, cnlName};
-    for (unsigned int i = 0; i < countof(db_indexes); ++i) {
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-        if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db.get()->index[db_indexes[i]])
-            lh_OPENSSL_STRING_delete(fieldIndex, (char **)row);
-#else
-        if (LHASH *fieldIndex = db.get()->index[db_indexes[i]])
-            lh_delete(fieldIndex, row);
-#endif
-    }
+    sq_TXT_DB_delete_row(db.get(), rowIndex);
 
     subSize(filename);
     int ret = remove(filename.c_str());
