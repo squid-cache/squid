@@ -1326,26 +1326,26 @@ externalAclHandleReply(void *data, const HelperReply &reply)
         entryData.result = ACCESS_ALLOWED;
     // XXX: handle other non-DENIED results better
 
-    // XXX: make entryData store a proper helperReply object.
+    // XXX: make entryData store a proper HelperReply object instead of copying.
 
-    Note::Pointer label = reply.responseKeys.findByName("tag");
+    Note::Pointer label = reply.notes.find("tag");
     if (label != NULL && label->values[0]->value.size() > 0)
         entryData.tag = label->values[0]->value;
 
-    label = reply.responseKeys.findByName("message");
+    label = reply.notes.find("message");
     if (label != NULL && label->values[0]->value.size() > 0)
         entryData.message = label->values[0]->value;
 
-    label = reply.responseKeys.findByName("log");
+    label = reply.notes.find("log");
     if (label != NULL && label->values[0]->value.size() > 0)
         entryData.log = label->values[0]->value;
 
 #if USE_AUTH
-    label = reply.responseKeys.findByName("user");
+    label = reply.notes.find("user");
     if (label != NULL && label->values[0]->value.size() > 0)
         entryData.user = label->values[0]->value;
 
-    label = reply.responseKeys.findByName("password");
+    label = reply.notes.find("password");
     if (label != NULL && label->values[0]->value.size() > 0)
         entryData.password = label->values[0]->value;
 #endif

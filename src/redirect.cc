@@ -79,7 +79,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
     debugs(61, 5, HERE << "reply=" << reply);
 
     // XXX: This funtion is now kept only to check for and display this garbage use-case
-    // it can be removed when the helpers are all updated to the normalized "OK/ERR key-pairs" format
+    // it can be removed when the helpers are all updated to the normalized "OK/ERR kv-pairs" format
 
     if (reply.result == HelperReply::Unknown) {
         // BACKWARD COMPATIBILITY 2012-06-15:
@@ -153,7 +153,7 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         ++n_bypassed;
         HelperReply bypassReply;
         bypassReply.result = HelperReply::Okay;
-        bypassReply.responseKeys.add("message","URL rewrite/redirect queue too long. Bypassed.");
+        bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
         handler(data, bypassReply);
         return;
     }
