@@ -54,11 +54,11 @@ HelperReply::parse(char *buf, size_t len)
                 MemBuf authToken;
                 authToken.init();
                 authToken.append(w1, strlen(w1));
-                responseKeys.add("token",authToken.content());
+                notes.add("token",authToken.content());
             } else {
                 // token field is mandatory on this response code
                 result = HelperReply::BrokenHelper;
-                responseKeys.add("message","Missing 'token' data");
+                notes.add("message","Missing 'token' data");
             }
 
         } else if (!strncmp(p,"AF ",3)) {
@@ -75,19 +75,19 @@ HelperReply::parse(char *buf, size_t len)
                 MemBuf authToken;
                 authToken.init();
                 authToken.append(w1, strlen(w1));
-                responseKeys.add("token",authToken.content());
+                notes.add("token",authToken.content());
 
                 MemBuf user;
                 user.init();
                 user.append(w2,strlen(w2));
-                responseKeys.add("user",user.content());
+                notes.add("user",user.content());
 
             } else if (w1 != NULL) {
                 // NTLM "user"
                 MemBuf user;
                 user.init();
                 user.append(w1,strlen(w1));
-                responseKeys.add("user",user.content());
+                notes.add("user",user.content());
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
@@ -109,7 +109,7 @@ HelperReply::parse(char *buf, size_t len)
 
     // Hack for backward-compatibility: BH used to be a text message...
     if (other().hasContent() && result == HelperReply::BrokenHelper) {
-        responseKeys.add("message",other().content());
+        notes.add("message",other().content());
         modifiableOther().clean();
     }
 }
@@ -139,9 +139,9 @@ HelperReply::parseResponseKeys()
         char *v = strwordtok(NULL, &p);
         if (v != NULL && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
-        String value = v;
+        const String value(v?v:""); // value can be empty, but must not be NULL
 
-        responseKeys.add(key, value);
+        notes.add(key, value);
 
         modifiableOther().consume(p - other().content());
         modifiableOther().consumeWhitespacePrefix();
@@ -171,9 +171,9 @@ operator <<(std::ostream &os, const HelperReply &r)
     }
 
     // dump the helper key=pair "notes" list
-    if (r.responseKeys.notes.size() > 0) {
+    if (r.notes.notes.size() > 0) {
         os << ", notes={";
-        for (Notes::NotesList::const_iterator m = r.responseKeys.notes.begin(); m != r.responseKeys.notes.end(); ++m) {
+        for (Notes::NotesList::const_iterator m = r.notes.notes.begin(); m != r.notes.notes.end(); ++m) {
             for (Note::Values::iterator v = (*m)->values.begin(); v != (*m)->values.end(); ++v) {
                 os << ',' << (*m)->key << '=' << ConfigParser::QuoteString((*v)->value);
             }
