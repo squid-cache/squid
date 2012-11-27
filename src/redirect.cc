@@ -79,7 +79,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
     debugs(61, 5, HERE << "reply=" << reply);
 
     // XXX: This funtion is now kept only to check for and display this garbage use-case
-    // it can be removed when the helpers are all updated to the normalized "OK/ERR key-pairs" format
+    // it can be removed when the helpers are all updated to the normalized "OK/ERR kv-pairs" format
 
     if (reply.result == HelperReply::Unknown) {
         // BACKWARD COMPATIBILITY 2012-06-15:
@@ -151,8 +151,10 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++n_bypassed;
-        HelperReply nilReply(NULL,0);
-        handler(data, nilReply);
+        HelperReply bypassReply;
+        bypassReply.result = HelperReply::Okay;
+        bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
+        handler(data, bypassReply);
         return;
     }
 

@@ -48,6 +48,12 @@ public:
      * or NULL if none matches.
      */
     const char *match(HttpRequest *request, HttpReply *reply);
+
+    /**
+     * Returns the first value for this key or an empty string.
+     */
+    const char *firstValue() const { return (values.size()>0&&values[0]->value.defined()?values[0]->value.termedBuf():""); }
+
     String key; ///< The note key
     Values values; ///< The possible values list for the note
 };
@@ -61,6 +67,7 @@ class Notes
 public:
     typedef Vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
+    typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
     Notes(const char *aDescr, const char **metasBlacklist): descr(aDescr), blacklisted(metasBlacklist) {}
     Notes(): descr(NULL), blacklisted(NULL) {}
@@ -83,9 +90,21 @@ public:
     /// return true if the notes list is empty
     bool empty() { return notes.empty(); }
 
+    /**
+     * Adds a note key and value to the notes list.
+     * If the key name already exists in list, add the given value to its set of values.
+     */
+    void add(const String &noteKey, const String &noteValue);
+
+    /**
+     * Returns a pointer to an existing Note with given key name or nil.
+     */
+    Note::Pointer find(const String &noteKey) const;
+
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr; ///< A short description for notes list
     const char **blacklisted; ///< Null terminated list of blacklisted note keys
+
 private:
     /**
      * Adds a note to the notes list and returns a pointer to the
@@ -93,6 +112,7 @@ private:
      * returns a pointer to the existing object.
      */
     Note::Pointer add(const String &noteKey);
+
 };
 
 class NotePairs : public HttpHeader
