@@ -73,16 +73,32 @@ Note::match(HttpRequest *request, HttpReply *reply)
 }
 
 Note::Pointer
-Notes::add(const String &noteKey)
+Notes::find(const String &noteKey) const
 {
-    typedef Notes::NotesList::iterator AMLI;
+    typedef Notes::NotesList::const_iterator AMLI;
     for (AMLI i = notes.begin(); i != notes.end(); ++i) {
         if ((*i)->key == noteKey)
             return (*i);
     }
 
-    Note::Pointer note = new Note(noteKey);
-    notes.push_back(note);
+    return Note::Pointer();
+}
+
+void
+Notes::add(const String &noteKey, const String &noteValue)
+{
+    Note::Pointer key = add(noteKey);
+    key->addValue(noteValue);
+}
+
+Note::Pointer
+Notes::add(const String &noteKey)
+{
+    Note::Pointer note = find(noteKey);
+    if (note == NULL) {
+        note = new Note(noteKey);
+        notes.push_back(note);
+    }
     return note;
 }
 
