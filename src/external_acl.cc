@@ -361,10 +361,13 @@ parse_externalAclHelper(external_acl ** list)
         } else if (strcmp(token, "protocol=2.5") == 0) {
             a->quote = external_acl::QUOTE_METHOD_SHELL;
         } else if (strcmp(token, "protocol=3.0") == 0) {
+            debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option protocol=3.0 is deprecated. Remove this from your config.");
             a->quote = external_acl::QUOTE_METHOD_URL;
         } else if (strcmp(token, "quote=url") == 0) {
+            debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option quote=url is deprecated. Remove this from your config.");
             a->quote = external_acl::QUOTE_METHOD_URL;
         } else if (strcmp(token, "quote=shell") == 0) {
+            debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option quote=shell is deprecated. Use protocol=2.5 if still needed.");
             a->quote = external_acl::QUOTE_METHOD_SHELL;
 
             /* INET6: allow admin to configure some helpers explicitly to
@@ -548,6 +551,9 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 
         if (node->cache)
             storeAppendPrintf(sentry, " cache=%d", node->cache_size);
+
+        if (node->quote == external_acl::QUOTE_METHOD_SHELL)
+            storeAppendPrintf(sentry, " protocol=2.5");
 
         for (format = node->format; format; format = format->next) {
             switch (format->type) {
@@ -1302,16 +1308,14 @@ free_externalAclState(void *data)
  *
  * Other keywords may be added to the protocol later
  *
- * value needs to be enclosed in quotes if it may contain whitespace, or
- * the whitespace escaped using \ (\ escaping obviously also applies to
- * any " characters)
+ * value needs to be URL-encoded or enclosed in double quotes (")
+ * with \-escaping on any whitespace, quotes, or slashes (\).
  */
 static void
 externalAclHandleReply(void *data, const HelperReply &reply)
 {
     externalAclState *state = static_cast<externalAclState *>(data);
     externalAclState *next;
-    char *t = NULL;
     ExternalACLEntryData entryData;
     entryData.result = ACCESS_DENIED;
     external_acl_entry *entry = NULL;
@@ -1322,41 +1326,29 @@ externalAclHandleReply(void *data, const HelperReply &reply)
         entryData.result = ACCESS_ALLOWED;
     // XXX: handle other non-DENIED results better
 
-    if (reply.other().hasContent()) {
-        char *temp = reply.modifiableOther().content();
-        char *token = strwordtok(temp, &t);
+    // XXX: make entryData store a proper HelperReply object instead of copying.
 
-        while ((token = strwordtok(NULL, &t))) {
-            char *value = strchr(token, '=');
+    Note::Pointer label = reply.notes.find("tag");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.tag = label->values[0]->value;
 
-            if (value) {
-                *value = '\0';	/* terminate the token, and move up to the value */
-                ++value;
+    label = reply.notes.find("message");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.message = label->values[0]->value;
 
-                if (state->def->quote == external_acl::QUOTE_METHOD_URL)
-                    rfc1738_unescape(value);
+    label = reply.notes.find("log");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.log = label->values[0]->value;
 
-                if (strcmp(token, "message") == 0)
-                    entryData.message = value;
-                else if (strcmp(token, "error") == 0)
-                    entryData.message = value;
-                else if (strcmp(token, "tag") == 0)
-                    entryData.tag = value;
-                else if (strcmp(token, "log") == 0)
-                    entryData.log = value;
 #if USE_AUTH
-                else if (strcmp(token, "user") == 0)
-                    entryData.user = value;
-                else if (strcmp(token, "password") == 0)
-                    entryData.password = value;
-                else if (strcmp(token, "passwd") == 0)
-                    entryData.password = value;
-                else if (strcmp(token, "login") == 0)
-                    entryData.user = value;
+    label = reply.notes.find("user");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.user = label->values[0]->value;
+
+    label = reply.notes.find("password");
+    if (label != NULL && label->values[0]->value.size() > 0)
+        entryData.password = label->values[0]->value;
 #endif
-            }
-        }
-    }
 
     dlinkDelete(&state->list, &state->def->queue);
 

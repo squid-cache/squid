@@ -262,37 +262,27 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     else
         assert(reply.whichServer == lm_request->authserver);
 
-    /* seperate out the useful data */
-    char *modifiableBlob = reply.modifiableOther().content();
-    char *arg = NULL;
-    if (modifiableBlob && *modifiableBlob != '\0') {
-        arg = strchr(modifiableBlob + 1, ' ');
-        if (arg) {
-            *arg = '\0';
-            ++arg;
-        }
-    }
-    const char *blob = modifiableBlob;
-
     switch (reply.result) {
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = 1;
         if (lm_request->request->flags.proxyKeepalive) {
-            lm_request->server_blob = xstrdup(blob);
+            Note::Pointer tokenNote = reply.notes.find("token");
+            lm_request->server_blob = xstrdup(tokenNote->firstValue());
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server blob '" << blob << "'");
+            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << tokenNote->firstValue() << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
-            auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+            auth_user_request->denyMessage("Negotiate authentication requires a persistent connection");
         }
         break;
 
-    case HelperReply::AF:
     case HelperReply::Okay: {
-        if (arg == NULL) {
+        Note::Pointer userNote = reply.notes.find("user");
+        Note::Pointer tokenNote = reply.notes.find("token");
+        if (userNote == NULL || tokenNote == NULL) {
             // XXX: handle a success with no username better
             /* protocol error */
             fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
@@ -300,10 +290,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
 
         /* we're finished, release the helper */
-        auth_user_request->user()->username(arg);
+        auth_user_request->user()->username(userNote->firstValue());
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(blob);
+        lm_request->server_blob = xstrdup(tokenNote->firstValue());
         lm_request->releaseAuthServer();
 
         /* connection is authenticated */
@@ -332,45 +322,53 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << arg << "'");
+        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << auth_user_request->user()->username() << "'");
     }
     break;
 
-    case HelperReply::NA:
-    case HelperReply::Error:
-        if (arg == NULL) {
+    case HelperReply::Error: {
+        Note::Pointer messageNote = reply.notes.find("message");
+        Note::Pointer tokenNote = reply.notes.find("token");
+        if (tokenNote == NULL) {
             /* protocol error */
             fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
             break;
         }
+
         /* authentication failure (wrong password, etc.) */
-        auth_user_request->denyMessage(arg);
+        auth_user_request->denyMessage(messageNote->firstValue());
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(blob);
+        lm_request->server_blob = xstrdup(tokenNote->firstValue());
         lm_request->releaseAuthServer();
         debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << reply << "'");
-        break;
+    }
+    break;
 
     case HelperReply::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << reply.whichServer << "' crashed!.");
-        blob = "Internal error";
         /* continue to the next case */
 
-    case HelperReply::BrokenHelper:
+    case HelperReply::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate Negotiate start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
-        auth_user_request->denyMessage(blob);
+        Note::Pointer errNote = reply.notes.find("message");
+        if (reply.result == HelperReply::Unknown)
+            auth_user_request->denyMessage("Internal Error");
+        else if (errNote != NULL)
+            auth_user_request->denyMessage(errNote->firstValue());
+        else
+            auth_user_request->denyMessage("Negotiate Authentication failed with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Error returned " << reply);
+    } // break;
     }
 
-    xfree(arg);
     if (lm_request->request) {
         HTTPMSGUNLOCK(lm_request->request);
         lm_request->request = NULL;

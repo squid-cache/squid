@@ -3,6 +3,7 @@
 
 #include "base/CbcPointer.h"
 #include "MemBuf.h"
+#include "Notes.h"
 
 #if HAVE_OSTREAM
 #include <ostream>
@@ -23,8 +24,14 @@ private:
     HelperReply &operator =(const HelperReply &r);
 
 public:
+    HelperReply() : result(HelperReply::Unknown), notes(), whichServer(NULL) {
+        other_.init(1,1);
+        other_.terminate();
+    }
+
     // create/parse details from the msg buffer provided
-    HelperReply(const char *buf, size_t len);
+    // XXX: buf should be const but parse() needs non-const for now
+    HelperReply(char *buf, size_t len);
 
     const MemBuf &other() const { return other_; }
 
@@ -34,28 +41,38 @@ public:
     /// and by token blob/arg parsing in Negotiate auth handler
     MemBuf &modifiableOther() const { return *const_cast<MemBuf*>(&other_); }
 
+    /** parse a helper response line format:
+     *   line     := [ result ] *#( kv-pair )
+     *   kv-pair := OWS token '=' ( quoted-string | token )
+     *
+     * token are URL-decoded.
+     * quoted-string are \-escape decoded and the quotes are stripped.
+     */
+    // XXX: buf should be const but we may need strwordtok() and rfc1738_unescape()
+    void parse(char *buf, size_t len);
+
 public:
     /// The helper response 'result' field.
     enum Result_ {
         Unknown,      // no result code received, or unknown result code
         Okay,         // "OK" indicating success/positive result
-        Error,        // "ERR" indicating failure/negative result
+        Error,        // "ERR" indicating success/negative result
         BrokenHelper, // "BH" indicating failure due to helper internal problems.
 
-        // some result codes for backward compatibility with NTLM/Negotiate
-        // TODO: migrate these into variants of the above results with key-pair parameters
-        TT,
-        AF,
-        NA
+        // result codes for backward compatibility with NTLM/Negotiate
+        // TODO: migrate to a variant of the above results with kv-pair parameters
+        TT
     } result;
 
-// TODO other key=pair values. when the callbacks actually use this object.
-// for now they retain their own parsing routines handling other()
+    // list of key=value pairs the helper produced
+    Notes notes;
 
     /// for stateful replies the responding helper 'server' needs to be preserved across callbacks
     CbcPointer<helper_stateful_server> whichServer;
 
 private:
+    void parseResponseKeys();
+
     /// the remainder of the line
     MemBuf other_;
 };
