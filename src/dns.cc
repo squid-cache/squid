@@ -134,8 +134,8 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
         HelperReply failReply;
         /* XXX: upgrade the ipcache and fqdn cache handlers to new syntax
         failReply.result= HelperReply::BrokenHelper;
-        failReply.responseKeys.add("message","Temporary network problem, please retry later");
-        failReply.responseKeys.add("message","DNS lookup queue overloaded");
+        failReply.notes.add("message","Temporary network problem, please retry later");
+        failReply.notes.add("message","DNS lookup queue overloaded");
         */
         failReply.modifiableOther().append(t, strlen(t));
         callback(data, failReply);

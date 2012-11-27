@@ -73,7 +73,7 @@ Note::match(HttpRequest *request, HttpReply *reply)
 }
 
 Note::Pointer
-Notes::findByName(const String &noteKey) const
+Notes::find(const String &noteKey) const
 {
     typedef Notes::NotesList::const_iterator AMLI;
     for (AMLI i = notes.begin(); i != notes.end(); ++i) {
@@ -94,7 +94,7 @@ Notes::add(const String &noteKey, const String &noteValue)
 Note::Pointer
 Notes::add(const String &noteKey)
 {
-    Note::Pointer note = findByName(noteKey);
+    Note::Pointer note = find(noteKey);
     if (note == NULL) {
         note = new Note(noteKey);
         notes.push_back(note);

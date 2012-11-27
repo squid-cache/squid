@@ -24,7 +24,7 @@ private:
     HelperReply &operator =(const HelperReply &r);
 
 public:
-    HelperReply() : result(HelperReply::Unknown), responseKeys(), whichServer(NULL) {
+    HelperReply() : result(HelperReply::Unknown), notes(), whichServer(NULL) {
         other_.init(1,1);
         other_.terminate();
     }
@@ -42,8 +42,8 @@ public:
     MemBuf &modifiableOther() const { return *const_cast<MemBuf*>(&other_); }
 
     /** parse a helper response line format:
-     *   line     := [ result ] *#( key-pair )
-     *   key-pair := OWS token '=' ( quoted-string | token )
+     *   line     := [ result ] *#( kv-pair )
+     *   kv-pair := OWS token '=' ( quoted-string | token )
      *
      * token are URL-decoded.
      * quoted-string are \-escape decoded and the quotes are stripped.
@@ -60,12 +60,12 @@ public:
         BrokenHelper, // "BH" indicating failure due to helper internal problems.
 
         // result codes for backward compatibility with NTLM/Negotiate
-        // TODO: migrate to a variant of the above results with key-pair parameters
+        // TODO: migrate to a variant of the above results with kv-pair parameters
         TT
     } result;
 
     // list of key=value pairs the helper produced
-    Notes responseKeys;
+    Notes notes;
 
     /// for stateful replies the responding helper 'server' needs to be preserved across callbacks
     CbcPointer<helper_stateful_server> whichServer;

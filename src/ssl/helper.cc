@@ -95,7 +95,7 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
         debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
         HelperReply failReply;
         failReply.result = HelperReply::BrokenHelper;
-        failReply.responseKeys.add("message", "error 45 Temporary network problem, please retry later");
+        failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
         callback(data, failReply);
         return;
     }
