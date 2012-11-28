@@ -15,6 +15,7 @@ typedef enum {
     XPROF_InvokeHandlers,
     XPROF_MemBuf_append,
     XPROF_MemBuf_consume,
+    XPROF_MemBuf_consumeWhitespace,
     XPROF_MemBuf_grow,
     XPROF_MemObject_write,
     XPROF_PROF_OVERHEAD,
