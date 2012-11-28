@@ -227,7 +227,7 @@ void MemBuf::consumeWhitespacePrefix()
     if (contentSize() > 0) {
         const char *end = buf + contentSize();
         const char *p = buf;
-        for(; p<end && xisspace(*p); ++p);
+        for (; p<end && xisspace(*p); ++p);
         if (p-buf > 0)
             consume(p-buf);
     }
