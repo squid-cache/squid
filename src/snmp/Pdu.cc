@@ -41,7 +41,7 @@ Snmp::Pdu::operator = (const Pdu& pdu)
 void
 Snmp::Pdu::init()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
     errstat = SNMP_DEFAULT_ERRSTAT;
     errindex = SNMP_DEFAULT_ERRINDEX;
 }
