@@ -2362,19 +2362,23 @@ comm_accept_try(int fd, void *)
     fdc_table[fd].acceptNext();
 }
 
-void CommIO::Initialise()
+void
+CommIO::Initialize()
 {
+    if (CommIO::Initialized)
+        return;
+
     /* Initialize done pipe signal */
     int DonePipe[2];
     if (pipe(DonePipe)) {}
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
-    fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
-    fd_open(DoneFD, FD_PIPE, "async-io completetion event: threads");
+    fd_open(DoneReadFD, FD_PIPE, "async-io completion event: main");
+    fd_open(DoneFD, FD_PIPE, "async-io completion event: threads");
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
     commSetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
-    Initialised = true;
+    Initialized = true;
 }
 
 void CommIO::NotifyIOClose()
@@ -2385,10 +2389,10 @@ void CommIO::NotifyIOClose()
     close(DoneReadFD);
     fd_close(DoneFD);
     fd_close(DoneReadFD);
-    Initialised = false;
+    Initialized = false;
 }
 
-bool CommIO::Initialised = false;
+bool CommIO::Initialized = false;
 bool CommIO::DoneSignalled = false;
 int CommIO::DoneFD = -1;
 int CommIO::DoneReadFD = -1;
