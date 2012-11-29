@@ -409,25 +409,28 @@ HttpStateData::cacheableReply()
             return 0;
         }
 
-        // HTTPbis pt7 section 4.1 clause 3: a response CC:public is present
         bool mayStore = false;
+        // HTTPbis pt6 section 3.2: a response CC:public is present
         if (rep->cache_control->Public()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
             mayStore = true;
 
-            // HTTPbis pt7 section 4.1 clause 2: a response CC:must-revalidate is present
+            // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
         } else if (rep->cache_control->mustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
             mayStore = true;
 
-#if 0 // waiting on HTTPbis WG agreement before we do this
+#if USE_HTTP_VIOLATIONS
             // NP: given the must-revalidate exception we should also be able to exempt no-cache.
-        } else if (rep->cache_control->noCache()) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache");
+            // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
+            // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
+            // as equivalent to must-revalidate in the reply.
+        } else if (rep->cache_control->noCache() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
 
-            // HTTPbis pt7 section 4.1 clause 1: a response CC:s-maxage is present
+            // HTTPbis pt6 section 3.2: a response CC:s-maxage is present
         } else if (rep->cache_control->sMaxAge()) {
             debugs(22, 3, HERE << " Authenticated but server reply Cache-Control:s-maxage");
             mayStore = true;
