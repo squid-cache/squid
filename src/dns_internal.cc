@@ -334,7 +334,8 @@ idnsAddPathComponent(const char *buf)
     }
 
     assert(npc < npc_alloc);
-    strcpy(searchpath[npc].domain, buf);
+    strncpy(searchpath[npc].domain, buf, sizeof(searchpath[npc].domain)-1);
+    searchpath[npc].domain[sizeof(searchpath[npc].domain)-1] = '\0';
     Tolower(searchpath[npc].domain);
     debugs(78, 3, "idnsAddPathComponent: Added domain #" << npc << ": " << searchpath[npc].domain);
     ++npc;
