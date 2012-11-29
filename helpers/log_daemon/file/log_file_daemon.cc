@@ -57,16 +57,24 @@ rotate(const char *path, int rotate_count)
         snprintf(from, MAXPATHLEN, "%s.%d", path, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", path, i);
 #if _SQUID_OS2_ || _SQUID_WINDOWS_
-        remove(to);
+        if (remove(to) < 0) {
+            fprintf(stderr, "WARNING: remove '%s' failure: %s\n", to, xstrerror());
+        }
 #endif
-        rename(from, to);
+        if (rename(path, to) < 0 && errno != ENOENT) {
+            fprintf(stderr, "WARNING: rename '%s' to '%s' failure: %s\n", path, to, xstrerror());
+        }
     }
     if (rotate_count > 0) {
         snprintf(to, MAXPATHLEN, "%s.%d", path, 0);
 #if _SQUID_OS2_ || _SQUID_WINDOWS_
-        remove(to);
+        if (remove(to) < 0) {
+            fprintf(stderr, "WARNING: remove '%s' failure: %s\n", to, xstrerror());
+        }
 #endif
-        rename(path, to);
+        if (rename(path, to) < 0 && errno != ENOENT) {
+            fprintf(stderr, "WARNING: rename %s to %s failure: %s\n", path, to, xstrerror());
+        }
     }
 }
 
@@ -119,7 +127,7 @@ main(int argc, char *argv[])
                      * out of device space - recover by rotating and hoping that rotation count drops a big one.
                      */
                     if (err == EFBIG || err == ENOSPC) {
-                        fprintf(stderr, "WARNING: %s writing %s. Attempting to recover via a log rotation.\n",strerror(err),argv[1]);
+                        fprintf(stderr, "WARNING: %s writing %s. Attempting to recover via a log rotation.\n",xstrerr(err),argv[1]);
                         fclose(fp);
                         rotate(argv[1], rotate_count);
                         fp = fopen(argv[1], "a");
