@@ -205,8 +205,11 @@ void Adaptation::Icap::Options::TransferList::parse(const String &buf, bool &fou
     while (strListGetItem(&buf, ',', &item, &ilen, &pos)) {
         if (ilen == 1 && *item == '*')
             foundStar = true;
-        else
-            add(xstrndup(item, ilen+1));
+        else {
+            const char *tmp = xstrndup(item, ilen+1);
+            add(tmp);
+            xfree(tmp);
+        }
     }
 }
 
