@@ -231,7 +231,9 @@ public:
     HttpReply *reply;
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
-    /// key:value pairs set by note and adaptation_meta
+
+    /// key:value pairs set by note and adaptation_meta directives
+    /// plus key=value pairs returned from URL rewrite/redirect helper
     NotePairs notes;
 
 #if ICAP_CLIENT
