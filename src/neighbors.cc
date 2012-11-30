@@ -833,7 +833,7 @@ peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup)
 {
 #if USE_CACHE_DIGESTS
     if (p)
-        strncpy(request->hier.cd_host, p->host, sizeof(request->hier.cd_host));
+        strncpy(request->hier.cd_host, p->host, sizeof(request->hier.cd_host)-1);
     else
         *request->hier.cd_host = '\0';
 
