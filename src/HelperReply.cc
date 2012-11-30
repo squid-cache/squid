@@ -118,9 +118,9 @@ void
 HelperReply::parseResponseKeys()
 {
     // parse a "key=value" pair off the 'other()' buffer.
-    while(other().hasContent()) {
+    while (other().hasContent()) {
         char *p = modifiableOther().content();
-        while(*p && *p != '=' && *p != ' ') ++p;
+        while (*p && *p != '=' && *p != ' ') ++p;
         if (*p != '=')
             return; // done. Not a key.
 
