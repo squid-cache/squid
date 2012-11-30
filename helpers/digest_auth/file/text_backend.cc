@@ -29,8 +29,11 @@
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
 #include "squid.h"
-
 #include "text_backend.h"
+
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 static hash_table *hash = NULL;
 static HASHFREE my_free;
