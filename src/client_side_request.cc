@@ -156,6 +156,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
 {
     http_access_done = false;
     redirect_done = false;
+    redirect_fail_count = 0;
     no_cache_done = false;
     interpreted_req_hdrs = false;
 #if USE_SSL
@@ -1203,56 +1204,103 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
     assert(redirect_state == REDIRECT_PENDING);
     redirect_state = REDIRECT_DONE;
 
-    if (reply.other().hasContent()) {
-        /* 2012-06-28: This cast is due to urlParse() truncating too-long URLs itself.
-         * At this point altering the helper buffer in that way is not harmful, but annoying.
-         * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
-         */
-        char * result = const_cast<char*>(reply.other().content());
-        http_status status = (http_status) atoi(result);
+    // copy the URL rewriter response Notes to the HTTP request for logging
+    // do it early to ensure that no matter what the outcome the notes are present.
+    // TODO put them straight into the transaction state record (ALE?) eventually
+    if (!old_request->helperNotes)
+        old_request->helperNotes = new Notes;
+    old_request->helperNotes->add(reply.notes);
 
-        if (status == HTTP_MOVED_PERMANENTLY
-                || status == HTTP_MOVED_TEMPORARILY
-                || status == HTTP_SEE_OTHER
-                || status == HTTP_PERMANENT_REDIRECT
-                || status == HTTP_TEMPORARY_REDIRECT) {
-            char *t = NULL;
+    switch(reply.result) {
+    case HelperReply::Unknown:
+    case HelperReply::TT:
+        // Handler in redirect.cc should have already mapped Unknown
+        // IF it contained valid entry for the old URL-rewrite helper protocol
+        debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper returned invalid result code. Wrong helper? " << reply);
+        break;
 
-            if ((t = strchr(result, ':')) != NULL) {
+    case HelperReply::BrokenHelper:
+        debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: " << reply << ", attempt #" << (redirect_fail_count+1) << " of 2");
+        if (redirect_fail_count < 2) { // XXX: make this configurable ?
+            ++redirect_fail_count;
+            // reset state flag to try redirector again from scratch.
+            redirect_done = false;
+        }
+        break;
+
+    case HelperReply::Error:
+        // no change to be done.
+        break;
+
+    case HelperReply::Okay: {
+        // #1: redirect with a specific status code    OK status=NNN url="..."
+        // #2: redirect with a default status code     OK url="..."
+        // #3: re-write the URL                        OK rewrite-url="..."
+
+        Note::Pointer statusNote = reply.notes.find("status");
+        Note::Pointer urlNote = reply.notes.find("url");
+
+        if (urlNote != NULL) {
+            // HTTP protocol redirect to be done.
+
+            // TODO: change default redirect status for appropriate requests
+            // Squid defaults to 302 status for now for better compatibility with old clients.
+            // HTTP/1.0 client should get 302 (HTTP_MOVED_TEMPORARILY)
+            // HTTP/1.1 client contacting reverse-proxy should get 307 (HTTP_TEMPORARY_REDIRECT)
+            // HTTP/1.1 client being diverted by forward-proxy should get 303 (HTTP_SEE_OTHER)
+            http_status status = HTTP_MOVED_TEMPORARILY;
+            if (statusNote != NULL) {
+                const char * result = statusNote->firstValue();
+                status = (http_status) atoi(result);
+            }
+
+            if (status == HTTP_MOVED_PERMANENTLY
+                    || status == HTTP_MOVED_TEMPORARILY
+                    || status == HTTP_SEE_OTHER
+                    || status == HTTP_PERMANENT_REDIRECT
+                    || status == HTTP_TEMPORARY_REDIRECT) {
                 http->redirect.status = status;
-                http->redirect.location = xstrdup(t + 1);
+                http->redirect.location = xstrdup(urlNote->firstValue());
                 // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
             } else {
-                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << result);
+                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << urlNote->firstValue());
             }
-        } else if (strcmp(result, http->uri)) {
-            // XXX: validate the URL properly *without* generating a whole new request object right here.
-            // XXX: the clone() should be done only AFTER we know the new URL is valid.
-            HttpRequest *new_request = old_request->clone();
-            if (urlParse(old_request->method, result, new_request)) {
-                debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
+        } else {
+            // URL-rewrite wanted. Ew.
+            urlNote = reply.notes.find("rewrite-url");
 
-                // update the new request to flag the re-writing was done on it
-                new_request->flags.redirected = 1;
+            // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
+            if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri)) {
+                // XXX: validate the URL properly *without* generating a whole new request object right here.
+                // XXX: the clone() should be done only AFTER we know the new URL is valid.
+                HttpRequest *new_request = old_request->clone();
+                if (urlParse(old_request->method, const_cast<char*>(urlNote->firstValue()), new_request)) {
+                    debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
 
-                // unlink bodypipe from the old request. Not needed there any longer.
-                if (old_request->body_pipe != NULL) {
-                    old_request->body_pipe = NULL;
-                    debugs(61,2, HERE << "URL-rewriter diverts body_pipe " << new_request->body_pipe <<
-                           " from request " << old_request << " to " << new_request);
+                    // update the new request to flag the re-writing was done on it
+                    new_request->flags.redirected = 1;
+
+                    // unlink bodypipe from the old request. Not needed there any longer.
+                    if (old_request->body_pipe != NULL) {
+                        old_request->body_pipe = NULL;
+                        debugs(61,2, HERE << "URL-rewriter diverts body_pipe " << new_request->body_pipe <<
+                               " from request " << old_request << " to " << new_request);
+                    }
+
+                    // update the current working ClientHttpRequest fields
+                    safe_free(http->uri);
+                    http->uri = xstrdup(urlCanonical(new_request));
+                    HTTPMSGUNLOCK(old_request);
+                    http->request = HTTPMSGLOCK(new_request);
+                } else {
+                    debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
+                           old_request->method << " " << urlNote->firstValue() << " " << old_request->http_ver);
+                    delete new_request;
                 }
-
-                // update the current working ClientHttpRequest fields
-                safe_free(http->uri);
-                http->uri = xstrdup(urlCanonical(new_request));
-                HTTPMSGUNLOCK(old_request);
-                http->request = HTTPMSGLOCK(new_request);
-            } else {
-                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
-                       old_request->method << " " << result << " " << old_request->http_ver);
-                delete new_request;
             }
         }
+    }
+    break;
     }
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
