@@ -102,6 +102,30 @@ Notes::add(const String &noteKey)
     return note;
 }
 
+void
+Notes::add(const Notes &src)
+{
+    typedef Notes::NotesList::const_iterator AMLI;
+    typedef Note::Values::iterator VLI;
+
+    for (AMLI i = src.notes.begin(); i != src.notes.end(); ++i) {
+
+        // ensure we have a key by that name to fill out values for...
+        // NP: not sharing pointers at the key level since merging other helpers
+        // details later would affect this src objects keys, which is a bad idea.
+        Note::Pointer ourKey = add((*i)->key);
+
+        // known key names, merge the values lists...
+        for (VLI v = (*i)->values.begin(); v != (*i)->values.end(); ++v ) {
+            // 2012-11-29: values are read-only and Pointer can safely be shared
+            // for now we share pointers to save memory and gain speed.
+            // If that ever ceases to be true, convert this to a full copy.
+            ourKey->values.push_back(*v);
+            // TODO: prune/skip duplicates ?
+        }
+    }
+}
+
 Note::Pointer
 Notes::parse(ConfigParser &parser)
 {

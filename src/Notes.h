@@ -97,6 +97,18 @@ public:
     void add(const String &noteKey, const String &noteValue);
 
     /**
+     * Adds a set of notes from another notes list to this set.
+     * Creating entries for any new keys needed.
+     * If the key name already exists in list, add the given value to its set of values.
+     *
+     * WARNING:
+     * The list entries are all of shared Pointer type. Altering the src object(s) after
+     * using this function will update both Notes lists. Likewise, altering this
+     * destination NotesList will affect any relevant copies of src still in use.
+     */
+    void add(const Notes &src);
+
+    /**
      * Returns a pointer to an existing Note with given key name or nil.
      */
     Note::Pointer find(const String &noteKey) const;
@@ -112,13 +124,24 @@ private:
      * returns a pointer to the existing object.
      */
     Note::Pointer add(const String &noteKey);
-
 };
 
 class NotePairs : public HttpHeader
 {
 public:
     NotePairs() : HttpHeader(hoNote) {}
+
+    /// convert a NotesList into a NotesPairs
+    /// appending to any existing entries already present
+    void append(const Notes::NotesList &src) {
+        for (Notes::NotesList::const_iterator m = src.begin(); m != src.end(); ++m)
+            for (Note::Values::iterator v =(*m)->values.begin(); v != (*m)->values.end(); ++v)
+                putExt((*m)->key.termedBuf(), (*v)->value.termedBuf());
+    }
+
+    void append(const NotePairs *src) {
+        HttpHeader::append(dynamic_cast<const HttpHeader*>(src));
+    }
 };
 
 #endif

@@ -56,6 +56,14 @@ public:
     ACLChecklist *acl_checklist;        /* need ptr back so we can unreg if needed */
     int redirect_state;
 
+    /**
+     * URL-rewrite/redirect helper may return BH for internal errors.
+     * We attempt to recover by trying the lookup again, but limit the
+     * number of retries to prevent lag and lockups.
+     * This tracks the number of previous failures for the current context.
+     */
+    uint8_t redirect_fail_count;
+
     bool host_header_verify_done;
     bool http_access_done;
     bool adapted_http_access_done;
