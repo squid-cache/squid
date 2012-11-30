@@ -53,11 +53,12 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#ifdef HAVE_NETINET_TCP_H
+// required for accept_filter to build.
+#include <netinet/tcp.h>
+#endif
 
-namespace Comm
-{
-CBDATA_CLASS_INIT(TcpAcceptor);
-};
+CBDATA_NAMESPACED_CLASS_INIT(Comm, TcpAcceptor);
 
 Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const char *note, const Subscription::Pointer &aSub) :
         AsyncJob("Comm::TcpAcceptor"),

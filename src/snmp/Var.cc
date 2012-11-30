@@ -40,7 +40,7 @@ Snmp::Var::operator = (const Var& var)
 void
 Snmp::Var::init()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Snmp::Var&

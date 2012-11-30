@@ -17,7 +17,7 @@ void DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry);
 
 Mgr::CountersActionData::CountersActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Mgr::CountersActionData&
