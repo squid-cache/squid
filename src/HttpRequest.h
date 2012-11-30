@@ -200,7 +200,7 @@ public:
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
-    Notes *helperNotes;         // collection of meta notes associated with this request.
+    Notes *helperNotes;         ///< collection of meta notes associated with this request by helper lookups.
 
     String tag;			/* Internal tag for this request */
 
