@@ -615,6 +615,8 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
+    if (request->helperNotes)
+        aLogEntry->notes.append(request->helperNotes->notes);
     if (request->content_length > 0) // negative when no body or unknown length
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
