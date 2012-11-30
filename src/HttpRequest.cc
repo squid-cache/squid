@@ -165,7 +165,7 @@ HttpRequest::clean()
 
     myportname.clean();
 
-    if (!helperNotes) {
+    if (helperNotes) {
         delete helperNotes;
         helperNotes = NULL;
     }
