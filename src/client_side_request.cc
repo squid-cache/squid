@@ -1211,7 +1211,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
         old_request->helperNotes = new Notes;
     old_request->helperNotes->add(reply.notes);
 
-    switch(reply.result) {
+    switch (reply.result) {
     case HelperReply::Unknown:
     case HelperReply::TT:
         // Handler in redirect.cc should have already mapped Unknown
