@@ -16,7 +16,7 @@ void DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentr
 
 Mgr::ServiceTimesActionData::ServiceTimesActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Mgr::ServiceTimesActionData&
