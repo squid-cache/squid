@@ -1,3 +1,11 @@
+Changes to squid-3.1.22 (03 Dec 2012):
+
+	- Bug 3685: Squid hangs in Delay Pools ClassCBucket::update
+	- Bug 3659: read_timeout problem with HTTPS
+	- Bug 3654: Fix IPv6 enabled squidclient
+	- Bug 3189: AIO thread race on pipe() initialization
+	- cachemgr.cgi: Memory Leaks and DoS Vulnerability
+
 Changes to squid-3.1.21 (23 Sep 2012):
 
 	- Bug 3622: peerClearRRStart scheduling multiple events
