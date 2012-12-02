@@ -19,7 +19,7 @@ extern void DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry);
 
 Mgr::IoActionData::IoActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Mgr::IoActionData&

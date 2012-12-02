@@ -14,7 +14,7 @@
 
 Ipc::TypedMsgHdr::TypedMsgHdr()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
     sync();
 }
 
@@ -208,7 +208,7 @@ Ipc::TypedMsgHdr::getFd() const
 void
 Ipc::TypedMsgHdr::prepForReading()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
     allocName();
     allocData();
     allocControl();

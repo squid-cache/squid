@@ -14,7 +14,7 @@
 
 StoreInfoStats::StoreInfoStats()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 StoreInfoStats &
@@ -57,6 +57,6 @@ StoreInfoStats::operator +=(const StoreInfoStats &stats)
 
 StoreIoStats::StoreIoStats()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 

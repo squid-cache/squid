@@ -47,13 +47,6 @@ death(int sig)
     fatal("tools.cc required");
 }
 
-void*
-xmemset(void* dst, int val, size_t sz)
-{
-    assert(dst);
-    return memset(dst, val, sz);
-}
-
 bool
 IamWorkerProcess()
 {

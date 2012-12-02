@@ -15,7 +15,7 @@
 
 Mgr::StoreIoActionData::StoreIoActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Mgr::StoreIoActionData&

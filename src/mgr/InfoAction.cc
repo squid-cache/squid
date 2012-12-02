@@ -26,7 +26,7 @@ extern void DumpMallocStatistics(StoreEntry* sentry);
 
 Mgr::InfoActionData::InfoActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Mgr::InfoActionData&

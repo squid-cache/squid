@@ -17,7 +17,7 @@
 
 DiskdActionData::DiskdActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 DiskdActionData&

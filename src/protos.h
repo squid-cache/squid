@@ -519,9 +519,6 @@ SQUIDCEXTERN int NumberOfKids();
 String ProcessRoles();
 SQUIDCEXTERN int DebugSignal;
 
-/* AYJ debugs function to show locations being reset with memset() */
-SQUIDCEXTERN void *xmemset(void *dst, int, size_t);
-
 SQUIDCEXTERN void debug_trap(const char *);
 SQUIDCEXTERN void logsFlush(void);
 SQUIDCEXTERN const char *checkNullString(const char *p);
