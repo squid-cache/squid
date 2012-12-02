@@ -42,6 +42,10 @@
 #include "ipcache.h"
 
 class CommConnectCbParams;
+namespace Comm
+{
+class ConnOpener;
+}
 
 namespace Adaptation
 {
@@ -188,6 +192,7 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
+    Comm::ConnOpener *cs;
     //CBDATA_CLASS2(Xaction);
 };
 

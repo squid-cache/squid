@@ -45,7 +45,8 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
         ignoreLastWrite(false),
         connector(NULL), reader(NULL), writer(NULL), closer(NULL),
         alep(new AccessLogEntry),
-        al(*alep)
+        al(*alep),
+        cs(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -170,7 +171,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     connector = JobCallback(93,3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
+    cs = new Comm::ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
     AsyncJob::Start(cs);
 }
@@ -225,6 +226,8 @@ void Adaptation::Icap::Xaction::closeConnection()
 // connection with the ICAP service established
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
+    cs = NULL;
+
     if (io.flag == COMM_TIMEOUT) {
         handleCommTimedout();
         return;
@@ -508,6 +511,12 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
+    if (cs) {
+        debugs(93,6, HERE << id << " about to notify ConnOpener!");
+        CallJobHere(93, 3, cs, Comm::ConnOpener, noteAbort);
+        cs = NULL;
+        service().noteConnectionFailed("abort");
+    }
 
     closeConnection(); // TODO: rename because we do not always close
 
