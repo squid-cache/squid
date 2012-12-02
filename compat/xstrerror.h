@@ -1,6 +1,10 @@
 #ifndef _SQUID_COMPAT_XSTRERROR_H
 #define _SQUID_COMPAT_XSTRERROR_H
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 /** strerror() wrapper replacement.
  *
  * Provides the guarantee that a string is always returned.
