@@ -57,7 +57,9 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 
-HttpRequest::HttpRequest() : HttpMsg(hoRequest)
+HttpRequest::HttpRequest() :
+        HttpMsg(hoRequest),
+        helperNotes(NULL)
 {
     init();
 }
