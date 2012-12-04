@@ -87,6 +87,8 @@ protected:
     const char *filePath; ///< location of cache storage file inside path/
 
 private:
+    void createError(const char *const msg);
+
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
     DirMap *map;
