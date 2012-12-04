@@ -2424,6 +2424,59 @@ DOC_START
 	You must have at least one ssl_crtd process.
 DOC_END
 
+NAME: sslcrtvalidator_program
+TYPE: eol
+IFDEF: USE_SSL
+DEFAULT: none
+LOC: Ssl::TheConfig.ssl_crt_validator
+DOC_START
+	Specify the location and options of the executable for ssl_crt_validator
+	process.
+DOC_END
+
+NAME: sslcrtvalidator_children
+TYPE: HelperChildConfig
+IFDEF: USE_SSL
+DEFAULT: 32 startup=5 idle=1 concurrency=1
+LOC: Ssl::TheConfig.ssl_crt_validator_Children
+DOC_START
+	The maximum number of processes spawn to service ssl server.
+	The maximum this may be safely set to is 32.
+	
+	The startup= and idle= options allow some measure of skew in your
+	tuning.
+	
+		startup=N
+	
+	Sets the minimum number of processes to spawn when Squid
+	starts or reconfigures. When set to zero the first request will
+	cause spawning of the first child process to handle it.
+	
+	Starting too few children temporary slows Squid under load while it
+	tries to spawn enough additional processes to cope with traffic.
+	
+		idle=N
+	
+	Sets a minimum of how many processes Squid is to try and keep available
+	at all times. When traffic begins to rise above what the existing
+	processes can handle this many more will be spawned up to the maximum
+	configured. A minimum setting of 1 is required.
+
+		concurrency=
+	
+	The number of requests each certificate validator helper can handle in
+	parallel. Defaults to 0 which indicates the certficate validator
+	is a old-style single threaded redirector.
+	
+	When this directive is set to a value >= 1 then the protocol
+	used to communicate with the helper is modified to include
+	a request ID in front of the request/response. The request
+	ID from the request must be echoed back with the response
+	to that request.
+	
+	You must have at least one ssl_crt_validator process.
+DOC_END
+
 COMMENT_START
  OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
  -----------------------------------------------------------------------------

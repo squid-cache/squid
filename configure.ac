@@ -3626,6 +3626,7 @@ AC_CONFIG_FILES([\
 	helpers/log_daemon/file/Makefile \
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \
+	helpers/ssl/Makefile \
 	tools/Makefile
 	tools/purge/Makefile
 ])
