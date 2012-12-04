@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.3 release notes</title>
+<title>Squid 3.2.4 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.3 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.4 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -412,9 +412,10 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The cache manager is available under the path prefix /squid-internal-mgr/. For example
    the URL http://example/com/squid-internal-mgr/menu will bring up the manager menu. This
    means there are some configuration changes required to lock down manager access.
-   The <em>manager</em> ACL needs changing to:
+   The <em>manager</em> ACL needs changing. A built-in definition is now used, equivalent
+   to the following regex pattern:
 <verb>
-	acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
+	^(cache_object://|https?://[^/]+/squid-internal-mgr/)
 </verb>
 
 <p>The manager prefix /squid-internal-mgr/ with no action attempts to load an optional
@@ -422,6 +423,13 @@ Most user-facing changes are reflected in squid.conf (see below).
    This template is not supplied with Squid but intended to be supplied by separate
    cache manager applications as their front page embedding all scripts, accessors or
    redirects required for their initial GUI display.
+
+<p>MGR_INDEX file
+<itemize>
+   <item>should contain a complete HTML page, with optional client-side scripting.
+   <item>must not contain server-side scripting. 
+   <item>will have macro substitution performed on it using the same macros as used by the error page tempates.
+</itemize>
 
 <p>Version 3.2 of the CGI cache manager tool now presents XHR scripted probes to detect
    proxies presenting these manager index pagess and provides direct HTTP/HTTPS web links
@@ -592,10 +600,12 @@ This section gives a thorough account of those changes in three categories:
 	<p>The <em>localip</em>/<em>localport</em> differ from earlier releases where they matched a mix of
 	   of an invalid IP and port 0, the client destination IP/port or the Squid listening IP/port.
 	   This definition is now consistent across all modes of traffic received by Squid.
-	<p>The <em>manager</em> ACL requires adjustment to cover new cache manager access:
+	<p>The <em>manager</em> ACL requires adjustment to cover new cache manager access. So it has now been
+	  built-in as a predefined ACL name matching URLs equivalent to the following regular expression:
         <verb>
-		acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
+		^(cache_object://|https?://[^/]+/squid-internal-mgr/)
         </verb>
+	  squid.conf containing the old manager definition can expect to see ACL type collisions.
 
 	<tag>auth_param</tag>
 	<p>New options for Basic, Digest, NTLM, Negotiate <em>children</em> settings.

@@ -594,12 +594,15 @@ munge_action_line(const char *_buf, cachemgr_request * req)
     if ((p = strchr(x, '\n')))
         *p = '\0';
     action = xstrtok(&x, '\t');
+    if (!action) {
+        xfree(buf);
+        return "";
+    }
     description = xstrtok(&x, '\t');
     if (!description)
         description = action;
-    if (!action)
-        return "";
     snprintf(html, sizeof(html), " <a href=\"%s\">%s</a>", menu_url(req, action), description);
+    xfree(buf);
     return html;
 }
 
@@ -828,7 +831,7 @@ process_request(cachemgr_request * req)
     }
 
     if (!check_target_acl(req->hostname, req->port)) {
-        snprintf(buf, 1024, "target %s:%d not allowed in cachemgr.conf\n", req->hostname, req->port);
+        snprintf(buf, sizeof(buf), "target %s:%d not allowed in cachemgr.conf\n", req->hostname, req->port);
         error_html(buf);
         return 1;
     }
@@ -840,7 +843,7 @@ process_request(cachemgr_request * req)
     } else if ((S = req->hostname))
         (void) 0;
     else {
-        snprintf(buf, 1024, "Unknown host: %s\n", req->hostname);
+        snprintf(buf, sizeof(buf), "Unknown host: %s\n", req->hostname);
         error_html(buf);
         return 1;
     }
@@ -854,17 +857,19 @@ process_request(cachemgr_request * req)
 #else
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 #endif
-        snprintf(buf, 1024, "socket: %s\n", xstrerror());
+        snprintf(buf, sizeof(buf), "socket: %s\n", xstrerror());
         error_html(buf);
+        S.FreeAddrInfo(AI);
         return 1;
     }
 
     if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
-        snprintf(buf, 1024, "connect %s: %s\n",
+        snprintf(buf, sizeof(buf), "connect %s: %s\n",
                  S.ToURL(ipbuf,MAX_IPSTRLEN),
                  xstrerror());
         error_html(buf);
         S.FreeAddrInfo(AI);
+        close(s);
         return 1;
     }
 
@@ -952,8 +957,6 @@ static char *
 read_post_request(void)
 {
     char *s;
-    char *buf;
-    int len;
 
     if ((s = getenv("REQUEST_METHOD")) == NULL)
         return NULL;
@@ -964,15 +967,34 @@ read_post_request(void)
     if ((s = getenv("CONTENT_LENGTH")) == NULL)
         return NULL;
 
-    if ((len = atoi(s)) <= 0)
+    if (*s == '-') // negative length content huh?
         return NULL;
 
-    buf = (char *)xmalloc(len + 1);
+    uint64_t len;
 
-    if (fread(buf, len, 1, stdin) == 0)
+    char *endptr = s+ strlen(s);
+    if ((len = strtoll(s, &endptr, 10)) <= 0)
         return NULL;
 
-    buf[len] = '\0';
+    // limit the input to something reasonable.
+    // 4KB should be enough for the GET/POST data length, but may be extended.
+    size_t bufLen = (len >= 4096 ? len : 4095);
+    char *buf = (char *)xmalloc(bufLen + 1);
+
+    size_t readLen = fread(buf, bufLen, 1, stdin);
+    if (readLen == 0) {
+        xfree(buf);
+        return NULL;
+    }
+    buf[readLen] = '\0';
+    len -= readLen;
+
+    // purge the remainder of the request entity
+    while (len > 0) {
+        char temp[65535];
+        readLen = fread(temp, 65535, 1, stdin);
+        len -= readLen;
+    }
 
     return buf;
 }
@@ -1118,37 +1140,49 @@ decode_pub_auth(cachemgr_request * req)
     debug("cmgr: length ok\n");
 
     /* parse ( a lot of memory leaks, but that is cachemgr style :) */
-    if ((host_name = strtok(buf, "|")) == NULL)
+    if ((host_name = strtok(buf, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded host: '%s'\n", host_name);
 
-    if ((time_str = strtok(NULL, "|")) == NULL)
+    if ((time_str = strtok(NULL, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded time: '%s' (now: %d)\n", time_str, (int) now);
 
-    if ((user_name = strtok(NULL, "|")) == NULL)
+    if ((user_name = strtok(NULL, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded uname: '%s'\n", user_name);
 
-    if ((passwd = strtok(NULL, "|")) == NULL)
+    if ((passwd = strtok(NULL, "|")) == NULL) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: decoded passwd: '%s'\n", passwd);
 
     /* verify freshness and validity */
-    if (atoi(time_str) + passwd_ttl < now)
+    if (atoi(time_str) + passwd_ttl < now) {
+        xfree(buf);
         return;
+    }
 
-    if (strcasecmp(host_name, req->hostname))
+    if (strcasecmp(host_name, req->hostname)) {
+        xfree(buf);
         return;
+    }
 
     debug("cmgr: verified auth. info.\n");
 
     /* ok, accept */
-    xfree(req->user_name);
+    safe_free(req->user_name);
 
     req->user_name = xstrdup(user_name);
 
@@ -1190,6 +1224,7 @@ make_auth_header(const cachemgr_request * req)
 
     snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %s\r\n", str64);
 
+    xfree(str64);
     return buf;
 }
 

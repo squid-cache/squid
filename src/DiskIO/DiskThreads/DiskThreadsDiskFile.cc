@@ -360,7 +360,8 @@ DiskThreadsDiskFile::writeDone(int rvfd, int errflag, size_t len, RefCount<Write
 
     debugs(79, 3, "DiskThreadsDiskFile::writeDone: FD " << fd << ", len " << len << ", err=" << errflag);
 
-    assert(++loop_detect < 10);
+    ++loop_detect;
+    assert(loop_detect < 10);
 
     --inProgressIOs;
 

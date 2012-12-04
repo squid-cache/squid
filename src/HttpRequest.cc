@@ -57,12 +57,16 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 
-HttpRequest::HttpRequest() : HttpMsg(hoRequest)
+HttpRequest::HttpRequest() :
+        HttpMsg(hoRequest),
+        helperNotes(NULL)
 {
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
+        HttpMsg(hoRequest),
+        helperNotes(NULL)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -163,6 +167,11 @@ HttpRequest::clean()
 
     myportname.clean();
 
+    if (helperNotes) {
+        delete helperNotes;
+        helperNotes = NULL;
+    }
+
     tag.clean();
 #if USE_AUTH
     extacl_user.clean();
@@ -221,6 +230,10 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_domain?
 
     copy->myportname = myportname;
+    if (helperNotes) {
+        copy->helperNotes = new Notes;
+        copy->helperNotes->notes = helperNotes->notes;
+    }
     copy->tag = tag;
 #if USE_AUTH
     copy->extacl_user = extacl_user;

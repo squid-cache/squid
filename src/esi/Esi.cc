@@ -968,7 +968,10 @@ ESIContext::ParserState::top()
     return stack[stackdepth-1];
 }
 
-ESIContext::ParserState::ParserState() : inited_ (false)
+ESIContext::ParserState::ParserState() :
+        stackdepth(0),
+        parsing(0),
+        inited_(false)
 {}
 
 bool
@@ -1554,6 +1557,7 @@ esiLiteral::finish()
 esiLiteral::esiLiteral(ESIContext *context, const char *s, int numberOfCharacters)
 {
     assert (s);
+    flags.donevars = 0;
     buffer = new ESISegment;
     ESISegment::Pointer local = buffer;
     size_t start = 0;
@@ -1570,7 +1574,7 @@ esiLiteral::esiLiteral(ESIContext *context, const char *s, int numberOfCharacter
         remainingCharacters -= len;
     }
 
-    varState = cbdataReference (context->varState);
+    varState = cbdataReference(context->varState);
 }
 
 void
@@ -1705,11 +1709,15 @@ esiTry::~esiTry()
     debugs(86, 5, "esiTry::~esiTry " << this);
 }
 
-esiTry::esiTry(esiTreeParentPtr aParent) : parent (aParent) , exceptbuffer(NULL)
-{}
+esiTry::esiTry(esiTreeParentPtr aParent) :
+        parent(aParent),
+        exceptbuffer(NULL)
+{
+    memset(&flags, 0, sizeof(flags));
+}
 
 void
-esiTry::render (ESISegment::Pointer output)
+esiTry::render(ESISegment::Pointer output)
 {
     /* Try renders from it's children */
     assert (this);
@@ -2087,8 +2095,8 @@ esiChoose::selectElement()
         return;
 
     for (size_t counter = 0; counter < elements.size(); ++counter) {
-        if ((dynamic_cast<esiWhen *>(elements[counter].getRaw()))->
-                testsTrue()) {
+        const esiWhen *el = dynamic_cast<esiWhen *>(elements[counter].getRaw());
+        if (el && el->testsTrue()) {
             chosenelement = counter;
             debugs (86,3, "esiChooseAdd: Chose element " << counter + 1);
             return;
@@ -2325,9 +2333,12 @@ ElementList::size() const
 }
 
 /* esiWhen */
-esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) : esiSequence (aParent)
+esiWhen::esiWhen(esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) :
+        esiSequence(aParent),
+        testValue(false),
+        unevaluatedExpression(NULL),
+        varState(NULL)
 {
-    varState = NULL;
     char const *expression = NULL;
 
     for (int loopCounter = 0; loopCounter < attrcount && attr[loopCounter]; loopCounter += 2) {
@@ -2370,7 +2381,7 @@ esiWhen::evaluate()
     if (!unevaluatedExpression)
         return;
 
-    assert (varState);
+    assert(varState);
 
     varState->feedData(unevaluatedExpression, strlen (unevaluatedExpression));
 
@@ -2381,14 +2392,14 @@ esiWhen::evaluate()
     safe_free (expression);
 }
 
-esiWhen::esiWhen(esiWhen const &old) : esiSequence (old)
+esiWhen::esiWhen(esiWhen const &old) :
+        esiSequence(old),
+        testValue(false),
+        unevaluatedExpression(NULL),
+        varState(NULL)
 {
-    unevaluatedExpression = NULL;
-
     if (old.unevaluatedExpression)
         unevaluatedExpression = xstrdup(old.unevaluatedExpression);
-
-    varState = NULL;
 }
 
 ESIElement::Pointer

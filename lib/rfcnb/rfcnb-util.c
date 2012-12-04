@@ -425,6 +425,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
     char resp[16];
     int len;
     struct RFCNB_Pkt *pkt, res_pkt;
+    int result = 0;
 
     /* We build and send the session request, then read the response */
 
@@ -450,7 +451,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 #endif
 
     if ((len = RFCNB_Put_Pkt(con, pkt, RFCNB_Pkt_Sess_Len)) < 0) {
-
+        RFCNB_Free_Pkt(pkt);
         return (RFCNBE_Bad);    /* Should be able to write that lot ... */
 
     }
@@ -463,7 +464,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
     res_pkt.next = NULL;
 
     if ((len = RFCNB_Get_Pkt(con, &res_pkt, sizeof(resp))) < 0) {
-
+        RFCNB_Free_Pkt(pkt);
         return (RFCNBE_Bad);
 
     }
@@ -497,12 +498,12 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
             break;
         }
 
-        return (RFCNBE_Bad);
+        result = (RFCNBE_Bad);
         break;
 
     case RFCNB_SESSION_ACK:     /* Got what we wanted ...      */
 
-        return (0);
+        result = (0);
         break;
 
     case RFCNB_SESSION_RETARGET:        /* Go elsewhere                */
@@ -512,13 +513,16 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
         memcpy(Dest_IP, (resp + RFCNB_Pkt_IP_Offset), sizeof(struct in_addr));
         *port = SVAL(resp, RFCNB_Pkt_Port_Offset);
 
-        return (0);
+        result = (0);
         break;
 
     default:                    /* A protocol error */
 
         RFCNB_errno = RFCNBE_ProtErr;
-        return (RFCNBE_Bad);
+        result = (RFCNBE_Bad);
         break;
     }
+
+    RFCNB_Free_Pkt(pkt);
+    return result;
 }

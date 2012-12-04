@@ -293,10 +293,6 @@ evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     rv = stack[whereAmI - 1].value.integral || stack[whereAmI + 1].value.integral;
 
-    if (rv == -2)
-        /* invalid comparison */
-        return 1;
-
     stackpop(stack, depth);      /* arg rhs */
 
     stackpop(stack, depth);      /* me */
@@ -343,10 +339,6 @@ evaland(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
         return 1;
 
     rv = stack[whereAmI - 1].value.integral && stack[whereAmI + 1].value.integral;
-
-    if (rv == -2)
-        /* invalid comparison */
-        return 1;
 
     stackpop(stack, depth);      /* arg rhs */
 

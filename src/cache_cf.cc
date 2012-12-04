@@ -594,6 +594,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     cfg_filename = orig_cfg_filename;
     config_lineno = orig_config_lineno;
 
+    xfree(tmp_line);
     return err_count;
 }
 
