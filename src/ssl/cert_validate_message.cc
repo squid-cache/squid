@@ -130,6 +130,13 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
     }
 
     /*Run through parsed errors to check for errors*/
+    typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
+    for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
+        if (i->error_no != SSL_ERROR_NONE) {
+            debugs(83, DBG_IMPORTANT, "WARNING: cert validator incomplete response: Missing error name from error_id: " << i->id);
+            return false;
+        }
+    }
 
     return true;
 }
@@ -161,6 +168,7 @@ Ssl::CertValidationResponse::getError(int errorId)
 
 Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old)
 {
+    id = old.id;
     error_no = old.error_no;
     error_reason = old.error_reason;
     setCert(old.cert.get());
@@ -168,6 +176,7 @@ Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old)
 
 Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdError::operator = (const RecvdError &old)
 {
+    id = old.id;
     error_no = old.error_no;
     error_reason = old.error_reason;
     setCert(old.cert.get());
