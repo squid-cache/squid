@@ -43,6 +43,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "SquidConfig.h"
+#include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
@@ -287,6 +288,12 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             delete filledCheck->sslErrors;
             filledCheck->sslErrors = NULL;
         }
+#if 1 // USE_SSL_CERT_VALIDATOR
+        // If the certificate validator is used then we need to allow all errors and 
+        // pass them to certficate validator for more processing
+        else if (Ssl::TheConfig.ssl_crt_validator)
+            ok = 1;
+#endif
     }
 
     if (!dont_verify_domain && server) {}

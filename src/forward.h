@@ -9,6 +9,9 @@
 #include "fde.h"
 #include "HttpStatusCode.h"
 #include "ip/Address.h"
+#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+#include "ssl/support.h"
+#endif
 
 /* forward decls */
 
@@ -16,6 +19,14 @@ class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
+
+#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+namespace Ssl
+{
+class ErrorDetail;
+class CertValidationResponse;
+};
+#endif
 
 /**
  * Returns the TOS value that we should be setting on the connection
@@ -28,6 +39,8 @@ tos_t GetTosToServer(HttpRequest * request);
  * connection to the server, based on the ACL.
  */
 nfmark_t GetNfmarkToServer(HttpRequest * request);
+
+class HelperReply;
 
 class FwdState : public RefCountable
 {
@@ -71,6 +84,14 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
+#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+    /// Callback function called when squid receive message from cert validator helper
+    static void sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply);
+    /// Process response from cert validator helper
+    void sslCrtvdHandleReply(const HelperReply &reply);
+    /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
+    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse &, Ssl::ErrorDetail *&);
+#endif
 private:
     // hidden for safer management of self; use static fwdStart
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
