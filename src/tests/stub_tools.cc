@@ -66,10 +66,3 @@ void setUmask(mode_t mask) STUB
 void strwordquote(MemBuf * mb, const char *str) STUB
 void keepCapabilities(void) STUB
 void restoreCapabilities(int keep) STUB
-
-void*
-xmemset(void* dst, int val, size_t sz)
-{
-    assert(dst);
-    return memset(dst, val, sz);
-}

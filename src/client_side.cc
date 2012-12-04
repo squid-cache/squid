@@ -615,6 +615,8 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
+    if (request->helperNotes)
+        aLogEntry->notes.append(request->helperNotes->notes);
     if (request->content_length > 0) // negative when no body or unknown length
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
@@ -3698,8 +3700,10 @@ ConnStateData::sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply)
 void
 ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
 {
-    if (!reply.other().hasContent()) {
-        debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper return <NULL> reply");
+    if (reply.result == HelperReply::BrokenHelper) {
+        debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
+    } else if (!reply.other().hasContent()) {
+        debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
     } else {
         Ssl::CrtdMessage reply_message(Ssl::CrtdMessage::REPLY);
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {

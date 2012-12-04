@@ -17,7 +17,7 @@ void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
 
 Mgr::IntervalActionData::IntervalActionData()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 Mgr::IntervalActionData&

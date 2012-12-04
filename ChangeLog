@@ -1,3 +1,9 @@
+Changes to squid-3.3.0.2 (03 Dec 2012):
+
+	- Support matching empty header field values using req_header and rep_header
+	- ... and some minor code polish and input vaidations
+	- ... and all changes from squid 3.2.4
+
 Changes to squid-3.3.0.1 (21 Oct 2012):
 
 	- Bug 3610: Add peername_regex ACL
@@ -16,6 +22,18 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.4 (03 Dec 2012):
+
+	- Ported: urllogin ACL from squid 2.7
+	- Bug 3688: Lots of Orphan Comm:Connections to ICAP server
+	- Bug 3677: Port un-pinning logic changes from squid 3.3
+	- Bug 3405: ssl_crtd crashes failing to remove certificate
+	- ... and major bugs fixed in squid 3.1.22
+	- Fix accept_filter on Linux
+	- Remove 'Bungled' warning on missing component directives
+	- ... and many buffer and memory leak issues in the bundled helpers
+	- ... and a small amount of code polishing
 
 Changes to squid-3.2.3 (21 Oct 2012):
 
@@ -453,6 +471,14 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.22 (03 Dec 2012):
+
+	- Bug 3685: Squid hangs in Delay Pools ClassCBucket::update
+	- Bug 3659: read_timeout problem with HTTPS
+	- Bug 3654: Fix IPv6 enabled squidclient
+	- Bug 3189: AIO thread race on pipe() initialization
+	- cachemgr.cgi: Memory Leaks and DoS Vulnerability
 
 Changes to squid-3.1.21 (23 Sep 2012):
 

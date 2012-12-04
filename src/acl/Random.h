@@ -53,6 +53,7 @@ public:
     virtual int match(ACLChecklist *checklist);
     virtual wordlist *dump() const;
     virtual bool empty () const;
+    virtual bool valid() const;
 
 protected:
     static Prototype RegistryProtoype;

@@ -291,9 +291,12 @@ ESIVariableQuery::~ESIVariableQuery()
     safe_free (query_string);
 }
 
-ESIVarState::ESIVarState (HttpHeader const *aHeader, char const *uri)
-        : output (NULL), hdr(hoReply)
+ESIVarState::ESIVarState(HttpHeader const *aHeader, char const *uri) :
+        output(NULL),
+        hdr(hoReply)
 {
+    memset(&flags, 0, sizeof(flags));
+
     /* TODO: only grab the needed headers */
     /* Note that as we pass these through to included requests, we
      * cannot trim them */

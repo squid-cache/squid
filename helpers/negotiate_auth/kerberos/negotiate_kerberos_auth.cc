@@ -30,6 +30,7 @@
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
 #include "squid.h"
+#include "rfc1738.h"
 #include "compat/getaddrinfo.h"
 #include "compat/getnameinfo.h"
 
@@ -119,7 +120,7 @@ gethost_name(void)
     struct addrinfo *hres = NULL, *hres_list;
     int rc, count;
 
-    rc = gethostname(hostname, sysconf(_SC_HOST_NAME_MAX));
+    rc = gethostname(hostname, sizeof(hostname)-1);
     if (rc) {
         fprintf(stderr, "%s| %s: ERROR: resolving hostname '%s' failed\n",
                 LogTime(), PROGRAM, hostname);
@@ -148,7 +149,7 @@ gethost_name(void)
         return NULL;
     }
     freeaddrinfo(hres);
-    hostname[sysconf(_SC_HOST_NAME_MAX) - 1] = '\0';
+    hostname[sizeof(hostname)-1] = '\0';
     return (xstrdup(hostname));
 }
 
@@ -458,10 +459,10 @@ main(int argc, char *const argv[])
                 *p = '\0';
             }
             fprintf(stdout, "AF %s %s\n", token, user);
-            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, token, user);
+            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, token, rfc1738_escape(user));
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
-                        PROGRAM, user);
+                        PROGRAM, rfc1738_escape(user));
             goto cleanup;
         } else {
             if (check_gss_err(major_status, minor_status, "gss_accept_sec_context()", log))
@@ -493,10 +494,10 @@ main(int argc, char *const argv[])
                 *p = '\0';
             }
             fprintf(stdout, "AF %s %s\n", "AA==", user);
-            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, "AA==", user);
+            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, "AA==", rfc1738_escape(user));
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
-                        PROGRAM, user);
+                        PROGRAM, rfc1738_escape(user));
 
         }
 cleanup:

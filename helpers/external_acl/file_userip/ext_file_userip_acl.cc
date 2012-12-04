@@ -75,9 +75,6 @@ load_dict(FILE * FH) {
 						   linked list */
     char line[DICT_BUFFER_SIZE]; /* the buffer for the lines read
 				   from the dict file */
-    char *cp;			/* a char pointer used to parse
-				   each line */
-    char *username;		/* for the username */
     char *tmpbuf;			/* for the address before the
 				   bitwise AND */
 
@@ -85,17 +82,28 @@ load_dict(FILE * FH) {
     first_entry = (struct ip_user_dict*)malloc(sizeof(struct ip_user_dict));
     current_entry = first_entry;
 
-    while ((cp = fgets (line, DICT_BUFFER_SIZE, FH)) != NULL) {
+    unsigned int lineCount = 0;
+    while (fgets(line, sizeof(line), FH) != NULL) {
+        ++lineCount;
         if (line[0] == '#') {
             continue;
         }
+
+        char *cp; // a char pointer used to parse each line.
         if ((cp = strchr (line, '\n')) != NULL) {
             /* chop \n characters */
             *cp = '\0';
         }
-        if ((cp = strtok (line, "\t ")) != NULL) {
+        if (strtok(line, "\t ") != NULL) {
+            // NP: line begins with IP/mask. Skipped to the end of it with this strtok()
+
             /* get the username */
-            username = strtok (NULL, "\t ");
+            char *username;
+            if ((username = strtok(NULL, "\t ")) == NULL) {
+                debug("Missing username on line %u of dictionary file\n", lineCount);
+                continue;
+            }
+
             /* look for a netmask */
             if ((cp = strtok (line, "/")) != NULL) {
                 /* store the ip address in a temporary buffer */
@@ -209,7 +217,6 @@ usage(const char *program_name)
 int
 main (int argc, char *argv[])
 {
-    FILE *FH;
     char *filename = NULL;
     char *program_name = argv[0];
     char *cp;
@@ -241,7 +248,11 @@ main (int argc, char *argv[])
         usage(program_name);
         exit(1);
     }
-    FH = fopen(filename, "r");
+    FILE *FH = fopen(filename, "r");
+    if (!FH) {
+        fprintf(stderr, "%s: FATAL: Unable to open file '%s': %s", program_name, filename, xstrerror());
+        exit(1);
+    }
     current_entry = load_dict(FH);
 
     while (fgets(line, HELPER_INPUT_BUFFER, stdin)) {
