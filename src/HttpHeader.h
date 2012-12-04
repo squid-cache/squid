@@ -247,6 +247,8 @@ public:
     bool getList(http_hdr_type id, String *s) const;
     String getStrOrList(http_hdr_type id) const;
     String getByName(const char *name) const;
+    /// sets value and returns true iff a [possibly empty] named field is there
+    bool getByNameIfPresent(const char *name, String &value) const;
     String getByNameListMember(const char *name, const char *member, const char separator) const;
     String getListMember(http_hdr_type id, const char *member, const char separator) const;
     int has(http_hdr_type id) const;

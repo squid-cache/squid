@@ -56,7 +56,6 @@ public:
 
     size_t chunk_size;
     int chunk_capacity;
-    int memPID;
     int chunkCount;
     void *freeCache;
     MemChunk *nextFreeChunk;

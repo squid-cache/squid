@@ -91,7 +91,6 @@ int NumberOfKids();
 String ProcessRoles();
 
 void debug_trap(const char *);
-void *xmemset(void *dst, int, size_t);
 
 void logsFlush(void);
 

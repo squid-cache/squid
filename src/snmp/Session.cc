@@ -35,7 +35,7 @@ Snmp::Session::operator = (const Session& session)
 void
 Snmp::Session::clear()
 {
-    xmemset(this, 0, sizeof(*this));
+    memset(this, 0, sizeof(*this));
 }
 
 void

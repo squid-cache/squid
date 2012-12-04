@@ -151,10 +151,10 @@ while (<>) {
 
     print(stderr "Received: Channel=".$cid.", UID='".$uid."'\n") if ($debug);
 
-    $status = $cid . " ERR database error";
+    $status = $cid . " ERR message=\"database error\"";
     my $sth = query_db($uid) || next;
     print(stderr "Rows: ". $sth->rows()."\n") if ($debug);
-    $status = $cid . " ERR unknown UID '".$uid."'";
+    $status = $cid . " ERR message=\"unknown UID '".$uid."'\"";
     my $row = $sth->fetchrow_hashref() || next;
     $status = $cid . " OK" . ($row->{'user'} ne "" ? " user=" . $row->{'user'} : "" ) . ($row->{'tag'} ne "" ? " tag=" . $row->{'tag'} : "" );
     $sth->finish();

@@ -258,8 +258,7 @@ start:
         /* Authentication */
         retval = PAM_SUCCESS;
         if (ttl != 0) {
-            if (retval == PAM_SUCCESS)
-                retval = pam_set_item(pamh, PAM_USER, user);
+            retval = pam_set_item(pamh, PAM_USER, user);
             if (retval == PAM_SUCCESS)
                 retval = pam_set_item(pamh, PAM_CONV, &conv);
         }
@@ -276,12 +275,11 @@ error:
         /* cleanup */
         retval = PAM_SUCCESS;
 #if defined(PAM_AUTHTOK)
-        if (ttl != 0) {
-            if (retval == PAM_SUCCESS)
-                retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);
+        if (ttl != 0 && pamh) {
+            retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);
         }
 #endif
-        if (ttl == 0 || retval != PAM_SUCCESS) {
+        if (pamh && (ttl == 0 || retval != PAM_SUCCESS)) {
             retval = pam_end(pamh, retval);
             if (retval != PAM_SUCCESS) {
                 debug("WARNING: failed to release PAM authenticator\n");

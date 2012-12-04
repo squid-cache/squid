@@ -398,7 +398,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
-        HelperReply nilReply(NULL, 0);
+        HelperReply nilReply;
         callback(data, nilReply);
         return;
     }
@@ -424,7 +424,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
-        HelperReply nilReply(NULL, 0);
+        HelperReply nilReply;
         callback(data, nilReply);
         return;
     }
@@ -758,7 +758,7 @@ helperServerFree(helper_server *srv)
             void *cbdata;
 
             if (cbdataReferenceValidDone(r->data, &cbdata)) {
-                HelperReply nilReply(NULL, 0);
+                HelperReply nilReply;
                 r->callback(cbdata, nilReply);
             }
 
@@ -824,7 +824,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
         void *cbdata;
 
         if (cbdataReferenceValidDone(r->data, &cbdata)) {
-            HelperReply nilReply(NULL,0);
+            HelperReply nilReply;
             nilReply.whichServer = srv;
             r->callback(cbdata, nilReply);
         }
@@ -942,7 +942,6 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
             t[-1] = '\0';
 
         *t = '\0';
-        ++t;
 
         if (hlp->childs.concurrency) {
             i = strtol(msg, &msg, 10);
@@ -952,6 +951,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         }
 
         helperReturnBuffer(i, srv, hlp, msg, t);
+        // only skip off the \0 _after_ passing its location to helperReturnBuffer
+        ++t;
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
@@ -1023,10 +1024,16 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     if ((t = strchr(srv->rbuf, hlp->eom))) {
         /* end of reply found */
         int called = 1;
+        int skip = 1;
         debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
-        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
-            t[-1] = '\0';
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n') {
+            *t = '\0';
+            // rewind to the \r octet which is the real terminal now
+            // and remember that we have to skip forward 2 places now.
+            skip = 2;
+            --t;
+        }
 
         *t = '\0';
 
@@ -1038,6 +1045,8 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
             debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
         }
+        // only skip off the \0's _after_ passing its location in HelperReply above
+        t += skip;
 
         srv->flags.busy = 0;
         srv->roffset = 0;
@@ -1366,7 +1375,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         /* a callback is needed before this request can _use_ a helper. */
         /* we don't care about releasing this helper. The request NEVER
          * gets to the helper. So we throw away the return code */
-        HelperReply nilReply(NULL,0);
+        HelperReply nilReply;
         nilReply.whichServer = srv;
         r->callback(r->data, nilReply);
         /* throw away the placeholder */

@@ -37,6 +37,7 @@
 #include "HierarchyLogEntry.h"
 #include "HttpMsg.h"
 #include "HttpRequestMethod.h"
+#include "Notes.h"
 #include "RequestFlags.h"
 
 #if USE_AUTH
@@ -198,6 +199,8 @@ public:
     char *peer_domain;		/* Configured peer forceddomain */
 
     String myportname; // Internal tag name= value from port this requests arrived in.
+
+    Notes *helperNotes;         ///< collection of meta notes associated with this request by helper lookups.
 
     String tag;			/* Internal tag for this request */
 
