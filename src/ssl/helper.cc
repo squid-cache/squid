@@ -94,8 +94,9 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
         if (squid_curtime - first_warn > 3 * 60)
             fatal("SSL servers not responding for 3 minutes");
         debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
-        const char *errMsg = "BH error 45 Temporary network problem, please retry later"; // XXX: upgrade to message=""
-        HelperReply failReply(errMsg,strlen(errMsg));
+        HelperReply failReply;
+        failReply.result = HelperReply::BrokenHelper;
+        failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
         callback(data, failReply);
         return;
     }
@@ -180,8 +181,9 @@ void Ssl::CertValidationHelper::sslSubmit(CrtdMessage const & message, HLPCB * c
         if (squid_curtime - first_warn > 3 * 60)
             fatal("ssl_crtvd queue being overloaded for long time");
         debugs(83, DBG_IMPORTANT, "WARNING: ssl_crtvd queue overload, rejecting");
-        const char *errMsg = "BH error 45 Temporary network problem, please retry later";
-        HelperReply failReply(errMsg,strlen(errMsg));
+        HelperReply failReply;
+        failReply.result = HelperReply::BrokenHelper;
+        failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
         callback(data, failReply);
         return;
     }

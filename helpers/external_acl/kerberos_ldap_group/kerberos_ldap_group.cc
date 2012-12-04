@@ -32,6 +32,7 @@
 #include "squid.h"
 #include "helpers/defines.h"
 #include "util.h"
+#include "rfc1738.h"
 
 #ifdef HAVE_LDAP
 
@@ -226,7 +227,8 @@ int
 main(int argc, char *const argv[])
 {
     char buf[6400];
-    char *user, *domain;
+    char *user, *domain, *group;
+    char *up=NULL, *dp=NULL, *np=NULL;
     char *nuser, *nuser8 = NULL, *netbios;
     char *c;
     int opt;
@@ -334,11 +336,17 @@ main(int argc, char *const argv[])
     }
 
     debug((char *) "%s| %s: INFO: Starting version %s\n", LogTime(), PROGRAM, KERBEROS_LDAP_GROUP_VERSION);
+    int gopt = 0;
     if (create_gd(&margs)) {
-        debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
-        SEND_ERR("");
-        clean_args(&margs);
-        exit(1);
+        if ( margs.glist != NULL ) {
+            debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
+            SEND_ERR("");
+            clean_args(&margs);
+            exit(1);
+        } else {
+            debug((char *) "%s| %s: INFO: no group list given expect it from stdin\n", LogTime(), PROGRAM);
+            gopt = 1;
+        }
     }
     if (create_nd(&margs)) {
         debug((char *) "%s| %s: FATAL: Error in netbios list: %s\n", LogTime(), PROGRAM, margs.nlist ? margs.nlist : "NULL");
@@ -370,12 +378,18 @@ main(int argc, char *const argv[])
         if (c) {
             *c = '\0';
         } else {
-            SEND_ERR("");
+            SEND_ERR("Invalid input. CR missing");
             debug((char *) "%s| %s: ERR\n", LogTime(), PROGRAM);
             continue;
         }
 
-        user = buf;
+        user = strtok(buf, " \n");
+        if (!user) {
+            debug((char *) "%s| %s: INFO: No Username given\n", LogTime(), PROGRAM);
+            SEND_ERR("Invalid request. No Username");
+            continue;
+        }
+        rfc1738_unescape(user);
         nuser = strchr(user, '\\');
         if (!nuser)
             nuser8 = strstr(user, "%5C");
@@ -391,32 +405,61 @@ main(int argc, char *const argv[])
                 nuser = nuser8 + 3;
             }
             netbios = user;
+            up = xstrdup(rfc1738_escape(nuser));
+            np = xstrdup(rfc1738_escape(netbios));
             if (debug_enabled)
-                debug((char *) "%s| %s: INFO: Got User: %s Netbios Name: %s\n", LogTime(), PROGRAM, nuser, netbios);
+                debug((char *) "%s| %s: INFO: Got User: %s Netbios Name: %s\n", LogTime(), PROGRAM, up, np);
             else
-                log((char *) "%s| %s: INFO: Got User: %s Netbios Name: %s\n", LogTime(), PROGRAM, nuser, netbios);
+                log((char *) "%s| %s: INFO: Got User: %s Netbios Name: %s\n", LogTime(), PROGRAM, up, np);
             domain = get_netbios_name(&margs, netbios);
             user = nuser;
+            xfree(up);
+            xfree(np);
         } else if (domain) {
             strup(domain);
             *domain = '\0';
             ++domain;
         }
+        up = xstrdup(rfc1738_escape(user));
+        if (domain)
+            dp = xstrdup(rfc1738_escape(domain));
         if (!domain && margs.ddomain) {
             domain = xstrdup(margs.ddomain);
             if (debug_enabled)
-                debug((char *) "%s| %s: INFO: Got User: %s set default domain: %s\n", LogTime(), PROGRAM, user, domain);
+                debug((char *) "%s| %s: INFO: Got User: %s set default domain: %s\n", LogTime(), PROGRAM, up, dp);
             else
-                log((char *) "%s| %s: INFO: Got User: %s set default domain: %s\n", LogTime(), PROGRAM, user, domain);
+                log((char *) "%s| %s: INFO: Got User: %s set default domain: %s\n", LogTime(), PROGRAM, up, dp);
         }
         if (debug_enabled)
-            debug((char *) "%s| %s: INFO: Got User: %s Domain: %s\n", LogTime(), PROGRAM, user, domain ? domain : "NULL");
+            debug((char *) "%s| %s: INFO: Got User: %s Domain: %s\n", LogTime(), PROGRAM, up, domain ? dp : "NULL");
         else
-            log((char *) "%s| %s: INFO: Got User: %s Domain: %s\n", LogTime(), PROGRAM, user, domain ? domain : "NULL");
+            log((char *) "%s| %s: INFO: Got User: %s Domain: %s\n", LogTime(), PROGRAM, up, domain ? dp : "NULL");
 
+        xfree(up);
+        xfree(dp);
         if (!strcmp(user, "QQ") && domain && !strcmp(domain, "QQ")) {
             clean_args(&margs);
             exit(-1);
+        }
+        if (gopt) {
+            if ((group = strtok(NULL, " \n")) != NULL) {
+                debug((char *) "%s| %s: INFO: Read group list %s from stdin\n", LogTime(), PROGRAM, group);
+                rfc1738_unescape(group);
+                if (margs.groups) {
+                    clean_gd(margs.groups);
+                    margs.groups = NULL;
+                }
+                margs.glist = xstrdup(group);
+                if (create_gd(&margs)) {
+                    SEND_ERR("Error in group list");
+                    debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
+                    continue;
+                }
+            } else {
+                SEND_ERR("No group list received on stdin");
+                debug((char *) "%s| %s: FATAL: No group list received on stdin\n", LogTime(), PROGRAM);
+                continue;
+            }
         }
         if (check_memberof(&margs, user, domain)) {
             SEND_OK("");
