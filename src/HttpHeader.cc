@@ -1020,10 +1020,19 @@ HttpHeader::getStrOrList(http_hdr_type id) const
 }
 
 /*
- * Returns the value of the specified header.
+ * Returns the value of the specified header and/or an undefined String.
  */
 String
 HttpHeader::getByName(const char *name) const
+{
+    String result;
+    // ignore presence: return undefined string if an empty header is present
+    (void)getByNameIfPresent(name, result);
+    return result;
+}
+
+bool
+HttpHeader::getByNameIfPresent(const char *name, String &result) const
 {
     http_hdr_type id;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1034,19 +1043,23 @@ HttpHeader::getByName(const char *name) const
     /* First try the quick path */
     id = httpHeaderIdByNameDef(name, strlen(name));
 
-    if (id != -1)
-        return getStrOrList(id);
-
-    String result;
+    if (id != -1) {
+        if (!has(id))
+            return false;
+        result = getStrOrList(id);
+        return true;
+    }
 
     /* Sorry, an unknown header name. Do linear search */
+    bool found = false;
     while ((e = getEntry(&pos))) {
         if (e->id == HDR_OTHER && e->name.caseCmp(name) == 0) {
+            found = true;
             strListAdd(&result, e->value.termedBuf(), ',');
         }
     }
 
-    return result;
+    return found;
 }
 
 /*
