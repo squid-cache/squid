@@ -313,10 +313,12 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         /* Is there any login information? (we should eventually parse it above) */
         t = strrchr(host, '@');
         if (t != NULL) {
-            strcpy((char *) login, (char *) host);
+            strncpy((char *) login, (char *) host, sizeof(login)-1);
+            login[sizeof(login)-1] = '\0';
             t = strrchr(login, '@');
             *t = 0;
-            strcpy((char *) host, t + 1);
+            strncpy((char *) host, t + 1, sizeof(host)-1);
+            host[sizeof(host)-1] = '\0';
         }
 
         /* Is there any host information? (we should eventually parse it above) */

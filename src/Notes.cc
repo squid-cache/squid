@@ -73,17 +73,57 @@ Note::match(HttpRequest *request, HttpReply *reply)
 }
 
 Note::Pointer
-Notes::add(const String &noteKey)
+Notes::find(const String &noteKey) const
 {
-    typedef Notes::NotesList::iterator AMLI;
+    typedef Notes::NotesList::const_iterator AMLI;
     for (AMLI i = notes.begin(); i != notes.end(); ++i) {
         if ((*i)->key == noteKey)
             return (*i);
     }
 
-    Note::Pointer note = new Note(noteKey);
-    notes.push_back(note);
+    return Note::Pointer();
+}
+
+void
+Notes::add(const String &noteKey, const String &noteValue)
+{
+    Note::Pointer key = add(noteKey);
+    key->addValue(noteValue);
+}
+
+Note::Pointer
+Notes::add(const String &noteKey)
+{
+    Note::Pointer note = find(noteKey);
+    if (note == NULL) {
+        note = new Note(noteKey);
+        notes.push_back(note);
+    }
     return note;
+}
+
+void
+Notes::add(const Notes &src)
+{
+    typedef Notes::NotesList::const_iterator AMLI;
+    typedef Note::Values::iterator VLI;
+
+    for (AMLI i = src.notes.begin(); i != src.notes.end(); ++i) {
+
+        // ensure we have a key by that name to fill out values for...
+        // NP: not sharing pointers at the key level since merging other helpers
+        // details later would affect this src objects keys, which is a bad idea.
+        Note::Pointer ourKey = add((*i)->key);
+
+        // known key names, merge the values lists...
+        for (VLI v = (*i)->values.begin(); v != (*i)->values.end(); ++v ) {
+            // 2012-11-29: values are read-only and Pointer can safely be shared
+            // for now we share pointers to save memory and gain speed.
+            // If that ever ceases to be true, convert this to a full copy.
+            ourKey->values.push_back(*v);
+            // TODO: prune/skip duplicates ?
+        }
+    }
 }
 
 Note::Pointer

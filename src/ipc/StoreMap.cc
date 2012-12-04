@@ -270,8 +270,8 @@ Ipc::StoreMap::freeLocked(Slot &s, bool keepLocked)
 
 Ipc::StoreMapSlot::StoreMapSlot(): state(Empty)
 {
-    xmemset(&key, 0, sizeof(key));
-    xmemset(&basics, 0, sizeof(basics));
+    memset(&key, 0, sizeof(key));
+    memset(&basics, 0, sizeof(basics));
 }
 
 void

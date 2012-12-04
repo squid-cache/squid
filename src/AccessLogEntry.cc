@@ -22,7 +22,7 @@ AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
         if (tcpClient != NULL)
             tcpClient->remote.NtoA(buf, bufsz);
         else if (cache.caddr.IsNoAddr()) // e.g., ICAP OPTIONS lack client
-            strncpy(buf, "-", 1);
+            strncpy(buf, "-", bufsz);
         else
             cache.caddr.NtoA(buf, bufsz);
 }

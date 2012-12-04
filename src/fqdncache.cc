@@ -34,6 +34,7 @@
 #include "cbdata.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
+#include "helper.h"
 #include "HelperReply.h"
 #include "Mem.h"
 #include "mgr/Registration.h"

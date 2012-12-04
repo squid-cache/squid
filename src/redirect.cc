@@ -78,8 +78,9 @@ redirectHandleReply(void *data, const HelperReply &reply)
     redirectStateData *r = static_cast<redirectStateData *>(data);
     debugs(61, 5, HERE << "reply=" << reply);
 
-    // XXX: This funtion is now kept only to check for and display this garbage use-case
-    // it can be removed when the helpers are all updated to the normalized "OK/ERR key-pairs" format
+    // XXX: This function is now kept only to check for and display the garbage use-case
+    // and to map the old helper response format(s) into new format result code and key=value pairs
+    // it can be removed when the helpers are all updated to the normalized "OK/ERR kv-pairs" format
 
     if (reply.result == HelperReply::Unknown) {
         // BACKWARD COMPATIBILITY 2012-06-15:
@@ -99,6 +100,51 @@ redirectHandleReply(void *data, const HelperReply &reply)
             }
             if (reply.other().hasContent() && *res == '\0')
                 reply.modifiableOther().clean(); // drop the whole buffer of garbage.
+
+            // if we still have anything in other() after all that
+            // parse it into status=, url= and rewrite-url= keys
+            if (reply.other().hasContent()) {
+                /* 2012-06-28: This cast is due to urlParse() truncating too-long URLs itself.
+                 * At this point altering the helper buffer in that way is not harmful, but annoying.
+                 * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
+                 */
+                const char * result = reply.other().content();
+                const http_status status = (http_status) atoi(result);
+
+                HelperReply newReply;
+                newReply.result = reply.result;
+                newReply.notes = reply.notes;
+
+                if (status == HTTP_MOVED_PERMANENTLY
+                        || status == HTTP_MOVED_TEMPORARILY
+                        || status == HTTP_SEE_OTHER
+                        || status == HTTP_PERMANENT_REDIRECT
+                        || status == HTTP_TEMPORARY_REDIRECT) {
+
+                    if (const char *t = strchr(result, ':')) {
+                        char statusBuf[4];
+                        snprintf(statusBuf, sizeof(statusBuf),"%3u",status);
+                        newReply.notes.add("status", statusBuf);
+                        ++t;
+                        // TODO: validate the URL produced here is RFC 2616 compliant URI
+                        newReply.notes.add("url", t);
+                    } else {
+                        debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << result);
+                    }
+                } else {
+                    // status code is not a redirect code (or does not exist)
+                    // treat as a re-write URL request
+                    // TODO: validate the URL produced here is RFC 2616 compliant URI
+                    newReply.notes.add("rewrite-url", reply.other().content());
+                }
+
+                void *cbdata;
+                if (cbdataReferenceValidDone(r->data, &cbdata))
+                    r->handler(cbdata, newReply);
+
+                redirectStateFree(r);
+                return;
+            }
         }
     }
 
@@ -151,8 +197,10 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++n_bypassed;
-        HelperReply nilReply(NULL,0);
-        handler(data, nilReply);
+        HelperReply bypassReply;
+        bypassReply.result = HelperReply::Okay;
+        bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
+        handler(data, bypassReply);
         return;
     }
 

@@ -605,7 +605,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     SquidMD5Init(&M);
 
-    SquidMD5Update(&M, pwd, 8);
+    SquidMD5Update(&M, pwd, sizeof(pwd));
 
     SquidMD5Update(&M, packet, len);
 
@@ -650,7 +650,6 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
-
     strncpy(pwd, srv->wccp_password, sizeof(pwd));
 
     /* Take a copy of the challenge: we need to NUL it before comparing */
@@ -660,7 +659,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     SquidMD5Init(&M);
 
-    SquidMD5Update(&M, pwd, 8);
+    SquidMD5Update(&M, pwd, sizeof(pwd));
 
     SquidMD5Update(&M, packet, len);
 

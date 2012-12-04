@@ -77,9 +77,11 @@ main(int argc, char *argv[])
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
     close(2);
-    open(_PATH_DEVNULL, O_RDWR);
+    if (open(_PATH_DEVNULL, O_RDWR) < 0) {
+        ; // the irony of having to close(2) earlier is that we cannot report this failure.
+    }
 
-    while (fgets(buf, UNLINK_BUF_LEN, stdin)) {
+    while (fgets(buf, sizeof(buf), stdin)) {
         if ((t = strchr(buf, '\n')))
             *t = '\0';
         x = unlink(buf);
