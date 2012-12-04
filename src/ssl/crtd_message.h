@@ -80,7 +80,7 @@ public:
     static const std::string param_SetCommonName;
     /// Parameter name for passing signing algorithm
     static const std::string param_Sign;
-private:
+protected:
     enum ParseState {
         BEFORE_CODE,
         CODE,
