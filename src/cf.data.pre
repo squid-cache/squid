@@ -3202,13 +3202,11 @@ DOC_START
 
 	The rock store type:
 
-	    cache_dir rock Directory-Name Mbytes <max-size=bytes> [options]
+	    cache_dir rock Directory-Name Mbytes [options]
 
 	The Rock Store type is a database-style storage. All cached
-	entries are stored in a "database" file, using fixed-size slots,
-	one entry per slot. The database size is specified in MB. The
-	slot size is specified in bytes using the max-size option. See
-	below for more info on the max-size option.
+	entries are stored in a "database" file, using fixed-size slots.
+	A single entry occupies one or more slots.
 
 	swap-timeout=msec: Squid will not start writing a miss to or
 	reading a hit from disk if it estimates that the swap operation
@@ -3232,6 +3230,16 @@ DOC_START
 	when disk demand exceeds available disk "bandwidth". By default
 	and when set to zero, disables the disk I/O rate limit
 	enforcement. Currently supported by IpcIo module only.
+
+	slot-size=bytes: The size of a database "record" used for
+	storing cached responses. A cached response occupies at least
+	one slot and all database I/O is done using individual slots so
+	increasing this parameter leads to more disk space waste while
+	decreasing it leads to more disk I/O overheads. Should be a
+	multiple of your operating system I/O page size. Defaults to
+	16KBytes. A housekeeping header is stored with each slot and
+	smaller slot-sizes will be rejected. The header is smaller than
+	100 bytes.
 
 
 	The coss store type:
