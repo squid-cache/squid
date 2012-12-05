@@ -34,7 +34,7 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     assert(sd);
     memset(&counts, 0, sizeof(counts));
     dbSize = sd->diskOffsetLimit(); // we do not care about the trailer waste
-    dbEntrySize = sd->max_objsize;
+    dbEntrySize = sd->slotSize;
     dbEntryLimit = sd->entryLimit();
     loaded.reserve(dbSize);
     for (size_t i = 0; i < loaded.size(); ++i)
