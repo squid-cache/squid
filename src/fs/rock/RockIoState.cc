@@ -20,7 +20,7 @@ Rock::IoState::IoState(SwapDir &aDir,
                        void *data):
         dbSlot(NULL),
         dir(aDir),
-        slotSize(dir.max_objsize),
+        slotSize(dir.slotSize),
         objOffset(0)
 {
     e = anEntry;

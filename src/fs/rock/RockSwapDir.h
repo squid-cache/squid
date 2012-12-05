@@ -38,9 +38,6 @@ public:
     virtual void create();
     virtual void parse(int index, char *path);
 
-    // XXX: stop misusing max_objsize as slot size
-    virtual int64_t maxObjectSize() const { return max_objsize * entryLimitAllowed(); }
-
     int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
     int64_t entryLimitAllowed() const;
 
@@ -58,6 +55,8 @@ public:
         Ipc::Mem::PageId pageId;
     };
     typedef Ipc::StoreMapWithExtras<MapExtras> DirMap;
+
+    uint64_t slotSize; ///< all db slots are of this size
 
 protected:
     /* protected ::SwapDir API */
@@ -88,6 +87,8 @@ protected:
     void dumpTimeOption(StoreEntry * e) const;
     bool parseRateOption(char const *option, const char *value, int reconfiguring);
     void dumpRateOption(StoreEntry * e) const;
+    bool parseSizeOption(char const *option, const char *value, int reconfiguring);
+    void dumpSizeOption(StoreEntry * e) const;
 
     void rebuild(); ///< starts loading and validating stored entry metadata
 

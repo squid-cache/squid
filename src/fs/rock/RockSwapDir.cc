@@ -30,7 +30,8 @@
 
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
-Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL), map(NULL)
+Rock::SwapDir::SwapDir(): ::SwapDir("rock"), 
+    slotSize(HeaderSize), filePath(NULL), io(NULL), map(NULL), dbSlots(NULL)
 {
 }
 
@@ -115,7 +116,10 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
 uint64_t
 Rock::SwapDir::currentSize() const
 {
-    return HeaderSize + max_objsize * currentCount();
+    const uint64_t spaceSize = !dbSlotIndex ?
+        maxSize() : (slotSize * dbSlotIndex->size());
+    // everything that is not free is in use
+    return maxSize() - spaceSize;
 }
 
 uint64_t
@@ -142,7 +146,7 @@ int64_t
 Rock::SwapDir::entryLimitAllowed() const
 {
     const int64_t eLimitLo = map ? map->entryLimit() : 0; // dynamic shrinking unsupported
-    const int64_t eWanted = (maxSize() - HeaderSize)/maxObjectSize();
+    const int64_t eWanted = (maxSize() - HeaderSize)/slotSize;
     return min(max(eLimitLo, eWanted), entryLimitHigh());
 }
 
@@ -302,6 +306,7 @@ Rock::SwapDir::getOptionTree() const
 {
     ConfigOptionVector *vector = dynamic_cast<ConfigOptionVector*>(::SwapDir::getOptionTree());
     assert(vector);
+    vector->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::parseSizeOption, &SwapDir::dumpSizeOption));
     vector->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::parseTimeOption, &SwapDir::dumpTimeOption));
     vector->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::parseRateOption, &SwapDir::dumpRateOption));
     return vector;
@@ -310,7 +315,7 @@ Rock::SwapDir::getOptionTree() const
 bool
 Rock::SwapDir::allowOptionReconfigure(const char *const option) const
 {
-    return strcmp(option, "max-size") != 0 &&
+    return strcmp(option, "slot-size") != 0 &&
            ::SwapDir::allowOptionReconfigure(option);
 }
 
@@ -319,7 +324,7 @@ bool
 Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconfiguring)
 {
     // TODO: ::SwapDir or, better, Config should provide time-parsing routines,
-    // including time unit handling. Same for size.
+    // including time unit handling. Same for size and rate.
 
     time_msec_t *storedTime;
     if (strcmp(option, "swap-timeout") == 0)
@@ -405,17 +410,60 @@ Rock::SwapDir::dumpRateOption(StoreEntry * e) const
         storeAppendPrintf(e, " max-swap-rate=%d", fileConfig.ioRate);
 }
 
+/// parses size-specific options; mimics ::SwapDir::optionObjectSizeParse()
+bool
+Rock::SwapDir::parseSizeOption(char const *option, const char *value, int reconfiguring)
+{
+    uint64_t *storedSize;
+    if (strcmp(option, "slot-size") == 0)
+        storedSize = &slotSize;
+    else
+        return false;
+
+    if (!value)
+        self_destruct();
+
+    // TODO: handle size units and detect parsing errors better
+    const uint64_t newSize = strtoll(value, NULL, 10);
+    if (newSize <= 0) {
+        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must be positive; got: " << newSize);
+        self_destruct();
+    }
+
+    if (newSize <= sizeof(DbCellHeader)) {
+        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must exceed " << sizeof(DbCellHeader) << "; got: " << newSize);
+        self_destruct();
+    }
+
+    if (!reconfiguring)
+        *storedSize = newSize;
+    else if (*storedSize != newSize) {
+        debugs(3, DBG_IMPORTANT, "WARNING: cache_dir " << path << ' ' << option
+               << " cannot be changed dynamically, value left unchanged: " <<
+               *storedSize);
+    }
+
+    return true;
+}
+
+/// reports size-specific options; mimics ::SwapDir::optionObjectSizeDump()
+void
+Rock::SwapDir::dumpSizeOption(StoreEntry * e) const
+{
+    storeAppendPrintf(e, " slot-size=%" PRId64, slotSize);
+}
+
 /// check the results of the configuration; only level-0 debugging works here
 void
 Rock::SwapDir::validateOptions()
 {
-    if (max_objsize <= 0)
-        fatal("Rock store requires a positive max-size");
+    if (slotSize <= 0)
+        fatal("Rock store requires a positive slot-size");
 
     const int64_t maxSizeRoundingWaste = 1024 * 1024; // size is configured in MB
-    const int64_t maxObjectSizeRoundingWaste = maxObjectSize();
+    const int64_t slotSizeRoundingWaste = slotSize;
     const int64_t maxRoundingWaste =
-        max(maxSizeRoundingWaste, maxObjectSizeRoundingWaste);
+        max(maxSizeRoundingWaste, slotSizeRoundingWaste);
     const int64_t usableDiskSize = diskOffset(entryLimitAllowed());
     const int64_t diskWasteSize = maxSize() - usableDiskSize;
     Must(diskWasteSize >= 0);
@@ -425,7 +473,7 @@ Rock::SwapDir::validateOptions()
             diskWasteSize >= maxRoundingWaste) {
         debugs(47, DBG_CRITICAL, "Rock store cache_dir[" << index << "] '" << path << "':");
         debugs(47, DBG_CRITICAL, "\tmaximum number of entries: " << entryLimitAllowed());
-        debugs(47, DBG_CRITICAL, "\tmaximum object size: " << maxObjectSize() << " Bytes");
+        debugs(47, DBG_CRITICAL, "\tdb slot size: " << slotSize << " Bytes");
         debugs(47, DBG_CRITICAL, "\tmaximum db size: " << maxSize() << " Bytes");
         debugs(47, DBG_CRITICAL, "\tusable db size:  " << usableDiskSize << " Bytes");
         debugs(47, DBG_CRITICAL, "\tdisk space waste: " << diskWasteSize << " Bytes");
@@ -529,7 +577,7 @@ int64_t
 Rock::SwapDir::diskOffset(int filen) const
 {
      assert(filen >= 0);
-     return HeaderSize + max_objsize*filen;
+     return HeaderSize + slotSize*filen;
 }
 
 int64_t
@@ -549,7 +597,7 @@ Rock::SwapDir::diskOffsetLimit() const
 int
 Rock::SwapDir::entryMaxPayloadSize() const
 {
-    return max_objsize - sizeof(DbCellHeader);
+    return slotSize - sizeof(DbCellHeader);
 }
 
 int
@@ -882,13 +930,19 @@ void Rock::SwapDirRr::create(const RunnerRegistry &)
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
             const int64_t capacity = sd->entryLimitAllowed();
+
+            String inodesPath = sd->path;
+            inodesPath.append("_inodes");
             SwapDir::DirMap::Owner *const mapOwner =
-                SwapDir::DirMap::Init(sd->path, capacity);
+                SwapDir::DirMap::Init(inodesPath.termedBuf(), capacity);
             mapOwners.push_back(mapOwner);
 
+            String spacesPath = sd->path;
+            spacesPath.append("_spaces");
             // XXX: remove pool id and counters from PageStack
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const dbSlotsOwner =
-                shm_new(Ipc::Mem::PageStack)(sd->path, i, capacity,
+                shm_new(Ipc::Mem::PageStack)(spacesPath.termedBuf(),
+                                             i, capacity,
                                              sizeof(DbCellHeader));
             dbSlotsOwners.push_back(dbSlotsOwner);
 
