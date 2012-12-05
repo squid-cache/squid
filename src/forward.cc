@@ -822,7 +822,7 @@ FwdState::sslCrtvdHandleReply(const HelperReply &reply)
         std::string error;
         STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(ssl);
         if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
-                   !replyMsg.parseResponse(validationResponse, peerCerts, error) ) {
+                !replyMsg.parseResponse(validationResponse, peerCerts, error) ) {
             debugs(83, 5, "Reply from ssl_crtvd for " << request->GetHost() << " is incorrect");
             validatorFailed = true;
         } else {
