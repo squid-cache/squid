@@ -291,7 +291,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             filledCheck->serverCert.reset(NULL);
         }
 #if 1 // USE_SSL_CERT_VALIDATOR
-        // If the certificate validator is used then we need to allow all errors and 
+        // If the certificate validator is used then we need to allow all errors and
         // pass them to certficate validator for more processing
         else if (Ssl::TheConfig.ssl_crt_validator)
             ok = 1;
