@@ -1,6 +1,11 @@
 #ifndef SQUID_FS_ROCK_DB_CELL_H
 #define SQUID_FS_ROCK_DB_CELL_H
 
+namespace Ipc
+{
+class StoreMapSlot;
+}
+
 namespace Rock
 {
 
@@ -11,13 +16,16 @@ namespace Rock
 class DbCellHeader
 {
 public:
-    DbCellHeader(): payloadSize(0), reserved(0) {}
+    DbCellHeader();
 
     /// whether the freshly loaded header fields make sense
-    bool sane() const { return payloadSize >= 0 && reserved == 0; }
+    bool sane() const;
 
-    int64_t payloadSize; ///< cell contents size excluding this header
-    int64_t reserved; ///< reserved for future use (next cell pointer?)
+    uint64_t key[2]; ///< StoreEntry key
+    uint32_t firstSlot; ///< first slot pointer in the entry chain
+    uint32_t nextSlot; ///< next slot pointer in the entry chain
+    uint32_t version; ///< entry chain version
+    uint32_t payloadSize; ///< cell contents size excluding this header
 };
 
 } // namespace Rock

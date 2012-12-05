@@ -5,6 +5,14 @@
 #include "cbdata.h"
 #include "store_rebuild.h"
 
+namespace Ipc
+{
+namespace Mem
+{
+class PageId;
+}
+}
+
 namespace Rock
 {
 
@@ -27,22 +35,29 @@ protected:
 private:
     void checkpoint();
     void steps();
+    void steps2();
     void doOneEntry();
+    void doOneSlot();
     void failure(const char *msg, int errNo = 0);
+    void invalidSlot(Ipc::Mem::PageId &pageId);
 
     SwapDir *sd;
 
     int64_t dbSize;
     int dbEntrySize;
     int dbEntryLimit;
+    int dbSlot;
 
     int fd; // store db file descriptor
     int64_t dbOffset;
     int filen;
 
+    Vector<bool> loaded; ///< true iff rebuilt is complete for a given slot
+
     StoreRebuildData counts;
 
     static void Steps(void *data);
+    static void Steps2(void *data);
 
     CBDATA_CLASS2(Rebuild);
 };

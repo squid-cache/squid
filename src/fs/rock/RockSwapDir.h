@@ -6,6 +6,8 @@
 #include "DiskIO/IORequestor.h"
 #include "fs/rock/RockDbCell.h"
 #include "ipc/StoreMap.h"
+#include "ipc/mem/Page.h"
+#include "ipc/mem/PageStack.h"
 
 class DiskIOStrategy;
 class ReadRequest;
@@ -17,7 +19,7 @@ namespace Rock
 class Rebuild;
 
 /// \ingroup Rock
-class SwapDir: public ::SwapDir, public IORequestor
+class SwapDir: public ::SwapDir, public IORequestor, public Ipc::StoreMapCleaner
 {
 public:
     SwapDir();
@@ -36,10 +38,26 @@ public:
     virtual void create();
     virtual void parse(int index, char *path);
 
+    // XXX: stop misusing max_objsize as slot size
+    virtual int64_t maxObjectSize() const { return max_objsize * entryLimitAllowed(); }
+
     int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
     int64_t entryLimitAllowed() const;
 
-    typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
+    bool popDbSlot(Ipc::Mem::PageId &pageId);
+    DbCellHeader &dbSlot(const Ipc::Mem::PageId &pageId);
+    const DbCellHeader &dbSlot(const Ipc::Mem::PageId &pageId) const;
+
+    int64_t diskOffset(Ipc::Mem::PageId &pageId) const;
+    void writeError(const sfileno fileno);
+
+    virtual void cleanReadable(const sfileno fileno);
+
+    // TODO: merge with MemStoreMapExtras?
+    struct MapExtras {
+        Ipc::Mem::PageId pageId;
+    };
+    typedef Ipc::StoreMapWithExtras<MapExtras> DirMap;
 
 protected:
     /* protected ::SwapDir API */
@@ -72,8 +90,6 @@ protected:
     void dumpRateOption(StoreEntry * e) const;
 
     void rebuild(); ///< starts loading and validating stored entry metadata
-    ///< used to add entries successfully loaded during rebuild
-    bool addEntry(const int fileno, const DbCellHeader &header, const StoreEntry &from);
 
     bool full() const; ///< no more entries can be stored without purging
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope
@@ -82,6 +98,8 @@ protected:
     int64_t diskOffset(int filen) const;
     int64_t diskOffsetLimit() const;
     int entryLimit() const { return map->entryLimit(); }
+    int entryMaxPayloadSize() const;
+    int entriesNeeded(const int64_t objSize) const;
 
     friend class Rebuild;
     const char *filePath; ///< location of cache storage file inside path/
@@ -92,6 +110,8 @@ private:
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
     DirMap *map;
+    DbCellHeader *dbSlots;
+    Ipc::Mem::Pointer<Ipc::Mem::PageStack> dbSlotIndex;
 
     /* configurable options */
     DiskFile::Config fileConfig; ///< file-level configuration options
@@ -111,7 +131,8 @@ protected:
     virtual void create(const RunnerRegistry &);
 
 private:
-    Vector<SwapDir::DirMap::Owner *> owners;
+    Vector<SwapDir::DirMap::Owner *> mapOwners;
+    Vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> dbSlotsOwners;
 };
 
 } // namespace Rock
