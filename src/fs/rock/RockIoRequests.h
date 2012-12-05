@@ -25,8 +25,9 @@ private:
 class WriteRequest: public ::WriteRequest
 {
 public:
-    WriteRequest(const ::WriteRequest &base, const IoState::Pointer &anSio);
+    WriteRequest(const ::WriteRequest &base, const IoState::Pointer &anSio, const bool last);
     IoState::Pointer sio;
+    const bool isLast;
 
 private:
     CBDATA_CLASS2(WriteRequest);

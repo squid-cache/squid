@@ -9,6 +9,7 @@ class DiskFile;
 namespace Rock
 {
 
+class DbCellHeader;
 class SwapDir;
 
 /// \ingroup Rock
@@ -17,7 +18,7 @@ class IoState: public ::StoreIOState
 public:
     typedef RefCount<IoState> Pointer;
 
-    IoState(SwapDir *dir, StoreEntry *e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
+    IoState(SwapDir &aDir, StoreEntry *e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
     virtual ~IoState();
 
     void file(const RefCount<DiskFile> &aFile);
@@ -27,21 +28,20 @@ public:
     virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func);
     virtual void close(int how);
 
-    /// called by SwapDir when writing is done
     void finishedWriting(int errFlag);
 
-    int64_t slotSize; ///< db cell size
     int64_t diskOffset; ///< the start of this cell inside the db file
-
-    /// when reading: number of bytes previously written to the db cell;
-    /// when writing: maximum payload offset in a db cell
-    int64_t payloadEnd;
+    DbCellHeader *dbSlot; ///< current db slot, used for writing
 
     MEMPROXY_CLASS(IoState);
 
 private:
-    void startWriting();
+    void doWrite(const bool isLast = false);
     void callBack(int errflag);
+
+    SwapDir &dir; ///< swap dir object
+    const size_t slotSize; ///< db cell size
+    int64_t objOffset; ///< object offset for current db slot
 
     RefCount<DiskFile> theFile; // "file" responsible for this I/O
     MemBuf theBuf; // use for write content accumulation only
