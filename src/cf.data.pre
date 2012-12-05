@@ -983,6 +983,15 @@ IF USE_SSL
 	  #
 	  # NOTE: The ssl_error ACL is only supported with sslproxy_cert_error,
 	  # sslproxy_cert_sign, and sslproxy_cert_adapt options.
+
+	acl aclname server_cert_fingerprint [-sha1] fingerprint
+	  # match against server SSL certificate fingerprint [fast]
+	  #
+	  # The fingerprint is the digest of the DER encoded version 
+	  # of the whole certificate. The user should use the form: XX:XX:...
+	  # Optional argument specifies the digest algorithm to use.
+	  # The SHA1 digest algorithm is the default and is currently
+	  # the only algorithm supported (-sha1).
 ENDIF
 
 	Examples:
