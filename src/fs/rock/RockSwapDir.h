@@ -38,6 +38,11 @@ public:
     virtual void create();
     virtual void parse(int index, char *path);
 
+    // temporary path to the shared memory map of first slots of cached entries
+    const char *inodeMapPath() const;
+    // temporary path to the shared memory stack of free slots
+    const char *spaceIndexPath() const;
+
     int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
     int64_t entryLimitAllowed() const;
 
