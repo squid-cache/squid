@@ -52,7 +52,8 @@ private:
     int64_t dbOffset;
     int filen;
 
-    Vector<bool> loaded; ///< true iff rebuilt is complete for a given slot
+    // TODO: use std::bitmap?
+    Vector<bool> processed; ///< true iff rebuilt is complete for a given slot
 
     StoreRebuildData counts;
 

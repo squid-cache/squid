@@ -36,9 +36,9 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     dbSize = sd->diskOffsetLimit(); // we do not care about the trailer waste
     dbEntrySize = sd->slotSize;
     dbEntryLimit = sd->entryLimit();
-    loaded.reserve(dbSize);
-    for (size_t i = 0; i < loaded.size(); ++i)
-        loaded.push_back(false);
+    processed.reserve(dbEntryLimit);
+    while (static_cast<int>(processed.size()) < dbEntryLimit)
+        processed.push_back(false);
 }
 
 Rock::Rebuild::~Rebuild()
@@ -225,7 +225,7 @@ Rock::Rebuild::doOneSlot()
     debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
            dbSlot << " <= " << dbSize);
 
-    if (loaded[dbSlot])
+    if (processed[dbSlot])
         return;
 
     Ipc::Mem::PageId pageId;
@@ -269,6 +269,6 @@ Rock::Rebuild::failure(const char *msg, int errNo)
 void Rock::Rebuild::invalidSlot(Ipc::Mem::PageId &pageId)
 {
     ++counts.invalid;
-    loaded[pageId.number - 1] = true;
+    processed[pageId.number - 1] = true;
     sd->dbSlotIndex->push(pageId);
 }
