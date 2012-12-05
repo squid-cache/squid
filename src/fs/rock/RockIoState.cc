@@ -13,18 +13,18 @@
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 
-Rock::IoState::IoState(SwapDir *dir,
+Rock::IoState::IoState(SwapDir &aDir,
                        StoreEntry *anEntry,
                        StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data):
-        slotSize(0),
-        diskOffset(-1),
-        payloadEnd(-1)
+        dbSlot(NULL),
+        dir(aDir),
+        slotSize(dir.max_objsize),
+        objOffset(0)
 {
     e = anEntry;
-    // swap_filen, swap_dirn, diskOffset, and payloadEnd are set by the caller
-    slotSize = dir->max_objsize;
+    // swap_filen, swap_dirn and diskOffset are set by the caller
     file_callback = cbFile;
     callback = cbIo;
     callback_data = cbdataReference(data);
@@ -53,50 +53,85 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
 {
     assert(theFile != NULL);
     assert(coreOff >= 0);
+
+    Ipc::Mem::PageId pageId;
+    pageId.pool = dir.index;
+    if (coreOff < objOffset) { // rewind
+        pageId.number = dbSlot->firstSlot;
+        dbSlot = &dir.dbSlot(pageId);
+        objOffset = 0;
+    }
+
+    while (coreOff >= objOffset + dbSlot->payloadSize) {
+        objOffset += dbSlot->payloadSize;
+        pageId.number = dbSlot->nextSlot;
+        assert(pageId); // XXX: should be an error?
+        dbSlot = &dir.dbSlot(pageId);
+    }
+    if (pageId)
+        diskOffset = dir.diskOffset(pageId);
+
     offset_ = coreOff;
-
-    // we skip our cell header; it is only read when building the map
-    const int64_t cellOffset = sizeof(DbCellHeader) +
-                               static_cast<int64_t>(coreOff);
-    assert(cellOffset <= payloadEnd);
-
-    // Core specifies buffer length, but we must not exceed stored entry size
-    if (cellOffset + (int64_t)len > payloadEnd)
-        len = payloadEnd - cellOffset;
+    len = min(len,
+        static_cast<size_t>(objOffset + dbSlot->payloadSize - coreOff));
 
     assert(read.callback == NULL);
     assert(read.callback_data == NULL);
     read.callback = cb;
     read.callback_data = cbdataReference(data);
 
-    theFile->read(new ReadRequest(
-                      ::ReadRequest(buf, diskOffset + cellOffset, len), this));
+    theFile->read(new ReadRequest(::ReadRequest(buf,
+        diskOffset + sizeof(DbCellHeader) + coreOff - objOffset, len), this));
 }
 
-// We only buffer data here; we actually write when close() is called.
+// We only write data when full slot is accumulated or when close() is called.
 // We buffer, in part, to avoid forcing OS to _read_ old unwritten portions
 // of the slot when the write does not end at the page or sector boundary.
 void
 Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
 {
-    // TODO: move to create?
-    if (!coreOff) {
-        assert(theBuf.isNull());
-        assert(payloadEnd <= slotSize);
-        theBuf.init(min(payloadEnd, slotSize), slotSize);
-        // start with our header; TODO: consider making it a trailer
-        DbCellHeader header;
-        assert(static_cast<int64_t>(sizeof(header)) <= payloadEnd);
-        header.payloadSize = payloadEnd - sizeof(header);
-        theBuf.append(reinterpret_cast<const char*>(&header), sizeof(header));
-    } else {
-        // Core uses -1 offset as "append". Sigh.
-        assert(coreOff == -1);
-        assert(!theBuf.isNull());
+    assert(dbSlot);
+
+    if (theBuf.isNull()) {
+        theBuf.init(min(size + sizeof(DbCellHeader), slotSize), slotSize);
+        theBuf.appended(sizeof(DbCellHeader)); // will fill header in doWrite
     }
 
-    theBuf.append(buf, size);
-    offset_ += size; // so that Core thinks we wrote it
+    if (size <= static_cast<size_t>(theBuf.spaceSize()))
+        theBuf.append(buf, size);
+    else {
+        Ipc::Mem::PageId pageId;
+        if (!dir.popDbSlot(pageId)) {
+            debugs(79, DBG_IMPORTANT, "WARNING: Rock cache_dir '" << dir.path <<
+                   "' run out of DB slots");
+            dir.writeError(swap_filen);
+            // XXX: do we need to destroy buf on error?
+            if (dtor)
+                (dtor)(const_cast<char*>(buf)); // cast due to a broken API?
+            // XXX: do we need to call callback on error?
+            callBack(DISK_ERROR);
+            return;
+        }
+        DbCellHeader &nextDbSlot = dir.dbSlot(pageId);
+        memcpy(nextDbSlot.key, dbSlot->key, sizeof(nextDbSlot.key));
+        nextDbSlot.firstSlot = dbSlot->firstSlot;
+        nextDbSlot.nextSlot = 0;
+        nextDbSlot.version = dbSlot->version;
+        nextDbSlot.payloadSize = 0;
+
+        dbSlot->nextSlot = pageId.number;
+
+        const size_t left = size - theBuf.spaceSize();
+        offset_ += theBuf.spaceSize(); // so that Core thinks we wrote it
+        theBuf.append(buf, theBuf.spaceSize());
+
+        doWrite();
+
+        dbSlot = &nextDbSlot;
+        diskOffset = dir.diskOffset(pageId);
+        theBuf.init(min(left, slotSize), slotSize);
+        write(buf + size - left, left, -1, NULL);
+    }
 
     if (dtor)
         (dtor)(const_cast<char*>(buf)); // cast due to a broken API?
@@ -104,7 +139,7 @@ Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
 
 // write what was buffered during write() calls
 void
-Rock::IoState::startWriting()
+Rock::IoState::doWrite(const bool isLast)
 {
     assert(theFile != NULL);
     assert(!theBuf.isNull());
@@ -115,10 +150,15 @@ Rock::IoState::startWriting()
     debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
            theBuf.contentSize());
 
-    assert(theBuf.contentSize() <= slotSize);
+    dbSlot->payloadSize = theBuf.contentSize() - sizeof(DbCellHeader);
+    memcpy(theBuf.content(), dbSlot, sizeof(DbCellHeader));
+
+    assert(static_cast<size_t>(theBuf.contentSize()) <= slotSize);
     // theFile->write may call writeCompleted immediatelly
-    theFile->write(new WriteRequest(::WriteRequest(theBuf.content(),
-                                    diskOffset, theBuf.contentSize(), theBuf.freeFunc()), this));
+    WriteRequest *const r = new WriteRequest(
+        ::WriteRequest(theBuf.content(), diskOffset, theBuf.contentSize(),
+                       theBuf.freeFunc()), this, isLast);
+    theFile->write(r);
 }
 
 //
@@ -135,7 +175,7 @@ Rock::IoState::close(int how)
     debugs(79, 3, HERE << swap_filen << " accumulated: " << offset_ <<
            " how=" << how);
     if (how == wroteAll && !theBuf.isNull())
-        startWriting();
+        doWrite(true);
     else
         callBack(how == writerGone ? DISK_ERROR : 0); // TODO: add DISK_CALLER_GONE
 }
