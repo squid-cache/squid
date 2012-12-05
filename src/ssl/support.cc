@@ -1195,7 +1195,7 @@ Ssl::GetX509Fingerprint(X509 * cert, const char *)
     static char buf[1024];
     if (!cert)
         return NULL;
-    
+
     unsigned int n;
     unsigned char md[EVP_MAX_MD_SIZE];
     if (!X509_digest(cert, EVP_sha1(), md, &n))
