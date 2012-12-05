@@ -148,7 +148,7 @@ ACLCertificateData::parse()
                 debugs(28, DBG_CRITICAL, "FATAL: Unknown option. Supported option(s) are: " << validAttributesStr);
                 self_destruct();
             }
-            
+
             /* an acl must use consistent attributes in all config lines */
             if (attribute) {
                 if (strcasecmp(newAttribute, attribute) != 0) {
