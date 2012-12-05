@@ -216,7 +216,7 @@ Rock::SwapDir::init()
     lock();
 
     Must(!map);
-    map = new DirMap(path);
+    map = new DirMap(inodeMapPath());
 
     const char *ioModule = needsDiskStrand() ? "IpcIo" : "Blocking";
     if (DiskIOModule *m = DiskIOModule::Find(ioModule)) {
@@ -233,7 +233,7 @@ Rock::SwapDir::init()
     theFile->configure(fileConfig);
     theFile->open(O_RDWR, 0644, this);
 
-    dbSlotIndex = shm_old(Ipc::Mem::PageStack)(path);
+    dbSlotIndex = shm_old(Ipc::Mem::PageStack)(spaceIndexPath());
     dbSlots = new (reinterpret_cast<char *>(dbSlotIndex.getRaw()) +
                    dbSlotIndex->stackSize()) DbCellHeader[entryLimitAllowed()];
 
@@ -919,6 +919,22 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
 }
 
+const char *
+Rock::SwapDir::inodeMapPath() const {
+    static String inodesPath;
+    inodesPath = path;
+    inodesPath.append("_inodes");
+    return inodesPath.termedBuf();
+}
+
+const char *
+Rock::SwapDir::spaceIndexPath() const {
+    static String spacesPath;
+    spacesPath = path;
+    spacesPath.append("_spaces");
+    return spacesPath.termedBuf();
+}
+
 namespace Rock
 {
 RunnerRegistrationEntry(rrAfterConfig, SwapDirRr);
@@ -931,17 +947,13 @@ void Rock::SwapDirRr::create(const RunnerRegistry &)
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
             const int64_t capacity = sd->entryLimitAllowed();
 
-            String inodesPath = sd->path;
-            inodesPath.append("_inodes");
             SwapDir::DirMap::Owner *const mapOwner =
-                SwapDir::DirMap::Init(inodesPath.termedBuf(), capacity);
+                SwapDir::DirMap::Init(sd->inodeMapPath(), capacity);
             mapOwners.push_back(mapOwner);
 
-            String spacesPath = sd->path;
-            spacesPath.append("_spaces");
             // XXX: remove pool id and counters from PageStack
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const dbSlotsOwner =
-                shm_new(Ipc::Mem::PageStack)(spacesPath.termedBuf(),
+                shm_new(Ipc::Mem::PageStack)(sd->spaceIndexPath(),
                                              i, capacity,
                                              sizeof(DbCellHeader));
             dbSlotsOwners.push_back(dbSlotsOwner);
