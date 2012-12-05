@@ -9,7 +9,7 @@
 
 Rock::DbCellHeader::DbCellHeader(): firstSlot(0), nextSlot(0), version(0),
         payloadSize(0) {
-    xmemset(&key, 0, sizeof(key));
+    memset(&key, 0, sizeof(key));
 }
 
 bool
