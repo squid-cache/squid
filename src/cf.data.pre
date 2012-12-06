@@ -4286,9 +4286,8 @@ DOC_START
 
 	When this directive is set to a value >= 1 then the protocol
 	used to communicate with the helper is modified to include
-	a request ID in front of the request/response. The request
-	ID from the request must be echoed back with the response
-	to that request.
+	an ID in front of the request/response. The ID from the request
+	must be echoed back with the response to that request.
 DOC_END
 
 NAME: url_rewrite_host_header redirect_rewrites_host_header
