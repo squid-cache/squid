@@ -132,7 +132,7 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
     /*Run through parsed errors to check for errors*/
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
-        if (i->error_no != SSL_ERROR_NONE) {
+        if (i->error_no == SSL_ERROR_NONE) {
             debugs(83, DBG_IMPORTANT, "WARNING: cert validator incomplete response: Missing error name from error_id: " << i->id);
             return false;
         }
