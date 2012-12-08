@@ -848,9 +848,6 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
 {
     helper_request *r = srv->requests[request_number];
     if (r) {
-// TODO: parse the reply into new helper reply object
-// pass that to the callback instead of msg
-
         HLPCB *callback = r->callback;
 
         srv->requests[request_number] = NULL;
@@ -883,15 +880,12 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
                request_number << " from " << hlp->id_name << " #" << srv->index + 1 <<
                " '" << srv->rbuf << "'");
     }
-    srv->roffset -= (msg_end - srv->rbuf);
-    memmove(srv->rbuf, msg_end, srv->roffset + 1);
 
     if (!srv->flags.shutdown) {
         helperKickQueue(hlp);
     } else if (!srv->flags.closing && !srv->stats.pending) {
         srv->flags.closing=1;
         srv->writePipe->close();
-        return;
     }
 }
 
@@ -936,10 +930,16 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         /* end of reply found */
         char *msg = srv->rbuf;
         int i = 0;
+        int skip = 1;
         debugs(84, 3, "helperHandleRead: end of reply found");
 
-        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
-            t[-1] = '\0';
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n') {
+            t = '\0';
+            // rewind to the \r octet which is the real terminal now
+            // and remember that we have to skip forward 2 places now.
+            skip = 2;
+            --t;
+        }
 
         *t = '\0';
 
@@ -951,8 +951,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         }
 
         helperReturnBuffer(i, srv, hlp, msg, t);
-        // only skip off the \0 _after_ passing its location to helperReturnBuffer
-        ++t;
+        srv->roffset -= (t - srv->rbuf) + skip;
+        memmove(srv->rbuf, t, srv->roffset);
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
@@ -1049,6 +1049,12 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         t += skip;
 
         srv->flags.busy = 0;
+        /**
+         * BUG: the below assumes that only one response per read() was received and discards any octets remaining.
+         *      Doing this prohibits concurrency support with multiple replies per read().
+         * TODO: check that read() setup on these buffers pays attention to roffest!=0
+         * TODO: check that replies bigger than the buffer are discarded and do not to affect future replies
+         */
         srv->roffset = 0;
         helperStatefulRequestFree(r);
         srv->request = NULL;
