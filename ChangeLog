@@ -23,6 +23,10 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
 
+Changes to squid-3.2.5 (10 Dec 2012):
+
+	- Bug 3698: Add missing include of errno.h
+
 Changes to squid-3.2.4 (03 Dec 2012):
 
 	- Ported: urllogin ACL from squid 2.7
