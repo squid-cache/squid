@@ -66,9 +66,6 @@ statefulhelper *negotiateauthenticators = NULL;
 static int authnegotiate_initialised = 0;
 
 /// \ingroup AuthNegotiateInternal
-Auth::Negotiate::Config negotiateConfig;
-
-/// \ingroup AuthNegotiateInternal
 static hash_table *proxy_auth_cache = NULL;
 
 /*
@@ -292,7 +289,7 @@ authenticateNegotiateStats(StoreEntry * sentry)
 Auth::UserRequest::Pointer
 Auth::Negotiate::Config::decode(char const *proxy_auth)
 {
-    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(&negotiateConfig);
+    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::Config::Find("negotiate"));
     Auth::UserRequest *auth_user_request = new Auth::Negotiate::UserRequest();
     assert(auth_user_request->user() == NULL);
 
