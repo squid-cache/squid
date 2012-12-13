@@ -28,7 +28,6 @@ private:
 };
 #endif
 
-#if 1 // USE_SSL_CERT_VALIDATOR
 class CertValidationHelper
 {
 public:
@@ -43,7 +42,6 @@ private:
 
     helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 };
-#endif // USE_SSL_CERT_VALIDATOR
 
 } //namespace Ssl
 #endif // SQUID_SSL_HELPER_H
