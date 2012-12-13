@@ -108,9 +108,6 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
 }
 #endif //USE_SSL_CRTD
 
-#if 1 // USE_SSL_CERT_VALIDATOR
-/*ssl_crtd_validator*/
-
 Ssl::CertValidationHelper * Ssl::CertValidationHelper::GetInstance()
 {
     static Ssl::CertValidationHelper sslHelper;
@@ -193,4 +190,3 @@ void Ssl::CertValidationHelper::sslSubmit(CrtdMessage const & message, HLPCB * c
     msg += '\n';
     helperSubmit(ssl_crt_validator, msg.c_str(), callback, data);
 }
-#endif // USE_SSL_CERT_VALIDATOR
