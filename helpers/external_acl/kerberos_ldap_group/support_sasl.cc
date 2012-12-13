@@ -231,11 +231,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
     char *sasl_realm = NULL;
     char *sasl_authc_id = NULL;
     char *sasl_authz_id = NULL;
-#ifdef HAVE_SUN_LDAP_SDK
     char *sasl_mech = (char *) "GSSAPI";
-#else
-    char *sasl_mech = NULL;
-#endif
     /*
      * Force encryption
      */
