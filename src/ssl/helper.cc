@@ -5,8 +5,11 @@
 #include "SquidString.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
+#include "ssl/cert_validate_message.h"
 #include "wordlist.h"
 #include "SquidConfig.h"
+
+LruMap<Ssl::CertValidationResponse> *Ssl::CertValidationHelper::HelperCache = NULL;
 
 #if USE_SSL_CRTD
 Ssl::Helper * Ssl::Helper::GetInstance()
@@ -145,16 +148,34 @@ void Ssl::CertValidationHelper::Init()
     // going to use the '\1' char as the end-of-message mark.
     ssl_crt_validator->eom = '\1';
     assert(ssl_crt_validator->cmdline == NULL);
+
+    int ttl = 60;
+    size_t cache = 2048;
     {
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crt_validator);
         char *tmp_begin = tmp;
         char * token = NULL;
+        bool parseParams = true;
         while ((token = strwordtok(NULL, &tmp))) {
+            if (parseParams) {
+                if (strncmp(token, "ttl=", 4) == 0) {
+                    ttl = atoi(token + 4);
+                    continue;
+                } else if (strncmp(token, "cache=", 6) == 0) {
+                    cache = atoi(token + 6);
+                    continue;
+                } else
+                    parseParams = false;
+            }
             wordlistAdd(&ssl_crt_validator->cmdline, token);
         }
         xfree(tmp_begin);
     }
     helperOpenServers(ssl_crt_validator);
+
+    //WARNING: initializing static member in an object initialization method
+    assert(HelperCache == NULL);
+    HelperCache = new LruMap<Ssl::CertValidationResponse>(ttl, cache);
 }
 
 void Ssl::CertValidationHelper::Shutdown()
@@ -165,9 +186,58 @@ void Ssl::CertValidationHelper::Shutdown()
     wordlistDestroy(&ssl_crt_validator->cmdline);
     delete ssl_crt_validator;
     ssl_crt_validator = NULL;
+    
+    // CertValidationHelper::HelperCache is a static member, it is not good policy to
+    // reset it here. Will work because the current Ssl::CertValidationHelper is 
+    // always the same static object.
+    delete HelperCache;
+    HelperCache = NULL;
 }
 
-void Ssl::CertValidationHelper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void * data)
+struct submitData {
+    std::string query;
+    Ssl::CertValidationHelper::CVHCB *callback;
+    void *data;
+    SSL *ssl;
+    CBDATA_CLASS2(submitData);
+};
+CBDATA_CLASS_INIT(submitData);
+
+static void
+sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
+{
+    Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
+    Ssl::CertValidationResponse *validationResponse = new Ssl::CertValidationResponse;
+    std::string error;
+
+    submitData *crtdvdData = static_cast<submitData *>(data);
+    STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(crtdvdData->ssl);
+    if (reply.result == HelperReply::BrokenHelper) {
+        debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
+        validationResponse->resultCode = HelperReply::BrokenHelper;
+    } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
+        !replyMsg.parseResponse(*validationResponse, peerCerts, error) ) {
+        debugs(83, DBG_IMPORTANT, "WARNING: Reply from ssl_crtvd for " << " is incorrect");
+        debugs(83, DBG_IMPORTANT, "Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
+        validationResponse->resultCode = HelperReply::BrokenHelper;
+    }
+    else
+        validationResponse->resultCode = reply.result;
+
+    crtdvdData->callback(crtdvdData->data, *validationResponse);
+
+    if (Ssl::CertValidationHelper::HelperCache &&
+        (validationResponse->resultCode == HelperReply::Okay || validationResponse->resultCode == HelperReply::Error)) {
+        Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), validationResponse);
+    } else
+        delete validationResponse;
+
+    cbdataReferenceDone(crtdvdData->data);
+    SSL_free(crtdvdData->ssl);
+    delete crtdvdData;
+}
+
+void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &request, Ssl::CertValidationHelper::CVHCB * callback, void * data)
 {
     static time_t first_warn = 0;
     assert(ssl_crt_validator);
@@ -178,15 +248,34 @@ void Ssl::CertValidationHelper::sslSubmit(CrtdMessage const & message, HLPCB * c
         if (squid_curtime - first_warn > 3 * 60)
             fatal("ssl_crtvd queue being overloaded for long time");
         debugs(83, DBG_IMPORTANT, "WARNING: ssl_crtvd queue overload, rejecting");
-        HelperReply failReply;
-        failReply.result = HelperReply::BrokenHelper;
-        failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
-        callback(data, failReply);
+        Ssl::CertValidationResponse resp;
+        resp.resultCode = HelperReply::BrokenHelper;
+        callback(data, resp);
         return;
     }
-
     first_warn = 0;
-    std::string msg = message.compose();
-    msg += '\n';
-    helperSubmit(ssl_crt_validator, msg.c_str(), callback, data);
+
+    Ssl::CertValidationMsg message(Ssl::CrtdMessage::REQUEST);
+    message.setCode(Ssl::CertValidationMsg::code_cert_validate);
+    message.composeRequest(request);
+    debugs(83, 5, "SSL crtvd request: " << message.compose().c_str());
+
+    submitData *crtdvdData = new submitData;
+    crtdvdData->query = message.compose();
+    crtdvdData->query += '\n';
+    crtdvdData->callback = callback;
+    crtdvdData->data = cbdataReference(data);
+    crtdvdData->ssl = request.ssl;
+    CRYPTO_add(&crtdvdData->ssl->references,1,CRYPTO_LOCK_SSL);
+    Ssl::CertValidationResponse const*validationResponse;
+
+    if (CertValidationHelper::HelperCache &&
+        (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query.c_str()))) {
+        callback(data, *validationResponse);
+        cbdataReferenceDone(crtdvdData->data);
+        SSL_free(crtdvdData->ssl);
+        delete crtdvdData;
+        return;
+    }
+    helperSubmit(ssl_crt_validator, crtdvdData->query.c_str(), sslCrtvdHandleReplyWrapper, crtdvdData);
 }

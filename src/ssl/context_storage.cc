@@ -34,91 +34,14 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
     for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage.storage.begin(); i != TheGlobalContextStorage.storage.end(); ++i) {
         stream << i->first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i->second));
-        stream << ssl_store_policy.max_memory / 1024 << delimiter;
-        stream << ssl_store_policy.memory_used / SSL_CTX_SIZE << delimiter;
+        stream << ssl_store_policy.memLimit() / 1024 << delimiter;
+        stream << ssl_store_policy.entries() << delimiter;
         stream << SSL_CTX_SIZE / 1024 << delimiter;
-        stream << ssl_store_policy.memory_used / 1024 << delimiter;
-        stream << (ssl_store_policy.max_memory - ssl_store_policy.memory_used) / 1024 << endString;
+        stream << ssl_store_policy.size() / 1024 << delimiter;
+        stream << ssl_store_policy.freeMem() / 1024 << endString;
     }
     stream << endString;
     stream.flush();
-}
-
-Ssl::LocalContextStorage::LocalContextStorage(size_t aMax_memory)
-        :   max_memory(aMax_memory), memory_used(0)
-{}
-
-Ssl::LocalContextStorage::~LocalContextStorage()
-{
-    for (QueueIterator i = lru_queue.begin(); i != lru_queue.end(); ++i) {
-        delete *i;
-    }
-}
-
-SSL_CTX * Ssl::LocalContextStorage::add(const char * host_name, SSL_CTX * ssl_ctx)
-{
-    if (max_memory < SSL_CTX_SIZE) {
-        return NULL;
-    }
-    remove(host_name);
-    while (SSL_CTX_SIZE + memory_used > max_memory) {
-        purgeOne();
-    }
-    lru_queue.push_front(new Item(ssl_ctx, host_name));
-    storage.insert(MapPair(host_name, lru_queue.begin()));
-    memory_used += SSL_CTX_SIZE;
-    return ssl_ctx;
-}
-
-SSL_CTX * Ssl::LocalContextStorage::find(char const * host_name)
-{
-    MapIterator i = storage.find(host_name);
-    if (i == storage.end()) {
-        return NULL;
-    }
-    lru_queue.push_front(*(i->second));
-    lru_queue.erase(i->second);
-    i->second = lru_queue.begin();
-    return (*lru_queue.begin())->ssl_ctx;
-}
-
-void Ssl::LocalContextStorage::remove(char const * host_name)
-{
-    deleteAt(storage.find(host_name));
-}
-
-void Ssl::LocalContextStorage::purgeOne()
-{
-    QueueIterator i = lru_queue.end();
-    --i;
-    if (i != lru_queue.end()) {
-        remove((*i)->host_name.c_str());
-    }
-}
-
-void Ssl::LocalContextStorage::deleteAt(LocalContextStorage::MapIterator i)
-{
-    if (i != storage.end()) {
-
-        delete *(i->second);
-        lru_queue.erase(i->second);
-        storage.erase(i);
-        memory_used -= SSL_CTX_SIZE;
-    }
-}
-
-void Ssl::LocalContextStorage::SetSize(size_t aMax_memory)
-{
-    max_memory = aMax_memory;
-}
-
-Ssl::LocalContextStorage::Item::Item(SSL_CTX * aSsl_ctx, std::string const & aName)
-        :   ssl_ctx(aSsl_ctx), host_name(aName)
-{}
-
-Ssl::LocalContextStorage::Item::~Item()
-{
-    SSL_CTX_free(ssl_ctx);
 }
 
 ///////////////////////////////////////////////////////
@@ -166,14 +89,14 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
             if (conf_i == configureStorage.end()) {
                 storage.erase(i);
             } else {
-                i->second->SetSize(conf_i->second);
+                i->second->setMemLimit(conf_i->second);
             }
         }
 
         // add new local storages.
         for (std::map<Ip::Address, size_t>::iterator conf_i = configureStorage.begin(); conf_i != configureStorage.end(); ++conf_i ) {
             if (storage.find(conf_i->first) == storage.end()) {
-                storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(conf_i->second)));
+                storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(-1, conf_i->second)));
             }
         }
     }

@@ -18,10 +18,10 @@ namespace Ssl
 class CertValidationRequest
 {
 public:
-    STACK_OF(X509) *peerCerts; ///< The list of sent by SSL server
+    SSL *ssl;
     Errors *errors; ///< The list of errors detected
     std::string domainName; ///< The server name
-    CertValidationRequest() : peerCerts(NULL), errors(NULL) {}
+    CertValidationRequest() : ssl(NULL), errors(NULL) {}
 };
 
 /**
@@ -54,6 +54,7 @@ public:
     /// If none found a new RecvdError item added with the given id;
     RecvdError &getError(int errorId);
     RecvdErrors errors; ///< The list of parsed errors
+    HelperReply::Result_ resultCode; ///< The helper result code
 };
 
 /**
