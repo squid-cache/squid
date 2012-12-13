@@ -2440,7 +2440,12 @@ DEFAULT: none
 LOC: Ssl::TheConfig.ssl_crt_validator
 DOC_START
 	Specify the location and options of the executable for ssl_crt_validator
-	process.
+	process. Usage:
+		sslcrtvalidator_program [ttl=n] [cache=n] path ...
+
+	Options:
+	  ttl=n         TTL in seconds for cached results.The default is 60 secs
+	  cache=n       limit the result cache size. The default value is 2048
 DOC_END
 
 NAME: sslcrtvalidator_children

@@ -16,6 +16,7 @@ libbase_la_SOURCES = \
 	CbcPointer.h \
 	InstanceId.h \
 	Lock.h \
+	LruMap.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
 	Subscription.h \

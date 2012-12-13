@@ -744,15 +744,11 @@ FwdState::negotiateSSL(int fd)
 
     if (Ssl::TheConfig.ssl_crt_validator) {
         Ssl::CertValidationRequest validationRequest;
-        // WARNING: The STACK_OF(*) OpenSSL objects does not support locking.
-        // If we need to support locking we need to sk_X509_dup the STACK_OF(X509)
-        // list and lock all of the X509 members of the list.
-        // Currently we do not use any locking for any of the members of the
-        // Ssl::CertValidationRequest class. If the ssl object gone, the value returned
-        // from SSL_get_peer_cert_chain may not exist any more. In this code the
+        // WARNING: Currently we do not use any locking for any of the
+        // members of the Ssl::CertValidationRequest class. In this code the
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
-        validationRequest.peerCerts = SSL_get_peer_cert_chain(ssl);
+        validationRequest.ssl = ssl;
         validationRequest.domainName = request->GetHost();
         if (Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
@@ -761,11 +757,7 @@ FwdState::negotiateSSL(int fd)
             validationRequest.errors = NULL;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
-            Ssl::CertValidationMsg requestMsg(Ssl::CrtdMessage::REQUEST);
-            requestMsg.setCode(Ssl::CertValidationMsg::code_cert_validate);
-            requestMsg.composeRequest(validationRequest);
-            debugs(83, 5, "SSL crtvd request: " << requestMsg.compose().c_str());
-            Ssl::CertValidationHelper::GetInstance()->sslSubmit(requestMsg, sslCrtvdHandleReplyWrapper, this);
+            Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, sslCrtvdHandleReplyWrapper, this);
             return;
         } catch (const std::exception &e) {
             debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
@@ -788,14 +780,14 @@ FwdState::negotiateSSL(int fd)
 }
 
 void
-FwdState::sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
+FwdState::sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &validationResponse)
 {
     FwdState * fwd = (FwdState *)(data);
-    fwd->sslCrtvdHandleReply(reply);
+    fwd->sslCrtvdHandleReply(validationResponse);
 }
 
 void
-FwdState::sslCrtvdHandleReply(const HelperReply &reply)
+FwdState::sslCrtvdHandleReply(Ssl::CertValidationResponse const &validationResponse)
 {
     Ssl::Errors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
@@ -803,39 +795,17 @@ FwdState::sslCrtvdHandleReply(const HelperReply &reply)
     if (!Comm::IsConnOpen(serverConnection())) {
         return;
     }
-    SSL *ssl = fd_table[serverConnection()->fd].ssl;
 
-    if (!reply.other().hasContent()) {
-        debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper return <NULL> reply");
-        validatorFailed = true;
-    } else if (reply.result == HelperReply::BrokenHelper) {
-        debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
-        validatorFailed = true;
-    } else  {
-        Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
-        Ssl::CertValidationResponse validationResponse;
-        std::string error;
-        STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(ssl);
-        if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
-                !replyMsg.parseResponse(validationResponse, peerCerts, error) ) {
-            debugs(83, 5, "Reply from ssl_crtvd for " << request->GetHost() << " is incorrect");
-            validatorFailed = true;
-        } else {
-            if (reply.result == HelperReply::Okay) {
-                debugs(83, 5, "Certificate for " << request->GetHost() << " was successfully validated from ssl_crtvd");
-            } else if (reply.result == HelperReply::Error) {
-                debugs(83, 5, "Certificate for " << request->GetHost() << " found buggy by ssl_crtvd");
-                errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-            } else {
-                debugs(83, 5, "Certificate for " << request->GetHost() << " cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
-                validatorFailed = true;
-            }
+    debugs(83,5, request->GetHost() << " cert validation result: " << validationResponse.resultCode);
 
-            if (!errDetails && !validatorFailed) {
-                dispatch();
-                return;
-            }
-        }
+    if (validationResponse.resultCode == HelperReply::Error)
+        errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
+    else if (validationResponse.resultCode != HelperReply::Okay)
+        validatorFailed = true;
+
+    if (!errDetails && !validatorFailed) {
+        dispatch();
+        return;
     }
 
     ErrorState *anErr = NULL;
@@ -874,7 +844,7 @@ FwdState::sslCrtvdHandleReply(const HelperReply &reply)
 /// The first honored error, if any, is returned via errDetails parameter.
 /// The method returns all seen errors except SSL_ERROR_NONE as Ssl::Errors.
 Ssl::Errors *
-FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse &resp, Ssl::ErrorDetail *& errDetails)
+FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
     Ssl::Errors *errs = NULL;
 
