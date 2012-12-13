@@ -72,11 +72,9 @@
 #include "urn.h"
 #include "whois.h"
 #if USE_SSL
-#if 1 // USE_SSL_CERT_VALIDATOR
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
-#endif
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"
@@ -744,7 +742,6 @@ FwdState::negotiateSSL(int fd)
         serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
     }
 
-#if 1 // USE_SSL_CERT_VALIDATOR
     if (Ssl::TheConfig.ssl_crt_validator) {
         Ssl::CertValidationRequest validationRequest;
         // WARNING: The STACK_OF(*) OpenSSL objects does not support locking.
@@ -786,12 +783,10 @@ FwdState::negotiateSSL(int fd)
             return;
         }
     }
-#endif // USE_SSL_CERT_VALIDATOR
 
     dispatch();
 }
 
-#if 1 // USE_SSL_CERT_VALIDATOR
 void
 FwdState::sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
 {
@@ -928,8 +923,6 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse &resp, Ssl::ErrorDe
     return errs;
 }
 
-#endif // USE_SSL_CERT_VALIDATOR
-
 void
 FwdState::initiateSSL()
 {
@@ -992,20 +985,16 @@ FwdState::initiateSSL()
             Ssl::setClientSNI(ssl, hostname);
     }
 
-#if 1 // USE_SSL_CERT_VALIDATOR
     // If CertValidation Helper used do not lookup checklist for errors,
     // but keep a list of errors to send it to CertValidator
     if (!Ssl::TheConfig.ssl_crt_validator) {
-#endif
         // Create the ACL check list now, while we have access to more info.
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
         if (acl_access *acl = Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
             SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
         }
-#if 1 // USE_SSL_CERT_VALIDATOR
     }
-#endif
 
     // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
     X509 *peeked_cert;

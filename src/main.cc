@@ -767,10 +767,8 @@ mainReconfigureStart(void)
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
 #if USE_SSL
-#if 1 // USE_SSL_CERT_VALIDATOR
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
-#endif
     Ssl::TheGlobalContextStorage.reconfigureStart();
 #endif
     redirectShutdown();
@@ -853,7 +851,7 @@ mainReconfigureFinish(void *)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
-#if USE_SSL // && USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1054,7 +1052,7 @@ mainInitialize(void)
     Ssl::Helper::GetInstance()->Init();
 #endif
 
-#if USE_SSL // && USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1852,7 +1850,7 @@ SquidShutdown()
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
 #endif
