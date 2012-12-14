@@ -415,7 +415,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     else
         Enqueue(hlp, r);
 
-    debugs(84, 9, "helperSubmit: " << buf);
+    debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
 }
 
 /// lastserver = "server last used as part of a reserved request sequence"
@@ -457,7 +457,8 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
             StatefulEnqueue(hlp, r);
     }
 
-    debugs(84, 9, "helperStatefulSubmit: placeholder: '" << r->placeholder << "', buf '" << buf << "'.");
+    debugs(84, DBG_DATA, "placeholder: '" << r->placeholder <<
+           "', " << Raw("buf", buf, strlen(buf)));
 }
 
 /**
@@ -914,7 +915,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
     srv->roffset += len;
     srv->rbuf[srv->roffset] = '\0';
-    debugs(84, 9, "helperHandleRead: '" << srv->rbuf << "'");
+    debugs(84, DBG_DATA, Raw("accumulated", srv->rbuf, srv->roffset));
 
     if (!srv->stats.pending) {
         /* someone spoke without being spoken to */
@@ -1011,6 +1012,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     srv->roffset += len;
     srv->rbuf[srv->roffset] = '\0';
     r = srv->request;
+    debugs(84, DBG_DATA, Raw("accumulated", srv->rbuf, srv->roffset));
 
     if (r == NULL) {
         /* someone spoke without being spoken to */
