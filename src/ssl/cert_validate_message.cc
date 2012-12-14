@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "helper.h"
 #include "ssl/support.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
