@@ -110,7 +110,7 @@ LruMap<EntryValue, EntryCost>::findEntry(const char *key, LruMap::MapIterator &i
     index.erase(i->second);
     i->second = index.begin();
 
-    LruMap::Entry *e = *i->second;
+    Entry *e = *i->second;
 
     if (e && expired(*e)) {
         del(i);
@@ -122,9 +122,9 @@ template <class EntryValue, size_t EntryCost>
 EntryValue *
 LruMap<EntryValue, EntryCost>::get(const char *key)
 {
-    LruMap::MapIterator i;
+    MapIterator i;
     findEntry(key, i);
-    LruMap::Entry *e = *i->second;
+    Entry *e = *i->second;
     if (i != storage.end()) {
         touch(i);
         return e->value;
@@ -176,7 +176,7 @@ template <class EntryValue, size_t EntryCost>
 bool
 LruMap<EntryValue, EntryCost>::del(const char *key)
 {
-    LruMap::MapIterator i;
+    MapIterator i;
     findEntry(key, i);
     return del(i);
 }
@@ -186,7 +186,7 @@ void
 LruMap<EntryValue, EntryCost>::trim()
 {
     while (memLimit() > 0 && size() >= memLimit()) {
-        LruMap::QueueIterator i = index.end();
+        QueueIterator i = index.end();
         --i;
         if (i != index.end()) {
             del((*i)->key.c_str());
