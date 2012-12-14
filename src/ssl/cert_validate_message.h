@@ -4,6 +4,7 @@
 #ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 #define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 
+#include "HelperReply.h"
 #include "ssl/support.h"
 #include "ssl/crtd_message.h"
 #include <vector>
