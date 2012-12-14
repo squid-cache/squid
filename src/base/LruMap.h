@@ -31,12 +31,11 @@ public:
     };
     typedef std::list<Entry *> Queue;
     typedef typename std::list<Entry *>::iterator QueueIterator;
-    
+
     /// key:queue_item mapping for fast lookups by key
     typedef std::map<std::string, QueueIterator> Map;
     typedef typename Map::iterator MapIterator;
     typedef std::pair<std::string, QueueIterator> MapPair;
-
 
     LruMap(int ttl, size_t size);
     ~LruMap();
@@ -59,7 +58,7 @@ public:
 private:
     LruMap(LruMap<EntryValue, EntryCost> const &);
     LruMap<EntryValue, EntryCost> & operator = (LruMap<EntryValue, EntryCost> const &);
-    
+
     bool expired(Entry &e);
     void trim();
     void touch(const MapIterator &i);
@@ -110,7 +109,7 @@ LruMap<EntryValue, EntryCost>::findEntry(const char *key, LruMap::MapIterator &i
     index.push_front(*(i->second));
     index.erase(i->second);
     i->second = index.begin();
-    
+
     LruMap::Entry *e = *i->second;
 
     if (e && expired(*e)) {
@@ -163,7 +162,7 @@ template <class EntryValue, size_t EntryCost>
 bool
 LruMap<EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
 {
-     if (i != storage.end()) {
+    if (i != storage.end()) {
         delete *(i->second);
         index.erase(i->second);
         storage.erase(i);
@@ -186,7 +185,7 @@ template <class EntryValue, size_t EntryCost>
 void
 LruMap<EntryValue, EntryCost>::trim()
 {
-    while(memLimit() > 0 && size() >= memLimit()) {
+    while (memLimit() > 0 && size() >= memLimit()) {
         LruMap::QueueIterator i = index.end();
         --i;
         if (i != index.end()) {
