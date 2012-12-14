@@ -1167,7 +1167,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
 
         } else
             ldap_msgfree(res);
-            debug((char *) "%s| %s: DEBUG: Did not find ldap entry for group %s\n", LogTime(), PROGRAM, group);
+        debug((char *) "%s| %s: DEBUG: Did not find ldap entry for group %s\n", LogTime(), PROGRAM, group);
         /*
          * Cleanup
          */

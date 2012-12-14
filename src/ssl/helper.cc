@@ -186,9 +186,9 @@ void Ssl::CertValidationHelper::Shutdown()
     wordlistDestroy(&ssl_crt_validator->cmdline);
     delete ssl_crt_validator;
     ssl_crt_validator = NULL;
-    
+
     // CertValidationHelper::HelperCache is a static member, it is not good policy to
-    // reset it here. Will work because the current Ssl::CertValidationHelper is 
+    // reset it here. Will work because the current Ssl::CertValidationHelper is
     // always the same static object.
     delete HelperCache;
     HelperCache = NULL;
@@ -216,18 +216,17 @@ sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
         validationResponse->resultCode = HelperReply::BrokenHelper;
     } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
-        !replyMsg.parseResponse(*validationResponse, peerCerts, error) ) {
+               !replyMsg.parseResponse(*validationResponse, peerCerts, error) ) {
         debugs(83, DBG_IMPORTANT, "WARNING: Reply from ssl_crtvd for " << " is incorrect");
         debugs(83, DBG_IMPORTANT, "Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
         validationResponse->resultCode = HelperReply::BrokenHelper;
-    }
-    else
+    } else
         validationResponse->resultCode = reply.result;
 
     crtdvdData->callback(crtdvdData->data, *validationResponse);
 
     if (Ssl::CertValidationHelper::HelperCache &&
-        (validationResponse->resultCode == HelperReply::Okay || validationResponse->resultCode == HelperReply::Error)) {
+            (validationResponse->resultCode == HelperReply::Okay || validationResponse->resultCode == HelperReply::Error)) {
         Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), validationResponse);
     } else
         delete validationResponse;
@@ -270,7 +269,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
     Ssl::CertValidationResponse const*validationResponse;
 
     if (CertValidationHelper::HelperCache &&
-        (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query.c_str()))) {
+            (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query.c_str()))) {
         callback(data, *validationResponse);
         cbdataReferenceDone(crtdvdData->data);
         SSL_free(crtdvdData->ssl);
