@@ -22,8 +22,8 @@ public:
         Entry(const char *aKey, EntryValue *t): key(aKey), value(t), date(squid_curtime) {}
         ~Entry() {delete value;}
     private:
-        Entry(LruMap<EntryValue, EntryCost>::Entry &);
-        LruMap<EntryValue, EntryCost>::Entry & operator = (LruMap<EntryValue, EntryCost>::Entry &);
+        Entry(Entry &);
+        Entry & operator = (Entry &);
     public:
         std::string key; ///< the key of entry
         EntryValue *value; ///< A pointer to the stored value
@@ -56,8 +56,8 @@ public:
     /// The number of stored entries
     int entries() const {return entries_;}
 private:
-    LruMap(LruMap<EntryValue, EntryCost> const &);
-    LruMap<EntryValue, EntryCost> & operator = (LruMap<EntryValue, EntryCost> const &);
+    LruMap(LruMap const &);
+    LruMap & operator = (LruMap const &);
 
     bool expired(Entry &e);
     void trim();
