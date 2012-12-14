@@ -1165,9 +1165,10 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
 
             debug((char *) "%s| %s: DEBUG: Users primary group %s %s\n", LogTime(), PROGRAM, retval ? "matches" : "does not match", group);
 
-        } else
+        } else {
             ldap_msgfree(res);
-        debug((char *) "%s| %s: DEBUG: Did not find ldap entry for group %s\n", LogTime(), PROGRAM, group);
+            debug((char *) "%s| %s: DEBUG: Did not find ldap entry for group %s\n", LogTime(), PROGRAM, group);
+        }
         /*
          * Cleanup
          */
