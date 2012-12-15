@@ -159,15 +159,15 @@ void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
 void _db_set_syslog(const char *facility);
 void _db_rotate_log(void);
 
-
 /// Prints raw and/or non-terminated data safely, efficiently, and beautifully.
 /// Allows raw data debugging in debugs() statements with low debugging levels
 /// by printing only if higher section debugging levels are configured:
 ///   debugs(11, DBG_IMPORTANT, "always printed" << Raw(may be printed...));
-class Raw {
+class Raw
+{
 public:
     Raw(const char *label, const char *data, const size_t size):
-        level(-1), label_(label), data_(data), size_(size) {}
+            level(-1), label_(label), data_(data), size_(size) {}
 
     /// limit data printing to at least the given debugging level
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
