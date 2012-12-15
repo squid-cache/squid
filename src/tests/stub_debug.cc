@@ -153,7 +153,7 @@ Raw::print(std::ostream &os) const
 
     // finalize debugging level if no level was set explicitly via minLevel()
     const int finalLevel = (level >= 0) ? level :
-        (size_ > 40 ? DBG_DATA : Debug::sectionLevel);
+                           (size_ > 40 ? DBG_DATA : Debug::sectionLevel);
     if (finalLevel <= Debug::sectionLevel) {
         os << (label_ ? '=' : ' ');
         os.write(data_, size_);
