@@ -243,10 +243,10 @@ public:
     class IcapLogEntry
     {
     public:
-        IcapLogEntry() : reqMethod(methodNone), bytesSent(0), bytesRead(0),
+        IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
                 bodyBytesRead(-1), request(NULL), reply(NULL),
                 outcome(Adaptation::Icap::xoUnknown), trTime(0),
-                ioTime(0), processingTime(0), resStatus(HTTP_STATUS_NONE) {}
+                ioTime(0), resStatus(HTTP_STATUS_NONE), processingTime(0) {}
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
