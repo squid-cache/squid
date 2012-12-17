@@ -31,7 +31,7 @@ AccessLogEntry::~AccessLogEntry()
 {
     safe_free(headers.request);
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     safe_free(adapt.last_meta);
 #endif
 
