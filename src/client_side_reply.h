@@ -144,6 +144,7 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void purgeAllCached();
+    void forgetHit();
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();

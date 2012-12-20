@@ -1547,6 +1547,23 @@ clientReplyContext::cloneReply()
     buildReplyHeader();
 }
 
+/// Safely disposes of an entry pointing to a cache hit that we do not want.
+/// We cannot just ignore the entry because it may be locking or otherwise
+/// holding an associated cache resource of some sort.
+void
+clientReplyContext::forgetHit()
+{
+    StoreEntry *e = http->storeEntry();
+    assert(e); // or we are not dealing with a hit
+    // We probably have not locked the entry earlier, unfortunately. We lock it
+    // now so that we can unlock two lines later (and trigger cleanup).
+    // Ideally, ClientHttpRequest::storeEntry() should lock/unlock, but it is
+    // used so inconsistently that simply adding locking there leads to bugs.
+    e->lock();
+    http->storeEntry(NULL);
+    e->unlock(); // may delete e (and release resources associated with it)
+}
+
 void
 clientReplyContext::identifyStoreObject()
 {
@@ -1624,7 +1641,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     if (http->redirect.status) {
         /** \li If redirection status is True force this to be a MISS */
         debugs(85, 3, HERE << "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses)");
-        http->storeEntry(NULL);
+        forgetHit();
         http->logType = LOG_TCP_REDIRECT;
         doGetMoreData();
         return;
@@ -1632,7 +1649,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (!e->validToSend()) {
         debugs(85, 3, "clientProcessRequest2: !storeEntryValidToSend MISS" );
-        http->storeEntry(NULL);
+        forgetHit();
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
         return;
@@ -1648,7 +1665,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (r->flags.noCache) {
         debugs(85, 3, "clientProcessRequest2: no-cache REFRESH MISS");
-        http->storeEntry(NULL);
+        forgetHit();
         http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
         doGetMoreData();
         return;
