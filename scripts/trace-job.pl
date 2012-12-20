@@ -21,8 +21,8 @@ my $inside = 0;
 my $entering;
 
 while (<>) {
-	$entering = $_ if !$inside && /\| entering\b/;
-	undef $entering if /\| leaving\b/;
+	$entering = $_ if !$inside && /[|:] entering\b/;
+	undef $entering if /[|:] leaving\b/;
 
 	# if (!$inside && /\bcalled\b.*\b$XactId\b/o) {
 	if (!$inside && /\bstatus in\b.*\b$XactId\b/o) {
@@ -39,7 +39,7 @@ while (<>) {
 
 	# if (/\bended\b.*\b$XactId\b/o || /\bswan\s+sang\b.*\b$XactId\b/o) {
 	# if (/\bstatus out\b.*\b$XactId\b/o || /\bswan\s+sang\b.*\b$XactId\b/o ||
-	if (/\| leaving\b/) {
+	if (/[|:] leaving\b/) {
 		print "\n";
 		$inside = 0;
 	}
