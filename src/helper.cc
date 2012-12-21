@@ -935,7 +935,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         debugs(84, 3, "helperHandleRead: end of reply found");
 
         if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n') {
-            t = '\0';
+            *t = '\0';
             // rewind to the \r octet which is the real terminal now
             // and remember that we have to skip forward 2 places now.
             skip = 2;
