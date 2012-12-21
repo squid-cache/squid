@@ -134,7 +134,6 @@ interaction(
 {
     const char *dflt = interact->defresult;
 
-    flags = flags;
     switch (interact->id) {
     case SASL_CB_GETREALM:
         if (defaults)
