@@ -459,7 +459,7 @@ asnAddNet(char *as_string, int as_number)
         q = new CbDataList<int> (as_number);
         asinfo = (as_info *)xmalloc(sizeof(as_info));
         asinfo->as_number = q;
-        rn = squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
+        squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
         rn = squid_rn_match(&e->e_addr, AS_tree_head);
         assert(rn != NULL);
         e->e_info = asinfo;
