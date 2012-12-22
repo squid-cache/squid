@@ -552,13 +552,11 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         /* this "if" is based on clientHandleIMSReply() */
 
         if (status == HTTP_NOT_MODIFIED) {
-            HttpRequest *r = NULL;
             /* our old entry is fine */
             assert(fetch->old_entry);
 
             if (!fetch->old_entry->mem_obj->request)
-                fetch->old_entry->mem_obj->request = r =
-                                                         HTTPMSGLOCK(fetch->entry->mem_obj->request);
+                fetch->old_entry->mem_obj->request = HTTPMSGLOCK(fetch->entry->mem_obj->request);
 
             assert(fetch->old_entry->mem_obj->request);
 
