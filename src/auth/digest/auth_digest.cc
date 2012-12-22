@@ -129,7 +129,6 @@ static digest_nonce_h *
 authenticateDigestNonceNew(void)
 {
     digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(digest_nonce_pool->alloc());
-    digest_nonce_h *temp;
 
     /* NONCE CREATION - NOTES AND REASONING. RBC 20010108
      * === EXCERPT FROM RFC 2617 ===
@@ -183,7 +182,7 @@ authenticateDigestNonceNew(void)
      * have a random factor
      */
 
-    while ((temp = authenticateDigestNonceFindNonce((char const *) (newnonce->key)))) {
+    while (authenticateDigestNonceFindNonce((char const *) (newnonce->key))) {
         /* create a new nonce */
         newnonce->noncedata.randomdata = squid_random();
         /* Bug 3526 high performance fix: add 1 second to creationtime to avoid duplication */
