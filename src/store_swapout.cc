@@ -434,8 +434,7 @@ StoreEntry::mayStartSwapOut()
         }
 
         if (store_status != STORE_OK) {
-            const int64_t maxKnownSize = expectedEnd < 0 ?
-                                         mem_obj->availableForSwapOut() : expectedEnd;
+            const int64_t maxKnownSize = expectedEnd; // expectedEnd >= 0
             debugs(20, 7, HERE << "maxKnownSize= " << maxKnownSize);
             if (maxKnownSize < store_maxobjsize) {
                 /*
