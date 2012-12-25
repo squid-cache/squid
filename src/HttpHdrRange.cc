@@ -96,7 +96,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
             return false;
     } else
         /* must have a '-' somewhere in _this_ field */
-        if (!((p = strchr(field, '-')) || (p - field >= flen))) {
+        if (!((p = strchr(field, '-')) && (p - field < flen))) {
             debugs(64, 2, "invalid (missing '-') range-spec near: '" << field << "'");
             return false;
         } else {
