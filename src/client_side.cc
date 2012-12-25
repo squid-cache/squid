@@ -714,7 +714,8 @@ ClientHttpRequest::logRequest()
         if (request)
             al->adapted_request = HTTPMSGLOCK(request);
         accessLogLog(al, checklist);
-        updateCounters();
+        if (request)
+            updateCounters();
 
         if (getConn() != NULL && getConn()->clientConnection != NULL)
             clientdbUpdate(getConn()->clientConnection->remote, logType, AnyP::PROTO_HTTP, out.size);

@@ -182,7 +182,7 @@ MemObject::dump() const
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
     debugs(20, DBG_IMPORTANT, "MemObject->reply: " << _reply);
     debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
-    debugs(20, DBG_IMPORTANT, "MemObject->log_url: " << log_url << " " << checkNullString(log_url));
+    debugs(20, DBG_IMPORTANT, "MemObject->log_url: " << checkNullString(log_url));
 }
 
 HttpReply const *
