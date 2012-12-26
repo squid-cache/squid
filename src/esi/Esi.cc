@@ -2077,12 +2077,13 @@ esiChoose::addElement(ESIElement::Pointer element)
 
         debugs (86,3, "esiChooseAdd: Added a new element, elements = " << elements.size());
 
-        if (chosenelement == -1)
-            if ((dynamic_cast<esiWhen *>(element.getRaw()))->
-                    testsTrue()) {
+        if (chosenelement == -1) {
+            const esiWhen * topElement=dynamic_cast<esiWhen *>(element.getRaw());
+            if (topElement && topElement->testsTrue()) {
                 chosenelement = elements.size() - 1;
                 debugs (86,3, "esiChooseAdd: Chose element " << elements.size());
             }
+        }
     }
 
     return true;
