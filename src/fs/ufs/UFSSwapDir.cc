@@ -236,7 +236,7 @@ Fs::Ufs::UFSSwapDir::changeIO(DiskIOModule *module)
     /* TODO: factor out these 4 lines */
     ConfigOption *ioOptions = IO->io->getOptionTree();
 
-    if (ioOptions)
+    if (currentIOOptions && ioOptions)
         currentIOOptions->options.push_back(ioOptions);
 }
 
