@@ -57,6 +57,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
     CPPUNIT_ASSERT_EQUAL(String("http://foo/bar"), String(url));
+    xfree(url);
 
     /* a connect url with non-CONNECT data */
     url = xstrdup(":foo/bar");
