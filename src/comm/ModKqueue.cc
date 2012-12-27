@@ -55,6 +55,7 @@
 #if USE_KQUEUE
 #include "comm/Loops.h"
 #include "fde.h"
+#include "globals.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
