@@ -2281,7 +2281,7 @@ parse_peer(CachePeer ** head)
             p->sslcapath = xstrdup(token + 10);
         } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
             safe_free(p->sslcrlfile);
-            p->sslcapath = xstrdup(token + 10);
+            p->sslcrlfile = xstrdup(token + 11);
         } else if (strncmp(token, "sslflags=", 9) == 0) {
             safe_free(p->sslflags);
             p->sslflags = xstrdup(token + 9);
@@ -4178,7 +4178,7 @@ dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAf
                               cpuAffinityMap->processes()[i]);
         }
         storeAppendPrintf(entry, " cores=");
-        for (size_t i = 0; i < cpuAffinityMap->processes().size(); ++i) {
+        for (size_t i = 0; i < cpuAffinityMap->cores().size(); ++i) {
             storeAppendPrintf(entry, "%s%i", (i ? "," : ""),
                               cpuAffinityMap->cores()[i]);
         }
