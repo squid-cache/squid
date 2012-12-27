@@ -354,7 +354,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         }
 
         // Bug 3183 sanity check: If scheme is present, host must be too.
-        if (protocol != AnyP::PROTO_NONE && (host == NULL || *host == '\0')) {
+        if (protocol != AnyP::PROTO_NONE && host[0] == '\0') {
             debugs(23, DBG_IMPORTANT, "SECURITY ALERT: Missing hostname in URL '" << url << "'. see access.log for details.");
             return NULL;
         }
