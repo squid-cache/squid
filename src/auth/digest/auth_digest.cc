@@ -1025,7 +1025,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         }
     } else {
         /* cnonce and nc both require qop */
-        if (digest_request->cnonce || digest_request->nc) {
+        if (digest_request->cnonce || digest_request->nc[0] != '\0') {
             debugs(29, 2, "missing qop!");
             rv = authDigestLogUsername(username, digest_request);
             safe_free(username);
