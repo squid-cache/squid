@@ -189,7 +189,7 @@ testRangeCanonization()
 int
 main(int argc, char **argv)
 {
-    try{
+    try {
         Mem::Init();
         /* enable for debugging to console */
         //    _db_init (NULL, NULL);
