@@ -878,8 +878,10 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::E
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
                 errDetails = new Ssl::ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
             }
-            delete check->sslErrors;
-            check->sslErrors = NULL;
+            if (check) {
+                delete check->sslErrors;
+                check->sslErrors = NULL;
+            }
         }
 
         if (!errs)
