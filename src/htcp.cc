@@ -1180,14 +1180,13 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from
     /* s is a new object */
     s = htcpUnpackSpecifier(buf, sz);
 
-    s->setFrom(from);
-
-    s->setDataHeader(dhdr);
-
-    if (NULL == s) {
+    if (s == NULL) {
         debugs(31, 3, "htcpHandleTstRequest: htcpUnpackSpecifier failed");
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
         return;
+    } else {
+        s->setFrom(from);
+        s->setDataHeader(dhdr);
     }
 
     if (!s->request) {

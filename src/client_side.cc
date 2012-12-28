@@ -2141,14 +2141,18 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     }
 }
 
-/**
- *  parseHttpRequest()
+/** Parse an HTTP request
  *
- *  Returns
- *  NULL on incomplete requests
- *  a ClientSocketContext structure on success or failure.
- *  Sets result->flags.parsed_ok to 0 if failed to parse the request.
- *  Sets result->flags.parsed_ok to 1 if we have a good request.
+ *  \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
+ *          to 1 if the request was correctly parsed.
+ *  \param[in] csd a ConnStateData. The caller must make sure it is not null
+ *  \param[in] hp an HttpParser
+ *  \param[out] mehtod_p will be set as a side-effect of the parsing.
+ *          Pointed-to value will be set to Http::METHOD_NONE in case of
+ *          parsing failure
+ *  \param[out] http_ver will be set as a side-effect of the parsing
+ *  \return NULL on incomplete requests,
+ *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
 parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_p, HttpVersion *http_ver)
@@ -2224,7 +2228,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     *method_p = HttpRequestMethod(&hp->buf[hp->req.m_start], &hp->buf[hp->req.m_end]+1);
 
     /* deny CONNECT via accelerated ports */
-    if (*method_p == Http::METHOD_CONNECT && csd && csd->port && csd->port->accel) {
+    if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->accel) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
