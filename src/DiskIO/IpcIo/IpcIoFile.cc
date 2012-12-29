@@ -588,9 +588,14 @@ IpcIoFile::getFD() const
 /* IpcIoMsg */
 
 IpcIoMsg::IpcIoMsg():
-        requestId(0), offset(0), len(0), command(IpcIo::cmdNone), xerrno(0)
+        requestId(0),
+        offset(0),
+        len(0),
+        command(IpcIo::cmdNone),
+        xerrno(0)
 {
     start.tv_sec = 0;
+    start.tv_usec = 0;
 }
 
 /* IpcIoPendingRequest */

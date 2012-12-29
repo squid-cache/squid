@@ -722,8 +722,10 @@ squidaio_read(int fd, char *bufp, size_t bufs, off_t offset, int whence, squidai
 static void
 squidaio_do_read(squidaio_request_t * requestp)
 {
-    lseek(requestp->fd, requestp->offset, requestp->whence);
-    requestp->ret = read(requestp->fd, requestp->bufferp, requestp->buflen);
+    if (lseek(requestp->fd, requestp->offset, requestp->whence) >= 0)
+        requestp->ret = read(requestp->fd, requestp->bufferp, requestp->buflen);
+    else
+        requestp->ret = -1;
     requestp->err = errno;
 }
 
