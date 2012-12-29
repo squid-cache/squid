@@ -47,9 +47,12 @@
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
 
-AIODiskIOStrategy::AIODiskIOStrategy()
+AIODiskIOStrategy::AIODiskIOStrategy() :
+        fd(-1)
 {
+    aq.aq_state = AQ_STATE_NONE;
     aq.aq_numpending = 0;
+    memset(&aq.aq_queue, 0, sizeof(aq.aq_queue));
 }
 
 AIODiskIOStrategy::~AIODiskIOStrategy()
