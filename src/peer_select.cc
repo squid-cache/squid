@@ -72,8 +72,8 @@ static IRCB peerHandlePingReply;
 static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(CachePeer *, icp_common_t *, ps_state *);
 #if USE_HTCP
-static void peerHtcpParentMiss(CachePeer *, htcpReplyData *, ps_state *);
-static void peerHandleHtcpReply(CachePeer *, peer_t, htcpReplyData *, void *);
+static void peerHtcpParentMiss(CachePeer *, HtcpReplyData *, ps_state *);
+static void peerHandleHtcpReply(CachePeer *, peer_t, HtcpReplyData *, void *);
 #endif
 static int peerCheckNetdbDirect(ps_state * psstate);
 static void peerGetSomeNeighbor(ps_state *);
@@ -836,7 +836,7 @@ peerHandleIcpReply(CachePeer * p, peer_t type, icp_common_t * header, void *data
 
 #if USE_HTCP
 static void
-peerHandleHtcpReply(CachePeer * p, peer_t type, htcpReplyData * htcp, void *data)
+peerHandleHtcpReply(CachePeer * p, peer_t type, HtcpReplyData * htcp, void *data)
 {
     ps_state *psstate = (ps_state *)data;
     debugs(44, 3, "peerHandleHtcpReply: " <<
@@ -861,7 +861,7 @@ peerHandleHtcpReply(CachePeer * p, peer_t type, htcpReplyData * htcp, void *data
 }
 
 static void
-peerHtcpParentMiss(CachePeer * p, htcpReplyData * htcp, ps_state * ps)
+peerHtcpParentMiss(CachePeer * p, HtcpReplyData * htcp, ps_state * ps)
 {
     int rtt;
 
@@ -910,7 +910,7 @@ peerHandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *
 #if USE_HTCP
 
     else if (proto == AnyP::PROTO_HTCP)
-        peerHandleHtcpReply(p, type, (htcpReplyData *)pingdata, data);
+        peerHandleHtcpReply(p, type, (HtcpReplyData *)pingdata, data);
 
 #endif
 

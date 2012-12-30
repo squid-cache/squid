@@ -57,11 +57,8 @@ public:
     } cto;
 };
 
-/// \bug redundant typedef
-typedef class HtcpReplyData htcpReplyData;
-
 /// \ingroup ServerProtocolHTCP
-void neighborsHtcpReply(const cache_key *, htcpReplyData *, const Ip::Address &);
+void neighborsHtcpReply(const cache_key *, HtcpReplyData *, const Ip::Address &);
 
 /// \ingroup ServerProtocolHTCP
 void htcpOpenPorts(void);
