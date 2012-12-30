@@ -18,7 +18,7 @@ Ssl::Helper * Ssl::Helper::GetInstance()
     return &sslHelper;
 }
 
-Ssl::Helper::Helper()
+Ssl::Helper::Helper() : ssl_crtd(NULL)
 {
 }
 
