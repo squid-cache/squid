@@ -40,6 +40,18 @@ init_ls(void) {
     return lssp;
 }
 
+void
+free_ls(struct lsstruct *lssp)
+{
+    while (lssp) {
+        struct lsstruct *lsspn = lssp->next;
+        xfree(lssp->lserver);
+        xfree(lssp->domain);
+        xfree(lssp);
+        lssp = lsspn;
+    }
+}
+
 int
 create_ls(struct main_args *margs)
 {
@@ -73,18 +85,24 @@ create_ls(struct main_args *margs)
         if (*p == '@') {	/* end of group name - start of domain name */
             if (p == np) {	/* empty group name not allowed */
                 debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);
+                free_ls(lssp);
                 return (1);
+            }
+            if (dp) {  /* end of domain name - twice */
+                debug((char *) "%s| %s: @ is not allowed in server name %s@%s\n",LogTime(), PROGRAM,np,dp);
+                free_ls(lssp);
+                return(1);
             }
             *p = '\0';
             ++p;
             lssp = init_ls();
             lssp->lserver = xstrdup(np);
-            if (lsspn)		/* Have already an existing structure */
-                lssp->next = lsspn;
+            lssp->next = lsspn;
             dp = p;		/* after @ starts new domain name */
         } else if (*p == ':') {	/* end of group name or end of domain name */
             if (p == np) {	/* empty group name not allowed */
                 debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);
+                free_ls(lssp);
                 return (1);
             }
             *p = '\0';
@@ -95,8 +113,7 @@ create_ls(struct main_args *margs)
             } else {		/* end of group name and no domain name */
                 lssp = init_ls();
                 lssp->lserver = xstrdup(np);
-                if (lsspn)	/* Have already an existing structure */
-                    lssp->next = lsspn;
+                lssp->next = lsspn;
             }
             lsspn = lssp;
             np = p;		/* after : starts new group name */
@@ -106,6 +123,7 @@ create_ls(struct main_args *margs)
     }
     if (p == np) {		/* empty group name not allowed */
         debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);
+        free_ls(lssp);
         return (1);
     }
     if (dp) {			/* end of domain name */
