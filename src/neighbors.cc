@@ -74,7 +74,7 @@ static int peerWouldBePinged(const CachePeer *, HttpRequest *);
 static void neighborRemove(CachePeer *);
 static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 #if USE_HTCP
-static void neighborAliveHtcp(CachePeer *, const MemObject *, const htcpReplyData *);
+static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
 static void peerRefreshDNS(void *);
@@ -893,7 +893,7 @@ neighborUpdateRtt(CachePeer * p, MemObject * mem)
 
 #if USE_HTCP
 static void
-neighborAliveHtcp(CachePeer * p, const MemObject * mem, const htcpReplyData * htcp)
+neighborAliveHtcp(CachePeer * p, const MemObject * mem, const HtcpReplyData * htcp)
 {
     peerAlive(p);
     ++ p->stats.pings_acked;
@@ -1689,7 +1689,7 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
 
 #if USE_HTCP
 void
-neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Address &from)
+neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Address &from)
 {
     StoreEntry *e = Store::Root().get(key);
     MemObject *mem = NULL;
