@@ -136,7 +136,7 @@
 
 volatile sig_atomic_t term_flag = 0; // 'terminate' is a gcc 2.8.x internal...
 char*  linebuffer = 0;
-size_t buffersize = 16834;
+size_t buffersize = 128*1024;
 static char* copydir = 0;
 static unsigned debugFlag = 0;
 static unsigned purgeMode = 0;
@@ -324,7 +324,6 @@ action( int fd, size_t metasize,
     static const char* schablone = "PURGE %s HTTP/1.0\r\nAccept: */*\r\n\r\n";
     struct stat st;
     long size = ( fstat(fd,&st) == -1 ? -1 : long(st.st_size - metasize) );
-    int status = 0;
 
     // if we want to copy out the file, do that first of all.
     if ( ::copydir && *copydir && size > 0 )
@@ -332,6 +331,7 @@ action( int fd, size_t metasize,
                   fn, url, ::copydir, ::envelope );
 
     // do we need to PURGE the file, yes, if purgemode bit#0 was set.
+    int status = 0;
     if ( ::purgeMode & 0x01 ) {
         unsigned long bufsize = strlen(url) + strlen(schablone) + 4;
         char* buffer = new char[bufsize];
@@ -361,7 +361,13 @@ action( int fd, size_t metasize,
             return false;
         }
         close(sockfd);
-        status = strtol(buffer+8,0,10);
+        int64_t s = strtol(buffer+8,0,10);
+        if (s > 0 && s < 1000)
+            status = s;
+        else {
+            // error while reading squid's answer
+            fprintf( stderr, "invalid HTTP status in reply: %s\n", buffer+8);
+        }
         delete[] buffer;
     }
 
@@ -396,7 +402,9 @@ match( const char* fn, const REList* list )
     if ( debugFlag & 0x01 ) fprintf( stderr, "# [3] %s\n", fn );
     int fd = open( fn, O_RDONLY );
     if ( fd != -1 ) {
-        if ( read(fd,::linebuffer,::buffersize-1) > 60 ) {
+        memset(::linebuffer, 0, ::buffersize);
+        size_t readLen = read(fd,::linebuffer,::buffersize-1);
+        if ( readLen > 60 ) {
             ::linebuffer[ ::buffersize-1 ] = '\0'; // force-terminate string
 
             // check the offset into the start of object data. The offset is
@@ -417,6 +425,10 @@ match( const char* fn, const REList* list )
             while ( offset + addon <= datastart ) {
                 unsigned int size = 0;
                 memcpy( &size, linebuffer+offset+sizeof(char), sizeof(unsigned int) );
+                if (size+offset > readLen) {
+                    fputs( "WARNING: Partial meta data loaded.\n", stderr );
+                    break;
+                }
                 meta.append( SquidMetaType(*(linebuffer+offset)),
                              size, linebuffer+offset+addon );
                 offset += ( addon + size );
