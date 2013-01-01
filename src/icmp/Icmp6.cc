@@ -200,6 +200,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     debugs(42,9, HERE << "x=" << x);
 
     Log(to, 0, NULL, 0, 0);
+    to.FreeAddrInfo(S);
 }
 
 /**
@@ -293,11 +294,13 @@ Icmp6::Recv(void)
                    ( icmp6header->icmp6_type&0x80 ? icmp6HighPktStr[(int)(icmp6header->icmp6_type&0x7f)] : icmp6LowPktStr[(int)(icmp6header->icmp6_type&0x7f)] )
                   );
         }
+        preply.from.FreeAddrInfo(from);
         return;
     }
 
     if (icmp6header->icmp6_id != icmp_ident) {
         debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
+        preply.from.FreeAddrInfo(from);
         return;
     }
 
@@ -334,6 +337,7 @@ Icmp6::Recv(void)
 
     /* send results of the lookup back to squid.*/
     control.SendResult(preply, (sizeof(pingerReplyData) - PINGER_PAYLOAD_SZ + preply.psize) );
+    preply.from.FreeAddrInfo(from);
 }
 
 #endif /* USE_ICMP */
