@@ -88,8 +88,10 @@ ACLRandom::parse()
     char bufa[256], bufb[256];
 
     t = strtokFile();
-    if (!t)
+    if (!t) {
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ACL random missing pattern");
         return;
+    }
 
     debugs(28, 5, "aclParseRandomData: " << t);
 
@@ -99,7 +101,7 @@ ACLRandom::parse()
     if (sscanf(t, "%[0-9]:%[0-9]", bufa, bufb) == 2) {
         int a = xatoi(bufa);
         int b = xatoi(bufb);
-        if (a == 0 || b == 0) {
+        if (a <= 0 || b <= 0) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL random with bad pattern: '" << t << "'");
             return;
         } else
@@ -107,7 +109,7 @@ ACLRandom::parse()
     } else if (sscanf(t, "%[0-9]/%[0-9]", bufa, bufb) == 2) {
         int a = xatoi(bufa);
         int b = xatoi(bufb);
-        if (a == 0 || b == 0) {
+        if (a <= 0 || b <= 0) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL random with bad pattern: '" << t << "'");
             return;
         } else
