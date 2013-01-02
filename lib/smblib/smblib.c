@@ -252,7 +252,8 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
         SMBlib_errno = -SMBlibE_CallFailed;
         return NULL;
     }
-    strcpy(con -> desthost, host);
+    strncpy(con->desthost, host, sizeof(con->desthost));
+    con->desthost[sizeof(con->desthost)-1]='\0';
 
     /* Now connect to the remote end, but first upper case the name of the
        service we are going to call, sine some servers want it in uppercase */

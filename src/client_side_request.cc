@@ -1911,7 +1911,8 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 #endif
         calloutContext->error->detailError(errDetail);
         calloutContext->readNextRequest = true;
-        c->expectNoForwarding();
+        if (c != NULL)
+            c->expectNoForwarding();
         doCallouts();
     }
     //else if(calloutContext == NULL) is it possible?
