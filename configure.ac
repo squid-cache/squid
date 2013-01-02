@@ -1313,18 +1313,29 @@ test "x$enableval" = "xyes" && squid_opt_io_loop_engine="poll"
 ])
 AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
 
-# kqueue support is still experiemntal and unstable. Not enabled by default.
 AC_ARG_ENABLE(kqueue,
-  AS_HELP_STRING([--enable-kqueue],
-                 [Enable kqueue(2) support (experimental).]), [
+  AS_HELP_STRING([--disable-kqueue],
+                 [Disable kqueue(2) support.]), [
 SQUID_YESNO($enableval,[--enable-kqueue takes no extra argument])
 ])
-if test "x${enable_kqueue:=no}" = "xyes" ; then
-  AC_CHECK_HEADERS([sys/event.h],[],
-    [ AC_MSG_ERROR([kqueue support requires sys/event.h header file.]) ])
-  squid_opt_io_loop_engine="kqueue"
+if test "x${enable_kqueue:=auto}" != "xno" ; then
+  AC_CHECK_HEADERS([sys/event.h],[],[
+    if test "x${enable_kqueue}" = "xyes" ; then
+      AC_MSG_ERROR([kqueue support requires sys/event.h header file.])
+    fi
+  ])
+  AC_CHECK_FUNCS(kqueue,[],[
+    if test "x${enable_kqueue}" = "xyes" ; then
+      AC_MSG_ERROR([kqueue support missing in libc library.])
+    fi
+  ])
+  if test "x$ac_cv_func_kqueue" = "xyes" -a "x$ac_cv_header_sys_event_h" = "xyes" ; then
+    squid_opt_io_loop_engine="kqueue"
+  else
+    enable_kqueue="no"
+  fi
 fi
-AC_MSG_NOTICE([enabling kqueue for net I/O: $enable_kqueue])
+AC_MSG_NOTICE([enabling kqueue for net I/O: ${enable_kqueue:=auto}])
 
 dnl Enable epoll()
 AC_ARG_ENABLE(epoll,
@@ -3160,7 +3171,6 @@ AC_CHECK_FUNCS(\
 	glob \
 	htobe16 \
 	htole16 \
-	kqueue\
 	lrand48 \
 	mallinfo \
 	mallocblksize \
@@ -3228,7 +3238,7 @@ if test "x$squid_opt_io_loop_engine" != "x"; then
 	AC_MSG_NOTICE([choosing user-specified net I/O API $squid_opt_io_loop_engine])
 elif test "x$enable_epoll" != "xno" -a "x$squid_cv_epoll_works" = "xyes" ; then
   squid_opt_io_loop_engine="epoll"
-elif test "x$enable_kqueue" != "xno" -a "x$ac_cv_func_kqueue" = "xyes" ; then
+elif test "x$enable_kqueue" != "xno" ; then
   squid_opt_io_loop_engine="kqueue"
 elif test "x$enable_devpoll" != "xno" ; then
   squid_opt_io_loop_engine="devpoll"
