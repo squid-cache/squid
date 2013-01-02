@@ -395,8 +395,6 @@ asStateFree(void *data)
 static int
 asnAddNet(char *as_string, int as_number)
 {
-    rtentry_t *e;
-
     struct squid_radix_node *rn;
     CbDataList<int> **Tail = NULL;
     CbDataList<int> *q = NULL;
@@ -430,9 +428,7 @@ asnAddNet(char *as_string, int as_number)
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
-    e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
-
-    memset(e, '\0', sizeof(rtentry_t));
+    rtentry_t *e = (rtentry_t *)xcalloc(1, sizeof(rtentry_t));
 
     e->e_addr.addr = addr;
 
