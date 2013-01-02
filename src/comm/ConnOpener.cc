@@ -112,7 +112,7 @@ Comm::ConnOpener::getHost() const
  * NP: on errors the earlyAbort call should be cancelled first with a reason.
  */
 void
-Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
+Comm::ConnOpener::doneConnecting(comm_err_t errFlag, int xerrno)
 {
     // only mark the address good/bad AFTER connect is finished.
     if (host_ != NULL) {
@@ -131,7 +131,7 @@ Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
         typedef CommConnectCbParams Params;
         Params &params = GetCommParams<Params>(callback_);
         params.conn = conn_;
-        params.flag = status;
+        params.flag = errFlag;
         params.xerrno = xerrno;
         ScheduleCallHere(callback_);
         callback_ = NULL;

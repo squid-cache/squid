@@ -169,8 +169,8 @@ StoreMapWithExtras<ExtrasT>::Init(const char *const path, const int limit)
 }
 
 template <class ExtrasT>
-StoreMapWithExtras<ExtrasT>::StoreMapWithExtras(const char *const path):
-        StoreMap(path)
+StoreMapWithExtras<ExtrasT>::StoreMapWithExtras(const char *const aPath):
+        StoreMap(aPath)
 {
     const size_t sharedSizeWithoutExtras =
         Shared::SharedMemorySize(entryLimit(), 0);

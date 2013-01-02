@@ -40,7 +40,7 @@ private:
 
     void earlyAbort(const CommCloseCbParams &);
     void timeout(const CommTimeoutCbParams &);
-    void doneConnecting(comm_err_t status, int xerrno);
+    void doneConnecting(comm_err_t errFlag, int xerrno);
     static void InProgressConnectRetry(int fd, void *data);
     static void DelayedConnectRetry(void *data);
     void connect();
