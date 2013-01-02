@@ -66,8 +66,11 @@ DiskdFile::operator delete(void *address)
     cbdataFree(t);
 }
 
-DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) : errorOccured (false), IO(anIO),
-        inProgressIOs (0)
+DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) :
+        errorOccured(false),
+        IO(anIO),
+        mode(0),
+        inProgressIOs(0)
 {
     assert (aPath);
     debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
@@ -379,8 +382,10 @@ DiskdFile::readDone(diomsg * M)
     debugs(79, 3, "DiskdFile::readDone: status " << M->status);
     assert (M->requestor);
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
+
     /* remove the free protection */
-    readRequest->RefCountDereference();
+    if (readRequest != NULL)
+        readRequest->RefCountDereference();
 
     if (M->status < 0) {
         ++diskd_stats.read.fail;
@@ -404,7 +409,8 @@ DiskdFile::writeDone(diomsg *M)
     assert (M->requestor);
     WriteRequest::Pointer writeRequest = dynamic_cast<WriteRequest *>(M->requestor);
     /* remove the free protection */
-    writeRequest->RefCountDereference();
+    if (writeRequest != NULL)
+        writeRequest->RefCountDereference();
 
     if (M->status < 0) {
         errorOccured = true;
