@@ -16,8 +16,6 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
 {
     msg.getString(httpUri);
 
-    const int m = msg.getInt();
-    Must(Http::METHOD_NONE <= m && m < Http::METHOD_ENUM_END);
     String method;
     msg.getString(method);
     httpMethod = HttpRequestMethod(method.termedBuf(), NULL);
