@@ -1088,14 +1088,15 @@ htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
         htcpHandleTstResponse(hdr, buf, sz, from);
 }
 
-HtcpReplyData::HtcpReplyData() : hdr(hoHtcpReply)
+HtcpReplyData::HtcpReplyData() :
+        hit(0), hdr(hoHtcpReply), msg_id(0), version(0.0)
 {}
 
 static void
 
 htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 {
-    htcpReplyData htcpReply;
+    HtcpReplyData htcpReply;
     cache_key *key = NULL;
 
     Ip::Address *peer;

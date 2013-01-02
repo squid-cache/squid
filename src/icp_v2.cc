@@ -95,10 +95,13 @@ Comm::ConnectionPointer icpIncomingConn = NULL;
 Comm::ConnectionPointer icpOutgoingConn = NULL;
 
 /* icp_common_t */
-_icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
+_icp_common_t::_icp_common_t() :
+        opcode(ICP_INVALID), version(0), length(0), reqnum(0),
+        flags(0), pad(0), shostid(0)
 {}
 
-_icp_common_t::_icp_common_t(char *buf, unsigned int len)
+_icp_common_t::_icp_common_t(char *buf, unsigned int len) :
+        opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
 {
     if (len < sizeof(_icp_common_t)) {
         /* mark as invalid */
