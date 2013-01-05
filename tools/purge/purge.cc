@@ -353,13 +353,15 @@ action( int fd, size_t metasize,
             return false;
         }
         memset( buffer+8, 0, 4 );
-        if ( read( sockfd, buffer, bufsize ) < 1 ) {
+        int readLen = read(sockfd, buffer, bufsize);
+        if (readLen < 1) {
             // error while reading squid's answer
             fprintf( stderr, "unable to read answer: %s\n", strerror(errno) );
             close(sockfd);
             delete[] buffer;
             return false;
         }
+        buffer[bufsize-1] = '\0';
         close(sockfd);
         int64_t s = strtol(buffer+8,0,10);
         if (s > 0 && s < 1000)
@@ -425,6 +427,10 @@ match( const char* fn, const REList* list )
             while ( offset + addon <= datastart ) {
                 unsigned int size = 0;
                 memcpy( &size, linebuffer+offset+sizeof(char), sizeof(unsigned int) );
+                if (size+offset < size) {
+                    fputs("WARNING: file corruption detected. 32-bit overflow in size field.\n", stderr);
+                    break;
+                }
                 if (size+offset > readLen) {
                     fputs( "WARNING: Partial meta data loaded.\n", stderr );
                     break;
