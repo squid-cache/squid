@@ -3,8 +3,7 @@
  */
 
 #include "squid.h"
-#include "MemObject.h"
-#include "Parsing.h"
+#include "base/TextException.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/WriteRequest.h"
@@ -12,19 +11,26 @@
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
+#include "MemObject.h"
+#include "Mem.h"
+#include "Parsing.h"
 
-Rock::IoState::IoState(SwapDir &aDir,
+Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreEntry *anEntry,
                        StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data):
-        dbSlot(NULL),
+        readableAnchor_(NULL),
+        writeableAnchor_(NULL),
+        sidCurrent(-1),
         dir(aDir),
-        slotSize(dir.slotSize),
-        objOffset(0)
+        slotSize(dir->slotSize),
+        objOffset(0),
+        theBuf(dir->slotSize)
 {
     e = anEntry;
-    // swap_filen, swap_dirn and diskOffset are set by the caller
+    e->lock("rock I/O");
+    // anchor, swap_filen, and swap_dirn are set by the caller
     file_callback = cbFile;
     callback = cbIo;
     callback_data = cbdataReference(data);
@@ -35,9 +41,17 @@ Rock::IoState::IoState(SwapDir &aDir,
 Rock::IoState::~IoState()
 {
     --store_open_disk_fd;
+
+    // The dir map entry may still be open for reading at the point because
+    // the map entry lock is associated with StoreEntry, not IoState.
+    // assert(!readableAnchor_);
+    assert(!writeableAnchor_);
+
     if (callback_data)
         cbdataReferenceDone(callback_data);
     theFile = NULL;
+
+    e->unlock("rock I/O");
 }
 
 void
@@ -48,136 +62,252 @@ Rock::IoState::file(const RefCount<DiskFile> &aFile)
     theFile = aFile;
 }
 
+const Ipc::StoreMapAnchor &
+Rock::IoState::readAnchor() const
+{
+    assert(readableAnchor_);
+    return *readableAnchor_;
+}
+
+Ipc::StoreMapAnchor &
+Rock::IoState::writeAnchor()
+{
+    assert(writeableAnchor_);
+    return *writeableAnchor_;
+}
+
+/// convenience wrapper returning the map slot we are reading now
+const Ipc::StoreMapSlice &
+Rock::IoState::currentReadableSlice() const
+{
+    return dir->map->readableSlice(swap_filen, sidCurrent);
+}
+
 void
 Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data)
 {
+    debugs(79, 7, swap_filen << " reads from " << coreOff);
+
     assert(theFile != NULL);
     assert(coreOff >= 0);
 
-    Ipc::Mem::PageId pageId;
-    pageId.pool = dir.index;
-    if (coreOff < objOffset) { // rewind
-        pageId.number = dbSlot->firstSlot;
-        dbSlot = &dir.dbSlot(pageId);
+    // if we are dealing with the first read or
+    // if the offset went backwords, start searching from the beginning
+    if (sidCurrent < 0 || coreOff < objOffset) {
+        sidCurrent = readAnchor().start;
         objOffset = 0;
     }
 
-    while (coreOff >= objOffset + dbSlot->payloadSize) {
-        objOffset += dbSlot->payloadSize;
-        pageId.number = dbSlot->nextSlot;
-        assert(pageId); // XXX: should be an error?
-        dbSlot = &dir.dbSlot(pageId);
+    while (coreOff >= objOffset + currentReadableSlice().size) {
+        objOffset += currentReadableSlice().size;
+        sidCurrent = currentReadableSlice().next;
+        assert(sidCurrent >= 0); // XXX: handle "read offset too big" error
     }
-    if (pageId)
-        diskOffset = dir.diskOffset(pageId);
 
     offset_ = coreOff;
     len = min(len,
-        static_cast<size_t>(objOffset + dbSlot->payloadSize - coreOff));
+        static_cast<size_t>(objOffset + currentReadableSlice().size - coreOff));
 
     assert(read.callback == NULL);
     assert(read.callback_data == NULL);
     read.callback = cb;
     read.callback_data = cbdataReference(data);
 
+    const uint64_t diskOffset = dir->diskOffset(sidCurrent);
     theFile->read(new ReadRequest(::ReadRequest(buf,
         diskOffset + sizeof(DbCellHeader) + coreOff - objOffset, len), this));
 }
 
-// We only write data when full slot is accumulated or when close() is called.
-// We buffer, in part, to avoid forcing OS to _read_ old unwritten portions
-// of the slot when the write does not end at the page or sector boundary.
-void
+/// wraps tryWrite() to handle deep write failures centrally and safely
+bool
 Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
 {
-    assert(dbSlot);
-
-    if (theBuf.isNull()) {
-        theBuf.init(min(size + sizeof(DbCellHeader), slotSize), slotSize);
-        theBuf.appended(sizeof(DbCellHeader)); // will fill header in doWrite
+    bool success = false;
+    try {
+        tryWrite(buf, size, coreOff);
+        success = true;
+    } catch (const std::exception &e) { // TODO: should we catch ... as well?
+        debugs(79, 2, "db write error: " << e.what());
+        dir->writeError(swap_filen);
+        finishedWriting(DISK_ERROR);
+        // 'this' might be gone beyond this point; fall through to free buf
     }
 
-    if (size <= static_cast<size_t>(theBuf.spaceSize()))
-        theBuf.append(buf, size);
-    else {
-        Ipc::Mem::PageId pageId;
-        if (!dir.popDbSlot(pageId)) {
-            debugs(79, DBG_IMPORTANT, "WARNING: Rock cache_dir '" << dir.path <<
-                   "' run out of DB slots");
-            dir.writeError(swap_filen);
-            // XXX: do we need to destroy buf on error?
-            if (dtor)
-                (dtor)(const_cast<char*>(buf)); // cast due to a broken API?
-            // XXX: do we need to call callback on error?
-            callBack(DISK_ERROR);
-            return;
-        }
-        DbCellHeader &nextDbSlot = dir.dbSlot(pageId);
-        memcpy(nextDbSlot.key, dbSlot->key, sizeof(nextDbSlot.key));
-        nextDbSlot.firstSlot = dbSlot->firstSlot;
-        nextDbSlot.nextSlot = 0;
-        nextDbSlot.version = dbSlot->version;
-        nextDbSlot.payloadSize = 0;
-
-        dbSlot->nextSlot = pageId.number;
-
-        const size_t left = size - theBuf.spaceSize();
-        offset_ += theBuf.spaceSize(); // so that Core thinks we wrote it
-        theBuf.append(buf, theBuf.spaceSize());
-
-        doWrite();
-
-        dbSlot = &nextDbSlot;
-        diskOffset = dir.diskOffset(pageId);
-        theBuf.init(min(left, slotSize), slotSize);
-        write(buf + size - left, left, -1, NULL);
-    }
-
+    // careful: 'this' might be gone here
+ 
     if (dtor)
         (dtor)(const_cast<char*>(buf)); // cast due to a broken API?
+
+    return success;
 }
 
-// write what was buffered during write() calls
+/** We only write data when full slot is accumulated or when close() is called.
+ We buffer, in part, to avoid forcing OS to _read_ old unwritten portions of
+ the slot when the write does not end at the page or sector boundary. */
 void
-Rock::IoState::doWrite(const bool isLast)
+Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
+{
+    debugs(79, 7, swap_filen << " writes " << size << " more");
+
+    // either this is the first write or append; we do not support write gaps
+    assert(!coreOff || coreOff == -1);
+
+    // allocate the first slice diring the first write
+    if (!coreOff) {
+        assert(sidCurrent < 0);
+        sidCurrent = reserveSlotForWriting(); // throws on failures
+        assert(sidCurrent >= 0);
+        writeAnchor().start = sidCurrent;
+    }
+
+    // buffer incoming data in slot buffer and write overflowing or final slots
+    // quit when no data left or we stopped writing on reentrant error
+    while (size > 0 && theFile != NULL) {
+        assert(sidCurrent >= 0);
+        const size_t processed = writeToBuffer(buf, size);
+        buf += processed;
+        size -= processed;
+        const bool overflow = size > 0;
+
+        // We do not write a full buffer without overflow because
+        // we would not yet know what to set the nextSlot to.
+        if (overflow) {
+            const SlotId sidNext = reserveSlotForWriting(); // throws
+            assert(sidNext >= 0);
+            writeToDisk(sidNext);
+        }
+    }
+}
+
+/// Buffers incoming data for the current slot.
+/// Returns the number of bytes buffered.
+size_t
+Rock::IoState::writeToBuffer(char const *buf, size_t size)
+{
+    // do not buffer a cell header for nothing
+    if (!size)
+        return 0;
+
+    if (!theBuf.size) {
+        // will fill the header in writeToDisk when the next slot is known
+        theBuf.appended(sizeof(DbCellHeader));
+    }
+
+    size_t forCurrentSlot = min(size, static_cast<size_t>(theBuf.spaceSize()));
+    theBuf.append(buf, forCurrentSlot);
+    offset_ += forCurrentSlot; // so that Core thinks we wrote it
+    return forCurrentSlot;
+}
+
+/// write what was buffered during write() calls
+/// negative sidNext means this is the last write request for this entry
+void
+Rock::IoState::writeToDisk(const SlotId sidNext)
 {
     assert(theFile != NULL);
-    assert(!theBuf.isNull());
+    assert(theBuf.size >= sizeof(DbCellHeader));
+
+    if (sidNext < 0) { // we are writing the last slot
+        e->swap_file_sz = offset_;
+        writeAnchor().basics.swap_file_sz = offset_; // would not hurt, right?
+    }
 
     // TODO: if DiskIO module is mmap-based, we should be writing whole pages
     // to avoid triggering read-page;new_head+old_tail;write-page overheads
 
+    const uint64_t diskOffset = dir->diskOffset(sidCurrent);
     debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
-           theBuf.contentSize());
+           theBuf.size);
 
-    dbSlot->payloadSize = theBuf.contentSize() - sizeof(DbCellHeader);
-    memcpy(theBuf.content(), dbSlot, sizeof(DbCellHeader));
+    // finalize map slice
+    Ipc::StoreMap::Slice &slice =
+        dir->map->writeableSlice(swap_filen, sidCurrent);
+    slice.next = sidNext;
+    slice.size = theBuf.size - sizeof(DbCellHeader);
 
-    assert(static_cast<size_t>(theBuf.contentSize()) <= slotSize);
-    // theFile->write may call writeCompleted immediatelly
+    // finalize db cell header
+    DbCellHeader header;
+    memcpy(header.key, e->key, sizeof(header.key));
+    header.firstSlot = writeAnchor().start;
+    header.nextSlot = sidNext;
+    header.payloadSize = theBuf.size - sizeof(DbCellHeader);
+    header.entrySize = e->swap_file_sz; // may still be zero unless sidNext < 0
+    header.version = writeAnchor().basics.timestamp;
+
+    // copy finalized db cell header into buffer
+    memcpy(theBuf.mem, &header, sizeof(DbCellHeader));
+
+    // and now allocate another buffer for the WriteRequest so that
+    // we can support concurrent WriteRequests (and to ease cleaning)
+    // TODO: should we limit the number of outstanding requests?
+    size_t wBufCap = 0;
+    void *wBuf = memAllocBuf(theBuf.size, &wBufCap);
+    memcpy(wBuf, theBuf.mem, theBuf.size);
+
     WriteRequest *const r = new WriteRequest(
-        ::WriteRequest(theBuf.content(), diskOffset, theBuf.contentSize(),
-                       theBuf.freeFunc()), this, isLast);
+        ::WriteRequest(static_cast<char*>(wBuf), diskOffset, theBuf.size,
+            memFreeBufFunc(wBufCap)), this, sidNext < 0);
+    theBuf.clear();
+
+    sidCurrent = sidNext;
+
+    // theFile->write may call writeCompleted immediatelly
     theFile->write(r);
 }
 
-//
+/// finds and returns a free db slot to fill or throws
+Rock::SlotId
+Rock::IoState::reserveSlotForWriting()
+{
+    Ipc::Mem::PageId pageId;
+    if (dir->useFreeSlot(pageId))
+        return pageId.number-1;
+
+    // This may happen when the number of available db slots is close to the
+    // number of concurrent requests reading or writing those slots, which may
+    // happen when the db is "small" compared to the request traffic OR when we
+    // are rebuilding and have not loaded "many" entries or empty slots yet.
+    throw TexcHere("ran out of free db slots");
+}
+
 void
 Rock::IoState::finishedWriting(const int errFlag)
 {
     // we incremented offset_ while accumulating data in write()
+    writeableAnchor_ = NULL;
     callBack(errFlag);
 }
 
 void
 Rock::IoState::close(int how)
 {
-    debugs(79, 3, HERE << swap_filen << " accumulated: " << offset_ <<
-           " how=" << how);
-    if (how == wroteAll && !theBuf.isNull())
-        doWrite(true);
-    else
-        callBack(how == writerGone ? DISK_ERROR : 0); // TODO: add DISK_CALLER_GONE
+    debugs(79, 3, swap_filen << " offset: " << offset_ << " how: " << how <<
+           " buf: " << theBuf.size << " callback: " << callback);
+
+    if (!theFile) {
+        debugs(79, 3, "I/O already canceled");
+        assert(!callback);
+        assert(!writeableAnchor_);
+        assert(!readableAnchor_);
+        return;
+    }
+
+    switch (how) {
+    case wroteAll:
+        assert(theBuf.size > 0); // we never flush last bytes on our own
+        writeToDisk(-1); // flush last, yet unwritten slot to disk
+        return; // writeCompleted() will callBack()
+
+    case writerGone:
+        assert(writeableAnchor_);
+        dir->writeError(swap_filen); // abort a partially stored entry
+        finishedWriting(DISK_ERROR);
+        return;
+
+    case readerDone:
+        callBack(0);
+        return;
+    }
 }
 
 /// close callback (STIOCB) dialer: breaks dependencies and
