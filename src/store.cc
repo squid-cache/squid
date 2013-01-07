@@ -514,20 +514,15 @@ StoreEntry::purgeMem()
         release();
 }
 
-/* RBC 20050104 this is wrong- memory ref counting
- * is not at all equivalent to the store 'usage' concept
- * which the replacement policies should be acting upon.
- * specifically, object iteration within stores needs
- * memory ref counting to prevent race conditions,
- * but this should not influence store replacement.
- */
 void
-
-StoreEntry::lock()
+StoreEntry::lock(const char *context)
 {
     ++lock_count;
-    debugs(20, 3, "StoreEntry::lock: key '" << getMD5Text() <<"' count=" <<
-           lock_count  );
+    debugs(20, 3, context << " locked key " << getMD5Text() << ' ' << *this);
+}
+
+void
+StoreEntry::touch() {
     lastref = squid_curtime;
     Store::Root().reference(*this);
 }
@@ -561,13 +556,13 @@ StoreEntry::releaseRequest()
     setPrivateKey();
 }
 
-/* unlock object, return -1 if object get released after unlock
- * otherwise lock_count */
 int
-StoreEntry::unlock()
+StoreEntry::unlock(const char *context)
 {
+	
+    debugs(20, 3, (context ? context : "somebody") <<
+           " unlocking key " << getMD5Text() << ' ' << *this);
     --lock_count;
-    debugs(20, 3, "StoreEntry::unlock: key '" << getMD5Text() << "' count=" << lock_count);
 
     if (lock_count)
         return (int) lock_count;
@@ -2033,7 +2028,7 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
     return os << e.swap_filen << '@' << e.swap_dirn << '=' <<
            e.mem_status << '/' << e.ping_status << '/' << e.store_status << '/' <<
-           e.swap_status;
+           e.swap_status << '*' << e.lock_count;
 }
 
 /* NullStoreEntry */
