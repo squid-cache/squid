@@ -1,16 +1,14 @@
 #ifndef SQUID_FS_ROCK_DB_CELL_H
 #define SQUID_FS_ROCK_DB_CELL_H
 
-namespace Ipc
-{
-class StoreMapSlot;
-}
+#include "typedefs.h"
 
 namespace Rock
 {
 
 /** \ingroup Rock
  * Meta-information at the beginning of every db cell.
+ * Links multiple map slots belonging to the same entry into an entry chain.
  * Stored on disk and used as sizeof() argument so it must remain POD.
  */
 class DbCellHeader
@@ -18,14 +16,21 @@ class DbCellHeader
 public:
     DbCellHeader();
 
-    /// whether the freshly loaded header fields make sense
-    bool sane() const;
+    /// true iff no entry occupies this slot
+    bool empty() const { return !firstSlot && !nextSlot && !payloadSize; }
+
+    /* members below are not meaningful if empty() */
+
+    /// whether this slot is not corrupted
+    bool sane() const { return firstSlot >= 0 && nextSlot >= -1 &&
+       version > 0 && payloadSize > 0; }
 
     uint64_t key[2]; ///< StoreEntry key
-    uint32_t firstSlot; ///< first slot pointer in the entry chain
-    uint32_t nextSlot; ///< next slot pointer in the entry chain
-    uint32_t version; ///< entry chain version
-    uint32_t payloadSize; ///< cell contents size excluding this header
+    uint64_t entrySize; ///< total entry content size or zero if still unknown
+    uint32_t payloadSize; ///< slot contents size, always positive
+    uint32_t version;  ///< detects conflicts among same-key entries
+    sfileno firstSlot; ///< slot ID of the first slot occupied by the entry
+    sfileno nextSlot; ///< slot ID of the next slot occupied by the entry
 };
 
 } // namespace Rock

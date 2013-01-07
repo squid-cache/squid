@@ -5,6 +5,7 @@
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "fs/rock/RockDbCell.h"
+#include "fs/rock/RockForward.h"
 #include "ipc/StoreMap.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
@@ -16,12 +17,13 @@ class WriteRequest;
 namespace Rock
 {
 
-class Rebuild;
-
 /// \ingroup Rock
 class SwapDir: public ::SwapDir, public IORequestor, public Ipc::StoreMapCleaner
 {
 public:
+    typedef RefCount<SwapDir> Pointer;
+    typedef Ipc::StoreMap DirMap;
+
     SwapDir();
     virtual ~SwapDir();
 
@@ -41,25 +43,24 @@ public:
     // temporary path to the shared memory map of first slots of cached entries
     const char *inodeMapPath() const;
     // temporary path to the shared memory stack of free slots
-    const char *spaceIndexPath() const;
+    const char *freeSlotsPath() const;
 
     int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
     int64_t entryLimitAllowed() const;
 
-    bool popDbSlot(Ipc::Mem::PageId &pageId);
-    DbCellHeader &dbSlot(const Ipc::Mem::PageId &pageId);
-    const DbCellHeader &dbSlot(const Ipc::Mem::PageId &pageId) const;
+    /// removes a slot from a list of free slots or returns false
+    bool useFreeSlot(Ipc::Mem::PageId &pageId);
+    /// whether the given slot ID may point to a slot in this db
+    bool validSlotId(const SlotId slotId) const;
+    /// purges one or more entries to make full() false and free some slots
+    void purgeSome();
 
     int64_t diskOffset(Ipc::Mem::PageId &pageId) const;
+    int64_t diskOffset(int filen) const;
     void writeError(const sfileno fileno);
 
-    virtual void cleanReadable(const sfileno fileno);
-
-    // TODO: merge with MemStoreMapExtras?
-    struct MapExtras {
-        Ipc::Mem::PageId pageId;
-    };
-    typedef Ipc::StoreMapWithExtras<MapExtras> DirMap;
+    /* StoreMapCleaner API */
+    virtual void noteFreeMapSlice(const sfileno fileno);
 
     uint64_t slotSize; ///< all db slots are of this size
 
@@ -101,23 +102,24 @@ protected:
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope
     void ignoreReferences(StoreEntry &e); ///< delete from repl policy scope
 
-    int64_t diskOffset(int filen) const;
     int64_t diskOffsetLimit() const;
     int entryLimit() const { return map->entryLimit(); }
     int entryMaxPayloadSize() const;
     int entriesNeeded(const int64_t objSize) const;
 
     friend class Rebuild;
+    friend class IoState;
     const char *filePath; ///< location of cache storage file inside path/
+    DirMap *map; ///< entry key/sfileno to MaxExtras/inode mapping
 
 private:
     void createError(const char *const msg);
 
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
-    DirMap *map;
-    DbCellHeader *dbSlots;
-    Ipc::Mem::Pointer<Ipc::Mem::PageStack> dbSlotIndex;
+    DbCellHeader *allSlots; ///< SlotId to DbCellHeader mapping
+    Ipc::Mem::Pointer<Ipc::Mem::PageStack> freeSlots; ///< free slots
+	Ipc::Mem::PageId *waitingForPage; ///< one-page cache for a "hot" free slot
 
     /* configurable options */
     DiskFile::Config fileConfig; ///< file-level configuration options
@@ -138,7 +140,7 @@ protected:
 
 private:
     Vector<SwapDir::DirMap::Owner *> mapOwners;
-    Vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> dbSlotsOwners;
+    Vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
 };
 
 } // namespace Rock
