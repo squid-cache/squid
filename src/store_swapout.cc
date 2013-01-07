@@ -123,7 +123,7 @@ storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     e->swap_dirn = mem->swapout.sio->swap_dirn;
 }
 
-static void
+static bool
 doPages(StoreEntry *anEntry)
 {
     MemObject *mem = anEntry->mem_obj;
@@ -134,7 +134,7 @@ doPages(StoreEntry *anEntry)
             mem->data_hdr.getBlockContainingLocation(mem->swapout.queue_offset);
 
         if (!page)
-            return; // wait for more data to become available
+            break; // wait for more data to become available
 
         // memNodeWriteComplete() and absence of buffer offset math below
         // imply that we always write from the very beginning of the page
@@ -158,15 +158,16 @@ doPages(StoreEntry *anEntry)
 
         mem->swapout.queue_offset += swap_buf_len;
 
-        storeIOWrite(mem->swapout.sio,
+        // Quit if write() fails. Sio is going to call our callback, and that
+        // will cleanup, but, depending on the fs, that call may be async.
+        const bool ok = mem->swapout.sio->write(
                      mem->data_hdr.NodeGet(page),
                      swap_buf_len,
                      -1,
                      memNodeWriteComplete);
 
-        /* the storeWrite() call might generate an error */
-        if (anEntry->swap_status != SWAPOUT_WRITING)
-            break;
+        if (!ok || anEntry->swap_status != SWAPOUT_WRITING)
+            return false;
 
         int64_t swapout_size = mem->endOffset() - mem->swapout.queue_offset;
 
@@ -175,8 +176,11 @@ doPages(StoreEntry *anEntry)
                 break;
 
         if (swapout_size <= 0)
-            return;
+            break;
     } while (true);
+
+    // either wait for more data or call swapOutFileClose()
+    return true;
 }
 
 /* This routine is called every time data is sent to the client side.
@@ -267,9 +271,7 @@ StoreEntry::swapOut()
     if (mem_obj->swapout.sio == NULL)
         return;
 
-    doPages(this);
-
-    if (mem_obj->swapout.sio == NULL)
+    if (!doPages(this))
         /* oops, we're not swapping out any more */
         return;
 
