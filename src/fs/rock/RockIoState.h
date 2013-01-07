@@ -1,8 +1,8 @@
 #ifndef SQUID_FS_ROCK_IO_STATE_H
 #define SQUID_FS_ROCK_IO_STATE_H
 
-#include "MemBuf.h"
-#include "SwapDir.h"
+#include "fs/rock/RockSwapDir.h"
+#include "MemBlob.h"
 
 class DiskFile;
 
@@ -18,33 +18,48 @@ class IoState: public ::StoreIOState
 public:
     typedef RefCount<IoState> Pointer;
 
-    IoState(SwapDir &aDir, StoreEntry *e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
+    IoState(Rock::SwapDir::Pointer &aDir, StoreEntry *e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
     virtual ~IoState();
 
     void file(const RefCount<DiskFile> &aFile);
 
     // ::StoreIOState API
     virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-    virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func);
+    virtual bool write(char const *buf, size_t size, off_t offset, FREE * free_func);
     virtual void close(int how);
 
-    void finishedWriting(int errFlag);
+    /// whether we are still waiting for the I/O results (i.e., not closed)
+    bool stillWaiting() const { return theFile != NULL; }
 
-    int64_t diskOffset; ///< the start of this cell inside the db file
-    DbCellHeader *dbSlot; ///< current db slot, used for writing
+    /// called by SwapDir::writeCompleted() after the last write and on error
+    void finishedWriting(const int errFlag);
 
     MEMPROXY_CLASS(IoState);
 
+    /* one and only one of these will be set and locked; access via *Anchor() */
+    const Ipc::StoreMapAnchor *readableAnchor_; ///< starting point for reading
+    Ipc::StoreMapAnchor *writeableAnchor_; ///< starting point for writing
+
+    SlotId sidCurrent; ///< ID of the db slot currently being read or written
+
 private:
-    void doWrite(const bool isLast = false);
+    const Ipc::StoreMapAnchor &readAnchor() const;
+    Ipc::StoreMapAnchor &writeAnchor();
+    const Ipc::StoreMapSlice &currentReadableSlice() const;
+
+    void tryWrite(char const *buf, size_t size, off_t offset);
+    size_t writeToBuffer(char const *buf, size_t size);
+    void writeToDisk(const SlotId nextSlot);
+    SlotId reserveSlotForWriting();
+    
     void callBack(int errflag);
 
-    SwapDir &dir; ///< swap dir object
+    Rock::SwapDir::Pointer dir; ///< swap dir that initiated I/O
     const size_t slotSize; ///< db cell size
     int64_t objOffset; ///< object offset for current db slot
 
     RefCount<DiskFile> theFile; // "file" responsible for this I/O
-    MemBuf theBuf; // use for write content accumulation only
+    MemBlob theBuf; // use for write content accumulation only
 };
 
 MEMPROXY_CLASS_INLINE(IoState);

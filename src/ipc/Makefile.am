@@ -21,6 +21,8 @@ libipc_la_SOURCES = \
 	StartListening.h \
 	StoreMap.cc \
 	StoreMap.h \
+	StoreMapSlice.cc \
+	StoreMapSlice.h \
 	StrandCoord.cc \
 	StrandCoord.h \
 	StrandCoords.h \
