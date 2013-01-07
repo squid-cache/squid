@@ -55,6 +55,10 @@ my %Pairs = (
 		'fd_open.*\sFD (\d+)',
 		'fd_close\s+FD (\d+)',
 	],
+	IpcStoreMapEntry => [
+		'StoreMap.* opened .*entry (\d+)',
+		'StoreMap.* closed .*entry (\d+)',
+	],
 );
 
 if (!$Pairs{$Thing}) {
