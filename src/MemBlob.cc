@@ -117,6 +117,14 @@ MemBlob::memAlloc(const size_type minSize)
 }
 
 void
+MemBlob::appended(const size_type n)
+{
+    Must(willFit(n));
+    size += n;
+    ++Stats.append;
+}
+
+void
 MemBlob::append(const char *source, const size_type n)
 {
     if (n > 0) { // appending zero bytes is allowed but only affects the stats
