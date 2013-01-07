@@ -74,6 +74,7 @@ storeCleanup(void *datanotused)
     static int store_errors = 0;
     static StoreSearchPointer currentSearch;
     static int validated = 0;
+    static int seen = 0;
 
     if (currentSearch == NULL || currentSearch->isDone())
         currentSearch = Store::Root().search(NULL, NULL);
@@ -85,6 +86,8 @@ storeCleanup(void *datanotused)
         StoreEntry *e;
 
         e = currentSearch->currentItem();
+
+        ++seen;
 
         if (EBIT_TEST(e->flags, ENTRY_VALIDATED))
             continue;
@@ -113,6 +116,7 @@ storeCleanup(void *datanotused)
     }
 
     if (currentSearch->isDone()) {
+        debugs(20, 2, "Seen: " << seen << " entries");
         debugs(20, DBG_IMPORTANT, "  Completed Validation Procedure");
         debugs(20, DBG_IMPORTANT, "  Validated " << validated << " Entries");
         debugs(20, DBG_IMPORTANT, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
@@ -368,9 +372,8 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
             return false;
         }
     } else if (tmpe.swap_file_sz <= 0) {
-        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with " <<
-               "unknown size: " << tmpe);
-        return false;
+        // if caller cannot handle unknown sizes, it must check after the call.
+        debugs(47, 7, "unknown size: " << tmpe);
     }
 
     if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
