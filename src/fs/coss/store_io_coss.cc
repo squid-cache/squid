@@ -334,7 +334,7 @@ CossState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *c
     }
 }
 
-void
+bool
 CossState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
 {
     char *dest;
@@ -360,6 +360,7 @@ CossState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
         (free_func) ((char *)buf);
 
     ++ StoreFScoss::GetInstance().stats.write.success;
+    return true;
 }
 
 off_t
