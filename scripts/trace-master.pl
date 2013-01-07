@@ -27,8 +27,8 @@ my $inside = 0;
 my $entering;
 
 while (<STDIN>) {
-	$entering = $_ if !$inside && /\| entering\b/;
-	undef $entering if /\| leaving\b/;
+	$entering = $_ if !$inside && /[|:] entering\b/;
+	undef $entering if /[|:] leaving\b/;
 
 	if (!$inside && /\bstatus in\b.*\b(?:async|job|icapx)(\d+)\b/o) {
 		$inside = $1;
@@ -48,7 +48,7 @@ while (<STDIN>) {
 		&linkJobs($inside, $1, $_);
 	}
 	
-	if (/\| leaving\b/) {
+	if (/[|:] leaving\b/) {
 		$inside = 0;
 	}
 }
@@ -158,6 +158,6 @@ sub reportJobHistory {
 
 	foreach my $line (@lines) {
 		print "$line\n";
-		print "\n" if $line =~ /\| leaving\b/;
+		print "\n" if $line =~ /[|:] leaving\b/;
 	}
 }
