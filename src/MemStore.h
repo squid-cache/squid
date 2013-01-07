@@ -53,7 +53,7 @@ protected:
     bool copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras);
 
     // Ipc::StoreMapCleaner API
-    virtual void cleanReadable(const sfileno fileno);
+    virtual void noteFreeMapSlice(const sfileno sliceId);
 
 private:
     MemStoreMap *map; ///< index of mem-cached entries

@@ -157,11 +157,11 @@ MemStore::get(const cache_key *key)
 
     // XXX: replace sfileno with a bigger word (sfileno is only for cache_dirs)
     sfileno index;
-    const Ipc::StoreMapSlot *const slot = map->openForReading(key, index);
+    const Ipc::StoreMapAnchor *const slot = map->openForReading(key, index);
     if (!slot)
         return NULL;
 
-    const Ipc::StoreMapSlot::Basics &basics = slot->basics;
+    const Ipc::StoreMapAnchor::Basics &basics = slot->basics;
     const MemStoreMap::Extras &extras = map->extras(index);
 
     // create a brand new store entry and initialize it with stored info
@@ -197,7 +197,7 @@ MemStore::get(const cache_key *key)
     }
 
     debugs(20, 3, HERE << "mem-loading failed; freeing " << index);
-    map->free(index); // do not let others into the same trap
+    map->freeEntry(index); // do not let others into the same trap
     return NULL;
 }
 
@@ -329,7 +329,7 @@ MemStore::keep(StoreEntry &e)
     }
 
     sfileno index = 0;
-    Ipc::StoreMapSlot *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e.key), index);
+    Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e.key), index);
     if (!slot) {
         debugs(20, 5, HERE << "No room in mem-cache map to index " << e);
         return;
@@ -381,7 +381,7 @@ MemStore::copyToShm(StoreEntry &e, MemStoreMap::Extras &extras)
 }
 
 void
-MemStore::cleanReadable(const sfileno fileno)
+MemStore::noteFreeMapSlice(const sfileno fileno)
 {
     Ipc::Mem::PutPage(map->extras(fileno).page);
     theCurrentSize -= Ipc::Mem::PageSize();
