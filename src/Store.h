@@ -195,13 +195,27 @@ public:
     virtual void buffer();
     /** flush any buffered content */
     virtual void flush();
-    /** reduce the memory lock count on the entry */
-    virtual int unlock();
-    /** increate the memory lock count on the entry */
     virtual int64_t objectLen() const;
     virtual int64_t contentLen() const;
 
-    virtual void lock();
+    /** deprecated: lock() in anonymous context folowed by touch()
+     * RBC 20050104 this is wrong- memory ref counting
+     * is not at all equivalent to the store 'usage' concept
+     * which the replacement policies should be acting upon.
+     * specifically, object iteration within stores needs
+     * memory ref counting to prevent race conditions,
+     * but this should not influence store replacement.
+     */
+    void lock() { lock("somebody"); touch(); }
+
+    /// claim shared ownership of this entry (for use in a given context)
+    void lock(const char *context);
+    /// disclaim shared ownership; may remove entry from store and delete it
+    /// returns remaning lock level (zero for unlocked and possibly gone entry)
+    int unlock(const char *context = "somebody");
+    /// update last reference timestamp and related Store metadata
+    void touch();
+
     virtual void release();
 
 #if USE_ADAPTATION
