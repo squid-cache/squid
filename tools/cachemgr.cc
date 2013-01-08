@@ -990,7 +990,7 @@ read_post_request(void)
     len -= readLen;
 
     // purge the remainder of the request entity
-    while (len > 0) {
+    while (len > 0 && readLen) {
         char temp[65535];
         readLen = fread(temp, 1, 65535, stdin);
         len -= readLen;
