@@ -1,3 +1,7 @@
+Changes to squid-3.1.23 (09 Jan 2013):
+
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
+
 Changes to squid-3.1.22 (03 Dec 2012):
 
 	- Bug 3685: Squid hangs in Delay Pools ClassCBucket::update
