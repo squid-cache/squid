@@ -1,3 +1,12 @@
+Changes to squid-3.3.0.3 (09 Jan 2013):
+
+	- Bug 3729: 32-bit overflow in parsing 64-bit configuration values
+	- Bug 3728: Improve debug for cache_dir
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
+	- kerberos_ldap_group: support multiple groups in squid.conf ACL definition
+	- kqueue: update status from experimental to fully available net I/O method
+	- ... and many memory leaks and potential bugs detected by Coverity Scan
+
 Changes to squid-3.3.0.2 (03 Dec 2012):
 
 	- Support matching empty header field values using req_header and rep_header
@@ -22,6 +31,14 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.6 (09 Jan 2013):
+
+	- Regression Bug 3731: TOS setsockopt() requires int value
+	- Regression Bug 3712: Rotating logs overwrites the previous log
+	- Bug 3727: LLVM compile errors in kerberos_ldap_group
+	- Bug 3650: Negotiate auth missing challenge token
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
 
 Changes to squid-3.2.5 (10 Dec 2012):
 
@@ -475,6 +492,10 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.23 (09 Jan 2013):
+
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
 
 Changes to squid-3.1.22 (03 Dec 2012):
 
