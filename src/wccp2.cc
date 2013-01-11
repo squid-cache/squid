@@ -1000,7 +1000,8 @@ wccp2ConnectionOpen(void)
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
     {
         int i = IP_PMTUDISC_DONT;
-        setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
+        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0)
+            debugs(80, 2, "WARNING: Path MTU discovery could not be disabled on FD " << theWccp2Connection << ": " << xstrerror());
     }
 
 #endif
@@ -1039,8 +1040,9 @@ wccp2ConnectionOpen(void)
             /* Disconnect the sending socket. Note: FreeBSD returns error
              * but disconnects anyway so we have to just assume it worked
              */
-            if (wccp2_numrouters > 1)
-                connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
+            if (wccp2_numrouters > 1) {
+                (void)connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
+            }
         }
 
         service_list_ptr = service_list_ptr->next;
@@ -1598,10 +1600,9 @@ wccp2HereIam(void *voidnotused)
                                 &service_list_ptr->wccp_packet,
                                 service_list_ptr->wccp_packet_size);
             } else {
-                send(theWccp2Connection,
-                     &service_list_ptr->wccp_packet,
-                     service_list_ptr->wccp_packet_size,
-                     0);
+                errno = 0;
+                if (send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < service_list_ptr->wccp_packet_size)
+                    debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << router << " : " << xstrerror());
             }
         }
 
@@ -1975,20 +1976,21 @@ wccp2AssignBuckets(void *voidnotused)
             if (ntohl(router_list_ptr->num_caches)) {
                 /* send packet */
 
+                /* FIXME INET6 : drop temp conversion */
+                Ip::Address tmp_rtr(router);
+
                 if (wccp2_numrouters > 1) {
-                    /* FIXME INET6 : drop temp conversion */
-                    Ip::Address tmp_rtr(router);
                     comm_udp_sendto(theWccp2Connection,
                                     tmp_rtr,
                                     &wccp_packet,
                                     offset);
                 } else {
-                    send(theWccp2Connection,
-                         &wccp_packet,
-                         offset,
-                         0);
+                    errno = 0;
+                    if (send(theWccp2Connection, &wccp_packet, offset, 0) < offset)
+                        debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << tmp_rtr << " : " << xstrerror());
                 }
             }
+            safe_free(weight);
         }
 
         service_list_ptr = service_list_ptr->next;
