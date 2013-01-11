@@ -206,7 +206,7 @@ main(int argc, char *argv[])
         } else {
             user = p;
             rfc1738_unescape(user);
-            if (user && strip_dm) {
+            if (strip_dm) {
                 suser = strchr(user, '\\');
                 if (!suser) suser = strchr(user, '/');
                 if (suser && suser[1]) user = suser + 1;
