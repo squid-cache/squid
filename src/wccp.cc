@@ -303,7 +303,7 @@ wccpHereIam(void *voidnotused)
 
     // if we failed to send the whole lot, try again at a shorter interval (20%)
     if (sent != sizeof(wccp_here_i_am)) {
-        debusg(80, 2, "ERROR: failed to send WCCP HERE_I_AM packet: " << xstrerror());
+        debugs(80, 2, "ERROR: failed to send WCCP HERE_I_AM packet: " << xstrerror());
         interval = 2.0;
     }
 
