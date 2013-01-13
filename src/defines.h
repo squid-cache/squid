@@ -175,7 +175,7 @@
 
 /* required for AF_UNIX below to be defined [on FreeBSD] */
 #if HAVE_SYS_SOCKET_H
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #endif
 
 #if HAVE_SOCKETPAIR && defined (AF_UNIX)
