@@ -1601,7 +1601,7 @@ wccp2HereIam(void *voidnotused)
                                 service_list_ptr->wccp_packet_size);
             } else {
                 errno = 0;
-                if (send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < service_list_ptr->wccp_packet_size)
+                if (send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < static_cast<int>(service_list_ptr->wccp_packet_size))
                     debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << router << " : " << xstrerror());
             }
         }
@@ -1986,7 +1986,7 @@ wccp2AssignBuckets(void *voidnotused)
                                     offset);
                 } else {
                     errno = 0;
-                    if (send(theWccp2Connection, &wccp_packet, offset, 0) < offset)
+                    if (send(theWccp2Connection, &wccp_packet, offset, 0) < static_cast<int>(offset))
                         debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << tmp_rtr << " : " << xstrerror());
                 }
             }
