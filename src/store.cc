@@ -380,32 +380,47 @@ StoreEntry::storeClientType() const
     return STORE_DISK_CLIENT;
 }
 
-StoreEntry::StoreEntry():
+StoreEntry::StoreEntry() :
+        mem_obj(NULL),
         hidden_mem_obj(NULL),
-        swap_file_sz(0)
+        expires(-1),
+        lastmod(-1)
+        lastref(-1),
+        timestamp(-1),
+        swap_file_sz(0),
+        refcount(0),
+        flags(0),
+        swap_filen(-1),
+        swap_dirn(-1),
+        lock_count(0),
+        mem_status(NOT_IN_MEMORY),
+        ping_status(PING_NONE),
+        store_status(STORE_PENDING),
+        swap_status(SWAPOUT_NONE)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
-    mem_obj = NULL;
-
-    expires = lastmod = lastref = timestamp = -1;
-
-    swap_status = SWAPOUT_NONE;
-    swap_filen = -1;
-    swap_dirn = -1;
 }
 
-StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
+StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl) :
+        mem_obj(NULL),
         hidden_mem_obj(NULL),
-        swap_file_sz(0)
+        expires(-1),
+        lastmod(-1)
+        lastref(-1),
+        timestamp(-1),
+        swap_file_sz(0),
+        refcount(0),
+        flags(0),
+        swap_filen(-1),
+        swap_dirn(-1),
+        lock_count(0),
+        mem_status(NOT_IN_MEMORY),
+        ping_status(PING_NONE),
+        store_status(STORE_PENDING),
+        swap_status(SWAPOUT_NONE)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = new MemObject(aUrl, aLogUrl);
-
-    expires = lastmod = lastref = timestamp = -1;
-
-    swap_status = SWAPOUT_NONE;
-    swap_filen = -1;
-    swap_dirn = -1;
 }
 
 StoreEntry::~StoreEntry()
