@@ -617,7 +617,6 @@ static oid_ParseFn *
 snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 {
     oid_ParseFn *Fn = NULL;
-    mib_tree_entry *mibTreeEntry = NULL, *nextoid = NULL;
     int count = 0;
 
     debugs(49, 5, "snmpTreeNext: Called");
@@ -625,9 +624,9 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     MemBuf tmp;
     debugs(49, 6, "snmpTreeNext: Current : " << snmpDebugOid(Current, CurrentLen, tmp));
 
-    mibTreeEntry = mib_tree_head;
+    mib_tree_entry *mibTreeEntry = mib_tree_head;
 
-    if (Current[count] == mibTreeEntry->name[count]) {
+    if (mibTreeEntry && Current[count] == mibTreeEntry->name[count]) {
         ++count;
 
         while ((mibTreeEntry) && (count < CurrentLen) && (!mibTreeEntry->parsefunction)) {
@@ -660,7 +659,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
         --count;
-        nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
+        mib_tree_entry *nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
         if (nextoid) {
             debugs(49, 5, "snmpTreeNext: Next OID found for sibling" << nextoid );
             mibTreeEntry = nextoid;
@@ -757,6 +756,9 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
             current = current->leaves[0];
+
+        if(!current)
+            return (instance);
 
         instance = client_Inst(current->name, len, current, Fn);
     } else if (*len <= current->len) {
