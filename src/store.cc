@@ -384,7 +384,7 @@ StoreEntry::StoreEntry() :
         mem_obj(NULL),
         hidden_mem_obj(NULL),
         expires(-1),
-        lastmod(-1)
+        lastmod(-1),
         lastref(-1),
         timestamp(-1),
         swap_file_sz(0),
@@ -405,7 +405,7 @@ StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl) :
         mem_obj(NULL),
         hidden_mem_obj(NULL),
         expires(-1),
-        lastmod(-1)
+        lastmod(-1),
         lastref(-1),
         timestamp(-1),
         swap_file_sz(0),
