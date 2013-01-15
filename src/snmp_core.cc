@@ -757,7 +757,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         while ((current) && (!current->parsefunction))
             current = current->leaves[0];
 
-        if(!current)
+        if (!current)
             return (instance);
 
         instance = client_Inst(current->name, len, current, Fn);
