@@ -652,20 +652,27 @@ parseCommandline( int argc, char* argv[], REList*& head,
             }
             break;
         case 'c':
-            if ( optarg && *optarg ) {
-                if ( *conffile ) xfree((void*) conffile);
-                conffile = xstrdup(optarg);
-                assert(conffile);
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a regex pattern argument!\n", option );
+                exit(1);
             }
+            if ( *conffile ) xfree((void*) conffile);
+            conffile = xstrdup(optarg);
+            assert(conffile);
             break;
 
         case 'd':
-            ::debugFlag = strtoul( optarg, 0, 0 );
+            ::debugFlag = optarg ? 0 : strtoul( optarg, 0, 0 );
             break;
 
         case 'E':
         case 'e':
-            if ( head == 0 ) tail = head = new REList( optarg, option=='E' );
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a regex pattern argument!\n", option );
+                exit(1);
+            }
+            if ( head == 0 )
+                tail = head = new REList( optarg, option=='E' );
             else {
                 tail->next = new REList( optarg, option=='E' );
                 tail = tail->next;
@@ -673,6 +680,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
 
         case 'f':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a filename argument!\n", option );
+                exit(1);
+            }
             if ( (rfile = fopen( optarg, "r" )) != NULL ) {
                 unsigned long lineno = 0;
 #define LINESIZE 512
@@ -711,6 +722,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             ::no_fork = ! ::no_fork;
             break;
         case 'p':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a port argument!\n", option );
+                exit(1);
+            }
             colon = strchr( optarg, ':' );
             if ( colon == 0 ) {
                 // no colon, only look at host
@@ -743,6 +758,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             }
             break;
         case 'P':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a mode argument!\n", option );
+                exit(1);
+            }
             ::purgeMode = ( strtol( optarg, 0, 0 ) & 0x07 );
             break;
         case 's':
