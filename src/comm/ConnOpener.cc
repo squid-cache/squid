@@ -13,6 +13,7 @@
 #include "globals.h"
 #include "icmp/net_db.h"
 #include "ipcache.h"
+#include "ip/tools.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
