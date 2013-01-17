@@ -2546,6 +2546,7 @@ tests_testHttpParser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_store.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/testHttpParser.cc \
@@ -3261,6 +3262,7 @@ tests_testRock_SOURCES = \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
+	$(SBUF_SOURCE) \
 	Mem.h \
 	mem.cc \
 	MemBuf.cc \

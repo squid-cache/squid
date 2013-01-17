@@ -83,10 +83,11 @@ void StoreEntry::setReleaseFlag() STUB
 void StoreEntry::append(char const *, int len) STUB
 void StoreEntry::buffer() STUB
 void StoreEntry::flush() STUB
-int StoreEntry::unlock() STUB_RETVAL(0)
+int StoreEntry::unlock(const char *) STUB_RETVAL(0)
 int64_t StoreEntry::objectLen() const STUB_RETVAL(0)
 int64_t StoreEntry::contentLen() const STUB_RETVAL(0)
-void StoreEntry::lock() STUB
+void StoreEntry::lock(const char *) STUB
+void StoreEntry::touch() STUB
 void StoreEntry::release() STUB
 
 NullStoreEntry *NullStoreEntry::getInstance() STUB_RETVAL(NULL)

@@ -15,7 +15,7 @@ bool MemStore::keepInLocalMemory(const StoreEntry &) const STUB_RETVAL(false)
 void MemStore::considerKeeping(StoreEntry &) STUB
 void MemStore::reference(StoreEntry &) STUB
 void MemStore::maintain() STUB
-void MemStore::cleanReadable(const sfileno) STUB
+void MemStore::noteFreeMapSlice(const sfileno) STUB
 void MemStore::get(String const, STOREGETCLIENT, void *) STUB
 void MemStore::init() STUB
 void MemStore::getStats(StoreInfoStats&) const STUB
