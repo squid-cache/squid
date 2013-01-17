@@ -1,13 +1,26 @@
 #ifndef SQUID_IPC_STORE_MAP_H
 #define SQUID_IPC_STORE_MAP_H
 
+#include "typedefs.h"
 #include "ipc/ReadWriteLock.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
-#include "ipc/StoreMapSlice.h"
 
 namespace Ipc
 {
+
+typedef uint32_t StoreMapSliceId;
+
+/// a piece of Store entry, linked to other pieces, forming a chain
+class StoreMapSlice
+{
+public:
+    StoreMapSlice(): next(0), size(0) {}
+
+    StoreMapSliceId next; ///< ID of the next slice occupied by the entry
+    uint32_t size; ///< slice contents size
+};
+
 
 /// Maintains shareable information about a StoreEntry as a whole.
 /// An anchor points to one or more StoreEntry slices. This is the
