@@ -58,13 +58,12 @@ private:
     int64_t dbSize;
     int dbEntrySize;
     int dbEntryLimit;
-    int dbSlot;
 
     int fd; // store db file descriptor
     int64_t dbOffset;
-    sfileno slotPos;
-    sfileno validationPos;
-    MemBuf buf;
+    sfileno loadingPos; ///< index of the db slot being loaded from disk now
+    sfileno validationPos; ///< index of the loaded db slot being validated now
+    MemBuf buf; ///< space to load current db slot (and entry metadata) into
 
     StoreRebuildData counts;
 

@@ -73,7 +73,7 @@ Ipc::StoreMap::Anchor *
 Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {
     debugs(54, 5, "opening entry with key " << storeKeyText(key)
-           << " for writing in map [" << path << ']');
+           << " for writing " << path);
     const int idx = anchorIndexByKey(key);
 
     if (Anchor *anchor = openForWritingAt(idx)) {
@@ -96,8 +96,8 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
         // bail if we cannot empty this position
         if (!s.waitingToBeFreed && s.state == Anchor::Readable && !overwriteExisting) {
             lock.unlockExclusive();
-            debugs(54, 5, "cannot open existing entry at " << fileno <<
-                   " for writing in map [" << path << ']');
+            debugs(54, 5, "cannot open existing entry " << fileno <<
+                   " for writing " << path);
             return NULL;
         }
 
@@ -112,10 +112,10 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
         //s.setKey(key); // XXX: the caller should do that
         debugs(54, 5, "opened entry " << fileno << " for writing " << path);
         return &s; // and keep the entry locked
-	}
+    }
 
-    debugs(54, 5, "cannot open busy entry at " << fileno <<
-           " for writing in map [" << path << ']');
+    debugs(54, 5, "cannot open busy entry " << fileno <<
+           " for writing " << path);
     return NULL;
 }
 
@@ -128,8 +128,8 @@ Ipc::StoreMap::closeForWriting(const sfileno fileno, bool lockForReading)
     s.state = Anchor::Readable;
     if (lockForReading) {
         s.lock.switchExclusiveToShared();
-        debugs(54, 5, "switched entry at " << fileno <<
-               " from writing to reading in map [" << path << ']');
+        debugs(54, 5, "switched entry " << fileno <<
+               " from writing to reading " << path);
     } else {
         s.lock.unlockExclusive();
         debugs(54, 5, "closed entry " << fileno << " for writing " << path);
@@ -142,7 +142,7 @@ Ipc::StoreMap::writeableSlice(const AnchorId anchorId, const SliceId sliceId)
     assert(valid(anchorId));
     assert(shared->slots[anchorId].anchor.state == Anchor::Writeable);
     assert(valid(sliceId));
-	return shared->slots[sliceId].slice;
+    return shared->slots[sliceId].slice;
 }
 
 const Ipc::StoreMap::Slice &
@@ -151,7 +151,7 @@ Ipc::StoreMap::readableSlice(const AnchorId anchorId, const SliceId sliceId) con
     assert(valid(anchorId));
     assert(shared->slots[anchorId].anchor.state == Anchor::Readable);
     assert(valid(sliceId));
-	return shared->slots[sliceId].slice;
+    return shared->slots[sliceId].slice;
 }
 
 Ipc::StoreMap::Anchor &
@@ -166,8 +166,7 @@ Ipc::StoreMap::writeableEntry(const AnchorId anchorId)
 void
 Ipc::StoreMap::abortWriting(const sfileno fileno)
 {
-    debugs(54, 5, "abort entry at " << fileno <<
-           " for writing in map [" << path << ']');
+    debugs(54, 5, "aborting entry " << fileno << " for writing " << path);
     assert(valid(fileno));
     Anchor &s = shared->slots[fileno].anchor;
     assert(s.state == Anchor::Writeable);
@@ -178,8 +177,7 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
 void
 Ipc::StoreMap::abortIo(const sfileno fileno)
 {
-    debugs(54, 5, "abort entry at " << fileno <<
-           " for I/O in map [" << path << ']');
+    debugs(54, 5, "aborting entry " << fileno << " for I/O in " << path);
     assert(valid(fileno));
     Anchor &s = shared->slots[fileno].anchor;
 
@@ -211,8 +209,7 @@ Ipc::StoreMap::peekAtReader(const sfileno fileno) const
 void
 Ipc::StoreMap::freeEntry(const sfileno fileno)
 {
-    debugs(54, 5, HERE << " marking entry at " << fileno << " to be freed in"
-           " map [" << path << ']');
+    debugs(54, 5, "marking entry " << fileno << " to be freed in " << path);
 
     assert(valid(fileno));
     Anchor &s = shared->slots[fileno].anchor;
@@ -228,10 +225,10 @@ void
 Ipc::StoreMap::freeChain(const sfileno fileno, Anchor &inode, const bool keepLocked)
 {
     debugs(54, 7, "freeing " << inode.state << " entry " << fileno <<
-           " in map [" << path << ']');
+           " in " << path);
     if (inode.state != Anchor::Empty) {
         sfileno sliceId = inode.start;
-        debugs(54, 7, "first slice " << sliceId);
+        debugs(54, 8, "first slice " << sliceId);
         while (sliceId >= 0) {
             Slice &slice = shared->slots[sliceId].slice;
             const sfileno nextId = slice.next;
@@ -248,15 +245,14 @@ Ipc::StoreMap::freeChain(const sfileno fileno, Anchor &inode, const bool keepLoc
     if (!keepLocked)
         inode.lock.unlockExclusive();
     --shared->count;
-    debugs(54, 5, "freed entry " << fileno <<
-           " in map [" << path << ']');
+    debugs(54, 5, "freed entry " << fileno << " in " << path);
 }
 
 const Ipc::StoreMap::Anchor *
 Ipc::StoreMap::openForReading(const cache_key *const key, sfileno &fileno)
 {
     debugs(54, 5, "opening entry with key " << storeKeyText(key)
-           << " for reading in map [" << path << ']');
+           << " for reading " << path);
     const int idx = anchorIndexByKey(key);
     if (const Anchor *slot = openForReadingAt(idx)) {
         if (slot->sameKey(key)) {
@@ -272,28 +268,27 @@ Ipc::StoreMap::openForReading(const cache_key *const key, sfileno &fileno)
 const Ipc::StoreMap::Anchor *
 Ipc::StoreMap::openForReadingAt(const sfileno fileno)
 {
-    debugs(54, 5, "opening entry at " << fileno <<
-           " for reading in map [" << path << ']');
+    debugs(54, 5, "opening entry " << fileno << " for reading " << path);
     assert(valid(fileno));
     Anchor &s = shared->slots[fileno].anchor;
 
     if (!s.lock.lockShared()) {
-        debugs(54, 5, "cannot open busy entry at " << fileno <<
-               "for reading in map [" << path << ']');
+        debugs(54, 5, "cannot open busy entry " << fileno <<
+               " for reading " << path);
         return NULL;
     }
 
     if (s.state == Anchor::Empty) {
         s.lock.unlockShared();
-        debugs(54, 7, "cannot open empty entry at " << fileno <<
-               " for reading in map [" << path << ']');
+        debugs(54, 7, "cannot open empty entry " << fileno <<
+               " for reading " << path);
         return NULL;
     }
 
     if (s.waitingToBeFreed) {
         s.lock.unlockShared();
-        debugs(54, 7, HERE << "cannot open marked entry at " << fileno <<
-               " for reading in map [" << path << ']');
+        debugs(54, 7, HERE << "cannot open marked entry " << fileno <<
+               " for reading " << path);
         return NULL;
     }
 
@@ -321,20 +316,20 @@ Ipc::StoreMap::purgeOne()
     const int searchLimit = min(10000, entryLimit());
     int tries = 0;
     for (; tries < searchLimit; ++tries) {
-		const sfileno fileno = shared->victim++ % shared->limit;
+        const sfileno fileno = shared->victim++ % shared->limit;
         assert(valid(fileno));
         Anchor &s = shared->slots[fileno].anchor;
         if (s.lock.lockExclusive()) {
             if (s.state == Anchor::Readable) { // skip empties
                 // this entry may be marked for deletion, and that is OK
                 freeChain(fileno, s, false);
-                debugs(54, 5, "purged entry at " << fileno);
+                debugs(54, 5, "purged entry " << fileno << " from " << path);
                 return true;
-			}
+            }
             s.lock.unlockExclusive();
         }
-	}
-    debugs(54, 5, "found no entries to purge; tried: " << tries);
+    }
+    debugs(54, 5, "no entries to purge from " << path << "; tried: " << tries);
     return false;
 }
 

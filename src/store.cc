@@ -559,7 +559,6 @@ StoreEntry::releaseRequest()
 int
 StoreEntry::unlock(const char *context)
 {
-	
     debugs(20, 3, (context ? context : "somebody") <<
            " unlocking key " << getMD5Text() << ' ' << *this);
     --lock_count;
