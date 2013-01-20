@@ -8,7 +8,7 @@
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
 struct MemStoreMapExtras {
-    Ipc::Mem::PageId page; ///< shared memory page with the slice content
+    Ipc::Mem::PageId page; ///< shared memory page with entry slice content
 };
 typedef Ipc::StoreMapWithExtras<MemStoreMapExtras> MemStoreMap;
 

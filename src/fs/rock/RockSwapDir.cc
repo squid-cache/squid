@@ -558,8 +558,8 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
 int64_t
 Rock::SwapDir::diskOffset(int filen) const
 {
-     assert(filen >= 0);
-     return HeaderSize + slotSize*filen;
+    assert(filen >= 0);
+    return HeaderSize + slotSize*filen;
 }
 
 int64_t
