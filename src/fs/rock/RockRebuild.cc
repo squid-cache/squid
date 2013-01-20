@@ -49,7 +49,7 @@ public:
 } /* namespace Rock */
 
 /** 
-    Several layers of information is manipualted during the rebuild:
+    Several layers of information are manipualted during the rebuild:
 
     Store Entry: Response message plus all the metainformation associated with
     it. Identified by store key. At any given time, from Squid point
@@ -100,10 +100,9 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
         dbSize(0),
         dbEntrySize(0),
         dbEntryLimit(0),
-        dbSlot(0),
         fd(-1),
         dbOffset(0),
-        slotPos(0),
+        loadingPos(0),
         validationPos(0)
 {
     assert(sd);
@@ -148,7 +147,7 @@ Rock::Rebuild::start()
     buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
 
     dbOffset = SwapDir::HeaderSize;
-    slotPos = 0;
+    loadingPos = 0;
 
     entries = new LoadingEntry[dbEntryLimit];
 
@@ -191,7 +190,7 @@ Rock::Rebuild::steps()
 void
 Rock::Rebuild::loadingSteps()
 {
-    debugs(47,5, HERE << sd->index << " slot " << slotPos << " at " <<
+    debugs(47,5, HERE << sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
     // Balance our desire to maximize the number of entries processed at once
@@ -204,7 +203,7 @@ Rock::Rebuild::loadingSteps()
     while (loaded < dbEntryLimit && dbOffset < dbSize) {
         loadOneSlot();
         dbOffset += dbEntrySize;
-        ++slotPos;
+        ++loadingPos;
         ++loaded;
 
         if (counts.scancount % 1000 == 0)
@@ -226,7 +225,7 @@ Rock::Rebuild::loadingSteps()
 void
 Rock::Rebuild::loadOneSlot()
 {
-    debugs(47,5, HERE << sd->index << " slot " << slotPos << " at " <<
+    debugs(47,5, HERE << sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
     ++counts.scancount;
@@ -239,7 +238,7 @@ Rock::Rebuild::loadOneSlot()
     if (!storeRebuildLoadEntry(fd, sd->index, buf, counts))
         return;
 
-    const SlotId slotId = slotPos;
+    const SlotId slotId = loadingPos;
 
     // get our header
     DbCellHeader header;
@@ -386,7 +385,7 @@ Rock::Rebuild::swanSong()
 void
 Rock::Rebuild::failure(const char *msg, int errNo)
 {
-    debugs(47,5, HERE << sd->index << " slot " << slotPos << " at " <<
+    debugs(47,5, HERE << sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
     if (errNo)

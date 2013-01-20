@@ -32,6 +32,7 @@ public:
 
     ~Owner();
 
+    /// Raw access; handy to finalize initiatization, but avoid if possible.
     Class *object() { return theObject; }
 
 private:

@@ -1,10 +1,10 @@
 #ifndef SQUID_IPC_STORE_MAP_H
 #define SQUID_IPC_STORE_MAP_H
 
-#include "typedefs.h"
 #include "ipc/ReadWriteLock.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
+#include "typedefs.h"
 
 namespace Ipc
 {
@@ -68,11 +68,13 @@ public:
     State state; ///< current state
 };
 
-/// XXX: a hack to allocate one shared array for both anchors and slices
+/// A hack to allocate one shared array for both anchors and slices.
+/// Anchors are indexed by store entry ID and are independent from each other.
+/// Slices are indexed by slice IDs and form entry chains using slice.next.
 class StoreMapSlot {
 public:
-    StoreMapAnchor anchor;
-    StoreMapSlice slice;
+    StoreMapAnchor anchor; ///< information about store entry as a whole
+    StoreMapSlice slice; ///< information about one stored entry piece
 };
 
 class StoreMapCleaner;

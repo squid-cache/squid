@@ -117,8 +117,8 @@ private:
 
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
-    Ipc::Mem::Pointer<Ipc::Mem::PageStack> freeSlots; ///< free slots
-	Ipc::Mem::PageId *waitingForPage; ///< one-page cache for a "hot" free slot
+    Ipc::Mem::Pointer<Ipc::Mem::PageStack> freeSlots; ///< all unused slots
+    Ipc::Mem::PageId *waitingForPage; ///< one-page cache for a "hot" free slot
 
     /* configurable options */
     DiskFile::Config fileConfig; ///< file-level configuration options

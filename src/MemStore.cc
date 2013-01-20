@@ -546,7 +546,6 @@ MemStore::EntryLimit()
     return entryLimit;
 }
 
-
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
 class MemStoreClaimMemoryNeedsRr: public RegisteredRunner
 {
@@ -604,8 +603,8 @@ protected:
     virtual void create(const RunnerRegistry &);
 
 private:
-    Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner;
-    MemStoreMap::Owner *mapOwner;
+    Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner
+    MemStoreMap::Owner *mapOwner; ///< primary map Owner
 };
 
 RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
