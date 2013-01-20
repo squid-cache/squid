@@ -681,8 +681,6 @@ wccp2Init(void)
 
     struct wccp2_router_list_t *router_list_ptr;
 
-    struct wccp2_security_md5_t wccp2_security_md5;
-
     debugs(80, 5, "wccp2Init: Called");
 
     if (wccp2_connected == 1)
@@ -701,6 +699,9 @@ wccp2Init(void)
     if (wccp2_numrouters == 0) {
         return;
     }
+
+    struct wccp2_security_md5_t wccp2_security_md5;
+    memset(&wccp2_security_md5, 0, sizeof(wccp2_security_md5));
 
     /* Initialise the list of services */
     wccp2InitServices();
