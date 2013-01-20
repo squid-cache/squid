@@ -184,13 +184,13 @@ IpcIoFile::close()
 bool
 IpcIoFile::canRead() const
 {
-    return diskId >= 0 && canWait();
+    return diskId >= 0 && !error_ && canWait();
 }
 
 bool
 IpcIoFile::canWrite() const
 {
-    return diskId >= 0 && canWait();
+    return diskId >= 0 && !error_ && canWait();
 }
 
 bool
