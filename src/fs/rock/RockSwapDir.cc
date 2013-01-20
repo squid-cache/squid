@@ -31,7 +31,7 @@
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
 Rock::SwapDir::SwapDir(): ::SwapDir("rock"), 
-    slotSize(HeaderSize), filePath(NULL), map(NULL), io(NULL), allSlots(NULL),
+    slotSize(HeaderSize), filePath(NULL), map(NULL), io(NULL),
     waitingForPage(NULL)
 {
 }
@@ -216,6 +216,8 @@ Rock::SwapDir::init()
     // are refcounted. We up our count once to avoid implicit delete's.
     lock();
 
+    freeSlots = shm_old(Ipc::Mem::PageStack)(freeSlotsPath());
+
     Must(!map);
     map = new DirMap(inodeMapPath());
     map->cleaner = this;
@@ -234,8 +236,6 @@ Rock::SwapDir::init()
     theFile = io->newFile(filePath);
     theFile->configure(fileConfig);
     theFile->open(O_RDWR, 0644, this);
-
-    freeSlots = shm_old(Ipc::Mem::PageStack)(freeSlotsPath());
 
     // Increment early. Otherwise, if one SwapDir finishes rebuild before
     // others start, storeRebuildComplete() will think the rebuild is over!
