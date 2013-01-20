@@ -9,13 +9,13 @@
 namespace Ipc
 {
 
-typedef uint32_t StoreMapSliceId;
+typedef int32_t StoreMapSliceId;
 
 /// a piece of Store entry, linked to other pieces, forming a chain
 class StoreMapSlice
 {
 public:
-    StoreMapSlice(): next(0), size(0) {}
+    StoreMapSlice(): next(-1), size(0) {}
 
     StoreMapSliceId next; ///< ID of the next slice occupied by the entry
     uint32_t size; ///< slice contents size
