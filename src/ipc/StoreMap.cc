@@ -229,12 +229,15 @@ Ipc::StoreMap::freeChain(const sfileno fileno, Anchor &inode, const bool keepLoc
 {
     debugs(54, 7, "freeing " << inode.state << " entry " << fileno <<
            " in map [" << path << ']');
-    if (inode.state == Anchor::Readable && cleaner) {
+    if (inode.state != Anchor::Empty) {
         sfileno sliceId = inode.start;
         debugs(54, 7, "first slice " << sliceId);
         while (sliceId >= 0) {
-			const sfileno nextId = shared->slots[sliceId].slice.next;
-            cleaner->noteFreeMapSlice(sliceId); // might change slice state
+            Slice &slice = shared->slots[sliceId].slice;
+            const sfileno nextId = slice.next;
+            slice.next = -1;
+            if (cleaner)
+                cleaner->noteFreeMapSlice(sliceId); // might change slice state
             sliceId = nextId;
         }
     }
