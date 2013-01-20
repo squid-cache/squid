@@ -138,7 +138,7 @@ volatile sig_atomic_t term_flag = 0; // 'terminate' is a gcc 2.8.x internal...
 char*  linebuffer = 0;
 size_t buffersize = 128*1024;
 static char* copydir = 0;
-static unsigned debugFlag = 0;
+static uint32_t debugFlag = 0;
 static unsigned purgeMode = 0;
 static bool iamalive = false;
 static bool reminder = false;
@@ -597,7 +597,7 @@ helpMe( void )
         " -a\tdisplay a little rotating thingy to indicate that I am alive (tty only).\n"
         " -c c\tsquid.conf location, default \"%s\".\n"
         " -C dir\tbase directory for content extraction (copy-out mode).\n"
-        " -d l\tdebug level, an OR of different debug options.\n"
+        " -d l\tdebug level, an OR mask of different debug options.\n"
         " -e re\tsingle regular expression per -e instance (use quotes!).\n"
         " -E re\tsingle case sensitive regular expression like -e.\n"
         " -f fn\tname of textfile containing one regular expression per line.\n"
@@ -662,7 +662,11 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
 
         case 'd':
-            ::debugFlag = optarg ? 0 : strtoul( optarg, 0, 0 );
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c expects a mask parameter. Debug disabled.\n", option );
+                ::debugFlag = 0;
+            } else
+                ::debugFlag = (strtoul(optarg, NULL, 0) & 0xFFFFFFFF);
             break;
 
         case 'E':
