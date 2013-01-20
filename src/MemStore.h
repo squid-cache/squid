@@ -2,13 +2,13 @@
 #define SQUID_MEMSTORE_H
 
 #include "ipc/mem/Page.h"
+#include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
 #include "Store.h"
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
 struct MemStoreMapExtras {
-    Ipc::Mem::PageId page; ///< shared memory page with the entry content
-    int64_t storedSize; ///< total size of the stored entry content
+    Ipc::Mem::PageId page; ///< shared memory page with the slice content
 };
 typedef Ipc::StoreMapWithExtras<MemStoreMapExtras> MemStoreMap;
 
@@ -46,18 +46,35 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    bool willFit(int64_t needed) const;
     void keep(StoreEntry &e);
 
-    bool copyToShm(StoreEntry &e, MemStoreMap::Extras &extras);
-    bool copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras);
+    bool copyToShm(StoreEntry &e, const sfileno index, Ipc::StoreMapAnchor &anchor);
+    bool copyToShmSlice(StoreEntry &e, const sfileno index, Ipc::StoreMapAnchor &anchor, int64_t &offset);
+    bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
+    bool copyFromShmSlice(StoreEntry &e, StoreIOBuffer &buf, bool eof);
+
+    sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const sfileno sliceId);
 
 private:
+    // TODO: move freeSlots into map
+    Ipc::Mem::Pointer<Ipc::Mem::PageStack> freeSlots; ///< unused map slot IDs
     MemStoreMap *map; ///< index of mem-cached entries
-    uint64_t theCurrentSize; ///< currently used space in the storage area
+
+    /// the last allocate slice for writing a store entry (during copyToShm)
+    sfileno lastWritingSlice;
+
+    /// temporary storage for slot and page ID pointers; for the waiting cache
+    class SlotAndPage {
+    public:
+        SlotAndPage(): slot(NULL), page(NULL) {}
+        bool operator !() const { return !slot && !page; }
+        Ipc::Mem::PageId *slot; ///< local slot variable, waiting to be filled
+        Ipc::Mem::PageId *page; ///< local page variable, waiting to be filled
+    };
+    SlotAndPage waitingFor; ///< a cache for a single "hot" free slot and page
 };
 
 // Why use Store as a base? MemStore and SwapDir are both "caches".
