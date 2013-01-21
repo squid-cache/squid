@@ -285,14 +285,14 @@ Rock::SwapDir::reconfigure()
 
 /// parse maximum db disk size
 void
-Rock::SwapDir::parseSize(const bool reconfiguring)
+Rock::SwapDir::parseSize(const bool reconfig)
 {
     const int i = GetInteger();
     if (i < 0)
         fatal("negative Rock cache_dir size value");
     const uint64_t new_max_size =
         static_cast<uint64_t>(i) << 20; // MBytes to Bytes
-    if (!reconfiguring)
+    if (!reconfig)
         max_size = new_max_size;
     else if (new_max_size != max_size) {
         debugs(3, DBG_IMPORTANT, "WARNING: cache_dir '" << path << "' size "
@@ -320,7 +320,7 @@ Rock::SwapDir::allowOptionReconfigure(const char *const option) const
 
 /// parses time-specific options; mimics ::SwapDir::optionObjectSizeParse()
 bool
-Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconfiguring)
+Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconfig)
 {
     // TODO: ::SwapDir or, better, Config should provide time-parsing routines,
     // including time unit handling. Same for size.
@@ -343,7 +343,7 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
 
     const time_msec_t newTime = static_cast<time_msec_t>(parsedValue);
 
-    if (!reconfiguring)
+    if (!reconfig)
         *storedTime = newTime;
     else if (*storedTime != newTime) {
         debugs(3, DBG_IMPORTANT, "WARNING: cache_dir " << path << ' ' << option
@@ -642,12 +642,12 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
         sio->offset_ += rlen;
     assert(sio->diskOffset + sio->offset_ <= diskOffsetLimit()); // post-factum
 
-    StoreIOState::STRCB *callback = sio->read.callback;
-    assert(callback);
+    StoreIOState::STRCB *callb = sio->read.callback;
+    assert(callb);
     sio->read.callback = NULL;
     void *cbdata;
     if (cbdataReferenceValidDone(sio->read.callback_data, &cbdata))
-        callback(cbdata, r->buf, rlen, sio.getRaw());
+        callb(cbdata, r->buf, rlen, sio.getRaw());
 }
 
 void
