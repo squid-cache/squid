@@ -73,11 +73,11 @@ StatHist::StatHist(const StatHist &src) :
 }
 
 void
-StatHist::count(double val)
+StatHist::count(double v)
 {
     if (bins==NULL) //do not count before initialization or after destruction
         return;
-    const unsigned int bin = findBin(val);
+    const unsigned int bin = findBin(v);
     ++bins[bin];
 }
 

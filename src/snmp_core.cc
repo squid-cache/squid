@@ -310,9 +310,9 @@ snmpOpenPorts(void)
         if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.IsAnyAddr()) {
             snmpOutgoingConn->local.SetIPv4();
         }
-        AsyncCall::Pointer call = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                            Comm::UdpOpenDialer(&snmpPortOpened));
-        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, call);
+        AsyncCall::Pointer c = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
+                                         Comm::UdpOpenDialer(&snmpPortOpened));
+        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
         debugs(1, DBG_IMPORTANT, "Sending SNMP messages from " << snmpOutgoingConn->local);
@@ -651,7 +651,6 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
         *NextLen = CurrentLen;
         *Next = (*mibTreeEntry->instancefunction) (Current, NextLen, mibTreeEntry, &Fn);
         if (*Next) {
-            MemBuf tmp;
             debugs(49, 6, "snmpTreeNext: Next : " << snmpDebugOid(*Next, *NextLen, tmp));
             return (Fn);
         }
@@ -695,7 +694,6 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     }
 
     if (*Next) {
-        MemBuf tmp;
         debugs(49, 6, "snmpTreeNext: Next : " << snmpDebugOid(*Next, *NextLen, tmp));
         return (Fn);
     } else

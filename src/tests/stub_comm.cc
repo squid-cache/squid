@@ -44,7 +44,7 @@ void comm_read(const Comm::ConnectionPointer &conn, char*, int, AsyncCall::Point
 
 /* should be in stub_CommRead */
 #include "CommRead.h"
-CommRead::CommRead(const Comm::ConnectionPointer &, char *buf, int len, AsyncCall::Pointer &callback) STUB
+CommRead::CommRead(const Comm::ConnectionPointer &, char *, int, AsyncCall::Pointer &) STUB
 CommRead::CommRead() STUB
 DeferredReadManager::~DeferredReadManager() STUB
 DeferredRead::DeferredRead(DeferrableRead *, void *, CommRead const &) STUB

@@ -1695,8 +1695,8 @@ ClientHttpRequest::doCallouts()
 #endif
 
     if (calloutContext->error) {
-        const char *uri = urlCanonical(request);
-        StoreEntry *e= storeCreateEntry(uri, uri, request->flags, request->method);
+        const char *url = urlCanonical(request);
+        StoreEntry *e= storeCreateEntry(url, url, request->flags, request->method);
 #if USE_SSL
         if (sslBumpNeeded()) {
             // set final error but delay sending until we bump
