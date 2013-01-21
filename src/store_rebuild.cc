@@ -294,8 +294,7 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
 };
 
 bool
-storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
-                      StoreRebuildData &counts)
+storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
 {
     if (fd < 0)
         return false;
@@ -317,7 +316,7 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
 
 bool
 storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
-                       StoreRebuildData &counts,
+                       StoreRebuildData &stats,
                        uint64_t expectedSize)
 {
     int swap_hdr_len = 0;
@@ -374,7 +373,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     }
 
     if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
-        ++ counts.badflags;
+        ++ stats.badflags;
         return false;
     }
 
@@ -382,8 +381,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
 }
 
 bool
-storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
-                      StoreRebuildData &counts)
+storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuildData &stats)
 {
     /* this needs to become
      * 1) unpack url
@@ -408,7 +406,7 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
         if (e->lastref >= tmpe.lastref) {
             /* key already exists, old entry is newer */
             /* keep old, ignore new */
-            ++counts.dupcount;
+            ++stats.dupcount;
 
             // For some stores, get() creates/unpacks a store entry. Signal
             // such stores that we will no longer use the get() result:
@@ -420,7 +418,7 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
             /* URL already exists, this swapfile not being used */
             /* junk old, load new */
             e->release();	/* release old entry */
-            ++counts.dupcount;
+            ++stats.dupcount;
         }
     }
 
