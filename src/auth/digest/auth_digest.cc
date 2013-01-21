@@ -851,9 +851,9 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         }
 
         /* find type */
-        http_digest_attr_type type = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
+        http_digest_attr_type t = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
 
-        switch (type) {
+        switch (t) {
         case DIGEST_USERNAME:
             safe_free(username);
             username = xstrndup(value.rawBuf(), value.size() + 1);

@@ -6,7 +6,7 @@
 #include "tests/STUB.h"
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest) STUB
-        HttpRequest::HttpRequest(const HttpRequestMethod& method, AnyP::ProtocolType protocol, const char *aUrlpath) : HttpMsg(hoRequest) STUB
+        HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) : HttpMsg(hoRequest) STUB
         HttpRequest::~HttpRequest() STUB
         void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const STUB
         bool HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error) STUB_RETVAL(false)

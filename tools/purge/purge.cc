@@ -344,8 +344,8 @@ action( int fd, size_t metasize,
             return false;
         }
 
-        int size = strlen(buffer);
-        if ( write( sockfd, buffer, size ) != size ) {
+        int content_size = strlen(buffer);
+        if ( write( sockfd, buffer, content_size ) != content_size ) {
             // error while talking to squid
             fprintf( stderr, "unable to talk to server: %s\n", strerror(errno) );
             close(sockfd);
@@ -563,23 +563,23 @@ dirlevel( const char* dirname, const REList* list, bool level=false )
 }
 
 int
-checkForPortOnly( const char* optarg )
+checkForPortOnly( const char* arg )
 // purpose: see if somebody just put in a port instead of a hostname
 // paramtr: optarg (IN): argument from commandline
 // returns: 0..65535 is the valid port number in network byte order,
 //          -1 if not a port
 {
     // if there is a period in there, it must be a valid hostname
-    if ( strchr( optarg, '.' ) != 0 ) return -1;
+    if ( strchr( arg, '.' ) != 0 ) return -1;
 
     // if it is just a number between 0 and 65535, it must be a port
     char* errstr = 0;
-    unsigned long result = strtoul( optarg, &errstr, 0 );
-    if ( result < 65536 && errstr != optarg ) return htons(result);
+    unsigned long result = strtoul( arg, &errstr, 0 );
+    if ( result < 65536 && errstr != arg ) return htons(result);
 
 #if 0
     // one last try, test for a symbolical service name
-    struct servent* service = getservbyname( optarg, "tcp" );
+    struct servent* service = getservbyname( arg, "tcp" );
     return service ? service->s_port : -1;
 #else
     return -1;
@@ -618,8 +618,8 @@ helpMe( void )
 
 void
 parseCommandline( int argc, char* argv[], REList*& head,
-                  char*& conffile, char*& copydir,
-                  struct in_addr& serverHost, unsigned short& serverPort )
+                  char*& conffile, char*& copyDirPath,
+                  struct in_addr& serverHostIp, unsigned short& serverHostPort )
 // paramtr: argc: see ::main().
 //          argv: see ::main().
 // returns: Does terminate the program on errors!
@@ -646,9 +646,9 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
         case 'C':
             if ( optarg && *optarg ) {
-                if ( copydir ) xfree( (void*) copydir );
-                copydir = xstrdup(optarg);
-                assert(copydir);
+                if ( copyDirPath ) xfree( (void*) copyDirPath );
+                copyDirPath = xstrdup(optarg);
+                assert(copyDirPath);
             }
             break;
         case 'c':
@@ -739,23 +739,23 @@ parseCommandline( int argc, char* argv[], REList*& head,
                 port = checkForPortOnly( optarg );
                 if ( port == -1 ) {
                     // assume that main() did set the default port
-                    if ( convertHostname(optarg,serverHost) == -1 ) {
+                    if ( convertHostname(optarg,serverHostIp) == -1 ) {
                         fprintf( stderr, "unable to resolve host %s!\n", optarg );
                         exit(1);
                     }
                 } else {
                     // assume that main() did set the default host
-                    serverPort = port;
+                    serverHostPort = port;
                 }
             } else {
                 // colon used, port is extra
                 *colon = 0;
                 ++colon;
-                if ( convertHostname(optarg,serverHost) == -1 ) {
+                if ( convertHostname(optarg,serverHostIp) == -1 ) {
                     fprintf( stderr, "unable to resolve host %s!\n", optarg );
                     exit(1);
                 }
-                if ( convertPortname(colon,serverPort) == -1 ) {
+                if ( convertPortname(colon,serverHostPort) == -1 ) {
                     fprintf( stderr, "unable to resolve port %s!\n", colon );
                     exit(1);
                 }
@@ -793,8 +793,8 @@ parseCommandline( int argc, char* argv[], REList*& head,
     assert( head != 0 );
 
     // make sure that the copy out directory is there and accessible
-    if ( copydir && *copydir )
-        if ( assert_copydir( copydir ) != 0 ) exit(1);
+    if ( copyDirPath && *copyDirPath )
+        if ( assert_copydir( copyDirPath ) != 0 ) exit(1);
 
     // show results
     if ( showme ) {
@@ -807,15 +807,15 @@ parseCommandline( int argc, char* argv[], REList*& head,
         puts( ::verbose ? " + extra verbosity" : "" );
 
         printf( "# Copy-out directory: %s ",
-                copydir ? copydir : "copy-out mode disabled" );
-        if ( copydir )
+                copyDirPath ? copyDirPath : "copy-out mode disabled" );
+        if ( copyDirPath )
             printf( "(%s HTTP header)\n", ::envelope ? "prepend" : "no" );
         else
             puts("");
 
         printf( "# Squid config file : %s\n", conffile );
         printf( "# Cacheserveraddress: %s:%u\n",
-                inet_ntoa( serverHost ), ntohs( serverPort ) );
+                inet_ntoa( serverHostIp ), ntohs( serverHostPort ) );
         printf( "# purge mode        : 0x%02x\n", ::purgeMode );
         printf( "# Regular expression: " );
 

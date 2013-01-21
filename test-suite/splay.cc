@@ -197,15 +197,18 @@ main(int argc, char *argv[])
         SplayCheck::BeginWalk();
         safeTop->walk(SplayCheck::WalkNodeRef, NULL);
     }
+
     /* check the check routine */
-    SplayCheck::BeginWalk();
-    intnode I;
-    I.i = 1;
-    /* check we don't segfault on NULL splay calls */
-    SplayCheck::WalkNodeRef(I, NULL);
-    I.i = 0;
-    SplayCheck::ExpectedFail = true;
-    SplayCheck::WalkNodeRef(I, NULL);
+    {
+        SplayCheck::BeginWalk();
+        intnode I;
+        I.i = 1;
+        /* check we don't segfault on NULL splay calls */
+        SplayCheck::WalkNodeRef(I, NULL);
+        I.i = 0;
+        SplayCheck::ExpectedFail = true;
+        SplayCheck::WalkNodeRef(I, NULL);
+    }
 
     {
         /* check for begin() */

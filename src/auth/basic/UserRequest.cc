@@ -112,18 +112,18 @@ Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
     /* mark this user as having verification in progress */
     user()->credentials(Auth::Pending);
     char buf[HELPER_INPUT_BUFFER];
-    static char username[HELPER_INPUT_BUFFER];
+    static char usern[HELPER_INPUT_BUFFER];
     static char pass[HELPER_INPUT_BUFFER];
     if (static_cast<Auth::Basic::Config*>(user()->config)->utf8) {
-        latin1_to_utf8(username, sizeof(username), user()->username());
+        latin1_to_utf8(usern, sizeof(usern), user()->username());
         latin1_to_utf8(pass, sizeof(pass), basic_auth->passwd);
-        xstrncpy(username, rfc1738_escape(username), sizeof(username));
+        xstrncpy(usern, rfc1738_escape(usern), sizeof(usern));
         xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
     } else {
-        xstrncpy(username, rfc1738_escape(user()->username()), sizeof(username));
+        xstrncpy(usern, rfc1738_escape(user()->username()), sizeof(usern));
         xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));
     }
-    int sz = snprintf(buf, sizeof(buf), "%s %s\n", username, pass);
+    int sz = snprintf(buf, sizeof(buf), "%s %s\n", usern, pass);
     if (sz<=0) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. Can not build helper validation request.");
         handler(data);

@@ -836,13 +836,13 @@ idnsVCClosed(const CommCloseCbParams &params)
 }
 
 static void
-idnsInitVC(int ns)
+idnsInitVC(int nsv)
 {
     nsvc *vc = cbdataAlloc(nsvc);
-    assert(ns < nns);
+    assert(nsv < nns);
     assert(vc->conn == NULL); // MUST be NULL from the construction process!
-    nameservers[ns].vc = vc;
-    vc->ns = ns;
+    nameservers[nsv].vc = vc;
+    vc->ns = nsv;
     vc->queue = new MemBuf;
     vc->msg = new MemBuf;
     vc->busy = 1;
@@ -854,7 +854,7 @@ idnsInitVC(int ns)
     else
         conn->local = Config.Addrs.udp_incoming;
 
-    conn->remote = nameservers[ns].S;
+    conn->remote = nameservers[nsv].S;
 
     if (conn->remote.IsIPv4()) {
         conn->local.SetIPv4();
@@ -868,17 +868,17 @@ idnsInitVC(int ns)
 }
 
 static void
-idnsSendQueryVC(idns_query * q, int ns)
+idnsSendQueryVC(idns_query * q, int nsn)
 {
-    assert(ns < nns);
-    if (nameservers[ns].vc == NULL)
-        idnsInitVC(ns);
+    assert(nsn < nns);
+    if (nameservers[nsn].vc == NULL)
+        idnsInitVC(nsn);
 
-    nsvc *vc = nameservers[ns].vc;
+    nsvc *vc = nameservers[nsn].vc;
 
     if (!vc) {
         char buf[MAX_IPSTRLEN];
-        debugs(78, DBG_IMPORTANT, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << nameservers[ns].S.NtoA(buf,MAX_IPSTRLEN) << "!");
+        debugs(78, DBG_IMPORTANT, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << nameservers[nsn].S.NtoA(buf,MAX_IPSTRLEN) << "!");
 
         return;
     }
@@ -912,28 +912,28 @@ idnsSendQuery(idns_query * q)
     assert(q->lru.prev == NULL);
 
     int x = -1, y = -1;
-    int ns;
+    int nsn;
 
     do {
-        ns = q->nsends % nns;
+        nsn = q->nsends % nns;
 
         if (q->need_vc) {
-            idnsSendQueryVC(q, ns);
+            idnsSendQueryVC(q, nsn);
             x = y = 0;
         } else {
-            if (DnsSocketB >= 0 && nameservers[ns].S.IsIPv6())
-                y = comm_udp_sendto(DnsSocketB, nameservers[ns].S, q->buf, q->sz);
+            if (DnsSocketB >= 0 && nameservers[nsn].S.IsIPv6())
+                y = comm_udp_sendto(DnsSocketB, nameservers[nsn].S, q->buf, q->sz);
             else if (DnsSocketA >= 0)
-                x = comm_udp_sendto(DnsSocketA, nameservers[ns].S, q->buf, q->sz);
+                x = comm_udp_sendto(DnsSocketA, nameservers[nsn].S, q->buf, q->sz);
         }
 
         ++ q->nsends;
 
         q->sent_t = current_time;
 
-        if (y < 0 && nameservers[ns].S.IsIPv6())
+        if (y < 0 && nameservers[nsn].S.IsIPv6())
             debugs(50, DBG_IMPORTANT, "idnsSendQuery: FD " << DnsSocketB << ": sendto: " << xstrerror());
-        if (x < 0 && nameservers[ns].S.IsIPv4())
+        if (x < 0 && nameservers[nsn].S.IsIPv4())
             debugs(50, DBG_IMPORTANT, "idnsSendQuery: FD " << DnsSocketA << ": sendto: " << xstrerror());
 
     } while ( (x<0 && y<0) && q->nsends % nns != 0);
@@ -945,7 +945,7 @@ idnsSendQuery(idns_query * q)
         fd_bytes(DnsSocketA, x, FD_WRITE);
     }
 
-    ++ nameservers[ns].nqueries;
+    ++ nameservers[nsn].nqueries;
     q->queue_t = current_time;
     dlinkAdd(q, &q->lru, &lru_list);
     q->pending = 1;
@@ -1016,9 +1016,8 @@ idnsCallback(idns_query *q, const char *error)
     if (q->master)
         q = q->master;
 
-    idns_query *q2;
     // If any of our subqueries are still pending then wait for them to complete before continuing
-    for ( q2 = q; q2; q2 = q2->slave) {
+    for (idns_query *q2 = q; q2; q2 = q2->slave) {
         if (q2->pending) {
             return;
         }
@@ -1030,7 +1029,7 @@ idnsCallback(idns_query *q, const char *error)
     int n = q->ancount;
     error = q->error;
 
-    while ( (q2 = q->slave) ) {
+    while ( idns_query *q2 = q->slave ) {
         debugs(78, 6, HERE << "Merging DNS results " << q->name << " A has " << n << " RR, AAAA has " << q2->ancount << " RR");
         q->slave = q2->slave;
         if ( !q2->error ) {
@@ -1252,7 +1251,6 @@ idnsRead(int fd, void *data)
     int len;
     int max = INCOMING_DNS_MAX;
     static char rbuf[SQUID_UDP_SO_RCVBUF];
-    int ns;
     Ip::Address from;
 
     debugs(78, 3, "idnsRead: starting with FD " << fd);
@@ -1304,10 +1302,10 @@ idnsRead(int fd, void *data)
         debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << from);
 
         /* BUG: see above. Its here that it becomes apparent that the content of bugbypass is gone. */
-        ns = idnsFromKnownNameserver(from);
+        int nsn = idnsFromKnownNameserver(from);
 
-        if (ns >= 0) {
-            ++ nameservers[ns].nreplies;
+        if (nsn >= 0) {
+            ++ nameservers[nsn].nreplies;
         }
 
         // Before unknown_nameservers check to avoid flooding cache.log on attacks,
@@ -1315,7 +1313,7 @@ idnsRead(int fd, void *data)
         if (!lru_list.head)
             continue; // Don't process replies if there is no pending query.
 
-        if (ns < 0 && Config.onoff.ignore_unknown_nameservers) {
+        if (nsn < 0 && Config.onoff.ignore_unknown_nameservers) {
             static time_t last_warning = 0;
 
             if (squid_curtime - last_warning > 60) {
@@ -1327,7 +1325,7 @@ idnsRead(int fd, void *data)
             continue;
         }
 
-        idnsGrokReply(rbuf, len, ns);
+        idnsGrokReply(rbuf, len, nsn);
     }
 }
 
