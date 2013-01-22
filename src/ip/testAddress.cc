@@ -711,6 +711,7 @@ testIpAddress::testAddrInfo()
     CPPUNIT_ASSERT( memcmp( expect->ai_addr, ipval->ai_addr, expect->ai_addrlen ) == 0 );
 
     freeaddrinfo(expect);
+    anIP.FreeAddrInfo(ipval);
 }
 
 void
