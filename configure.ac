@@ -317,7 +317,7 @@ dnl Guido Serassio (serassio@squid-cache.org) 20070811
 dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
 dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
-    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
+    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
     ;;
   freebsd)
     # FreeBSD places local libraries and packages in /usr/local
@@ -326,10 +326,10 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
     LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
     ;;
   *)
-    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
     ;;
   esac
-  SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
+  SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
 else
   SQUID_CFLAGS=
   SQUID_CXXFLAGS=
