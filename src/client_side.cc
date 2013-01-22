@@ -2566,7 +2566,7 @@ static void
 clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, HttpVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
-    HttpRequest *request = NULL;
+    HttpRequest::Pointer request;
     bool notedUseOfBuffer = false;
     bool chunked = false;
     bool mustReplyToOptions = false;
