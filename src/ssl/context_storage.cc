@@ -10,14 +10,14 @@
 #include <openssl/ssl.h>
 #endif
 
-Ssl::CertificateStorageAction::CertificateStorageAction(const Mgr::Command::Pointer &cmd)
-        :   Mgr::Action(cmd)
+Ssl::CertificateStorageAction::CertificateStorageAction(const Mgr::Command::Pointer &aCmd)
+        :   Mgr::Action(aCmd)
 {}
 
 Ssl::CertificateStorageAction::Pointer
-Ssl::CertificateStorageAction::Create(const Mgr::Command::Pointer &cmd)
+Ssl::CertificateStorageAction::Create(const Mgr::Command::Pointer &aCmd)
 {
-    return new CertificateStorageAction(cmd);
+    return new CertificateStorageAction(aCmd);
 }
 
 void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
