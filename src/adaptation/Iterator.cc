@@ -215,9 +215,9 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
 
     debugs(85,3, HERE << "retiring old plan: " << thePlan);
 
-    Adaptation::ServiceFilter filter = this->filter();
+    Adaptation::ServiceFilter f = this->filter();
     DynamicGroupCfg current, future;
-    DynamicServiceChain::Split(filter, services, current, future);
+    DynamicServiceChain::Split(f, services, current, future);
 
     if (!future.empty()) {
         ah->setFutureServices(future);
@@ -225,8 +225,8 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
     }
 
     // use the current config even if it is empty; we must replace the old plan
-    theGroup = new DynamicServiceChain(current, filter); // refcounted
-    thePlan = ServicePlan(theGroup, filter);
+    theGroup = new DynamicServiceChain(current, f); // refcounted
+    thePlan = ServicePlan(theGroup, f);
     debugs(85,3, HERE << "adopted service-proposed plan: " << thePlan);
     return true;
 }
