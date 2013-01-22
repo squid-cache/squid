@@ -47,7 +47,15 @@ typedef void HLPSCB(void *, void *lastserver, char *buf);
 class helper
 {
 public:
-    inline helper(const char *name) : cmdline(NULL), id_name(name), eom('\n') {}
+    inline helper(const char *name) :
+            cmdline(NULL),
+            id_name(name),
+            ipc_type(0),
+            last_queue_warn(0),
+            last_restart(0),
+            eom('\n') {
+        memset(&stats, 0, sizeof(stats));
+    }
     ~helper();
 
 public:
@@ -76,7 +84,7 @@ private:
 class statefulhelper : public helper
 {
 public:
-    inline statefulhelper(const char *name) : helper(name) {};
+    inline statefulhelper(const char *name) : helper(name), datapool(NULL), IsAvailable(NULL), OnEmptyQueue(NULL) {};
     inline ~statefulhelper() {};
 
 public:
