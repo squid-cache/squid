@@ -46,6 +46,7 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ipcache.h"
+#include "ip/tools.h"
 #include "Mem.h"
 #include "neighbors.h"
 #include "peer_sourcehash.h"
@@ -348,6 +349,14 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             p = new Comm::Connection();
             p->remote = ia->in_addrs[n];
+
+            // when IPv6 is disabled we cannot use it
+            if (!Ip::EnableIpv6 && p->remote.IsIPv6()) {
+                const char *host = (fs->_peer ? fs->_peer->host : psstate->request->GetHost());
+                ipcacheMarkBadAddr(host, p->remote);
+                continue;
+            }
+
             if (fs->_peer)
                 p->remote.SetPort(fs->_peer->http_port);
             else
