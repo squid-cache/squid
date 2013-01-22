@@ -3287,13 +3287,14 @@ connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
             (result->transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        setsockopt(client->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
+        if (setsockopt(client->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0)
+            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << client << " : " << xstrerror());
 #else
-        static int reported = 0;
+        static bool reported = false;
 
         if (!reported) {
-            debugs(33, DBG_IMPORTANT, "Notice: httpd_accel_no_pmtu_disc not supported on your platform");
-            reported = 1;
+            debugs(33, DBG_IMPORTANT, "NOTICE: Path MTU discovery disabling is not supported on your platform.");
+            reported = true;
         }
 #endif
     }
