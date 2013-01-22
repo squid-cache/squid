@@ -561,6 +561,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         r->flags.needValidation = 1;
 
         if (e->lastmod < 0) {
+            debugs(88, 3, "validate HIT object? NO. Missing Last-Modified header. Do MISS.");
             /*
              * Previous reply didn't have a Last-Modified header,
              * we cannot revalidate it.
@@ -568,6 +569,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             http->logType = LOG_TCP_MISS;
             processMiss();
         } else if (r->flags.noCache) {
+            debugs(88, 3, "validate HIT object? NO. Client sent CC:no-cache. Do CLIENT_REFRESH_MISS");
             /*
              * This did not match a refresh pattern that overrides no-cache
              * we should honour the client no-cache header.
@@ -575,12 +577,14 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
             processMiss();
         } else if (r->protocol == AnyP::PROTO_HTTP) {
+            debugs(88, 3, "validate HIT object? YES.");
             /*
              * Object needs to be revalidated
              * XXX This could apply to FTP as well, if Last-Modified is known.
              */
             processExpired();
         } else {
+            debugs(88, 3, "validate HIT object? NO. Client protocol non-HTTP. Do MISS.");
             /*
              * We don't know how to re-validate other protocols. Handle
              * them as if the object has expired.
