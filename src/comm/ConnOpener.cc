@@ -13,6 +13,7 @@
 #include "globals.h"
 #include "icmp/net_db.h"
 #include "ipcache.h"
+#include "ip/tools.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
@@ -165,12 +166,10 @@ Comm::ConnOpener::start()
 
     /* get a socket open ready for connecting with */
     if (temporaryFd_ < 0) {
-#if USE_IPV6
         /* outbound sockets have no need to be protocol agnostic. */
-        if (conn_->remote.IsIPv4()) {
+        if (!(Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING) && conn_->remote.IsIPv4()) {
             conn_->local.SetIPv4();
         }
-#endif
         temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
         if (temporaryFd_ < 0) {
             doneConnecting(COMM_ERR_CONNECT, 0);
