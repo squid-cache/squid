@@ -1382,8 +1382,8 @@ ClientRequestContext::sslBumpAccessCheck()
 
     debugs(85, 5, HERE << "SslBump possible, checking ACL");
 
-    ACLFilledChecklist *acl_checklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
-    acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+    ACLFilledChecklist *aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+    aclChecklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
     return true;
 }
 
