@@ -341,15 +341,10 @@ Fs::Ufs::UFSSwapDir::~UFSSwapDir()
         file_close(swaplog_fd);
         swaplog_fd = -1;
     }
-
-    delete map;
-
-    if (IO)
-        delete IO;
-
-    IO = NULL;
-
     safe_free(ioType);
+    delete map;
+    delete IO;
+    delete currentIOOptions;
 }
 
 void
