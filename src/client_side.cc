@@ -3905,8 +3905,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
         }
     }
 
-    SSL *ssl = NULL;
-    if (!(ssl = httpsCreate(clientConnection, sslContext)))
+    if (!httpsCreate(clientConnection, sslContext))
         return;
 
     // commSetConnTimeout() was called for this request before we switched.
