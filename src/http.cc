@@ -2136,6 +2136,8 @@ HttpStateData::sendRequest()
      */
     if (request->flags.mustKeepalive)
         flags.keepalive = true;
+    else if (request->flags.pinned)
+        flags.keepalive = request->persistent();
     else if (!Config.onoff.server_pconns)
         flags.keepalive = false;
     else if (_peer == NULL)
