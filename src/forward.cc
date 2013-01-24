@@ -172,16 +172,22 @@ FwdState::selectPeerForIntercepted()
 {
     // use pinned connection if available
     Comm::ConnectionPointer p;
-    if (ConnStateData *client = request->pinnedConnection())
+    if (ConnStateData *client = request->pinnedConnection()) {
         p = client->validatePinnedConnection(request, NULL);
+        if (Comm::IsConnOpen(p)) {
+            /* duplicate peerSelectPinned() effects */
+            p->peerType = PINNED;
+            entry->ping_status = PING_DONE;     /* Skip ICP */
 
-    if (Comm::IsConnOpen(p)) {
-        /* duplicate peerSelectPinned() effects */
-        p->peerType = PINNED;
-        entry->ping_status = PING_DONE;     /* Skip ICP */
-
-        debugs(17, 3, HERE << "reusing a pinned conn: " << *p);
-        serverDestinations.push_back(p);
+            debugs(17, 3, "reusing a pinned conn: " << *p);
+            serverDestinations.push_back(p);
+        } else {
+            debugs(17,2, "Pinned connection is not valid: " << p);
+            ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, request);
+            fail(anErr);
+        }
+        // Either use the valid pinned connection or fail if it is invalid.
+        return;
     }
 
     // use client original destination as second preferred choice
@@ -396,9 +402,18 @@ FwdState::fail(ErrorState * errorState)
     if (!errorState->request)
         errorState->request = HTTPMSGLOCK(request);
 
-    if (pconnRace == racePossible && err->type == ERR_ZERO_SIZE_OBJECT) {
+    if (err->type != ERR_ZERO_SIZE_OBJECT)
+        return;
+
+    if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
+    }
+
+    if (ConnStateData *pinned_connection = request->pinnedConnection()) {
+        pinned_connection->pinning.zeroReply = true;
+        flags.dont_retry = true; // we want to propagate failure to the client
+        debugs(17, 4, "zero reply on pinned connection");
     }
 }
 
@@ -1014,18 +1029,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-    // some requests benefit from pinning but do not require it and can "repin"
-    const bool rePin = request->flags.canRePin &&
-                       request->clientConnectionManager.valid();
-    if (rePin) {
-        debugs(17, 3, HERE << "repinning " << serverConn);
-        request->clientConnectionManager->pinConnection(serverConn,
-                request, serverConn->getPeer(), request->flags.auth);
-        request->flags.pinned = 1;
-    }
-
 #if USE_SSL
-    if (!request->flags.pinned || rePin) {
+    if (!request->flags.pinned) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
                 request->flags.sslPeek) {
@@ -1105,6 +1110,7 @@ FwdState::connectStart()
     // XXX: also, logs will now lie if pinning is broken and leads to an error message.
     if (serverDestinations[0]->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
+        debugs(17,7, "pinned peer connection: " << pinned_connection);
         // pinned_connection may become nil after a pconn race
         if (pinned_connection)
             serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
@@ -1126,16 +1132,12 @@ FwdState::connectStart()
             dispatch();
             return;
         }
-        /* Failure. Fall back on next path unless we can re-pin */
+        // Pinned connection failure.
         debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
-        if (pconnRace != raceHappened || !request->flags.canRePin) {
-            serverDestinations.shift();
-            pconnRace = raceImpossible;
-            startConnectionOrFail();
-            return;
-        }
-        debugs(17,3, HERE << "There was a pconn race. Will try to repin.");
-        // and fall through to regular handling
+        ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, request);
+        fail(anErr);
+        self = NULL; // refcounted
+        return;
     }
 
     // Use pconn to avoid opening a new connection.
