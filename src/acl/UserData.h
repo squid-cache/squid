@@ -53,8 +53,8 @@ public:
     SplayNode<char *> *names;
 
     struct {
-        unsigned int case_insensitive:1;
-        unsigned int required:1;
+        bool case_insensitive;
+        bool required;
     } flags;
 };
 

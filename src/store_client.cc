@@ -175,7 +175,7 @@ storeClientCopyEvent(void *data)
     store_client *sc = (store_client *)data;
     debugs(90, 3, "storeClientCopyEvent: Running");
     assert (sc->flags.copy_event_pending);
-    sc->flags.copy_event_pending = 0;
+    sc->flags.copy_event_pending = false;
 
     if (!sc->_callback.pending())
         return;
@@ -191,7 +191,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
         ,  object_ok(true)
 {
     cmp_offset = 0;
-    flags.disk_io_pending = 0;
+    flags.disk_io_pending = false;
     ++ entry->refcount;
 
     if (getType() == STORE_DISK_CLIENT)
@@ -315,7 +315,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     }
 
     if (sc->flags.store_copying) {
-        sc->flags.copy_event_pending = 1;
+        sc->flags.copy_event_pending = true;
         debugs(90, 3, "storeClientCopy2: Queueing storeClientCopyEvent()");
         eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0.0, 0);
         return;
@@ -335,9 +335,9 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * this function
      */
     cbdataInternalLock(sc);
-    assert (sc->flags.store_copying == 0);
+    assert (!sc->flags.store_copying);
     sc->doCopy(e);
-    assert (sc->flags.store_copying == 0);
+    assert (!sc->flags.store_copying);
     cbdataInternalUnlock(sc);
 }
 
@@ -345,7 +345,7 @@ void
 store_client::doCopy(StoreEntry *anEntry)
 {
     assert (anEntry == entry);
-    flags.store_copying = 1;
+    flags.store_copying = true;
     MemObject *mem = entry->mem_obj;
 
     debugs(33, 5, "store_client::doCopy: co: " <<
@@ -356,14 +356,14 @@ store_client::doCopy(StoreEntry *anEntry)
         /* There is no more to send! */
         debugs(33, 3, HERE << "There is no more to send!");
         callback(0);
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     }
 
     /* Check that we actually have data */
     if (anEntry->store_status == STORE_PENDING && copyInto.offset >= mem->endOffset()) {
         debugs(90, 3, "store_client::doCopy: Waiting for more");
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     }
 
@@ -394,7 +394,7 @@ store_client::startSwapin()
     if (storeTooManyDiskFilesOpen()) {
         /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
         fail();
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     } else if (!flags.disk_io_pending) {
         /* Don't set store_io_pending here */
@@ -402,7 +402,7 @@ store_client::startSwapin()
 
         if (swapin_sio == NULL) {
             fail();
-            flags.store_copying = 0;
+            flags.store_copying = false;
             return;
         }
 
@@ -415,7 +415,7 @@ store_client::startSwapin()
         return;
     } else {
         debugs(90, DBG_IMPORTANT, "WARNING: Averted multiple fd operation (1)");
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     }
 }
@@ -443,7 +443,7 @@ store_client::scheduleDiskRead()
 
     fileRead();
 
-    flags.store_copying = 0;
+    flags.store_copying = false;
 }
 
 void
@@ -454,7 +454,7 @@ store_client::scheduleMemRead()
     debugs(90, 3, "store_client::doCopy: Copying normal from memory");
     size_t sz = entry->mem_obj->data_hdr.copy(copyInto);
     callback(sz);
-    flags.store_copying = 0;
+    flags.store_copying = false;
 }
 
 void
@@ -464,7 +464,7 @@ store_client::fileRead()
 
     assert(_callback.pending());
     assert(!flags.disk_io_pending);
-    flags.disk_io_pending = 1;
+    flags.disk_io_pending = true;
 
     if (mem->swap_hdr_sz != 0)
         if (entry->swap_status == SWAPOUT_WRITING)
@@ -491,7 +491,7 @@ store_client::readBody(const char *buf, ssize_t len)
     int parsed_header = 0;
 
     // Don't assert disk_io_pending here.. may be called by read_header
-    flags.disk_io_pending = 0;
+    flags.disk_io_pending = false;
     assert(_callback.pending());
     debugs(90, 3, "storeClientReadBody: len " << len << "");
 
@@ -615,7 +615,7 @@ store_client::readHeader(char const *buf, ssize_t len)
     MemObject *const mem = entry->mem_obj;
 
     assert(flags.disk_io_pending);
-    flags.disk_io_pending = 0;
+    flags.disk_io_pending = false;
     assert(_callback.pending());
 
     unpackHeader (buf, len);

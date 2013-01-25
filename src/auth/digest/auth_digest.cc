@@ -171,7 +171,7 @@ authenticateDigestNonceNew(void)
 
     /* create a new nonce */
     newnonce->nc = 0;
-    newnonce->flags.valid = 1;
+    newnonce->flags.valid = true;
     newnonce->noncedata.self = newnonce;
     newnonce->noncedata.creationtime = current_time.tv_sec;
     newnonce->noncedata.randomdata = squid_random();
@@ -193,7 +193,7 @@ authenticateDigestNonceNew(void)
     hash_join(digest_nonce_cache, newnonce);
     /* the cache's link */
     authDigestNonceLink(newnonce);
-    newnonce->flags.incache = 1;
+    newnonce->flags.incache = true;
     debugs(29, 5, "authenticateDigestNonceNew: created nonce " << newnonce << " at " << newnonce->noncedata.creationtime);
     return newnonce;
 }
@@ -210,7 +210,7 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 
 #endif
 
-        assert(nonce->flags.incache == 0);
+        assert(!nonce->flags.incache);
 
         safe_free(nonce->key);
 
@@ -281,7 +281,7 @@ authenticateDigestNonceCacheCleanup(void *data)
             debugs(29, 4, "authenticateDigestNonceCacheCleanup: Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
             assert(nonce->flags.incache);
             /* invalidate nonce so future requests fail */
-            nonce->flags.valid = 0;
+            nonce->flags.valid = false;
             /* if it is tied to a auth_user, remove the tie */
             authDigestNonceUserUnlink(nonce);
             authDigestNoncePurge(nonce);
@@ -386,7 +386,7 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
     if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
         debugs(29, 4, "authDigestNonceIsValid: Nonce count doesn't match");
-        nonce->flags.valid = 0;
+        nonce->flags.valid = false;
         return 0;
     }
 
@@ -414,19 +414,19 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
                static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration << " " <<
                current_time.tv_sec);
 
-        nonce->flags.valid = 0;
+        nonce->flags.valid = false;
         return -1;
     }
 
     if (nonce->nc > 99999998) {
         debugs(29, 4, "authDigestNonceIsStale: Nonce count overflow");
-        nonce->flags.valid = 0;
+        nonce->flags.valid = false;
         return -1;
     }
 
     if (nonce->nc > static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count over user limit");
-        nonce->flags.valid = 0;
+        nonce->flags.valid = false;
         return -1;
     }
 
@@ -469,7 +469,7 @@ authDigestNoncePurge(digest_nonce_h * nonce)
 
     hash_remove_link(digest_nonce_cache, nonce);
 
-    nonce->flags.incache = 0;
+    nonce->flags.incache = false;
 
     /* the cache's link */
     authDigestNonceUnlink(nonce);
