@@ -72,7 +72,7 @@ public:
     HttpRequest *urlres_r;
 
     struct {
-        unsigned int force_menu:1;
+        bool force_menu;
     } flags;
     char reqbuf[URN_REQBUF_SZ];
     int reqofs;
@@ -216,7 +216,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
         updateRequestURL(r, r->urlpath.rawBuf() + 5, r->urlpath.size() - 5 );
-        flags.force_menu = 1;
+        flags.force_menu = true;
     }
 
     createUriResRequest (r->urlpath);

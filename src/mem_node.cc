@@ -60,12 +60,12 @@ memNodeWriteComplete(void* d)
 {
     mem_node* n = (mem_node*)((char*)d - _mem_node_data_offset);
     assert(n->write_pending);
-    n->write_pending = 0;
+    n->write_pending = false;
 }
 
 mem_node::mem_node(int64_t offset) :
         nodeBuffer(0,offset,data),
-        write_pending(0)
+        write_pending(false)
 {
     *data = 0;
 }
