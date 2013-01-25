@@ -1360,7 +1360,7 @@ peerCountMcastPeersSchedule(CachePeer * p, time_t when)
              p,
              (double) when, 1);
 
-    p->mcast.flags.count_event_pending = 1;
+    p->mcast.flags.count_event_pending = true;
 }
 
 static void
@@ -1374,7 +1374,7 @@ peerCountMcastPeersStart(void *data)
     int reqnum;
     LOCAL_ARRAY(char, url, MAX_URL);
     assert(p->type == PEER_MULTICAST);
-    p->mcast.flags.count_event_pending = 0;
+    p->mcast.flags.count_event_pending = false;
     snprintf(url, MAX_URL, "http://");
     p->in_addr.ToURL(url+7, MAX_URL -8 );
     strcat(url, "/");
@@ -1401,7 +1401,7 @@ peerCountMcastPeersStart(void *data)
              peerCountMcastPeersDone,
              psstate,
              Config.Timeout.mcast_icp_query / 1000.0, 1);
-    p->mcast.flags.counting = 1;
+    p->mcast.flags.counting = true;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }
 
@@ -1413,7 +1413,7 @@ peerCountMcastPeersDone(void *data)
 
     if (cbdataReferenceValid(psstate->callback_data)) {
         CachePeer *p = (CachePeer *)psstate->callback_data;
-        p->mcast.flags.counting = 0;
+        p->mcast.flags.counting = false;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
         debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
