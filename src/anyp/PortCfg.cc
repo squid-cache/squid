@@ -13,14 +13,15 @@ CBDATA_NAMESPACED_CLASS_INIT(AnyP, PortCfg);
 int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
 
-AnyP::PortCfg::PortCfg(const char *aProtocol)
+AnyP::PortCfg::PortCfg(const char *aProtocol) :
+        next(NULL),
+        protocol(xstrdup(aProtocol)),
+        name(NULL),
+        defaultsite(NULL)
 #if USE_SSL
-        :
-        dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
+        ,dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
 #endif
-{
-    protocol = xstrdup(aProtocol);
-}
+{}
 
 AnyP::PortCfg::~PortCfg()
 {
@@ -94,7 +95,8 @@ AnyP::PortCfg::clone() const
 }
 
 #if USE_SSL
-void AnyP::PortCfg::configureSslServerContext()
+void
+AnyP::PortCfg::configureSslServerContext()
 {
     if (cert)
         Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, cert, key);
