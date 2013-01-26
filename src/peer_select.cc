@@ -239,15 +239,18 @@ peerSelectDnsPaths(ps_state *psstate)
     const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
     const bool choseDirect = fs && fs->code == HIER_DIRECT;
     if (isIntercepted && useOriginalDst && choseDirect) {
-        // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
-        Comm::ConnectionPointer p = new Comm::Connection();
-        p->remote = req->clientConnectionManager->clientConnection->local;
-        p->peerType = fs->code;
-        p->setPeer(fs->_peer);
+        // check the client is still around before using any of its details
+        if (req->clientConnectionManager.valid()) {
+            // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
+            Comm::ConnectionPointer p = new Comm::Connection();
+            p->remote = req->clientConnectionManager->clientConnection->local;
+            p->peerType = fs->code;
+            p->setPeer(fs->_peer);
 
-        // check for a configured outgoing address for this destination...
-        getOutgoingAddress(psstate->request, p);
-        psstate->paths->push_back(p);
+            // check for a configured outgoing address for this destination...
+            getOutgoingAddress(psstate->request, p);
+            psstate->paths->push_back(p);
+        }
 
         // clear the used fs and continue
         psstate->servers = fs->next;
