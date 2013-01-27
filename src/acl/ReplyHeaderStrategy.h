@@ -45,7 +45,7 @@ class ACLReplyHeaderStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *, ACLFlags &);
     virtual bool requiresReply() const {return true;}
 
     static ACLReplyHeaderStrategy *Instance();
@@ -63,7 +63,7 @@ private:
 
 template <http_hdr_type header>
 int
-ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     char const *theHeader = checklist->reply->header.getStr(header);
 

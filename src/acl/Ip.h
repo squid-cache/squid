@@ -33,6 +33,7 @@
 #define SQUID_ACLIP_H
 
 #include "acl/Acl.h"
+#include "acl/Data.h"
 #include "splay.h"
 #include "ip/Address.h"
 
@@ -74,6 +75,7 @@ public:
     void operator delete(void *);
 
     ACLIP() : data(NULL) {}
+    explicit ACLIP(const ACLFlag flgs[]) : ACL(flgs), data(NULL) {}
 
     ~ACLIP();
 

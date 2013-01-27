@@ -1160,7 +1160,7 @@ class ACLSNMPCommunityStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLSNMPCommunityStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g++ warnings about
@@ -1186,7 +1186,7 @@ ACL::Prototype ACLSNMPCommunity::RegistryProtoype(&ACLSNMPCommunity::RegistryEnt
 ACLStrategised<char const *> ACLSNMPCommunity::RegistryEntry_(new ACLStringData, ACLSNMPCommunityStrategy::Instance(), "snmp_community");
 
 int
-ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     return data->match (checklist->snmp_community);
 }

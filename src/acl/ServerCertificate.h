@@ -14,7 +14,7 @@
 class ACLServerCertificateStrategy : public ACLStrategy<X509 *>
 {
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLServerCertificateStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about

@@ -39,6 +39,8 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
+ACLFlag ACLDestinationIP::SupportedFlags[] = {ACL_F_NO_LOOKUP, ACL_F_END};
+
 char const *
 ACLDestinationIP::typeString() const
 {
@@ -57,6 +59,17 @@ ACLDestinationIP::match(ACLChecklist *cl)
     if (Config.onoff.client_dst_passthru && (checklist->request->flags.intercepted || checklist->request->flags.spoofClientIp)) {
         assert(checklist->conn() && checklist->conn()->clientConnection != NULL);
         return ACLIP::match(checklist->conn()->clientConnection->local);
+    }
+
+    if (flags.isSet(ACL_F_NO_LOOKUP)) {
+        if (!checklist->request->GetHostIsNumeric()) {
+            debugs(28, 3, "aclMatchAcl:  No-lookup DNS ACL '" << AclMatchedName << "' for '" << checklist->request->GetHost() << "'");
+            return 0;
+        }
+
+        if(ACLIP::match(checklist->request->host_addr))
+            return 1;
+        return 0;
     }
 
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);

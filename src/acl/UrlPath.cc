@@ -40,7 +40,7 @@
 #include "rfc1738.h"
 
 int
-ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     char *esc_buf = xstrdup(checklist->request->urlpath.termedBuf());
     rfc1738_unescape(esc_buf);
