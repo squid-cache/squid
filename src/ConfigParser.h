@@ -35,6 +35,10 @@
 #define SQUID_CONFIGPARSER_H
 
 #include "SquidString.h"
+#include <queue>
+#if HAVE_STRING
+#include <string>
+#endif
 
 class wordlist;
 /**
@@ -76,6 +80,11 @@ public:
     static const char *QuoteString(String &var);
     static void ParseWordList(wordlist **list);
     static char * strtokFile();
+    static void strtokFileUndo();
+    static void strtokFilePutBack(const char *);
+private:
+    static char *lastToken;
+    static std::queue<std::string> undo;
 };
 
 int parseConfigFile(const char *file_name);

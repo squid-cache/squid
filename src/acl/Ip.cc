@@ -509,7 +509,12 @@ ACLIP::parse()
 {
     char *t = NULL;
 
-    while ((t = strtokFile())) {
+    flags.parseFlags(t);
+
+    if (!t)
+        return;
+
+    do {
         acl_ip_data *q = acl_ip_data::FactoryParse(t);
 
         while (q != NULL) {
@@ -519,7 +524,7 @@ ACLIP::parse()
             data = data->insert(q, acl_ip_data::NetworkCompare);
             q = next_node;
         }
-    }
+    } while ((t = strtokFile()));
 }
 
 ACLIP::~ACLIP()

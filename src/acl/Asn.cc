@@ -609,7 +609,7 @@ ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryE
 ACLStrategised<Ip::Address> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int
-ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist)
+ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     return data->match(checklist->src_addr);
 }
@@ -623,7 +623,7 @@ ACLSourceASNStrategy::Instance()
 ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
 
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 

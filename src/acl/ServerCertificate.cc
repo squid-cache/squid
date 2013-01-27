@@ -13,7 +13,7 @@
 #include "ssl/ServerBump.h"
 
 int
-ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     X509 *cert = NULL;
     if (checklist->serverCert.get())

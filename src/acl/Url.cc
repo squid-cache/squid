@@ -40,7 +40,7 @@
 #include "URL.h"
 
 int
-ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     char *esc_buf = xstrdup(urlCanonical(checklist->request));
     rfc1738_unescape(esc_buf);

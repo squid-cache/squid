@@ -705,7 +705,7 @@ ACLExternal::parse()
 
     data = cbdataAlloc(external_acl_data);
 
-    token = strtok(NULL, w_space);
+    token = strtokFile();
 
     if (!token)
         self_destruct();
