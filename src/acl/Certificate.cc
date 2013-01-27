@@ -48,7 +48,7 @@
 #include "globals.h"
 
 int
-ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     const int fd = checklist->fd();
     const bool goodDescriptor = 0 <= fd && fd <= Biggest_FD;
