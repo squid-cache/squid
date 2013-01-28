@@ -1014,6 +1014,7 @@ parse(FILE *fp) {
             return NULL;
         }
         strncpy(name, token, 64);
+        name[63] = '\0';
         type = get_token(fp, token);
         if (type == OBJTYPE) {
             if (root == NULL) {

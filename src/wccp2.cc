@@ -592,6 +592,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
     strncpy(pwd, password, sizeof(pwd));
+    pwd[sizeof(pwd) - 1] = '\0';
 
     ws = (struct wccp2_security_md5_t *) ptr;
     assert(ntohs(ws->security_type) == WCCP2_SECURITY_INFO);
@@ -660,6 +661,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
     strncpy(pwd, srv->wccp_password, sizeof(pwd));
+    pwd[sizeof(pwd) - 1] = '\0';
 
     /* Take a copy of the challenge: we need to NUL it before comparing */
     memcpy(md5_challenge, ws->security_implementation, 16);
