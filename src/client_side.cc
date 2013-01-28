@@ -2228,7 +2228,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     *method_p = HttpRequestMethod(&hp->buf[hp->req.m_start], &hp->buf[hp->req.m_end]+1);
 
     /* deny CONNECT via accelerated ports */
-    if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->accel) {
+    if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
@@ -2294,7 +2294,8 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
 #endif
 
-    debugs(33,5, HERE << "repare absolute URL from " << (csd->transparent()?"intercept":(csd->port->accel ? "accel":"")));
+    debugs(33,5, HERE << "repare absolute URL from " <<
+                    (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
@@ -2318,7 +2319,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = 1;
 
-    } else if (csd->port->accel || csd->switchedToHttps()) {
+    } else if (csd->port->flags.accelSurrogate || csd->switchedToHttps()) {
         /* accelerator mode */
         prepareAcceleratedURL(csd, http, url, req_hdr);
     }
@@ -3667,7 +3668,7 @@ httpsAccept(const CommAcceptCbParams &params)
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = connStateCreate(params.conn, s);
 
-    if (s->sslBump) {
+    if (s->flags.tunnelSslBumping) {
         debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
 
         if (!Config.accessList.ssl_bump) {
@@ -3964,7 +3965,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
         Ip::Address intendedDest;
         intendedDest = sslConnectHostOrIp.termedBuf();
-        const bool isConnectRequest = !port->spoof_client_ip && !port->intercepted;
+        const bool isConnectRequest = !port->flags.tproxyIntercept && !port->flags.natIntercept;
 
         // Squid serves its own error page and closes, so we want
         // a CN that causes no additional browser errors. Possible
@@ -4026,16 +4027,18 @@ clientHttpConnectionsOpen(void)
         }
 
 #if USE_SSL
-        if (s->sslBump && !Config.accessList.ssl_bump) {
+        if (s->flags.tunnelSslBumping && !Config.accessList.ssl_bump) {
             debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->s);
-            s->sslBump = 0;
+            s->flags.tunnelSslBumping = false;
         }
 
-        if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
+        if (s->flags.tunnelSslBumping &&
+            !s->staticSslContext &&
+            !s->generateHostCertificates) {
             debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
-            s->sslBump = 0;
+            s->flags.tunnelSslBumping = false;
         }
-        if (s->sslBump) {
+        if (s->flags.tunnelSslBumping) {
             // Create ssl_ctx cache for this port.
             Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
         }
@@ -4045,7 +4048,7 @@ clientHttpConnectionsOpen(void)
         //  then pass back when active so we can start a TcpAcceptor subscription.
         s->listenConn = new Comm::Connection;
         s->listenConn->local = s->s;
-        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0) | (s->intercepted ? COMM_INTERCEPTION : 0);
+        s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) | (s->flags.natIntercept ? COMM_INTERCEPTION : 0);
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -4081,17 +4084,17 @@ clientHttpsConnectionsOpen(void)
         }
 
         // TODO: merge with similar code in clientHttpConnectionsOpen()
-        if (s->sslBump && !Config.accessList.ssl_bump) {
+        if (s->flags.tunnelSslBumping && !Config.accessList.ssl_bump) {
             debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->s);
-            s->sslBump = 0;
+            s->flags.tunnelSslBumping = false;
         }
 
-        if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
+        if (s->flags.tunnelSslBumping && !s->staticSslContext && !s->generateHostCertificates) {
             debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
-            s->sslBump = 0;
+            s->flags.tunnelSslBumping = false;
         }
 
-        if (s->sslBump) {
+        if (s->flags.tunnelSslBumping) {
             // Create ssl_ctx cache for this port.
             Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
         }
@@ -4099,8 +4102,8 @@ clientHttpsConnectionsOpen(void)
         // Fill out a Comm::Connection which IPC will open as a listener for us
         s->listenConn = new Comm::Connection;
         s->listenConn->local = s->s;
-        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0) |
-                               (s->intercepted ? COMM_INTERCEPTION : 0);
+        s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
+                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0);
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -4131,10 +4134,10 @@ clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNot
     AsyncJob::Start(new Comm::TcpAcceptor(s->listenConn, FdNote(portTypeNote), sub));
 
     debugs(1, DBG_IMPORTANT, "Accepting " <<
-           (s->intercepted ? "NAT intercepted " : "") <<
-           (s->spoof_client_ip ? "TPROXY spoofing " : "") <<
-           (s->sslBump ? "SSL bumped " : "") <<
-           (s->accel ? "reverse-proxy " : "")
+           (s->flags.natIntercept ? "NAT intercepted " : "") <<
+           (s->flags.tproxyIntercept ? "TPROXY spoofing " : "") <<
+           (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
+           (s->flags.accelSurrogate ? "reverse-proxy " : "")
            << FdNote(portTypeNote) << " connections at "
            << s->listenConn);
 
