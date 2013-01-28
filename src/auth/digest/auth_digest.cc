@@ -764,7 +764,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
     assert(auth_user_request != NULL);
 
     /* log the username */
-    debugs(29, 9, "authDigestLogUsername: Creating new user for logging '" << username << "'");
+    debugs(29, 9, "Creating new user for logging '" << (username?username:"[no username]") << "'");
     Auth::User::Pointer digest_user = new Auth::Digest::User(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
     /* save the credentials */
     digest_user->username(username);

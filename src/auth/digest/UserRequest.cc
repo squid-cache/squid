@@ -20,7 +20,10 @@ Auth::Digest::UserRequest::UserRequest() :
         uri(NULL),
         response(NULL),
         nonce(NULL)
-{}
+{
+    memset(nc, 0, sizeof(nc));
+    memset(&flags, 0, sizeof(flags));
+}
 
 /**
  * Delete the digest request structure.
