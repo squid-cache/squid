@@ -938,6 +938,12 @@ StoreHashIndex::get(String const key, STOREGETCLIENT aCallback, void *aCallbackD
 void
 StoreHashIndex::init()
 {
+    if (Config.Store.objectsPerBucket <= 0)
+        fatal("'store_objects_per_bucket' should be larger than 0.");
+
+    if (Config.Store.avgObjectSize <= 0)
+        fatal("'store_avg_object_size' should be larger than 0.");
+
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     /* this is very bogus, its specific to the any Store maintaining an
      * in-core index, not global */
