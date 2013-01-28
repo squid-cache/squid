@@ -2657,7 +2657,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped=conn->switchedToHttps();
-    request->flags.canRePin = request->flags.sslBumped && conn->pinning.pinned;
     request->flags.ignoreCc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
@@ -4259,8 +4258,12 @@ ConnStateData::ConnStateData() :
         stoppedSending_(NULL),
         stoppedReceiving_(NULL)
 {
+    pinning.host = NULL;
+    pinning.port = -1;
     pinning.pinned = false;
     pinning.auth = false;
+    pinning.zeroReply = false;
+    pinning.peer = NULL;
 }
 
 bool
@@ -4416,9 +4419,13 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
     // FwdState might repin a failed connection sooner than this close
     // callback is called for the failed connection.
-    if (pinning.serverConnection == io.conn) {
-        pinning.closeHandler = NULL; // Comm unregisters handlers before calling
-        unpinConnection();
+    assert(pinning.serverConnection == io.conn);
+    pinning.closeHandler = NULL; // Comm unregisters handlers before calling
+    const bool sawZeroReply = pinning.zeroReply; // reset when unpinning
+    unpinConnection();
+    if (sawZeroReply) {
+        debugs(33, 3, "Closing client connection on pinned zero reply.");
+        clientConnection->close();
     }
 }
 
@@ -4516,6 +4523,8 @@ ConnStateData::unpinConnection()
     }
 
     safe_free(pinning.host);
+
+    pinning.zeroReply = false;
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */

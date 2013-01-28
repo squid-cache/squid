@@ -263,6 +263,7 @@ public:
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
         bool auth;               /* pinned for www authentication */
+        bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;

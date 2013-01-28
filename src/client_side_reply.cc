@@ -1483,6 +1483,10 @@ clientReplyContext::buildReplyHeader()
         // We do not really have to close, but we pretend we are a tunnel.
         debugs(88, 3, "clientBuildReplyHeader: bumped reply forces close");
         request->flags.proxyKeepalive = 0;
+    } else if (request->pinnedConnection() && !reply->persistent()) {
+        // The peer wants to close the pinned connection
+        debugs(88, 3, "pinned reply forces close");
+        request->flags.proxyKeepalive = 0;
     }
 
     // Decide if we send chunked reply
@@ -2079,6 +2083,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     }
     if (!conn->isOpen()) {
         debugs(33,3, "not sending more data to closing connection " << conn->clientConnection);
+        return;
+    }
+    if (conn->pinning.zeroReply) {
+        debugs(33,3, "not sending more data after a pinned zero reply " << conn->clientConnection);
         return;
     }
 
