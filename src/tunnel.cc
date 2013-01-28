@@ -614,10 +614,10 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     debugs(26, 4, HERE << "determine post-connect handling pathway.");
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
-        tunnelState->request->flags.proxying = (conn->getPeer()->options.originserver?0:1);
+        tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
-        tunnelState->request->flags.proxying = 0;
+        tunnelState->request->flags.proxying = false;
     }
 
     if (tunnelState->request->flags.proxying)
