@@ -1209,7 +1209,7 @@ getMyPort(void)
     AnyP::PortCfg *p = NULL;
     if ((p = Config.Sockaddr.http)) {
         // skip any special interception ports
-        while (p && (p->intercepted || p->spoof_client_ip))
+        while (p && (p->flags.natIntercept || p->flags.tproxyIntercept))
             p = p->next;
         if (p)
             return p->s.GetPort();
@@ -1218,7 +1218,7 @@ getMyPort(void)
 #if USE_SSL
     if ((p = Config.Sockaddr.https)) {
         // skip any special interception ports
-        while (p && (p->intercepted || p->spoof_client_ip))
+        while (p && (p->flags.natIntercept || p->flags.tproxyIntercept))
             p = p->next;
         if (p)
             return p->s.GetPort();

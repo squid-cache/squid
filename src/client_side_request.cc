@@ -1366,7 +1366,8 @@ ClientRequestContext::sslBumpAccessCheck()
     // (bumping of intercepted SSL conns is decided before we get 1st request).
     // We also do not bump redirected CONNECT requests.
     if (http->request->method != Http::METHOD_CONNECT || http->redirect.status ||
-            !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
+            !Config.accessList.ssl_bump ||
+            !http->getConn()->port->flags.tunnelSslBumping) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "cannot SslBump this request");
         return false;
