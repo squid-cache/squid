@@ -156,6 +156,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     }
 
     Log(to, ' ', NULL, 0, 0);
+    to.FreeAddrInfo(S);
 }
 
 void
@@ -221,11 +222,15 @@ Icmp4::Recv(void)
 
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
 
-    if (icmp->icmp_type != ICMP_ECHOREPLY)
+    if (icmp->icmp_type != ICMP_ECHOREPLY) {
+        preply.from.FreeAddrInfo(from);
         return;
+    }
 
-    if (icmp->icmp_id != icmp_ident)
+    if (icmp->icmp_id != icmp_ident) {
+        preply.from.FreeAddrInfo(from);
         return;
+    }
 
     echo = (icmpEchoData *) (void *) (icmp + 1);
 
@@ -242,6 +247,7 @@ Icmp4::Recv(void)
     control.SendResult(preply, (sizeof(pingerReplyData) - MAX_PKT4_SZ + preply.psize) );
 
     Log(preply.from, icmp->icmp_type, icmpPktStr[icmp->icmp_type], preply.rtt, preply.hops);
+    preply.from.FreeAddrInfo(from);
 }
 
 #endif /* USE_ICMP */
