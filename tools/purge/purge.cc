@@ -138,7 +138,7 @@ volatile sig_atomic_t term_flag = 0; // 'terminate' is a gcc 2.8.x internal...
 char*  linebuffer = 0;
 size_t buffersize = 16834;
 static char* copydir = 0;
-static unsigned debugFlag = 0;
+static uint32_t debugFlag = 0;
 static unsigned purgeMode = 0;
 static bool iamalive = false;
 static bool reminder = false;
@@ -578,7 +578,7 @@ helpMe( void )
         " -a\tdisplay a little rotating thingy to indicate that I am alive (tty only).\n"
         " -c c\tsquid.conf location, default \"%s\".\n"
         " -C dir\tbase directory for content extraction (copy-out mode).\n"
-        " -d l\tdebug level, an OR of different debug options.\n"
+        " -d l\tdebug level, an OR mask of different debug options.\n"
         " -e re\tsingle regular expression per -e instance (use quotes!).\n"
         " -E re\tsingle case sensitive regular expression like -e.\n"
         " -f fn\tname of textfile containing one regular expression per line.\n"
@@ -633,20 +633,31 @@ parseCommandline( int argc, char* argv[], REList*& head,
             }
             break;
         case 'c':
-            if ( optarg && *optarg ) {
-                if ( *conffile ) xfree((void*) conffile);
-                conffile = xstrdup(optarg);
-                assert(conffile);
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a regex pattern argument!\n", option );
+                exit(1);
             }
+            if ( *conffile ) xfree((void*) conffile);
+            conffile = xstrdup(optarg);
+            assert(conffile);
             break;
 
         case 'd':
-            ::debugFlag = strtoul( optarg, 0, 0 );
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c expects a mask parameter. Debug disabled.\n", option );
+                ::debugFlag = 0;
+            } else
+                ::debugFlag = (strtoul(optarg, NULL, 0) & 0xFFFFFFFF);
             break;
 
         case 'E':
         case 'e':
-            if ( head == 0 ) tail = head = new REList( optarg, option=='E' );
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a regex pattern argument!\n", option );
+                exit(1);
+            }
+            if ( head == 0 )
+                tail = head = new REList( optarg, option=='E' );
             else {
                 tail->next = new REList( optarg, option=='E' );
                 tail = tail->next;
@@ -654,6 +665,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
 
         case 'f':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a filename argument!\n", option );
+                exit(1);
+            }
             if ( (rfile = fopen( optarg, "r" )) != NULL ) {
                 unsigned long lineno = 0;
 #define LINESIZE 512
@@ -692,6 +707,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             ::no_fork = ! ::no_fork;
             break;
         case 'p':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a port argument!\n", option );
+                exit(1);
+            }
             colon = strchr( optarg, ':' );
             if ( colon == 0 ) {
                 // no colon, only look at host
@@ -724,6 +743,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             }
             break;
         case 'P':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a mode argument!\n", option );
+                exit(1);
+            }
             ::purgeMode = ( strtol( optarg, 0, 0 ) & 0x07 );
             break;
         case 's':
