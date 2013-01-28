@@ -44,27 +44,26 @@ const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
 
 const char *AclMatchedName = NULL;
 
-bool ACLFlags::supported(const ACLFlag f) const 
+bool ACLFlags::supported(const ACLFlag f) const
 {
     if (f == ACL_F_REGEX_CASE)
         return true;
-    return (supported_.find(f) != std::string::npos); 
+    return (supported_.find(f) != std::string::npos);
 }
 
-void 
+void
 ACLFlags::parseFlags(char * &nextToken)
 {
-    while((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
+    while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
 
         //if token is the "--" break flag
-        if (strcmp(nextToken, "--") == 0) 
+        if (strcmp(nextToken, "--") == 0)
             break;
 
         for (const char *flg = nextToken+1; *flg!='\0'; flg++ ) {
             if (supported(*flg)) {
                 makeSet(*flg);
-            }
-            else {
+            } else {
                 debugs(28, 0, HERE << "Flag '" << *flg << "' not supported");
                 self_destruct();
             }
