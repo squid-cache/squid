@@ -377,6 +377,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
     u_char *DataPtr;
     int DataLen;
     oid TmpBuf[MAX_NAME_LEN];
+    memset(TmpBuf, 0, MAX_NAME_LEN * sizeof(*TmpBuf));
 
     int AllVarLen = *BufLen;
     int ThisVarLen = 0;

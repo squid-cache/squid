@@ -408,7 +408,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
         np->enums = NULL;	/* so we don't free them later */
         if (root->child_list == NULL) {
             root->child_list = tp;
-        } else {
+        } else if (peer) {
             peer->next_peer = tp;
         }
         peer = tp;
@@ -630,6 +630,16 @@ free_node(struct node *np)
     xfree((char *) np);
 }
 
+static void
+free_node_list(struct node *nl)
+{
+    while (nl) {
+        struct node *t = nl->next;
+        free_node(nl);
+        nl = t;
+    }
+}
+
 /*
  * Parse an entry of the form:
  * label OBJECT IDENTIFIER ::= { parent 2 }
@@ -662,9 +672,9 @@ parse_objectid(FILE *fp, char *name) {
                 op++, nop++) {
             /* every node must have parent's name and child's name or number */
             if (op->label && (nop->label || (nop->subid != -1))) {
-                strcpy(np->parent, op->label);
+                strncpy(np->parent, op->label, sizeof(np->parent) - 1);
                 if (nop->label)
-                    strcpy(np->label, nop->label);
+                    strncpy(np->label, nop->label, sizeof(np->label) - 1);
                 if (nop->subid != -1)
                     np->subid = nop->subid;
                 np->type = 0;
@@ -685,8 +695,8 @@ parse_objectid(FILE *fp, char *name) {
          */
         if (count == (length - 2)) {
             if (op->label) {
-                strcpy(np->parent, op->label);
-                strcpy(np->label, name);
+                strncpy(np->parent, op->label, sizeof(np->parent));
+                strncpy(np->label, name, sizeof(np->label));
                 if (nop->subid != -1)
                     np->subid = nop->subid;
                 else
@@ -695,12 +705,14 @@ parse_objectid(FILE *fp, char *name) {
                 free_node(np);
                 if (oldnp)
                     oldnp->next = NULL;
-                else
+                else {
+                    free_node_list(root); // we need to clear the newly allocated list
                     return NULL;
+                }
             }
         } else {
             print_error("Missing end of oid", (char *) NULL, type);
-            free_node(np);	/* the last node allocated wasn't used */
+            free_node_list(root); // we need to clear the newly allocated list
             if (oldnp)
                 oldnp->next = NULL;
             return NULL;
@@ -950,9 +962,12 @@ parse_objecttype(register FILE *fp, char *name) {
     length = getoid(fp, SubOid, 32);
     if (length > 1 && length <= 32) {
         /* just take the last pair in the oid list */
-        if (SubOid[length - 2].label)
+        if (SubOid[length - 2].label) {
             strncpy(np->parent, SubOid[length - 2].label, 64);
-        strcpy(np->label, name);
+            np->parent[63] = '\0';
+        }
+        strncpy(np->label, name, sizeof(np->label));
+        np->label[sizeof(np->label) - 1] = '\0';
         if (SubOid[length - 1].subid != -1)
             np->subid = SubOid[length - 1].subid;
         else
@@ -995,6 +1010,7 @@ parse(FILE *fp) {
                 return root;
             }
             print_error(token, "is a reserved word", type);
+            free_node_list(root);
             return NULL;
         }
         strncpy(name, token, 64);
@@ -1011,6 +1027,7 @@ parse(FILE *fp) {
                 np->next = parse_objecttype(fp, name);
                 if (np->next == NULL) {
                     print_error("Bad parse of objecttype", (char *) NULL, type);
+                    free_node_list(root);
                     return NULL;
                 }
             }
@@ -1029,6 +1046,7 @@ parse(FILE *fp) {
                 np->next = parse_objectid(fp, name);
                 if (np->next == NULL) {
                     print_error("Bad parse of object type", (char *) NULL, type);
+                    free_node_list(root);
                     return NULL;
                 }
             }
@@ -1041,6 +1059,7 @@ parse(FILE *fp) {
             break;
         } else {
             print_error("Bad operator", (char *) NULL, type);
+            free_node_list(root);
             return NULL;
         }
     }
@@ -1081,18 +1100,20 @@ read_mib(char *filename) {
             strlen("DUMMY")));
     if (!p) {
         snmplib_debug(0, "Bad MIB version or tag missing, install original!\n");
+        fclose(fp);
         return NULL;
     }
     if (!strcmp(mbuf, "DUMMY")) {
         snmplib_debug(0, "You need to update your MIB!\n");
+        fclose(fp);
         return NULL;
     }
     nodes = parse(fp);
+    fclose(fp);
     if (!nodes) {
         snmplib_debug(0, "Mib table is bad.  Exiting\n");
         return NULL;
     }
     tree = build_tree(nodes);
-    fclose(fp);
     return (tree);
 }
