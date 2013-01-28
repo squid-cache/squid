@@ -186,7 +186,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         AnyP::PortCfg *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
-            if (p->intercepted)
+            if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
@@ -197,7 +197,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
-            if (p->intercepted)
+            if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myport' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
