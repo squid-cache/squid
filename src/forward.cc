@@ -204,12 +204,12 @@ FwdState::selectPeerForIntercepted()
 void
 FwdState::completed()
 {
-    if (flags.forward_completed == 1) {
+    if (flags.forward_completed) {
         debugs(17, DBG_IMPORTANT, HERE << "FwdState::completed called on a completed request! Bad!");
         return;
     }
 
-    flags.forward_completed = 1;
+    flags.forward_completed = true;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, HERE << "entry aborted");
@@ -1107,7 +1107,7 @@ FwdState::connectStart()
         return;
     }
 
-    request->flags.pinned = 0; // XXX: what if the ConnStateData set this to flag existing credentials?
+    request->flags.pinned = false; // XXX: what if the ConnStateData set this to flag existing credentials?
     // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
     // XXX: also, logs will now lie if pinning is broken and leads to an error message.
     if (serverDestinations[0]->peerType == PINNED) {
@@ -1125,9 +1125,9 @@ FwdState::connectStart()
                 serverConn->peerType = HIER_DIRECT;
 #endif
             ++n_tries;
-            request->flags.pinned = 1;
+            request->flags.pinned = true;
             if (pinned_connection->pinnedAuth())
-                request->flags.auth = 1;
+                request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
             // the server may close the pinned connection before this request
             pconnRace = racePossible;
@@ -1323,7 +1323,7 @@ FwdState::dispatch()
             ErrorState *anErr = new ErrorState(ERR_UNSUP_REQ, HTTP_BAD_REQUEST, request);
             fail(anErr);
             // Set the dont_retry flag because this is not a transient (network) error.
-            flags.dont_retry = 1;
+            flags.dont_retry = true;
             if (Comm::IsConnOpen(serverConn)) {
                 serverConn->close();
             }
