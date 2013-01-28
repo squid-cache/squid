@@ -85,7 +85,7 @@ int64_t
 GetInteger64(void)
 {
     char *token = strtok(NULL, w_space);
-    int i;
+    int64_t i;
 
     if (token == NULL)
         self_destruct();
