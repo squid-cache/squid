@@ -67,7 +67,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
             return 0;
         }
 
-        if(ACLIP::match(checklist->request->host_addr))
+        if (ACLIP::match(checklist->request->host_addr))
             return 1;
         return 0;
     }

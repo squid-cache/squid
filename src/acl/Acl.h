@@ -77,7 +77,7 @@ public:
 private:
     /// Convert a flag to a 64bit unsigned integer.
     /// The characters from 'A' to 'z' represented by the values from 65 to 122.
-    /// They are 57 different characters which can be fit to the bits of an 64bit 
+    /// They are 57 different characters which can be fit to the bits of an 64bit
     /// integer.
     uint64_t flagToInt(const ACLFlag f) const {
         assert('A' <= f && f <= 'z');
@@ -104,7 +104,7 @@ public:
     static ACL* FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), flags(flgs){}
+    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), flags(flgs) {}
     virtual ~ACL();
     virtual ACL *clone()const = 0;
     virtual void parse() = 0;
