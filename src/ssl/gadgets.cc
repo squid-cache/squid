@@ -258,7 +258,7 @@ mimicExtensions(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & mimicCert)
 {
     static int extensions[]= {
         NID_key_usage,
-        NID_ext_key_usage, 
+        NID_ext_key_usage,
         NID_basic_constraints,
         0
     };
