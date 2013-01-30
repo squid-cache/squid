@@ -170,10 +170,6 @@ public:
     void *callback_data;
 
     struct {
-        unsigned int flag_cbdata:1;
-    } flags;
-
-    struct {
         wordlist *server_msg;
         char *request;
         char *reply;
