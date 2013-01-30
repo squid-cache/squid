@@ -1118,9 +1118,9 @@ ssl_read_method(int fd, char *buf, int len)
 
     if (i > 0 && SSL_pending(ssl) > 0) {
         debugs(83, 2, "SSL FD " << fd << " is pending");
-        fd_table[fd].flags.read_pending = 1;
+        fd_table[fd].flags.read_pending = true;
     } else
-        fd_table[fd].flags.read_pending = 0;
+        fd_table[fd].flags.read_pending = false;
 
     return i;
 }

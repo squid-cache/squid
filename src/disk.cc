@@ -125,7 +125,7 @@ file_close(int fd)
         while (!diskWriteIsComplete(fd))
             diskHandleWrite(fd, NULL);
 #else
-        F->flags.close_request = 1;
+        F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
         PROF_stop(file_close);
         return;
@@ -223,7 +223,7 @@ diskHandleWrite(int fd, void *notused)
     _fde_disk *fdd = &F->disk;
     dwrite_q *q = fdd->write_q;
     int status = DISK_OK;
-    int do_close;
+    bool do_close;
 
     if (NULL == q)
         return;
@@ -232,7 +232,7 @@ diskHandleWrite(int fd, void *notused)
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
 
-    F->flags.write_daemon = 0;
+    F->flags.write_daemon = false;
 
     assert(fdd->write_q != NULL);
 
@@ -332,7 +332,7 @@ diskHandleWrite(int fd, void *notused)
         /* another block is queued */
         diskCombineWrites(fdd);
         Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
-        F->flags.write_daemon = 1;
+        F->flags.write_daemon = true;
     }
 
     do_close = F->flags.close_request;
