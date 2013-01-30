@@ -102,7 +102,7 @@ HelperServerBase::closePipesSafely()
     shutdown(writePipe->fd, SD_BOTH);
 #endif
 
-    flags.closing = 1;
+    flags.closing = true;
     if (readPipe->fd == writePipe->fd)
         readPipe->fd = -1;
     else
@@ -131,7 +131,7 @@ HelperServerBase::closeWritePipeSafely()
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
 #endif
 
-    flags.closing = 1;
+    flags.closing = true;
     if (readPipe->fd == writePipe->fd)
         readPipe->fd = -1;
     writePipe->close();
@@ -347,7 +347,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
         srv->hIpc = hIpc;
         srv->pid = pid;
-        srv->flags.reserved = 0;
+        srv->flags.reserved = false;
         srv->initStats();
         srv->index = k;
         srv->addr = hlp->addr;
@@ -476,7 +476,7 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
 
     ++ srv->stats.releases;
 
-    srv->flags.reserved = 0;
+    srv->flags.reserved = false;
     if (srv->parent->OnEmptyQueue != NULL && srv->data)
         srv->parent->OnEmptyQueue(srv->data);
 
@@ -622,7 +622,7 @@ helperShutdown(helper * hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        srv->flags.shutdown = 1;	/* request it to shut itself down */
+        srv->flags.shutdown = true;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
             debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is CLOSING.");
@@ -659,7 +659,7 @@ helperStatefulShutdown(statefulhelper * hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        srv->flags.shutdown = 1;	/* request it to shut itself down */
+        srv->flags.shutdown = true;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
             debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is BUSY.");
@@ -885,7 +885,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
     if (!srv->flags.shutdown) {
         helperKickQueue(hlp);
     } else if (!srv->flags.closing && !srv->stats.pending) {
-        srv->flags.closing=1;
+        srv->flags.closing=true;
         srv->writePipe->close();
     }
 }
@@ -1050,7 +1050,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         // only skip off the \0's _after_ passing its location in HelperReply above
         t += skip;
 
-        srv->flags.busy = 0;
+        srv->flags.busy = false;
         /**
          * BUG: the below assumes that only one response per read() was received and discards any octets remaining.
          *      Doing this prohibits concurrency support with multiple replies per read().
@@ -1291,7 +1291,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t l
     srv->writebuf->clean();
     delete srv->writebuf;
     srv->writebuf = NULL;
-    srv->flags.writing = 0;
+    srv->flags.writing = false;
 
     if (flag != COMM_OK) {
         /* Helper server has crashed */
@@ -1302,7 +1302,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t l
     if (!srv->wqueue->isNull()) {
         srv->writebuf = srv->wqueue;
         srv->wqueue = new MemBuf;
-        srv->flags.writing = 1;
+        srv->flags.writing = true;
         AsyncCall::Pointer call = commCbCall(5,5, "helperDispatchWriteDone",
                                              CommIoCbPtrFun(helperDispatchWriteDone, srv));
         Comm::Write(srv->writePipe, srv->writebuf->content(), srv->writebuf->contentSize(), call, NULL);
@@ -1345,7 +1345,7 @@ helperDispatch(helper_server * srv, helper_request * r)
         assert(NULL == srv->writebuf);
         srv->writebuf = srv->wqueue;
         srv->wqueue = new MemBuf;
-        srv->flags.writing = 1;
+        srv->flags.writing = true;
         AsyncCall::Pointer call = commCbCall(5,5, "helperDispatchWriteDone",
                                              CommIoCbPtrFun(helperDispatchWriteDone, srv));
         Comm::Write(srv->writePipe, srv->writebuf->content(), srv->writebuf->contentSize(), call, NULL);
@@ -1397,8 +1397,8 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         return;
     }
 
-    srv->flags.busy = 1;
-    srv->flags.reserved = 1;
+    srv->flags.busy = true;
+    srv->flags.reserved = true;
     srv->request = r;
     srv->dispatch_time = current_time;
     AsyncCall::Pointer call = commCbCall(5,5, "helperStatefulDispatchWriteDone",

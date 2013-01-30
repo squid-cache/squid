@@ -180,7 +180,7 @@ peerDigestNeeded(PeerDigest * pd)
     assert(!pd->flags.needed);
     assert(!pd->cd);
 
-    pd->flags.needed = 1;
+    pd->flags.needed = true;
     pd->times.needed = squid_curtime;
     peerDigestSetCheck(pd, 0);	/* check asap */
 }
@@ -322,7 +322,7 @@ peerDigestRequest(PeerDigest * pd)
     StoreIOBuffer tempBuffer;
 
     pd->req_result = NULL;
-    pd->flags.requested = 1;
+    pd->flags.requested = true;
 
     /* compute future request components */
 
@@ -836,7 +836,7 @@ peerDigestReqFinish(DigestFetchState * fetch, char *buf,
     /* must go before peerDigestPDFinish */
 
     if (pdcb_valid) {
-        fetch->pd->flags.requested = 0;
+        fetch->pd->flags.requested = false;
         fetch->pd->req_result = reason;
     }
 
@@ -887,14 +887,14 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
             pd->cd = NULL;
         }
 
-        pd->flags.usable = 0;
+        pd->flags.usable = false;
 
         if (!pcb_valid)
             peerDigestNotePeerGone(pd);
     } else {
         assert(pcb_valid);
 
-        pd->flags.usable = 1;
+        pd->flags.usable = true;
 
         /* XXX: ugly condition, but how? */
 

@@ -321,13 +321,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (wfd)
         *wfd = pwfd;
 
-    fd_table[prfd].flags.ipc = 1;
-
-    fd_table[pwfd].flags.ipc = 1;
-
-    fd_table[crfd].flags.ipc = 1;
-
-    fd_table[cwfd].flags.ipc = 1;
+    fd_table[prfd].flags.ipc = true;
+    fd_table[pwfd].flags.ipc = true;
+    fd_table[crfd].flags.ipc = true;
+    fd_table[cwfd].flags.ipc = true;
 
     if (Config.sleep_after_fork) {
         /* XXX emulation of usleep() */

@@ -778,7 +778,7 @@ void
 clientReplyContext::purgeRequestFindObjectToPurge()
 {
     /* Try to find a base entry */
-    http->flags.purging = 1;
+    http->flags.purging = true;
     lookingforstore = 1;
 
     // TODO: can we use purgeAllCached() here instead of doing the
@@ -2026,7 +2026,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
     if (http->request->method == Http::METHOD_HEAD) {
         /* do not forward body for HEAD replies */
         body_size = 0;
-        http->flags.done_copying = 1;
+        http->flags.done_copying = true;
         flags.complete = 1;
     }
 

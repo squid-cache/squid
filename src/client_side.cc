@@ -2030,7 +2030,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     char *host;
     char ipbuf[MAX_IPSTRLEN];
 
-    http->flags.accel = 1;
+    http->flags.accel = true;
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
@@ -2316,7 +2316,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         http->uri = xstrdup(internalLocalUri(NULL, url));
         // We just re-wrote the URL. Must replace the Host: header.
         //  But have not parsed there yet!! flag for local-only handling.
-        http->flags.internal = 1;
+        http->flags.internal = true;
 
     } else if (csd->port->accel || csd->switchedToHttps()) {
         /* accelerator mode */
@@ -2692,11 +2692,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (internalCheck(request->urlpath.termedBuf())) {
         if (internalHostnameIs(request->GetHost()) &&
                 request->port == getMyPort()) {
-            http->flags.internal = 1;
+            http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
             request->SetHost(internalHostname());
             request->port = getMyPort();
-            http->flags.internal = 1;
+            http->flags.internal = true;
         }
     }
 
@@ -2984,7 +2984,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
             }
 
             /* It might be half-closed, we can't tell */
-            fd_table[io.conn->fd].flags.socket_eof = 1;
+            fd_table[io.conn->fd].flags.socket_eof = true;
 
             commMarkHalfClosed(io.conn->fd);
 
