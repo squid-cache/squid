@@ -220,7 +220,7 @@ Comm::ConnOpener::connected()
      *       Also, legacy code still depends on comm_local_port() with no access to Comm::Connection
      *       when those are done comm_local_port can become one of our member functions to do the below.
      */
-    fd_table[conn_->fd].flags.open = 1;
+    fd_table[conn_->fd].flags.open = true;
     fd_table[conn_->fd].local_addr = conn_->local;
 }
 

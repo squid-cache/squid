@@ -364,7 +364,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* Set flags */
     /* internal requests only makes sense in an
      * accelerator today. TODO: accept flags ? */
-    http->flags.accel = 1;
+    http->flags.accel = true;
     /* allow size for url rewriting */
     url_sz = strlen(url) + Config.appendDomainLen + 5;
     http->uri = (char *)xcalloc(url_sz, 1);
