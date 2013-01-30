@@ -594,7 +594,6 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
 #endif
         detailCode(ERR_DETAIL_NONE)
 {
-    memset(&flags, 0, sizeof(flags));
     memset(&ftp, 0, sizeof(ftp));
 
     if (page_id >= ERR_MAX && ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect != HTTP_STATUS_NONE)
@@ -653,9 +652,6 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
     HttpReply *rep;
     debugs(4, 3, HERE << conn << ", err=" << err);
     assert(Comm::IsConnOpen(conn));
-
-    /* moved in front of errorBuildBuf @?@ */
-    err->flags.flag_cbdata = 1;
 
     rep = err->BuildHttpReply();
 
