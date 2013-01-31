@@ -322,12 +322,12 @@ Format::Token::parse(const char *def, Quoting *quoting)
     }
 
     if (*cur == '-') {
-        left = 1;
+        left = true;
         ++cur;
     }
 
     if (*cur == '0') {
-        zero = 1;
+        zero = false;
         ++cur;
     }
 
@@ -403,7 +403,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
     }
 
     if (*cur == ' ') {
-        space = 1;
+        space = true;
         ++cur;
     }
 
