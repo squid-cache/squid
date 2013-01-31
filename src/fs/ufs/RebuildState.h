@@ -62,10 +62,11 @@ public:
     int curlvl1;
     int curlvl2;
 
-    struct {
-        unsigned int need_to_validate:1;
-        unsigned int clean:1;
-        unsigned int init:1;
+    struct Flags {
+        Flags() : need_to_validate(false), clean(false), init(false) {}
+        bool need_to_validate;
+        bool clean;
+        bool init;
     } flags;
     int in_dir;
     int done;
