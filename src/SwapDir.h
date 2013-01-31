@@ -192,9 +192,9 @@ public:
     int scanned;
 
     struct Flags {
-        Flags() : selected(0), read_only(0) {}
-        unsigned int selected:1;
-        unsigned int read_only:1;
+        Flags() : selected(false), read_only(false) {}
+        bool selected;
+        bool read_only;
     } flags;
     virtual void init() = 0;	/* Initialise the fs */
     virtual void create();	/* Create a new fs */

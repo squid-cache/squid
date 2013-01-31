@@ -262,7 +262,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 
     for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
         SD = dynamic_cast<SwapDir *>(INDEXSD(i));
-        SD->flags.selected = 0;
+        SD->flags.selected = false;
 
         if (!SD->canStore(*e, objsize, load))
             continue;
@@ -295,7 +295,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     }
 
     if (dirn >= 0)
-        dynamic_cast<SwapDir *>(INDEXSD(dirn))->flags.selected = 1;
+        dynamic_cast<SwapDir *>(INDEXSD(dirn))->flags.selected = true;
 
     return dirn;
 }

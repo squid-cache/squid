@@ -63,7 +63,7 @@ Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
      * use commonUfsDirRebuildFromDirectory() to open up each file
      * and suck in the meta data.
      */
-    int clean = 0;
+    int clean = 0; //TODO: change to bool
     int zeroLengthLog = 0;
     FILE *fp = sd->openTmpSwapLog(&clean, &zeroLengthLog);
 
@@ -78,11 +78,11 @@ Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
 
     } else {
         fromLog = true;
-        flags.clean = (unsigned int) clean;
+        flags.clean = (clean != 0);
     }
 
     if (!clean)
-        flags.need_to_validate = 1;
+        flags.need_to_validate = true;
 
     debugs(47, DBG_IMPORTANT, "Rebuilding storage in " << sd->path << " (" <<
            (clean ? "clean log" : (LogParser ? "dirty log" : "no log")) << ")");
@@ -444,12 +444,12 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *size)
     while (fd < 0 && done == 0) {
         fd = -1;
 
-        if (0 == flags.init) {  /* initialize, open first file */
+        if (!flags.init) {  /* initialize, open first file */
             done = 0;
             curlvl1 = 0;
             curlvl2 = 0;
             in_dir = 0;
-            flags.init = 1;
+            flags.init = true;
             assert(Config.cacheSwap.n_configured > 0);
         }
 

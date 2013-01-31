@@ -32,9 +32,9 @@ public:
             widthMin(-1),
             widthMax(-1),
             quote(LOG_QUOTE_NONE),
-            left(0),
-            space(0),
-            zero(0),
+            left(false),
+            space(false),
+            zero(false),
             divisor(0),
             next(NULL)
     { data.string = NULL; }
@@ -65,9 +65,9 @@ public:
     int widthMin; ///< minimum field width
     int widthMax; ///< maximum field width
     enum Quoting quote;
-    unsigned int left:1;
-    unsigned int space:1;
-    unsigned int zero:1;
+    bool left;
+    bool space;
+    bool zero;
     int divisor;
     Token *next;	/* todo: move from linked list to array */
 
