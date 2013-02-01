@@ -1,3 +1,20 @@
+Changes to squid-3.2.7 (01 Feb 2013):
+
+	- Bug 3736: Floating point exception due to divide by zero
+	- Bug 3735: raw-IPv6 domain URLs crash if IPv6-disabled
+	- Bug 3732: Fix ConnOpener IPv6 awareness
+	- Bug 3729: 32-bit overflow in parsing 64-bit configuration values
+	- Bug 3728: Improve debug for cache_dir
+	- Bug 3687: unhandled exception: c when using interception and peers
+	- Bug 3678: external acl grace period causes acl lookup failures
+	- Bug 3567: Memory leak handling malformed requests
+	- Bug 3111: Mid-term fix for the forward.cc "err" assertion
+	- Support OpenSSL NO_Compression optio
+	- Fix IPv6 enabled pinger on split-stack or IPv6-disabled systems
+	- Fix "address.GetPort() != 0" assertion for helpers
+	- ... and several minor memory leaks
+	- ... and some cache.log message polishing
+
 Changes to squid-3.2.6 (09 Jan 2013):
 
 	- Regression Bug 3731: TOS setsockopt() requires int value
