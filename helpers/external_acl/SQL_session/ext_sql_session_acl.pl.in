@@ -147,7 +147,7 @@ while (<>) {
 
     $status = "ERR";
     $cid =~ s/%(..)/pack("H*", $1)/ge;
-    $uid =~ s/%(..)/pack("H*", $2)/ge;
+    $uid =~ s/%(..)/pack("H*", $1)/ge;
 
     print(stderr "Received: Channel=".$cid.", UID='".$uid."'\n") if ($debug);
 
