@@ -400,6 +400,11 @@ ssl_options[] = {
         "NO_TLSv1_2", SSL_OP_NO_TLSv1_2
     },
 #endif
+#if SSL_OP_NO_COMPRESSION
+    {
+        "No_Compression", SSL_OP_NO_COMPRESSION
+    },
+#endif
     {
         "", 0
     },
