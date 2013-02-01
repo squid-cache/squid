@@ -70,6 +70,7 @@
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
+#include "ip/tools.h"
 
 #if _SQUID_MSWIN_
 
@@ -146,6 +147,9 @@ main(int argc, char *argv[])
         debug_args = xstrdup(t);
 
     getCurrentTime();
+
+    // determine IPv4 or IPv6 capabilities before using sockets.
+    Ip::ProbeTransport();
 
     _db_init(NULL, debug_args);
 
