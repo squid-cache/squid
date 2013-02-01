@@ -196,6 +196,8 @@ FwdState::completed()
 
     if (entry->store_status == STORE_PENDING) {
         if (entry->isEmpty()) {
+            if (!err) // we quit (e.g., fd closed) before an error or content
+                fail(new ErrorState(ERR_READ_ERROR, HTTP_BAD_GATEWAY, request));
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
