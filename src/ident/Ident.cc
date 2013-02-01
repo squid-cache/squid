@@ -150,7 +150,7 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
 
     AsyncCall::Pointer writeCall = commCbCall(5,4, "Ident::WriteFeedback",
                                    CommIoCbPtrFun(Ident::WriteFeedback, state));
-    Comm::Write(conn, &queryMsg, writeCall);
+    Comm::Write(conn, &state->queryMsg, writeCall);
     AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
                                   CommIoCbPtrFun(Ident::ReadReply, state));
     comm_read(conn, state->buf, IDENT_BUFSIZE, readCall);
@@ -262,7 +262,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
 
     // build our query from the original connection details
     state->queryMsg.init();
-    state->queryMsg.printf("%d, %d\r\n", conn->remote.GetPort(), conn->local.GetPort());
+    state->queryMsg.Printf("%d, %d\r\n", conn->remote.GetPort(), conn->local.GetPort());
 
     ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);
