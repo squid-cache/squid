@@ -164,16 +164,16 @@ Comm::ConnOpener::cleanFd()
         f.write_handler = NULL;
     }
     // Comm::DoSelect does not do this when calling and resetting write_handler
-    // (because it expects more writes to come?). We could mimic that 
+    // (because it expects more writes to come?). We could mimic that
     // optimization by resetting Comm "Select" state only when the FD is
     // actually closed.
     Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, NULL, NULL, 0);
- 
+
     if (calls_.timeout_ != NULL) {
         calls_.timeout_->cancel("Comm::ConnOpener::cleanFd");
         calls_.timeout_ = NULL;
     }
-    // Comm checkTimeouts() and commCloseAllSockets() do not clear .timeout 
+    // Comm checkTimeouts() and commCloseAllSockets() do not clear .timeout
     // when calling timeoutHandler (XXX fix them), so we clear unconditionally.
     f.timeoutHandler = NULL;
     f.timeout = 0;
@@ -232,7 +232,8 @@ Comm::ConnOpener::start()
 
 /// called at the end of Comm::ConnOpener::DelayedConnectRetry event
 void
-Comm::ConnOpener::restart() {
+Comm::ConnOpener::restart()
+{
     debugs(5, 5, conn_ << " restarting after sleep");
     calls_.sleep_ = false;
 
@@ -240,7 +241,7 @@ Comm::ConnOpener::restart() {
         connect();
 }
 
-/// Create a socket for the future connection or return false. 
+/// Create a socket for the future connection or return false.
 /// If false is returned, done() is guaranteed to return true and end the job.
 bool
 Comm::ConnOpener::createFd()
@@ -348,7 +349,8 @@ Comm::ConnOpener::connect()
 
 /// Close and wait a little before trying to open and connect again.
 void
-Comm::ConnOpener::sleep() {
+Comm::ConnOpener::sleep()
+{
     Must(!calls_.sleep_);
     closeFd();
     calls_.sleep_ = true;
@@ -362,16 +364,16 @@ void
 Comm::ConnOpener::cancelSleep()
 {
     if (calls_.sleep_) {
-       // It would be nice to delete the sleep event, but it might be out of
-       // the event queue and in the async queue already, so (a) we do not know
-       // whether we can safely delete the call ptr here and (b) eventDelete()
-       // will assert if the event went async. Thus, we let the event run so
-       // that it deletes the call ptr [after this job is gone]. Note that we
-       // are called only when the job ends so this "hanging event" will do
-       // nothing but deleting the call ptr.  TODO: Revise eventDelete() API.
-       // eventDelete(Comm::ConnOpener::DelayedConnectRetry, calls_.sleep);
-       calls_.sleep_ = false;
-       debugs(5, 9, conn_ << " stops sleeping");
+        // It would be nice to delete the sleep event, but it might be out of
+        // the event queue and in the async queue already, so (a) we do not know
+        // whether we can safely delete the call ptr here and (b) eventDelete()
+        // will assert if the event went async. Thus, we let the event run so
+        // that it deletes the call ptr [after this job is gone]. Note that we
+        // are called only when the job ends so this "hanging event" will do
+        // nothing but deleting the call ptr.  TODO: Revise eventDelete() API.
+        // eventDelete(Comm::ConnOpener::DelayedConnectRetry, calls_.sleep);
+        calls_.sleep_ = false;
+        debugs(5, 9, conn_ << " stops sleeping");
     }
 }
 
