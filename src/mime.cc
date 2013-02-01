@@ -77,20 +77,47 @@ private:
 
 class mimeEntry
 {
-
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    mimeEntry() : pattern(NULL), content_type(NULL),
+        content_encoding(NULL), transfer_mode('I'), view_option(false),
+        download_option(false), next(NULL), theIcon() {}
 
-    char *pattern;
+    mimeEntry(const char *aPattern, const regex_t &compiledPattern,
+              const char *aContentType,
+              const char *aContentEncoding, const char *aTransferMode,
+              bool optionViewEnable, bool optionDownloadEnable,
+              const char *anIconName) :
+                  pattern(xstrdup(aPattern)),
+                  compiled_pattern(compiledPattern),
+                  content_type(xstrdup(aContentType)),
+                  content_encoding(xstrdup(aContentEncoding)),
+                  view_option(optionViewEnable),
+                  download_option(optionViewEnable),
+                  next(NULL)
+    {
+        if (!strcasecmp(aTransferMode, "ascii"))
+            transfer_mode = 'A';
+        else if (!strcasecmp(aTransferMode, "text"))
+            transfer_mode = 'A';
+        else
+            transfer_mode = 'I';
+
+        theIcon.setName(anIconName);
+    }
+
+
+
+    //void *operator new (size_t byteCount);
+    //void operator delete (void *address);
+
+    const char *pattern;
     regex_t compiled_pattern;
-    char *icon;
-    char *content_type;
-    char *content_encoding;
+    const char *content_type;
+    const char *content_encoding;
     char transfer_mode;
 
-    unsigned int view_option:1;
-    unsigned int download_option:1;
+    bool view_option;
+    bool download_option;
 
     mimeEntry *next;
     MimeIcon theIcon;
@@ -99,17 +126,17 @@ public:
 static mimeEntry *MimeTable = NULL;
 static mimeEntry **MimeTableTail = &MimeTable;
 
-void *
-mimeEntry::operator new (size_t byteCount)
-{
-    return xcalloc(1, byteCount);
-}
-
-void
-mimeEntry::operator delete (void *address)
-{
-    safe_free (address);
-}
+//void *
+//mimeEntry::operator new (size_t byteCount)
+//{
+//    return xcalloc(1, byteCount);
+//}
+//
+//void
+//mimeEntry::operator delete (void *address)
+//{
+//    safe_free (address);
+//}
 
 static mimeEntry *
 mimeGetEntry(const char *fn, int skip_encodings)
@@ -211,7 +238,7 @@ mimeGetIconURL(const char *fn)
     }
 }
 
-char *
+const char *
 mimeGetContentType(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 1);
@@ -225,7 +252,7 @@ mimeGetContentType(const char *fn)
     return m->content_type;
 }
 
-char *
+const char *
 mimeGetContentEncoding(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 0);
@@ -246,18 +273,18 @@ mimeGetTransferMode(const char *fn)
     return m ? m->transfer_mode : 'I';
 }
 
-int
+bool
 mimeGetDownloadOption(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 1);
     return m ? m->download_option : 0;
 }
 
-int
+bool
 mimeGetViewOption(const char *fn)
 {
     mimeEntry *m = mimeGetEntry(fn, 0);
-    return m ? m->view_option : 0;
+    return m != 0 ? m->view_option : false;
 }
 
 /* Initializes/reloads the mime table
@@ -355,23 +382,8 @@ mimeInit(char *filename)
             continue;
         }
 
-        m = new mimeEntry;
-        m->pattern = xstrdup(pattern);
-        m->content_type = xstrdup(type);
-        m->theIcon.setName(icon);
-        m->content_encoding = xstrdup(encoding);
-        m->compiled_pattern = re;
-
-        if (!strcasecmp(mode, "ascii"))
-            m->transfer_mode = 'A';
-        else if (!strcasecmp(mode, "text"))
-            m->transfer_mode = 'A';
-        else
-            m->transfer_mode = 'I';
-
-        m->view_option = view_option;
-
-        m->download_option = download_option;
+        m = new mimeEntry(pattern,re,type,encoding,mode,view_option,
+            download_option,icon);
 
         *MimeTableTail = m;
 
@@ -381,14 +393,10 @@ mimeInit(char *filename)
     }
 
     fclose(fp);
-    /*
-     * Create Icon StoreEntry's
-     */
 
     for (m = MimeTable; m != NULL; m = m->next)
         m->theIcon.load();
-
-    debugs(25, DBG_IMPORTANT, "Loaded Icons.");
+    debugs(25, DBG_IMPORTANT, "Finished loading MIME types and icons.");
 }
 
 void
@@ -400,7 +408,6 @@ mimeFreeMemory(void)
         MimeTable = m->next;
         safe_free(m->pattern);
         safe_free(m->content_type);
-        safe_free(m->icon);
         safe_free(m->content_encoding);
         regfree(&m->compiled_pattern);
         delete m;
