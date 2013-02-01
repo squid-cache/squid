@@ -46,6 +46,7 @@
 #include "http.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
+#include "ip/QosConfig.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
@@ -580,6 +581,15 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelState->serverDestinations.shift();
         if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
+
+            if (Ip::Qos::TheConfig.isAclTosActive()) {
+                tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request);
+            }
+
+#if SO_MARK && USE_LIBCAP
+            tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request);
+#endif
+
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
             Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
@@ -745,6 +755,14 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
         return;
     }
     delete err;
+
+    if (Ip::Qos::TheConfig.isAclTosActive()) {
+        tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request);
+    }
+
+#if SO_MARK && USE_LIBCAP
+    tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request);
+#endif
 
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");
