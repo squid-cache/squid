@@ -40,9 +40,11 @@
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "SquidConfig.h"
+#include "ssl/bio.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
@@ -1577,6 +1579,36 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
+}
+
+SSL *
+Ssl::Create(SSL_CTX *sslContext, const int fd, const char *squidCtx)
+{
+    const char *errAction = NULL;
+    int errCode = 0;
+    if (SSL *ssl = SSL_new(sslContext)) {
+        // without BIO, we would call SSL_set_fd(ssl, fd) instead
+        if (BIO *bio = Ssl::Bio::Create(fd)) {
+            Ssl::Bio::Link(ssl, bio); // cannot fail
+
+            fd_table[fd].ssl = ssl;
+            fd_table[fd].read_method = &ssl_read_method;
+            fd_table[fd].write_method = &ssl_write_method;
+            fd_note(fd, squidCtx);
+
+            return ssl;
+        }
+        errCode = ERR_get_error();
+        errAction = "failed to initialize I/O";
+        SSL_free(ssl);
+    } else {
+        errCode = ERR_get_error();
+        errAction = "failed to allocate handle";
+    }
+
+    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
+           ": " << ERR_error_string(errCode, NULL));
+    return NULL;
 }
 
 #endif /* USE_SSL */

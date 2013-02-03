@@ -74,6 +74,10 @@ typedef int ssl_error_t;
 
 typedef CbDataList<Ssl::ssl_error_t> Errors;
 
+/// Creates SSL connection structure and initializes SSL I/O (Comm and BIO).
+/// On errors, emits DBG_IMPORTANT with details and returns NULL.
+SSL *Create(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
