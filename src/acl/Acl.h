@@ -104,7 +104,7 @@ public:
     static ACL* FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), flags(flgs) {}
+    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs) { memset(name, '\0', sizeof(name)); }
     virtual ~ACL();
     virtual ACL *clone()const = 0;
     virtual void parse() = 0;
