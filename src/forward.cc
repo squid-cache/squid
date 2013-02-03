@@ -915,7 +915,6 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::E
 void
 FwdState::initiateSSL()
 {
-    SSL *ssl;
     SSL_CTX *sslContext = NULL;
     const CachePeer *peer = serverConnection()->getPeer();
     int fd = serverConnection()->fd;
@@ -929,16 +928,14 @@ FwdState::initiateSSL()
 
     assert(sslContext);
 
-    if ((ssl = SSL_new(sslContext)) == NULL) {
-        debugs(83, DBG_IMPORTANT, "fwdInitiateSSL: Error allocating handle: " << ERR_error_string(ERR_get_error(), NULL)  );
+    SSL *ssl = Ssl::Create(sslContext, fd, "server https start");
+    if (!ssl) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         // TODO: create Ssl::ErrorDetail with OpenSSL-supplied error code
         fail(anErr);
         self = NULL;		// refcounted
         return;
     }
-
-    SSL_set_fd(ssl, fd);
 
     if (peer) {
         if (peer->ssldomain)
@@ -994,9 +991,6 @@ FwdState::initiateSSL()
         SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
     }
 
-    fd_table[fd].ssl = ssl;
-    fd_table[fd].read_method = &ssl_read_method;
-    fd_table[fd].write_method = &ssl_write_method;
     negotiateSSL(fd);
 }
 

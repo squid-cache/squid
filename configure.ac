@@ -2366,6 +2366,7 @@ AC_CHECK_HEADERS( \
   netinet/in.h \
   netinet/in_systm.h \
   netinet/ip_fil_compat.h \
+  openssl/bio.h \
   openssl/err.h \
   openssl/md5.h \
   openssl/opensslv.h \
