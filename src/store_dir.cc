@@ -1128,7 +1128,12 @@ StoreHashIndex::search(String const url, HttpRequest *)
 
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
 
-StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) : sd(aSwapDir), _done (false), bucket (0)
+StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) :
+        sd(aSwapDir),
+        callback(NULL),
+        cbdata(NULL),
+        _done(false),
+        bucket(0)
 {}
 
 /* do not link
