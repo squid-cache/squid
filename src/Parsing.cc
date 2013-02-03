@@ -191,6 +191,11 @@ GetPercentage(void)
     int p;
     char *token = strtok(NULL, w_space);
 
+    if (!token) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: A percentage value is missing.");
+        self_destruct();
+    }
+
     //if there is a % in the end of the digits, we remove it and go on.
     char* end = &token[strlen(token)-1];
     if (*end == '%') {
