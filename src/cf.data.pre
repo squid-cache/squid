@@ -104,6 +104,8 @@ COMMENT_START
 	across all Squid processes.
 COMMENT_END
 
+# no Options Removed in 3.3
+
 # Options Removed in 3.2
 NAME: ignore_expect_100
 TYPE: obsolete
@@ -114,7 +116,7 @@ DOC_END
 NAME: dns_v4_fallback
 TYPE: obsolete
 DOC_START
-	Remove this line.
+	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, the 'fallback' algorithm is no longer relevant.
 DOC_END
 
 NAME: ftp_list_width
@@ -127,6 +129,12 @@ NAME: maximum_single_addr_tries
 TYPE: obsolete
 DOC_START
 	Replaced by connect_retries. The behaviour has changed, please read the documentation before altering.
+DOC_END
+
+NAME: update_headers
+TYPE: obsolete
+DOC_START
+	Remove this line. The feature is supported by default in storage types where update is implemented.
 DOC_END
 
 NAME: url_rewrite_concurrency
@@ -252,7 +260,7 @@ DOC_START
 		the user does not exist.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	"ERR" and "BH" results may optionally be followed by message="..."
@@ -270,7 +278,7 @@ DOC_START
 	auth_param basic program @DEFAULT_PREFIX@/libexec/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
 
 	"utf8" on|off
-	HTTP uses iso-latin-1 as characterset, while some authentication
+	HTTP uses iso-latin-1 as character set, while some authentication
 	backends such as LDAP expects UTF-8. If this is set to on Squid will
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
@@ -293,7 +301,7 @@ DOC_START
 	supports one request at a time. Setting this to a number greater than
 	0 changes the protocol used to include a channel number first on the
 	request/response line, allowing multiple requests to be sent to the
-	same helper in parallell without wating for the response.
+	same helper in parallel without waiting for the response.
 	Must not be set unless it's known the helper supports this.
 
 	auth_param basic children 20 startup=0 idle=1
@@ -339,7 +347,7 @@ DOC_START
 		the user does not exist.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	"ERR" and "BH" results may optionally be followed by message="..."
@@ -354,7 +362,7 @@ DOC_START
 	auth_param digest program @DEFAULT_PREFIX@/bin/digest_pw_auth @DEFAULT_PREFIX@/etc/digpass
 
 	"utf8" on|off
-	HTTP uses iso-latin-1 as characterset, while some authentication
+	HTTP uses iso-latin-1 as character set, while some authentication
 	backends such as LDAP expects UTF-8. If this is set to on Squid will
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
@@ -377,7 +385,7 @@ DOC_START
 	supports one request at a time. Setting this to a number greater than
 	0 changes the protocol used to include a channel number first on the
 	request/response line, allowing multiple requests to be sent to the
-	same helper in parallell without wating for the response.
+	same helper in parallel without waiting for the response.
 	Must not be set unless it's known the helper supports this.
 
 	auth_param digest children 20 startup=0 idle=1
@@ -404,7 +412,7 @@ DOC_START
 	"nonce_strictness" on|off
 	Determines if squid requires strict increment-by-1 behavior
 	for nonce counts, or just incrementing (off - for use when
-	useragents generate nonce counts that occasionally miss 1
+	user agents generate nonce counts that occasionally miss 1
 	(ie, 1,2,4,6)). Default off.
 
 	"check_nonce_count" on|off
@@ -475,7 +483,7 @@ DOC_START
 	The maximum number of authenticator processes to spawn (default 5).
 	If you start too few Squid will have to wait for them to
 	process a backlog of credential verifications, slowing it
-	down. When crendential verifications are done via a (slow)
+	down. When credential verifications are done via a (slow)
 	network you are likely to need lots of authenticator
 	processes.
 
@@ -527,7 +535,7 @@ DEFAULT: 1 hour
 LOC: Config.authenticateGCInterval
 DOC_START
 	The time period between garbage collection across the username cache.
-	This is a tradeoff between memory utilization (long intervals - say
+	This is a trade-off between memory utilization (long intervals - say
 	2 days) and CPU (short intervals - say 1 minute). Only change if you
 	have good reason to.
 DOC_END
@@ -552,7 +560,7 @@ DOC_START
 	this directive controls how long Squid remembers the IP
 	addresses associated with each user.  Use a small value
 	(e.g., 60 seconds) if your users might change addresses
-	quickly, as is the case with dialups.   You might be safe
+	quickly, as is the case with dialup.   You might be safe
 	using a larger value (e.g., 2 hours) in a corporate LAN
 	environment with relatively static address assignments.
 DOC_END
@@ -689,7 +697,7 @@ DOC_START
 		the ACL test does not produce a match.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	The meaning of 'a match' is determined by your squid.conf
@@ -4227,7 +4235,7 @@ DOC_START
 		Do not change the URL.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 
