@@ -7,18 +7,18 @@
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
         expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
         protoPrefix("HTTP/"), bodySizeMax(-2)
-STUB_NOP
-HttpReply::~HttpReply() STUB
-void HttpReply::setHeaders(http_status status, const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires_) STUB
-void HttpReply::packHeadersInto(Packer * p) const STUB
-void HttpReply::reset() STUB
-void httpBodyPackInto(const HttpBody * body, Packer * p) STUB
-bool HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error) STUB_RETVAL(false)
-int HttpReply::httpMsgParseError() STUB_RETVAL(0)
-bool HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const STUB_RETVAL(false)
-void HttpReply::packFirstLineInto(Packer * p, bool) const STUB
-bool HttpReply::parseFirstLine(const char *start, const char *end) STUB_RETVAL(false)
-void HttpReply::hdrCacheInit() STUB
-HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
-bool HttpReply::inheritProperties(const HttpMsg *aMsg) STUB_RETVAL(false)
-int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
+        STUB_NOP
+        HttpReply::~HttpReply() STUB
+        void HttpReply::setHeaders(http_status status, const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires_) STUB
+        void HttpReply::packHeadersInto(Packer * p) const STUB
+        void HttpReply::reset() STUB
+        void httpBodyPackInto(const HttpBody * body, Packer * p) STUB
+        bool HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error) STUB_RETVAL(false)
+        int HttpReply::httpMsgParseError() STUB_RETVAL(0)
+        bool HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const STUB_RETVAL(false)
+        void HttpReply::packFirstLineInto(Packer * p, bool) const STUB
+        bool HttpReply::parseFirstLine(const char *start, const char *end) STUB_RETVAL(false)
+        void HttpReply::hdrCacheInit() STUB
+        HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
+        bool HttpReply::inheritProperties(const HttpMsg *aMsg) STUB_RETVAL(false)
+        int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
