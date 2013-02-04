@@ -75,8 +75,6 @@ Ssl::Bio::Bio(const int anFd): fd_(anFd)
 Ssl::Bio::~Bio()
 {
     debugs(83, 7, "Bio destructing, this=" << this << " FD " << fd_);
-    // XXX: seems wrong: we do not own this fd and callers do conn->close()!
-    comm_close(fd_); 
 }
 
 int Ssl::Bio::write(const char *buf, int size, BIO *table)
@@ -215,7 +213,11 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         }
         return -1;
 
-    case BIO_CTRL_DUP: // XXX: Should this really do what FLUSH does?
+    case BIO_CTRL_DUP:
+        // Should implemented if the SSL_dup openSSL API function 
+        // used anywhere in squid.
+        return 0;
+
     case BIO_CTRL_FLUSH:
         if (table->init) {
             Ssl::Bio *bio = static_cast<Ssl::Bio*>(table->ptr);
