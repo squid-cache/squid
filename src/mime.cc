@@ -80,22 +80,7 @@ public:
               const char *aContentType,
               const char *aContentEncoding, const char *aTransferMode,
               bool optionViewEnable, bool optionDownloadEnable,
-              const char *anIconName) :
-                  pattern(xstrdup(aPattern)),
-                  compiled_pattern(compiledPattern),
-                  content_type(xstrdup(aContentType)),
-                  content_encoding(xstrdup(aContentEncoding)),
-                  view_option(optionViewEnable),
-                  download_option(optionViewEnable),
-                  next(NULL), theIcon(anIconName)
-    {
-        if (!strcasecmp(aTransferMode, "ascii"))
-            transfer_mode = 'A';
-        else if (!strcasecmp(aTransferMode, "text"))
-            transfer_mode = 'A';
-        else
-            transfer_mode = 'I';
-    }
+              const char *anIconName);
     ~MimeEntry();
 
     const char *pattern;
@@ -162,14 +147,14 @@ MimeIcon::MimeIcon(const char *aName) :
     url = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon));
 }
 
-MimeIcon::~MimeIcon ()
+MimeIcon::~MimeIcon()
 {
     safe_free (icon);
     safe_free (url);
 }
 
 void
-MimeIcon::setName (char const *aString)
+MimeIcon::setName(char const *aString)
 {
     safe_free (icon);
     safe_free (url);
@@ -178,7 +163,7 @@ MimeIcon::setName (char const *aString)
 }
 
 char const *
-MimeIcon::getName () const
+MimeIcon::getName() const
 {
     return icon;
 }
@@ -470,4 +455,24 @@ MimeEntry::~MimeEntry() {
     safe_free(content_type);
     safe_free(content_encoding);
     regfree(&compiled_pattern);
+}
+
+MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+                const char *aContentType, const char *aContentEncoding,
+                const char *aTransferMode, bool optionViewEnable,
+                bool optionDownloadEnable, const char *anIconName) :
+                                    pattern(xstrdup(aPattern)),
+                                    compiled_pattern(compiledPattern),
+                                    content_type(xstrdup(aContentType)),
+                                    content_encoding(xstrdup(aContentEncoding)),
+                                    view_option(optionViewEnable),
+                                    download_option(optionViewEnable),
+                                    next(NULL), theIcon(anIconName)
+{
+    if (!strcasecmp(aTransferMode, "ascii"))
+        transfer_mode = 'A';
+    else if (!strcasecmp(aTransferMode, "text"))
+        transfer_mode = 'A';
+    else
+        transfer_mode = 'I';
 }
