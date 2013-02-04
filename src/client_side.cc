@@ -3965,7 +3965,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
         Ip::Address intendedDest;
         intendedDest = sslConnectHostOrIp.termedBuf();
-        const bool isConnectRequest = !port->flags.tproxyIntercept && !port->flags.natIntercept;
+        const bool isConnectRequest = !port->flags.isIntercepted();
 
         // Squid serves its own error page and closes, so we want
         // a CN that causes no additional browser errors. Possible

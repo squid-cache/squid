@@ -58,6 +58,11 @@ public:
      *  - peer relay prohibited. TODO: re-encrypt and re-wrap with CONNECT
      */
     bool tunnelSslBumping;
+
+    /** true if the traffic is in any way intercepted
+     *
+     */
+    bool isIntercepted() { return natIntercept||tproxyIntercept ;}
 };
 
 } // namespace AnyP
