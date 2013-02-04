@@ -455,7 +455,7 @@ MimeIcon::created (StoreEntry *newEntry)
         return;
     }
 
-    flags.cachable = 1;
+    flags.cachable = true;
     StoreEntry *e = storeCreateEntry(url,url,flags,Http::METHOD_GET);
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);

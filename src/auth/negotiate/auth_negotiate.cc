@@ -226,7 +226,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
         if (!keep_alive) {
             /* drop the connection */
             rep->header.delByName("keep-alive");
-            request->flags.proxyKeepalive = 0;
+            request->flags.proxyKeepalive = false;
         }
     } else {
         Auth::Negotiate::UserRequest *negotiate_request = dynamic_cast<Auth::Negotiate::UserRequest *>(auth_user_request.getRaw());
@@ -238,7 +238,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
-            request->flags.proxyKeepalive = 0;
+            request->flags.proxyKeepalive = false;
             /* fall through */
 
         case Auth::Ok:

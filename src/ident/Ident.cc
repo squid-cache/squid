@@ -59,6 +59,7 @@ typedef struct _IdentClient {
 typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
     Comm::ConnectionPointer conn;
+    MemBuf queryMsg;  ///< the lookup message sent to IDENT server
     IdentClient *clients;
     char buf[IDENT_BUFSIZE];
 } IdentStateData;
@@ -147,14 +148,9 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
 
     comm_add_close_handler(conn->fd, Ident::Close, state);
 
-    MemBuf mb;
-    mb.init();
-    mb.Printf("%d, %d\r\n",
-              conn->remote.GetPort(),
-              conn->local.GetPort());
     AsyncCall::Pointer writeCall = commCbCall(5,4, "Ident::WriteFeedback",
                                    CommIoCbPtrFun(Ident::WriteFeedback, state));
-    Comm::Write(conn, &mb, writeCall);
+    Comm::Write(conn, &state->queryMsg, writeCall);
     AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
                                   CommIoCbPtrFun(Ident::ReadReply, state));
     comm_read(conn, state->buf, IDENT_BUFSIZE, readCall);
@@ -263,6 +259,10 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     // NP: use random port for secure outbound to IDENT_PORT
     state->conn->local.SetPort(0);
     state->conn->remote.SetPort(IDENT_PORT);
+
+    // build our query from the original connection details
+    state->queryMsg.init();
+    state->queryMsg.Printf("%d, %d\r\n", conn->remote.GetPort(), conn->local.GetPort());
 
     ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);

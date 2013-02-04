@@ -215,7 +215,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
 
         if (!keep_alive) {
             /* drop the connection */
-            request->flags.proxyKeepalive = 0;
+            request->flags.proxyKeepalive = false;
         }
     } else {
         Auth::Ntlm::UserRequest *ntlm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
@@ -226,7 +226,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         case Auth::Failed:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
-            request->flags.proxyKeepalive = 0;
+            request->flags.proxyKeepalive = false;
             /* fall through */
 
         case Auth::Ok:

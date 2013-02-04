@@ -36,8 +36,9 @@ public:
     char buffer[COSS_MEMBUF_SZ];
 
     struct _cossmembuf_flags {
-        unsigned int full:1;
-        unsigned int writing:1;
+        _cossmembuf_flags() : full(false), writing(false) {}
+        bool full;
+        bool writing;
     } flags;
 };
 
@@ -68,9 +69,9 @@ public:
     size_t requestoffset;	/* in blocks */
     int64_t reqdiskoffset;	/* in blocks */
 
-    struct {
-        unsigned int reading:1;
-        unsigned int writing:1;
+    struct CossFlags {
+        bool reading;
+        bool writing;
     } flags;
 
     CossMemBuf *locked_membuf;

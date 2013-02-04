@@ -863,7 +863,7 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
            RequestMethodStr(request->method));
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
-    request->flags.proxyKeepalive = request->persistent() ? 1 : 0;
+    request->flags.proxyKeepalive = request->persistent();
 }
 
 static int
@@ -2030,7 +2030,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     char *host;
     char ipbuf[MAX_IPSTRLEN];
 
-    http->flags.accel = 1;
+    http->flags.accel = true;
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
@@ -2317,7 +2317,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         http->uri = xstrdup(internalLocalUri(NULL, url));
         // We just re-wrote the URL. Must replace the Host: header.
         //  But have not parsed there yet!! flag for local-only handling.
-        http->flags.internal = 1;
+        http->flags.internal = true;
 
     } else if (csd->port->flags.accelSurrogate || csd->switchedToHttps()) {
         /* accelerator mode */
@@ -2490,7 +2490,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     // at the client-side, but many such errors do require closure and the
     // client-side code is bad at handling errors so we play it safe.
     if (request)
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     flags.readMore = false;
     debugs(33,4, HERE << "Will close after error: " << clientConnection);
 }
@@ -2693,11 +2693,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (internalCheck(request->urlpath.termedBuf())) {
         if (internalHostnameIs(request->GetHost()) &&
                 request->port == getMyPort()) {
-            http->flags.internal = 1;
+            http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
             request->SetHost(internalHostname());
             request->port = getMyPort();
-            http->flags.internal = 1;
+            http->flags.internal = true;
         }
     }
 
@@ -2985,7 +2985,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
             }
 
             /* It might be half-closed, we can't tell */
-            fd_table[io.conn->fd].flags.socket_eof = 1;
+            fd_table[io.conn->fd].flags.socket_eof = true;
 
             commMarkHalfClosed(io.conn->fd);
 
@@ -3932,7 +3932,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     // and now want to switch to SSL to send the error to the client
     // without even peeking at the origin server certificate.
     if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
-        request->flags.sslPeek = 1;
+        request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request);
 
         // will call httpsPeeked() with certificate and connection, eventually
