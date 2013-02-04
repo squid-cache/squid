@@ -3556,7 +3556,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     /* modes first */
 
     if (strcmp(token, "accel") == 0) {
-        if (s->flags.natIntercept || s->flags.tproxyIntercept) {
+        if (s->flags.isIntercepted()) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
@@ -3646,7 +3646,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Scceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Acceleration mode flag.");
             self_destruct();
         }
 #endif
@@ -3697,9 +3697,9 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strcasecmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
                "in http_port. Use 'ssl-bump' instead.");
-        s->flags.tunnelSslBumping = true; // accelerated when bumped, otherwise not
+        s->flags.tunnelSslBumping = true;
     } else if (strcmp(token, "ssl-bump") == 0) {
-        s->flags.tunnelSslBumping = true; // accelerated when bumped, otherwise not
+        s->flags.tunnelSslBumping = true;
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
@@ -3796,7 +3796,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 #if USE_SSL
     if (strcasecmp(protocol, "https") == 0) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
-        const bool hijacked = s->flags.tproxyIntercept || s->flags.natIntercept;
+        const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {
             debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy/intercept which is missing.");
             self_destruct();
