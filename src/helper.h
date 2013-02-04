@@ -132,11 +132,11 @@ public:
     dlink_node link;
 
     struct _helper_flags {
-        unsigned int busy:1;
-        unsigned int writing:1;
-        unsigned int closing:1;
-        unsigned int shutdown:1;
-        unsigned int reserved:1;
+        bool busy;
+        bool writing;
+        bool closing;
+        bool shutdown;
+        bool reserved;
     } flags;
 
     struct {

@@ -197,22 +197,23 @@ HttpHdrSc::parse(const String * str)
             int ma;
             if (p && httpHeaderParseInt(p, &ma)) {
                 sct->maxAge(ma);
+
+                if ((p = strchr (p, '+'))) {
+                    int ms;
+                    ++p; //skip the + char
+                    if (httpHeaderParseInt(p, &ms)) {
+                        sct->maxStale(ms);
+                    } else {
+                        debugs(90, 2, "sc: invalid max-stale specs near '" << item << "'");
+                        sct->clearMaxStale();
+                        /* leave the max-age alone */
+                    }
+                }
             } else {
                 debugs(90, 2, "sc: invalid max-age specs near '" << item << "'");
                 sct->clearMaxAge();
             }
 
-            if ((p = strchr (p, '+'))) {
-                int ms;
-                ++p; //skip the + char
-                if (httpHeaderParseInt(p, &ms)) {
-                    sct->maxStale(ms);
-                } else {
-                    debugs(90, 2, "sc: invalid max-stale specs near '" << item << "'");
-                    sct->clearMaxStale();
-                    /* leave the max-age alone */
-                }
-            }
             break;
         }
 

@@ -2867,41 +2867,41 @@ parse_refreshpattern(RefreshPattern ** head)
     t->max = max;
 
     if (flags & REG_ICASE)
-        t->flags.icase = 1;
+        t->flags.icase = true;
 
     if (refresh_ims)
-        t->flags.refresh_ims = 1;
+        t->flags.refresh_ims = true;
 
     if (store_stale)
-        t->flags.store_stale = 1;
+        t->flags.store_stale = true;
 
     t->max_stale = max_stale;
 
 #if USE_HTTP_VIOLATIONS
 
     if (override_expire)
-        t->flags.override_expire = 1;
+        t->flags.override_expire = true;
 
     if (override_lastmod)
-        t->flags.override_lastmod = 1;
+        t->flags.override_lastmod = true;
 
     if (reload_into_ims)
-        t->flags.reload_into_ims = 1;
+        t->flags.reload_into_ims = true;
 
     if (ignore_reload)
-        t->flags.ignore_reload = 1;
+        t->flags.ignore_reload = true;
 
     if (ignore_no_store)
-        t->flags.ignore_no_store = 1;
+        t->flags.ignore_no_store = true;
 
     if (ignore_must_revalidate)
-        t->flags.ignore_must_revalidate = 1;
+        t->flags.ignore_must_revalidate = true;
 
     if (ignore_private)
-        t->flags.ignore_private = 1;
+        t->flags.ignore_private = true;
 
     if (ignore_auth)
-        t->flags.ignore_auth = 1;
+        t->flags.ignore_auth = true;
 
 #endif
 

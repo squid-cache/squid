@@ -113,12 +113,12 @@ public:
     AccessLogEntry::Pointer al; ///< access.log entry
 
     struct {
-        unsigned int accel:1;
-        unsigned int intercepted:1;
-        unsigned int spoof_client_ip:1;
-        unsigned int internal:1;
-        unsigned int done_copying:1;
-        unsigned int purging:1;
+        bool accel;
+        //bool intercepted; //XXX: it's apparently never used.
+        //bool spoof_client_ip; //XXX: it's apparently never used.
+        bool internal;
+        bool done_copying;
+        bool purging;
     } flags;
 
     struct {

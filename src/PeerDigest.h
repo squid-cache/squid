@@ -104,9 +104,9 @@ public:
     const char *req_result;     /**< text status of the last request */
 
     struct {
-        unsigned int needed:1;          /**< there were requests for this digest */
-        unsigned int usable:1;          /**< can be used for lookups */
-        unsigned int requested:1;       /**< in process of receiving [fresh] digest */
+        bool needed;          /**< there were requests for this digest */
+        bool usable;          /**< can be used for lookups */
+        bool requested;       /**< in process of receiving [fresh] digest */
     } flags;
 
     struct {
