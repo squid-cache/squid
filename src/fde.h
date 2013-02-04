@@ -86,19 +86,19 @@ public:
     char desc[FD_DESC_SZ];
 
     struct _fde_flags {
-        unsigned int open:1;
-        unsigned int close_request:1; // file_ or comm_close has been called
-        unsigned int write_daemon:1;
-        unsigned int socket_eof:1;
-        unsigned int nolinger:1;
-        unsigned int nonblocking:1;
-        unsigned int ipc:1;
-        unsigned int called_connect:1;
-        unsigned int nodelay:1;
-        unsigned int close_on_exec:1;
-        unsigned int read_pending:1;
-        unsigned int write_pending:1;
-        unsigned int transparent:1;
+        bool open;
+        bool close_request; ///< true if file_ or comm_close has been called
+        bool write_daemon;
+        bool socket_eof;
+        bool nolinger;
+        bool nonblocking;
+        bool ipc;
+        bool called_connect;
+        bool nodelay;
+        bool close_on_exec;
+        bool read_pending;
+        //bool write_pending; //XXX seems not to be used
+        bool transparent;
     } flags;
 
     int64_t bytes_read;

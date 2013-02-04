@@ -3,9 +3,10 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
-#include "ssl/support.h"
 
 #if USE_SSL
+#include "ssl/support.h"
+
 AccessLogEntry::SslDetails::SslDetails(): user(NULL), bumpMode(::Ssl::bumpEnd)
 {
 }

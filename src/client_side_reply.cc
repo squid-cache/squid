@@ -129,7 +129,7 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
 {
     if (errstate->httpStatus == HTTP_NOT_IMPLEMENTED && http->request)
         /* prevent confusion over whether we default to persistent or not */
-        http->request->flags.proxyKeepalive = 0;
+        http->request->flags.proxyKeepalive = false;
 
     http->al->http.code = errstate->httpStatus;
 
@@ -273,7 +273,7 @@ clientReplyContext::processExpired()
         return;
     }
 
-    http->request->flags.refresh = 1;
+    http->request->flags.refresh = true;
 #if STORE_CLIENT_LIST_DEBUG
     /* Prevent a race with the store client memory free routines
      */
@@ -390,7 +390,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     // origin replied 304
     if (status == HTTP_NOT_MODIFIED) {
         http->logType = LOG_TCP_REFRESH_UNMODIFIED;
-        http->request->flags.staleIfHit = 0; // old_entry is no longer stale
+        http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
         // update headers on existing entry
         old_rep->updateOnNotModified(http->storeEntry()->getReply());
@@ -558,7 +558,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          * request.  Otherwise two siblings could generate a loop if
          * both have a stale version of the object.
          */
-        r->flags.needValidation = 1;
+        r->flags.needValidation = true;
 
         if (e->lastmod < 0) {
             debugs(88, 3, "validate HIT object? NO. Missing Last-Modified header. Do MISS.");
@@ -734,7 +734,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
     if (r.header.has(HDR_IF_NONE_MATCH)) {
         if (!e->hasIfNoneMatchEtag(r)) {
             // RFC 2616: ignore IMS if If-None-Match did not match
-            r.flags.ims = 0;
+            r.flags.ims = false;
             r.ims = -1;
             r.imslen = 0;
             r.header.delById(HDR_IF_MODIFIED_SINCE);
@@ -778,7 +778,7 @@ void
 clientReplyContext::purgeRequestFindObjectToPurge()
 {
     /* Try to find a base entry */
-    http->flags.purging = 1;
+    http->flags.purging = true;
     lookingforstore = 1;
 
     // TODO: can we use purgeAllCached() here instead of doing the
@@ -1407,7 +1407,7 @@ clientReplyContext::buildReplyHeader()
                         hdr->delAt(pos, connection_auth_blocked);
                         continue;
                     }
-                    request->flags.mustKeepalive = 1;
+                    request->flags.mustKeepalive = true;
                     if (!request->flags.accelerated && !request->flags.intercepted) {
                         httpHeaderPutStrf(hdr, HDR_PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
@@ -1463,30 +1463,30 @@ clientReplyContext::buildReplyHeader()
     /* Check whether we should send keep-alive */
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.mustKeepalive) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (!Config.onoff.client_pconns && !request->flags.mustKeepalive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection Keep-Alive not requested by admin or client");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (request->flags.proxyKeepalive && shutting_down) {
         debugs(88, 3, "clientBuildReplyHeader: Shutting down, don't keep-alive.");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (request->flags.connectionAuth && !reply->keep_alive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection oriented auth but server side non-persistent");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (reply->bodySize(request->method) < 0 && !maySendChunkedReply) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (fdUsageHigh()&& !request->flags.mustKeepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (request->flags.sslBumped && !reply->persistent()) {
         // We do not really have to close, but we pretend we are a tunnel.
         debugs(88, 3, "clientBuildReplyHeader: bumped reply forces close");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     } else if (request->pinnedConnection() && !reply->persistent()) {
         // The peer wants to close the pinned connection
         debugs(88, 3, "pinned reply forces close");
-        request->flags.proxyKeepalive = 0;
+        request->flags.proxyKeepalive = false;
     }
 
     // Decide if we send chunked reply
@@ -1494,7 +1494,7 @@ clientReplyContext::buildReplyHeader()
             request->flags.proxyKeepalive &&
             reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: chunked reply");
-        request->flags.chunkedReply = 1;
+        request->flags.chunkedReply = true;
         hdr->putStr(HDR_TRANSFER_ENCODING, "chunked");
     }
 
@@ -1824,7 +1824,7 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
     debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
     StoreIOBuffer localTempBuffer;
     flags.complete = 1;
-    http->request->flags.streamError = 1;
+    http->request->flags.streamError = true;
     localTempBuffer.flags.error = result.flags.error;
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, NULL,
                          localTempBuffer);
@@ -2026,7 +2026,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
     if (http->request->method == Http::METHOD_HEAD) {
         /* do not forward body for HEAD replies */
         body_size = 0;
-        http->flags.done_copying = 1;
+        http->flags.done_copying = true;
         flags.complete = 1;
     }
 

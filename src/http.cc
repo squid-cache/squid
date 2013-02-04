@@ -122,7 +122,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
-        request->flags.proxying = 1;
+        request->flags.proxying = true;
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
          * We might end up getting the object from somewhere else if,
@@ -752,7 +752,7 @@ HttpStateData::processReplyHeader()
     }
 
     if (!peerSupportsConnectionPinning())
-        request->flags.connectionAuthDisabled = 1;
+        request->flags.connectionAuthDisabled = true;
 
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = true;
@@ -1442,7 +1442,7 @@ HttpStateData::processReplyBody()
 
             if (ispinned && request->clientConnectionManager.valid()) {
                 request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
-                        (request->flags.connectionAuth != 0));
+                        (request->flags.connectionAuth));
             } else {
                 fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
             }
@@ -1691,11 +1691,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.cachable = 0;
+        request->flags.cachable = false;
         /* pretend it's not a range request */
         delete request->range;
         request->range = NULL;
-        request->flags.isRanged=false;
+        request->flags.isRanged = false;
     }
 
     /* append Via */
@@ -2065,9 +2065,9 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
-            request->flags.authSent = 1;
+            request->flags.authSent = true;
         else if (hdr.has(HDR_AUTHORIZATION))
-            request->flags.authSent = 1;
+            request->flags.authSent = true;
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);

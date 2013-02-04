@@ -116,8 +116,8 @@ public:
     unsigned short locks;
 
     struct {
-        unsigned int negcached:1;
-        unsigned int fromhosts:1;
+        bool negcached;
+        bool fromhosts;
     } flags;
 
     int age() const; ///< time passed since request_time or -1 if unknown
@@ -428,7 +428,7 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
     int ttl = 0;
     const char *name = (const char *)f->hash.key;
     f->expires = squid_curtime + Config.negativeDnsTtl;
-    f->flags.negcached = 1;
+    f->flags.negcached = true;
 
     if (nr < 0) {
         debugs(35, 3, "fqdncacheParse: Lookup of '" << name << "' failed (" << error_message << ")");
@@ -485,7 +485,7 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
 
     f->expires = squid_curtime + ttl;
 
-    f->flags.negcached = 0;
+    f->flags.negcached = false;
 
     return f->name_count;
 }
@@ -827,7 +827,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 
     fce->name_count = j;
     fce->names[j] = NULL;	/* it's safe */
-    fce->flags.fromhosts = 1;
+    fce->flags.fromhosts = true;
     fqdncacheAddEntry(fce);
     fqdncacheLockEntry(fce);
 }

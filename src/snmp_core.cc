@@ -705,8 +705,8 @@ static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 {
     oid *instance = NULL;
     if (*len <= current->len) {
-        instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = 0;
         *len += 1;
     }
@@ -722,8 +722,8 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     int index[TIME_INDEX_LEN] = {TIME_INDEX};
 
     if (*len <= current->len) {
-        instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = *index;
         *len += 1;
     } else {
@@ -733,8 +733,8 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             ++loop;
 
         if (loop < (TIME_INDEX_LEN - 1)) {
-            instance = (oid *)xmalloc(sizeof(name) * (*len));
-            memcpy(instance, name, (sizeof(name) * *len));
+            instance = (oid *)xmalloc(sizeof(*name) * (*len));
+            memcpy(instance, name, sizeof(*name) * (*len));
             instance[*len - 1] = index[++loop];
         }
     }
@@ -761,8 +761,8 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         instance = client_Inst(current->name, len, current, Fn);
     } else if (*len <= current->len) {
         debugs(49, 6, "snmp peer_Inst: *len <= current->len ???");
-        instance = (oid *)xmalloc(sizeof(name) * ( *len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * ( *len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = 1 ;
         *len += 1;
     } else {
@@ -773,8 +773,8 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 
         if (peers) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
-            instance = (oid *)xmalloc(sizeof(name) * (current->len + 1 ));
-            memcpy(instance, name, (sizeof(name) * current->len ));
+            instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
+            memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
@@ -808,8 +808,8 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 
         debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
 
-        instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
-        memcpy(instance, name, (sizeof(name) * (*len)));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + size ));
+        memcpy(instance, name, (sizeof(*name) * (*len)));
 
         if ( !laddr.IsAnyAddr() ) {
             addr2oid(laddr, &instance[ *len]);  // the addr
@@ -832,8 +832,8 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 
             debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
 
-            instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
-            memcpy(instance, name, (sizeof(name) * (current->len)));
+            instance = (oid *)xmalloc(sizeof(*name) * (current->len +  newshift));
+            memcpy(instance, name, (sizeof(*name) * (current->len)));
             addr2oid(laddr, &instance[current->len]);  // the addr.
             *len = current->len + newshift ;
         }
