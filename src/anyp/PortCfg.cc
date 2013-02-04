@@ -58,12 +58,9 @@ AnyP::PortCfg::clone() const
     if (defaultsite)
         b->defaultsite = xstrdup(defaultsite);
 
-    b->intercepted = intercepted;
-    b->spoof_client_ip = spoof_client_ip;
-    b->accel = accel;
+    b->flags = flags;
     b->allow_direct = allow_direct;
     b->vhost = vhost;
-    b->sslBump = sslBump;
     b->vport = vport;
     b->connection_auth_disabled = connection_auth_disabled;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
