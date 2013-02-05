@@ -31,19 +31,20 @@
 #ifndef SQUID_HTTPMSG_H
 #define SQUID_HTTPMSG_H
 
-#include "typedefs.h"
+#include "base/Lock.h"
+#include "BodyPipe.h"
 #include "HttpHeader.h"
 #include "HttpRequestMethod.h"
 #include "HttpStatusCode.h"
 #include "HttpVersion.h"
-#include "BodyPipe.h"
+#include "typedefs.h"
 
 // common parts of HttpRequest and HttpReply
 
 template <class Msg>
 class HttpMsgPointerT;
 
-class HttpMsg
+class HttpMsg : public RefCountable
 {
 
 public:
@@ -125,9 +126,6 @@ protected:
     virtual bool parseFirstLine(const char *blk_start, const char *blk_end) = 0;
 
     virtual void hdrCacheInit();
-
-    int lock_count;
-
 };
 
 int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
