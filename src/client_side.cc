@@ -2295,7 +2295,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 #endif
 
     debugs(33,5, HERE << "repare absolute URL from " <<
-                    (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
+           (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
@@ -4033,8 +4033,8 @@ clientHttpConnectionsOpen(void)
         }
 
         if (s->flags.tunnelSslBumping &&
-            !s->staticSslContext &&
-            !s->generateHostCertificates) {
+                !s->staticSslContext &&
+                !s->generateHostCertificates) {
             debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
             s->flags.tunnelSslBumping = false;
         }

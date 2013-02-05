@@ -440,16 +440,16 @@ StoreEntry::mayStartSwapOut()
         if (expectedEnd < 0 && store_status != STORE_OK) {
             const int64_t maxKnownSize = mem_obj->availableForSwapOut();
             debugs(20, 7, HERE << "maxKnownSize= " << maxKnownSize);
-                /*
-                 * NOTE: the store_maxobjsize here is the max of optional
-                 * max-size values from 'cache_dir' lines.  It is not the
-                 * same as 'maximum_object_size'.  By default, store_maxobjsize
-                 * will be set to -1.  However, I am worried that this
-                 * deferance may consume a lot of memory in some cases.
-                 * Should we add an option to limit this memory consumption?
-                 */
-                debugs(20, 5,  HERE << "Deferring swapout start for " <<
-                       (store_maxobjsize - maxKnownSize) << " bytes");
+            /*
+             * NOTE: the store_maxobjsize here is the max of optional
+             * max-size values from 'cache_dir' lines.  It is not the
+             * same as 'maximum_object_size'.  By default, store_maxobjsize
+             * will be set to -1.  However, I am worried that this
+             * deferance may consume a lot of memory in some cases.
+             * Should we add an option to limit this memory consumption?
+             */
+            debugs(20, 5,  HERE << "Deferring swapout start for " <<
+                   (store_maxobjsize - maxKnownSize) << " bytes");
             return true; // may still fit, but no final decision yet
         }
     }
