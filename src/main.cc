@@ -312,7 +312,7 @@ usage(void)
             "                 Enable logging to syslog.\n"
             "       -u port   Specify ICP port number (default: %d), disable with 0.\n"
             "       -v        Print version.\n"
-            "       -z        Create swap directories\n"
+            "       -z        Create missing swap directories and then exit.\n"
             "       -C        Do not catch fatal signals.\n"
             "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
@@ -1457,7 +1457,7 @@ SquidMain(int argc, char **argv)
         }
 
         setEffectiveUser();
-        debugs(0, DBG_CRITICAL, "Creating Swap Directories");
+        debugs(0, DBG_CRITICAL, "Creating missing swap directories");
         Store::Root().create();
 
         return 0;
