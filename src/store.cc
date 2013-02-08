@@ -1694,6 +1694,8 @@ StoreEntry::url() const
 void
 StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
 {
+    debugs(20, 3, "A mem_obj create attempted using : " << aUrl);
+
     if (mem_obj)
         return;
 

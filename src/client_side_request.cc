@@ -132,6 +132,7 @@ static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static HLPCB clientRedirectDoneWrapper;
+static HLPCB clientStoreIdDoneWrapper;
 static void checkNoCacheDoneWrapper(allow_t, void *);
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSS clientReplyStatus;
@@ -152,11 +153,13 @@ ClientRequestContext::~ClientRequestContext()
     debugs(85,3, HERE << this << " ClientRequestContext destructed");
 }
 
-ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE), error(NULL), readNextRequest(false)
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE), store_id_state(REDIRECT_NONE),error(NULL), readNextRequest(false)
 {
     http_access_done = false;
     redirect_done = false;
     redirect_fail_count = 0;
+    store_id_done = false;
+    store_id_fail_count = 0;
     no_cache_done = false;
     interpreted_req_hdrs = false;
 #if USE_SSL
@@ -920,6 +923,44 @@ ClientRequestContext::clientRedirectStart()
         redirectStart(http, clientRedirectDoneWrapper, this);
 }
 
+/**
+ * This methods handles Access checks result of StoreId access list.
+ * Will handle as "ERR" (no change) in a case Access is not allowed.
+ */
+static void
+clientStoreIdAccessCheckDone(allow_t answer, void *data)
+{
+    ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
+    ClientHttpRequest *http = context->http;
+    context->acl_checklist = NULL;
+
+    if (answer == ACCESS_ALLOWED)
+        storeIdStart(http, clientStoreIdDoneWrapper, context);
+    else {
+        debugs(85, 3, "access denied expected ERR reply handling: " << answer);
+        HelperReply nilReply;
+        nilReply.result = HelperReply::Error;
+        context->clientStoreIdDone(nilReply);
+    }
+}
+
+/**
+ * Start locating an alternative storeage ID string (if any) from admin
+ * configured helper program. This is an asynchronous operation terminating in
+ * ClientRequestContext::clientStoreIdDone() when completed.
+ */
+void
+ClientRequestContext::clientStoreIdStart()
+{
+    debugs(33, 5,"'" << http->uri << "'");
+
+    if (Config.accessList.store_id) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
+        acl_checklist->nonBlockingCheck(clientStoreIdAccessCheckDone, this);
+    } else
+        storeIdStart(http, clientStoreIdDoneWrapper, this);
+}
+
 static int
 clientHierarchical(ClientHttpRequest * http)
 {
@@ -1197,6 +1238,17 @@ clientRedirectDoneWrapper(void *data, const HelperReply &result)
 }
 
 void
+clientStoreIdDoneWrapper(void *data, const HelperReply &result)
+{
+    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+
+    calloutContext->clientStoreIdDone(result);
+}
+
+void
 ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 {
     HttpRequest *old_request = http->request;
@@ -1309,6 +1361,62 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
         fd_note(http->getConn()->clientConnection->fd, http->uri);
 
     assert(http->uri);
+
+    http->doCallouts();
+}
+
+/**
+ * This method handles the different replies from StoreID helper.
+ */
+void
+ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
+{
+    HttpRequest *old_request = http->request;
+    debugs(85, 5, "'" << http->uri << "' result=" << reply);
+    assert(store_id_state == REDIRECT_PENDING);
+    store_id_state = REDIRECT_DONE;
+
+    // copy the helper response Notes to the HTTP request for logging
+    // do it early to ensure that no matter what the outcome the notes are present.
+    // TODO put them straight into the transaction state record (ALE?) eventually
+    if (!old_request->helperNotes)
+        old_request->helperNotes = new Notes;
+    old_request->helperNotes->add(reply.notes);
+
+    switch (reply.result) {
+    case HelperReply::Unknown:
+    case HelperReply::TT:
+        // Handler in redirect.cc should have already mapped Unknown
+        // IF it contained valid entry for the old helper protocol
+        debugs(85, DBG_IMPORTANT, "ERROR: storeID helper returned invalid result code. Wrong helper? " << reply);
+        break;
+
+    case HelperReply::BrokenHelper:
+        debugs(85, DBG_IMPORTANT, "ERROR: storeID helper: " << reply << ", attempt #" << (store_id_fail_count+1) << " of 2");
+        if (store_id_fail_count < 2) { // XXX: make this configurable ?
+            ++store_id_fail_count;
+            // reset state flag to try StoreID again from scratch.
+            store_id_done = false;
+        }
+        break;
+
+    case HelperReply::Error:
+        // no change to be done.
+        break;
+
+    case HelperReply::Okay: {
+        Note::Pointer urlNote = reply.notes.find("store-id");
+
+        // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
+        if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri) ) {
+            // Debug section required for some very specific cases.
+            debugs(85, 9, "Setting storeID with: " << urlNote->firstValue() );
+            http->request->store_id = urlNote->firstValue();
+            http->store_id = urlNote->firstValue();
+        }
+    }
+    break;
+    }
 
     http->doCallouts();
 }
@@ -1643,6 +1751,18 @@ ClientHttpRequest::doCallouts()
             return;
         }
 
+        if (!calloutContext->store_id_done) {
+            calloutContext->store_id_done = true;
+            assert(calloutContext->store_id_state == REDIRECT_NONE);
+
+            if (Config.Program.store_id) {
+                debugs(83, 3,"Doing calloutContext->clientStoreIdStart()");
+                calloutContext->store_id_state = REDIRECT_PENDING;
+                calloutContext->clientStoreIdStart();
+                return;
+            }
+        }
+
         if (!calloutContext->interpreted_req_hdrs) {
             debugs(83, 3, HERE << "Doing clientInterpretRequestHeaders()");
             calloutContext->interpreted_req_hdrs = 1;
@@ -1696,8 +1816,8 @@ ClientHttpRequest::doCallouts()
 #endif
 
     if (calloutContext->error) {
-        const char *url = urlCanonical(request);
-        StoreEntry *e= storeCreateEntry(url, url, request->flags, request->method);
+        const char *storeUri = request->storeId();
+        StoreEntry *e= storeCreateEntry(storeUri, storeUri, request->flags, request->method);
 #if USE_SSL
         if (sslBumpNeeded()) {
             // set final error but delay sending until we bump

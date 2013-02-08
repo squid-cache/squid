@@ -701,6 +701,13 @@ configDoConfigure(void)
         }
     }
 
+    if (Config.Program.store_id) {
+        if (Config.storeIdChildren.n_max < 1) {
+            Config.storeIdChildren.n_max = 0;
+            wordlistDestroy(&Config.Program.store_id);
+        }
+    }
+
     if (Config.appendDomain)
         if (*Config.appendDomain != '.')
             fatal("append_domain must begin with a '.'");
@@ -762,6 +769,9 @@ configDoConfigure(void)
     requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
+
+    if (Config.Program.store_id)
+        requirePathnameExists("store_id_program", Config.Program.store_id->key);
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 

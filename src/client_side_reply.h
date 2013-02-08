@@ -91,6 +91,7 @@ public:
     clientStream_status_t replyStatus();
     void processMiss();
     void traceReply(clientStreamNode * node);
+    const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     http_status purgeStatus;
 
