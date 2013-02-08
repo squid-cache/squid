@@ -98,6 +98,7 @@ public:
     HttpRequest *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
+    String store_id; /* StoreID for transactions where the request member is nil */
 
     struct {
         int64_t offset;

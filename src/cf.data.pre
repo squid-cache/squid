@@ -4354,6 +4354,128 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ OPTIONS FOR STORE ID
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: store_id_program storeurl_rewrite_program
+TYPE: wordlist
+LOC: Config.Program.store_id
+DEFAULT: none
+DOC_START
+	Specify the location of the executable StoreID helper to use.
+	Since they can perform almost any function there isn't one included.
+
+	For each requested URL, the helper will receive one line with the format
+
+	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kv-pairs]<NL>
+
+
+	After processing the request the helper must reply using the following format:
+
+	  [channel-ID <SP>] result [<SP> kv-pairs]
+
+	The result code can be:
+
+	  OK store-id="..."
+		Use the StoreID supplied in 'store-id='.
+
+	  ERR
+		The default is to use HTTP request URL as the store ID.
+
+	  BH
+		An internal error occured in the helper, preventing
+		a result being identified.
+
+
+	Helper programs should be prepared to receive and possibly ignore additional
+	kv-pairs with keys they do not support.
+
+	When using the concurrency= option the protocol is changed by
+	introducing a query channel tag in front of the request/response.
+	The query channel tag is a number between 0 and concurrency-1.
+	This value must be echoed back unchanged to Squid as the first part
+	of the response relating to its request.
+
+	NOTE: when using StoreID refresh_pattern will apply to the StoreID
+	      returned from the helper and not the URL.
+
+	WARNING: Wrong StoreID value returned by a careless helper may result
+	         in the wrong cached response returned to the user.
+
+	By default, a StoreID helper is not used.
+DOC_END
+
+NAME: store_id_children storeurl_rewrite_children
+TYPE: HelperChildConfig
+DEFAULT: 20 startup=0 idle=1 concurrency=0
+LOC: Config.storeIdChildren
+DOC_START
+	The maximum number of StoreID helper processes to spawn. If you limit
+	it too few Squid will have to wait for them to process a backlog of
+	requests, slowing it down. If you allow too many they will use RAM
+	and other system resources noticably.
+	
+	The startup= and idle= options allow some measure of skew in your
+	tuning.
+	
+		startup=
+	
+	Sets a minimum of how many processes are to be spawned when Squid
+	starts or reconfigures. When set to zero the first request will
+	cause spawning of the first child process to handle it.
+	
+	Starting too few will cause an initial slowdown in traffic as Squid
+	attempts to simultaneously spawn enough processes to cope.
+	
+		idle=
+	
+	Sets a minimum of how many processes Squid is to try and keep available
+	at all times. When traffic begins to rise above what the existing
+	processes can handle this many more will be spawned up to the maximum
+	configured. A minimum setting of 1 is required.
+
+		concurrency=
+
+	The number of requests each storeID helper can handle in
+	parallel. Defaults to 0 which indicates the helper
+	is a old-style single threaded program.
+
+	When this directive is set to a value >= 1 then the protocol
+	used to communicate with the helper is modified to include
+	an ID in front of the request/response. The ID from the request
+	must be echoed back with the response to that request.
+DOC_END
+
+NAME: store_id_access storeurl_rewrite_access
+TYPE: acl_access
+DEFAULT: none
+LOC: Config.accessList.store_id
+DOC_START
+	If defined, this access list specifies which requests are
+	sent to the StoreID processes.  By default all requests
+	are sent.
+
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
+NAME: store_id_bypass storeurl_rewrite_bypass
+TYPE: onoff
+LOC: Config.onoff.store_id_bypass
+DEFAULT: on
+DOC_START
+	When this is 'on', a request will not go through the
+	helper if all helpers are busy.  If this is 'off'
+	and the helper queue grows too large, Squid will exit
+	with a FATAL error and ask you to increase the number of
+	helpers.  You should only enable this if the helperss
+	are not critical to your caching system.  If you use
+	helpers for critical caching components, and you enable this 
+	option,	users may not get objects from cache.
+DOC_END
+
+COMMENT_START
  OPTIONS FOR TUNING THE CACHE
  -----------------------------------------------------------------------------
 COMMENT_END
