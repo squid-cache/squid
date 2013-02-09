@@ -295,11 +295,12 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
     if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
             request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHE_OBJECT) {
         /**
-         * Check if this host is allowed to fetch MISSES from us (miss_access)
+         * Check if this host is allowed to fetch MISSES from us (miss_access).
+         * Intentionally replace the src_addr automatically selected by the checklist code
+         * we do NOT want the indirect client address to be tested here.
          */
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
-        ch.my_addr = request->my_addr;
         if (ch.fastCheck() == ACCESS_DENIED) {
             err_type page_id;
             page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
@@ -1443,12 +1444,6 @@ tos_t
 GetTosToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
-
-    if (request) {
-        ch.src_addr = request->client_addr;
-        ch.my_addr = request->my_addr;
-    }
-
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
 
@@ -1456,11 +1451,5 @@ nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
-
-    if (request) {
-        ch.src_addr = request->client_addr;
-        ch.my_addr = request->my_addr;
-    }
-
     return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
 }
