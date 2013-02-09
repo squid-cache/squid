@@ -1,3 +1,14 @@
+Changes to squid-3.3.1 (09 Feb 2013):
+
+	- Bug 3726: build errors with --disable-ssl
+	- Propigate pinned connection persistency and closures to the client.
+	- Mimic SSL certificate Key Usage and Basic Constraints
+	- Fix segmentation fault on missing squid.conf values
+	- ext_sql_session_acl: Fix hex decoding on UID
+	- ... and some code polish
+	- ... and a lot of documentation polish
+	- ... and all changes from squid 3.2.7
+
 Changes to squid-3.3.0.3 (09 Jan 2013):
 
 	- Bug 3729: 32-bit overflow in parsing 64-bit configuration values
