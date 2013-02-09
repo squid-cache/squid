@@ -441,10 +441,11 @@ StoreEntry::mayStartSwapOut()
             const int64_t maxKnownSize = mem_obj->availableForSwapOut();
             debugs(20, 7, HERE << "maxKnownSize= " << maxKnownSize);
             /*
-             * NOTE: the store_maxobjsize here is the max of optional
-             * max-size values from 'cache_dir' lines.  It is not the
-             * same as 'maximum_object_size'.  By default, store_maxobjsize
-             * will be set to -1.  However, I am worried that this
+             * NOTE: the store_maxobjsize here is the global maximum
+             * size of object cacheable in any of Squid cache stores
+             * both disk and memory stores.
+             *
+             * However, I am worried that this
              * deferance may consume a lot of memory in some cases.
              * Should we add an option to limit this memory consumption?
              */
