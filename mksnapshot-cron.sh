@@ -61,12 +61,11 @@ make_snapshot()
   set +e
     # cleanup old snapshots
     ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r*[0-9]${type} | \
-		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
+#		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
 		sort -r | tail +${save} | \
     while read f; do
-	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
+	rm -f ${f} ${f}.md5
     done
-
   set -e
 
     # update dynamic index pages Last-Modified info
