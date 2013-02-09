@@ -104,6 +104,61 @@ COMMENT_START
 	across all Squid processes.
 COMMENT_END
 
+# options still not yet ported from 2.7 to 3.x
+NAME: broken_vary_encoding
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: cache_vary
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: collapsed_forwarding
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3. see http://bugs.squid-cache.org/show_bug.cgi?id=3495
+DOC_END
+
+NAME: error_map
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: external_refresh_check
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: ignore_ims_on_miss
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: location_rewrite_program location_rewrite_access location_rewrite_children location_rewrite_concurrency
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: refresh_stale_hit
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by Squid-3.
+DOC_END
+
+NAME: storeurl_access storeurl_rewrite_program storeurl_rewrite_concurrency storeurl_rewrite_children
+TYPE: obsolete
+DOC_START
+	This option is not yet supported by this version of Squid-3. Please try a later release.
+DOC_END
+
 # Options Removed in 3.2
 NAME: ignore_expect_100
 TYPE: obsolete
