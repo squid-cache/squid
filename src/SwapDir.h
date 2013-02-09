@@ -150,7 +150,7 @@ public:
 
     /// The maximum size of object which may be stored here.
     /// Larger objects will not be added and may be purged.
-    int64_t maxObjectSize() const;
+    virtual int64_t maxObjectSize() const;
 
     /// configure the maximum object size for this storage area.
     /// May be any size up to the total storage area.
