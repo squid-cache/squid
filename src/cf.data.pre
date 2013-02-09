@@ -190,6 +190,18 @@ DOC_START
 	Since squid-3.0 use the 'disable-pmtu-discovery' flag on http_port instead.
 DOC_END
 
+NAME: wais_relay_host
+TYPE: obsolete
+DOC_START
+	Replace this line with 'cache_peer' configuration.
+DOC_END
+
+NAME: wais_relay_port
+TYPE: obsolete
+DOC_START
+	Replace this line with 'cache_peer' configuration.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR AUTHENTICATION
  -----------------------------------------------------------------------------
