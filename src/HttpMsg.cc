@@ -42,12 +42,11 @@
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
         cache_control(NULL), hdr_sz(0), content_length(0), protocol(AnyP::PROTO_NONE),
-        pstate(psReadyToParseStartLine), lock_count(0)
+        pstate(psReadyToParseStartLine)
 {}
 
 HttpMsg::~HttpMsg()
 {
-    assert(lock_count == 0);
     assert(!body_pipe);
 }
 
@@ -363,7 +362,7 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
 HttpMsg *
 HttpMsg::_lock()
 {
-    ++lock_count;
+    lock();
     return this;
 }
 
@@ -371,9 +370,6 @@ HttpMsg::_lock()
 void
 HttpMsg::_unlock()
 {
-    assert(lock_count > 0);
-    --lock_count;
-
-    if (0 == lock_count)
+    if (unlock() == 0)
         delete this;
 }

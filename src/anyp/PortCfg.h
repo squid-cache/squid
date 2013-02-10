@@ -1,6 +1,7 @@
 #ifndef SQUID_ANYP_PORTCFG_H
 #define SQUID_ANYP_PORTCFG_H
 
+#include "anyp/TrafficMode.h"
 #include "cbdata.h"
 #include "comm/Connection.h"
 
@@ -29,12 +30,10 @@ public:
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
 
-    unsigned int intercepted:1;        /**< intercepting proxy port */
-    unsigned int spoof_client_ip:1;    /**< spoof client ip if possible */
-    unsigned int accel:1;              /**< HTTP accelerator */
+    TrafficMode flags;  ///< flags indicating what type of traffic to expect via this port.
+
     unsigned int allow_direct:1;       /**< Allow direct forwarding in accelerator mode */
     unsigned int vhost:1;              /**< uses host header */
-    unsigned int sslBump:1;            /**< intercepts CONNECT requests */
     unsigned int actAsOrigin:1;        ///< update replies to conform with RFC 2616
     unsigned int ignore_cc:1;          /**< Ignore request Cache-Control directives */
 

@@ -166,7 +166,21 @@ during fast reload.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-z
-Create swap directories
+Create missing swap directories and other missing cache_dir structures,
+then exit. All cache_dir types create the configured top-level directory if 
+it is missing. Other actions are type-specific. For example, ufs-based
+storage systems create missing L1 and L2 directories while Rock creates
+the missing database file.
+.IP
+This option does not enable validation of any present swap structures. Its
+focus is on creation of missing pieces. If nothing is missing, squid -z 
+just exits. If you suspect cache_dir corruption, you must delete the top-level
+cache_dir directory before running squid -z.
+.IP
+By default, squid -z runs in daemon mode (so that configuration macros and
+other SMP features work as expected). Use
+.B \-N
+option to overwrite this.
 .
 .SH FILES
 Squid configuration files located in @SYSCONFDIR@/:

@@ -277,16 +277,23 @@ self_destruct(void)
 static void
 update_maxobjsize(void)
 {
-    int i;
     int64_t ms = -1;
 
-    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    // determine the maximum size object that can be stored to disk
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         assert (Config.cacheSwap.swapDirs[i].getRaw());
 
-        if (dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->
-                max_objsize > ms)
-            ms = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->max_objsize;
+        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
+        if (ms < storeMax)
+            ms = storeMax;
     }
+
+    // Ensure that we do not discard objects which could be stored only in memory.
+    // It is governed by maximum_object_size_in_memory (for now)
+    // TODO: update this to check each in-memory location (SMP and local memory limits differ)
+    if (ms < static_cast<int64_t>(Config.Store.maxInMemObjSize))
+        ms = Config.Store.maxInMemObjSize;
+
     store_maxobjsize = ms;
 }
 
@@ -679,7 +686,7 @@ configDoConfigure(void)
 
     if (Config.Announce.period > 0) {
         Config.onoff.announce = 1;
-    } else if (Config.Announce.period < 1) {
+    } else {
         Config.Announce.period = 86400 * 365;	/* one year */
         Config.onoff.announce = 0;
     }
@@ -698,6 +705,13 @@ configDoConfigure(void)
         if (Config.redirectChildren.n_max < 1) {
             Config.redirectChildren.n_max = 0;
             wordlistDestroy(&Config.Program.redirect);
+        }
+    }
+
+    if (Config.Program.store_id) {
+        if (Config.storeIdChildren.n_max < 1) {
+            Config.storeIdChildren.n_max = 0;
+            wordlistDestroy(&Config.Program.store_id);
         }
     }
 
@@ -762,6 +776,9 @@ configDoConfigure(void)
     requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
+
+    if (Config.Program.store_id)
+        requirePathnameExists("store_id_program", Config.Program.store_id->key);
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 
@@ -928,7 +945,7 @@ configDoConfigure(void)
     }
 
     for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
-        if (!s->sslBump)
+        if (!s->flags.tunnelSslBumping)
             continue;
 
         debugs(3, DBG_IMPORTANT, "Initializing http_port " << s->s << " SSL context");
@@ -3556,17 +3573,18 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     /* modes first */
 
     if (strcmp(token, "accel") == 0) {
-        if (s->intercepted || s->spoof_client_ip) {
+        if (s->flags.isIntercepted()) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->accel = s->vhost = 1;
+        s->flags.accelSurrogate = true;
+        s->vhost = 1;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
-        if (s->accel || s->spoof_client_ip) {
+        if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->intercepted = 1;
+        s->flags.natIntercept = true;
         Ip::Interceptor.StartInterception();
         /* Log information regarding the port modes under interception. */
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
@@ -3580,11 +3598,11 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
         }
     } else if (strcmp(token, "tproxy") == 0) {
-        if (s->intercepted || s->accel) {
+        if (s->flags.natIntercept || s->flags.accelSurrogate) {
             debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->spoof_client_ip = 1;
+        s->flags.tproxyIntercept = true;
         Ip::Interceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
@@ -3596,55 +3614,56 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         }
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: defaultsite option requires Acceleration mode flag.");
             self_destruct();
         }
         safe_free(s->defaultsite);
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
         }
-        s->accel = s->vhost = 1;
+        s->flags.accelSurrogate = true;
+        s->vhost = 1;
     } else if (strcmp(token, "no-vhost") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
         }
         s->vhost = 0;
     } else if (strcmp(token, "vport") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = -1;
     } else if (strncmp(token, "vport=", 6) == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = xatos(token + 6);
     } else if (strncmp(token, "protocol=", 9) == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
             self_destruct();
         }
         s->protocol = xstrdup(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
         s->allow_direct = 1;
     } else if (strcmp(token, "act-as-origin") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
         } else
             s->actAsOrigin = 1;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
-        if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Scceleration mode flag.");
+        if (!s->flags.accelSurrogate) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Acceleration mode flag.");
             self_destruct();
         }
 #endif
@@ -3695,9 +3714,9 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strcasecmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
                "in http_port. Use 'ssl-bump' instead.");
-        s->sslBump = 1; // accelerated when bumped, otherwise not
+        s->flags.tunnelSslBumping = true;
     } else if (strcmp(token, "ssl-bump") == 0) {
-        s->sslBump = 1; // accelerated when bumped, otherwise not
+        s->flags.tunnelSslBumping = true;
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
@@ -3794,12 +3813,12 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 #if USE_SSL
     if (strcasecmp(protocol, "https") == 0) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
-        const bool hijacked = s->spoof_client_ip || s->intercepted;
-        if (s->sslBump && !hijacked) {
+        const bool hijacked = s->flags.isIntercepted();
+        if (s->flags.tunnelSslBumping && !hijacked) {
             debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy/intercept which is missing.");
             self_destruct();
         }
-        if (hijacked && !s->sslBump) {
+        if (hijacked && !s->flags.tunnelSslBumping) {
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
             self_destruct();
         }
@@ -3829,13 +3848,13 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
                       s->s.ToURL(buf,MAX_IPSTRLEN));
 
     // MODES and specific sub-options.
-    if (s->intercepted)
+    if (s->flags.natIntercept)
         storeAppendPrintf(e, " intercept");
 
-    else if (s->spoof_client_ip)
+    else if (s->flags.tproxyIntercept)
         storeAppendPrintf(e, " tproxy");
 
-    else if (s->accel) {
+    else if (s->flags.accelSurrogate) {
         storeAppendPrintf(e, " accel");
 
         if (s->vhost)
@@ -3866,7 +3885,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
         storeAppendPrintf(e, " name=%s", s->name);
 
 #if USE_HTTP_VIOLATIONS
-    if (!s->accel && s->ignore_cc)
+    if (!s->flags.accelSurrogate && s->ignore_cc)
         storeAppendPrintf(e, " ignore-cc");
 #endif
 
@@ -3898,7 +3917,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
     }
 
 #if USE_SSL
-    if (s->sslBump)
+    if (s->flags.tunnelSslBumping)
         storeAppendPrintf(e, " ssl-bump");
 
     if (s->cert)
