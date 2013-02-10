@@ -32,20 +32,21 @@ public:
 
     TrafficMode flags;  ///< flags indicating what type of traffic to expect via this port.
 
-    unsigned int allow_direct:1;       /**< Allow direct forwarding in accelerator mode */
-    unsigned int vhost:1;              /**< uses host header */
-    unsigned int actAsOrigin:1;        ///< update replies to conform with RFC 2616
-    unsigned int ignore_cc:1;          /**< Ignore request Cache-Control directives */
+    bool allow_direct;       ///< Allow direct forwarding in accelerator mode
+    bool vhost;              ///< uses host header
+    bool actAsOrigin;        ///< update replies to conform with RFC 2616
+    bool ignore_cc;          ///< Ignore request Cache-Control directives
 
-    int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
-    bool connection_auth_disabled;     /* Don't support connection oriented auth */
+    bool connection_auth_disabled; ///< Don't support connection oriented auth
+
+    int vport;               ///< virtual port support. -1 if dynamic, >0 static
     int disable_pmtu_discovery;
 
     struct {
-        unsigned int enabled;
         unsigned int idle;
         unsigned int interval;
         unsigned int timeout;
+        bool enabled;
     } tcp_keepalive;
 
     /**
