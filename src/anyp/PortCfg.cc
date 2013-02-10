@@ -64,8 +64,7 @@ AnyP::PortCfg::clone() const
     b->vport = vport;
     b->connection_auth_disabled = connection_auth_disabled;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
-
-    memcpy( &(b->tcp_keepalive), &(tcp_keepalive), sizeof(tcp_keepalive));
+    b->tcp_keepalive = tcp_keepalive;
 
 #if 0
     // AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
