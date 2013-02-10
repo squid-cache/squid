@@ -24,7 +24,7 @@ Rock::IoState::IoState(SwapDir *dir,
 {
     e = anEntry;
     // swap_filen, swap_dirn, diskOffset, and payloadEnd are set by the caller
-    slotSize = dir->max_objsize;
+    slotSize = dir->maxObjectSize();
     file_callback = cbFile;
     callback = cbIo;
     callback_data = cbdataReference(data);

@@ -18,3 +18,4 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest) STUB
         HttpRequest * HttpRequest::clone() const STUB_RETVAL(NULL)
         bool HttpRequest::inheritProperties(const HttpMsg *aMsg) STUB_RETVAL(false)
         int64_t HttpRequest::getRangeOffsetLimit() STUB_RETVAL(0)
+        const char *HttpRequest::storeId() STUB_RETVAL(".")

@@ -258,7 +258,7 @@ clientReplyContext::triggerInitialStoreRead()
 void
 clientReplyContext::processExpired()
 {
-    char *url = http->uri;
+    const char *url = storeId();
     StoreEntry *entry = NULL;
     debugs(88, 3, "clientReplyContext::processExpired: '" << http->uri << "'");
     assert(http->storeEntry()->lastmod >= 0);
@@ -497,8 +497,8 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
      */
     assert(http->logType == LOG_TCP_HIT);
 
-    if (strcmp(e->mem_obj->url, urlCanonical(r)) != 0) {
-        debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
+    if (strcmp(e->mem_obj->url, http->request->storeId()) != 0) {
+        debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << http->request->storeId() << "'");
         processMiss();
         return;
     }
@@ -880,7 +880,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     http->storeEntry(entry);
 
     http->storeEntry()->lock();
-    http->storeEntry()->createMemObject(http->uri, http->log_uri);
+    http->storeEntry()->createMemObject(storeId(), http->log_uri);
 
     http->storeEntry()->mem_obj->method = http->request->method;
 
@@ -1744,8 +1744,13 @@ clientReplyContext::doGetMoreData()
              * is a cache hit for a GET response, we want to keep
              * the method as GET.
              */
-            http->storeEntry()->createMemObject(http->uri, http->log_uri);
+            http->storeEntry()->createMemObject(storeId(), http->log_uri);
             http->storeEntry()->mem_obj->method = http->request->method;
+            /**
+             * Here we can see if the object was
+             * created using URL or alternative StoreID from helper.
+             */
+            debugs(88, 3, "mem_obj->url: " << http->storeEntry()->mem_obj->url);
         }
 
         sc = storeClientListAdd(http->storeEntry(), this);
@@ -2176,7 +2181,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     if (http->request == NULL)
         http->request = HTTPMSGLOCK(new HttpRequest(m, AnyP::PROTO_NONE, null_string));
 
-    StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, reqFlags, m);
+    StoreEntry *e = storeCreateEntry(storeId(), http->log_uri, reqFlags, m);
 
     sc = storeClientListAdd(e, this);
 

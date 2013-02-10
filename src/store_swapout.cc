@@ -200,7 +200,7 @@ StoreEntry::swapOut()
 
     Store::Root().maybeTrimMemory(*this, weAreOrMayBeSwappingOut);
 
-    if (!weAreOrMayBeSwappingOut)
+    if (mem_obj->swapout.decision != MemObject::SwapOut::swPossible)
         return; // nothing else to do
 
     // Aborted entries have STORE_OK, but swapoutPossible rejects them. Thus,
@@ -360,8 +360,6 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 bool
 StoreEntry::mayStartSwapOut()
 {
-    dlink_node *node;
-
     // must be checked in the caller
     assert(!EBIT_TEST(flags, ENTRY_ABORTED));
     assert(!swappingOut());
@@ -403,6 +401,18 @@ StoreEntry::mayStartSwapOut()
         return false;
     }
 
+    if (mem_obj->inmem_lo > 0) {
+        debugs(20, 3, "storeSwapOut: (inmem_lo > 0)  imem_lo:" <<  mem_obj->inmem_lo);
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
+    if (!mem_obj->isContiguous()) {
+        debugs(20, 3, "storeSwapOut: not Contiguous");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
     // check cache_dir max-size limit if all cache_dirs have it
     if (store_maxobjsize >= 0) {
         // TODO: add estimated store metadata size to be conservative
@@ -426,66 +436,23 @@ StoreEntry::mayStartSwapOut()
             return false; // already does not fit and may only get bigger
         }
 
-        // prevent default swPossible answer for yet unknown length
-        if (expectedEnd < 0) {
-            debugs(20, 3,  HERE << "wait for more info: " <<
-                   store_maxobjsize);
-            return false; // may fit later, but will be rejected now
-        }
-
-        if (store_status != STORE_OK) {
-            const int64_t maxKnownSize = expectedEnd; // expectedEnd >= 0
+        // prevent final default swPossible answer for yet unknown length
+        if (expectedEnd < 0 && store_status != STORE_OK) {
+            const int64_t maxKnownSize = mem_obj->availableForSwapOut();
             debugs(20, 7, HERE << "maxKnownSize= " << maxKnownSize);
-            if (maxKnownSize < store_maxobjsize) {
-                /*
-                 * NOTE: the store_maxobjsize here is the max of optional
-                 * max-size values from 'cache_dir' lines.  It is not the
-                 * same as 'maximum_object_size'.  By default, store_maxobjsize
-                 * will be set to -1.  However, I am worried that this
-                 * deferance may consume a lot of memory in some cases.
-                 * Should we add an option to limit this memory consumption?
-                 */
-                debugs(20, 5,  HERE << "Deferring swapout start for " <<
-                       (store_maxobjsize - maxKnownSize) << " bytes");
-                return false;
-            }
+            /*
+             * NOTE: the store_maxobjsize here is the global maximum
+             * size of object cacheable in any of Squid cache stores
+             * both disk and memory stores.
+             *
+             * However, I am worried that this
+             * deferance may consume a lot of memory in some cases.
+             * Should we add an option to limit this memory consumption?
+             */
+            debugs(20, 5,  HERE << "Deferring swapout start for " <<
+                   (store_maxobjsize - maxKnownSize) << " bytes");
+            return true; // may still fit, but no final decision yet
         }
-    }
-
-    if (mem_obj->inmem_lo > 0) {
-        debugs(20, 3, "storeSwapOut: (inmem_lo > 0)  imem_lo:" <<  mem_obj->inmem_lo);
-        decision = MemObject::SwapOut::swImpossible;
-        return false;
-    }
-
-    /*
-     * If there are DISK clients, we must write to disk
-     * even if its not cachable
-     * RBC: Surely we should not create disk client on non cacheable objects?
-     * therefore this should be an assert?
-     * RBC 20030708: We can use disk to avoid mem races, so this shouldn't be
-     * an assert.
-     *
-     * XXX: Not clear what "mem races" the above refers to, especially when
-     * dealing with non-cachable objects that cannot have multiple clients.
-     *
-     * XXX: If STORE_DISK_CLIENT needs SwapOut::swPossible, we have to check
-     * for that flag earlier, but forcing swapping may contradict max-size or
-     * other swapability restrictions. Change storeClientType() and/or its
-     * callers to take swap-in availability into account.
-     */
-    for (node = mem_obj->clients.head; node; node = node->next) {
-        if (((store_client *) node->data)->getType() == STORE_DISK_CLIENT) {
-            debugs(20, 3, HERE << "DISK client found");
-            decision = MemObject::SwapOut::swPossible;
-            return true;
-        }
-    }
-
-    if (!mem_obj->isContiguous()) {
-        debugs(20, 3, "storeSwapOut: not Contiguous");
-        decision = MemObject::SwapOut::swImpossible;
-        return false;
     }
 
     decision = MemObject::SwapOut::swPossible;
