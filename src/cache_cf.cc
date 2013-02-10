@@ -3578,7 +3578,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
         }
         s->flags.accelSurrogate = true;
-        s->vhost = 1;
+        s->vhost = true;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
@@ -3625,12 +3625,12 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
         }
         s->flags.accelSurrogate = true;
-        s->vhost = 1;
+        s->vhost = true;
     } else if (strcmp(token, "no-vhost") == 0) {
         if (!s->flags.accelSurrogate) {
             debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
         }
-        s->vhost = 0;
+        s->vhost = false;
     } else if (strcmp(token, "vport") == 0) {
         if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
@@ -3654,12 +3654,12 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
-        s->allow_direct = 1;
+        s->allow_direct = true;
     } else if (strcmp(token, "act-as-origin") == 0) {
         if (!s->flags.accelSurrogate) {
             debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
         } else
-            s->actAsOrigin = 1;
+            s->actAsOrigin = true;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->flags.accelSurrogate) {
@@ -3667,7 +3667,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
         }
 #endif
-        s->ignore_cc = 1;
+        s->ignore_cc = true;
     } else if (strncmp(token, "name=", 5) == 0) {
         safe_free(s->name);
         s->name = xstrdup(token + 5);
@@ -3694,10 +3694,10 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
         }
     } else if (strcmp(token, "tcpkeepalive") == 0) {
-        s->tcp_keepalive.enabled = 1;
+        s->tcp_keepalive.enabled = true;
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
         char *t = token + 13;
-        s->tcp_keepalive.enabled = 1;
+        s->tcp_keepalive.enabled = true;
         s->tcp_keepalive.idle = xatoui(t);
         t = strchr(t, ',');
         if (t) {
