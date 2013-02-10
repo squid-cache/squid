@@ -165,6 +165,14 @@ public:
 
     char *canonical;
 
+    /**
+     * If defined, store_id_program mapped the request URL to this ID.
+     * Store uses this ID (and not the URL) to find and store entries,
+     * avoiding caching duplicate entries when different URLs point to
+     * "essentially the same" cachable resource.
+     */
+    String store_id;
+
     RequestFlags flags;
 
     HttpHdrRange *range;
@@ -240,6 +248,14 @@ public:
     static HttpRequest * CreateFromUrl(char * url);
 
     ConnStateData *pinnedConnection();
+
+    /**
+     * Returns the current StoreID for the request as a nul-terminated char*.
+     * Always returns the current id for the request
+     * (either the request canonical url or modified ID by the helper).
+     * Does not return NULL.
+     */
+    const char *storeId();
 
     /**
      * The client connection manager, if known;

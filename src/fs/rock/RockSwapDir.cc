@@ -160,8 +160,19 @@ Rock::SwapDir::create()
 
     debugs (47,3, HERE << "creating in " << path);
 
-    struct stat swap_sb;
-    if (::stat(path, &swap_sb) < 0) {
+    struct stat dir_sb;
+    if (::stat(path, &dir_sb) == 0) {
+        struct stat file_sb;
+        if (::stat(filePath, &file_sb) == 0) {
+            debugs (47, DBG_IMPORTANT, "Skipping existing Rock db: " << filePath);
+            return;
+        }
+        // else the db file is not there or is not accessible, and we will try
+        // to create it later below, generating a detailed error on failures.
+    } else { // path does not exist or is inaccessible
+        // If path exists but is not accessible, mkdir() below will fail, and
+        // the admin should see the error and act accordingly, so there is
+        // no need to distinguish ENOENT from other possible stat() errors.
         debugs (47, DBG_IMPORTANT, "Creating Rock db directory: " << path);
         const int res = mkdir(path, 0700);
         if (res != 0) {
@@ -171,6 +182,7 @@ Rock::SwapDir::create()
         }
     }
 
+    debugs (47, DBG_IMPORTANT, "Creating Rock db: " << filePath);
 #if SLOWLY_FILL_WITH_ZEROS
     char block[1024];
     Must(maxSize() % sizeof(block) == 0);

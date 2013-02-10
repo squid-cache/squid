@@ -277,10 +277,10 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 
         /* If the load is equal, then look in more details */
         if (load == least_load) {
-            /* closest max_objsize fit */
+            /* closest max-size fit */
 
             if (least_objsize != -1)
-                if (SD->max_objsize > least_objsize || SD->max_objsize == -1)
+                if (SD->maxObjectSize() > least_objsize)
                     continue;
 
             /* most free */
@@ -289,7 +289,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
         }
 
         least_load = load;
-        least_objsize = SD->max_objsize;
+        least_objsize = SD->maxObjectSize();
         most_free = cur_free;
         dirn = i;
     }
@@ -1128,7 +1128,12 @@ StoreHashIndex::search(String const url, HttpRequest *)
 
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
 
-StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) : sd(aSwapDir), _done (false), bucket (0)
+StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) :
+        sd(aSwapDir),
+        callback(NULL),
+        cbdata(NULL),
+        _done(false),
+        bucket(0)
 {}
 
 /* do not link
