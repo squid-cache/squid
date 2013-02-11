@@ -595,14 +595,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format <em>referrer</em> to log with the format previously used by referer_log directive.
 	<p>New format <em>useragent</em> to log with the format previously used by useragent_log directive.
 
-	<tag>acl : random, localip, localport</tag>
+	<tag>acl : random, urllogin</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
-	<p>Renamed <em>myip</em> to <em>localip</em>. It matches the IP which the client connected to.
-	<p>Renamed <em>myport</em> to <em>localport</em>. It matches the port which the client connected to.
 	<p>Ported <em>urllogin</em> option from Squid 2.7, to match a regex pattern on the URL login field (if any).
-	<p>The <em>localip</em>/<em>localport</em> differ from earlier releases where they matched a mix of
-	   of an invalid IP and port 0, the client destination IP/port or the Squid listening IP/port.
-	   This definition is now consistent across all modes of traffic received by Squid.
 	<p>The <em>manager</em> ACL requires adjustment to cover new cache manager access. So it has now been
 	  built-in as a predefined ACL name matching URLs equivalent to the following regular expression:
         <verb>
