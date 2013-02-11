@@ -821,11 +821,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SQUID_STATUS:
             if (al->http.timedout || al->http.aborted) {
-                snprintf(tmp, sizeof(tmp), "%s%s", log_tags[al->cache.code],
+                snprintf(tmp, sizeof(tmp), "%s%s", LogTags_str[al->cache.code],
                          al->http.statusSfx());
                 out = tmp;
             } else {
-                out = log_tags[al->cache.code];
+                out = LogTags_str[al->cache.code];
             }
 
             break;

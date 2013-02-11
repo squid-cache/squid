@@ -37,6 +37,7 @@
 #include "dlink.h"
 #include "base/AsyncJob.h"
 #include "HttpHeaderRange.h"
+#include "LogTags.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
@@ -108,7 +109,10 @@ public:
 
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */
-    log_type logType;
+
+    /// the processing tags associated with this request transaction.
+    // NP: still an enum so each stage altering it must take care when replacing it.
+    LogTags logType;
 
     struct timeval start_time;
     AccessLogEntry::Pointer al; ///< access.log entry

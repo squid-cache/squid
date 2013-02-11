@@ -1556,7 +1556,7 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     logType = LOG_TAG_NONE;
-    debugs(85, 4, "ClientHttpRequest::httpStart: " << Format::log_tags[logType] << " for '" << uri << "'");
+    debugs(85, 4, LogTags_str[logType] << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);

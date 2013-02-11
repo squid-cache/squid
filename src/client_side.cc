@@ -231,8 +231,8 @@ static void clientSetKeepaliveFlag(ClientHttpRequest *);
 static int clientIsContentLengthValid(HttpRequest * r);
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
-static void clientUpdateStatHistCounters(log_type logType, int svc_time);
-static void clientUpdateStatCounters(log_type logType);
+static void clientUpdateStatHistCounters(LogTags logType, int svc_time);
+static void clientUpdateStatCounters(LogTags logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
@@ -241,7 +241,7 @@ static bool connIsUsable(ConnStateData * conn);
 #endif
 static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &receivedData);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn);
-static void clientUpdateSocketStats(log_type logType, size_t size);
+static void clientUpdateSocketStats(LogTags logType, size_t size);
 
 char *skipLeadingSpace(char *aString);
 static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
@@ -444,7 +444,7 @@ clientIdentDone(const char *ident, void *data)
 #endif
 
 void
-clientUpdateStatCounters(log_type logType)
+clientUpdateStatCounters(LogTags logType)
 {
     ++statCounter.client_http.requests;
 
@@ -458,7 +458,7 @@ clientUpdateStatCounters(log_type logType)
 }
 
 void
-clientUpdateStatHistCounters(log_type logType, int svc_time)
+clientUpdateStatHistCounters(LogTags logType, int svc_time)
 {
     statCounter.client_http.allSvcTime.count(svc_time);
     /**
@@ -1640,7 +1640,7 @@ ClientSocketContext::keepaliveNextRequest()
 }
 
 void
-clientUpdateSocketStats(log_type logType, size_t size)
+clientUpdateSocketStats(LogTags logType, size_t size)
 {
     if (size == 0)
         return;

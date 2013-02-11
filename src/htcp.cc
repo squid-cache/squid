@@ -267,7 +267,7 @@ static void htcpFreeDetail(htcpDetail * s);
 
 static void htcpHandleMsg(char *buf, int sz, Ip::Address &from);
 
-static void htcpLogHtcp(Ip::Address &, int, log_type, const char *);
+static void htcpLogHtcp(Ip::Address &, int, LogTags, const char *);
 static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
 
 static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
@@ -1721,7 +1721,7 @@ htcpClosePorts(void)
 }
 
 static void
-htcpLogHtcp(Ip::Address &caddr, int opcode, log_type logcode, const char *url)
+htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
     if (LOG_TAG_NONE == logcode)
