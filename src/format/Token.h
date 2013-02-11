@@ -75,8 +75,6 @@ private:
     const char *scanForToken(TokenTableEntry const table[], const char *cur);
 };
 
-extern const char *log_tags[];
-
 } // namespace Format
 
 #endif /* _SQUID_FORMAT_TOKEN_H */

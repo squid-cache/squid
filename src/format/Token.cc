@@ -6,32 +6,6 @@
 #include "SquidConfig.h"
 #include "Store.h"
 
-const char *Format::log_tags[] = {
-    "NONE",
-    "TCP_HIT",
-    "TCP_MISS",
-    "TCP_REFRESH_UNMODIFIED",
-    "TCP_REFRESH_FAIL", // same tag logged for LOG_TCP_REFRESH_FAIL_OLD and
-    "TCP_REFRESH_FAIL", // LOG_TCP_REFRESH_FAIL_ERR for backward-compatibility
-    "TCP_REFRESH_MODIFIED",
-    "TCP_CLIENT_REFRESH_MISS",
-    "TCP_IMS_HIT",
-    "TCP_SWAPFAIL_MISS",
-    "TCP_NEGATIVE_HIT",
-    "TCP_MEM_HIT",
-    "TCP_DENIED",
-    "TCP_DENIED_REPLY",
-    "TCP_OFFLINE_HIT",
-    "TCP_REDIRECT",
-    "UDP_HIT",
-    "UDP_MISS",
-    "UDP_DENIED",
-    "UDP_INVALID",
-    "UDP_MISS_NOFETCH",
-    "ICP_QUERY",
-    "LOG_TYPE_MAX"
-};
-
 // Due to token overlaps between 1 and 2 letter tokens (Bug 3310)
 // We split the token table into sets determined by the token length
 namespace Format

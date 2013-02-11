@@ -39,11 +39,11 @@
 #include "HierarchyLogEntry.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
-#include "HttpRequestMethod.h"
+#include "LogTags.h"
+#include "Notes.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#include "Notes.h"
 #if USE_SSL
 #include "ssl/gadgets.h"
 #endif
@@ -169,7 +169,7 @@ public:
         int replyHeadersSize; ///< sent, including status line
         int64_t highOffset;
         int64_t objectSize;
-        log_type code;
+        LogTags code;
         int msec;
         const char *rfc931;
         const char *authuser;

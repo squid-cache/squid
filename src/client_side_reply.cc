@@ -631,7 +631,7 @@ clientReplyContext::processMiss()
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             debugs(88, DBG_CRITICAL, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, DBG_CRITICAL, "\tlog_type = " << Format::log_tags[http->logType]);
+            debugs(88, DBG_CRITICAL, "\tlog_type = " << LogTags_str[http->logType]);
             http->storeEntry()->dump(1);
         }
 

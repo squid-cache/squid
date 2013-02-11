@@ -60,7 +60,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
                   al->cache.replySize,
-                  ::Format::log_tags[al->cache.code],
+                  LogTags_str[al->cache.code],
                   al->http.statusSfx(),
                   hier_code_str[al->hier.code],
                   (Config.onoff.log_mime_hdrs?"":"\n"));
