@@ -40,6 +40,7 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "StoreClient.h"
+#include "LogTags.h"
 
 class HttpRequest;
 
@@ -122,7 +123,7 @@ struct icpUdpData {
     struct timeval start;
 #endif
 
-    log_type logcode;
+    LogTags logcode;
 
     struct timeval queue_time;
 };
@@ -144,10 +145,10 @@ void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pa
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, log_type, int);
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, LogTags, int);
 
 /// \ingroup ServerProtocolICPAPI
-log_type icpLogFromICPCode(icp_opcode opcode);
+LogTags icpLogFromICPCode(icp_opcode opcode);
 
 /// \ingroup ServerProtocolICPAPI
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
