@@ -3293,6 +3293,12 @@ DOC_START
 	slot size is specified in bytes using the max-size option. See
 	below for more info on the max-size option.
 
+	If possible, Squid using Rock Store creates a dedicated kid
+	process called "disker" to avoid blocking Squid worker(s) on disk
+	I/O. One disker kid is created for each rock cache_dir.  Diskers
+	are created only when Squid, running in daemon mode, has support
+	for the IpcIo disk I/O module.
+
 	swap-timeout=msec: Squid will not start writing a miss to or
 	reading a hit from disk if it estimates that the swap operation
 	will take more than the specified number of milliseconds. By
