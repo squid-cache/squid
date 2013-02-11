@@ -40,6 +40,7 @@
 #include "internal.h"
 #include "Mem.h"
 #include "MemBuf.h"
+#include "MemObject.h"
 #include "mime.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
