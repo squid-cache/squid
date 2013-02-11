@@ -213,7 +213,7 @@ storeIdStats(StoreEntry * sentry)
 }
 
 static void
-constructHelperQuery(const char *name, struct helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data)
+constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data)
 {
     ConnStateData * conn = http->getConn();
     const char *fqdn;
