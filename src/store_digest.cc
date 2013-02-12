@@ -398,7 +398,8 @@ storeDigestRewriteStart(void *datanotused)
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
-    e->mem_obj->request = HTTPMSGLOCK(req);
+    e->mem_obj->request = req;
+    HTTPMSGLOCK(e->mem_obj->request);
     /* wait for rebuild (if any) to finish */
 
     if (sd_state.rebuild_lock) {

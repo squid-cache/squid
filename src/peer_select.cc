@@ -157,7 +157,8 @@ peerSelect(Comm::ConnectionList * paths,
 
     psstate = new ps_state;
 
-    psstate->request = HTTPMSGLOCK(request);
+    psstate->request = request;
+    HTTPMSGLOCK(psstate->request);
 
     psstate->entry = entry;
     psstate->paths = paths;

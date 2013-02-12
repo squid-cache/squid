@@ -175,7 +175,8 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         accessList = cbdataReference(A);
 
     if (http_request != NULL) {
-        request = HTTPMSGLOCK(http_request);
+        request = http_request;
+        HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;

@@ -772,7 +772,7 @@ HttpStateData::processReplyHeader()
 void
 HttpStateData::handle1xx(HttpReply *reply)
 {
-    HttpMsgPointerT<HttpReply> msg(reply); // will destroy reply if unused
+    HttpReply::Pointer msg(reply); // will destroy reply if unused
 
     // one 1xx at a time: we must not be called while waiting for previous 1xx
     Must(!flags.handling1xx);
@@ -788,7 +788,8 @@ HttpStateData::handle1xx(HttpReply *reply)
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest(), NULL);
-        ch.reply = HTTPMSGLOCK(reply);
+        ch.reply = reply;
+        HTTPMSGLOCK(ch.reply);
         if (ch.fastCheck() != ACCESS_ALLOWED) { // TODO: support slow lookups?
             debugs(11, 3, HERE << "ignoring denied 1xx");
             proceedAfter1xx();

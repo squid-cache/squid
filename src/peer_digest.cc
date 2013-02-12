@@ -355,7 +355,8 @@ peerDigestRequest(PeerDigest * pd)
 
     fetch = cbdataAlloc(DigestFetchState);
 
-    fetch->request = HTTPMSGLOCK(req);
+    fetch->request = req;
+    HTTPMSGLOCK(fetch->request);
 
     fetch->pd = cbdataReference(pd);
 
@@ -555,8 +556,10 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* our old entry is fine */
             assert(fetch->old_entry);
 
-            if (!fetch->old_entry->mem_obj->request)
-                fetch->old_entry->mem_obj->request = HTTPMSGLOCK(fetch->entry->mem_obj->request);
+            if (!fetch->old_entry->mem_obj->request) {
+                fetch->old_entry->mem_obj->request = fetch->entry->mem_obj->request;
+                HTTPMSGLOCK(fetch->old_entry->mem_obj->request);
+            }
 
             assert(fetch->old_entry->mem_obj->request);
 

@@ -79,7 +79,7 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
         debugs(93, 7, HERE << "readAll=" << readAll);
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
-        sendAnswer(Answer::Forward(icapReply));
+        sendAnswer(Answer::Forward(icapReply.getRaw()));
         Must(done()); // there should be nothing else to do
         return;
     }
@@ -96,7 +96,7 @@ bool Adaptation::Icap::OptXact::parseResponse()
     HttpReply::Pointer r(new HttpReply);
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
-    if (!parseHttpMsg(r)) // throws on errors
+    if (!parseHttpMsg(r.getRaw())) // throws on errors
         return false;
 
     if (httpHeaderHasConnDir(&r->header, "close"))
@@ -116,7 +116,7 @@ void Adaptation::Icap::OptXact::finalizeLogInfo()
     //    al.cache.caddr = 0;
     al.icap.reqMethod = Adaptation::methodOptions;
 
-    if (icapReply && al.icap.bytesRead > icapReply->hdr_sz)
+    if (icapReply != NULL && al.icap.bytesRead > icapReply->hdr_sz)
         al.icap.bodyBytesRead = al.icap.bytesRead - icapReply->hdr_sz;
 
     Adaptation::Icap::Xaction::finalizeLogInfo();

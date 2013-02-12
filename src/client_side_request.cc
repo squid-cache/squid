@@ -422,7 +422,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     HttpVersion http_ver(1,1);
     request->http_ver = http_ver;
 
-    http->request = HTTPMSGLOCK(request);
+    http->request = request;
+    HTTPMSGLOCK(http->request);
 
     /* optional - skip the access check ? */
     http->calloutContext = new ClientRequestContext(http);
@@ -1343,7 +1344,8 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     safe_free(http->uri);
                     http->uri = xstrdup(urlCanonical(new_request));
                     HTTPMSGUNLOCK(old_request);
-                    http->request = HTTPMSGLOCK(new_request);
+                    http->request = new_request;
+                    HTTPMSGLOCK(http->request);
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                            old_request->method << " " << urlNote->firstValue() << " " << old_request->http_ver);
@@ -1703,8 +1705,10 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     /*Save the original request for logging purposes*/
-    if (!calloutContext->http->al->request)
-        calloutContext->http->al->request = HTTPMSGLOCK(request);
+    if (!calloutContext->http->al->request) {
+        calloutContext->http->al->request = request;
+        HTTPMSGLOCK(calloutContext->http->al->request);
+    }
 
     if (!calloutContext->error) {
         // CVE-2009-0801: verify the Host: header is consistent with other known details.
@@ -1892,7 +1896,7 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 
     switch (answer.kind) {
     case Adaptation::Answer::akForward:
-        handleAdaptedHeader(answer.message);
+        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
         break;
 
     case Adaptation::Answer::akBlock:
@@ -1915,7 +1919,8 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
          * Replace the old request with the new request.
          */
         HTTPMSGUNLOCK(request);
-        request = HTTPMSGLOCK(new_req);
+        request = new_req;
+        HTTPMSGLOCK(request);
         /*
          * Store the new URI for logging
          */

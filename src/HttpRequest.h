@@ -66,18 +66,13 @@ class HttpRequest: public HttpMsg
 {
 
 public:
-    typedef HttpMsgPointerT<HttpRequest> Pointer;
+    typedef RefCount<HttpRequest> Pointer;
 
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
-
-    // use HTTPMSGLOCK() instead of calling this directly
-    virtual HttpRequest *_lock() {
-        return static_cast<HttpRequest*>(HttpMsg::_lock());
-    };
 
     void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
 

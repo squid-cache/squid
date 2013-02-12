@@ -136,7 +136,8 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
 
     ACLFilledChecklist *cl =
         new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
-    cl->reply = HTTPMSGLOCK(info.icapReply);
+    cl->reply = info.icapReply;
+    HTTPMSGLOCK(cl->reply);
 
     bool result = cl->fastCheck() == ACCESS_ALLOWED;
     delete cl;
@@ -147,17 +148,27 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(HttpRequest *anIcapRequest,
         HttpReply *anIcapReply, bool beRetriable, bool beRepeatable):
-        icapRequest(anIcapRequest ? HTTPMSGLOCK(anIcapRequest) : NULL),
-        icapReply(anIcapReply ? HTTPMSGLOCK(anIcapReply) : NULL),
-        isRetriable(beRetriable), isRepeatable(beRepeatable)
+        icapRequest(anIcapRequest),
+        icapReply(anIcapReply),
+        isRetriable(beRetriable),
+        isRepeatable(beRepeatable)
 {
+    if (icapRequest)
+        HTTPMSGLOCK(icapRequest);
+    if (icapReply)
+        HTTPMSGLOCK(icapReply);
 }
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(const Adaptation::Icap::XactAbortInfo &i):
-        icapRequest(i.icapRequest ? HTTPMSGLOCK(i.icapRequest) : NULL),
-        icapReply(i.icapReply ? HTTPMSGLOCK(i.icapReply) : NULL),
-        isRetriable(i.isRetriable), isRepeatable(i.isRepeatable)
+        icapRequest(i.icapRequest),
+        icapReply(i.icapReply),
+        isRetriable(i.isRetriable),
+        isRepeatable(i.isRepeatable)
 {
+    if (icapRequest)
+        HTTPMSGLOCK(icapRequest);
+    if (icapReply)
+        HTTPMSGLOCK(icapReply);
 }
 
 Adaptation::Icap::XactAbortInfo::~XactAbortInfo()
