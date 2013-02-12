@@ -1381,13 +1381,15 @@ peerCountMcastPeersStart(void *data)
     fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
     psstate = new ps_state;
-    psstate->request = HTTPMSGLOCK(req);
+    psstate->request = req;
+    HTTPMSGLOCK(psstate->request);
     psstate->entry = fake;
     psstate->callback = NULL;
     psstate->callback_data = cbdataReference(p);
     psstate->ping.start = current_time;
     mem = fake->mem_obj;
-    mem->request = HTTPMSGLOCK(psstate->request);
+    mem->request = psstate->request;
+    HTTPMSGLOCK(mem->request);
     mem->start_ping = current_time;
     mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;

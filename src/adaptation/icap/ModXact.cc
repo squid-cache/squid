@@ -771,7 +771,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 {
     Must(state.sending == State::sendingUndecided);
 
-    if (!parseHead(icapReply))
+    if (!parseHead(icapReply.getRaw()))
         return;
 
     if (httpHeaderHasConnDir(&icapReply->header, "close")) {
@@ -946,8 +946,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     {
         HttpMsg::Pointer newHead;
         if (dynamic_cast<const HttpRequest*>(oldHead)) {
-            HttpRequest::Pointer newR(new HttpRequest);
-            newHead = newR;
+            newHead = new HttpRequest;
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
             newHead = new HttpReply;
         }
@@ -955,7 +954,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
 
         newHead->inheritProperties(oldHead);
 
-        adapted.setHeader(newHead);
+        adapted.setHeader(newHead.getRaw());
     }
 
     // parse the buffer back
@@ -1269,10 +1268,12 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 
     al.cache.caddr = request_->client_addr;
 
-    al.request = HTTPMSGLOCK(request_);
-    if (reply_)
-        al.reply = HTTPMSGLOCK(reply_);
-    else
+    al.request = request_;
+    HTTPMSGLOCK(al.request);
+    if (reply_) {
+        al.reply = reply_;
+        HTTPMSGLOCK(al.reply);
+    } else
         al.reply = NULL;
 
     if (h->rfc931.size())
@@ -1514,13 +1515,13 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest::Pointer new_request(new HttpRequest);
         Must(old_request->canonical);
-        urlParse(old_request->method, old_request->canonical, new_request);
+        urlParse(old_request->method, old_request->canonical, new_request.getRaw());
         new_request->http_ver = old_request->http_ver;
-        headClone = new_request;
+        headClone = new_request.getRaw();
     } else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {
         HttpReply::Pointer new_reply(new HttpReply);
         new_reply->sline = old_reply->sline;
-        headClone = new_reply;
+        headClone = new_reply.getRaw();
     }
     Must(headClone != NULL);
     headClone->inheritProperties(head);
@@ -1537,7 +1538,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     headClone->header.removeHopByHopEntries();
 
     // pack polished HTTP header
-    packHead(httpBuf, headClone);
+    packHead(httpBuf, headClone.getRaw());
 
     // headClone unlocks and, hence, deletes the message we packed
 }

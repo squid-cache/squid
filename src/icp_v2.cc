@@ -132,10 +132,12 @@ _icp_common_t::getOpCode() const
 
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
         header(aHeader),
-        request(HTTPMSGLOCK(aRequest)),
+        request(aRequest),
         fd(-1),
         url(NULL)
-{}
+{
+    HTTPMSGLOCK(request);
+}
 
 ICPState::~ICPState()
 {

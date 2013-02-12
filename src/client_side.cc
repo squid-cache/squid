@@ -381,8 +381,8 @@ ClientSocketContextNew(const Comm::ConnectionPointer &client, ClientHttpRequest 
 void
 ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
 {
-    HttpReply *rep = msg.reply;
-    Must(rep);
+    const HttpReply::Pointer rep(msg.reply);
+    Must(rep != NULL);
 
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
@@ -707,12 +707,16 @@ ClientHttpRequest::logRequest()
 
     ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 
-    if (al->reply)
-        checklist->reply = HTTPMSGLOCK(al->reply);
+    if (al->reply) {
+        checklist->reply = al->reply;
+        HTTPMSGLOCK(checklist->reply);
+    }
 
     if (!Config.accessList.log || checklist->fastCheck() == ACCESS_ALLOWED) {
-        if (request)
-            al->adapted_request = HTTPMSGLOCK(request);
+        if (request) {
+            al->adapted_request = request;
+            HTTPMSGLOCK(al->adapted_request);
+        }
         accessLogLog(al, checklist);
         if (request)
             updateCounters();
@@ -1475,7 +1479,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
         context->sendBody(rep, receivedData);
     else {
         assert(rep);
-        http->al->reply = HTTPMSGLOCK(rep);
+        http->al->reply = rep;
+        HTTPMSGLOCK(http->al->reply);
         context->sendStartOfMessage(rep, receivedData);
     }
 
@@ -2517,8 +2522,10 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         repContext->setReplyToStoreEntry(sslServerBump->entry);
 
         // save the original request for logging purposes
-        if (!context->http->al->request)
-            context->http->al->request = HTTPMSGLOCK(http->request);
+        if (!context->http->al->request) {
+            context->http->al->request = http->request;
+            HTTPMSGLOCK(context->http->al->request);
+        }
 
         // Get error details from the fake certificate-peeking request.
         http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
@@ -2561,8 +2568,10 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                     sslServerBump->serverCert.get(), NULL);
                 err->detail = errDetail;
                 // Save the original request for logging purposes.
-                if (!context->http->al->request)
-                    context->http->al->request = HTTPMSGLOCK(request);
+                if (!context->http->al->request) {
+                    context->http->al->request = request;
+                    HTTPMSGLOCK(context->http->al->request);
+                }
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
@@ -2618,7 +2627,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
-        conn->quitAfterError(request);
+        conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2637,7 +2646,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
-        conn->quitAfterError(request);
+        conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2655,7 +2664,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
-        conn->quitAfterError(request);
+        conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2707,7 +2716,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->flags.internal = http->flags.internal;
-    setLogUri (http, urlCanonicalClean(request));
+    setLogUri (http, urlCanonicalClean(request.getRaw()));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
     // indirect client gets stored here because it is an HTTP header result (from X-Forwarded-For:)
@@ -2732,26 +2741,26 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     mustReplyToOptions = (method == Http::METHOD_OPTIONS) &&
                          (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
-    if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
+    if (!urlCheckRequest(request.getRaw()) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
-        conn->quitAfterError(request);
+        conn->quitAfterError(request.getRaw());
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED, request->method, NULL,
-                                    conn->clientConnection->remote, request, NULL, NULL);
+                                    conn->clientConnection->remote, request.getRaw(), NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
     }
 
-    if (!chunked && !clientIsContentLengthValid(request)) {
+    if (!chunked && !clientIsContentLengthValid(request.getRaw())) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        conn->quitAfterError(request);
+        conn->quitAfterError(request.getRaw());
         repContext->setReplyToError(ERR_INVALID_REQ,
                                     HTTP_LENGTH_REQUIRED, request->method, NULL,
-                                    conn->clientConnection->remote, request, NULL, NULL);
+                                    conn->clientConnection->remote, request.getRaw(), NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
@@ -2764,16 +2773,17 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            conn->quitAfterError(request);
+            conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri,
-                                        conn->clientConnection->remote, request, NULL, NULL);
+                                        conn->clientConnection->remote, request.getRaw(), NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;
         }
     }
 
-    http->request = HTTPMSGLOCK(request);
+    http->request = request.getRaw();
+    HTTPMSGLOCK(http->request);
     clientSetKeepaliveFlag(http);
 
     // Let tunneling code be fully responsible for CONNECT requests
@@ -2803,7 +2813,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            conn->quitAfterError(request);
+            conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_TOO_BIG,
                                         HTTP_REQUEST_ENTITY_TOO_LARGE, Http::METHOD_NONE, NULL,
                                         conn->clientConnection->remote, http->request, NULL, NULL);
@@ -2839,7 +2849,7 @@ finish:
      * be freed and the above connNoteUseOfBuffer() would hit an
      * assertion, not to mention that we were accessing freed memory.
      */
-    if (request && request->flags.resetTcp && Comm::IsConnOpen(conn->clientConnection)) {
+    if (request != NULL && request->flags.resetTcp && Comm::IsConnOpen(conn->clientConnection)) {
         debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);
@@ -3751,7 +3761,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         if (X509 *mimicCert = sslServerBump->serverCert.get())
             certProperties.mimicCert.resetAndLock(mimicCert);
 
-        ACLFilledChecklist checklist(NULL, sslServerBump->request,
+        ACLFilledChecklist checklist(NULL, sslServerBump->request.getRaw(),
                                      clientConnection != NULL ? clientConnection->rfc931 : dash_str);
         checklist.sslErrors = cbdataReference(sslServerBump->sslErrors);
 
@@ -3936,7 +3946,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
         sslServerBump = new Ssl::ServerBump(request);
 
         // will call httpsPeeked() with certificate and connection, eventually
-        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request);
+        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
         return;
     }
 

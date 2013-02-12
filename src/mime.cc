@@ -466,7 +466,8 @@ MimeIcon::created (StoreEntry *newEntry)
     if (NULL == r)
         fatal("mimeLoadIcon: cannot parse internal URL");
 
-    e->mem_obj->request = HTTPMSGLOCK(r);
+    e->mem_obj->request = r;
+    HTTPMSGLOCK(e->mem_obj->request);
 
     HttpReply *reply = new HttpReply;
 

@@ -62,7 +62,8 @@ public:
     void setCause(HttpRequest *r) {
         if (r) {
             HTTPMSGUNLOCK(cause);
-            cause = HTTPMSGLOCK(r);
+            cause = r;
+            HTTPMSGLOCK(cause);
         } else {
             assert(!cause);
         }
@@ -70,7 +71,8 @@ public:
 
     void setHeader(Header *h) {
         HTTPMSGUNLOCK(header);
-        header = HTTPMSGLOCK(h);
+        header = h;
+        HTTPMSGLOCK(header);
         body_pipe = header->body_pipe;
     }
 

@@ -52,20 +52,13 @@ class HttpReply: public HttpMsg
 {
 
 public:
-    typedef HttpMsgPointerT<HttpReply> Pointer;
+    typedef RefCount<HttpReply> Pointer;
 
     MEMPROXY_CLASS(HttpReply);
     HttpReply();
     ~HttpReply();
 
     virtual void reset();
-
-    /// \par use HTTPMSGLOCK() instead of calling this directly
-    virtual HttpReply *_lock() {
-        return static_cast<HttpReply*>(HttpMsg::_lock());
-    };
-
-    //virtual void unlock();  // only needed for debugging
 
     /**
      \retval true on success
@@ -163,7 +156,7 @@ private:
     /** Calculates and stores maximum body size if needed.
      * Used by receivedBodyTooLarge() and expectedBodyTooLarge().
      */
-    void calcMaxBodySize(HttpRequest& request);
+    void calcMaxBodySize(HttpRequest& request) const;
 
     String removeStaleWarningValues(const String &value);
 

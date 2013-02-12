@@ -237,16 +237,15 @@ asnCacheStart(int as)
 {
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
-    HttpRequest *req;
     ASState *asState;
     asState = cbdataAlloc(ASState);
     asState->dataRead = 0;
     debugs(53, 3, "asnCacheStart: AS " << as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
-    req = HttpRequest::CreateFromUrl(asres);
-    assert(NULL != req);
-    asState->request = HTTPMSGLOCK(req);
+    asState->request = HttpRequest::CreateFromUrl(asres);
+    assert(NULL != asState->request);
+    HTTPMSGLOCK(asState->request);
 
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
