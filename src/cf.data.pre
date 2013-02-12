@@ -822,9 +822,23 @@ DOC_START
 
 	When using "file", the file should contain one item per line.
 
-	By default, regular expressions are CASE-SENSITIVE.
-	To make them case-insensitive, use the -i option. To return case-sensitive
-	use the +i option between patterns, or make a new ACL line without -i.
+	Some acl types supports options which changes their default behaviour.
+	The available options are:
+
+	-i,+i	By default, regular expressions are CASE-SENSITIVE. To make them
+		case-insensitive, use the -i option. To return case-sensitive
+		use the +i option between patterns, or make a new ACL line
+		without -i.	
+
+	-n	Disable lookups and address type conversions.  If lookup or
+		conversion is required because the parameter type (IP or
+		domain name) does not match the message address type (domain
+		name or IP), then the ACL would immediately declare a mismatch
+		without any warnings or lookups.
+
+	--	Used to stop processing all options, in the case the first acl
+		value has '-' character as first character (for example the '-'
+		is a valid domain name)
 
 	Some acl types require suspending the current request in order
 	to access some external data source.
@@ -837,7 +851,7 @@ DOC_START
 
 	acl aclname src ip-address/mask ...	# clients IP address [fast]
 	acl aclname src addr1-addr2/mask ...	# range of addresses [fast]
-	acl aclname dst ip-address/mask ...	# URL host's IP address [slow]
+	acl aclname dst [-n] ip-address/mask ...	# URL host's IP address [slow]
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
@@ -853,11 +867,11 @@ DOC_START
 
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
-	acl aclname dstdomain   .foo.com ...
+	acl aclname dstdomain [-n] .foo.com ...
 	  # Destination server from URL [fast]
 	acl aclname srcdom_regex [-i] \.foo\.com ...
 	  # regex matching client name [slow]
-	acl aclname dstdom_regex [-i] \.foo\.com ...
+	acl aclname dstdom_regex [-n] [-i] \.foo\.com ...
 	  # regex matching server [fast]
 	  #
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
