@@ -27,7 +27,7 @@ report with a stack trace.
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&product=Squid&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&version=3.2" name="open bugs against Squid-3.2">.
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.2" name="open bugs against Squid-3.2">.
 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.2 series are:
 
