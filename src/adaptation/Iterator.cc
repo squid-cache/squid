@@ -20,12 +20,17 @@ Adaptation::Iterator::Iterator(
         AsyncJob("Iterator"),
         Adaptation::Initiate("Iterator"),
         theGroup(aGroup),
-        theMsg(HTTPMSGLOCK(aMsg)),
-        theCause(aCause ? HTTPMSGLOCK(aCause) : NULL),
+        theMsg(aMsg),
+        theCause(aCause),
         theLauncher(0),
         iterations(0),
         adapted(false)
 {
+    if (theCause != NULL)
+        HTTPMSGLOCK(theCause);
+
+    if (theMsg != NULL)
+        HTTPMSGLOCK(theMsg);
 }
 
 Adaptation::Iterator::~Iterator()
@@ -85,7 +90,7 @@ Adaptation::Iterator::noteAdaptationAnswer(const Answer &answer)
 {
     switch (answer.kind) {
     case Answer::akForward:
-        handleAdaptedHeader(answer.message);
+        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
         break;
 
     case Answer::akBlock:
@@ -115,7 +120,8 @@ Adaptation::Iterator::handleAdaptedHeader(HttpMsg *aMsg)
 
     Must(aMsg);
     HTTPMSGUNLOCK(theMsg);
-    theMsg = HTTPMSGLOCK(aMsg);
+    theMsg = aMsg;
+    HTTPMSGLOCK(theMsg);
     adapted = true;
 
     clearAdaptation(theLauncher);

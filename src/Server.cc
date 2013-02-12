@@ -75,7 +75,8 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
 
     entry->lock();
 
-    request = HTTPMSGLOCK(fwd->request);
+    request = fwd->request;
+    HTTPMSGLOCK(request);
 }
 
 ServerStateData::~ServerStateData()
@@ -147,7 +148,8 @@ ServerStateData::setVirginReply(HttpReply *rep)
     debugs(11,5, HERE << this << " setting virgin reply to " << rep);
     assert(!theVirginReply);
     assert(rep);
-    theVirginReply = HTTPMSGLOCK(rep);
+    theVirginReply = rep;
+    HTTPMSGLOCK(theVirginReply);
     return theVirginReply;
 }
 
@@ -165,7 +167,8 @@ ServerStateData::setFinalReply(HttpReply *rep)
 
     assert(!theFinalReply);
     assert(rep);
-    theFinalReply = HTTPMSGLOCK(rep);
+    theFinalReply = rep;
+    HTTPMSGLOCK(theFinalReply);
 
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
@@ -658,7 +661,7 @@ ServerStateData::noteAdaptationAnswer(const Adaptation::Answer &answer)
 
     switch (answer.kind) {
     case Adaptation::Answer::akForward:
-        handleAdaptedHeader(answer.message);
+        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
         break;
 
     case Adaptation::Answer::akBlock:

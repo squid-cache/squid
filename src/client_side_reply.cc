@@ -1542,9 +1542,8 @@ clientReplyContext::cloneReply()
 {
     assert(reply == NULL);
 
-    HttpReply *rep = http->storeEntry()->getReply()->clone();
-
-    reply = HTTPMSGLOCK(rep);
+    reply = http->storeEntry()->getReply()->clone();
+    HTTPMSGLOCK(reply);
 
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our 1.1 version (but only on real HTTP traffic) */
@@ -1960,7 +1959,8 @@ clientReplyContext::processReplyAccess ()
     /** Process http_reply_access lists */
     ACLFilledChecklist *replyChecklist =
         clientAclChecklistCreate(Config.accessList.reply, http);
-    replyChecklist->reply = HTTPMSGLOCK(reply);
+    replyChecklist->reply = reply;
+    HTTPMSGLOCK(replyChecklist->reply);
     replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
 }
 
@@ -2178,8 +2178,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
      * so make a fake one.
      */
 
-    if (http->request == NULL)
-        http->request = HTTPMSGLOCK(new HttpRequest(m, AnyP::PROTO_NONE, null_string));
+    if (http->request == NULL) {
+        http->request = new HttpRequest(m, AnyP::PROTO_NONE, null_string);
+        HTTPMSGLOCK(http->request);
+    }
 
     StoreEntry *e = storeCreateEntry(storeId(), http->log_uri, reqFlags, m);
 

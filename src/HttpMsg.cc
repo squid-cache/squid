@@ -357,19 +357,3 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
     packFirstLineInto(&p, true);
     packerClean(&p);
 }
-
-// use HTTPMSGLOCK() instead of calling this directly
-HttpMsg *
-HttpMsg::_lock()
-{
-    lock();
-    return this;
-}
-
-// use HTTPMSGUNLOCK() instead of calling this directly
-void
-HttpMsg::_unlock()
-{
-    if (unlock() == 0)
-        delete this;
-}

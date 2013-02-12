@@ -432,7 +432,7 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 }
 
 bool
-TemplateFile::loadFor(HttpRequest *request)
+TemplateFile::loadFor(const HttpRequest *request)
 {
     String hdr;
 
@@ -600,7 +600,8 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
         httpStatus = ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect;
 
     if (req != NULL) {
-        request = HTTPMSGLOCK(req);
+        request = req;
+        HTTPMSGLOCK(request);
         src_addr = req->client_addr;
     }
 }

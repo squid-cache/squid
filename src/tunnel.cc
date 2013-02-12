@@ -686,7 +686,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
     tunnelState->url = xstrdup(url);
-    tunnelState->request = HTTPMSGLOCK(request);
+    tunnelState->request = request;
+    HTTPMSGLOCK(tunnelState->request);
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = http->getConn()->clientConnection;

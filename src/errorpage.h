@@ -278,7 +278,7 @@ public:
      * template selected (eg because of a "Accept-Language: *"), or not available
      * template found this function return false.
      */
-    bool loadFor(HttpRequest *request);
+    bool loadFor(const HttpRequest *request);
 
     /**
      * Load the file given by "path". It uses the "parse()" method.

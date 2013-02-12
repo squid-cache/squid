@@ -124,7 +124,8 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
     entry = e;
     clientConn = client;
-    request = HTTPMSGLOCK(r);
+    request = r;
+    HTTPMSGLOCK(request);
     pconnRace = raceImpossible;
     start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
@@ -322,7 +323,8 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
      * This seems like an odd place to bind mem_obj and request.
      * Might want to assert that request is NULL at this point
      */
-    entry->mem_obj->request = HTTPMSGLOCK(request);
+    entry->mem_obj->request = request;
+    HTTPMSGLOCK(entry->mem_obj->request);
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -402,8 +404,10 @@ FwdState::fail(ErrorState * errorState)
     delete err;
     err = errorState;
 
-    if (!errorState->request)
-        errorState->request = HTTPMSGLOCK(request);
+    if (!errorState->request) {
+        errorState->request = request;
+        HTTPMSGLOCK(errorState->request);
+    }
 
     if (err->type != ERR_ZERO_SIZE_OBJECT)
         return;

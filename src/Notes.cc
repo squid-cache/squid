@@ -59,8 +59,9 @@ Note::match(HttpRequest *request, HttpReply *reply)
 
     typedef Values::iterator VLI;
     ACLFilledChecklist ch(NULL, request, NULL);
+    ch.reply = reply;
     if (reply)
-        ch.reply = HTTPMSGLOCK(reply);
+        HTTPMSGLOCK(ch.reply);
 
     for (VLI i = values.begin(); i != values.end(); ++i ) {
         const int ret= ch.fastCheck((*i)->aclList);
