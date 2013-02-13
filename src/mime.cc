@@ -60,7 +60,7 @@ static char const *mimeGetIcon(const char *fn);
 class MimeIcon : public StoreClient
 {
 public:
-    MimeIcon(const char *aName);
+    explicit MimeIcon(const char *aName);
     ~MimeIcon();
     void setName(char const *);
     char const * getName() const;
@@ -69,7 +69,6 @@ public:
     MEMPROXY_CLASS(MimeIcon);
 
 private:
-    MimeIcon();
     const char *icon_;
     char *url_;
 };
@@ -78,7 +77,7 @@ MEMPROXY_CLASS_INLINE(MimeIcon);
 class MimeEntry
 {
 public:
-    MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+    explicit MimeEntry(const char *aPattern, const regex_t &compiledPattern,
               const char *aContentType,
               const char *aContentEncoding, const char *aTransferMode,
               bool optionViewEnable, bool optionDownloadEnable,
@@ -95,8 +94,6 @@ public:
     bool download_option;
     MimeIcon theIcon;
     MimeEntry *next;
-private:
-    MimeEntry();
 };
 MEMPROXY_CLASS_INLINE(MimeEntry);
 
