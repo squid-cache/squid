@@ -31,6 +31,7 @@ HelperReply::parse(char *buf, size_t len)
     }
 
     char *p = buf;
+    bool sawNA = false;
 
     // optimization: do not consider parsing result code if the response is short.
     // URL-rewriter may return relative URLs or empty response for a large portion
@@ -100,6 +101,7 @@ HelperReply::parse(char *buf, size_t len)
             // NTLM fail-closed ERR response
             result = HelperReply::Error;
             p+=3;
+            sawNA=true;
         }
 
         for (; xisspace(*p); ++p); // skip whitespace
@@ -112,10 +114,12 @@ HelperReply::parse(char *buf, size_t len)
     // NULL-terminate so the helper callback handlers do not buffer-overrun
     other_.terminate();
 
-    parseResponseKeys();
+    // Hack for backward-compatibility: Do not parse for kv-pairs on NA response
+    if (!sawNA)
+        parseResponseKeys();
 
-    // Hack for backward-compatibility: BH used to be a text message...
-    if (other().hasContent() && result == HelperReply::BrokenHelper) {
+    // Hack for backward-compatibility: BH and NA used to be a text message...
+    if (other().hasContent() && (sawNA || result == HelperReply::BrokenHelper)) {
         notes.add("message",other().content());
         modifiableOther().clean();
     }
