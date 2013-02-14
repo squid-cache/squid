@@ -148,7 +148,13 @@ public:
 
     virtual uint64_t minSize() const;
 
-    virtual int64_t maxObjectSize() const { return max_objsize; }
+    /// The maximum size of object which may be stored here.
+    /// Larger objects will not be added and may be purged.
+    virtual int64_t maxObjectSize() const;
+
+    /// configure the maximum object size for this storage area.
+    /// May be any size up to the total storage area.
+    void maxObjectSize(int64_t newMax);
 
     virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat (StoreEntry &anEntry) const;
@@ -180,13 +186,13 @@ private:
 
 protected:
     uint64_t max_size;        ///< maximum allocatable size of the storage area
+    int64_t min_objsize;      ///< minimum size of any object stored here (-1 for no limit)
+    int64_t max_objsize;      ///< maximum size of any object stored here (-1 for no limit)
 
 public:
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int disker; ///< disker kid id dedicated to this SwapDir or -1
-    int64_t min_objsize;
-    int64_t max_objsize;
     RemovalPolicy *repl;
     int removals;
     int scanned;

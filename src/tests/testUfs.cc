@@ -111,6 +111,7 @@ testUfs::testUfsSearch()
     strtok(config_line, w_space);
 
     aStore->parse(0, path);
+    store_maxobjsize = 1024*1024*2;
 
     safe_free(path);
 
@@ -145,7 +146,7 @@ testUfs::testUfsSearch()
         flags.cachable = 1;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
-        rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
+        rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 

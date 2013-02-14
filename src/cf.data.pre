@@ -3061,7 +3061,7 @@ DOC_START
 	replacement policies.
 
 	NOTE: if using the LFUDA replacement policy you should increase
-	the value of maximum_object_size above its default of 4096 KB to
+	the value of maximum_object_size above its default of 4 MB to
 	to maximize the potential byte hit rate improvement of LFUDA.
 
 	For more information about the GDSF and LFUDA cache replacement
@@ -3260,14 +3260,18 @@ DOC_END
 NAME: maximum_object_size
 COMMENT: (bytes)
 TYPE: b_int64_t
-DEFAULT: 4096 KB
+DEFAULT: 4 MB
 LOC: Config.Store.maxObjectSize
 DOC_START
-	Objects larger than this size will NOT be saved on disk.  The
-	value is specified in kilobytes, and the default is 4MB.  If
-	you wish to get a high BYTES hit ratio, you should probably
+	The default limit on size of objects stored to disk.
+	This size is used for cache_dir where max-size is not set.
+	The value is specified in bytes, and the default is 4 MB.
+
+	If you wish to get a high BYTES hit ratio, you should probably
 	increase this (one 32 MB object hit counts for 3200 10KB
-	hits).  If you wish to increase speed more than your want to
+	hits).
+
+	If you wish to increase hit ratio more than you want to
 	save bandwidth you should leave this low.
 
 	NOTE: if using the LFUDA replacement policy you should increase

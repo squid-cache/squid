@@ -998,9 +998,8 @@ StoreEntry::checkCachable()
             ++store_check_cachable_hist.no.negative_cached;
             return 0;           /* avoid release call below */
         } else if ((getReply()->content_length > 0 &&
-                    getReply()->content_length
-                    > Config.Store.maxObjectSize) ||
-                   mem_obj->endOffset() > Config.Store.maxObjectSize) {
+                    getReply()->content_length > store_maxobjsize) ||
+                   mem_obj->endOffset() > store_maxobjsize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
