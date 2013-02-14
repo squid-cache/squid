@@ -130,7 +130,6 @@ mail_warranty(void)
 {
     FILE *fp = NULL;
     static char command[256];
-    bool do_free_filename=false;
 
     const mode_t prev_umask=umask(S_IRWXU);
 
@@ -143,7 +142,6 @@ mail_warranty(void)
     }
 #else
     char *filename;
-    do_free_filename=true;
     // XXX tempnam is obsolete since POSIX.2008-1
     // tmpfile is not an option, we want the created files to stick around
     if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL ||
@@ -166,8 +164,9 @@ mail_warranty(void)
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
     if (system(command)) {}		/* XXX should avoid system(3) */
     unlink(filename);
-    if (do_free_filename)
-        xfree(filename);
+#if !HAVE_MKSTEMP
+    xfree(filename); // tempnam() requires us to free its allocation
+#endif
 }
 
 void
