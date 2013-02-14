@@ -331,7 +331,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         Note::Pointer tokenNote = reply.notes.find("token");
 
         /* authentication failure (wrong password, etc.) */
-        if (messageNote != NULL) {
+        if (messageNote != NULL)
             auth_user_request->denyMessage(messageNote->firstValue());
         else
             auth_user_request->denyMessage("Negotiate Authentication denied with no reason given");
