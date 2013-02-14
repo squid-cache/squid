@@ -78,10 +78,10 @@ class MimeEntry
 {
 public:
     explicit MimeEntry(const char *aPattern, const regex_t &compiledPattern,
-              const char *aContentType,
-              const char *aContentEncoding, const char *aTransferMode,
-              bool optionViewEnable, bool optionDownloadEnable,
-              const char *anIconName);
+                       const char *aContentType,
+                       const char *aContentEncoding, const char *aTransferMode,
+                       bool optionViewEnable, bool optionDownloadEnable,
+                       const char *anIconName);
     ~MimeEntry();
     MEMPROXY_CLASS(MimeEntry);
 
@@ -139,7 +139,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
 }
 
 MimeIcon::MimeIcon(const char *aName) :
-                icon_(xstrdup(aName))
+        icon_(xstrdup(aName))
 {
     url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
@@ -342,7 +342,7 @@ mimeInit(char *filename)
         }
 
         m = new MimeEntry(pattern,re,type,encoding,mode,view_option,
-            download_option,icon);
+                          download_option,icon);
 
         *MimeTableTail = m;
 
@@ -454,16 +454,16 @@ MimeEntry::~MimeEntry()
 }
 
 MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
-                const char *aContentType, const char *aContentEncoding,
-                const char *aTransferMode, bool optionViewEnable,
-                bool optionDownloadEnable, const char *anIconName) :
-                                    pattern(xstrdup(aPattern)),
-                                    compiled_pattern(compiledPattern),
-                                    content_type(xstrdup(aContentType)),
-                                    content_encoding(xstrdup(aContentEncoding)),
-                                    view_option(optionViewEnable),
-                                    download_option(optionViewEnable),
-                                    theIcon(anIconName), next(NULL)
+                     const char *aContentType, const char *aContentEncoding,
+                     const char *aTransferMode, bool optionViewEnable,
+                     bool optionDownloadEnable, const char *anIconName) :
+        pattern(xstrdup(aPattern)),
+        compiled_pattern(compiledPattern),
+        content_type(xstrdup(aContentType)),
+        content_encoding(xstrdup(aContentEncoding)),
+        view_option(optionViewEnable),
+        download_option(optionViewEnable),
+        theIcon(anIconName), next(NULL)
 {
     if (!strcasecmp(aTransferMode, "ascii"))
         transfer_mode = 'A';
