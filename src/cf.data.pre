@@ -5129,6 +5129,25 @@ DOC_START
 	or response to be rejected.
 DOC_END
 
+NAME: collapsed_forwarding
+COMMENT: (on|off)
+TYPE: onoff
+LOC: Config.onoff.collapsed_forwarding
+DEFAULT: off
+DOC_START
+       This option controls whether Squid is allowed to merge multiple
+       potentially cachable requests for the same URI before Squid knows
+       whether the response is going to be cachable.
+
+       This feature is disabled by default: Enabling collapsed forwarding
+       needlessly delays forwarding requests that look cachable (when they are
+       collapsed) but then need to be forwarded individually anyway because
+       they end up being for uncachable content. However, in some cases, such
+       as accelleration of highly cachable content with periodic or groupped
+       expiration times, the gains from collapsing [large volumes of
+       simultenous refresh requests] outweigh losses from such delays.
+DOC_END
+
 COMMENT_START
  TIMEOUTS
  -----------------------------------------------------------------------------
