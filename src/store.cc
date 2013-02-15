@@ -2025,9 +2025,42 @@ StoreEntry::isAccepting() const
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
-    return os << e.swap_filen << '@' << e.swap_dirn << '=' <<
-           e.mem_status << '/' << e.ping_status << '/' << e.store_status << '/' <<
-           e.swap_status << '*' << e.lock_count;
+    os << "e:";
+
+    if (e.swap_filen > -1 || e.swap_dirn > -1)
+        os << e.swap_filen << '@' << e.swap_dirn << '=';
+
+    // print only non-default status values, using unique letters
+    if (e.mem_status != NOT_IN_MEMORY ||
+        e.store_status != STORE_PENDING ||
+        e.swap_status != SWAPOUT_NONE ||
+        e.ping_status != PING_NONE) {
+        if (e.mem_status != NOT_IN_MEMORY) os << 'm';
+        if (e.store_status != STORE_PENDING) os << 's';
+        if (e.swap_status != SWAPOUT_NONE) os << 'w' << e.swap_status;
+        if (e.ping_status != PING_NONE) os << 'p' << e.ping_status;
+        os << '.';
+    }
+
+    // print only set flags, using unique letters
+    if (e.flags) {
+        if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) os << 'S';
+        if (EBIT_TEST(e.flags, ENTRY_REVALIDATE)) os << 'R';
+        if (EBIT_TEST(e.flags, DELAY_SENDING)) os << 'T';
+        if (EBIT_TEST(e.flags, RELEASE_REQUEST)) os << 'X';
+        if (EBIT_TEST(e.flags, REFRESH_REQUEST)) os << 'F';
+        if (EBIT_TEST(e.flags, ENTRY_CACHABLE)) os << 'C';
+        if (EBIT_TEST(e.flags, ENTRY_DISPATCHED)) os << 'D';
+        if (EBIT_TEST(e.flags, KEY_PRIVATE)) os << 'I';
+        if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) os << 'W';
+        if (EBIT_TEST(e.flags, ENTRY_NEGCACHED)) os << 'N';
+        if (EBIT_TEST(e.flags, ENTRY_VALIDATED)) os << 'V';
+        if (EBIT_TEST(e.flags, ENTRY_BAD_LENGTH)) os << 'L';
+        if (EBIT_TEST(e.flags, ENTRY_ABORTED)) os << 'A';
+        os << '/';
+    }
+
+    return os << &e << '*' << e.lock_count;
 }
 
 /* NullStoreEntry */
