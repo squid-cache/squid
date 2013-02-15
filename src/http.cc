@@ -188,6 +188,8 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     serverConnection->close();
 }
 
+/// Remove an existing public store entry if the incoming response (to be
+/// stored in a currently private entry) is going to invalidate it.
 static void
 httpMaybeRemovePublic(StoreEntry * e, http_status status)
 {
@@ -195,6 +197,8 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
     int forbidden = 0;
     StoreEntry *pe;
 
+    // If the incoming response already goes into a public entry, then there is
+    // nothing to remove. This protects ready-for-collapsing entries as well.
     if (!EBIT_TEST(e->flags, KEY_PRIVATE))
         return;
 
