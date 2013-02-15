@@ -341,6 +341,7 @@ public:
         int emailErrData;
         int httpd_suppress_version_string;
         int global_internal_static;
+        int collapsed_forwarding;
 
 #if FOLLOW_X_FORWARDED_FOR
         int acl_uses_indirect_client;
