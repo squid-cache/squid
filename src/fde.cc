@@ -38,6 +38,8 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+fde *fd_table = NULL;
+
 bool
 fde::readPending(int fdNumber)
 {
