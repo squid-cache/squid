@@ -2131,18 +2131,8 @@ HttpStateData::sendRequest()
                                     Dialer, this,  HttpStateData::wroteLast);
     }
 
-    if (_peer != NULL) {
-        if (_peer->options.originserver) {
-            flags.proxying = false;
-            flags.originpeer = true;
-        } else {
-            flags.proxying = false;
-            flags.originpeer = false;
-        }
-    } else {
-        flags.proxying = false;
-        flags.originpeer = false;
-    }
+    flags.originpeer = (_peer != NULL && _peer->options.originserver);
+    flags.proxying = (_peer != NULL && !flags.originpeer);
 
     /*
      * Is keep-alive okay for all request methods?
