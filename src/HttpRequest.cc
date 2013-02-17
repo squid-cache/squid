@@ -116,6 +116,7 @@ HttpRequest::init()
     errDetail = ERR_DETAIL_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
     peer_domain = NULL;		// not allocated/deallocated by this class
+    peer_host = NULL;
     vary_headers = NULL;
     myportname = null_string;
     tag = null_string;

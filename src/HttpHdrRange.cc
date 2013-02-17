@@ -224,7 +224,7 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
  * Range
  */
 
-HttpHdrRange::HttpHdrRange () : clen (HttpHdrRangeSpec::UnknownPosition)
+HttpHdrRange::HttpHdrRange() : clen(HttpHdrRangeSpec::UnknownPosition)
 {}
 
 HttpHdrRange *
@@ -285,7 +285,9 @@ HttpHdrRange::~HttpHdrRange()
         delete specs.pop_back();
 }
 
-HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) : specs()
+HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) :
+        specs(),
+        clen(HttpHdrRangeSpec::UnknownPosition)
 {
     specs.reserve(old.specs.size());
 
