@@ -868,16 +868,16 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by --enable-eui
 
 	<tag>--enable-auth-basic-helpers</tag>
-	<p>replaced by <em>--enable-auth-basic</em>.
+	<p>Replaced by <em>--enable-auth-basic</em>.
 
 	<tag>--enable-auth-digest-helpers</tag>
-	<p>replaced by <em>--enable-auth-digest</em>.
+	<p>Replaced by <em>--enable-auth-digest</em>.
 
 	<tag>--enable-auth-negotiate-helpers</tag>
-	<p>replaced by <em>--enable-auth-negotiate</em>.
+	<p>Replaced by <em>--enable-auth-negotiate</em>.
 
 	<tag>--enable-auth-ntlm-helpers</tag>
-	<p>replaced by <em>--enable-auth-ntlm</em>.
+	<p>Replaced by <em>--enable-auth-ntlm</em>.
 
 	<tag>--enable-referer-log</tag>
 	<p>Obsolete.
@@ -907,7 +907,7 @@ This section gives an account of those changes in three categories:
 	  An external_acl_type helper may be used to bypass authentication if that is suitable.
 
 	<tag>cache_peer</tag>
-	<p><em>http11</em> Obsolete.
+	<p>Option <em>http11</em> obsolete.
 
 	<tag>external_acl_type</tag>
 	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
@@ -917,9 +917,9 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
 
 	<tag>http_port</tag>
-	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
-	<p><em>transparent</em> option replaced by <em>intercept</em>
-	<p><em>http11</em> obsolete.
+	<p>Option <em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
+	<p>Option <em>transparent</em> option replaced by <em>intercept</em>
+	<p>Option <em>http11</em> obsolete.
 
 	<tag>http_access2</tag>
 	<p>Replaced by <em>adapted_http_access</em>
