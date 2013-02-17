@@ -77,7 +77,7 @@ private:
 class HeaderWithAcl
 {
 public:
-    HeaderWithAcl() : valueFormat(NULL), aclList(NULL), fieldId(HDR_BAD_HDR), quoted(false) {}
+    HeaderWithAcl() : aclList(NULL), valueFormat(NULL), fieldId(HDR_BAD_HDR), quoted(false) {}
 
     /// HTTP header field name
     std::string fieldName;
