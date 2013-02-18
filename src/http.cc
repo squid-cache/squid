@@ -1445,7 +1445,7 @@ HttpStateData::processReplyBody()
                 request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
                         (request->flags.connectionAuth));
             } else {
-                fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
+                fwd->pconnPush(serverConnection, request->GetHost());
             }
 
             serverConnection = NULL;
