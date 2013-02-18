@@ -1632,7 +1632,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (Config.onoff.offline) {
         /** \li If we are running in offline mode set to HIT */
-        debugs(85, 3, "clientProcessRequest2: offline HIT");
+        debugs(85, 3, "clientProcessRequest2: offline HIT " << *e);
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
         return;
@@ -1640,7 +1640,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (http->redirect.status) {
         /** \li If redirection status is True force this to be a MISS */
-        debugs(85, 3, HERE << "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses)");
+        debugs(85, 3, HERE << "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses) " << *e);
         forgetHit();
         http->logType = LOG_TCP_REDIRECT;
         doGetMoreData();
@@ -1648,7 +1648,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (!e->validToSend()) {
-        debugs(85, 3, "clientProcessRequest2: !storeEntryValidToSend MISS" );
+        debugs(85, 3, "clientProcessRequest2: !storeEntryValidToSend MISS " << *e);
         forgetHit();
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
@@ -1657,21 +1657,21 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
         /* \li Special entries are always hits, no matter what the client says */
-        debugs(85, 3, "clientProcessRequest2: ENTRY_SPECIAL HIT");
+        debugs(85, 3, "clientProcessRequest2: ENTRY_SPECIAL HIT " << *e);
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
         return;
     }
 
     if (r->flags.noCache) {
-        debugs(85, 3, "clientProcessRequest2: no-cache REFRESH MISS");
+        debugs(85, 3, "clientProcessRequest2: no-cache REFRESH MISS " << *e);
         forgetHit();
         http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
         doGetMoreData();
         return;
     }
 
-    debugs(85, 3, "clientProcessRequest2: default HIT");
+    debugs(85, 3, "clientProcessRequest2: default HIT " << *e);
     http->logType = LOG_TCP_HIT;
     doGetMoreData();
 }
