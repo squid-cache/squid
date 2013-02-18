@@ -1644,6 +1644,8 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
@@ -2906,6 +2908,7 @@ tests_testStore_SOURCES= \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	fd.h \
+	fde.h \
 	tests/stub_fd.cc \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -3065,6 +3068,8 @@ tests_testUfs_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	client_db.h \
 	disk.h \
 	disk.cc \
@@ -3243,6 +3248,8 @@ tests_testRock_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	FileMap.h \
 	filemap.cc \
 	HttpHeaderFieldStat.h \
@@ -3404,6 +3411,8 @@ tests_testCoss_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	disk.h \
 	disk.cc \
 	FileMap.h \
