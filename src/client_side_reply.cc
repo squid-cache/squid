@@ -2200,6 +2200,15 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     /* So, we mark the store logic as complete */
     flags.storelogiccomplete = 1;
 
+    // TODO: why is !.needValidation required here?
+    if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
+        !reqFlags.needValidation &&
+        (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
+        // make the entry available to others
+        debugs(88, 3, "allow collapsing: " << *e);
+        e->makePublic();
+    }
+
     /* and get the caller to request a read, from whereever they are */
     /* NOTE: after ANY data flows down the pipe, even one step,
      * this function CAN NOT be used to manage errors
