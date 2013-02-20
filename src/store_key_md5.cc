@@ -125,7 +125,6 @@ storeKeyPublic(const char *url, const HttpRequestMethod& method)
     SquidMD5Update(&M, &m, sizeof(m));
     SquidMD5Update(&M, (unsigned char *) url, strlen(url));
     SquidMD5Final(digest, &M);
-    debugs(20, 3, "created public key: " << digest << " for: " << method << ' ' << url);
     return digest;
 }
 
@@ -150,8 +149,8 @@ storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& me
         SquidMD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
         debugs(20, 3, "updating public key by vary headers: " << request->vary_headers << " for: " << url);
     }
+
     SquidMD5Final(digest, &M);
-    debugs(20, 3, "created public key: " << digest << " for: " << method << ' ' << url);
 
     return digest;
 }
