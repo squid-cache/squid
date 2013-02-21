@@ -2179,6 +2179,15 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, reqFlags, m);
 
+    // Make entry collapsable ASAP, to increase collapsing chances for others.
+    // TODO: why is !.needValidation required here?
+    if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
+        !reqFlags.needValidation &&
+        (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
+        // make the entry available for future requests now
+        Store::Root().allowCollapsing(e, reqFlags, m);
+    }
+
     sc = storeClientListAdd(e, this);
 
 #if USE_DELAY_POOLS
@@ -2199,15 +2208,6 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     //        SendMoreData, this);
     /* So, we mark the store logic as complete */
     flags.storelogiccomplete = 1;
-
-    // TODO: why is !.needValidation required here?
-    if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
-        !reqFlags.needValidation &&
-        (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
-        // make the entry available to others
-        debugs(88, 3, "allow collapsing: " << *e);
-        e->makePublic();
-    }
 
     /* and get the caller to request a read, from whereever they are */
     /* NOTE: after ANY data flows down the pipe, even one step,

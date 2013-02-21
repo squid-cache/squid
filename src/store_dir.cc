@@ -46,6 +46,7 @@
 #include "SwapDir.h"
 #include "swap_log_op.h"
 #include "tools.h"
+#include "Transients.h"
 
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
@@ -83,12 +84,13 @@ static STDIRSELECT storeDirSelectSwapDirLeastLoad;
 int StoreController::store_dirs_rebuilding = 1;
 
 StoreController::StoreController() : swapDir (new StoreHashIndex())
-        , memStore(NULL)
+        , memStore(NULL), transients(NULL)
 {}
 
 StoreController::~StoreController()
 {
     delete memStore;
+    delete transients;
 }
 
 /*
@@ -113,6 +115,11 @@ StoreController::init()
     } else {
         storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
         debugs(47, DBG_IMPORTANT, "Using Least Load store dir selection");
+    }
+
+    if (UsingSmp() && IamWorkerProcess() && Config.onoff.collapsed_forwarding) {
+        transients = new Transients;
+        transients->init();
     }
 }
 
@@ -781,6 +788,17 @@ StoreController::get(const cache_key *key)
 
     debugs(20, 4, HERE << "none of " << Config.cacheSwap.n_configured <<
            " cache_dirs have " << storeKeyText(key));
+
+    // Last, check shared in-transit table if enabled.
+    // We speculate that collapsed forwarding hits are less frequent than
+    // proper cache hits checked above (the order does not matter for misses).
+    if (transients) {
+        if (StoreEntry *e = transients->get(key)) {
+            debugs(20, 3, "got shared in-transit entry: " << *e);
+            return e;
+        }
+    }
+
     return NULL;
 }
 
@@ -861,6 +879,17 @@ StoreController::handleIdleEntry(StoreEntry &e)
         e.purgeMem(); // may free e
     }
 }
+
+void
+StoreController::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
+                                 const HttpRequestMethod &reqMethod)
+{
+    e->makePublic(); // this is needed for both local and SMP collapsing
+    if (transients)
+        transients->put(e, reqFlags, reqMethod);
+    debugs(20, 3, "may " << (transients ? "SMP" : "") << " collapse " << *e);
+}
+
 
 StoreHashIndex::StoreHashIndex()
 {
