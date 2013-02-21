@@ -369,6 +369,11 @@ public:
     /// called to get rid of no longer needed entry data in RAM, if any
     virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable) {}
 
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// makes the entry available for collapsing future requests
+    virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod) {}
+
 private:
     static RefCount<Store> CurrentRoot;
 };

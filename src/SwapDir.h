@@ -37,6 +37,9 @@
 /* forward decls */
 class RemovalPolicy;
 class MemStore;
+class Transients;
+class RequestFlags;
+class HttpRequestMethod;
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
@@ -60,6 +63,7 @@ public:
     /* Store parent API */
     virtual void handleIdleEntry(StoreEntry &e);
     virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable);
+    virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
 
     virtual void init();
 
@@ -95,6 +99,11 @@ private:
 
     StorePointer swapDir; ///< summary view of all disk caches
     MemStore *memStore; ///< memory cache
+
+    /// A shared table of public store entries that do not know whether they
+    /// will belong to a memory cache, a disk cache, or will be uncachable
+    /// when the response header comes. Used for SMP collapsed forwarding.
+    Transients *transients;
 };
 
 /* migrating from the Config based list of swapdirs */
