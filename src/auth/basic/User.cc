@@ -8,7 +8,7 @@
 Auth::Basic::User::User(Auth::Config *aConfig) :
         Auth::User(aConfig),
         passwd(NULL),
-        auth_queue(NULL),
+        queue(NULL),
         currentRequest(NULL)
 {}
 

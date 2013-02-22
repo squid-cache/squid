@@ -4,12 +4,11 @@
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 
-class BasicAuthQueueNode;
-
 namespace Auth
 {
 
 class Config;
+class QueueNode;
 
 namespace Basic
 {
@@ -31,7 +30,7 @@ public:
 
     char *passwd;
 
-    BasicAuthQueueNode *auth_queue;
+    QueueNode *queue;
 
 private:
     Auth::UserRequest::Pointer currentRequest;
