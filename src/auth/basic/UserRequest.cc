@@ -2,6 +2,7 @@
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
+#include "auth/QueueNode.h"
 #include "auth/State.h"
 #include "charset.h"
 #include "Debug.h"
@@ -96,15 +97,11 @@ Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
     if (user()->credentials() == Auth::Pending) {
         /* there is a request with the same credentials already being verified */
 
-        BasicAuthQueueNode *node = static_cast<BasicAuthQueueNode *>(xcalloc(1, sizeof(BasicAuthQueueNode)));
-        assert(node);
-        node->auth_user_request = this;
-        node->handler = handler;
-        node->data = cbdataReference(data);
+        Auth::QueueNode *node = new Auth::QueueNode(this, handler, data);
 
         /* queue this validation request to be infored of the pending lookup results */
-        node->next = basic_auth->auth_queue;
-        basic_auth->auth_queue = node;
+        node->next = basic_auth->queue;
+        basic_auth->queue = node;
         return;
     }
     // otherwise submit this request to the auth helper(s) for validation
@@ -139,7 +136,6 @@ void
 Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
-    BasicAuthQueueNode *tmpnode;
     void *cbdata;
     debugs(29, 5, HERE << "reply=" << reply);
 
@@ -168,15 +164,15 @@ Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     cbdataReferenceDone(r->data);
 
-    while (basic_auth->auth_queue) {
-        tmpnode = basic_auth->auth_queue->next;
+    while (basic_auth->queue) {
+        if (cbdataReferenceValidDone(basic_auth->queue->data, &cbdata))
+            basic_auth->queue->handler(cbdata);
 
-        if (cbdataReferenceValidDone(basic_auth->auth_queue->data, &cbdata))
-            basic_auth->auth_queue->handler(cbdata);
+        Auth::QueueNode *tmpnode = basic_auth->queue->next;
+        basic_auth->queue->next = NULL;
+        delete basic_auth->queue;
 
-        xfree(basic_auth->auth_queue);
-
-        basic_auth->auth_queue = tmpnode;
+        basic_auth->queue = tmpnode;
     }
 
     delete r;
