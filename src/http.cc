@@ -432,7 +432,7 @@ HttpStateData::cacheableReply()
 
             // HTTPbis pt6 section 3.2: a response CC:s-maxage is present
         } else if (rep->cache_control->sMaxAge()) {
-            debugs(22, 3, HERE << " Authenticated but server reply Cache-Control:s-maxage");
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:s-maxage");
             mayStore = true;
         }
 
