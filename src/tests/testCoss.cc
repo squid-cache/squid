@@ -18,7 +18,7 @@
 #include <stdexcept>
 #endif
 
-#define TESTDIR "testCoss__testCossSearch"
+#define TESTDIR "testCoss_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testCoss );
 
