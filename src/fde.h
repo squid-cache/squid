@@ -73,6 +73,10 @@ public:
     void noteUse(PconnPool *);
 
 public:
+
+    /// global table of FD and their state.
+    static fde* Table;
+
     unsigned int type;
     unsigned short remote_port;
 
@@ -192,6 +196,8 @@ private:
         nfmarkFromServer = 0;
     }
 };
+
+#define fd_table fde::Table
 
 int fdNFree(void);
 
