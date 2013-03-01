@@ -67,9 +67,11 @@ Comm::ConnOpener::swanSong()
         sendAnswer(COMM_ERR_CONNECT, 0, "Comm::ConnOpener::swanSong");
     }
 
+    // did we abort with a temporary FD assigned?
     if (temporaryFd_ >= 0)
         closeFd();
 
+    // did we abort while waiting between retries?
     if (calls_.sleep_)
         cancelSleep();
 
@@ -120,6 +122,7 @@ Comm::ConnOpener::sendAnswer(comm_err_t errFlag, int xerrno, const char *why)
         if (callback_->canceled()) {
             debugs(5, 4, conn_ << " not calling canceled " << *callback_ <<
                    " [" << callback_->id << ']' );
+            // TODO save the pconn to the pconnPool ?
         } else {
             typedef CommConnectCbParams Params;
             Params &params = GetCommParams<Params>(callback_);
