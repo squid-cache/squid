@@ -19,7 +19,7 @@
 #include <stdexcept>
 #endif
 
-#define TESTDIR "testUfs__testUfsSearch"
+#define TESTDIR "testUfs_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
 
