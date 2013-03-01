@@ -27,7 +27,7 @@
 #include <unistd.h>
 #endif
 
-#define TESTDIR "testRock__testRockSearch"
+#define TESTDIR "testRock_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
 
