@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.7 release notes</title>
+<title>Squid 3.2.8 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,21 +13,21 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.7 for 
-testing.
+The Squid Team are pleased to announce the release of Squid-3.2.8.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+<p>A large number of the show-stopper bugs have been fixed along with general improvements to the IPv6 support.
+While this release is not fully bug-free we believe it is ready for use in production on many systems.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
 report with a stack trace.
 
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&product=Squid&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&version=3.2" name="open bugs against Squid-3.2">.
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.2" name="open bugs against Squid-3.2">.
 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.2 series are:
 
@@ -595,14 +595,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format <em>referrer</em> to log with the format previously used by referer_log directive.
 	<p>New format <em>useragent</em> to log with the format previously used by useragent_log directive.
 
-	<tag>acl : random, localip, localport</tag>
+	<tag>acl : random, urllogin</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
-	<p>Renamed <em>myip</em> to <em>localip</em>. It matches the IP which the client connected to.
-	<p>Renamed <em>myport</em> to <em>localport</em>. It matches the port which the client connected to.
 	<p>Ported <em>urllogin</em> option from Squid 2.7, to match a regex pattern on the URL login field (if any).
-	<p>The <em>localip</em>/<em>localport</em> differ from earlier releases where they matched a mix of
-	   of an invalid IP and port 0, the client destination IP/port or the Squid listening IP/port.
-	   This definition is now consistent across all modes of traffic received by Squid.
 	<p>The <em>manager</em> ACL requires adjustment to cover new cache manager access. So it has now been
 	  built-in as a predefined ACL name matching URLs equivalent to the following regular expression:
         <verb>
@@ -873,16 +868,16 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by --enable-eui
 
 	<tag>--enable-auth-basic-helpers</tag>
-	<p>replaced by <em>--enable-auth-basic</em>.
+	<p>Replaced by <em>--enable-auth-basic</em>.
 
 	<tag>--enable-auth-digest-helpers</tag>
-	<p>replaced by <em>--enable-auth-digest</em>.
+	<p>Replaced by <em>--enable-auth-digest</em>.
 
 	<tag>--enable-auth-negotiate-helpers</tag>
-	<p>replaced by <em>--enable-auth-negotiate</em>.
+	<p>Replaced by <em>--enable-auth-negotiate</em>.
 
 	<tag>--enable-auth-ntlm-helpers</tag>
-	<p>replaced by <em>--enable-auth-ntlm</em>.
+	<p>Replaced by <em>--enable-auth-ntlm</em>.
 
 	<tag>--enable-referer-log</tag>
 	<p>Obsolete.
@@ -912,7 +907,7 @@ This section gives an account of those changes in three categories:
 	  An external_acl_type helper may be used to bypass authentication if that is suitable.
 
 	<tag>cache_peer</tag>
-	<p><em>http11</em> Obsolete.
+	<p>Option <em>http11</em> obsolete.
 
 	<tag>external_acl_type</tag>
 	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
@@ -922,9 +917,9 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
 
 	<tag>http_port</tag>
-	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
-	<p><em>transparent</em> option replaced by <em>intercept</em>
-	<p><em>http11</em> obsolete.
+	<p>Option <em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
+	<p>Option <em>transparent</em> option replaced by <em>intercept</em>
+	<p>Option <em>http11</em> obsolete.
 
 	<tag>http_access2</tag>
 	<p>Replaced by <em>adapted_http_access</em>
