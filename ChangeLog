@@ -1,3 +1,10 @@
+Changes to squid-3.3.2 (02 Mar 2013):
+
+	- Bug 3781: Proxy Authentication not sent to cache_peer
+	- Bug 3794: MacOS: workaround compiler errors
+	- Bug 3720: Compile error in Solaris /OpenIndiana
+	- ... and all changes from squid 3.2.8
+
 Changes to squid-3.3.1 (09 Feb 2013):
 
 	- Bug 3726: build errors with --disable-ssl
@@ -42,6 +49,22 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.8 (02 Mar 2013):
+
+	- Bug 3767: tcp_outgoing_tos/mark ACLs do not obey acl_uses_indirect_client
+	- Bug 3763: diskd Error: no filename in shm buffer
+	- Bug 3752: objects that cannot be cached in memory are not cached on disk
+	- Bug 3753: Removes the domain from the cache_peer server pconn key
+	- Bug 3749: IDENT lookup using wrong ports to identify the user
+	- Bug 3723: tcp_outgoing_tos/mark broken for CONNECT requests
+	- Bug 3686: cache_dir max-size default fails
+	- Bug 3515: crash in FtpStateData::ftpTimeout
+	- Bug 3329: Quieten orphan Comm::Connection messages
+	- Make squid -z for cache_dir rock preserve the rock DB
+	- Fixed several server connect problems
+	- ... and some build issues on SOlaris, OpenIndiana, MacOS X
+	- ... and soem documentation and debugs polishing
 
 Changes to squid-3.2.7 (01 Feb 2013):
 
