@@ -63,8 +63,8 @@ Changes to squid-3.2.8 (02 Mar 2013):
 	- Bug 3329: Quieten orphan Comm::Connection messages
 	- Make squid -z for cache_dir rock preserve the rock DB
 	- Fixed several server connect problems
-	- ... and some build issues on SOlaris, OpenIndiana, MacOS X
-	- ... and soem documentation and debugs polishing
+	- ... and some build issues on Solaris, OpenIndiana, MacOS X
+	- ... and some documentation and debugs polishing
 
 Changes to squid-3.2.7 (01 Feb 2013):
 
