@@ -53,6 +53,7 @@
 #if USE_DEVPOLL
 
 #include "comm/Loops.h"
+#include "fd.h"
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
