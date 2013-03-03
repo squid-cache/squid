@@ -388,7 +388,7 @@ idnsParseResolvConf(void)
 
         if (NULL == t) {
             continue;
-        } else if (strcasecmp(t, "nameserver") == 0) {
+        } else if (strcmp(t, "nameserver") == 0) {
             t = strtok(NULL, w_space);
 
             if (NULL == t)
@@ -397,7 +397,7 @@ idnsParseResolvConf(void)
             debugs(78, DBG_IMPORTANT, "Adding nameserver " << t << " from " << _PATH_RESCONF);
 
             idnsAddNameserver(t);
-        } else if (strcasecmp(t, "domain") == 0) {
+        } else if (strcmp(t, "domain") == 0) {
             idnsFreeSearchpath();
             t = strtok(NULL, w_space);
 
@@ -407,7 +407,7 @@ idnsParseResolvConf(void)
             debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
 
             idnsAddPathComponent(t);
-        } else if (strcasecmp(t, "search") == 0) {
+        } else if (strcmp(t, "search") == 0) {
             idnsFreeSearchpath();
             while (NULL != t) {
                 t = strtok(NULL, w_space);
@@ -419,7 +419,7 @@ idnsParseResolvConf(void)
 
                 idnsAddPathComponent(t);
             }
-        } else if (strcasecmp(t, "options") == 0) {
+        } else if (strcmp(t, "options") == 0) {
             while (NULL != t) {
                 t = strtok(NULL, w_space);
 
