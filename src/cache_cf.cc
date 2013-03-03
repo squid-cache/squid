@@ -2138,29 +2138,29 @@ parse_peer(CachePeer ** head)
     p->connection_auth = 2;    /* auto */
 
     while ((token = strtok(NULL, w_space))) {
-        if (!strcasecmp(token, "proxy-only")) {
+        if (!strcmp(token, "proxy-only")) {
             p->options.proxy_only = true;
-        } else if (!strcasecmp(token, "no-query")) {
+        } else if (!strcmp(token, "no-query")) {
             p->options.no_query = true;
-        } else if (!strcasecmp(token, "background-ping")) {
+        } else if (!strcmp(token, "background-ping")) {
             p->options.background_ping = true;
-        } else if (!strcasecmp(token, "no-digest")) {
+        } else if (!strcmp(token, "no-digest")) {
             p->options.no_digest = true;
-        } else if (!strcasecmp(token, "no-tproxy")) {
+        } else if (!strcmp(token, "no-tproxy")) {
             p->options.no_tproxy = true;
-        } else if (!strcasecmp(token, "multicast-responder")) {
+        } else if (!strcmp(token, "multicast-responder")) {
             p->options.mcast_responder = true;
 #if PEER_MULTICAST_SIBLINGS
-        } else if (!strcasecmp(token, "multicast-siblings")) {
+        } else if (!strcmp(token, "multicast-siblings")) {
             p->options.mcast_siblings = true;
 #endif
-        } else if (!strncasecmp(token, "weight=", 7)) {
+        } else if (!strncmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
-        } else if (!strncasecmp(token, "basetime=", 9)) {
+        } else if (!strncmp(token, "basetime=", 9)) {
             p->basetime = xatoi(token + 9);
-        } else if (!strcasecmp(token, "closest-only")) {
+        } else if (!strcmp(token, "closest-only")) {
             p->options.closest_only = true;
-        } else if (!strncasecmp(token, "ttl=", 4)) {
+        } else if (!strncmp(token, "ttl=", 4)) {
             p->mcast.ttl = xatoi(token + 4);
 
             if (p->mcast.ttl < 0)
@@ -2168,16 +2168,16 @@ parse_peer(CachePeer ** head)
 
             if (p->mcast.ttl > 128)
                 p->mcast.ttl = 128;
-        } else if (!strcasecmp(token, "default")) {
+        } else if (!strcmp(token, "default")) {
             p->options.default_parent = true;
-        } else if (!strcasecmp(token, "round-robin")) {
+        } else if (!strcmp(token, "round-robin")) {
             p->options.roundrobin = true;
-        } else if (!strcasecmp(token, "weighted-round-robin")) {
+        } else if (!strcmp(token, "weighted-round-robin")) {
             p->options.weighted_roundrobin = true;
 #if USE_HTCP
-        } else if (!strcasecmp(token, "htcp")) {
+        } else if (!strcmp(token, "htcp")) {
             p->options.htcp = true;
-        } else if (!strncasecmp(token, "htcp=", 5) || !strncasecmp(token, "htcp-", 5)) {
+        } else if (!strncmp(token, "htcp=", 5) || !strncmp(token, "htcp-", 5)) {
             /* Note: The htcp- form is deprecated, replaced by htcp= */
             p->options.htcp = true;
             char *tmp = xstrdup(token+5);
@@ -2188,19 +2188,19 @@ parse_peer(CachePeer ** head)
                     *nextmode = '\0';
                     ++nextmode;
                 }
-                if (!strcasecmp(mode, "no-clr")) {
+                if (!strcmp(mode, "no-clr")) {
                     if (p->options.htcp_only_clr)
                         fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
                     p->options.htcp_no_clr = true;
-                } else if (!strcasecmp(mode, "no-purge-clr")) {
+                } else if (!strcmp(mode, "no-purge-clr")) {
                     p->options.htcp_no_purge_clr = true;
-                } else if (!strcasecmp(mode, "only-clr")) {
+                } else if (!strcmp(mode, "only-clr")) {
                     if (p->options.htcp_no_clr)
                         fatalf("parse_peer: can't set htcp no-clr and only-clr simultaneously");
                     p->options.htcp_only_clr = true;
-                } else if (!strcasecmp(mode, "forward-clr")) {
+                } else if (!strcmp(mode, "forward-clr")) {
                     p->options.htcp_forward_clr = true;
-                } else if (!strcasecmp(mode, "oldsquid")) {
+                } else if (!strcmp(mode, "oldsquid")) {
                     p->options.htcp_oldsquid = true;
                 } else {
                     fatalf("invalid HTCP mode '%s'", mode);
@@ -2208,15 +2208,15 @@ parse_peer(CachePeer ** head)
             }
             safe_free(tmp);
 #endif
-        } else if (!strcasecmp(token, "no-netdb-exchange")) {
+        } else if (!strcmp(token, "no-netdb-exchange")) {
             p->options.no_netdb_exchange = true;
 
-        } else if (!strcasecmp(token, "carp")) {
+        } else if (!strcmp(token, "carp")) {
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
 
             p->options.carp = true;
-        } else if (!strncasecmp(token, "carp-key=", 9)) {
+        } else if (!strncmp(token, "carp-key=", 9)) {
             if (p->options.carp != true)
                 fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
             p->options.carp_key.set = true;
@@ -2224,21 +2224,21 @@ parse_peer(CachePeer ** head)
             for (; key; key = nextkey) {
                 nextkey=strchr(key,',');
                 if (nextkey) ++nextkey; // skip the comma, any
-                if (0==strncasecmp(key,"scheme",6)) {
+                if (0==strncmp(key,"scheme",6)) {
                     p->options.carp_key.scheme = true;
-                } else if (0==strncasecmp(key,"host",4)) {
+                } else if (0==strncmp(key,"host",4)) {
                     p->options.carp_key.host = true;
-                } else if (0==strncasecmp(key,"port",4)) {
+                } else if (0==strncmp(key,"port",4)) {
                     p->options.carp_key.port = true;
-                } else if (0==strncasecmp(key,"path",4)) {
+                } else if (0==strncmp(key,"path",4)) {
                     p->options.carp_key.path = true;
-                } else if (0==strncasecmp(key,"params",6)) {
+                } else if (0==strncmp(key,"params",6)) {
                     p->options.carp_key.params = true;
                 } else {
                     fatalf("invalid carp-key '%s'",key);
                 }
             }
-        } else if (!strcasecmp(token, "userhash")) {
+        } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
@@ -2247,42 +2247,42 @@ parse_peer(CachePeer ** head)
 #else
             fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
 #endif
-        } else if (!strcasecmp(token, "sourcehash")) {
+        } else if (!strcmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
 
             p->options.sourcehash = true;
 
-        } else if (!strcasecmp(token, "no-delay")) {
+        } else if (!strcmp(token, "no-delay")) {
 #if USE_DELAY_POOLS
             p->options.no_delay = true;
 #else
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option 'no-delay' requires --enable-delay-pools");
 #endif
-        } else if (!strncasecmp(token, "login=", 6)) {
+        } else if (!strncmp(token, "login=", 6)) {
             p->login = xstrdup(token + 6);
             rfc1738_unescape(p->login);
-        } else if (!strncasecmp(token, "connect-timeout=", 16)) {
+        } else if (!strncmp(token, "connect-timeout=", 16)) {
             p->connect_timeout = xatoi(token + 16);
-        } else if (!strncasecmp(token, "connect-fail-limit=", 19)) {
+        } else if (!strncmp(token, "connect-fail-limit=", 19)) {
             p->connect_fail_limit = xatoi(token + 19);
 #if USE_CACHE_DIGESTS
-        } else if (!strncasecmp(token, "digest-url=", 11)) {
+        } else if (!strncmp(token, "digest-url=", 11)) {
             p->digest_url = xstrdup(token + 11);
 #endif
 
-        } else if (!strcasecmp(token, "allow-miss")) {
+        } else if (!strcmp(token, "allow-miss")) {
             p->options.allow_miss = true;
-        } else if (!strncasecmp(token, "max-conn=", 9)) {
+        } else if (!strncmp(token, "max-conn=", 9)) {
             p->max_conn = xatoi(token + 9);
-        } else if (!strcasecmp(token, "originserver")) {
+        } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
-        } else if (!strncasecmp(token, "name=", 5)) {
+        } else if (!strncmp(token, "name=", 5)) {
             safe_free(p->name);
 
             if (token[5])
                 p->name = xstrdup(token + 5);
-        } else if (!strncasecmp(token, "forceddomain=", 13)) {
+        } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
 
             if (token[13])
@@ -2630,14 +2630,14 @@ parse_onoff(int *var)
     if (token == NULL)
         self_destruct();
 
-    if (!strcasecmp(token, "on")) {
+    if (!strcmp(token, "on")) {
         *var = 1;
-    } else if (!strcasecmp(token, "enable")) {
+    } else if (!strcmp(token, "enable")) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'enable' is deprecated. Please update to use 'on'.");
         *var = 1;
-    } else if (!strcasecmp(token, "off")) {
+    } else if (!strcmp(token, "off")) {
         *var = 0;
-    } else if (!strcasecmp(token, "disable")) {
+    } else if (!strcmp(token, "disable")) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'disable' is deprecated. Please update to use 'off'.");
         *var = 0;
     } else {
@@ -2671,16 +2671,16 @@ parse_tristate(int *var)
     if (token == NULL)
         self_destruct();
 
-    if (!strcasecmp(token, "on")) {
+    if (!strcmp(token, "on")) {
         *var = 1;
-    } else if (!strcasecmp(token, "enable")) {
+    } else if (!strcmp(token, "enable")) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'enable' is deprecated. Please update to use value 'on'.");
         *var = 1;
-    } else if (!strcasecmp(token, "warn")) {
+    } else if (!strcmp(token, "warn")) {
         *var = -1;
-    } else if (!strcasecmp(token, "off")) {
+    } else if (!strcmp(token, "off")) {
         *var = 0;
-    } else if (!strcasecmp(token, "disable")) {
+    } else if (!strcmp(token, "disable")) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'disable' is deprecated. Please update to use value 'off'.");
         *var = 0;
     } else {
@@ -3266,15 +3266,15 @@ parse_uri_whitespace(int *var)
     if (token == NULL)
         self_destruct();
 
-    if (!strcasecmp(token, "strip"))
+    if (!strcmp(token, "strip"))
         *var = URI_WHITESPACE_STRIP;
-    else if (!strcasecmp(token, "deny"))
+    else if (!strcmp(token, "deny"))
         *var = URI_WHITESPACE_DENY;
-    else if (!strcasecmp(token, "allow"))
+    else if (!strcmp(token, "allow"))
         *var = URI_WHITESPACE_ALLOW;
-    else if (!strcasecmp(token, "encode"))
+    else if (!strcmp(token, "encode"))
         *var = URI_WHITESPACE_ENCODE;
-    else if (!strcasecmp(token, "chop"))
+    else if (!strcmp(token, "chop"))
         *var = URI_WHITESPACE_CHOP;
     else {
         debugs(0, DBG_PARSE_NOTE(2), "ERROR: Invalid option '" << token << "': 'uri_whitespace' accepts 'strip', 'deny', 'allow', 'encode', and 'chop'.");
@@ -3416,19 +3416,19 @@ dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &config)
 peer_t
 parseNeighborType(const char *s)
 {
-    if (!strcasecmp(s, "parent"))
+    if (!strcmp(s, "parent"))
         return PEER_PARENT;
 
-    if (!strcasecmp(s, "neighbor"))
+    if (!strcmp(s, "neighbor"))
         return PEER_SIBLING;
 
-    if (!strcasecmp(s, "neighbour"))
+    if (!strcmp(s, "neighbour"))
         return PEER_SIBLING;
 
-    if (!strcasecmp(s, "sibling"))
+    if (!strcmp(s, "sibling"))
         return PEER_SIBLING;
 
-    if (!strcasecmp(s, "multicast"))
+    if (!strcmp(s, "multicast"))
         return PEER_MULTICAST;
 
     debugs(15, DBG_CRITICAL, "WARNING: Unknown neighbor type: " << s);
@@ -3680,11 +3680,11 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strcmp(token, "connection-auth=on") == 0) {
         s->connection_auth_disabled = false;
     } else if (strncmp(token, "disable-pmtu-discovery=", 23) == 0) {
-        if (!strcasecmp(token + 23, "off"))
+        if (!strcmp(token + 23, "off"))
             s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
-        else if (!strcasecmp(token + 23, "transparent"))
+        else if (!strcmp(token + 23, "transparent"))
             s->disable_pmtu_discovery = DISABLE_PMTU_TRANSPARENT;
-        else if (!strcasecmp(token + 23, "always"))
+        else if (!strcmp(token + 23, "always"))
             s->disable_pmtu_discovery = DISABLE_PMTU_ALWAYS;
         else
             self_destruct();
@@ -3711,7 +3711,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             // t = strchr(t, ','); // not really needed, left in as documentation
         }
 #if USE_SSL
-    } else if (strcasecmp(token, "sslBump") == 0) {
+    } else if (strcmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
                "in http_port. Use 'ssl-bump' instead.");
         s->flags.tunnelSslBumping = true;
@@ -3811,7 +3811,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     }
 
 #if USE_SSL
-    if (strcasecmp(protocol, "https") == 0) {
+    if (strcmp(protocol, "https") == 0) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {

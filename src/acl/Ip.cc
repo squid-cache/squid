@@ -260,7 +260,7 @@ acl_ip_data::FactoryParse(const char *t)
     debugs(28, 5, "aclIpParseIpData: " << t);
 
     /* Special ACL RHS "all" matches entire Internet */
-    if (strcasecmp(t, "all") == 0) {
+    if (strcmp(t, "all") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'all' found.");
         q->addr1.SetAnyAddr();
         q->addr2.SetEmpty();
@@ -270,8 +270,8 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Detect some old broken strings equivalent to 'all'.
      * treat them nicely. But be loud until its fixed.  */
-    if (strcasecmp(t, "0/0") == 0 || strcasecmp(t, "0.0.0.0/0") == 0 || strcasecmp(t, "0.0.0.0/0.0.0.0") == 0 ||
-            strcasecmp(t, "0.0.0.0-255.255.255.255") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
+    if (strcmp(t, "0/0") == 0 || strcmp(t, "0.0.0.0/0") == 0 || strcmp(t, "0.0.0.0/0.0.0.0") == 0 ||
+            strcmp(t, "0.0.0.0-255.255.255.255") == 0 || strcmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
 
         debugs(28,DBG_CRITICAL, "ERROR: '" << t << "' needs to be replaced by the term 'all'.");
         debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
@@ -284,14 +284,14 @@ acl_ip_data::FactoryParse(const char *t)
     /* Special ACL RHS "ipv4" matches IPv4 Internet
      * A nod to IANA; we include the entire class space in case
      * they manage to find a way to recover and use it */
-    if (strcasecmp(t, "ipv4") == 0) {
+    if (strcmp(t, "ipv4") == 0) {
         q->mask.SetNoAddr();
         q->mask.ApplyMask(0, AF_INET);
         return q;
     }
 
     /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
-    if (strcasecmp(t, "ipv6") == 0) {
+    if (strcmp(t, "ipv6") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
         r = q; // save head of the list for result.
 

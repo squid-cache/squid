@@ -49,10 +49,10 @@ Adaptation::ServiceConfig::parseVectPoint(const char *service_configConfig) cons
     if (q)
         t = q + 1;
 
-    if (!strcasecmp(t, "precache"))
+    if (!strcmp(t, "precache"))
         return Adaptation::pointPreCache;
 
-    if (!strcasecmp(t, "postcache"))
+    if (!strcmp(t, "postcache"))
         return Adaptation::pointPostCache;
 
     return Adaptation::pointNone;
