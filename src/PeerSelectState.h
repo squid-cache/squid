@@ -73,6 +73,11 @@ class ps_state
 public:
     void *operator new(size_t);
     ps_state();
+
+    // Produce a URL for display identifying the transaction we are
+    // trying to locate a peer for.
+    const char * url() const;
+
     HttpRequest *request;
     StoreEntry *entry;
     allow_t always_direct;
