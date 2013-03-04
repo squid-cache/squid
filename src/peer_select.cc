@@ -55,6 +55,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "URL.h"
 
 static struct {
     int timeouts;
@@ -285,15 +286,10 @@ peerSelectDnsPaths(ps_state *psstate)
     PSC *callback = psstate->callback;
     psstate->callback = NULL;
 
-    if (psstate->paths->size() < 1) {
-        debugs(44, DBG_IMPORTANT, "Failed to select source for '" << psstate->entry->url() << "'");
-        debugs(44, DBG_IMPORTANT, "  always_direct = " << psstate->always_direct);
-        debugs(44, DBG_IMPORTANT, "   never_direct = " << psstate->never_direct);
-        debugs(44, DBG_IMPORTANT, "       timedout = " << psstate->ping.timedout);
-    } else {
-        debugs(44, 2, "Found sources for '" << psstate->entry->url() << "'");
-        debugs(44, 2, "  always_direct = " << psstate->always_direct);
-        debugs(44, 2, "   never_direct = " << psstate->never_direct);
+    debugs(44, 2, (psstate->paths->size()<1?"Failed to select source":"Found sources") << " for '" << psstate->url() << "'");
+    debugs(44, 2, "  always_direct = " << psstate->always_direct);
+    debugs(44, 2, "   never_direct = " << psstate->never_direct);
+    if (psstate->paths) {
         for (size_t i = 0; i < psstate->paths->size(); ++i) {
             if ((*psstate->paths)[i]->peerType == HIER_DIRECT)
                 debugs(44, 2, "         DIRECT = " << (*psstate->paths)[i]);
@@ -304,8 +300,8 @@ peerSelectDnsPaths(ps_state *psstate)
             else
                 debugs(44, 2, "     cache_peer = " << (*psstate->paths)[i]);
         }
-        debugs(44, 2, "       timedout = " << psstate->ping.timedout);
     }
+    debugs(44, 2, "       timedout = " << psstate->ping.timedout);
 
     psstate->ping.stop = current_time;
     psstate->request->hier.ping = psstate->ping;
@@ -969,6 +965,18 @@ ps_state::ps_state() : request (NULL),
         acl_checklist (NULL)
 {
     ; // no local defaults.
+}
+
+const char *
+ps_state::url() const
+{
+    if (entry)
+        return entry->url();
+
+    if (request)
+        return urlCanonical(request);
+
+    return "[no URL]";
 }
 
 ping_data::ping_data() :
