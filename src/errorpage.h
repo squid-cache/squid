@@ -315,11 +315,16 @@ protected:
 /**
  * Parses the Accept-Language header value and return one language item on
  * each call.
+ * Will ignore any whitespace, q-values, and detectably invalid language
+ * codes in the header.
+ *
  * \param hdr is the Accept-Language header value
- * \param lang a buffer given by the user to store parsed language
+ * \param lang a buffer to store parsed language code in
  * \param langlen the length of the lang buffer
- * \param pos it is used to store the state of parsing. Must be "0" on first call
- * \return true on success, false otherwise
+ * \param pos is used to store the offset state of parsing. Must be "0" on first call.
+ *            Will be altered to point at the start of next field-value.
+ * \return true if something looking like a language token has been placed in lang, false otherwise
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
+
 #endif /* SQUID_ERRORPAGE_H */

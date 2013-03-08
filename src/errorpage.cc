@@ -381,17 +381,9 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
     while (pos < hdr.size()) {
         char *dt = lang;
 
-        if (!pos) {
-            /* skip any initial whitespace. */
-            while (pos < hdr.size() && xisspace(hdr[pos]))
-                ++pos;
-        } else {
-            // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
-            while (pos < hdr.size() && hdr[pos] != ',')
-                ++pos;
-            if (hdr[pos] == ',')
-                ++pos;
-        }
+        /* skip any initial whitespace. */
+        while (pos < hdr.size() && xisspace(hdr[pos]))
+            ++pos;
 
         /*
          * Header value format:
@@ -421,6 +413,13 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
         }
         *dt = '\0'; // nul-terminated the filename content string before system use.
         ++dt;
+
+        // if we terminated the tag on garbage or ';' we need to skip to the next ',' or end of header.
+        while (pos < hdr.size() && hdr[pos] != ',')
+            ++pos;
+
+        if (pos < hdr.size() && hdr[pos] == ',')
+            ++pos;
 
         debugs(4, 9, HERE << "STATE: dt='" << dt << "', lang='" << lang << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
 
