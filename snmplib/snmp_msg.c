@@ -252,23 +252,23 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
 
     bufp = asn_parse_header(Packet, PacketLenP, &type);
     if (bufp == NULL) {
-        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Messsage Header (Header)!\n");
+        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Header)!\n");
         ASN_PARSE_ERROR(NULL);
     }
     if (type != (ASN_SEQUENCE | ASN_CONSTRUCTOR)) {
-        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Messsage Header (Header)!\n");
+        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Header)!\n");
         ASN_PARSE_ERROR(NULL);
     }
     bufp = asn_parse_int(bufp, PacketLenP,
                          &type,
                          (int *) Version, sizeof(*Version));
     if (bufp == NULL) {
-        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Messsage Header (Version)!\n");
+        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Version)!\n");
         ASN_PARSE_ERROR(NULL);
     }
     bufp = asn_parse_string(bufp, PacketLenP, &type, Community, CommLenP);
     if (bufp == NULL) {
-        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Messsage Header (Community)!\n");
+        snmplib_debug(4, "snmp_msg_Decode:Error decoding SNMP Message Header (Community)!\n");
         ASN_PARSE_ERROR(NULL);
     }
     Community[*CommLenP] = '\0';
