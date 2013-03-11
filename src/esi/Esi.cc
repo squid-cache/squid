@@ -1323,7 +1323,7 @@ ESIContext::process ()
     /* parsing:
      * read through buffered, skipping plain text, and skipping any
      * <...> entry that is not an <esi: entry.
-     * when it's found, hand an esiLiteral of the preceeding data to our current
+     * when it's found, hand an esiLiteral of the preceding data to our current
      * context
      */
 
