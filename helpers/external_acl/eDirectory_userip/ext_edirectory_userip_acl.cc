@@ -977,7 +977,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
                     if (bufb[i] == ':')
                         ++j;
                 }
-                --j;								/* Preceeding "::" doesn't count */
+                --j;								/* Preceding "::" doesn't count */
                 t = 8 - (strlen(l->search_ip) / 4) - j;			/* Remainder */
                 if (t > 0) {
                     for (i = 0; i < t; ++i)
