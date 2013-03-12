@@ -1,3 +1,10 @@
+Changes to squid-3.2.9 (12 Mar 2013):
+
+	- Regression fix: Accept-Language header parse
+	- Bug 3673: Silence 'Failed to select source' messages
+	- Fix authentication headers sent on peer digest requests
+	- Fix build error on Solaris, OpenIndiana, Omnios
+
 Changes to squid-3.2.8 (02 Mar 2013):
 
 	- Bug 3767: tcp_outgoing_tos/mark ACLs do not obey acl_uses_indirect_client
