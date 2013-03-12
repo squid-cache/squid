@@ -1,3 +1,8 @@
+Changes to squid-3.3.3 (12 Mar 2013):
+
+	- Bug 3720: Add missing include in /dev/poll I/O module (pt2)
+	- ... and all changes from squid 3.2.9
+
 Changes to squid-3.3.2 (02 Mar 2013):
 
 	- Bug 3781: Proxy Authentication not sent to cache_peer
@@ -49,6 +54,13 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.9 (12 Mar 2013):
+
+	- Regression fix: Accept-Language header parse
+	- Bug 3673: Silence 'Failed to select source' messages
+	- Fix authentication headers sent on peer digest requests
+	- Fix build error on Solaris, OpenIndiana, Omnios
 
 Changes to squid-3.2.8 (02 Mar 2013):
 
