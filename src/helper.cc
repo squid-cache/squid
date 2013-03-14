@@ -953,7 +953,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
         helperReturnBuffer(i, srv, hlp, msg, t);
         srv->roffset -= (t - srv->rbuf) + skip;
-        memmove(srv->rbuf, t, srv->roffset);
+        memmove(srv->rbuf, t + skip, srv->roffset);
+        srv->rbuf[srv->roffset] = '\0';
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
