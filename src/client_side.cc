@@ -3618,8 +3618,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         static char reqStr[MAX_IPSTRLEN + 80];
-        connState->clientConnection->local.NtoA(ip, sizeof(ip));
-        snprintf(reqStr, sizeof(reqStr), "CONNECT %s:%d HTTP/1.1\r\nHost: %s\r\n\r\n", ip, connState->clientConnection->local.GetPort(), ip);
+        connState->clientConnection->local.ToURL(ip, sizeof(ip));
+        snprintf(reqStr, sizeof(reqStr), "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", ip, ip);
         bool ret = connState->handleReadData(reqStr, strlen(reqStr));
         if (ret)
             ret = connState->clientParseRequests();
