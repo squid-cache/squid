@@ -76,7 +76,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-ErrorState *clientBuildError(err_type, http_status, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *);
 
 /* privates */
 
@@ -105,7 +105,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http 
  */
 void
 clientReplyContext::setReplyToError(
-    err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
+    err_type err, Http::StatusCode status, const HttpRequestMethod& method, char const *uri,
     Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request
@@ -127,7 +127,7 @@ clientReplyContext::setReplyToError(
 
 void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorState *errstate)
 {
-    if (errstate->httpStatus == HTTP_NOT_IMPLEMENTED && http->request)
+    if (errstate->httpStatus == Http::scNotImplemented && http->request)
         /* prevent confusion over whether we default to persistent or not */
         http->request->flags.proxyKeepalive = false;
 
@@ -376,7 +376,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     /* update size of the request */
     reqsize = result.length + reqofs;
 
-    const http_status status = http->storeEntry()->getReply()->sline.status;
+    const Http::StatusCode status = http->storeEntry()->getReply()->sline.status;
 
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
@@ -388,7 +388,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     HttpReply *old_rep = (HttpReply *) old_entry->getReply();
 
     // origin replied 304
-    if (status == HTTP_NOT_MODIFIED) {
+    if (status == Http::scNotModified) {
         http->logType = LOG_TCP_REFRESH_UNMODIFIED;
         http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
@@ -411,7 +411,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     }
 
     // origin replied with a non-error code
-    else if (status > HTTP_STATUS_NONE && status < HTTP_INTERNAL_SERVER_ERROR) {
+    else if (status > Http::scNone && status < Http::scInternalServerError) {
         // forward response from origin
         http->logType = LOG_TCP_REFRESH_MODIFIED;
         debugs(88, 3, "handleIMSReply: origin replied " << status << ", replacing existing entry and forwarding to client");
@@ -657,8 +657,8 @@ clientReplyContext::processMiss()
 
     /// Deny loops
     if (r->flags.loopDetected) {
-        http->al->http.code = HTTP_FORBIDDEN;
-        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
+        http->al->http.code = Http::scForbidden;
+        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL, http->getConn()->clientConnection->remote, http->request);
         createStoreEntry(r->method, RequestFlags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -701,8 +701,8 @@ clientReplyContext::processOnlyIfCachedMiss()
 {
     debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
            RequestMethodStr(http->request->method) << " " << http->uri << "'");
-    http->al->http.code = HTTP_GATEWAY_TIMEOUT;
-    ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
+    http->al->http.code = Http::scGateway_Timeout;
+    ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGateway_Timeout, NULL,
                                        http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
@@ -714,7 +714,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
-    if (e->getReply()->sline.status != HTTP_OK) {
+    if (e->getReply()->sline.status != Http::scOkay) {
         debugs(88, 4, "clientReplyContext::processConditional: Reply code " <<
                e->getReply()->sline.status << " != 200");
         http->logType = LOG_TCP_MISS;
@@ -869,7 +869,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
                                            http->getConn()->clientConnection->remote, http->request);
         startError(err);
         return;
@@ -908,7 +908,7 @@ clientReplyContext::purgeRequest()
 
     if (!Config2.onoff.enable_purge) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL, http->getConn()->clientConnection->remote, http->request);
         startError(err);
         return;
     }
@@ -935,7 +935,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
     assert (newEntry);
     /* Move to new() when that is created */
-    purgeStatus = HTTP_NOT_FOUND;
+    purgeStatus = Http::scNotFound;
 
     if (!newEntry->isNull()) {
         /* Release the cached URI */
@@ -944,7 +944,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
         newEntry->release();
-        purgeStatus = HTTP_OK;
+        purgeStatus = Http::scOkay;
     }
 
     lookingforstore = 4;
@@ -960,7 +960,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
         newEntry->release();
-        purgeStatus = HTTP_OK;
+        purgeStatus = Http::scOkay;
     }
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
@@ -975,7 +975,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
             entry->release();
-            purgeStatus = HTTP_OK;
+            purgeStatus = Http::scOkay;
         }
 
         entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_HEAD);
@@ -986,7 +986,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
             entry->release();
-            purgeStatus = HTTP_OK;
+            purgeStatus = Http::scOkay;
         }
     }
 
@@ -1021,7 +1021,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     HttpReply *rep = new HttpReply;
-    rep->setHeaders(HTTP_OK, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
+    rep->setHeaders(Http::scOkay, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
     http->storeEntry()->complete();
@@ -1232,21 +1232,21 @@ clientReplyContext::replyStatus()
  * mysterious breakages.
  */
 bool
-clientReplyContext::alwaysAllowResponse(http_status sline) const
+clientReplyContext::alwaysAllowResponse(Http::StatusCode sline) const
 {
     bool result;
 
     switch (sline) {
 
-    case HTTP_CONTINUE:
+    case Http::scContinue:
 
-    case HTTP_SWITCHING_PROTOCOLS:
+    case Http::scSwitchingProtocols:
 
-    case HTTP_PROCESSING:
+    case Http::scProcessing:
 
-    case HTTP_NO_CONTENT:
+    case Http::scNoContent:
 
-    case HTTP_NOT_MODIFIED:
+    case Http::scNotModified:
         result = true;
         break;
 
@@ -1430,8 +1430,8 @@ clientReplyContext::buildReplyHeader()
 #if USE_AUTH
     /* Handle authentication headers */
     if (http->logType == LOG_TCP_DENIED &&
-            ( reply->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED ||
-              reply->sline.status == HTTP_UNAUTHORIZED)
+            ( reply->sline.status == Http::scProxyAuthenticationRequired ||
+              reply->sline.status == Http::scUnauthorized)
        ) {
         /* Add authentication header */
         /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
@@ -1868,7 +1868,7 @@ clientReplyContext::sendBodyTooLargeError()
     Ip::Address tmp_noaddr;
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
-    ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
+    ErrorState *err = clientBuildError(ERR_TOO_BIG, Http::scForbidden, NULL,
                                        http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                        http->request);
     removeClientStoreReference(&(sc), http);
@@ -1883,7 +1883,7 @@ clientReplyContext::sendPreconditionFailedError()
 {
     http->logType = LOG_TCP_HIT;
     ErrorState *const err =
-        clientBuildError(ERR_PRECONDITION_FAILED, HTTP_PRECONDITION_FAILED,
+        clientBuildError(ERR_PRECONDITION_FAILED, Http::scPreconditionFailed,
                          NULL, http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
@@ -1990,7 +1990,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 
         Ip::Address tmp_noaddr;
         tmp_noaddr.SetNoAddr();
-        err = clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
+        err = clientBuildError(page_id, Http::scForbidden, NULL,
                                http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                http->request);
 
@@ -2018,7 +2018,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 
 #if USE_SQUID_ESI
 
-    if (http->flags.accel && reply->sline.status != HTTP_FORBIDDEN &&
+    if (http->flags.accel && reply->sline.status != Http::scForbidden &&
             !alwaysAllowResponse(reply->sline.status) &&
             esiEnableProcessing(reply)) {
         debugs(88, 2, "Enabling ESI processing for " << http->uri);
@@ -2214,7 +2214,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 }
 
 ErrorState *
-clientBuildError(err_type page_id, http_status status, char const *url,
+clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
                  Ip::Address &src_addr, HttpRequest * request)
 {
     ErrorState *err = new ErrorState(page_id, status, request);

@@ -97,7 +97,7 @@ CBDATA_CLASS_INIT(HttpStateData);
 
 static const char *const crlf = "\r\n";
 
-static void httpMaybeRemovePublic(StoreEntry *, http_status);
+static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &);
 //Declared in HttpHeaderTools.cc
@@ -182,14 +182,14 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
-        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGateway_Timeout, fwd->request));
     }
 
     serverConnection->close();
 }
 
 static void
-httpMaybeRemovePublic(StoreEntry * e, http_status status)
+httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 {
     int remove = 0;
     int forbidden = 0;
@@ -200,33 +200,33 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     switch (status) {
 
-    case HTTP_OK:
+    case Http::scOkay:
 
-    case HTTP_NON_AUTHORITATIVE_INFORMATION:
+    case Http::scNonAuthoritativeInformation:
 
-    case HTTP_MULTIPLE_CHOICES:
+    case Http::scMultipleChoices:
 
-    case HTTP_MOVED_PERMANENTLY:
+    case Http::scMovedPermanently:
 
-    case HTTP_MOVED_TEMPORARILY:
+    case Http::scMovedTemporarily:
 
-    case HTTP_GONE:
+    case Http::scGone:
 
-    case HTTP_NOT_FOUND:
+    case Http::scNotFound:
         remove = 1;
 
         break;
 
-    case HTTP_FORBIDDEN:
+    case Http::scForbidden:
 
-    case HTTP_METHOD_NOT_ALLOWED:
+    case Http::scMethodNotAllowed:
         forbidden = 1;
 
         break;
 
 #if WORK_IN_PROGRESS
 
-    case HTTP_UNAUTHORIZED:
+    case Http::scUnauthorized:
         forbidden = 1;
 
         break;
@@ -445,16 +445,16 @@ HttpStateData::cacheableReply()
     switch (rep->sline.status) {
         /* Responses that are cacheable */
 
-    case HTTP_OK:
+    case Http::scOkay:
 
-    case HTTP_NON_AUTHORITATIVE_INFORMATION:
+    case Http::scNonAuthoritativeInformation:
 
-    case HTTP_MULTIPLE_CHOICES:
+    case Http::scMultipleChoices:
 
-    case HTTP_MOVED_PERMANENTLY:
-    case HTTP_PERMANENT_REDIRECT:
+    case Http::scMovedPermanently:
+    case Http::scPermanentRedirect:
 
-    case HTTP_GONE:
+    case Http::scGone:
         /*
          * Don't cache objects that need to be refreshed on next request,
          * unless we know how to refresh it.
@@ -472,8 +472,8 @@ HttpStateData::cacheableReply()
 
         /* Responses that only are cacheable if the server says so */
 
-    case HTTP_MOVED_TEMPORARILY:
-    case HTTP_TEMPORARY_REDIRECT:
+    case Http::scMovedTemporarily:
+    case Http::scTemporaryRedirect:
         if (rep->date <= 0) {
             debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status << " and Date missing/invalid");
             return 0;
@@ -490,29 +490,29 @@ HttpStateData::cacheableReply()
 
         /* Errors can be negatively cached */
 
-    case HTTP_NO_CONTENT:
+    case Http::scNoContent:
 
-    case HTTP_USE_PROXY:
+    case Http::scUseProxy:
 
-    case HTTP_BAD_REQUEST:
+    case Http::scBadRequest:
 
-    case HTTP_FORBIDDEN:
+    case Http::scForbidden:
 
-    case HTTP_NOT_FOUND:
+    case Http::scNotFound:
 
-    case HTTP_METHOD_NOT_ALLOWED:
+    case Http::scMethodNotAllowed:
 
-    case HTTP_REQUEST_URI_TOO_LARGE:
+    case Http::scRequestUriTooLarge:
 
-    case HTTP_INTERNAL_SERVER_ERROR:
+    case Http::scInternalServerError:
 
-    case HTTP_NOT_IMPLEMENTED:
+    case Http::scNotImplemented:
 
-    case HTTP_BAD_GATEWAY:
+    case Http::scBadGateway:
 
-    case HTTP_SERVICE_UNAVAILABLE:
+    case Http::scServiceUnavailable:
 
-    case HTTP_GATEWAY_TIMEOUT:
+    case Http::scGateway_Timeout:
         debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status);
         return -1;
 
@@ -521,34 +521,34 @@ HttpStateData::cacheableReply()
 
         /* Some responses can never be cached */
 
-    case HTTP_PARTIAL_CONTENT:	/* Not yet supported */
+    case Http::scPartialContent:	/* Not yet supported */
 
-    case HTTP_SEE_OTHER:
+    case Http::scSeeOther:
 
-    case HTTP_NOT_MODIFIED:
+    case Http::scNotModified:
 
-    case HTTP_UNAUTHORIZED:
+    case Http::scUnauthorized:
 
-    case HTTP_PROXY_AUTHENTICATION_REQUIRED:
+    case Http::scProxyAuthenticationRequired:
 
-    case HTTP_INVALID_HEADER:	/* Squid header parsing error */
+    case Http::scInvalidHeader:	/* Squid header parsing error */
 
-    case HTTP_HEADER_TOO_LARGE:
+    case Http::scHeaderTooLarge:
 
-    case HTTP_PAYMENT_REQUIRED:
-    case HTTP_NOT_ACCEPTABLE:
-    case HTTP_REQUEST_TIMEOUT:
-    case HTTP_CONFLICT:
-    case HTTP_LENGTH_REQUIRED:
-    case HTTP_PRECONDITION_FAILED:
-    case HTTP_REQUEST_ENTITY_TOO_LARGE:
-    case HTTP_UNSUPPORTED_MEDIA_TYPE:
-    case HTTP_UNPROCESSABLE_ENTITY:
-    case HTTP_LOCKED:
-    case HTTP_FAILED_DEPENDENCY:
-    case HTTP_INSUFFICIENT_STORAGE:
-    case HTTP_REQUESTED_RANGE_NOT_SATISFIABLE:
-    case HTTP_EXPECTATION_FAILED:
+    case Http::scPaymentRequired:
+    case Http::scNotAcceptable:
+    case Http::scRequestTimeout:
+    case Http::scConflict:
+    case Http::scLengthRequired:
+    case Http::scPreconditionFailed:
+    case Http::scRequestEntityTooLarge:
+    case Http::scUnsupportedMediaType:
+    case Http::scUnprocessableEntity:
+    case Http::scLocked:
+    case Http::scFailedDependency:
+    case Http::scInsufficientStorage:
+    case Http::scRequestedRangeNotSatisfied:
+    case Http::scExpectationFailed:
 
         debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status);
         return 0;
@@ -696,7 +696,7 @@ HttpStateData::processReplyHeader()
         return;
     }
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
 
     HttpReply *newrep = new HttpReply;
     const bool parsed = newrep->parse(readBuf, eof, &error);
@@ -704,7 +704,7 @@ HttpStateData::processReplyHeader()
     if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
-        tmprep->setHeaders(HTTP_OK, "Gatewaying", NULL, -1, -1, -1);
+        tmprep->setHeaders(Http::scOkay, "Gatewaying", NULL, -1, -1, -1);
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
         newrep->parse(mb, eof, &error);
@@ -848,10 +848,10 @@ bool HttpStateData::peerSupportsConnectionPinning() const
     /*The peer supports connection pinning and the http reply status
       is not unauthorized, so the related connection can be pinned
      */
-    if (rep->sline.status != HTTP_UNAUTHORIZED)
+    if (rep->sline.status != Http::scUnauthorized)
         return true;
 
-    /*The server respond with HTTP_UNAUTHORIZED and the peer configured
+    /*The server respond with Http::scUnauthorized and the peer configured
       with "connection-auth=on" we know that the peer supports pinned
       connections
     */
@@ -897,7 +897,7 @@ HttpStateData::haveParsedReplyHeaders()
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     HttpReply *rep = finalReply();
 
-    if (rep->sline.status == HTTP_PARTIAL_CONTENT &&
+    if (rep->sline.status == Http::scPartialContent &&
             rep->content_range)
         currentOffset = rep->content_range->spec.offset;
 
@@ -1135,7 +1135,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         if (ignoreErrno(io.xerrno)) {
             flags.do_next_read = true;
         } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
             err->xerrno = io.xerrno;
             fwd->fail(err);
             flags.do_next_read = false;
@@ -1260,12 +1260,12 @@ HttpStateData::continueAfterParsingHeader()
     if (flags.headers_parsed) { // parsed headers, possibly with errors
         // check for header parsing errors
         if (HttpReply *vrep = virginReply()) {
-            const http_status s = vrep->sline.status;
+            const Http::StatusCode s = vrep->sline.status;
             const HttpVersion &v = vrep->sline.version;
-            if (s == HTTP_INVALID_HEADER && v != HttpVersion(0,9)) {
+            if (s == Http::scInvalidHeader && v != HttpVersion(0,9)) {
                 debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
-            } else if (s == HTTP_HEADER_TOO_LARGE) {
+            } else if (s == Http::scHeaderTooLarge) {
                 fwd->dontRetry(true);
                 error = ERR_TOO_BIG;
             } else {
@@ -1290,7 +1290,7 @@ HttpStateData::continueAfterParsingHeader()
 
     assert(error != ERR_NONE);
     entry->reset();
-    fwd->fail(new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request));
+    fwd->fail(new ErrorState(error, Http::scBadGateway, fwd->request));
     flags.do_next_read = false;
     serverConnection->close();
     return false; // quit on error
@@ -1514,7 +1514,7 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
         return;
 
     if (io.flag) {
-        ErrorState *err = new ErrorState(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+        ErrorState *err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
         serverConnection->close();
@@ -2316,7 +2316,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
             flags.abuse_detected = true;
             debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
-            if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
+            if (virginReply()->sline.status == Http::scInvalidHeader) {
                 serverConnection->close();
                 return;
             }
@@ -2337,7 +2337,7 @@ HttpStateData::handleRequestBodyProducerAborted()
         // We might also get here if client-side aborts, but then our response
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
-        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
+        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, fwd->request);
         err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
         fwd->fail(err);
     }

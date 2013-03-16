@@ -113,17 +113,17 @@ redirectHandleReply(void *data, const HelperReply &reply)
                  * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
                  */
                 const char * result = reply.other().content();
-                const http_status status = (http_status) atoi(result);
+                const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
 
                 HelperReply newReply;
                 newReply.result = reply.result;
                 newReply.notes = reply.notes;
 
-                if (status == HTTP_MOVED_PERMANENTLY
-                        || status == HTTP_MOVED_TEMPORARILY
-                        || status == HTTP_SEE_OTHER
-                        || status == HTTP_PERMANENT_REDIRECT
-                        || status == HTTP_TEMPORARY_REDIRECT) {
+                if (status == Http::scMovedPermanently
+                        || status == Http::scMovedTemporarily
+                        || status == Http::scSeeOther
+                        || status == Http::scPermanentRedirect
+                        || status == Http::scTemporaryRedirect) {
 
                     if (const char *t = strchr(result, ':')) {
                         char statusBuf[4];
@@ -219,7 +219,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
     const char *fqdn;
     char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
     int sz;
-    http_status status;
+    Http::StatusCode status;
     char claddr[MAX_IPSTRLEN];
     char myaddr[MAX_IPSTRLEN];
 
@@ -282,10 +282,10 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
 
     if ((sz<=0) || (sz>=MAX_REDIRECTOR_REQUEST_STRLEN)) {
         if (sz<=0) {
-            status = HTTP_INTERNAL_SERVER_ERROR;
+            status = Http::scInternalServerError;
             debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to " << name << ". Request ABORTED.");
         } else {
-            status = HTTP_REQUEST_URI_TOO_LARGE;
+            status = Http::scRequestUriTooLarge;
             debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to " << name << " exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
         }
 

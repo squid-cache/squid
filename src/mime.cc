@@ -425,7 +425,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     HttpReply *reply = new HttpReply;
 
-    reply->setHeaders(HTTP_OK, NULL, mimeGetContentType(icon_), sb.st_size, sb.st_mtime, -1);
+    reply->setHeaders(Http::scOkay, NULL, mimeGetContentType(icon_), sb.st_size, sb.st_mtime, -1);
     reply->cache_control = new HttpHdrCc();
     reply->cache_control->maxAge(86400);
     reply->header.putCc(reply->cache_control);

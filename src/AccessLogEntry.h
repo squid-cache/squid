@@ -246,7 +246,7 @@ public:
         IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
                 bodyBytesRead(-1), request(NULL), reply(NULL),
                 outcome(Adaptation::Icap::xoUnknown), trTime(0),
-                ioTime(0), resStatus(HTTP_STATUS_NONE), processingTime(0) {}
+                ioTime(0), resStatus(Http::scNone), processingTime(0) {}
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -274,7 +274,7 @@ public:
          * ICAP response is received.
          */
         int ioTime;
-        http_status resStatus;   ///< ICAP response status code
+        Http::StatusCode resStatus;   ///< ICAP response status code
         int processingTime;      ///< total ICAP processing time in milliseconds
     }
     icap;

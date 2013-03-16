@@ -505,7 +505,7 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
-    *tunnelState->status_ptr = HTTP_OK;
+    *tunnelState->status_ptr = Http::scOkay;
     if (cbdataReferenceValid(tunnelState)) {
         tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
         tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
@@ -524,7 +524,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
     debugs(26, 3, HERE << conn << ", flag=" << flag);
 
     if (flag != COMM_OK) {
-        *tunnelState->status_ptr = HTTP_INTERNAL_SERVER_ERROR;
+        *tunnelState->status_ptr = Http::scInternalServerError;
         tunnelErrorComplete(conn->fd, data, 0);
         return;
     }
@@ -597,8 +597,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             AsyncJob::Start(cs);
         } else {
             debugs(26, 4, HERE << "terminate with error.");
-            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
-            *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
+            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request);
+            *tunnelState->status_ptr = Http::scServiceUnavailable;
             err->xerrno = xerrno;
             // on timeout is this still:    err->xerrno = ETIMEDOUT;
             err->port = conn->remote.GetPort();
@@ -670,8 +670,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         ch.my_addr = request->my_addr;
         if (ch.fastCheck() == ACCESS_DENIED) {
             debugs(26, 4, HERE << "MISS access forbidden.");
-            err = new ErrorState(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
-            *status_ptr = HTTP_FORBIDDEN;
+            err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request);
+            *status_ptr = Http::scForbidden;
             errorSend(http->getConn()->clientConnection, err);
             return;
         }
@@ -747,7 +747,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     if (peer_paths == NULL || peer_paths->size() < 1) {
         debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
         if (!err) {
-            err = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
+            err = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, tunnelState->request);
         }
         *tunnelState->status_ptr = err->httpStatus;
         err->callback = tunnelErrorComplete;

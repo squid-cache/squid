@@ -371,7 +371,7 @@ squid_SOURCES = \
 	HttpStateFlags.h \
 	http.cc \
 	http.h \
-	HttpStatusCode.h \
+	http/StatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
 	HttpHeaderFieldStat.h \
@@ -1154,7 +1154,7 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
-	HttpStatusCode.h \
+	http/StatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
 	Mem.h \
