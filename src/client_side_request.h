@@ -127,7 +127,7 @@ public:
     } flags;
 
     struct {
-        http_status status;
+        Http::StatusCode status;
         char *location;
     } redirect;
 

@@ -439,7 +439,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse");
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     const bool parsed = msg->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 

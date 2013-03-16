@@ -269,7 +269,7 @@ private:
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;
 
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error);
+    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error);
 
     virtual void hdrCacheInit();
 

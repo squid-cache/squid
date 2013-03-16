@@ -745,7 +745,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
             assert (0 != rep->sline.status);
             debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status);
 
-            if (HTTP_OK != rep->sline.status) {
+            if (Http::scOkay != rep->sline.status) {
                 netdbExchangeDone(ex);
                 return;
             }
@@ -1232,7 +1232,7 @@ netdbBinaryExchange(StoreEntry * s)
 
     struct in_addr line_addr;
     s->buffer();
-    reply->setHeaders(HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(Http::scOkay, "OK", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     rec_sz = 0;
     rec_sz += 1 + sizeof(struct in_addr);
@@ -1298,7 +1298,7 @@ netdbBinaryExchange(StoreEntry * s)
     memFree(buf, MEM_4K_BUF);
 #else
 
-    reply->setHeaders(HTTP_BAD_REQUEST, "Bad Request", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(Http::scBadRequest, "Bad Request", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif

@@ -87,7 +87,7 @@ CBDATA_CLASS_INIT(ErrorState);
 typedef struct {
     int id;
     char *page_name;
-    http_status page_redirect;
+    Http::StatusCode page_redirect;
 } ErrorDynamicPageInfo;
 
 /* local constant and vars */
@@ -210,7 +210,7 @@ errorInitialize(void)
             assert(info && info->id == i && info->page_name);
 
             const char *pg = info->page_name;
-            if (info->page_redirect != HTTP_STATUS_NONE)
+            if (info->page_redirect != Http::scNone)
                 pg = info->page_name +4;
 
             if (strchr(pg, ':') == NULL) {
@@ -477,7 +477,7 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
     ErrorDynamicPageInfo *info = new ErrorDynamicPageInfo;
     info->id = id;
     info->page_name = xstrdup(page_name);
-    info->page_redirect = static_cast<http_status>(atoi(page_name));
+    info->page_redirect = static_cast<Http::StatusCode>(atoi(page_name));
 
     /* WARNING on redirection status:
      * 2xx are permitted, but not documented officially.
@@ -490,7 +490,7 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
      * - current result is Squid crashing or XSS problems as dynamic deny_info load random disk files.
      * - a future redesign of the file loading may result in loading remote objects sent inline as local body.
      */
-    if (info->page_redirect == HTTP_STATUS_NONE)
+    if (info->page_redirect == Http::scNone)
         ; // special case okay.
     else if (info->page_redirect < 200 || info->page_redirect > 599) {
         // out of range
@@ -568,7 +568,7 @@ errorPageName(int pageId)
     return "ERR_UNKNOWN";	/* should not happen */
 }
 
-ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
+ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
         type(t),
         page_id(t),
         err_language(NULL),
@@ -595,7 +595,7 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
 {
     memset(&ftp, 0, sizeof(ftp));
 
-    if (page_id >= ERR_MAX && ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect != HTTP_STATUS_NONE)
+    if (page_id >= ERR_MAX && ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect;
 
     if (req != NULL) {
@@ -1157,14 +1157,14 @@ ErrorState::BuildHttpReply()
 
     if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
-        http_status status = HTTP_MOVED_TEMPORARILY;
+        Http::StatusCode status = Http::scMovedTemporarily;
         // Use configured 3xx reply status if set.
         if (name[0] == '3')
             status = httpStatus;
         else {
             // Use 307 for HTTP/1.1 non-GET/HEAD requests.
             if (request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= HttpVersion(1,1))
-                status = HTTP_TEMPORARY_REDIRECT;
+                status = Http::scTemporaryRedirect;
         }
 
         rep->setHeaders(status, NULL, "text/html", 0, 0, -1);

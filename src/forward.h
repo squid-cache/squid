@@ -7,7 +7,7 @@
 #include "comm/Connection.h"
 #include "err_type.h"
 #include "fde.h"
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 #include "ip/Address.h"
 #if USE_SSL
 #include "ssl/support.h"
@@ -65,7 +65,7 @@ public:
     void complete();
     void handleUnregisteredServerEnd();
     int reforward();
-    bool reforwardableStatus(http_status s);
+    bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed(int fd);
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
@@ -100,7 +100,7 @@ private:
 #if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();
 #endif
-    static void logReplyStatus(int tries, http_status status);
+    static void logReplyStatus(int tries, const Http::StatusCode status);
     void doneWithRetries();
     void completed();
     void retryOrBail();

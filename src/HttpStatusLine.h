@@ -31,13 +31,13 @@
 #ifndef SQUID_HTTPSTATUSLINE_H
 #define SQUID_HTTPSTATUSLINE_H
 
-class Packer;
-class String;
-
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 #include "HttpVersion.h"
 #include "anyp/ProtocolType.h"
 #include "SquidString.h"
+
+class Packer;
+class String;
 
 /**
  * Holds the values parsed from an HTTP reply status line.
@@ -57,7 +57,7 @@ public:
     AnyP::ProtocolType protocol;
 
     HttpVersion version;     ///< breakdown of protocol version labels: 0.9 1.0 1.1
-    http_status status;      ///< status code. ie 200 404
+    Http::StatusCode status; ///< status code. ie 200 404
     const char *reason;	     ///< points to a _constant_ string (default or supplied), never free()d */
 };
 
@@ -66,7 +66,7 @@ void httpStatusLineInit(HttpStatusLine * sline);
 void httpStatusLineClean(HttpStatusLine * sline);
 /* set/get values */
 void httpStatusLineSet(HttpStatusLine * sline, HttpVersion version,
-                       http_status status, const char *reason);
+                       Http::StatusCode status, const char *reason);
 const char *httpStatusLineReason(const HttpStatusLine * sline);
 /* parse/pack */
 /* parse a 0-terminating buffer and fill internal structires; returns true on success */
@@ -75,6 +75,6 @@ int httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix,
 /* pack fields using Packer */
 void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
 
-const char *httpStatusString(http_status status);
+const char *httpStatusString(Http::StatusCode status);
 
 #endif /* SQUID_HTTPSTATUSLINE_H */

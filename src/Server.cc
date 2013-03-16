@@ -383,7 +383,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
     if (io.flag) {
         debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
-        err = new ErrorState(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+        err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
         abortTransaction("I/O error while sending request body");
@@ -828,7 +828,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
 
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
-        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
+        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request);
         err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
@@ -862,7 +862,7 @@ ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
-    ErrorState *err = new ErrorState(page_id, HTTP_FORBIDDEN, request);
+    ErrorState *err = new ErrorState(page_id, Http::scForbidden, request);
     err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
@@ -901,7 +901,7 @@ ServerStateData::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer grou
 void
 ServerStateData::sendBodyIsTooLargeError()
 {
-    ErrorState *err = new ErrorState(ERR_TOO_BIG, HTTP_FORBIDDEN, request);
+    ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request);
     fwd->fail(err);
     fwd->dontRetry(true);
     abortTransaction("Virgin body too large.");

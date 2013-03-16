@@ -776,7 +776,7 @@ StoreEntry::setPublicKey()
             StoreEntry *pe = storeCreateEntry(mem_obj->url, mem_obj->log_url, request->flags, request->method);
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
-            rep->setHeaders(HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
+            rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = mem_obj->getReply()->header.getList(HDR_VARY);
 
             if (vary.size()) {
@@ -1402,10 +1402,10 @@ StoreEntry::validLength() const
         return 1;
     }
 
-    if (reply->sline.status == HTTP_NOT_MODIFIED)
+    if (reply->sline.status == Http::scNotModified)
         return 1;
 
-    if (reply->sline.status == HTTP_NO_CONTENT)
+    if (reply->sline.status == Http::scNoContent)
         return 1;
 
     diff = reply->hdr_sz + reply->content_length - objectLen();

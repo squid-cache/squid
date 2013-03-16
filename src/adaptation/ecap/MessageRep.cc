@@ -99,7 +99,7 @@ Adaptation::Ecap::HeaderRep::parse(const Area &buf)
     MemBuf mb;
     mb.init();
     mb.append(buf.start, buf.size);
-    http_status error;
+    Http::StatusCode error;
     Must(theMessage.parse(&mb, true, &error));
 }
 
@@ -293,7 +293,7 @@ void
 Adaptation::Ecap::StatusLineRep::statusCode(int code)
 {
     // TODO: why is .status a enum? Do we not support unknown statuses?
-    theMessage.sline.status = static_cast<http_status>(code);
+    theMessage.sline.status = static_cast<Http::StatusCode>(code);
 }
 
 int

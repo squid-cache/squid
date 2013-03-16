@@ -114,7 +114,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         assert(rep == NULL);
     } else {
         if (rep) {
-            if (rep->sline.status != HTTP_OK) {
+            if (rep->sline.status != Http::scOkay) {
                 rep = NULL;
                 esiStream->include->includeFail (esiStream);
                 esiStream->finished = 1;

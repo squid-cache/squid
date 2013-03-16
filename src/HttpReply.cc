@@ -76,7 +76,7 @@ static http_hdr_type Denied304HeadersArr[] = {
 void
 httpReplyInitModule(void)
 {
-    assert(HTTP_STATUS_NONE == 0); // HttpReply::parse() interface assumes that
+    assert(Http::scNone == 0); // HttpReply::parse() interface assumes that
     httpHeaderMaskInit(&Denied304HeadersMask, 0);
     httpHeaderCalcMask(&Denied304HeadersMask, Denied304HeadersArr, countof(Denied304HeadersArr));
 }
@@ -161,7 +161,7 @@ HttpReply::pack()
 
 #if DEAD_CODE
 MemBuf *
-httpPackedReply(http_status status, const char *ctype, int64_t clen, time_t lmt, time_t expires)
+httpPackedReply(Http::StatusCode status, const char *ctype, int64_t clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = new HttpReply;
     rep->setHeaders(status, ctype, NULL, clen, lmt, expires);
@@ -189,7 +189,7 @@ HttpReply::make304() const
     /* rv->content_range */
     /* rv->keep_alive */
     HttpVersion ver(1,1);
-    httpStatusLineSet(&rv->sline, ver, HTTP_NOT_MODIFIED, NULL);
+    httpStatusLineSet(&rv->sline, ver, Http::scNotModified, NULL);
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
@@ -212,7 +212,7 @@ HttpReply::packed304Reply()
 }
 
 void
-HttpReply::setHeaders(http_status status, const char *reason,
+HttpReply::setHeaders(Http::StatusCode status, const char *reason,
                       const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
@@ -248,7 +248,7 @@ HttpReply::setHeaders(http_status status, const char *reason,
 }
 
 void
-HttpReply::redirect(http_status status, const char *loc)
+HttpReply::redirect(Http::StatusCode status, const char *loc)
 {
     HttpHeader *hdr;
     HttpVersion ver(1,1);
@@ -430,13 +430,13 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
         return -1;
     else if (method.id() == Http::METHOD_HEAD)
         return 0;
-    else if (sline.status == HTTP_OK)
+    else if (sline.status == Http::scOkay)
         (void) 0;		/* common case, continue */
-    else if (sline.status == HTTP_NO_CONTENT)
+    else if (sline.status == Http::scNoContent)
         return 0;
-    else if (sline.status == HTTP_NOT_MODIFIED)
+    else if (sline.status == Http::scNotModified)
         return 0;
-    else if (sline.status < HTTP_OK)
+    else if (sline.status < Http::scOkay)
         return 0;
 
     return content_length;
@@ -449,7 +449,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
  * NP: not all error cases are detected yet. Some are left for detection later in parse.
  */
 bool
-HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
+HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error)
 {
     // hack warning: using psize instead of size here due to type mismatches with MemBuf.
 
@@ -458,7 +458,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
     if ( buf->contentSize() < (protoPrefix.psize() + 4) ) {
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too small reply header (" << hdr_len << " bytes)");
-            *error = HTTP_INVALID_HEADER;
+            *error = Http::scInvalidHeader;
         }
         return false;
     }
@@ -473,7 +473,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
 
         if (protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
             debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
-            *error = HTTP_INVALID_HEADER;
+            *error = Http::scInvalidHeader;
             return false;
         }
 
@@ -486,7 +486,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
         // catch missing version info
         if (pos == protoPrefix.psize()) {
             debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol version numbers (ie. " << protoPrefix << "/1.0) in '" << buf->content() << "'");
-            *error = HTTP_INVALID_HEADER;
+            *error = Http::scInvalidHeader;
             return false;
         }
     }
@@ -496,7 +496,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
 
     if (pos < buf->contentSize() && !xisdigit(*(buf->content()+pos))) {
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing or invalid status number in '" << buf->content() << "'");
-        *error = HTTP_INVALID_HEADER;
+        *error = Http::scInvalidHeader;
         return false;
     }
 
@@ -519,7 +519,7 @@ HttpReply::httpMsgParseError()
 {
     int result(HttpMsg::httpMsgParseError());
     /* indicate an error in the status line */
-    sline.status = HTTP_INVALID_HEADER;
+    sline.status = Http::scInvalidHeader;
     return result;
 }
 
@@ -534,11 +534,11 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
 
     if (req_method == Http::METHOD_HEAD)
         expectBody = false;
-    else if (sline.status == HTTP_NO_CONTENT)
+    else if (sline.status == Http::scNoContent)
         expectBody = false;
-    else if (sline.status == HTTP_NOT_MODIFIED)
+    else if (sline.status == Http::scNotModified)
         expectBody = false;
-    else if (sline.status < HTTP_OK)
+    else if (sline.status < Http::scOkay)
         expectBody = false;
     else
         expectBody = true;

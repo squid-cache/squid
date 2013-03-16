@@ -103,7 +103,7 @@ static const char *const crlf = "\r\n";
 static void clientFollowXForwardedForCheck(allow_t answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-ErrorState *clientBuildError(err_type, http_status, char const *url, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *);
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -611,7 +611,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
-    repContext->setReplyToError(ERR_CONFLICT_HOST, HTTP_CONFLICT,
+    repContext->setReplyToError(ERR_CONFLICT_HOST, Http::scConflict,
                                 http->request->method, NULL,
                                 http->getConn()->clientConnection->remote,
                                 http->request,
@@ -777,7 +777,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 {
     acl_checklist = NULL;
     err_type page_id;
-    http_status status;
+    Http::StatusCode status;
     debugs(85, 2, "The request " <<
            RequestMethodStr(http->request->method) << " " <<
            http->uri << " is " << answer <<
@@ -819,22 +819,22 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 #if USE_AUTH
             if (http->request->flags.sslBumped) {
                 /*SSL Bumped request, authentication is not possible*/
-                status = HTTP_FORBIDDEN;
+                status = Http::scForbidden;
             } else if (!http->flags.accel) {
                 /* Proxy authorisation needed */
-                status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
+                status = Http::scProxyAuthenticationRequired;
             } else {
                 /* WWW authorisation needed */
-                status = HTTP_UNAUTHORIZED;
+                status = Http::scUnauthorized;
             }
 #else
             // need auth, but not possible to do.
-            status = HTTP_FORBIDDEN;
+            status = Http::scForbidden;
 #endif
             if (page_id == ERR_NONE)
                 page_id = ERR_CACHE_ACCESS_DENIED;
         } else {
-            status = HTTP_FORBIDDEN;
+            status = Http::scForbidden;
 
             if (page_id == ERR_NONE)
                 page_id = ERR_ACCESS_DENIED;
@@ -1298,20 +1298,20 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
             // TODO: change default redirect status for appropriate requests
             // Squid defaults to 302 status for now for better compatibility with old clients.
-            // HTTP/1.0 client should get 302 (HTTP_MOVED_TEMPORARILY)
-            // HTTP/1.1 client contacting reverse-proxy should get 307 (HTTP_TEMPORARY_REDIRECT)
-            // HTTP/1.1 client being diverted by forward-proxy should get 303 (HTTP_SEE_OTHER)
-            http_status status = HTTP_MOVED_TEMPORARILY;
+            // HTTP/1.0 client should get 302 (Http::scMovedTemporarily)
+            // HTTP/1.1 client contacting reverse-proxy should get 307 (Http::scTemporaryRedirect)
+            // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
+            Http::StatusCode status = Http::scMovedTemporarily;
             if (statusNote != NULL) {
                 const char * result = statusNote->firstValue();
-                status = (http_status) atoi(result);
+                status = static_cast<Http::StatusCode>(atoi(result));
             }
 
-            if (status == HTTP_MOVED_PERMANENTLY
-                    || status == HTTP_MOVED_TEMPORARILY
-                    || status == HTTP_SEE_OTHER
-                    || status == HTTP_PERMANENT_REDIRECT
-                    || status == HTTP_TEMPORARY_REDIRECT) {
+            if (status == Http::scMovedPermanently
+                    || status == Http::scMovedTemporarily
+                    || status == Http::scSeeOther
+                    || status == Http::scPermanentRedirect
+                    || status == Http::scTemporaryRedirect) {
                 http->redirect.status = status;
                 http->redirect.location = xstrdup(urlNote->firstValue());
                 // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
@@ -1485,7 +1485,7 @@ ClientRequestContext::sslBumpAccessCheck()
 
     // Do not bump during authentication: clients would not proxy-authenticate
     // if we delay a 407 response and respond with 200 OK to CONNECT.
-    if (error && error->httpStatus == HTTP_PROXY_AUTHENTICATION_REQUIRED) {
+    if (error && error->httpStatus == Http::scProxyAuthenticationRequired) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "no SslBump during proxy authentication");
         return false;
@@ -2083,7 +2083,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         Ip::Address noAddr;
         noAddr.SetNoAddr();
         ConnStateData * c = getConn();
-        calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
+        calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, Http::scInternalServerError,
                                 NULL,
                                 c != NULL ? c->clientConnection->remote : noAddr,
                                 request

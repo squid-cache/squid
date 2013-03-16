@@ -1278,7 +1278,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 
     if (!rep)
         range_err = "no [parse-able] reply";
-    else if ((rep->sline.status != HTTP_OK) && (rep->sline.status != HTTP_PARTIAL_CONTENT))
+    else if ((rep->sline.status != Http::scOkay) && (rep->sline.status != Http::scPartialContent))
         range_err = "wrong status code";
     else if (hdr->has(HDR_CONTENT_RANGE))
         range_err = "origin server does ranges";
@@ -1311,8 +1311,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         http->request->range = NULL;
     } else {
         /* XXX: TODO: Review, this unconditional set may be wrong. - TODO: review. */
-        httpStatusLineSet(&rep->sline, rep->sline.version,
-                          HTTP_PARTIAL_CONTENT, NULL);
+        httpStatusLineSet(&rep->sline, rep->sline.version, Http::scPartialContent, NULL);
         // web server responded with a valid, but unexpected range.
         // will (try-to) forward as-is.
         //TODO: we should cope with multirange request/responses
@@ -2052,7 +2051,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 #if SHOULD_REJECT_UNKNOWN_URLS
 
         if (!url) {
-            hp->request_parse_status = HTTP_BAD_REQUEST;
+            hp->request_parse_status = Http::scBadRequest;
             return parseHttpRequestAbort(conn, "error:invalid-request");
         }
 #endif
@@ -2180,7 +2179,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         return NULL;
     } else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
-        hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
+        hp->request_parse_status = Http::scHeaderTooLarge;
         return parseHttpRequestAbort(csd, "error:request-too-large");
     }
 
@@ -2225,7 +2224,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     /* Enforce max_request_size */
     if (req_sz >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "parseHttpRequest: Too large request");
-        hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
+        hp->request_parse_status = Http::scHeaderTooLarge;
         return parseHttpRequestAbort(csd, "error:request-too-large");
     }
 
@@ -2237,14 +2236,14 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
-        hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
+        hp->request_parse_status = Http::scMethodNotAllowed;
         return parseHttpRequestAbort(csd, "error:method-not-allowed");
     }
 
     if (*method_p == Http::METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
-        hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
+        hp->request_parse_status = Http::scMethodNotAllowed;
         return parseHttpRequestAbort(csd, "error:unsupported-request-method");
     }
 
@@ -2468,7 +2467,7 @@ ConnStateData::checkHeaderLimits()
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
     repContext->setReplyToError(ERR_TOO_BIG,
-                                HTTP_BAD_REQUEST, Http::METHOD_NONE, NULL,
+                                Http::scBadRequest, Http::METHOD_NONE, NULL,
                                 clientConnection->remote, NULL, NULL, NULL);
     context->registerWithConn();
     context->pullData();
@@ -2561,7 +2560,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 request->hier.note(peekerRequest->hier.tcpServer, request->GetHost());
 
                 // Create an error object and fill it
-                ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+                ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request);
                 err->src_addr = clientConnection->remote;
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
@@ -2608,11 +2607,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         switch (hp->request_parse_status) {
-        case HTTP_HEADER_TOO_LARGE:
-            repContext->setReplyToError(ERR_TOO_BIG, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+        case Http::scHeaderTooLarge:
+            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf, NULL);
             break;
-        case HTTP_METHOD_NOT_ALLOWED:
-            repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri,
+        case Http::scMethodNotAllowed:
+            repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf, NULL);
             break;
         default:
@@ -2632,7 +2631,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
@@ -2651,7 +2650,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri,
+        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
                                     conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -2669,7 +2668,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
@@ -2746,7 +2745,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         conn->quitAfterError(request.getRaw());
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED, request->method, NULL,
+        repContext->setReplyToError(ERR_UNSUP_REQ, Http::scNotImplemented, request->method, NULL,
                                     conn->clientConnection->remote, request.getRaw(), NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -2759,7 +2758,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         assert (repContext);
         conn->quitAfterError(request.getRaw());
         repContext->setReplyToError(ERR_INVALID_REQ,
-                                    HTTP_LENGTH_REQUIRED, request->method, NULL,
+                                    Http::scLengthRequired, request->method, NULL,
                                     conn->clientConnection->remote, request.getRaw(), NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -2774,7 +2773,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
             conn->quitAfterError(request.getRaw());
-            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri,
+            repContext->setReplyToError(ERR_INVALID_REQ, Http::scExpectationFailed, request->method, http->uri,
                                         conn->clientConnection->remote, request.getRaw(), NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -2815,7 +2814,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             assert (repContext);
             conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_TOO_BIG,
-                                        HTTP_REQUEST_ENTITY_TOO_LARGE, Http::METHOD_NONE, NULL,
+                                        Http::scRequestEntityTooLarge, Http::METHOD_NONE, NULL,
                                         conn->clientConnection->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -3169,8 +3168,8 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
         assert(repContext);
-        const http_status scode = (error == ERR_TOO_BIG) ?
-                                  HTTP_REQUEST_ENTITY_TOO_LARGE : HTTP_BAD_REQUEST;
+        const Http::StatusCode scode = (error == ERR_TOO_BIG) ?
+                                  Http::scRequestEntityTooLarge : HTTP_BAD_REQUEST;
         repContext->setReplyToError(error, scode,
                                     repContext->http->request->method,
                                     repContext->http->uri,
@@ -3243,7 +3242,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    HTTP_REQUEST_TIMEOUT, Http::METHOD_NONE, "N/A", &CachePeer.sin_addr,
+                                    Http::scRequestTimeout, Http::METHOD_NONE, "N/A", &CachePeer.sin_addr,
                                     NULL, NULL, NULL);
         /* No requests can be outstanded */
         assert(chr == NULL);
