@@ -45,19 +45,19 @@ void
 httpStatusLineInit(HttpStatusLine * sline)
 {
     HttpVersion version;
-    httpStatusLineSet(sline, version, HTTP_STATUS_NONE, NULL);
+    httpStatusLineSet(sline, version, Http::scNone, NULL);
 }
 
 void
 httpStatusLineClean(HttpStatusLine * sline)
 {
     HttpVersion version;
-    httpStatusLineSet(sline, version, HTTP_INTERNAL_SERVER_ERROR, NULL);
+    httpStatusLineSet(sline, version, Http::scInternalServerError, NULL);
 }
 
 /* set values */
 void
-httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, http_status status, const char *reason)
+httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, Http::StatusCode status, const char *reason)
 {
     assert(sline);
     sline->protocol = AnyP::PROTO_HTTP;
@@ -101,7 +101,7 @@ int
 httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const char *start, const char *end)
 {
     assert(sline);
-    sline->status = HTTP_INVALID_HEADER;	/* Squid header parsing error */
+    sline->status = Http::scInvalidHeader;	/* Squid header parsing error */
 
     // XXX: HttpMsg::parse() has a similar check but is using
     // casesensitive comparison (which is required by HTTP errata?)
@@ -126,7 +126,7 @@ httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const cha
     if (!(start = strchr(start, ' ')))
         return 0;
 
-    sline->status = (http_status) atoi(++start);
+    sline->status = static_cast<Http::StatusCode>(atoi(++start));
 
     /* we ignore 'reason-phrase' */
     /* Should assert start < end ? */
@@ -141,7 +141,7 @@ httpStatusLineReason(const HttpStatusLine * sline)
 }
 
 const char *
-httpStatusString(http_status status)
+httpStatusString(Http::StatusCode status)
 {
     /* why not to return matching string instead of using "p" ? @?@ */
     const char *p = NULL;
@@ -152,188 +152,188 @@ httpStatusString(http_status status)
         p = "Init";		/* we init .status with code 0 */
         break;
 
-    case HTTP_CONTINUE:
+    case Http::scContinue:
         p = "Continue";
         break;
 
-    case HTTP_SWITCHING_PROTOCOLS:
+    case Http::scSwitchingProtocols:
         p = "Switching Protocols";
         break;
 
-    case HTTP_OK:
+    case Http::scOkay:
         p = "OK";
         break;
 
-    case HTTP_CREATED:
+    case Http::scCreated:
         p = "Created";
         break;
 
-    case HTTP_ACCEPTED:
+    case Http::scAccepted:
         p = "Accepted";
         break;
 
-    case HTTP_NON_AUTHORITATIVE_INFORMATION:
+    case Http::scNonAuthoritativeInformation:
         p = "Non-Authoritative Information";
         break;
 
-    case HTTP_NO_CONTENT:
+    case Http::scNoContent:
         p = "No Content";
         break;
 
-    case HTTP_RESET_CONTENT:
+    case Http::scResetContent:
         p = "Reset Content";
         break;
 
-    case HTTP_PARTIAL_CONTENT:
+    case Http::scPartialContent:
         p = "Partial Content";
         break;
 
-    case HTTP_MULTI_STATUS:
+    case Http::scMultiStatus:
         p = "Multi-Status";
         break;
 
-    case HTTP_MULTIPLE_CHOICES:
+    case Http::scMultipleChoices:
         p = "Multiple Choices";
         break;
 
-    case HTTP_MOVED_PERMANENTLY:
+    case Http::scMovedPermanently:
         p = "Moved Permanently";
         break;
 
-    case HTTP_MOVED_TEMPORARILY:
+    case Http::scMovedTemporarily:
         p = "Moved Temporarily";
         break;
 
-    case HTTP_SEE_OTHER:
+    case Http::scSeeOther:
         p = "See Other";
         break;
 
-    case HTTP_NOT_MODIFIED:
+    case Http::scNotModified:
         p = "Not Modified";
         break;
 
-    case HTTP_USE_PROXY:
+    case Http::scUseProxy:
         p = "Use Proxy";
         break;
 
-    case HTTP_TEMPORARY_REDIRECT:
+    case Http::scTemporaryRedirect:
         p = "Temporary Redirect";
         break;
 
-    case HTTP_PERMANENT_REDIRECT:
+    case Http::scPermanentRedirect:
         p = "Permanent Redirect";
         break;
 
-    case HTTP_BAD_REQUEST:
+    case Http::scBadRequest:
         p = "Bad Request";
         break;
 
-    case HTTP_UNAUTHORIZED:
+    case Http::scUnauthorized:
         p = "Unauthorized";
         break;
 
-    case HTTP_PAYMENT_REQUIRED:
+    case Http::scPaymentRequired:
         p = "Payment Required";
         break;
 
-    case HTTP_FORBIDDEN:
+    case Http::scForbidden:
         p = "Forbidden";
         break;
 
-    case HTTP_NOT_FOUND:
+    case Http::scNotFound:
         p = "Not Found";
         break;
 
-    case HTTP_METHOD_NOT_ALLOWED:
+    case Http::scMethodNotAllowed:
         p = "Method Not Allowed";
         break;
 
-    case HTTP_NOT_ACCEPTABLE:
+    case Http::scNotAcceptable:
         p = "Not Acceptable";
         break;
 
-    case HTTP_PROXY_AUTHENTICATION_REQUIRED:
+    case Http::scProxyAuthenticationRequired:
         p = "Proxy Authentication Required";
         break;
 
-    case HTTP_REQUEST_TIMEOUT:
+    case Http::scRequestTimeout:
         p = "Request Time-out";
         break;
 
-    case HTTP_CONFLICT:
+    case Http::scConflict:
         p = "Conflict";
         break;
 
-    case HTTP_GONE:
+    case Http::scGone:
         p = "Gone";
         break;
 
-    case HTTP_LENGTH_REQUIRED:
+    case Http::scLengthRequired:
         p = "Length Required";
         break;
 
-    case HTTP_PRECONDITION_FAILED:
+    case Http::scPreconditionFailed:
         p = "Precondition Failed";
         break;
 
-    case HTTP_REQUEST_ENTITY_TOO_LARGE:
+    case Http::scRequestEntityTooLarge:
         p = "Request Entity Too Large";
         break;
 
-    case HTTP_REQUEST_URI_TOO_LARGE:
+    case Http::scRequestUriTooLarge:
         p = "Request-URI Too Large";
         break;
 
-    case HTTP_UNSUPPORTED_MEDIA_TYPE:
+    case Http::scUnsupportedMediaType:
         p = "Unsupported Media Type";
         break;
 
-    case HTTP_REQUESTED_RANGE_NOT_SATISFIABLE:
+    case Http::scRequestedRangeNotSatisfied:
         p = "Requested Range Not Satisfiable";
         break;
 
-    case HTTP_EXPECTATION_FAILED:
+    case Http::scExpectationFailed:
         p = "Expectation Failed";
         break;
 
-    case HTTP_INTERNAL_SERVER_ERROR:
+    case Http::scInternalServerError:
         p = "Internal Server Error";
         break;
 
-    case HTTP_NOT_IMPLEMENTED:
+    case Http::scNotImplemented:
         p = "Not Implemented";
         break;
 
-    case HTTP_BAD_GATEWAY:
+    case Http::scBadGateway:
         p = "Bad Gateway";
         break;
 
-    case HTTP_SERVICE_UNAVAILABLE:
+    case Http::scServiceUnavailable:
         p = "Service Unavailable";
         break;
 
-    case HTTP_GATEWAY_TIMEOUT:
+    case Http::scGateway_Timeout:
         p = "Gateway Time-out";
         break;
 
-    case HTTP_HTTP_VERSION_NOT_SUPPORTED:
+    case Http::scHttpVersionNotSupported:
         p = "HTTP Version not supported";
         break;
 
         // RFC 6585
-    case HTTP_PRECONDITION_REQUIRED: // 428
+    case Http::scPreconditionRequired: // 428
         p = "Precondition Required";
         break;
 
-    case HTTP_TOO_MANY_REQUESTS: // 429
+    case Http::scTooManyFields: // 429
         p = "Too Many Requests";
         break;
 
-    case HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE: // 431
+    case Http::scRequestHeaderFieldsTooLarge: // 431
         p = "Request Header Fields Too Large";
         break;
 
-    case HTTP_NETWORK_AUTHENTICATION_REQUIRED: // 511
+    case Http::scNetworkAuthenticationRequired: // 511
         p = "Network Authentication Required";
         break;
 

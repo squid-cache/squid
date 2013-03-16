@@ -546,7 +546,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         return -1;
 
     if ((hdr_size = headersEnd(buf, size))) {
-        http_status status;
+        Http::StatusCode status;
         HttpReply const *reply = fetch->entry->getReply();
         assert(reply);
         assert (reply->sline.status != 0);
@@ -557,7 +557,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
         /* this "if" is based on clientHandleIMSReply() */
 
-        if (status == HTTP_NOT_MODIFIED) {
+        if (status == Http::scNotModified) {
             /* our old entry is fine */
             assert(fetch->old_entry);
 
@@ -586,7 +586,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
             /* fetch->entry->mem_obj->request = NULL; */
-        } else if (status == HTTP_OK) {
+        } else if (status == Http::scOkay) {
             /* get rid of old entry if any */
 
             if (fetch->old_entry) {
@@ -604,7 +604,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
         /* must have a ready-to-use store entry if we got here */
         /* can we stay with the old in-memory digest? */
-        if (status == HTTP_NOT_MODIFIED && fetch->pd->cd) {
+        if (status == Http::scNotModified && fetch->pd->cd) {
             peerDigestFetchStop(fetch, buf, "Not modified");
             fetch->state = DIGEST_READ_DONE;
         } else {
@@ -640,7 +640,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
         assert(fetch->entry->getReply());
         assert (fetch->entry->getReply()->sline.status != 0);
 
-        if (fetch->entry->getReply()->sline.status != HTTP_OK) {
+        if (fetch->entry->getReply()->sline.status != Http::scOkay) {
             debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
                    " status " << fetch->entry->getReply()->sline.status <<
                    " got cached!");

@@ -39,7 +39,7 @@ void httpReplyInitModule(void);
 
 #if DEAD_CODE
 /** do everything in one call: init, set, pack, clean, return MemBuf */
-MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype, int64_t clen, time_t lmt, time_t expires);
+MemBuf *httpPackedReply(HttpVersion ver, Http::StatusCode status, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 #endif
 
 /* Sync changes here with HttpReply.cc */
@@ -63,9 +63,9 @@ public:
     /**
      \retval true on success
      \retval false and sets *error to zero when needs more data
-     \retval false and sets *error to a positive http_status code on error
+     \retval false and sets *error to a positive Http::StatusCode on error
      */
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error);
+    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error);
 
     /** \par public, readable; never update these or their .hdr equivalents directly */
     time_t date;
@@ -101,7 +101,7 @@ public:
     void updateOnNotModified(HttpReply const *other);
 
     /** set commonly used info with one call */
-    void setHeaders(http_status status,
+    void setHeaders(Http::StatusCode status,
                     const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 
     /** \return a ready to use mem buffer with a packed reply */
@@ -110,7 +110,7 @@ public:
     /** construct a 304 reply and return it */
     HttpReply *make304() const;
 
-    void redirect(http_status, const char *);
+    void redirect(Http::StatusCode, const char *);
 
     int64_t bodySize(const HttpRequestMethod&) const;
 

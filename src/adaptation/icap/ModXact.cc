@@ -958,7 +958,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     }
 
     // parse the buffer back
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
 
     Must(adapted.header->parse(&httpBuf, true, &error));
 
@@ -1071,7 +1071,7 @@ bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse" <<
            "; state: " << state.parsing);
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     const bool parsed = head->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 

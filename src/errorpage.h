@@ -38,7 +38,7 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
@@ -97,7 +97,7 @@ class MemBuf;
 class ErrorState
 {
 public:
-    ErrorState(err_type type, http_status, HttpRequest * request);
+    ErrorState(err_type type, Http::StatusCode, HttpRequest * request);
     ErrorState(); // not implemented.
     ~ErrorState();
 
@@ -153,7 +153,7 @@ public:
     err_type type;
     int page_id;
     char *err_language;
-    http_status httpStatus;
+    Http::StatusCode httpStatus;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif

@@ -1919,16 +1919,16 @@ FtpStateData::loginFailed()
     if ((state == SENT_USER || state == SENT_PASS) && ctrl.replycode >= 400) {
         if (ctrl.replycode == 421 || ctrl.replycode == 426) {
             // 421/426 - Service Overload - retry permitted.
-            err = new ErrorState(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
+            err = new ErrorState(ERR_FTP_UNAVAILABLE, Http::scServiceUnavailable, fwd->request);
         } else if (ctrl.replycode >= 430 && ctrl.replycode <= 439) {
             // 43x - Invalid or Credential Error - retry challenge required.
-            err = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+            err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
         } else if (ctrl.replycode >= 530 && ctrl.replycode <= 539) {
             // 53x - Credentials Missing - retry challenge required
             if (password_url) // but they were in the URI! major fail.
-                err = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scForbidden, fwd->request);
             else
-                err = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
         }
     }
 
@@ -3294,7 +3294,7 @@ FtpStateData::completedListing()
 {
     assert(entry);
     entry->lock();
-    ErrorState ferr(ERR_DIR_LISTING, HTTP_OK, request);
+    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request);
     ferr.ftp.listing = &listing;
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
@@ -3516,12 +3516,12 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
             if (ctrl.replycode > 500)
                 if (password_url)
-                    ftperr = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
+                    ftperr = new ErrorState(ERR_FTP_FORBIDDEN, Http::scForbidden, fwd->request);
                 else
-                    ftperr = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+                    ftperr = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
 
             else if (ctrl.replycode == 421)
-                ftperr = new ErrorState(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
+                ftperr = new ErrorState(ERR_FTP_UNAVAILABLE, Http::scServiceUnavailable, fwd->request);
 
             break;
 
@@ -3529,7 +3529,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
         case SENT_RETR:
             if (ctrl.replycode == 550)
-                ftperr = new ErrorState(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND, fwd->request);
+                ftperr = new ErrorState(ERR_FTP_NOT_FOUND, Http::scNotFound, fwd->request);
 
             break;
 
@@ -3540,16 +3540,16 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        ftperr = new ErrorState(error, HTTP_GATEWAY_TIMEOUT, fwd->request);
+        ftperr = new ErrorState(error, Http::scGateway_Timeout, fwd->request);
         break;
 
     default:
-        ftperr = new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request);
+        ftperr = new ErrorState(error, Http::scBadGateway, fwd->request);
         break;
     }
 
     if (ftperr == NULL)
-        ftperr = new ErrorState(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY, fwd->request);
+        ftperr = new ErrorState(ERR_FTP_FAILURE, Http::scBadGateway, fwd->request);
 
     ftperr->xerrno = xerrno;
 
@@ -3584,7 +3584,7 @@ static void
 ftpSendReply(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    http_status http_code;
+    Http::StatusCode http_code;
     err_type err_code = ERR_NONE;
 
     debugs(9, 3, HERE << ftpState->entry->url() << ", code " << code);
@@ -3594,13 +3594,13 @@ ftpSendReply(FtpStateData * ftpState)
 
     if (code == 226 || code == 250) {
         err_code = (ftpState->mdtm > 0) ? ERR_FTP_PUT_MODIFIED : ERR_FTP_PUT_CREATED;
-        http_code = (ftpState->mdtm > 0) ? HTTP_ACCEPTED : HTTP_CREATED;
+        http_code = (ftpState->mdtm > 0) ? Http::scAccepted : Http::scCreated;
     } else if (code == 227) {
         err_code = ERR_FTP_PUT_CREATED;
-        http_code = HTTP_CREATED;
+        http_code = Http::scCreated;
     } else {
         err_code = ERR_FTP_PUT_ERROR;
-        http_code = HTTP_INTERNAL_SERVER_ERROR;
+        http_code = Http::scInternalServerError;
     }
 
     ErrorState err(err_code, http_code, ftpState->request);
@@ -3676,7 +3676,7 @@ FtpStateData::appendSuccessHeader()
 
     if (0 == getCurrentOffset()) {
         /* Full reply */
-        reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, theSize, mdtm, -2);
+        reply->setHeaders(Http::scOkay, "Gatewaying", mime_type, theSize, mdtm, -2);
     } else if (theSize < getCurrentOffset()) {
         /*
          * DPW 2007-05-04
@@ -3688,13 +3688,13 @@ FtpStateData::appendSuccessHeader()
                " current offset=" << getCurrentOffset() <<
                ", but theSize=" << theSize <<
                ".  assuming full content response");
-        reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, theSize, mdtm, -2);
+        reply->setHeaders(Http::scOkay, "Gatewaying", mime_type, theSize, mdtm, -2);
     } else {
         /* Partial reply */
         HttpHdrRangeSpec range_spec;
         range_spec.offset = getCurrentOffset();
         range_spec.length = theSize - getCurrentOffset();
-        reply->setHeaders(HTTP_PARTIAL_CONTENT, "Gatewaying", mime_type, theSize - getCurrentOffset(), mdtm, -2);
+        reply->setHeaders(Http::scPartialContent, "Gatewaying", mime_type, theSize - getCurrentOffset(), mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, theSize);
     }
 
@@ -3730,7 +3730,7 @@ FtpStateData::haveParsedReplyHeaders()
 HttpReply *
 FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
 {
-    ErrorState err(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
+    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request);
     HttpReply *newrep = err.BuildHttpReply();
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */

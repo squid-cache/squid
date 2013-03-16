@@ -296,7 +296,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         asStateFree(asState);
         return;
-    } else if (HTTP_OK != e->getReply()->sline.status) {
+    } else if (Http::scOkay != e->getReply()->sline.status) {
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
         asStateFree(asState);
         return;

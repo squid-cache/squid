@@ -253,7 +253,7 @@ HierarchyLogEntry::HierarchyLogEntry() :
         cd_lookup(LOOKUP_NONE),
         n_choices(0),
         n_ichoices(0),
-        peer_reply_status(HTTP_STATUS_NONE),
+        peer_reply_status(Http::scNone),
         peer_response_time(-1),
         total_response_time(-1),
         tcpServer(NULL),
@@ -569,7 +569,7 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     if (0 == pq)
         S = (unsigned short) rep->sline.status;
     else
-        S = (unsigned short) HTTP_STATUS_NONE;
+        S = (unsigned short) Http::scNone;
 
     logfileWrite(headerslog, &magic, sizeof(magic));
     logfileWrite(headerslog, &M, sizeof(M));

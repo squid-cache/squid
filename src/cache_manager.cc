@@ -330,7 +330,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     Mgr::Command::Pointer cmd = ParseUrl(entry->url());
     if (!cmd) {
-        ErrorState *err = new ErrorState(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
+        ErrorState *err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
@@ -353,7 +353,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     if (CheckPassword(*cmd) != 0) {
         /* build error message */
-        ErrorState errState(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
+        ErrorState errState(ERR_CACHE_MGR_ACCESS_DENIED, Http::scUnauthorized, request);
         /* warn if user specified incorrect password */
 
         if (cmd->params.password.size()) {
@@ -407,11 +407,11 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     // special case: /squid-internal-mgr/ index page
     if (!strcmp(cmd->profile->name, "index")) {
-        ErrorState err(MGR_INDEX, HTTP_OK, request);
+        ErrorState err(MGR_INDEX, Http::scOkay, request);
         err.url = xstrdup(entry->url());
         HttpReply *rep = err.BuildHttpReply();
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
-            rep->sline.status = HTTP_NOT_FOUND;
+            rep->sline.status = Http::scNotFound;
         // Allow cachemgr and other XHR scripts access to our version string
         if (request->header.has(HDR_ORIGIN)) {
             rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));

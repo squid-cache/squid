@@ -374,7 +374,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
         delete psstate->lastError;
         psstate->lastError = NULL;
         if (fs->code == HIER_DIRECT) {
-            psstate->lastError = new ErrorState(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, psstate->request);
+            psstate->lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, psstate->request);
             psstate->lastError->dnsError = details.error;
         }
     }

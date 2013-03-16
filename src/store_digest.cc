@@ -424,7 +424,7 @@ storeDigestRewriteResume(void)
     e->setPublicKey();
     /* fake reply */
     HttpReply *rep = new HttpReply;
-    rep->setHeaders(HTTP_OK, "Cache Digest OK",
+    rep->setHeaders(Http::scOkay, "Cache Digest OK",
                     "application/cache-digest", (store_digest->mask_size + sizeof(sd_state.cblock)),
                     squid_curtime, (squid_curtime + Config.digest.rewrite_period) );
     debugs(71, 3, "storeDigestRewrite: entry expires on " << rep->expires <<

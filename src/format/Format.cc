@@ -797,7 +797,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_HTTP_RECEIVED_STATUS_CODE:
-            if (al->hier.peer_reply_status == HTTP_STATUS_NONE) {
+            if (al->hier.peer_reply_status == Http::scNone) {
                 out = "-";
             } else {
                 outint = al->hier.peer_reply_status;
