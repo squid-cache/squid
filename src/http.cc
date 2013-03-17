@@ -714,7 +714,7 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = true;
-            newrep->sline.version = HttpVersion(1,1);
+            newrep->sline.version = Http::ProtocolVersion(1,1);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
@@ -1261,8 +1261,8 @@ HttpStateData::continueAfterParsingHeader()
         // check for header parsing errors
         if (HttpReply *vrep = virginReply()) {
             const Http::StatusCode s = vrep->sline.status;
-            const HttpVersion &v = vrep->sline.version;
-            if (s == Http::scInvalidHeader && v != HttpVersion(0,9)) {
+            const Http::ProtocolVersion &v = vrep->sline.version;
+            if (s == Http::scInvalidHeader && v != Http::ProtocolVersion(0,9)) {
                 debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
             } else if (s == Http::scHeaderTooLarge) {
@@ -2048,7 +2048,13 @@ mb_size_t
 HttpStateData::buildRequestPrefix(MemBuf * mb)
 {
     const int offset = mb->size;
-    HttpVersion httpver(1,1);
+    /* Uses a local httpver variable to print the HTTP/1.1 label
+     * since the HttpRequest may have an older version label.
+     * XXX: This could create protocol bugs as the headers sent and
+     * flow control should all be based on the HttpRequest version
+     * not the one we are sending. Needs checking.
+     */
+    Http::ProtocolVersion httpver(1,1);
     const char * url;
     if (_peer && !_peer->options.originserver)
         url = entry->url();

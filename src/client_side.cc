@@ -221,7 +221,7 @@ static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, HttpVersion *);
+static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -2159,7 +2159,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_p, HttpVersion *http_ver)
+parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_p, Http::ProtocolVersion *http_ver)
 {
     char *req_hdr = NULL;
     char *end;
@@ -2196,7 +2196,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     }
 
     /* Request line is valid here .. */
-    *http_ver = HttpVersion(hp->req.v_maj, hp->req.v_min);
+    *http_ver = Http::ProtocolVersion(hp->req.v_maj, hp->req.v_min);
 
     /* This call scans the entire request, not just the headers */
     if (hp->req.v_maj > 0) {
@@ -2584,7 +2584,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #endif // USE_SSL
 
 static void
-clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, HttpVersion http_ver)
+clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2887,7 +2887,6 @@ ConnStateData::clientParseRequests()
 {
     HttpRequestMethod method;
     bool parsed_req = false;
-    HttpVersion http_ver;
 
     debugs(33, 5, HERE << clientConnection << ": attempting to parse");
 
@@ -2914,6 +2913,7 @@ ConnStateData::clientParseRequests()
         HttpParserInit(&parser_, in.buf, in.notYetUsed);
 
         /* Process request */
+        Http::ProtocolVersion http_ver;
         ClientSocketContext *context = parseHttpRequest(this, &parser_, &method, &http_ver);
         PROF_stop(parseHttpRequest);
 

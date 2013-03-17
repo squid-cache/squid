@@ -36,7 +36,7 @@
 #include "HttpHeader.h"
 #include "HttpRequestMethod.h"
 #include "http/StatusCode.h"
-#include "HttpVersion.h"
+#include "http/ProtocolVersion.h"
 #include "typedefs.h"
 
 /// common parts of HttpRequest and HttpReply
@@ -68,7 +68,7 @@ public:
     bool persistent() const;
 
 public:
-    HttpVersion http_ver;
+    Http::ProtocolVersion http_ver;
 
     HttpHeader header;
 

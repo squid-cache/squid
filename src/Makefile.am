@@ -408,7 +408,6 @@ squid_SOURCES = \
 	HttpRequest.h \
 	HttpRequestMethod.cc \
 	HttpRequestMethod.h \
-	HttpVersion.h \
 	ICP.h \
 	icp_opcode.h \
 	icp_v2.cc \
