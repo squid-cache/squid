@@ -1163,7 +1163,7 @@ ErrorState::BuildHttpReply()
             status = httpStatus;
         else {
             // Use 307 for HTTP/1.1 non-GET/HEAD requests.
-            if (request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= HttpVersion(1,1))
+            if (request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= Http::ProtocolVersion(1,1))
                 status = Http::scTemporaryRedirect;
         }
 

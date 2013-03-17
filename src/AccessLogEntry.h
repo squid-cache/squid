@@ -34,7 +34,7 @@
 #include "base/RefCount.h"
 #include "comm/Connection.h"
 #include "HttpHeader.h"
-#include "HttpVersion.h"
+#include "http/ProtocolVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
 #include "icp_opcode.h"
@@ -89,7 +89,7 @@ public:
         HttpRequestMethod method;
         int code;
         const char *content_type;
-        HttpVersion version;
+        Http::ProtocolVersion version;
         bool timedout; ///< terminated due to a lifetime or I/O timeout
         bool aborted; ///< other abnormal termination (e.g., I/O error)
 

@@ -44,20 +44,18 @@ const char *IcyStatusLineFormat = "ICY %3d %s\r\n";
 void
 httpStatusLineInit(HttpStatusLine * sline)
 {
-    HttpVersion version;
-    httpStatusLineSet(sline, version, Http::scNone, NULL);
+    httpStatusLineSet(sline, Http::ProtocolVersion(), Http::scNone, NULL);
 }
 
 void
 httpStatusLineClean(HttpStatusLine * sline)
 {
-    HttpVersion version;
-    httpStatusLineSet(sline, version, Http::scInternalServerError, NULL);
+    httpStatusLineSet(sline, Http::ProtocolVersion(), Http::scInternalServerError, NULL);
 }
 
 /* set values */
 void
-httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, Http::StatusCode status, const char *reason)
+httpStatusLineSet(HttpStatusLine * sline, Http::ProtocolVersion version, Http::StatusCode status, const char *reason)
 {
     assert(sline);
     sline->protocol = AnyP::PROTO_HTTP;
