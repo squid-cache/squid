@@ -1,7 +1,8 @@
 #ifndef _SQUID_SRC_HTTP_STATUSCODE_H
 #define _SQUID_SRC_HTTP_STATUSCODE_H
 
-namespace Http {
+namespace Http
+{
 
 /**
  * These basic HTTP reply status codes are defined by RFC 2616 unless otherwise stated.
