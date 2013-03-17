@@ -6,6 +6,7 @@ noinst_LTLIBRARIES = libsquid-http.la
 libsquid_http_la_SOURCES = \
 	MethodType.cc \
 	MethodType.h \
+	ProtocolVersion.h \
 	StatusCode.h
 
 MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk

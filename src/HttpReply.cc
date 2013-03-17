@@ -188,8 +188,7 @@ HttpReply::make304() const
     /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
-    HttpVersion ver(1,1);
-    httpStatusLineSet(&rv->sline, ver, Http::scNotModified, NULL);
+    httpStatusLineSet(&rv->sline, Http::ProtocolVersion(1,1), Http::scNotModified, NULL);
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
@@ -216,8 +215,7 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
                       const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
-    HttpVersion ver(1,1);
-    httpStatusLineSet(&sline, ver, status, reason);
+    httpStatusLineSet(&sline, Http::ProtocolVersion(1,1), status, reason);
     hdr = &header;
     hdr->putStr(HDR_SERVER, visible_appname_string);
     hdr->putStr(HDR_MIME_VERSION, "1.0");
@@ -251,8 +249,7 @@ void
 HttpReply::redirect(Http::StatusCode status, const char *loc)
 {
     HttpHeader *hdr;
-    HttpVersion ver(1,1);
-    httpStatusLineSet(&sline, ver, status, httpStatusString(status));
+    httpStatusLineSet(&sline, Http::ProtocolVersion(1,1), status, httpStatusString(status));
     hdr = &header;
     hdr->putStr(HDR_SERVER, APP_FULLNAME);
     hdr->putTime(HDR_DATE, squid_curtime);

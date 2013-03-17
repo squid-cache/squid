@@ -39,7 +39,7 @@ void httpReplyInitModule(void);
 
 #if DEAD_CODE
 /** do everything in one call: init, set, pack, clean, return MemBuf */
-MemBuf *httpPackedReply(HttpVersion ver, Http::StatusCode status, const char *ctype, int64_t clen, time_t lmt, time_t expires);
+MemBuf *httpPackedReply(Http::ProtocolVersion ver, Http::StatusCode status, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 #endif
 
 /* Sync changes here with HttpReply.cc */
