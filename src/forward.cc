@@ -1123,10 +1123,6 @@ FwdState::connectStart()
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
             flags.connected_okay = true;
-#if 0
-            if (!serverConn->getPeer())
-                serverConn->peerType = HIER_DIRECT;
-#endif
             ++n_tries;
             request->flags.pinned = true;
             if (pinned_connection->pinnedAuth())

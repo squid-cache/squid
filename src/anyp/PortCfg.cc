@@ -67,7 +67,7 @@ AnyP::PortCfg::clone() const
     b->tcp_keepalive = tcp_keepalive;
 
 #if 0
-    // AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
+    // TODO: AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
 
 #if USE_SSL
     char *cert;

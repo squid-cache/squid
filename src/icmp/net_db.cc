@@ -989,23 +989,6 @@ netdbFreeMemory(void)
 #endif
 }
 
-#if 0 // AYJ: Looks to be unused code.
-int
-netdbHops(Ip::Address &addr)
-{
-#if USE_ICMP
-    netdbEntry *n = netdbLookupAddr(addr);
-
-    if (n && n->pings_recv) {
-        n->last_use_time = squid_curtime;
-        return (int) (n->hops + 0.5);
-    }
-
-#endif
-    return 256;
-}
-#endif
-
 void
 netdbDump(StoreEntry * sentry)
 {
