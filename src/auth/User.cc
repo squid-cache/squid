@@ -105,7 +105,7 @@ Auth::User::absorb(Auth::User::Pointer from)
         new_ipdata = static_cast<AuthUserIP *>(from->ip_list.head->data);
 
         /* If this IP has expired - ignore the expensive merge actions. */
-        if (new_ipdata->ip_expiretime + ::Config.authenticateIpTTL < squid_curtime) {
+        if (new_ipdata->ip_expiretime <= squid_curtime) {
             /* This IP has expired - remove from the source list */
             dlinkDelete(&new_ipdata->node, &(from->ip_list));
             cbdataFree(new_ipdata);
@@ -124,7 +124,7 @@ Auth::User::absorb(Auth::User::Pointer from)
                     /* update IP ttl and stop searching. */
                     ipdata->ip_expiretime = max(ipdata->ip_expiretime, new_ipdata->ip_expiretime);
                     break;
-                } else if (ipdata->ip_expiretime + ::Config.authenticateIpTTL < squid_curtime) {
+                } else if (ipdata->ip_expiretime <= squid_curtime) {
                     /* This IP has expired - cleanup the destination list */
                     dlinkDelete(&ipdata->node, &ip_list);
                     cbdataFree(ipdata);
@@ -309,7 +309,7 @@ Auth::User::addIp(Ip::Address ipaddr)
             found = 1;
             /* update IP ttl */
             ipdata->ip_expiretime = squid_curtime;
-        } else if (ipdata->ip_expiretime + ::Config.authenticateIpTTL < squid_curtime) {
+        } else if (ipdata->ip_expiretime <= squid_curtime) {
             /* This IP has expired - remove from the seen list */
             dlinkDelete(&ipdata->node, &ip_list);
             cbdataFree(ipdata);
@@ -327,7 +327,7 @@ Auth::User::addIp(Ip::Address ipaddr)
     /* This ip is not in the seen list */
     ipdata = cbdataAlloc(AuthUserIP);
 
-    ipdata->ip_expiretime = squid_curtime;
+    ipdata->ip_expiretime = squid_curtime + ::Config.authenticateIpTTL;
 
     ipdata->ipaddr = ipaddr;
 
