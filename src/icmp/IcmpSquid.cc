@@ -51,9 +51,6 @@ IcmpSquid icmpEngine;
 #if USE_ICMP
 
 #define S_ICMP_ECHO     1
-#if DEAD_CODE
-#define S_ICMP_ICP      2
-#endif
 #define S_ICMP_DOM      3
 
 static void * hIpc;
