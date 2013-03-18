@@ -531,7 +531,6 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     HttpRequest *req;
     unsigned short magic = 0;
     unsigned char M = (unsigned char) m;
-    unsigned short S;
     char *hmask;
     int ccmask = 0;
 
@@ -566,10 +565,9 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     magic = htons(magic);
     ccmask = htonl(ccmask);
 
+    unsigned short S = 0;
     if (0 == pq)
-        S = (unsigned short) rep->sline.status;
-    else
-        S = (unsigned short) Http::scNone;
+        S = static_cast<unsigned short>(rep->sline.status());
 
     logfileWrite(headerslog, &magic, sizeof(magic));
     logfileWrite(headerslog, &M, sizeof(M));

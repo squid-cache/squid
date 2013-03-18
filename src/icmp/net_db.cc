@@ -742,10 +742,10 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
             debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
             rep = ex->e->getReply();
-            assert (0 != rep->sline.status);
-            debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status);
+            assert(rep->sline.status() != Http::scNone);
+            debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status());
 
-            if (Http::scOkay != rep->sline.status) {
+            if (rep->sline.status() != Http::scOkay) {
                 netdbExchangeDone(ex);
                 return;
             }

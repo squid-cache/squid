@@ -508,7 +508,7 @@ ServerStateData::maybePurgeOthers()
         return;
 
     // and probably only if the response was successful
-    if (theFinalReply->sline.status >= 400)
+    if (theFinalReply->sline.status() >= 400)
         return;
 
     // XXX: should we use originalRequest() here?

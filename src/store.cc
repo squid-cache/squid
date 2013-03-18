@@ -1402,10 +1402,10 @@ StoreEntry::validLength() const
         return 1;
     }
 
-    if (reply->sline.status == Http::scNotModified)
+    if (reply->sline.status() == Http::scNotModified)
         return 1;
 
-    if (reply->sline.status == Http::scNoContent)
+    if (reply->sline.status() == Http::scNoContent)
         return 1;
 
     diff = reply->hdr_sz + reply->content_length - objectLen();

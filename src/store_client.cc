@@ -495,7 +495,7 @@ store_client::readBody(const char *buf, ssize_t len)
     assert(_callback.pending());
     debugs(90, 3, "storeClientReadBody: len " << len << "");
 
-    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {
+    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status() == Http::scNone) {
         /* Our structure ! */
         HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 

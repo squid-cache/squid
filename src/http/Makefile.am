@@ -7,7 +7,10 @@ libsquid_http_la_SOURCES = \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \
-	StatusCode.h
+	StatusCode.cc \
+	StatusCode.h \
+	StatusLine.cc \
+	StatusLine.h
 
 MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/MethodType.h | \
