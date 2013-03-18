@@ -1305,15 +1305,6 @@ clientReplyContext::buildReplyHeader()
          * age calculation is performed by adjusting the timestamp in
          * StoreEntry::timestampsSet(), not here.
          */
-#if DEAD_CODE
-        // XXX: realy useless? or is there a bug now that this is detatched from the below if-sequence ?
-        // looks like this pre-if was supposed to be the browser workaround...
-        if (NULL == http->storeEntry())
-            (void) 0;
-        else if (http->storeEntry()->timestamp < 0)
-            (void) 0;
-#endif
-
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(HDR_DATE);
             hdr->insertTime(HDR_DATE, squid_curtime);

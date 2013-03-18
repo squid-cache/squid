@@ -890,23 +890,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     }
 
-    /* Squid seems to be working fine without this code. With this code,
-     * we leak memory on many connect requests because of EINPROGRESS.
-     * If you find that this code is needed, please file a bug report. */
-#if 0
-#if _SQUID_LINUX_
-    /* 2007-11-27:
-     * Linux Debian replaces our allocated AI pointer with garbage when
-     * connect() fails. This leads to segmentation faults deallocating
-     * the system-allocated memory when we go to clean up our pointer.
-     * HACK: is to leak the memory returned since we can't deallocate.
-     */
-    if (errno != 0) {
-        AI = NULL;
-    }
-#endif
-#endif
-
     address.FreeAddrInfo(AI);
 
     PROF_stop(comm_connect_addr);
