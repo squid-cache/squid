@@ -200,8 +200,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
     http_hdr_type type;
 
     /* don't add to authentication error pages */
-    if ((!accel && rep->sline.status == Http::scProxyAuthenticationRequired)
-            || (accel && rep->sline.status == Http::scUnauthorized))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
@@ -233,8 +233,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
         return;
 
     /* don't add to authentication error pages */
-    if ((!accel && rep->sline.status == Http::scProxyAuthenticationRequired)
-            || (accel && rep->sline.status == Http::scUnauthorized))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;

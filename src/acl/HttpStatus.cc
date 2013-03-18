@@ -156,11 +156,11 @@ aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist)
 int
 ACLHTTPStatus::match(ACLChecklist *checklist)
 {
-    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status);
+    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status());
 }
 
 int
-aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, Http::StatusCode status)
+aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, const Http::StatusCode status)
 {
 
     acl_httpstatus_data X(status);

@@ -888,7 +888,7 @@ ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, ClientHttpRequest *ht
     rv->rep = rep;
     rv->cbdataLocker = rv;
 
-    if (esiAlwaysPassthrough(rep->sline.status)) {
+    if (esiAlwaysPassthrough(rep->sline.status())) {
         rv->flags.passthrough = 1;
     } else {
         /* remove specific headers for ESI to prevent

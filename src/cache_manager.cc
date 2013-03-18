@@ -411,7 +411,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
         err.url = xstrdup(entry->url());
         HttpReply *rep = err.BuildHttpReply();
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
-            rep->sline.status = Http::scNotFound;
+            rep->sline.set(Http::ProtocolVersion(1,1), Http::scNotFound);
         // Allow cachemgr and other XHR scripts access to our version string
         if (request->header.has(HDR_ORIGIN)) {
             rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));

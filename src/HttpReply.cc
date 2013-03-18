@@ -98,7 +98,7 @@ void
 HttpReply::init()
 {
     hdrCacheInit();
-    httpStatusLineInit(&sline);
+    sline.init();
     pstate = psReadyToParseStartLine;
     do_clean = true;
 }
@@ -126,14 +126,14 @@ HttpReply::clean()
     body.clear();
     hdrCacheClean();
     header.clean();
-    httpStatusLineClean(&sline);
+    sline.clean();
     bodySizeMax = -2; // hack: make calculatedBodySizeMax() false
 }
 
 void
 HttpReply::packHeadersInto(Packer * p) const
 {
-    httpStatusLinePackInto(&sline, p);
+    sline.packInto(p);
     header.packInto(p);
     packerAppend(p, "\r\n", 2);
 }
@@ -188,7 +188,7 @@ HttpReply::make304() const
     /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
-    httpStatusLineSet(&rv->sline, Http::ProtocolVersion(1,1), Http::scNotModified, NULL);
+    rv->sline.set(Http::ProtocolVersion(1,1), Http::scNotModified, NULL);
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
@@ -215,7 +215,7 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
                       const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
-    httpStatusLineSet(&sline, Http::ProtocolVersion(1,1), status, reason);
+    sline.set(Http::ProtocolVersion(1,1), status, reason);
     hdr = &header;
     hdr->putStr(HDR_SERVER, visible_appname_string);
     hdr->putStr(HDR_MIME_VERSION, "1.0");
@@ -249,7 +249,7 @@ void
 HttpReply::redirect(Http::StatusCode status, const char *loc)
 {
     HttpHeader *hdr;
-    httpStatusLineSet(&sline, Http::ProtocolVersion(1,1), status, httpStatusString(status));
+    sline.set(Http::ProtocolVersion(1,1), status, NULL);
     hdr = &header;
     hdr->putStr(HDR_SERVER, APP_FULLNAME);
     hdr->putTime(HDR_DATE, squid_curtime);
@@ -427,13 +427,13 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
         return -1;
     else if (method.id() == Http::METHOD_HEAD)
         return 0;
-    else if (sline.status == Http::scOkay)
+    else if (sline.status() == Http::scOkay)
         (void) 0;		/* common case, continue */
-    else if (sline.status == Http::scNoContent)
+    else if (sline.status() == Http::scNoContent)
         return 0;
-    else if (sline.status == Http::scNotModified)
+    else if (sline.status() == Http::scNotModified)
         return 0;
-    else if (sline.status < Http::scOkay)
+    else if (sline.status() < Http::scOkay)
         return 0;
 
     return content_length;
@@ -500,14 +500,10 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusC
     return true;
 }
 
-void HttpReply::packFirstLineInto(Packer *p, bool unused) const
+bool
+HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
 {
-    httpStatusLinePackInto(&sline, p);
-}
-
-bool HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
-{
-    return httpStatusLineParse(&sline, protoPrefix, blk_start, blk_end);
+    return sline.parse(protoPrefix, blk_start, blk_end);
 }
 
 /* handy: resets and returns -1 */
@@ -516,7 +512,7 @@ HttpReply::httpMsgParseError()
 {
     int result(HttpMsg::httpMsgParseError());
     /* indicate an error in the status line */
-    sline.status = Http::scInvalidHeader;
+    sline.set(Http::ProtocolVersion(1,1), Http::scInvalidHeader);
     return result;
 }
 
@@ -531,11 +527,11 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
 
     if (req_method == Http::METHOD_HEAD)
         expectBody = false;
-    else if (sline.status == Http::scNoContent)
+    else if (sline.status() == Http::scNoContent)
         expectBody = false;
-    else if (sline.status == Http::scNotModified)
+    else if (sline.status() == Http::scNotModified)
         expectBody = false;
-    else if (sline.status < Http::scOkay)
+    else if (sline.status() < Http::scOkay)
         expectBody = false;
     else
         expectBody = true;

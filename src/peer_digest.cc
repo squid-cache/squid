@@ -546,11 +546,10 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         return -1;
 
     if ((hdr_size = headersEnd(buf, size))) {
-        Http::StatusCode status;
         HttpReply const *reply = fetch->entry->getReply();
         assert(reply);
-        assert (reply->sline.status != 0);
-        status = reply->sline.status;
+        assert(reply->sline.status() != Http::scNone);
+        const Http::StatusCode status = reply->sline.status();
         debugs(72, 3, "peerDigestFetchReply: " << pd->host << " status: " << status <<
                ", expires: " << (long int) reply->expires << " (" << std::showpos <<
                (int) (reply->expires - squid_curtime) << ")");
@@ -598,7 +597,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             }
         } else {
             /* some kind of a bug */
-            peerDigestFetchAbort(fetch, buf, httpStatusLineReason(&reply->sline));
+            peerDigestFetchAbort(fetch, buf, reply->sline.reason());
             return -1;		/* XXX -1 will abort stuff in ReadReply! */
         }
 
@@ -638,11 +637,11 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 
     if ((hdr_size = headersEnd(buf, size))) {
         assert(fetch->entry->getReply());
-        assert (fetch->entry->getReply()->sline.status != 0);
+        assert(fetch->entry->getReply()->sline.status() != Http::scNone);
 
-        if (fetch->entry->getReply()->sline.status != Http::scOkay) {
+        if (fetch->entry->getReply()->sline.status() != Http::scOkay) {
             debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
-                   " status " << fetch->entry->getReply()->sline.status <<
+                   " status " << fetch->entry->getReply()->sline.status() <<
                    " got cached!");
 
             peerDigestFetchAbort(fetch, buf, "internal status error");

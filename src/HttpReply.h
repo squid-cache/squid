@@ -33,7 +33,7 @@
 #include "HttpBody.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
-#include "HttpStatusLine.h"
+#include "http/StatusLine.h"
 
 void httpReplyInitModule(void);
 
@@ -83,7 +83,7 @@ public:
     short int keep_alive;
 
     /** \par public, writable, but use httpReply* interfaces when possible */
-    HttpStatusLine sline;
+    Http::StatusLine sline;
 
     HttpBody body;		/**< for small constant memory-resident text bodies only */
 
@@ -163,7 +163,7 @@ private:
     mutable int64_t bodySizeMax; /**< cached result of calcMaxBodySize */
 
 protected:
-    virtual void packFirstLineInto(Packer * p, bool) const;
+    virtual void packFirstLineInto(Packer * p, bool) const { sline.packInto(p); }
 
     virtual bool parseFirstLine(const char *start, const char *end);
 

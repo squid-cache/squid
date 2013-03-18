@@ -28,8 +28,8 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-#ifndef SQUID_HTTPSTATUSLINE_H
-#define SQUID_HTTPSTATUSLINE_H
+#ifndef SQUID_HTTP_STATUSLINE_H
+#define SQUID_HTTP_STATUSLINE_H
 
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
@@ -38,13 +38,42 @@
 class Packer;
 class String;
 
+namespace Http
+{
+
 /**
  * Holds the values parsed from an HTTP reply status line.
  *
- * For example: HTTP/1.1 200 Okay
+ * For example: HTTP/1.1 200 OK
  */
-class HttpStatusLine
+class StatusLine
 {
+public:
+    /// reset this status-line back to empty state
+    void init();
+
+    /// reset this status-line back to Internal Server Error state
+    void clean();
+
+    /// set this status-line to the given values
+    /// when reason is NULL the default message text for this StatusCode will be used
+    void set(const Http::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
+
+    /// retrieve the status code for this status line
+    const Http::StatusCode status() const { return status_; }
+
+    /// retrieve the reason string for this status line
+    const char *reason() const;
+
+    /// pack fields using Packer
+    void packInto(Packer * p) const;
+
+    /**
+     * Parse a buffer and fill internal structures;
+     * \return true on success, false otherwise
+     */
+    bool parse(const String &protoPrefix, const char *start, const char *end);
+
 public:
     /* public, read only */
 
@@ -53,27 +82,19 @@ public:
      * However there are protocols which violate HTTP by sending their own custom formats
      * back with other protocol names (ICY streaming format being the current major problem).
      */
+    // XXX: protocol is part of Http::ProtocolVersion. We should be able to use version.protocol instead now.
     AnyP::ProtocolType protocol;
 
-    Http::ProtocolVersion version;     ///< breakdown of protocol version labels: 0.9 1.0 1.1
-    Http::StatusCode status; ///< status code. ie 200 404
-    const char *reason;	     ///< points to a _constant_ string (default or supplied), never free()d */
+    Http::ProtocolVersion version;     ///< breakdown of protocol version label: (HTTP/ICY) and (0.9/1.0/1.1)
+
+private:
+    /// status code. ie 100 ... 200 ... 404 ... 599
+    Http::StatusCode status_;
+
+    /// points to a _constant_ string (default or supplied), never free()d
+    const char *reason_;
 };
 
-/* init/clean */
-void httpStatusLineInit(HttpStatusLine * sline);
-void httpStatusLineClean(HttpStatusLine * sline);
-/* set/get values */
-void httpStatusLineSet(HttpStatusLine * sline, Http::ProtocolVersion version,
-                       Http::StatusCode status, const char *reason);
-const char *httpStatusLineReason(const HttpStatusLine * sline);
-/* parse/pack */
-/* parse a 0-terminating buffer and fill internal structires; returns true on success */
-int httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix,
-                        const char *start, const char *end);
-/* pack fields using Packer */
-void httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p);
+} // namespace Http
 
-const char *httpStatusString(Http::StatusCode status);
-
-#endif /* SQUID_HTTPSTATUSLINE_H */
+#endif /* SQUID_HTTP_STATUSLINE_H */

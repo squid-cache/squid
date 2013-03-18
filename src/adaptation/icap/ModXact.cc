@@ -779,14 +779,14 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         reuseConnection = false;
     }
 
-    switch (icapReply->sline.status) {
+    switch (icapReply->sline.status()) {
 
-    case 100:
+    case Http::scContinue:
         handle100Continue();
         break;
 
-    case 200:
-    case 201: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
+    case Http::scOkay:
+    case Http::scCreated: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
 
         if (!validate200Ok()) {
             throw TexcHere("Invalid ICAP Response");
@@ -796,16 +796,16 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 
         break;
 
-    case 204:
+    case Http::scNoContent:
         handle204NoContent();
         break;
 
-    case 206:
+    case Http::scPartialContent:
         handle206PartialContent();
         break;
 
     default:
-        debugs(93, 5, HERE << "ICAP status " << icapReply->sline.status);
+        debugs(93, 5, "ICAP status " << icapReply->sline.status());
         handleUnknownScode();
         break;
     }
@@ -1294,7 +1294,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     }
 
     if (reply_) {
-        al.http.code = reply_->sline.status;
+        al.http.code = reply_->sline.status();
         al.http.content_type = reply_->content_type.termedBuf();
         if (replyHttpBodySize >= 0) {
             al.cache.replySize = replyHttpBodySize + reply_->hdr_sz;

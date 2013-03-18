@@ -376,7 +376,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     /* update size of the request */
     reqsize = result.length + reqofs;
 
-    const Http::StatusCode status = http->storeEntry()->getReply()->sline.status;
+    const Http::StatusCode status = http->storeEntry()->getReply()->sline.status();
 
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
@@ -405,7 +405,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         } else {
             // send existing entry, it's still valid
             debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and sending " <<
-                   old_rep->sline.status << " to client");
+                   old_rep->sline.status() << " to client");
             sendClientOldEntry();
         }
     }
@@ -428,7 +428,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         // ignore and let client have old entry
         http->logType = LOG_TCP_REFRESH_FAIL_OLD;
         debugs(88, 3, "handleIMSReply: origin replied with error " <<
-               status << ", sending old entry (" << old_rep->sline.status << ") to client");
+               status << ", sending old entry (" << old_rep->sline.status() << ") to client");
         sendClientOldEntry();
     }
 }
@@ -714,9 +714,9 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
-    if (e->getReply()->sline.status != Http::scOkay) {
+    if (e->getReply()->sline.status() != Http::scOkay) {
         debugs(88, 4, "clientReplyContext::processConditional: Reply code " <<
-               e->getReply()->sline.status << " != 200");
+               e->getReply()->sline.status() << " != 200");
         http->logType = LOG_TCP_MISS;
         processMiss();
         return;
@@ -1430,8 +1430,8 @@ clientReplyContext::buildReplyHeader()
 #if USE_AUTH
     /* Handle authentication headers */
     if (http->logType == LOG_TCP_DENIED &&
-            ( reply->sline.status == Http::scProxyAuthenticationRequired ||
-              reply->sline.status == Http::scUnauthorized)
+            ( reply->sline.status() == Http::scProxyAuthenticationRequired ||
+              reply->sline.status() == Http::scUnauthorized)
        ) {
         /* Add authentication header */
         /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
@@ -1461,7 +1461,7 @@ clientReplyContext::buildReplyHeader()
                                      (request->http_ver >= Http::ProtocolVersion(1, 1));
 
     /* Check whether we should send keep-alive */
-    if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.mustKeepalive) {
+    if (!Config.onoff.error_pconns && reply->sline.status() >= 400 && !request->flags.mustKeepalive) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
         request->flags.proxyKeepalive = false;
     } else if (!Config.onoff.client_pconns && !request->flags.mustKeepalive) {
@@ -1936,7 +1936,7 @@ clientReplyContext::processReplyAccess ()
     /** Don't block our own responses or HTTP status messages */
     if (http->logType == LOG_TCP_DENIED ||
             http->logType == LOG_TCP_DENIED_REPLY ||
-            alwaysAllowResponse(reply->sline.status)) {
+            alwaysAllowResponse(reply->sline.status())) {
         headers_sz = reply->hdr_sz;
         processReplyAccessResult(ACCESS_ALLOWED);
         return;
@@ -2018,8 +2018,8 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 
 #if USE_SQUID_ESI
 
-    if (http->flags.accel && reply->sline.status != Http::scForbidden &&
-            !alwaysAllowResponse(reply->sline.status) &&
+    if (http->flags.accel && reply->sline.status() != Http::scForbidden &&
+            !alwaysAllowResponse(reply->sline.status()) &&
             esiEnableProcessing(reply)) {
         debugs(88, 2, "Enabling ESI processing for " << http->uri);
         clientStreamInsertHead(&http->client_stream, esiStreamRead,

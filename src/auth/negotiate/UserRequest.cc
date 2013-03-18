@@ -385,8 +385,8 @@ Auth::Negotiate::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int a
         return;
 
     /* don't add to authentication error pages */
-    if ((!accel && rep->sline.status == Http::scProxyAuthenticationRequired)
-            || (accel && rep->sline.status == Http::scUnauthorized))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
