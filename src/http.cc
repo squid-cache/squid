@@ -442,7 +442,7 @@ HttpStateData::cacheableReply()
             return 0;
         }
 
-    switch (rep->sline.status) {
+    switch (rep->sline.status()) {
         /* Responses that are cacheable */
 
     case Http::scOkay:
@@ -464,7 +464,7 @@ HttpStateData::cacheableReply()
             debugs(22, 3, "NO because refreshIsCachable() returned non-cacheable..");
             return 0;
         } else {
-            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status);
+            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status());
             return 1;
         }
         /* NOTREACHED */
@@ -475,14 +475,14 @@ HttpStateData::cacheableReply()
     case Http::scMovedTemporarily:
     case Http::scTemporaryRedirect:
         if (rep->date <= 0) {
-            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status << " and Date missing/invalid");
+            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Date missing/invalid");
             return 0;
         }
         if (rep->expires > rep->date) {
-            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status << " and Expires > Date");
+            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status() << " and Expires > Date");
             return 1;
         } else {
-            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status << " and Expires <= Date");
+            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Expires <= Date");
             return 0;
         }
         /* NOTREACHED */
@@ -513,7 +513,7 @@ HttpStateData::cacheableReply()
     case Http::scServiceUnavailable:
 
     case Http::scGateway_Timeout:
-        debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status);
+        debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status());
         return -1;
 
         /* NOTREACHED */
@@ -550,12 +550,12 @@ HttpStateData::cacheableReply()
     case Http::scRequestedRangeNotSatisfied:
     case Http::scExpectationFailed:
 
-        debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status);
+        debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status());
         return 0;
 
     default:
         /* RFC 2616 section 6.1.1: an unrecognized response MUST NOT be cached. */
-        debugs (11, 3, HERE << "NO because unknown HTTP status code " << rep->sline.status);
+        debugs (11, 3, HERE << "NO because unknown HTTP status code " << rep->sline.status());
         return 0;
 
         /* NOTREACHED */
@@ -714,8 +714,9 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = true;
-            newrep->sline.version = Http::ProtocolVersion(1,1);
-            newrep->sline.status = error;
+            // XXX: when sanityCheck is gone and Http::StatusLine is used to parse,
+            //   the sline should be already set the appropriate values during that parser stage
+            newrep->sline.set(Http::ProtocolVersion(1,1), error);
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
             ctx_exit(ctx);
@@ -739,7 +740,7 @@ HttpStateData::processReplyHeader()
 
     newrep->removeStaleWarnings();
 
-    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->sline.status() >= 100 && newrep->sline.status() < 200) {
         handle1xx(newrep);
         ctx_exit(ctx);
         return;
@@ -763,7 +764,7 @@ HttpStateData::processReplyHeader()
 
     processSurrogateControl (vrep);
 
-    request->hier.peer_reply_status = newrep->sline.status;
+    request->hier.peer_reply_status = newrep->sline.status();
 
     ctx_exit(ctx);
 }
@@ -848,7 +849,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
     /*The peer supports connection pinning and the http reply status
       is not unauthorized, so the related connection can be pinned
      */
-    if (rep->sline.status != Http::scUnauthorized)
+    if (rep->sline.status() != Http::scUnauthorized)
         return true;
 
     /*The server respond with Http::scUnauthorized and the peer configured
@@ -897,17 +898,16 @@ HttpStateData::haveParsedReplyHeaders()
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     HttpReply *rep = finalReply();
 
-    if (rep->sline.status == Http::scPartialContent &&
-            rep->content_range)
+    if (rep->sline.status() == Http::scPartialContent && rep->content_range)
         currentOffset = rep->content_range->spec.offset;
 
     entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
-    debugs(11, 3, "haveParsedReplyHeaders: HTTP CODE: " << rep->sline.status);
+    debugs(11, 3, "HTTP CODE: " << rep->sline.status());
 
     if (neighbors_do_private_keys)
-        httpMaybeRemovePublic(entry, rep->sline.status);
+        httpMaybeRemovePublic(entry, rep->sline.status());
 
     if (rep->header.has(HDR_VARY)
 #if X_ACCELERATOR_VARY
@@ -918,7 +918,7 @@ HttpStateData::haveParsedReplyHeaders()
 
         if (!vary) {
             entry->makePrivate();
-            if (!fwd->reforwardableStatus(rep->sline.status))
+            if (!fwd->reforwardableStatus(rep->sline.status()))
                 EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             goto no_cache;
         }
@@ -930,7 +930,7 @@ HttpStateData::haveParsedReplyHeaders()
      * If its not a reply that we will re-forward, then
      * allow the client to get it.
      */
-    if (!fwd->reforwardableStatus(rep->sline.status))
+    if (!fwd->reforwardableStatus(rep->sline.status()))
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     switch (cacheableReply()) {
@@ -1260,7 +1260,7 @@ HttpStateData::continueAfterParsingHeader()
     if (flags.headers_parsed) { // parsed headers, possibly with errors
         // check for header parsing errors
         if (HttpReply *vrep = virginReply()) {
-            const Http::StatusCode s = vrep->sline.status;
+            const Http::StatusCode s = vrep->sline.status();
             const Http::ProtocolVersion &v = vrep->sline.version;
             if (s == Http::scInvalidHeader && v != Http::ProtocolVersion(0,9)) {
                 debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
@@ -2322,7 +2322,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
             flags.abuse_detected = true;
             debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
-            if (virginReply()->sline.status == Http::scInvalidHeader) {
+            if (virginReply()->sline.status() == Http::scInvalidHeader) {
                 serverConnection->close();
                 return;
             }

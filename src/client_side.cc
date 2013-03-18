@@ -649,10 +649,10 @@ ClientHttpRequest::logRequest()
     debugs(33, 9, "clientLogRequest: al.url='" << al->url << "'");
 
     if (al->reply) {
-        al->http.code = al->reply->sline.status;
+        al->http.code = al->reply->sline.status();
         al->http.content_type = al->reply->content_type.termedBuf();
     } else if (loggingEntry() && loggingEntry()->mem_obj) {
-        al->http.code = loggingEntry()->mem_obj->getReply()->sline.status;
+        al->http.code = loggingEntry()->mem_obj->getReply()->sline.status();
         al->http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
     }
 
@@ -1278,7 +1278,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 
     if (!rep)
         range_err = "no [parse-able] reply";
-    else if ((rep->sline.status != Http::scOkay) && (rep->sline.status != Http::scPartialContent))
+    else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
         range_err = "wrong status code";
     else if (hdr->has(HDR_CONTENT_RANGE))
         range_err = "origin server does ranges";
@@ -1310,8 +1310,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         delete http->request->range;
         http->request->range = NULL;
     } else {
-        /* XXX: TODO: Review, this unconditional set may be wrong. - TODO: review. */
-        httpStatusLineSet(&rep->sline, rep->sline.version, Http::scPartialContent, NULL);
+        /* XXX: TODO: Review, this unconditional set may be wrong. */
+        rep->sline.set(rep->sline.version, Http::scPartialContent);
         // web server responded with a valid, but unexpected range.
         // will (try-to) forward as-is.
         //TODO: we should cope with multirange request/responses

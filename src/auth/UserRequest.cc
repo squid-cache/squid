@@ -479,7 +479,7 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
 {
     http_hdr_type type;
 
-    switch (rep->sline.status) {
+    switch (rep->sline.status()) {
 
     case Http::scProxyAuthenticationRequired:
         /* Proxy authorisation needed */
@@ -500,8 +500,8 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
 
     debugs(29, 9, HERE << "headertype:" << type << " authuser:" << auth_user_request);
 
-    if (((rep->sline.status == Http::scProxyAuthenticationRequired)
-            || (rep->sline.status == Http::scUnauthorized)) && internal)
+    if (((rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (rep->sline.status() == Http::scUnauthorized)) && internal)
         /* this is a authenticate-needed response */
     {
 

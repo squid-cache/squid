@@ -371,9 +371,6 @@ squid_SOURCES = \
 	HttpStateFlags.h \
 	http.cc \
 	http.h \
-	http/StatusCode.h \
-	HttpStatusLine.cc \
-	HttpStatusLine.h \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1153,9 +1150,6 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
-	http/StatusCode.h \
-	HttpStatusLine.cc \
-	HttpStatusLine.h \
 	Mem.h \
 	mem.cc \
 	RegexList.h \
@@ -1203,6 +1197,7 @@ nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
+	http/libsquid-http.la \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
@@ -1479,7 +1474,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -1665,7 +1659,6 @@ tests_testDiskIO_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -1895,7 +1888,6 @@ tests_testEvent_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2142,7 +2134,6 @@ tests_testEventLoop_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2386,7 +2377,6 @@ tests_test_http_range_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.h \
@@ -2674,7 +2664,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -3077,7 +3066,6 @@ tests_testUfs_SOURCES = \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	RequestFlags.h \
@@ -3267,7 +3255,6 @@ tests_testRock_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -3419,7 +3406,6 @@ tests_testCoss_SOURCES = \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -3646,7 +3632,6 @@ tests_testURL_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \

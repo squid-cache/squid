@@ -372,9 +372,9 @@ urnHandleReply(void *data, StoreIOBuffer result)
     assert(urlres_e->getReply());
     rep = new HttpReply;
     rep->parseCharBuf(buf, k);
-    debugs(52, 3, "reply exists, code=" << rep->sline.status << ".");
+    debugs(52, 3, "reply exists, code=" << rep->sline.status() << ".");
 
-    if (rep->sline.status != Http::scOkay) {
+    if (rep->sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request);
         err->url = xstrdup(e->url());

@@ -68,6 +68,8 @@ typedef enum {
     scHeaderTooLarge = 601         /* Header too large to process */
 } StatusCode;
 
+const char *StatusCodeString(const Http::StatusCode status);
+
 } // namespace Http
 
 #endif /* _SQUID_SRC_HTTP_STATUSCODE_H */

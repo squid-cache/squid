@@ -399,7 +399,7 @@ FwdState::startConnectionOrFail()
 void
 FwdState::fail(ErrorState * errorState)
 {
-    debugs(17, 3, HERE << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
+    debugs(17, 3, err_type_str[errorState->type] << " \"" << Http::StatusCodeString(errorState->httpStatus) << "\"\n\t" << entry->url());
 
     delete err;
     err = errorState;
@@ -455,16 +455,16 @@ FwdState::unregister(int fd)
 void
 FwdState::complete()
 {
-    debugs(17, 3, HERE << entry->url() << "\n\tstatus " << entry->getReply()->sline.status  );
+    debugs(17, 3, HERE << entry->url() << "\n\tstatus " << entry->getReply()->sline.status());
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    logReplyStatus(n_tries, entry->getReply()->sline.status);
+    logReplyStatus(n_tries, entry->getReply()->sline.status());
 
     if (reforward()) {
-        debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status << " " << entry->url());
+        debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status() << " " << entry->url());
 
         if (Comm::IsConnOpen(serverConn))
             unregister(serverConn);
@@ -477,9 +477,9 @@ FwdState::complete()
 
     } else {
         if (Comm::IsConnOpen(serverConn))
-            debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status);
+            debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status());
         else
-            debugs(17, 3, HERE << "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status);
+            debugs(17, 3, HERE << "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status());
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
         entry->complete();
 
@@ -1380,7 +1380,7 @@ FwdState::reforward()
         return 0;
     }
 
-    const Http::StatusCode s = e->getReply()->sline.status;
+    const Http::StatusCode s = e->getReply()->sline.status();
     debugs(17, 3, HERE << "status " << s);
     return reforwardableStatus(s);
 }
