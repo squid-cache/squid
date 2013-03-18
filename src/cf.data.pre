@@ -615,7 +615,7 @@ DOC_END
 NAME: authenticate_ip_ttl
 TYPE: time_t
 LOC: Config.authenticateIpTTL
-DEFAULT: 0 seconds
+DEFAULT: 1 second
 DOC_START
 	If you use proxy authentication and the 'max_user_ip' ACL,
 	this directive controls how long Squid remembers the IP
