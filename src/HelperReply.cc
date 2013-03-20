@@ -23,6 +23,8 @@ HelperReply::parse(char *buf, size_t len)
     debugs(84, 3, "Parsing helper buffer");
     // check we have something to parse
     if (!buf || len < 1) {
+        // empty line response was the old URL-rewriter interface ERR response.
+        result = HelperReply::Error;
         // for now ensure that legacy handlers are not presented with NULL strings.
         debugs(84, 3, "Reply length is smaller than 1 or none at all ");
         other_.init(1,1);
