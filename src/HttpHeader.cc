@@ -112,6 +112,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
     {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
     {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
+    {"Key", HDR_KEY, ftStr},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
     {"Link", HDR_LINK, ftStr},
     {"Location", HDR_LOCATION, ftStr},
