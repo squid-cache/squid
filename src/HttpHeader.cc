@@ -188,6 +188,7 @@ static http_hdr_type ListHeadersArr[] = {
     HDR_CONNECTION,
     HDR_EXPECT,
     HDR_IF_MATCH, HDR_IF_NONE_MATCH,
+    HDR_KEY,
     HDR_LINK, HDR_PRAGMA,
     HDR_PROXY_CONNECTION,
     HDR_PROXY_SUPPORT,
@@ -232,6 +233,7 @@ static HttpHeaderMask ReplyHeadersMask;		/* set run-time using ReplyHeaders */
 static http_hdr_type ReplyHeadersArr[] = {
     HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
     HDR_ACCEPT_RANGES, HDR_AGE,
+    HDR_KEY,
     HDR_LOCATION, HDR_MAX_FORWARDS,
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE, HDR_SET_COOKIE2,
     HDR_ORIGIN,
