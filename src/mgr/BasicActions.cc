@@ -20,7 +20,7 @@ Mgr::IndexAction::Create(const Command::Pointer &cmd)
     return new IndexAction(cmd);
 }
 
-Mgr::IndexAction::IndexAction(const Command::Pointer &cmd): Action(cmd)
+Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -37,7 +37,7 @@ Mgr::MenuAction::Create(const Command::Pointer &cmd)
     return new MenuAction(cmd);
 }
 
-Mgr::MenuAction::MenuAction(const Command::Pointer &cmd): Action(cmd)
+Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -64,7 +64,7 @@ Mgr::ShutdownAction::Create(const Command::Pointer &cmd)
     return new ShutdownAction(cmd);
 }
 
-Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &cmd): Action(cmd)
+Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -82,8 +82,8 @@ Mgr::ReconfigureAction::Create(const Command::Pointer &cmd)
     return new ReconfigureAction(cmd);
 }
 
-Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &cmd):
-        Action(cmd)
+Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
+        Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -102,7 +102,7 @@ Mgr::RotateAction::Create(const Command::Pointer &cmd)
     return new RotateAction(cmd);
 }
 
-Mgr::RotateAction::RotateAction(const Command::Pointer &cmd): Action(cmd)
+Mgr::RotateAction::RotateAction(const Command::Pointer &aCmd): Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -125,8 +125,8 @@ Mgr::OfflineToggleAction::Create(const Command::Pointer &cmd)
     return new OfflineToggleAction(cmd);
 }
 
-Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &cmd):
-        Action(cmd)
+Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
+        Action(aCmd)
 {
     debugs(16, 5, HERE);
 }

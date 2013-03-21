@@ -109,7 +109,7 @@ public:
     } read;
 
     struct {
-        unsigned int closing:1;	/* debugging aid */
+        bool closing;	/* debugging aid */
     } flags;
 };
 

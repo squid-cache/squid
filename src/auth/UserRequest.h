@@ -50,14 +50,24 @@ class HttpRequest;
 // AYJ: must match re-definition in helpers/negotiate_auth/kerberos/negotiate_kerb_auth.cc
 #define MAX_AUTHTOKEN_LEN   32768
 
-/// \ingroup AuthAPI
+/**
+ * Node used to link an IP address to some user credentials
+ * for the max_user_ip ACL feature.
+ *
+ * \ingroup AuthAPI
+ */
 class AuthUserIP
 {
 public:
     dlink_node node;
-    /* IP addr this user authenticated from */
 
+    /// IP address this user authenticated from
     Ip::Address ipaddr;
+
+    /** When this IP should be forgotten.
+     * Set to the time of last request made from this
+     * (user,IP) pair plus authenticate_ip_ttl seconds
+     */
     time_t ip_expiretime;
 };
 

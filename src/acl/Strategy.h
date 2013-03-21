@@ -34,6 +34,7 @@
 #ifndef SQUID_ACLSTRATEGY_H
 #define SQUID_ACLSTRATEGY_H
 
+#include "acl/Acl.h"
 #include "acl/Data.h"
 
 class ACLFilledChecklist;
@@ -45,7 +46,7 @@ class ACLStrategy
 
 public:
     typedef M MatchType;
-    virtual int match (ACLData<M> * &, ACLFilledChecklist *) = 0;
+    virtual int match (ACLData<M> * &, ACLFilledChecklist *, ACLFlags &) = 0;
     virtual bool requiresRequest() const {return false;}
 
     virtual bool requiresReply() const {return false;}

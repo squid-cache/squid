@@ -236,7 +236,7 @@ Fs::Ufs::UFSSwapDir::changeIO(DiskIOModule *module)
     /* TODO: factor out these 4 lines */
     ConfigOption *ioOptions = IO->io->getOptionTree();
 
-    if (ioOptions)
+    if (currentIOOptions && ioOptions)
         currentIOOptions->options.push_back(ioOptions);
 }
 
@@ -341,15 +341,10 @@ Fs::Ufs::UFSSwapDir::~UFSSwapDir()
         file_close(swaplog_fd);
         swaplog_fd = -1;
     }
-
-    delete map;
-
-    if (IO)
-        delete IO;
-
-    IO = NULL;
-
     safe_free(ioType);
+    delete map;
+    delete IO;
+    delete currentIOOptions;
 }
 
 void

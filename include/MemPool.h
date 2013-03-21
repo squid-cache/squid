@@ -204,7 +204,7 @@ public:
     virtual char const *objectType() const;
     virtual size_t objectSize() const = 0;
     virtual int getInUseCount() = 0;
-    void zeroOnPush(bool doIt);
+    void zeroBlocks(bool doIt) {doZero = doIt;}
     int inUseCount();
 
     /**
@@ -226,7 +226,13 @@ public:
     static size_t RoundedSize(size_t minSize);
 
 protected:
-    bool doZeroOnPush;
+    /** Whether to zero memory on initial allocation and on return to the pool.
+     *
+     * We do this on some pools because many object constructors are/were incomplete
+     * and we are afraid some code may use the object after free.
+     * These probems are becoming less common, so when possible set this to false.
+     */
+    bool doZero;
 
 private:
     const char *label;

@@ -45,8 +45,8 @@ struct _digest_nonce_h : public hash_link {
     /* has this nonce been invalidated ? */
 
     struct {
-        unsigned int valid:1;
-        unsigned int incache:1;
+        bool valid;
+        bool incache;
     } flags;
 };
 

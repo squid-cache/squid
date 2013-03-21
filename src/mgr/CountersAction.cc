@@ -90,8 +90,8 @@ Mgr::CountersAction::Create(const CommandPointer &cmd)
     return new CountersAction(cmd);
 }
 
-Mgr::CountersAction::CountersAction(const CommandPointer &cmd):
-        Action(cmd), data()
+Mgr::CountersAction::CountersAction(const CommandPointer &aCmd):
+        Action(aCmd), data()
 {
     debugs(16, 5, HERE);
 }

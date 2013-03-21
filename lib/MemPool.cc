@@ -324,7 +324,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     return pools_inuse;
 }
 
-MemAllocator::MemAllocator(char const *aLabel) : doZeroOnPush(true), label(aLabel)
+MemAllocator::MemAllocator(char const *aLabel) : doZero(true), label(aLabel)
 {
 }
 
@@ -443,12 +443,6 @@ MemImplementingAllocator::~MemImplementingAllocator()
     else
         MemPools::GetInstance().pools = next;
     --MemPools::GetInstance().poolCount;
-}
-
-void
-MemAllocator::zeroOnPush(bool doIt)
-{
-    doZeroOnPush = doIt;
 }
 
 MemPoolMeter const &

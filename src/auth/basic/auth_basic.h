@@ -13,17 +13,6 @@
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
-/** queue of auth requests waiting for verification to occur */
-class BasicAuthQueueNode
-{
-
-public:
-    BasicAuthQueueNode *next;
-    Auth::UserRequest::Pointer auth_user_request;
-    AUTHCB *handler;
-    void *data;
-};
-
 namespace Auth
 {
 namespace Basic

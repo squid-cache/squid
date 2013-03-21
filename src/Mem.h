@@ -75,7 +75,7 @@ void memFreeString(size_t size, void *);
 void memFreeBuf(size_t size, void *);
 FREE *memFreeBufFunc(size_t size);
 int memInUse(mem_type);
-void memDataInit(mem_type, const char *, size_t, int, bool zeroOnPush = true);
+void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
 void memConfigure(void);
 

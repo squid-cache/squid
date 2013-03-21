@@ -33,14 +33,12 @@
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
 #include "comm/Connection.h"
+#include "enums.h"
 #include "hier_code.h"
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 #include "lookup_t.h"
 #include "rfc2181.h"
 #include "PingData.h"
-
-/* for http_status */
-#include "enums.h"
 
 class HierarchyLogEntry
 {
@@ -66,7 +64,7 @@ public:
 
     struct timeval store_complete_stop;
 
-    http_status peer_reply_status; ///< last HTTP status code received
+    Http::StatusCode peer_reply_status; ///< last HTTP status code received
     timeval peer_http_request_sent; ///< last peer finished writing req
     int64_t peer_response_time; ///< last peer response delay
     timeval first_conn_start; ///< first connection use among all peers

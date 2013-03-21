@@ -72,7 +72,7 @@ public:
     HttpRequest *urlres_r;
 
     struct {
-        unsigned int force_menu:1;
+        bool force_menu;
     } flags;
     char reqbuf[URN_REQBUF_SZ];
     int reqofs;
@@ -216,14 +216,14 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
         updateRequestURL(r, r->urlpath.rawBuf() + 5, r->urlpath.size() - 5 );
-        flags.force_menu = 1;
+        flags.force_menu = true;
     }
 
     createUriResRequest (r->urlpath);
 
     if (urlres_r == NULL) {
         debugs(52, 3, "urnStart: Bad uri-res URL " << urlres);
-        ErrorState *err = new ErrorState(ERR_URN_RESOLVE, HTTP_NOT_FOUND, r);
+        ErrorState *err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r);
         err->url = urlres;
         urlres = NULL;
         errorAppendEntry(entry, err);
@@ -239,7 +239,8 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
 {
     debugs(52, 3, "urnStart: '" << e->url() << "'" );
     entry = e;
-    request = HTTPMSGLOCK(r);
+    request = r;
+    HTTPMSGLOCK(request);
 
     entry->lock();
     setUriResFromRequest(r);
@@ -371,11 +372,11 @@ urnHandleReply(void *data, StoreIOBuffer result)
     assert(urlres_e->getReply());
     rep = new HttpReply;
     rep->parseCharBuf(buf, k);
-    debugs(52, 3, "reply exists, code=" << rep->sline.status << ".");
+    debugs(52, 3, "reply exists, code=" << rep->sline.status() << ".");
 
-    if (rep->sline.status != HTTP_OK) {
+    if (rep->sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
-        err = new ErrorState(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
@@ -397,7 +398,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (urls == NULL) {		/* unkown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url()  );
-        err = new ErrorState(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         urnHandleReplyError(urnState, urlres_e);
@@ -438,7 +439,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "</ADDRESS>\n",
         APP_FULLNAME, getMyHostname());
     rep = new HttpReply;
-    rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
+    rep->setHeaders(Http::scMovedTemporarily, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");

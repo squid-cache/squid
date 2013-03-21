@@ -33,7 +33,7 @@ Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, ti
         bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
 
 #include "comm/IoCallback.h"
-        void Comm::IoCallback::setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz) STUB
+        void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
         void Comm::IoCallback::selectOrQueueWrite() STUB
         void Comm::IoCallback::cancel(const char *reason) STUB
         void Comm::IoCallback::finish(comm_err_t code, int xerrn) STUB

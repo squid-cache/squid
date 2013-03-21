@@ -99,7 +99,7 @@ Adaptation::Ecap::HeaderRep::parse(const Area &buf)
     MemBuf mb;
     mb.init();
     mb.append(buf.start, buf.size);
-    http_status error;
+    Http::StatusCode error;
     Must(theMessage.parse(&mb, true, &error));
 }
 
@@ -292,29 +292,26 @@ Adaptation::Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
 void
 Adaptation::Ecap::StatusLineRep::statusCode(int code)
 {
-    // TODO: why is .status a enum? Do we not support unknown statuses?
-    theMessage.sline.status = static_cast<http_status>(code);
+    theMessage.sline.set(theMessage.sline.version, static_cast<Http::StatusCode>(code), theMessage.sline.reason());
 }
 
 int
 Adaptation::Ecap::StatusLineRep::statusCode() const
 {
-    // TODO: see statusCode(code) TODO above
-    return static_cast<int>(theMessage.sline.status);
+    // TODO: remove cast when possible
+    return static_cast<int>(theMessage.sline.status());
 }
 
 void
-Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &)
+Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &str)
 {
-    // Squid does not support custom reason phrases
-    theMessage.sline.reason = NULL;
+    theMessage.sline.set(theMessage.sline.version, theMessage.sline.status(), str.c_str());
 }
 
 Adaptation::Ecap::StatusLineRep::Area
 Adaptation::Ecap::StatusLineRep::reasonPhrase() const
 {
-    return theMessage.sline.reason ?
-           Area::FromTempString(std::string(theMessage.sline.reason)) : Area();
+    return Area::FromTempString(std::string(theMessage.sline.reason()));
 }
 
 libecap::Version

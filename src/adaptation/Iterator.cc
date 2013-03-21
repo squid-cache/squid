@@ -20,12 +20,17 @@ Adaptation::Iterator::Iterator(
         AsyncJob("Iterator"),
         Adaptation::Initiate("Iterator"),
         theGroup(aGroup),
-        theMsg(HTTPMSGLOCK(aMsg)),
-        theCause(aCause ? HTTPMSGLOCK(aCause) : NULL),
+        theMsg(aMsg),
+        theCause(aCause),
         theLauncher(0),
         iterations(0),
         adapted(false)
 {
+    if (theCause != NULL)
+        HTTPMSGLOCK(theCause);
+
+    if (theMsg != NULL)
+        HTTPMSGLOCK(theMsg);
 }
 
 Adaptation::Iterator::~Iterator()
@@ -85,7 +90,7 @@ Adaptation::Iterator::noteAdaptationAnswer(const Answer &answer)
 {
     switch (answer.kind) {
     case Answer::akForward:
-        handleAdaptedHeader(answer.message);
+        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
         break;
 
     case Answer::akBlock:
@@ -115,7 +120,8 @@ Adaptation::Iterator::handleAdaptedHeader(HttpMsg *aMsg)
 
     Must(aMsg);
     HTTPMSGUNLOCK(theMsg);
-    theMsg = HTTPMSGLOCK(aMsg);
+    theMsg = aMsg;
+    HTTPMSGLOCK(theMsg);
     adapted = true;
 
     clearAdaptation(theLauncher);
@@ -215,9 +221,9 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
 
     debugs(85,3, HERE << "retiring old plan: " << thePlan);
 
-    Adaptation::ServiceFilter filter = this->filter();
+    Adaptation::ServiceFilter f = this->filter();
     DynamicGroupCfg current, future;
-    DynamicServiceChain::Split(filter, services, current, future);
+    DynamicServiceChain::Split(f, services, current, future);
 
     if (!future.empty()) {
         ah->setFutureServices(future);
@@ -225,8 +231,8 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
     }
 
     // use the current config even if it is empty; we must replace the old plan
-    theGroup = new DynamicServiceChain(current, filter); // refcounted
-    thePlan = ServicePlan(theGroup, filter);
+    theGroup = new DynamicServiceChain(current, f); // refcounted
+    thePlan = ServicePlan(theGroup, f);
     debugs(85,3, HERE << "adopted service-proposed plan: " << thePlan);
     return true;
 }

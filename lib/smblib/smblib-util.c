@@ -767,7 +767,7 @@ int SMB_Get_Last_SMB_Err()
 
 static const char *SMBlib_Error_Messages[] = {
 
-    "Request completed sucessfully.",
+    "Request completed successfully.",
     "Server returned a non-zero SMB Error Class and Code.",
     "A lower layer protocol error occurred.",
     "Function not yet implemented.",

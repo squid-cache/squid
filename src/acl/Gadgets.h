@@ -3,12 +3,12 @@
 
 #include "err_type.h"
 
-struct dlink_list;
 class acl_access;
 class ACL;
 class AclDenyInfoList;
 class ACLList;
 class ConfigParser;
+class dlink_list;
 class StoreEntry;
 class wordlist;
 

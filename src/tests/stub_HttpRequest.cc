@@ -6,10 +6,10 @@
 #include "tests/STUB.h"
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest) STUB
-        HttpRequest::HttpRequest(const HttpRequestMethod& method, AnyP::ProtocolType protocol, const char *aUrlpath) : HttpMsg(hoRequest) STUB
+        HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) : HttpMsg(hoRequest) STUB
         HttpRequest::~HttpRequest() STUB
         void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const STUB
-        bool HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error) STUB_RETVAL(false)
+        bool HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)
         void HttpRequest::hdrCacheInit() STUB
         void HttpRequest::reset() STUB
         bool HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t&) const STUB_RETVAL(false)
@@ -18,3 +18,4 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest) STUB
         HttpRequest * HttpRequest::clone() const STUB_RETVAL(NULL)
         bool HttpRequest::inheritProperties(const HttpMsg *aMsg) STUB_RETVAL(false)
         int64_t HttpRequest::getRangeOffsetLimit() STUB_RETVAL(0)
+        const char *HttpRequest::storeId() STUB_RETVAL(".")

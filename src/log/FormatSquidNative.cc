@@ -69,7 +69,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   (int) current_time.tv_usec / 1000,
                   al->cache.msec,
                   clientip,
-                  ::Format::log_tags[al->cache.code],
+                  LogTags_str[al->cache.code],
                   al->http.statusSfx(),
                   al->http.code,
                   al->cache.replySize,

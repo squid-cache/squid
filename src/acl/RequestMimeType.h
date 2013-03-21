@@ -51,7 +51,7 @@ private:
 
 template <>
 inline int
-ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     char const *theHeader = checklist->request->header.getStr(HDR_CONTENT_TYPE);
 

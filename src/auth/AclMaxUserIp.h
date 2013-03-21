@@ -73,9 +73,9 @@ private:
     int maximum;
 
     struct Flags {
-        Flags() : strict(0) {}
+        Flags() : strict(false) {}
 
-        unsigned int strict:1;
+        bool strict;
     } flags;
 };
 

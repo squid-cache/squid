@@ -88,6 +88,11 @@ create_ls(struct main_args *margs)
                 free_ls(lssp);
                 return (1);
             }
+            if (dp) {  /* end of domain name - twice */
+                debug((char *) "%s| %s: @ is not allowed in server name %s@%s\n",LogTime(), PROGRAM,np,dp);
+                free_ls(lssp);
+                return(1);
+            }
             *p = '\0';
             ++p;
             lssp = init_ls();

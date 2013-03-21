@@ -79,16 +79,16 @@ Format::Format::parse(const char *def)
 }
 
 void
-Format::Format::dump(StoreEntry * entry, const char *name)
+Format::Format::dump(StoreEntry * entry, const char *directiveName)
 {
     debugs(46, 4, HERE);
 
     // loop rather than recursing to conserve stack space.
-    for (Format *format = this; format; format = format->next) {
-        debugs(46, 3, HERE << "Dumping format definition for " << format->name);
-        storeAppendPrintf(entry, "format %s ", format->name);
+    for (Format *fmt = this; fmt; fmt = fmt->next) {
+        debugs(46, 3, HERE << "Dumping format definition for " << fmt->name);
+        storeAppendPrintf(entry, "%s %s ", directiveName, fmt->name);
 
-        for (Token *t = format->format; t; t = t->next) {
+        for (Token *t = fmt->format; t; t = t->next) {
             if (t->type == LFT_STRING)
                 storeAppendPrintf(entry, "%s", t->data.string);
             else {
@@ -797,7 +797,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_HTTP_RECEIVED_STATUS_CODE:
-            if (al->hier.peer_reply_status == HTTP_STATUS_NONE) {
+            if (al->hier.peer_reply_status == Http::scNone) {
                 out = "-";
             } else {
                 outint = al->hier.peer_reply_status;
@@ -821,11 +821,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SQUID_STATUS:
             if (al->http.timedout || al->http.aborted) {
-                snprintf(tmp, sizeof(tmp), "%s%s", log_tags[al->cache.code],
+                snprintf(tmp, sizeof(tmp), "%s%s", LogTags_str[al->cache.code],
                          al->http.statusSfx());
                 out = tmp;
             } else {
-                out = log_tags[al->cache.code];
+                out = LogTags_str[al->cache.code];
             }
 
             break;

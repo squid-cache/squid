@@ -7,9 +7,9 @@
 #include "comm/Connection.h"
 #include "err_type.h"
 #include "fde.h"
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 #include "ip/Address.h"
-#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+#if USE_SSL
 #include "ssl/support.h"
 #endif
 
@@ -20,7 +20,7 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
-#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+#if USE_SSL
 namespace Ssl
 {
 class ErrorDetail;
@@ -65,7 +65,7 @@ public:
     void complete();
     void handleUnregisteredServerEnd();
     int reforward();
-    bool reforwardableStatus(http_status s);
+    bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed(int fd);
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
@@ -84,13 +84,13 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     /// Callback function called when squid receive message from cert validator helper
-    static void sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply);
+    static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(const HelperReply &reply);
+    void sslCrtvdHandleReply(Ssl::CertValidationResponse const &);
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse &, Ssl::ErrorDetail *&);
+    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 #endif
 private:
     // hidden for safer management of self; use static fwdStart
@@ -100,7 +100,7 @@ private:
 #if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();
 #endif
-    static void logReplyStatus(int tries, http_status status);
+    static void logReplyStatus(int tries, const Http::StatusCode status);
     void doneWithRetries();
     void completed();
     void retryOrBail();
@@ -128,9 +128,9 @@ private:
     } calls;
 
     struct {
-        unsigned int connected_okay:1; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
-        unsigned int dont_retry:1;
-        unsigned int forward_completed:1;
+        bool connected_okay; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
+        bool dont_retry;
+        bool forward_completed;
     } flags;
 
     /** connections to open, in order, until successful */
