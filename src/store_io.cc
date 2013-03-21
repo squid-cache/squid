@@ -63,7 +63,7 @@ storeClose(StoreIOState::Pointer sio, int how)
         return;
     }
 
-    sio->flags.closing = 1;
+    sio->flags.closing = true;
 
     debugs(20,3,HERE << "storeClose: calling sio->close(" << how << ")");
     sio->close(how);

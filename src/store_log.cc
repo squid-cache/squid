@@ -93,7 +93,7 @@ storeLog(int tag, const StoreEntry * e)
                       e->swap_dirn,
                       e->swap_filen,
                       e->getMD5Text(),
-                      reply->sline.status,
+                      reply->sline.status(),
                       (int) reply->date,
                       (int) reply->last_modified,
                       (int) reply->expires,

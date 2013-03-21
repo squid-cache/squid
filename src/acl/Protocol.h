@@ -42,7 +42,7 @@ class ACLProtocolStrategy : public ACLStrategy<AnyP::ProtocolType>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     virtual bool requiresRequest() const {return true;}
 
     static ACLProtocolStrategy *Instance();

@@ -49,7 +49,7 @@ my %Pairs = (
 	],
 	cbdata => [
 		'cbdataAlloc: (\S+)',
-		'cbdataFree: Freeing (\S+)',
+		'(?:cbdataFree|cbdataUnlock): Freeing (\S+)',
 	],
 	FD => [
 		'fd_open.*\sFD (\d+)',

@@ -17,7 +17,8 @@ Kid::Kid():
         badFailures(0),
         pid(-1),
         startTime(0),
-        isRunning(false)
+        isRunning(false),
+        status(0)
 {
 }
 
@@ -26,7 +27,8 @@ Kid::Kid(const String& kid_name):
         badFailures(0),
         pid(-1),
         startTime(0),
-        isRunning(false)
+        isRunning(false),
+        status(0)
 {
 }
 
@@ -42,7 +44,7 @@ void Kid::start(pid_t cpid)
 }
 
 /// called when kid terminates, sets exiting status
-void Kid::stop(status_type exitStatus)
+void Kid::stop(status_type theExitStatus)
 {
     assert(running());
     assert(startTime != 0);
@@ -56,7 +58,7 @@ void Kid::stop(status_type exitStatus)
     else
         badFailures = 0; // the failures are not "frequent" [any more]
 
-    status = exitStatus;
+    status = theExitStatus;
 }
 
 /// returns true if tracking of kid is stopped

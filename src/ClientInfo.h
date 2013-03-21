@@ -3,6 +3,7 @@
 
 #include "ip/Address.h"
 #include "hash.h"
+#include "LogTags.h"
 #include "enums.h"
 #include "typedefs.h"
 #include "cbdata.h"

@@ -331,8 +331,7 @@ restart:
                 p = strchr(buf, ':');
                 if (p)
                     ++p;
-                if (keytab_filename)
-                    xfree(keytab_filename);
+                xfree(keytab_filename);
                 keytab_filename = xstrdup(p ? p : buf);
             } else {
                 keytab_filename = xstrdup(kf);
@@ -425,6 +424,10 @@ restart:
             mem_cache =
                 (char *) xmalloc(strlen("FILE:/tmp/peer_proxy_negotiate_auth_")
                                  + 16);
+            if (!mem_cache) {
+                debugs(11, 5, "Error while allocating memory");
+                return(1);
+            }
             snprintf(mem_cache,
                      strlen("FILE:/tmp/peer_proxy_negotiate_auth_") + 16,
                      "FILE:/tmp/peer_proxy_negotiate_auth_%d", (int) getpid());
@@ -432,6 +435,10 @@ restart:
             mem_cache =
                 (char *) xmalloc(strlen("MEMORY:peer_proxy_negotiate_auth_") +
                                  16);
+            if (!mem_cache) {
+                debugs(11, 5, "Error while allocating memory");
+                return(1);
+            }
             snprintf(mem_cache,
                      strlen("MEMORY:peer_proxy_negotiate_auth_") + 16,
                      "MEMORY:peer_proxy_negotiate_auth_%d", (int) getpid());
@@ -439,8 +446,7 @@ restart:
 
             setenv("KRB5CCNAME", mem_cache, 1);
             code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc);
-            if (mem_cache)
-                xfree(mem_cache);
+            xfree(mem_cache);
             if (code) {
                 debugs(11, 5,
                        HERE << "Error while resolving memory credential cache : "

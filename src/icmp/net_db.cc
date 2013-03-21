@@ -742,10 +742,10 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
             debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
             rep = ex->e->getReply();
-            assert (0 != rep->sline.status);
-            debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status);
+            assert(rep->sline.status() != Http::scNone);
+            debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status());
 
-            if (HTTP_OK != rep->sline.status) {
+            if (rep->sline.status() != Http::scOkay) {
                 netdbExchangeDone(ex);
                 return;
             }
@@ -989,23 +989,6 @@ netdbFreeMemory(void)
 #endif
 }
 
-#if 0 // AYJ: Looks to be unused code.
-int
-netdbHops(Ip::Address &addr)
-{
-#if USE_ICMP
-    netdbEntry *n = netdbLookupAddr(addr);
-
-    if (n && n->pings_recv) {
-        n->last_use_time = squid_curtime;
-        return (int) (n->hops + 0.5);
-    }
-
-#endif
-    return 256;
-}
-#endif
-
 void
 netdbDump(StoreEntry * sentry)
 {
@@ -1232,7 +1215,7 @@ netdbBinaryExchange(StoreEntry * s)
 
     struct in_addr line_addr;
     s->buffer();
-    reply->setHeaders(HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(Http::scOkay, "OK", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     rec_sz = 0;
     rec_sz += 1 + sizeof(struct in_addr);
@@ -1298,7 +1281,7 @@ netdbBinaryExchange(StoreEntry * s)
     memFree(buf, MEM_4K_BUF);
 #else
 
-    reply->setHeaders(HTTP_BAD_REQUEST, "Bad Request", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(Http::scBadRequest, "Bad Request", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
@@ -1333,7 +1316,7 @@ netdbExchangeStart(void *data)
 
     HTTPMSGLOCK(ex->r);
     assert(NULL != ex->r);
-    ex->r->http_ver = HttpVersion(1,1);
+    ex->r->http_ver = Http::ProtocolVersion(1,1);
     ex->connstate = STATE_HEADER;
     ex->e = storeCreateEntry(uri, uri, RequestFlags(), Http::METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;
@@ -1344,7 +1327,7 @@ netdbExchangeStart(void *data)
     tempBuffer.data = ex->buf;
     storeClientCopy(ex->sc, ex->e, tempBuffer,
                     netdbExchangeHandleReply, ex);
-    ex->r->flags.loopDetected = 1;	/* cheat! -- force direct */
+    ex->r->flags.loopDetected = true;	/* cheat! -- force direct */
 
     if (p->login)
         xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);

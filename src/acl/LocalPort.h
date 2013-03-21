@@ -41,7 +41,7 @@ class ACLLocalPortStrategy : public ACLStrategy<int>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLLocalPortStrategy *Instance();
     /**
      * Not implemented to prevent copies of the instance.

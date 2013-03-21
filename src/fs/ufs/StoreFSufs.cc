@@ -34,16 +34,8 @@
 /*TODO: remove this file as unused*/
 
 #include "squid.h"
-#if 0
-#include "StoreFileSystem.h"
-#endif
-
 #include "fs/ufs/StoreFSufs.h"
 #include "fs/ufs/UFSSwapDir.h"
-
-#if 0
-#include "DiskIO/DiskIOModule.h"
-#endif
 
 /* Unused variable: */
 Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance_foo = NULL;

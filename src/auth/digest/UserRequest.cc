@@ -20,7 +20,10 @@ Auth::Digest::UserRequest::UserRequest() :
         uri(NULL),
         response(NULL),
         nonce(NULL)
-{}
+{
+    memset(nc, 0, sizeof(nc));
+    memset(&flags, 0, sizeof(flags));
+}
 
 /**
  * Delete the digest request structure.
@@ -99,7 +102,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
     if (strcasecmp(digest_request->response, Response) != 0) {
         if (!digest_request->flags.helper_queried) {
             /* Query the helper in case the password has changed */
-            digest_request->flags.helper_queried = 1;
+            digest_request->flags.helper_queried = true;
             auth_user->credentials(Auth::Pending);
             return;
         }
@@ -117,7 +120,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
 
             if (strcasecmp(digest_request->response, Response)) {
                 auth_user->credentials(Auth::Failed);
-                digest_request->flags.invalid_password = 1;
+                digest_request->flags.invalid_password = true;
                 digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {
@@ -142,7 +145,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
             }
         } else {
             auth_user->credentials(Auth::Failed);
-            digest_request->flags.invalid_password = 1;
+            digest_request->flags.invalid_password = true;
             digest_request->setDenyMessage("Incorrect password");
             return;
         }
@@ -197,9 +200,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
     http_hdr_type type;
 
     /* don't add to authentication error pages */
-
-    if ((!accel && rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
-            || (accel && rep->sline.status == HTTP_UNAUTHORIZED))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
@@ -211,7 +213,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
 #endif
 
     if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
-        flags.authinfo_sent = 1;
+        flags.authinfo_sent = true;
         debugs(29, 9, HERE << "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
     }
@@ -231,8 +233,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
         return;
 
     /* don't add to authentication error pages */
-    if ((!accel && rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
-            || (accel && rep->sline.status == HTTP_UNAUTHORIZED))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
@@ -328,7 +330,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
         assert(digest_request);
 
         digest_request->user()->credentials(Auth::Failed);
-        digest_request->flags.invalid_password = 1;
+        digest_request->flags.invalid_password = true;
 
         Note::Pointer msgNote = reply.notes.find("message");
         if (msgNote != NULL) {

@@ -362,10 +362,10 @@ RFCNB_Name_To_IP(char *host, struct in_addr *Dest_IP)
 
 /* Disconnect the TCP connection to the server */
 int
-RFCNB_Close(int socket)
+RFCNB_Close(int fd)
 {
 
-    close(socket);
+    close(fd);
 
     /* If we want to do error recovery, here is where we put it */
 

@@ -106,7 +106,7 @@ storeKeyPrivate(const char *url, const HttpRequestMethod& method, int id)
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     SquidMD5_CTX M;
     assert(id > 0);
-    debugs(20, 3, "storeKeyPrivate: " << RequestMethodStr(method) << " " << url);
+    debugs(20, 3, "storeKeyPrivate: " << method << " " << url);
     SquidMD5Init(&M);
     SquidMD5Update(&M, (unsigned char *) &id, sizeof(id));
     SquidMD5Update(&M, (unsigned char *) &method, sizeof(method));
@@ -139,14 +139,16 @@ storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& me
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method.id();
-    const char *url = urlCanonical(request);
+    const char *url = request->storeId(); /* storeId returns the right storeID\canonical URL for the md5 calc */
     SquidMD5_CTX M;
     SquidMD5Init(&M);
     SquidMD5Update(&M, &m, sizeof(m));
     SquidMD5Update(&M, (unsigned char *) url, strlen(url));
 
-    if (request->vary_headers)
+    if (request->vary_headers) {
         SquidMD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
+        debugs(20, 3, "updating public key by vary headers: " << request->vary_headers << " for: " << url);
+    }
 
     SquidMD5Final(digest, &M);
 

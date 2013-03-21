@@ -29,14 +29,13 @@ public:
 class HttpControlMsg
 {
 public:
-    typedef HttpMsgPointerT<HttpReply> MsgPtr;
     typedef AsyncCall::Pointer Callback;
 
-    HttpControlMsg(const MsgPtr &aReply, const Callback &aCallback):
+    HttpControlMsg(const HttpReply::Pointer &aReply, const Callback &aCallback):
             reply(aReply), cbSuccess(aCallback) {}
 
 public:
-    MsgPtr reply; ///< the 1xx message being forwarded
+    HttpReply::Pointer reply; ///< the 1xx message being forwarded
     Callback cbSuccess; ///< called after successfully writing the 1xx message
 
     // We could add an API to notify of send failures as well, but the

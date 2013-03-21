@@ -978,10 +978,10 @@ read_post_request(void)
 
     // limit the input to something reasonable.
     // 4KB should be enough for the GET/POST data length, but may be extended.
-    size_t bufLen = (len >= 4096 ? len : 4095);
+    size_t bufLen = (len < 4096 ? len : 4095);
     char *buf = (char *)xmalloc(bufLen + 1);
 
-    size_t readLen = fread(buf, bufLen, 1, stdin);
+    size_t readLen = fread(buf, 1, bufLen, stdin);
     if (readLen == 0) {
         xfree(buf);
         return NULL;
@@ -990,9 +990,9 @@ read_post_request(void)
     len -= readLen;
 
     // purge the remainder of the request entity
-    while (len > 0) {
+    while (len > 0 && readLen) {
         char temp[65535];
-        readLen = fread(temp, 65535, 1, stdin);
+        readLen = fread(temp, 1, 65535, stdin);
         len -= readLen;
     }
 
@@ -1054,23 +1054,23 @@ read_request(void)
 
         rfc1738_unescape(q);
 
-        if (0 == strcasecmp(t, "server") && strlen(q))
+        if (0 == strcmp(t, "server") && strlen(q))
             req->server = xstrdup(q);
-        else if (0 == strcasecmp(t, "host") && strlen(q))
+        else if (0 == strcmp(t, "host") && strlen(q))
             req->hostname = xstrdup(q);
-        else if (0 == strcasecmp(t, "port") && strlen(q))
+        else if (0 == strcmp(t, "port") && strlen(q))
             req->port = atoi(q);
-        else if (0 == strcasecmp(t, "user_name") && strlen(q))
+        else if (0 == strcmp(t, "user_name") && strlen(q))
             req->user_name = xstrdup(q);
-        else if (0 == strcasecmp(t, "passwd") && strlen(q))
+        else if (0 == strcmp(t, "passwd") && strlen(q))
             req->passwd = xstrdup(q);
-        else if (0 == strcasecmp(t, "auth") && strlen(q))
+        else if (0 == strcmp(t, "auth") && strlen(q))
             req->pub_auth = xstrdup(q), decode_pub_auth(req);
-        else if (0 == strcasecmp(t, "operation"))
+        else if (0 == strcmp(t, "operation"))
             req->action = xstrdup(q);
-        else if (0 == strcasecmp(t, "workers") && strlen(q))
+        else if (0 == strcmp(t, "workers") && strlen(q))
             req->workers = xstrdup(q);
-        else if (0 == strcasecmp(t, "processes") && strlen(q))
+        else if (0 == strcmp(t, "processes") && strlen(q))
             req->processes = xstrdup(q);
     }
 
@@ -1289,7 +1289,7 @@ check_target_acl(const char *hostname, int port)
             if (strcmp(token, "*") == 0)
 
                 ;   /* Wildcard port specification */
-            else if (strcasecmp(token, "any") == 0)
+            else if (strcmp(token, "any") == 0)
 
                 ;   /* Wildcard port specification */
             else if (sscanf(token, "%d", &i) != 1)

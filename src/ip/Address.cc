@@ -400,10 +400,6 @@ Ip::Address::LookupHostIP(const char *s, bool nodns)
     if (nodns) {
         want.ai_flags = AI_NUMERICHOST; // prevent actual DNS lookups!
     }
-#if 0
-    else if (!Ip::EnableIpv6)
-        want.ai_family = AF_INET;  // maybe prevent IPv6 DNS lookups.
-#endif
 
     if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
         debugs(14,3, HERE << "Given Non-IP '" << s << "': " << gai_strerror(err) );

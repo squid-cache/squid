@@ -42,7 +42,7 @@ class ACLHTTPRepHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     virtual bool requiresReply() const { return true; }
 
     static ACLHTTPRepHeaderStrategy *Instance();

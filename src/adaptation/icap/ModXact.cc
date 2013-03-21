@@ -771,7 +771,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 {
     Must(state.sending == State::sendingUndecided);
 
-    if (!parseHead(icapReply))
+    if (!parseHead(icapReply.getRaw()))
         return;
 
     if (httpHeaderHasConnDir(&icapReply->header, "close")) {
@@ -779,14 +779,14 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         reuseConnection = false;
     }
 
-    switch (icapReply->sline.status) {
+    switch (icapReply->sline.status()) {
 
-    case 100:
+    case Http::scContinue:
         handle100Continue();
         break;
 
-    case 200:
-    case 201: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
+    case Http::scOkay:
+    case Http::scCreated: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
 
         if (!validate200Ok()) {
             throw TexcHere("Invalid ICAP Response");
@@ -796,16 +796,16 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 
         break;
 
-    case 204:
+    case Http::scNoContent:
         handle204NoContent();
         break;
 
-    case 206:
+    case Http::scPartialContent:
         handle206PartialContent();
         break;
 
     default:
-        debugs(93, 5, HERE << "ICAP status " << icapReply->sline.status);
+        debugs(93, 5, "ICAP status " << icapReply->sline.status());
         handleUnknownScode();
         break;
     }
@@ -946,8 +946,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     {
         HttpMsg::Pointer newHead;
         if (dynamic_cast<const HttpRequest*>(oldHead)) {
-            HttpRequest::Pointer newR(new HttpRequest);
-            newHead = newR;
+            newHead = new HttpRequest;
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
             newHead = new HttpReply;
         }
@@ -955,11 +954,11 @@ void Adaptation::Icap::ModXact::prepEchoing()
 
         newHead->inheritProperties(oldHead);
 
-        adapted.setHeader(newHead);
+        adapted.setHeader(newHead.getRaw());
     }
 
     // parse the buffer back
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
 
     Must(adapted.header->parse(&httpBuf, true, &error));
 
@@ -1072,7 +1071,7 @@ bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse" <<
            "; state: " << state.parsing);
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     const bool parsed = head->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
@@ -1269,10 +1268,12 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 
     al.cache.caddr = request_->client_addr;
 
-    al.request = HTTPMSGLOCK(request_);
-    if (reply_)
-        al.reply = HTTPMSGLOCK(reply_);
-    else
+    al.request = request_;
+    HTTPMSGLOCK(al.request);
+    if (reply_) {
+        al.reply = reply_;
+        HTTPMSGLOCK(al.reply);
+    } else
         al.reply = NULL;
 
     if (h->rfc931.size())
@@ -1293,7 +1294,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     }
 
     if (reply_) {
-        al.http.code = reply_->sline.status;
+        al.http.code = reply_->sline.status();
         al.http.content_type = reply_->content_type.termedBuf();
         if (replyHttpBodySize >= 0) {
             al.cache.replySize = replyHttpBodySize + reply_->hdr_sz;
@@ -1514,13 +1515,13 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest::Pointer new_request(new HttpRequest);
         Must(old_request->canonical);
-        urlParse(old_request->method, old_request->canonical, new_request);
+        urlParse(old_request->method, old_request->canonical, new_request.getRaw());
         new_request->http_ver = old_request->http_ver;
-        headClone = new_request;
+        headClone = new_request.getRaw();
     } else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {
         HttpReply::Pointer new_reply(new HttpReply);
         new_reply->sline = old_reply->sline;
-        headClone = new_reply;
+        headClone = new_reply.getRaw();
     }
     Must(headClone != NULL);
     headClone->inheritProperties(head);
@@ -1537,7 +1538,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     headClone->header.removeHopByHopEntries();
 
     // pack polished HTTP header
-    packHead(httpBuf, headClone);
+    packHead(httpBuf, headClone.getRaw());
 
     // headClone unlocks and, hence, deletes the message we packed
 }

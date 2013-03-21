@@ -27,7 +27,7 @@
 #include <unistd.h>
 #endif
 
-#define TESTDIR "testRock__testRockSearch"
+#define TESTDIR "testRock_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
 
@@ -71,6 +71,7 @@ testRock::setUp()
     strtok(config_line, w_space);
 
     store->parse(0, path);
+    store_maxobjsize = 1024*1024*2;
 
     safe_free(path);
 
@@ -172,15 +173,14 @@ StoreEntry *
 testRock::createEntry(const int i)
 {
     RequestFlags flags;
-    flags.cachable = 1;
+    flags.cachable = true;
     char url[64];
     snprintf(url, sizeof(url), "dummy url %i", i);
     url[sizeof(url) - 1] = '\0';
     StoreEntry *const pe =
         storeCreateEntry(url, "dummy log url", flags, Http::METHOD_GET);
     HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
-    rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test",
-                    -1, -1, squid_curtime + 100000);
+    rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
     pe->setPublicKey();
 

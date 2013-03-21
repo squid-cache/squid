@@ -1,3 +1,35 @@
+Changes to squid-3.3.3 (12 Mar 2013):
+
+	- Bug 3720: Add missing include in /dev/poll I/O module (pt2)
+	- ... and all changes from squid 3.2.9
+
+Changes to squid-3.3.2 (02 Mar 2013):
+
+	- Bug 3781: Proxy Authentication not sent to cache_peer
+	- Bug 3794: MacOS: workaround compiler errors
+	- Bug 3720: Compile error in Solaris /OpenIndiana
+	- ... and all changes from squid 3.2.8
+
+Changes to squid-3.3.1 (09 Feb 2013):
+
+	- Bug 3726: build errors with --disable-ssl
+	- Propigate pinned connection persistency and closures to the client.
+	- Mimic SSL certificate Key Usage and Basic Constraints
+	- Fix segmentation fault on missing squid.conf values
+	- ext_sql_session_acl: Fix hex decoding on UID
+	- ... and some code polish
+	- ... and a lot of documentation polish
+	- ... and all changes from squid 3.2.7
+
+Changes to squid-3.3.0.3 (09 Jan 2013):
+
+	- Bug 3729: 32-bit overflow in parsing 64-bit configuration values
+	- Bug 3728: Improve debug for cache_dir
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
+	- kerberos_ldap_group: support multiple groups in squid.conf ACL definition
+	- kqueue: update status from experimental to fully available net I/O method
+	- ... and many memory leaks and potential bugs detected by Coverity Scan
+
 Changes to squid-3.3.0.2 (03 Dec 2012):
 
 	- Support matching empty header field values using req_header and rep_header
@@ -22,6 +54,58 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.9 (12 Mar 2013):
+
+	- Regression fix: Accept-Language header parse
+	- Bug 3673: Silence 'Failed to select source' messages
+	- Fix authentication headers sent on peer digest requests
+	- Fix build error on Solaris, OpenIndiana, Omnios
+
+Changes to squid-3.2.8 (02 Mar 2013):
+
+	- Bug 3767: tcp_outgoing_tos/mark ACLs do not obey acl_uses_indirect_client
+	- Bug 3763: diskd Error: no filename in shm buffer
+	- Bug 3752: objects that cannot be cached in memory are not cached on disk
+	- Bug 3753: Removes the domain from the cache_peer server pconn key
+	- Bug 3749: IDENT lookup using wrong ports to identify the user
+	- Bug 3723: tcp_outgoing_tos/mark broken for CONNECT requests
+	- Bug 3686: cache_dir max-size default fails
+	- Bug 3515: crash in FtpStateData::ftpTimeout
+	- Bug 3329: Quieten orphan Comm::Connection messages
+	- Make squid -z for cache_dir rock preserve the rock DB
+	- Fixed several server connect problems
+	- ... and some build issues on Solaris, OpenIndiana, MacOS X
+	- ... and some documentation and debugs polishing
+
+Changes to squid-3.2.7 (01 Feb 2013):
+
+	- Bug 3736: Floating point exception due to divide by zero
+	- Bug 3735: raw-IPv6 domain URLs crash if IPv6-disabled
+	- Bug 3732: Fix ConnOpener IPv6 awareness
+	- Bug 3729: 32-bit overflow in parsing 64-bit configuration values
+	- Bug 3728: Improve debug for cache_dir
+	- Bug 3687: unhandled exception: c when using interception and peers
+	- Bug 3678: external acl grace period causes acl lookup failures
+	- Bug 3567: Memory leak handling malformed requests
+	- Bug 3111: Mid-term fix for the forward.cc "err" assertion
+	- Support OpenSSL NO_Compression optio
+	- Fix IPv6 enabled pinger on split-stack or IPv6-disabled systems
+	- Fix "address.GetPort() != 0" assertion for helpers
+	- ... and several minor memory leaks
+	- ... and some cache.log message polishing
+
+Changes to squid-3.2.6 (09 Jan 2013):
+
+	- Regression Bug 3731: TOS setsockopt() requires int value
+	- Regression Bug 3712: Rotating logs overwrites the previous log
+	- Bug 3727: LLVM compile errors in kerberos_ldap_group
+	- Bug 3650: Negotiate auth missing challenge token
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
+
+Changes to squid-3.2.5 (10 Dec 2012):
+
+	- Bug 3698: Add missing include of errno.h
 
 Changes to squid-3.2.4 (03 Dec 2012):
 
@@ -471,6 +555,10 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.23 (09 Jan 2013):
+
+	- Additional fixes for CVE-2012-5643 / SQUID:2012-1
 
 Changes to squid-3.1.22 (03 Dec 2012):
 

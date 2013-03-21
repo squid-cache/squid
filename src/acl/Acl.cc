@@ -33,13 +33,68 @@
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "anyp/PortCfg.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "dlink.h"
 #include "globals.h"
 #include "SquidConfig.h"
 
+const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
+
 const char *AclMatchedName = NULL;
+
+bool ACLFlags::supported(const ACLFlag f) const
+{
+    if (f == ACL_F_REGEX_CASE)
+        return true;
+    return (supported_.find(f) != std::string::npos);
+}
+
+void
+ACLFlags::parseFlags(char * &nextToken)
+{
+    while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
+
+        //if token is the "--" break flag
+        if (strcmp(nextToken, "--") == 0)
+            break;
+
+        for (const char *flg = nextToken+1; *flg!='\0'; flg++ ) {
+            if (supported(*flg)) {
+                makeSet(*flg);
+            } else {
+                debugs(28, 0, HERE << "Flag '" << *flg << "' not supported");
+                self_destruct();
+            }
+        }
+    }
+
+    /*Regex code needs to parse -i file*/
+    if ( isSet(ACL_F_REGEX_CASE))
+        ConfigParser::strtokFilePutBack("-i");
+
+    if (nextToken != NULL && strcmp(nextToken, "--") != 0 )
+        ConfigParser::strtokFileUndo();
+}
+
+const char *
+ACLFlags::flagsStr() const
+{
+    static char buf[64];
+    if (flags_ == 0)
+        return "";
+
+    char *s = buf;
+    *s++ = '-';
+    for (ACLFlag f = 'A'; f <= 'z'; f++) {
+        // ACL_F_REGEX_CASE (-i) flag handled by ACLRegexData class, ignore
+        if (isSet(f) && f != ACL_F_REGEX_CASE)
+            *s++ = f;
+    }
+    *s = '\0';
+    return buf;
+}
 
 void *
 ACL::operator new (size_t byteCount)
@@ -131,7 +186,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         AnyP::PortCfg *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
-            if (p->intercepted)
+            if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
@@ -142,7 +197,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
-            if (p->intercepted)
+            if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myport' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
@@ -179,6 +234,9 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      * warning message in aclDomainCompare().
      */
     AclMatchedName = A->name;	/* ugly */
+
+    char *aTok;
+    A->flags.parseFlags(aTok);
 
     /*split the function here */
     A->parse();
@@ -425,8 +483,11 @@ ACL::Prototype::Factory (char const *typeToClone)
     debugs(28, 4, "ACL::Prototype::Factory: cloning an object for type '" << typeToClone << "'");
 
     for (iterator i = Registry->begin(); i != Registry->end(); ++i)
-        if (!strcmp (typeToClone, (*i)->typeString))
-            return (*i)->prototype->clone();
+        if (!strcmp (typeToClone, (*i)->typeString)) {
+            ACL *A = (*i)->prototype->clone();
+            A->flags = (*i)->prototype->flags;
+            return A;
+        }
 
     debugs(28, 4, "ACL::Prototype::Factory: cloning failed, no type '" << typeToClone << "' available");
 

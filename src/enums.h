@@ -32,32 +32,6 @@
 #ifndef SQUID_ENUMS_H
 #define SQUID_ENUMS_H
 
-typedef enum {
-    LOG_TAG_NONE,
-    LOG_TCP_HIT,
-    LOG_TCP_MISS,
-    LOG_TCP_REFRESH_UNMODIFIED, // refresh from origin revalidated existing entry
-    LOG_TCP_REFRESH_FAIL_OLD,   // refresh from origin failed, stale reply sent
-    LOG_TCP_REFRESH_FAIL_ERR,   // refresh from origin failed, error forwarded
-    LOG_TCP_REFRESH_MODIFIED,   // refresh from origin replaced existing entry
-    LOG_TCP_CLIENT_REFRESH_MISS,
-    LOG_TCP_IMS_HIT,
-    LOG_TCP_SWAPFAIL_MISS,
-    LOG_TCP_NEGATIVE_HIT,
-    LOG_TCP_MEM_HIT,
-    LOG_TCP_DENIED,
-    LOG_TCP_DENIED_REPLY,
-    LOG_TCP_OFFLINE_HIT,
-    LOG_TCP_REDIRECT,
-    LOG_UDP_HIT,
-    LOG_UDP_MISS,
-    LOG_UDP_DENIED,
-    LOG_UDP_INVALID,
-    LOG_UDP_MISS_NOFETCH,
-    LOG_ICP_QUERY,
-    LOG_TYPE_MAX
-} log_type;
-
 enum fd_type {
     FD_NONE,
     FD_LOG,

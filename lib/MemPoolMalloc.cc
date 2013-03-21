@@ -56,7 +56,10 @@ MemPoolMalloc::allocate()
         memMeterDec(meter.idle);
         ++saved_calls;
     } else {
-        obj = xcalloc(1, obj_size);
+        if (doZero)
+            obj = xcalloc(1, obj_size);
+        else
+            obj = xmalloc(obj_size);
         memMeterInc(meter.alloc);
     }
     memMeterInc(meter.inuse);
@@ -71,7 +74,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
         xfree(obj);
         memMeterDec(meter.alloc);
     } else {
-        if (doZeroOnPush)
+        if (doZero)
             memset(obj, 0, obj_size);
         memMeterInc(meter.idle);
         freelist.push_back(obj);

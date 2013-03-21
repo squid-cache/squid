@@ -139,7 +139,7 @@ WhoisState::setReplyToOK(StoreEntry *sentry)
 {
     HttpReply *reply = new HttpReply;
     sentry->buffer();
-    reply->setHeaders(HTTP_OK, "Gatewaying", "text/plain", -1, -1, -2);
+    reply->setHeaders(Http::scOkay, "Gatewaying", "text/plain", -1, -1, -2);
     sentry->replaceHttpReply(reply);
 }
 
@@ -162,7 +162,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
                                                  CommIoCbPtrFun(whoisReadReply, this));
             comm_read(conn, aBuffer, BUFSIZ, call);
         } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, fwd->request);
             err->xerrno = xerrno;
             fwd->fail(err);
             conn->close();

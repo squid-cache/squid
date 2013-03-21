@@ -206,7 +206,7 @@ comm_empty_os_read_buffers(int fd)
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
 
-    if (fd_table[fd].flags.nonblocking == 1) {
+    if (fd_table[fd].flags.nonblocking) {
         while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
     }
 #endif
@@ -504,7 +504,7 @@ comm_set_transparent(int fd)
         debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
     } else {
         /* mark the socket as having transparent options */
-        fd_table[fd].flags.transparent = 1;
+        fd_table[fd].flags.transparent = true;
     }
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
@@ -711,24 +711,24 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     comm_init_opened(conn, 0, 0, note, AI);
 
     if (!(conn->flags & COMM_NOCLOEXEC))
-        fd_table[conn->fd].flags.close_on_exec = 1;
+        fd_table[conn->fd].flags.close_on_exec = true;
 
     if (conn->local.GetPort() > (unsigned short) 0) {
 #if _SQUID_WINDOWS_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
-            fd_table[conn->fd].flags.nolinger = 1;
+            fd_table[conn->fd].flags.nolinger = true;
     }
 
     if ((conn->flags & COMM_TRANSPARENT))
-        fd_table[conn->fd].flags.transparent = 1;
+        fd_table[conn->fd].flags.transparent = true;
 
     if (conn->flags & COMM_NONBLOCKING)
-        fd_table[conn->fd].flags.nonblocking = 1;
+        fd_table[conn->fd].flags.nonblocking = true;
 
 #ifdef TCP_NODELAY
     if (AI->ai_socktype == SOCK_STREAM)
-        fd_table[conn->fd].flags.nodelay = 1;
+        fd_table[conn->fd].flags.nodelay = true;
 #endif
 
     /* no fd_table[fd].flags. updates needed for these conditions:
@@ -829,7 +829,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
     errno = 0;
 
     if (!F->flags.called_connect) {
-        F->flags.called_connect = 1;
+        F->flags.called_connect = true;
         ++ statCounter.syscalls.sock.connects;
 
         x = connect(sock, AI->ai_addr, AI->ai_addrlen);
@@ -889,23 +889,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
 #endif
 
     }
-
-    /* Squid seems to be working fine without this code. With this code,
-     * we leak memory on many connect requests because of EINPROGRESS.
-     * If you find that this code is needed, please file a bug report. */
-#if 0
-#if _SQUID_LINUX_
-    /* 2007-11-27:
-     * Linux Debian replaces our allocated AI pointer with garbage when
-     * connect() fails. This leads to segmentation faults deallocating
-     * the system-allocated memory when we go to clean up our pointer.
-     * HACK: is to leak the memory returned since we can't deallocate.
-     */
-    if (errno != 0) {
-        AI = NULL;
-    }
-#endif
-#endif
 
     address.FreeAddrInfo(AI);
 
@@ -1110,7 +1093,7 @@ _comm_close(int fd, char const *file, int line)
 
     PROF_start(comm_close);
 
-    F->flags.close_request = 1;
+    F->flags.close_request = true;
 
 #if USE_SSL
     if (F->ssl) {
@@ -1287,7 +1270,7 @@ commSetNoLinger(int fd)
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
         debugs(50, 0, "commSetNoLinger: FD " << fd << ": " << xstrerror());
 
-    fd_table[fd].flags.nolinger = 1;
+    fd_table[fd].flags.nolinger = true;
 }
 
 static void
@@ -1351,7 +1334,7 @@ commSetNonBlocking(int fd)
 #if _SQUID_CYGWIN_
     }
 #endif
-    fd_table[fd].flags.nonblocking = 1;
+    fd_table[fd].flags.nonblocking = true;
 
     return 0;
 }
@@ -1378,7 +1361,7 @@ commUnsetNonBlocking(int fd)
         return COMM_ERROR;
     }
 
-    fd_table[fd].flags.nonblocking = 0;
+    fd_table[fd].flags.nonblocking = false;
     return 0;
 }
 
@@ -1397,7 +1380,7 @@ commSetCloseOnExec(int fd)
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0)
         debugs(50, 0, "FD " << fd << ": set close-on-exec failed: " << xstrerror());
 
-    fd_table[fd].flags.close_on_exec = 1;
+    fd_table[fd].flags.close_on_exec = true;
 
 #endif
 }
@@ -1411,7 +1394,7 @@ commSetTcpNoDelay(int fd)
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
         debugs(50, DBG_IMPORTANT, "commSetTcpNoDelay: FD " << fd << ": " << xstrerror());
 
-    fd_table[fd].flags.nodelay = 1;
+    fd_table[fd].flags.nodelay = true;
 }
 
 #endif

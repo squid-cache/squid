@@ -57,7 +57,7 @@ struct session_list {
 
 struct snmp_internal_session {
     int sd;			/* socket descriptor for this connection */
-    ipaddr addr;		/* address of connected peer */
+    struct sockaddr_in addr;		/* address of connected peer */
     struct request_list *requests;	/* Info about outstanding requests */
 };
 

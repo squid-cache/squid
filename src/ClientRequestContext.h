@@ -35,6 +35,8 @@ public:
     void clientAccessCheckDone(const allow_t &answer);
     void clientRedirectStart();
     void clientRedirectDone(const HelperReply &reply);
+    void clientStoreIdStart();
+    void clientStoreIdDone(const HelperReply &reply);
     void checkNoCache();
     void checkNoCacheDone(const allow_t &answer);
 #if USE_ADAPTATION
@@ -55,6 +57,7 @@ public:
     ClientHttpRequest *http;
     ACLChecklist *acl_checklist;        /* need ptr back so we can unreg if needed */
     int redirect_state;
+    int store_id_state;
 
     /**
      * URL-rewrite/redirect helper may return BH for internal errors.
@@ -63,6 +66,7 @@ public:
      * This tracks the number of previous failures for the current context.
      */
     uint8_t redirect_fail_count;
+    uint8_t store_id_fail_count;
 
     bool host_header_verify_done;
     bool http_access_done;
@@ -71,6 +75,7 @@ public:
     bool adaptation_acl_check_done;
 #endif
     bool redirect_done;
+    bool store_id_done;
     bool no_cache_done;
     bool interpreted_req_hdrs;
     bool tosToClientDone;

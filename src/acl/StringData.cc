@@ -66,6 +66,12 @@ splaystrcmp (char * const &l, char * const &r)
     return strcmp (l,r);
 }
 
+void
+ACLStringData::insert(const char *value)
+{
+    values = values->insert(xstrdup(value), splaystrcmp);
+}
+
 bool
 ACLStringData::match(char const *toFind)
 {

@@ -18,6 +18,7 @@ libauth_la_SOURCES = \
 	CredentialState.h \
 	Gadgets.cc \
 	Gadgets.h \
+	QueueNode.h \
 	Scheme.cc \
 	Scheme.h \
 	State.h \
