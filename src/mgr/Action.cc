@@ -98,7 +98,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 
     if (writeHttpHeader) {
         HttpReply *rep = new HttpReply;
-        rep->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
+        rep->setHeaders(Http::scOkay, NULL, "text/plain", -1, squid_curtime, squid_curtime);
         // Allow cachemgr and other XHR scripts access to our version string
         const ActionParams &params = command().params;
         if (params.httpOrigin.size() > 0) {

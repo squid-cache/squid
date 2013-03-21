@@ -56,6 +56,9 @@
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #if HAVE_SYS_MOUNT_H
 #include <sys/mount.h>
 #endif
@@ -262,7 +265,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 
     for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
         SD = dynamic_cast<SwapDir *>(INDEXSD(i));
-        SD->flags.selected = 0;
+        SD->flags.selected = false;
 
         if (!SD->canStore(*e, objsize, load))
             continue;
@@ -277,10 +280,10 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 
         /* If the load is equal, then look in more details */
         if (load == least_load) {
-            /* closest max_objsize fit */
+            /* closest max-size fit */
 
             if (least_objsize != -1)
-                if (SD->max_objsize > least_objsize || SD->max_objsize == -1)
+                if (SD->maxObjectSize() > least_objsize)
                     continue;
 
             /* most free */
@@ -289,13 +292,13 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
         }
 
         least_load = load;
-        least_objsize = SD->max_objsize;
+        least_objsize = SD->maxObjectSize();
         most_free = cur_free;
         dirn = i;
     }
 
     if (dirn >= 0)
-        dynamic_cast<SwapDir *>(INDEXSD(dirn))->flags.selected = 1;
+        dynamic_cast<SwapDir *>(INDEXSD(dirn))->flags.selected = true;
 
     return dirn;
 }
@@ -913,6 +916,10 @@ StoreHashIndex::callback()
 void
 StoreHashIndex::create()
 {
+    if (Config.cacheSwap.n_configured == 0) {
+        debugs(0, DBG_PARSE_NOTE(DBG_CRITICAL), "No cache_dir stores are configured.");
+    }
+
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (dir(i).active())
             store(i)->create();
@@ -940,6 +947,12 @@ StoreHashIndex::get(String const key, STOREGETCLIENT aCallback, void *aCallbackD
 void
 StoreHashIndex::init()
 {
+    if (Config.Store.objectsPerBucket <= 0)
+        fatal("'store_objects_per_bucket' should be larger than 0.");
+
+    if (Config.Store.avgObjectSize <= 0)
+        fatal("'store_avg_object_size' should be larger than 0.");
+
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     /* this is very bogus, its specific to the any Store maintaining an
      * in-core index, not global */
@@ -1118,7 +1131,12 @@ StoreHashIndex::search(String const url, HttpRequest *)
 
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
 
-StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) : sd(aSwapDir), _done (false), bucket (0)
+StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) :
+        sd(aSwapDir),
+        callback(NULL),
+        cbdata(NULL),
+        _done(false),
+        bucket(0)
 {}
 
 /* do not link

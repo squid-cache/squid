@@ -136,9 +136,9 @@
 
 volatile sig_atomic_t term_flag = 0; // 'terminate' is a gcc 2.8.x internal...
 char*  linebuffer = 0;
-size_t buffersize = 16834;
+size_t buffersize = 128*1024;
 static char* copydir = 0;
-static unsigned debugFlag = 0;
+static uint32_t debugFlag = 0;
 static unsigned purgeMode = 0;
 static bool iamalive = false;
 static bool reminder = false;
@@ -324,7 +324,6 @@ action( int fd, size_t metasize,
     static const char* schablone = "PURGE %s HTTP/1.0\r\nAccept: */*\r\n\r\n";
     struct stat st;
     long size = ( fstat(fd,&st) == -1 ? -1 : long(st.st_size - metasize) );
-    int status = 0;
 
     // if we want to copy out the file, do that first of all.
     if ( ::copydir && *copydir && size > 0 )
@@ -332,6 +331,7 @@ action( int fd, size_t metasize,
                   fn, url, ::copydir, ::envelope );
 
     // do we need to PURGE the file, yes, if purgemode bit#0 was set.
+    int status = 0;
     if ( ::purgeMode & 0x01 ) {
         unsigned long bufsize = strlen(url) + strlen(schablone) + 4;
         char* buffer = new char[bufsize];
@@ -344,8 +344,8 @@ action( int fd, size_t metasize,
             return false;
         }
 
-        int size = strlen(buffer);
-        if ( write( sockfd, buffer, size ) != size ) {
+        int content_size = strlen(buffer);
+        if ( write( sockfd, buffer, content_size ) != content_size ) {
             // error while talking to squid
             fprintf( stderr, "unable to talk to server: %s\n", strerror(errno) );
             close(sockfd);
@@ -353,15 +353,23 @@ action( int fd, size_t metasize,
             return false;
         }
         memset( buffer+8, 0, 4 );
-        if ( read( sockfd, buffer, bufsize ) < 1 ) {
+        int readLen = read(sockfd, buffer, bufsize);
+        if (readLen < 1) {
             // error while reading squid's answer
             fprintf( stderr, "unable to read answer: %s\n", strerror(errno) );
             close(sockfd);
             delete[] buffer;
             return false;
         }
+        buffer[bufsize-1] = '\0';
         close(sockfd);
-        status = strtol(buffer+8,0,10);
+        int64_t s = strtol(buffer+8,0,10);
+        if (s > 0 && s < 1000)
+            status = s;
+        else {
+            // error while reading squid's answer
+            fprintf( stderr, "invalid HTTP status in reply: %s\n", buffer+8);
+        }
         delete[] buffer;
     }
 
@@ -396,7 +404,9 @@ match( const char* fn, const REList* list )
     if ( debugFlag & 0x01 ) fprintf( stderr, "# [3] %s\n", fn );
     int fd = open( fn, O_RDONLY );
     if ( fd != -1 ) {
-        if ( read(fd,::linebuffer,::buffersize-1) > 60 ) {
+        memset(::linebuffer, 0, ::buffersize);
+        size_t readLen = read(fd,::linebuffer,::buffersize-1);
+        if ( readLen > 60 ) {
             ::linebuffer[ ::buffersize-1 ] = '\0'; // force-terminate string
 
             // check the offset into the start of object data. The offset is
@@ -417,6 +427,14 @@ match( const char* fn, const REList* list )
             while ( offset + addon <= datastart ) {
                 unsigned int size = 0;
                 memcpy( &size, linebuffer+offset+sizeof(char), sizeof(unsigned int) );
+                if (size+offset < size) {
+                    fputs("WARNING: file corruption detected. 32-bit overflow in size field.\n", stderr);
+                    break;
+                }
+                if (size+offset > readLen) {
+                    fputs( "WARNING: Partial meta data loaded.\n", stderr );
+                    break;
+                }
                 meta.append( SquidMetaType(*(linebuffer+offset)),
                              size, linebuffer+offset+addon );
                 offset += ( addon + size );
@@ -545,23 +563,23 @@ dirlevel( const char* dirname, const REList* list, bool level=false )
 }
 
 int
-checkForPortOnly( const char* optarg )
+checkForPortOnly( const char* arg )
 // purpose: see if somebody just put in a port instead of a hostname
 // paramtr: optarg (IN): argument from commandline
 // returns: 0..65535 is the valid port number in network byte order,
 //          -1 if not a port
 {
     // if there is a period in there, it must be a valid hostname
-    if ( strchr( optarg, '.' ) != 0 ) return -1;
+    if ( strchr( arg, '.' ) != 0 ) return -1;
 
     // if it is just a number between 0 and 65535, it must be a port
     char* errstr = 0;
-    unsigned long result = strtoul( optarg, &errstr, 0 );
-    if ( result < 65536 && errstr != optarg ) return htons(result);
+    unsigned long result = strtoul( arg, &errstr, 0 );
+    if ( result < 65536 && errstr != arg ) return htons(result);
 
 #if 0
     // one last try, test for a symbolical service name
-    struct servent* service = getservbyname( optarg, "tcp" );
+    struct servent* service = getservbyname( arg, "tcp" );
     return service ? service->s_port : -1;
 #else
     return -1;
@@ -579,7 +597,7 @@ helpMe( void )
         " -a\tdisplay a little rotating thingy to indicate that I am alive (tty only).\n"
         " -c c\tsquid.conf location, default \"%s\".\n"
         " -C dir\tbase directory for content extraction (copy-out mode).\n"
-        " -d l\tdebug level, an OR of different debug options.\n"
+        " -d l\tdebug level, an OR mask of different debug options.\n"
         " -e re\tsingle regular expression per -e instance (use quotes!).\n"
         " -E re\tsingle case sensitive regular expression like -e.\n"
         " -f fn\tname of textfile containing one regular expression per line.\n"
@@ -600,8 +618,8 @@ helpMe( void )
 
 void
 parseCommandline( int argc, char* argv[], REList*& head,
-                  char*& conffile, char*& copydir,
-                  struct in_addr& serverHost, unsigned short& serverPort )
+                  char*& conffile, char*& copyDirPath,
+                  struct in_addr& serverHostIp, unsigned short& serverHostPort )
 // paramtr: argc: see ::main().
 //          argv: see ::main().
 // returns: Does terminate the program on errors!
@@ -628,26 +646,37 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
         case 'C':
             if ( optarg && *optarg ) {
-                if ( copydir ) xfree( (void*) copydir );
-                copydir = xstrdup(optarg);
-                assert(copydir);
+                if ( copyDirPath ) xfree( (void*) copyDirPath );
+                copyDirPath = xstrdup(optarg);
+                assert(copyDirPath);
             }
             break;
         case 'c':
-            if ( optarg && *optarg ) {
-                if ( *conffile ) xfree((void*) conffile);
-                conffile = xstrdup(optarg);
-                assert(conffile);
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a regex pattern argument!\n", option );
+                exit(1);
             }
+            if ( *conffile ) xfree((void*) conffile);
+            conffile = xstrdup(optarg);
+            assert(conffile);
             break;
 
         case 'd':
-            ::debugFlag = strtoul( optarg, 0, 0 );
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c expects a mask parameter. Debug disabled.\n", option );
+                ::debugFlag = 0;
+            } else
+                ::debugFlag = (strtoul(optarg, NULL, 0) & 0xFFFFFFFF);
             break;
 
         case 'E':
         case 'e':
-            if ( head == 0 ) tail = head = new REList( optarg, option=='E' );
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a regex pattern argument!\n", option );
+                exit(1);
+            }
+            if ( head == 0 )
+                tail = head = new REList( optarg, option=='E' );
             else {
                 tail->next = new REList( optarg, option=='E' );
                 tail = tail->next;
@@ -655,6 +684,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
 
         case 'f':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a filename argument!\n", option );
+                exit(1);
+            }
             if ( (rfile = fopen( optarg, "r" )) != NULL ) {
                 unsigned long lineno = 0;
 #define LINESIZE 512
@@ -693,6 +726,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
             ::no_fork = ! ::no_fork;
             break;
         case 'p':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a port argument!\n", option );
+                exit(1);
+            }
             colon = strchr( optarg, ':' );
             if ( colon == 0 ) {
                 // no colon, only look at host
@@ -702,29 +739,33 @@ parseCommandline( int argc, char* argv[], REList*& head,
                 port = checkForPortOnly( optarg );
                 if ( port == -1 ) {
                     // assume that main() did set the default port
-                    if ( convertHostname(optarg,serverHost) == -1 ) {
+                    if ( convertHostname(optarg,serverHostIp) == -1 ) {
                         fprintf( stderr, "unable to resolve host %s!\n", optarg );
                         exit(1);
                     }
                 } else {
                     // assume that main() did set the default host
-                    serverPort = port;
+                    serverHostPort = port;
                 }
             } else {
                 // colon used, port is extra
                 *colon = 0;
                 ++colon;
-                if ( convertHostname(optarg,serverHost) == -1 ) {
+                if ( convertHostname(optarg,serverHostIp) == -1 ) {
                     fprintf( stderr, "unable to resolve host %s!\n", optarg );
                     exit(1);
                 }
-                if ( convertPortname(colon,serverPort) == -1 ) {
+                if ( convertPortname(colon,serverHostPort) == -1 ) {
                     fprintf( stderr, "unable to resolve port %s!\n", colon );
                     exit(1);
                 }
             }
             break;
         case 'P':
+            if ( !optarg || !*optarg ) {
+                fprintf( stderr, "%c requires a mode argument!\n", option );
+                exit(1);
+            }
             ::purgeMode = ( strtol( optarg, 0, 0 ) & 0x07 );
             break;
         case 's':
@@ -752,8 +793,8 @@ parseCommandline( int argc, char* argv[], REList*& head,
     assert( head != 0 );
 
     // make sure that the copy out directory is there and accessible
-    if ( copydir && *copydir )
-        if ( assert_copydir( copydir ) != 0 ) exit(1);
+    if ( copyDirPath && *copyDirPath )
+        if ( assert_copydir( copyDirPath ) != 0 ) exit(1);
 
     // show results
     if ( showme ) {
@@ -766,15 +807,15 @@ parseCommandline( int argc, char* argv[], REList*& head,
         puts( ::verbose ? " + extra verbosity" : "" );
 
         printf( "# Copy-out directory: %s ",
-                copydir ? copydir : "copy-out mode disabled" );
-        if ( copydir )
+                copyDirPath ? copyDirPath : "copy-out mode disabled" );
+        if ( copyDirPath )
             printf( "(%s HTTP header)\n", ::envelope ? "prepend" : "no" );
         else
             puts("");
 
         printf( "# Squid config file : %s\n", conffile );
         printf( "# Cacheserveraddress: %s:%u\n",
-                inet_ntoa( serverHost ), ntohs( serverPort ) );
+                inet_ntoa( serverHostIp ), ntohs( serverHostPort ) );
         printf( "# purge mode        : 0x%02x\n", ::purgeMode );
         printf( "# Regular expression: " );
 

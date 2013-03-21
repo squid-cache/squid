@@ -371,9 +371,6 @@ squid_SOURCES = \
 	HttpStateFlags.h \
 	http.cc \
 	http.h \
-	HttpStatusCode.h \
-	HttpStatusLine.cc \
-	HttpStatusLine.h \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -408,7 +405,6 @@ squid_SOURCES = \
 	HttpRequest.h \
 	HttpRequestMethod.cc \
 	HttpRequestMethod.h \
-	HttpVersion.h \
 	ICP.h \
 	icp_opcode.h \
 	icp_v2.cc \
@@ -423,6 +419,7 @@ squid_SOURCES = \
 	$(LEAKFINDERSOURCE) \
 	SquidList.h \
 	SquidList.cc \
+	LogTags.h \
 	lookup_t.h \
 	main.cc \
 	Mem.h \
@@ -603,6 +600,7 @@ BUILT_SOURCES = \
 	globals.cc \
 	hier_code.cc \
 	icp_opcode.cc \
+	LogTags.cc \
 	lookup_t.cc \
 	repl_modules.cc \
 	swap_log_op.cc
@@ -956,6 +954,9 @@ err_type.cc: err_type.h mk-string-arrays.awk
 err_detail_type.cc: err_detail_type.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_detail_type.h | sed 's/ERR_DETAIL_//' > $@ || ($(RM) -f $@ && exit 1)
 
+LogTags.cc: LogTags.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/LogTags.h | sed 's/LOG_//' > $@ || ($(RM) -f $@ && exit 1)
+
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
 
@@ -1149,9 +1150,6 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
-	HttpStatusCode.h \
-	HttpStatusLine.cc \
-	HttpStatusLine.h \
 	Mem.h \
 	mem.cc \
 	RegexList.h \
@@ -1199,6 +1197,7 @@ nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
+	http/libsquid-http.la \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
@@ -1475,7 +1474,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -1639,6 +1637,8 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
@@ -1659,7 +1659,6 @@ tests_testDiskIO_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -1889,7 +1888,6 @@ tests_testEvent_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2136,7 +2134,6 @@ tests_testEventLoop_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2380,7 +2377,6 @@ tests_test_http_range_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.h \
@@ -2669,7 +2665,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2902,6 +2897,7 @@ tests_testStore_SOURCES= \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	fd.h \
+	fde.h \
 	tests/stub_fd.cc \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -3061,6 +3057,8 @@ tests_testUfs_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	client_db.h \
 	disk.h \
 	disk.cc \
@@ -3069,7 +3067,6 @@ tests_testUfs_SOURCES = \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	RequestFlags.h \
@@ -3239,6 +3236,8 @@ tests_testRock_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	FileMap.h \
 	filemap.cc \
 	HttpHeaderFieldStat.h \
@@ -3257,7 +3256,6 @@ tests_testRock_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -3401,6 +3399,8 @@ tests_testCoss_SOURCES = \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
+	fde.h \
+	fde.cc \
 	disk.h \
 	disk.cc \
 	FileMap.h \
@@ -3408,7 +3408,6 @@ tests_testCoss_SOURCES = \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
-	HttpStatusLine.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -3635,7 +3634,6 @@ tests_testURL_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \

@@ -293,7 +293,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
-        request->flags.failOnValidationError = 1;
+        request->flags.failOnValidationError = true;
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
@@ -303,7 +303,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
        ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
         if (request)
-            request->flags.failOnValidationError = 1;
+            request->flags.failOnValidationError = true;
         return STALE_MUST_REVALIDATE;
     }
 
@@ -331,7 +331,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         } else {
             /* The clients no-cache header is not overridden on this request */
             debugs(22, 3, "refreshCheck: YES: client reload");
-            request->flags.noCache = 1;
+            request->flags.noCache = true;
             return STALE_FORCED_RELOAD;
         }
 
@@ -398,7 +398,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if ( max_stale >= 0 && staleness > max_stale) {
         debugs(22, 3, "refreshCheck: YES: max-stale limit");
         if (request)
-            request->flags.failOnValidationError = 1;
+            request->flags.failOnValidationError = true;
         return STALE_MAX_STALE;
     }
 

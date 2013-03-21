@@ -14,11 +14,14 @@ public:
     /// The number of processes spawn for ssl_crtd.
     HelperChildConfig ssl_crtdChildren;
 #endif
-#if 1 // USE_SSL_CERT_VALIDATOR
     char *ssl_crt_validator;
     HelperChildConfig ssl_crt_validator_Children;
+    Config():
+#if USE_SSL_CRTD
+            ssl_crtd(NULL),
 #endif
-    Config();
+            ssl_crt_validator(NULL) {}
+
     ~Config();
 private:
     Config(const Config &); // not implemented

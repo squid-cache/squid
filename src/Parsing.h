@@ -38,7 +38,9 @@
 
 double xatof(const char *token);
 int xatoi(const char *token);
+unsigned int xatoui(const char *token);
 long xatol(const char *token);
+int64_t xatoll(const char *token, int base);
 unsigned short xatos(const char *token);
 
 /**
@@ -49,8 +51,18 @@ int64_t GetInteger64(void);
 /**
  * Parses an integer value.
  * Uses a method that obeys hexadecimal 0xN syntax needed for certain bitmasks.
+ * self_destruct() will be called to abort when invalid tokens are encountered.
  */
 int GetInteger(void);
+
+/**
+ * Parse a percentage value, e.g., 20%.
+ * The behavior of this function is similar as GetInteger().
+ * The difference is that the token might contain '%' as percentage symbol (%),
+ * and we further check whether the value is in the range of [0, 100]
+ * For example, 20% and 20 are both valid tokens, while 101%, 101, -1 are invalid.
+ */
+int GetPercentage(void);
 
 unsigned short GetShort(void);
 

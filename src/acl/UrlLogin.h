@@ -45,7 +45,7 @@ class ACLUrlLoginStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *, ACLFlags &);
     virtual bool requiresRequest() const {return true;}
 
     static ACLUrlLoginStrategy *Instance();

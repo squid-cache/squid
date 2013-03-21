@@ -3,9 +3,10 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
-#include "ssl/support.h"
 
 #if USE_SSL
+#include "ssl/support.h"
+
 AccessLogEntry::SslDetails::SslDetails(): user(NULL), bumpMode(::Ssl::bumpEnd)
 {
 }
@@ -31,7 +32,7 @@ AccessLogEntry::~AccessLogEntry()
 {
     safe_free(headers.request);
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     safe_free(adapt.last_meta);
 #endif
 

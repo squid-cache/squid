@@ -42,10 +42,53 @@
 #if HAVE_OSTREAM
 #include <ostream>
 #endif
+#if HAVE_STRING
+#include <string>
+#endif
 
 class ConfigParser;
 class ACLChecklist;
 class ACLList;
+
+typedef char ACLFlag;
+// ACLData Flags
+#define ACL_F_REGEX_CASE 'i'
+#define ACL_F_NO_LOOKUP 'n'
+#define ACL_F_END '\0'
+
+/**
+ * \ingroup ACLAPI
+ * Used to hold a list of one-letter flags which can be passed as parameters
+ * to acls  (eg '-i', '-n' etc)
+ */
+class ACLFlags
+{
+public:
+    explicit ACLFlags(const ACLFlag flags[]) : supported_(flags), flags_(0) {}
+    ACLFlags() : flags_(0) {}
+    bool supported(const ACLFlag f) const; ///< True if the given flag supported
+    void makeSet(const ACLFlag f) { flags_ |= flagToInt(f); } ///< Set the given flag
+    /// Return true if the given flag is set
+    bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
+    /// Parse a flags given in the form -[A..Z|a..z]
+    void parseFlags(char * &nextToken);
+    const char *flagsStr() const; ///< Convert the flags to a string representation
+
+private:
+    /// Convert a flag to a 64bit unsigned integer.
+    /// The characters from 'A' to 'z' represented by the values from 65 to 122.
+    /// They are 57 different characters which can be fit to the bits of an 64bit
+    /// integer.
+    uint64_t flagToInt(const ACLFlag f) const {
+        assert('A' <= f && f <= 'z');
+        return ((uint64_t)1 << (f - 'A'));
+    }
+
+    std::string supported_; ///< The supported character flags
+    uint64_t flags_; ///< The flags which is set
+public:
+    static const ACLFlag NoFlags[1]; ///< An empty flags list
+};
 
 /// \ingroup ACLAPI
 class ACL
@@ -61,6 +104,7 @@ public:
     static ACL* FindByName(const char *name);
 
     ACL();
+    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs) { memset(name, '\0', sizeof(name)); }
     virtual ~ACL();
     virtual ACL *clone()const = 0;
     virtual void parse() = 0;
@@ -82,6 +126,7 @@ public:
     char name[ACL_NAME_SZ];
     char *cfgline;
     ACL *next;
+    ACLFlags flags; ///< The list of given ACL flags
 
 public:
 

@@ -42,12 +42,11 @@
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
         cache_control(NULL), hdr_sz(0), content_length(0), protocol(AnyP::PROTO_NONE),
-        pstate(psReadyToParseStartLine), lock_count(0)
+        pstate(psReadyToParseStartLine)
 {}
 
 HttpMsg::~HttpMsg()
 {
-    assert(lock_count == 0);
     assert(!body_pipe);
 }
 
@@ -141,13 +140,14 @@ httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char
     return 1;
 }
 
-// negative return is the negated HTTP_ error code
+// negative return is the negated Http::StatusCode error code
 // zero return means need more data
 // positive return is the size of parsed headers
-bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
+bool
+HttpMsg::parse(MemBuf *buf, bool eof, Http::StatusCode *error)
 {
     assert(error);
-    *error = HTTP_STATUS_NONE;
+    *error = Http::scNone;
 
     // httpMsgParseStep() and debugging require 0-termination, unfortunately
     buf->terminate(); // does not affect content size
@@ -159,8 +159,8 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     if (!sanityCheckStartLine(buf, hdr_len, error)) {
         // NP: sanityCheck sets *error and sends debug warnings on syntax errors.
         // if we have seen the connection close, this is an error too
-        if (eof && *error==HTTP_STATUS_NONE)
-            *error = HTTP_INVALID_HEADER;
+        if (eof && *error == Http::scNone)
+            *error = Http::scInvalidHeader;
 
         return false;
     }
@@ -168,7 +168,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     // TODO: move to httpReplyParseStep()
     if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize)) {
         debugs(58, DBG_IMPORTANT, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
-        *error = HTTP_HEADER_TOO_LARGE;
+        *error = Http::scHeaderTooLarge;
         return false;
     }
 
@@ -176,7 +176,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
         debugs(58, 3, "HttpMsg::parse: failed to find end of headers (eof: " << eof << ") in '" << buf->content() << "'");
 
         if (eof) // iff we have seen the end, this is an error
-            *error = HTTP_INVALID_HEADER;
+            *error = Http::scInvalidHeader;
 
         return false;
     }
@@ -185,13 +185,13 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
 
     if (res < 0) { // error
         debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers in '" << buf->content() << "'");
-        *error = HTTP_INVALID_HEADER;
+        *error = Http::scInvalidHeader;
         return false;
     }
 
     if (res == 0) {
         debugs(58, 2, "HttpMsg::parse: strange, need more data near '" << buf->content() << "'");
-        *error = HTTP_INVALID_HEADER;
+        *error = Http::scInvalidHeader;
         return false; // but this should not happen due to headersEnd() above
     }
 
@@ -322,7 +322,7 @@ HttpMsg::setContentLength(int64_t clen)
 bool
 HttpMsg::persistent() const
 {
-    if (http_ver > HttpVersion(1, 0)) {
+    if (http_ver > Http::ProtocolVersion(1, 0)) {
         /*
          * for modern versions of HTTP: persistent unless there is
          * a "Connection: close" header.
@@ -357,23 +357,4 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
     packerToMemInit(&p, &mb);
     packFirstLineInto(&p, true);
     packerClean(&p);
-}
-
-// use HTTPMSGLOCK() instead of calling this directly
-HttpMsg *
-HttpMsg::_lock()
-{
-    ++lock_count;
-    return this;
-}
-
-// use HTTPMSGUNLOCK() instead of calling this directly
-void
-HttpMsg::_unlock()
-{
-    assert(lock_count > 0);
-    --lock_count;
-
-    if (0 == lock_count)
-        delete this;
 }

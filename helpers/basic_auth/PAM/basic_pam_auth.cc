@@ -158,6 +158,7 @@ static void usage(char *program)
     fprintf(stderr, "           to authenticate all users\n");
     fprintf(stderr, " -o        Do not perform account mgmt (account expiration etc)\n");
     fprintf(stderr, " -1        Only one user authentication per PAM connection\n");
+    fprintf(stderr, " -r        Detect and remove Negotiate/NTLM realm from username\n");
 }
 
 int
@@ -172,12 +173,13 @@ main(int argc, char *argv[])
     int ttl = DEFAULT_SQUID_PAM_TTL;
     const char *service = DEFAULT_SQUID_PAM_SERVICE;
     int no_acct_mgmt = 0;
+    int no_realm = 0;
 
     /* make standard output line buffered */
     setvbuf(stdout, NULL, _IOLBF, 0);
 
     while (1) {
-        int ch = getopt(argc, argv, "1n:t:o");
+        int ch = getopt(argc, argv, "1n:t:or");
         switch (ch) {
         case -1:
             goto start;
@@ -192,6 +194,9 @@ main(int argc, char *argv[])
             break;
         case 'o':
             no_acct_mgmt = 1;
+            break;
+        case 'r':
+            no_realm = 1;
             break;
         default:
             fprintf(stderr, "FATAL: Unknown getopt value '%c'\n", ch);
@@ -224,6 +229,18 @@ start:
         rfc1738_unescape(user);
         rfc1738_unescape(password_buf);
         conv.appdata_ptr = (char *) password_buf;	/* from buf above. not allocated */
+
+        if (no_realm) {
+            /* Remove DOMAIN\.. and ...@domain from the user name in case the user
+             * thought this was an NTLM or Negotiate authentication popup box
+             */
+            char * user_ptr = strchr(user, '@');
+            if (user_ptr) *user_ptr = 0;
+            else {
+                user_ptr = strchr(user, '\\');
+                if (user_ptr) user = user_ptr + 1;
+            }
+        }
 
 #if _SQUID_SOLARIS_
         /* Workaround for Solaris 2.6 where the PAM library is broken

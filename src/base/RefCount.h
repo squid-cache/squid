@@ -43,7 +43,7 @@
 /**
  * Template for Reference Counting pointers.
  *
- * Objects of type 'C' must inherit from 'Lockable' in base/Lock.h
+ * Objects of type 'C' must inherit from 'RefCountable' in base/Lock.h
  * which provides the locking interface used by reference counting.
  */
 template <class C>

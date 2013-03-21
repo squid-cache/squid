@@ -72,7 +72,7 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, LogTags, int, const char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
@@ -95,10 +95,13 @@ Comm::ConnectionPointer icpIncomingConn = NULL;
 Comm::ConnectionPointer icpOutgoingConn = NULL;
 
 /* icp_common_t */
-_icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
+_icp_common_t::_icp_common_t() :
+        opcode(ICP_INVALID), version(0), length(0), reqnum(0),
+        flags(0), pad(0), shostid(0)
 {}
 
-_icp_common_t::_icp_common_t(char *buf, unsigned int len)
+_icp_common_t::_icp_common_t(char *buf, unsigned int len) :
+        opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
 {
     if (len < sizeof(_icp_common_t)) {
         /* mark as invalid */
@@ -129,10 +132,12 @@ _icp_common_t::getOpCode() const
 
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
         header(aHeader),
-        request(HTTPMSGLOCK(aRequest)),
+        request(aRequest),
         fd(-1),
         url(NULL)
-{}
+{
+    HTTPMSGLOCK(request);
+}
 
 ICPState::~ICPState()
 {
@@ -196,7 +201,7 @@ ICP2State::created(StoreEntry *newEntry)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, int delay)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry();
 
@@ -293,7 +298,7 @@ int
 icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
-           log_type logcode,
+           LogTags logcode,
            int delay)
 {
     icpUdpData *queue;
@@ -377,7 +382,7 @@ icpGetCommonOpcode()
     return ICP_ERR;
 }
 
-log_type
+LogTags
 icpLogFromICPCode(icp_opcode opcode)
 {
     if (opcode == ICP_ERR)

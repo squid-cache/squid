@@ -55,8 +55,8 @@ Mgr::ServiceTimesAction::Create(const CommandPointer &cmd)
     return new ServiceTimesAction(cmd);
 }
 
-Mgr::ServiceTimesAction::ServiceTimesAction(const CommandPointer &cmd):
-        Action(cmd), data()
+Mgr::ServiceTimesAction::ServiceTimesAction(const CommandPointer &aCmd):
+        Action(aCmd), data()
 {
     debugs(16, 5, HERE);
 }

@@ -64,8 +64,7 @@ public:
     int calls;
     int lasttimeout;
     int return_timeout;
-    RecordingEngine(int return_timeout=0): calls(0), lasttimeout(0),
-            return_timeout(return_timeout) {}
+    RecordingEngine(int aTimeout=0): calls(0), lasttimeout(0), return_timeout(aTimeout) {}
 
     virtual int checkEvents(int timeout) {
         ++calls;

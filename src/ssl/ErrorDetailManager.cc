@@ -115,11 +115,11 @@ void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDeta
 }
 
 bool
-Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, HttpRequest *request, ErrorDetailEntry &entry)
+Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry)
 {
 #if USE_ERR_LOCALES
     String hdr;
-    if (request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr)) {
+    if (request != NULL && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr)) {
         ErrorDetailsList::Pointer errDetails = NULL;
         //Try to retrieve from cache
         size_t pos = 0;
@@ -132,7 +132,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, HttpRequest *re
             debugs(83, 8, HERE << "Creating new ErrDetailList to read from disk");
             errDetails = new ErrorDetailsList();
             ErrorDetailFile detailTmpl(errDetails);
-            if (detailTmpl.loadFor(request)) {
+            if (detailTmpl.loadFor(request.getRaw())) {
                 if (detailTmpl.language()) {
                     debugs(83, 8, HERE << "Found details on disk for language " << detailTmpl.language());
                     errDetails->errLanguage = detailTmpl.language();

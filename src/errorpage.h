@@ -38,7 +38,7 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
@@ -97,7 +97,7 @@ class MemBuf;
 class ErrorState
 {
 public:
-    ErrorState(err_type type, http_status, HttpRequest * request);
+    ErrorState(err_type type, Http::StatusCode, HttpRequest * request);
     ErrorState(); // not implemented.
     ~ErrorState();
 
@@ -153,7 +153,7 @@ public:
     err_type type;
     int page_id;
     char *err_language;
-    http_status httpStatus;
+    Http::StatusCode httpStatus;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
@@ -168,10 +168,6 @@ public:
     char *redirect_url;
     ERCB *callback;
     void *callback_data;
-
-    struct {
-        unsigned int flag_cbdata:1;
-    } flags;
 
     struct {
         wordlist *server_msg;
@@ -282,7 +278,7 @@ public:
      * template selected (eg because of a "Accept-Language: *"), or not available
      * template found this function return false.
      */
-    bool loadFor(HttpRequest *request);
+    bool loadFor(const HttpRequest *request);
 
     /**
      * Load the file given by "path". It uses the "parse()" method.
@@ -315,11 +311,16 @@ protected:
 /**
  * Parses the Accept-Language header value and return one language item on
  * each call.
+ * Will ignore any whitespace, q-values, and detectably invalid language
+ * codes in the header.
+ *
  * \param hdr is the Accept-Language header value
- * \param lang a buffer given by the user to store parsed language
+ * \param lang a buffer to store parsed language code in
  * \param langlen the length of the lang buffer
- * \param pos it is used to store the state of parsing. Must be "0" on first call
- * \return true on success, false otherwise
+ * \param pos is used to store the offset state of parsing. Must be "0" on first call.
+ *            Will be altered to point at the start of next field-value.
+ * \return true if something looking like a language token has been placed in lang, false otherwise
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
+
 #endif /* SQUID_ERRORPAGE_H */

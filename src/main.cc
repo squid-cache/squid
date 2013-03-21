@@ -312,7 +312,7 @@ usage(void)
             "                 Enable logging to syslog.\n"
             "       -u port   Specify ICP port number (default: %d), disable with 0.\n"
             "       -v        Print version.\n"
-            "       -z        Create swap directories\n"
+            "       -z        Create missing swap directories and then exit.\n"
             "       -C        Do not catch fatal signals.\n"
             "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
@@ -767,10 +767,8 @@ mainReconfigureStart(void)
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
 #if USE_SSL
-#if 1 // USE_SSL_CERT_VALIDATOR
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
-#endif
     Ssl::TheGlobalContextStorage.reconfigureStart();
 #endif
     redirectShutdown();
@@ -853,7 +851,7 @@ mainReconfigureFinish(void *)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
-#if USE_SSL // && USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1054,7 +1052,7 @@ mainInitialize(void)
     Ssl::Helper::GetInstance()->Init();
 #endif
 
-#if USE_SSL // && USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1459,7 +1457,7 @@ SquidMain(int argc, char **argv)
         }
 
         setEffectiveUser();
-        debugs(0, DBG_CRITICAL, "Creating Swap Directories");
+        debugs(0, DBG_CRITICAL, "Creating missing swap directories");
         Store::Root().create();
 
         return 0;
@@ -1852,7 +1850,7 @@ SquidShutdown()
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL //&& USE_SSL_CERT_VALIDATOR
+#if USE_SSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
 #endif

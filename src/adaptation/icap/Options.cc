@@ -75,7 +75,7 @@ void Adaptation::Icap::Options::configure(const HttpReply *reply)
 
     const HttpHeader *h = &reply->header;
 
-    if (reply->sline.status != 200)
+    if (reply->sline.status() != Http::scOkay)
         error = "unsupported status code of OPTIONS response";
 
     // Methods
