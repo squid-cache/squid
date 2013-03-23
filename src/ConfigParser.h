@@ -82,11 +82,32 @@ public:
     static char * strtokFile();
     static void strtokFileUndo();
     static void strtokFilePutBack(const char *);
+
+    /**
+      Returns the body of the next element. The element is either a token or
+      a quoted string with optional escape sequences and/or macros. The body
+      of a quoted string element does not include quotes or escape sequences.
+      Future code will want to see Elements and not just their bodies.
+    */
+    static char *NextToken();
+
+    /// configuration_includes_quoted_values in squid.conf
+    static int RecognizeQuotedValues;
+
+protected:
+    static char *NextElement(bool *wasQuoted);
+    static char *StripComment(char *token);
+
 private:
     static char *lastToken;
     static std::queue<std::string> undo;
 };
 
 int parseConfigFile(const char *file_name);
+
+/// XXX: Used for temporary hacks to allow old code to handle quoted values
+/// without replacing every strtok() call.
+extern char *xstrtok(char *str, const char *delimiters);
+
 
 #endif /* SQUID_CONFIGPARSER_H */

@@ -151,6 +151,9 @@ public:
         typedef Vector<Prototype const*>::const_iterator const_iterator;
         void registerMe();
     };
+
+protected:
+    static char *strtok(char *str, const char *delimiters);
 };
 
 /// \ingroup ACLAPI

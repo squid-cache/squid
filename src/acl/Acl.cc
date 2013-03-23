@@ -431,6 +431,14 @@ acl_access::operator delete (void *address)
     cbdataFree(t);
 }
 
+/// XXX: Temporary hack to allow old ACL code to handle quoted values without
+/// replacing every strtok() call.
+char *
+ACL::strtok(char *str, const char *delimiters)
+{
+    return xstrtok(str, delimiters);
+}
+
 ACL::Prototype::Prototype() : prototype (NULL), typeString (NULL) {}
 
 ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype (aPrototype), typeString (aType)

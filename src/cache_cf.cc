@@ -1302,6 +1302,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 
         while (v != NULL) {
             debugs(3, 3, "dump_acl: " << name << " " << ae->name << " " << v->key);
+            // XXX: use something like ConfigParser::QuoteString() here
             storeAppendPrintf(entry, "%s ", v->key);
             v = v->next;
         }

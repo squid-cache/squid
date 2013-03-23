@@ -65,6 +65,19 @@ COMMENT_START
   configuration files.
 
 
+  Values with spaces, quotes, and other special characters
+
+	Squid supports directive parameters with spaces, quotes, and other
+	special characters. Surround such parameters with "double quotes". Use
+	the configuration_includes_quoted_values directive to enable or
+	disable that support.
+
+	XXX: Document escaping and macro substitution rules inside quoted
+	strings.
+
+	XXX: Support single-quoted strings that prevent macro substitution.
+
+
   Conditional configuration
 
 	If-statements can be used to make configuration directives
@@ -8141,6 +8154,17 @@ COMMENT_START
  MISCELLANEOUS
  -----------------------------------------------------------------------------
 COMMENT_END
+
+NAME: configuration_includes_quoted_values
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: ConfigParser::RecognizeQuotedValues
+DOC_START
+	If set, Squid will recognize each "quoted string" as a single
+	configuration directive parameter. The quotes are stripped before the
+	parameter value is interpreted or used. XXX: Give more details.
+DOC_END
 
 NAME: memory_pools
 COMMENT: on|off

@@ -41,6 +41,9 @@
 char *ConfigParser::lastToken = NULL;
 std::queue<std::string> ConfigParser::undo;
 
+
+int ConfigParser::RecognizeQuotedValues = true;
+
 void
 ConfigParser::destruct()
 {
@@ -64,6 +67,18 @@ ConfigParser::strtokFilePutBack(const char *tok)
 }
 
 char *
+xstrtok(char *str, const char *delimiters)
+{   
+    assert(!str); // we are parsing the configuration file
+    // no support unless enabled in the configuration and
+    // no support for other delimiters (they may need to be eradicated!)
+    return (ConfigParser::RecognizeQuotedValues &&
+            strcmp(delimiters, " \t\n\r") == 0) ?
+        ConfigParser::NextToken() : ::strtok(str, delimiters);
+}
+
+
+char *
 ConfigParser::strtokFile(void)
 {
     static int fromFile = 0;
@@ -77,8 +92,12 @@ ConfigParser::strtokFile(void)
         strncpy(undoToken, undo.front().c_str(), sizeof(undoToken));
         undoToken[sizeof(undoToken) - 1] = '\0';
         undo.pop();
-        return undoToken;
+        return lastToken = undoToken;
     }
+
+    // XXX: add file:name support to the quoted string-aware parser
+    if (RecognizeQuotedValues)
+        return lastToken = ConfigParser::NextToken();
 
     lastToken = NULL;
     do {
@@ -142,29 +161,62 @@ ConfigParser::strtokFile(void)
     return lastToken = t;
 }
 
+/// returns token after stripping any comments
+/// must be called in non-quoted context only
+char *
+ConfigParser::StripComment(char *token)
+{
+    if (!token)
+        return NULL;
+
+    // we are outside the quoted string context
+    // assume that anything starting with a '#' is a comment
+    if (char *comment = strchr(token, '#')) {
+        *comment = '\0'; // remove the comment from this token
+        (void)strtok(NULL, ""); // remove the comment from the current line
+        if (!*token)
+            return NULL; // token was a comment
+    }
+
+    return token;
+}
+
 void
 ConfigParser::ParseQuotedString(char **var, bool *wasQuoted)
 {
-    String sVar;
-    ParseQuotedString(&sVar, wasQuoted);
-    *var = xstrdup(sVar.termedBuf());
+    if (const char *phrase = NextElement(wasQuoted))
+        *var = xstrdup(phrase);
+    else
+        self_destruct();
 }
 
 void
 ConfigParser::ParseQuotedString(String *var, bool *wasQuoted)
 {
+    if (const char *phrase = NextElement(wasQuoted))
+        var->reset(phrase);
+    else
+        self_destruct();
+}
+
+char *
+ConfigParser::NextElement(bool *wasQuoted)
+{
+    if (wasQuoted)
+        *wasQuoted = false;
+
     // Get all of the remaining string
     char *token = strtok(NULL, "");
     if (token == NULL)
-        self_destruct();
+        return NULL;
 
-    if (*token != '"') {
-        token = strtok(token, w_space);
-        var->reset(token);
-        if (wasQuoted)
-            *wasQuoted = false;
-        return;
-    } else if (wasQuoted)
+    // skip leading whitespace (may skip the entire token that way)
+    while (xisspace(*token)) ++token;
+
+    if (*token != '"')
+        return StripComment(strtok(token, w_space));
+
+    if (wasQuoted)
         *wasQuoted = true;
 
     char  *s = token + 1;
@@ -178,14 +230,26 @@ ConfigParser::ParseQuotedString(String *var, bool *wasQuoted)
     }
 
     if (*s != '"') {
-        debugs(3, DBG_CRITICAL, "ParseQuotedString: missing '\"' at the end of quoted string" );
+        debugs(3, DBG_CRITICAL, "missing '\"' at the end of quoted string" );
         self_destruct();
     }
     strtok(s-1, "\""); /*Reset the strtok to point after the "  */
     *s = '\0';
 
-    var->reset(token+1);
+    return (token+1);
 }
+
+char *
+ConfigParser::NextToken()
+{
+    return NextElement(NULL);
+    // TODO: support file:name syntax to auto-include files, but think how
+    // admins will be able to disable that interpretation w/o disabling
+    // macros and other special value processing. The "file:" prefix or
+    // any similar key construct would probably have to go outside the
+    // optionally quoted string for that to work: file:"name with $macros".
+}
+
 
 const char *
 ConfigParser::QuoteString(String &var)
