@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
     try {
         size_t max_db_size = 0;
         size_t fs_block_size = 2048;
-        char c;
+        int8_t c;
         bool create_new_db = false;
         std::string db_path;
         // proccess options.
