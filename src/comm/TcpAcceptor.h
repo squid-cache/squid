@@ -1,17 +1,11 @@
 #ifndef SQUID_COMM_TCPACCEPTOR_H
 #define SQUID_COMM_TCPACCEPTOR_H
 
-#include "base/AsyncCall.h"
+#include "base/AsyncJob.h"
+#include "base/CbcPointer.h"
 #include "base/Subscription.h"
-#include "CommCalls.h"
 #include "comm_err_t.h"
 #include "comm/forward.h"
-#include "comm/TcpAcceptor.h"
-#include "ip/Address.h"
-
-#if HAVE_MAP
-#include <map>
-#endif
 
 namespace Comm
 {
@@ -32,6 +26,9 @@ class AcceptLimiter;
  */
 class TcpAcceptor : public AsyncJob
 {
+public:
+    typedef CbcPointer<Comm::TcpAcceptor> Pointer;
+
 private:
     virtual void start();
     virtual bool doneAll() const;
