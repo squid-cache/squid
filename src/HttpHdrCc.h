@@ -74,15 +74,27 @@ public:
 
     //manipulation for Cache-Control: private header
     bool hasPrivate() const {return isSet(CC_PRIVATE);}
-    bool Private() const {return isSet(CC_PRIVATE);}
-    void Private(bool v) {setMask(CC_PRIVATE,v);}
-    void clearPrivate() {setMask(CC_PRIVATE,false);}
+    const String &Private() const {return private_;}
+    void Private(String &v) {
+        setMask(CC_PRIVATE,true);
+        // uses append for multi-line headers
+        if (private_.defined())
+            private_.append(",");
+        private_.append(v);
+    }
+    void clearPrivate() {setMask(CC_PRIVATE,false); private_.clean();}
 
     //manipulation for Cache-Control: no-cache header
     bool hasNoCache() const {return isSet(CC_NO_CACHE);}
-    bool noCache() const {return isSet(CC_NO_CACHE);}
-    void noCache(bool v) {setMask(CC_NO_CACHE,v);}
-    void clearNoCache() {setMask(CC_NO_CACHE,false);}
+    const String &noCache() const {return no_cache;}
+    void noCache(String &v) {
+        setMask(CC_NO_CACHE,true);
+        // uses append for multi-line headers
+        if (no_cache.defined())
+            no_cache.append(",");
+        no_cache.append(v);
+    }
+    void clearNoCache() {setMask(CC_NO_CACHE,false); no_cache.clean();}
 
     //manipulation for Cache-Control: no-store header
     bool hasNoStore() const {return isSet(CC_NO_STORE);}
@@ -166,6 +178,9 @@ private:
     int32_t max_stale;
     int32_t stale_if_error;
     int32_t min_fresh;
+    String private_; ///< List of headers sent as value for CC:private="...". May be empty/undefined if the value is missing.
+    String no_cache; ///< List of headers sent as value for CC:no-cache="...". May be empty/undefined if the value is missing.
+
     /// low-level part of the public set method, performs no checks
     _SQUID_INLINE_ void setMask(http_hdr_cc_type id, bool newval=true);
     _SQUID_INLINE_ void setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, bool setting=true);
