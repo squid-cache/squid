@@ -23,7 +23,7 @@ namespace Comm
  * use TcpAcceptor::isLimited as a flag whether to re-list when kick()'ing
  * or to NULL an entry while scanning the list for empty spaces.
  * Side effect: TcpAcceptor->kick() becomes allowed to pull off multiple accept()'s in bunches
- * 
+ *
  * 2) re-implement as a list instead of vector?
  * storing head/tail pointers for fast push/pop and avoiding the whole shift() overhead
  */
