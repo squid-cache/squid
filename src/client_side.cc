@@ -809,9 +809,7 @@ ConnStateData::swanSong()
     }
 #endif
 
-    if (Comm::IsConnOpen(pinning.serverConnection))
-        pinning.serverConnection->close();
-    pinning.serverConnection = NULL;
+    unpinConnection();
 
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
