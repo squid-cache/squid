@@ -375,6 +375,16 @@ HttpStateData::cacheableReply()
         }
 
         // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
+        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().defined()) {
+            /* TODO: we are allowed to cache when no-cache= has parameters.
+             * Provided we strip away any of the listed headers unless they are revalidated
+             * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
+             * That is a bit tricky for squid right now so we avoid caching entirely.
+             */
+            debugs(22, 3, HERE << "NO because server reply Cache-Control:no-cache has parameters");
+            return 0;
+        }
+
         // NP: request CC:private is undefined. We ignore.
         // NP: other request CC flags are limiters on HIT/MISS. We don't care about here.
 
@@ -386,16 +396,21 @@ HttpStateData::cacheableReply()
         }
 
         // RFC 2616 section 14.9.1 - MUST NOT cache any response with CC:private in a shared cache like Squid.
+        // CC:private overrides CC:public when both are present in a response.
         // TODO: add a shared/private cache configuration possibility.
         if (rep->cache_control &&
-                rep->cache_control->Private() &&
+                rep->cache_control->hasPrivate() &&
                 !REFRESH_OVERRIDE(ignore_private)) {
+            /* TODO: we are allowed to cache when private= has parameters.
+             * Provided we strip away any of the listed headers unless they are revalidated
+             * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
+             * That is a bit tricky for squid right now so we avoid caching entirely.
+             */
             debugs(22, 3, HERE << "NO because server reply Cache-Control:private");
             return 0;
         }
-        // NP: being conservative; CC:private overrides CC:public when both are present in a response.
-
     }
+
     // RFC 2068, sec 14.9.4 - MUST NOT cache any response with Authentication UNLESS certain CC controls are present
     // allow HTTP violations to IGNORE those controls (ie re-block caching Auth)
     if (request && (request->flags.auth || request->flags.authSent) && !REFRESH_OVERRIDE(ignore_auth)) {
@@ -424,8 +439,8 @@ HttpStateData::cacheableReply()
             // NP: given the must-revalidate exception we should also be able to exempt no-cache.
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
-            // as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->noCache() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+            // (without parameters) as equivalent to must-revalidate in the reply.
+        } else if (rep->cache_control->hasNoCache() && !rep->cache_control->noCache().defined() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
@@ -976,10 +991,22 @@ no_cache:
 
     if (!ignoreCacheControl) {
         if (rep->cache_control) {
-            if (rep->cache_control->proxyRevalidate() ||
-                    rep->cache_control->mustRevalidate() ||
-                    rep->cache_control->noCache() ||
-                    rep->cache_control->hasSMaxAge())
+            // We are required to revalidate on many conditions.
+            // For security reasons we do so even if storage was caused by refresh_pattern ignore-* option
+
+            // CC:must-revalidate or CC:proxy-revalidate
+            const bool ccMustRevalidate = (rep->cache_control->proxyRevalidate() || rep->cache_control->mustRevalidate());
+
+            // CC:no-cache (only if there are no parameters)
+            const bool ccNoCacheNoParams = (rep->cache_control->hasNoCache() && rep->cache_control->noCache().undefined());
+
+            // CC:s-maxage=N
+            const bool ccSMaxAge = rep->cache_control->hasSMaxAge();
+
+            // CC:private (yes, these can sometimes be stored)
+            const bool ccPrivate = rep->cache_control->hasPrivate();
+
+            if (ccMustRevalidate || ccNoCacheNoParams || ccSMaxAge || ccPrivate)
                 EBIT_SET(entry->flags, ENTRY_REVALIDATE);
         }
 #if USE_HTTP_VIOLATIONS // response header Pragma::no-cache is undefined in HTTP
@@ -1815,7 +1842,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (!cc->hasMaxAge() && !cc->noCache()) {
+        if (!cc->hasMaxAge() && !cc->hasNoCache()) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
             cc->maxAge(getMaxAge(url));

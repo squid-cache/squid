@@ -1047,7 +1047,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (!request->flags.ignoreCc) {
         if (request->cache_control) {
-            if (request->cache_control->noCache())
+            if (request->cache_control->hasNoCache())
                 no_cache=true;
 
             // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing

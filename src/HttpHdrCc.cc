@@ -194,14 +194,41 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
+        case CC_PRIVATE: {
+            String temp;
+            if (!p)  {
+                // Value parameter is optional.
+                private_.clean();
+            }            else if (/* p &&*/ httpHeaderParseQuotedString(p, (ilen-nlen-1), &temp)) {
+                private_.append(temp);
+            }            else {
+                debugs(65, 2, "cc: invalid private= specs near '" << item << "'");
+            }
+            // to be safe we ignore broken parameters, but always remember the 'private' part.
+            setMask(type,true);
+        }
+        break;
+
+        case CC_NO_CACHE: {
+            String temp;
+            if (!p) {
+                // On Requests, missing value parameter is expected syntax.
+                // On Responses, value parameter is optional.
+                setMask(type,true);
+                no_cache.clean();
+            } else if (/* p &&*/ httpHeaderParseQuotedString(p, (ilen-nlen-1), &temp)) {
+                // On Requests, a value parameter is invalid syntax.
+                // XXX: identify when parsing request header and dump err message here.
+                setMask(type,true);
+                no_cache.append(temp);
+            } else {
+                debugs(65, 2, "cc: invalid no-cache= specs near '" << item << "'");
+            }
+        }
+        break;
+
         case CC_PUBLIC:
             Public(true);
-            break;
-        case CC_PRIVATE:
-            Private(true);
-            break;
-        case CC_NO_CACHE:
-            noCache(true);
             break;
         case CC_NO_STORE:
             noStore(true);
