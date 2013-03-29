@@ -46,6 +46,8 @@ public:
     /// dumps class-wide statistics
     std::ostream& dump(std::ostream& os) const;
 
+    MemBlobStats& operator += (const MemBlobStats&);
+
 public:
     uint64_t alloc;     ///< number of MemBlob instances created so far
     uint64_t live;      ///< number of MemBlob instances currently alive
