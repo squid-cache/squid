@@ -3,12 +3,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#if 0 // guideline violation: only #include into .h when used by the .h
-#include "SBuf.h"
-#include "SBufExceptions.h"
-#include "SBufList.h"
-#include "SBufUtil.h"
-#endif
 #include "OutOfBoundsException.h"
 
 /*
@@ -44,11 +38,8 @@ class testSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testPrintf );
     CPPUNIT_TEST( testScanf );
     CPPUNIT_TEST( testCopy );
-    CPPUNIT_TEST( testSBufTokenizer );
     CPPUNIT_TEST( testStringOps );
     CPPUNIT_TEST( testGrow );
-    CPPUNIT_TEST( testSBufList );
-    CPPUNIT_TEST( testBaseName );
     CPPUNIT_TEST( testSBufStream );
     CPPUNIT_TEST( testAutoFind );
 
@@ -84,12 +75,9 @@ protected:
     void testRFindSBuf();
     void testSearchFail();
     void testCopy();
-    void testSBufTokenizer();
     void testStringOps();
     void testGrow();
     void testStartsWith();
-    void testSBufList();
-    void testBaseName();
     void testSBufStream();
     void testFindFirstOf();
     void testAutoFind();

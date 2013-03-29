@@ -1,10 +1,7 @@
 #include "squid.h"
 #include "Mem.h"
 #include "SBuf.h"
-#include "SBufList.h"
 #include "SBufStream.h"
-#include "SBufTokenizer.h"
-#include "SBufUtil.h"
 #include "SquidString.h"
 #include "testSBuf.h"
 #include "SBufFindTest.h"
@@ -596,28 +593,6 @@ void testSBuf::testCopy()
     CPPUNIT_ASSERT(s==s2);
 }
 
-// XXX: please split each class into a separate unit-test .cc / even if they share a binary.
-//  rule-of-thumb guideline for layering is 'one class Foo -> one Foo.cc,  one Foo.cc -> one testFoo.cc'
-
-static int sbuf_tokens_number=9;
-static SBuf tokens[]={
-    SBuf("The",0,3), SBuf("quick",0,5), SBuf("brown",0,5), SBuf("fox",0,3),
-    SBuf("jumped",0,6), SBuf("over",0,4), SBuf("the",0,3), SBuf("lazy",0,4),
-    SBuf("dog",0,3)
-};
-
-void testSBuf::testSBufTokenizer()
-{
-    int j=0;
-    SBuf s;
-    for (SBufTokenizer st(literal,SBuf(" ",0,1)); !st.atEnd(); st.next()) {
-        s=st.token();
-        CPPUNIT_ASSERT(s==tokens[j]);
-        j++;
-    }
-    CPPUNIT_ASSERT(j==9);
-}
-
 void testSBuf::testStringOps()
 {
     SBuf sng(literal),
@@ -655,26 +630,6 @@ void testSBuf::testStartsWith()
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1),caseInsensitive));
     casebuf = "tha quick";
     CPPUNIT_ASSERT(!literal.startsWith(casebuf,caseInsensitive));
-}
-
-void testSBuf::testSBufList()
-{
-    SBufList foo;
-    for (int j=0; j<sbuf_tokens_number; ++j)
-        foo.add(tokens[j]);
-    CPPUNIT_ASSERT(foo.isMember(SBuf("fox")));
-    CPPUNIT_ASSERT(foo.isMember(SBuf("Fox"),caseInsensitive));
-    CPPUNIT_ASSERT(!foo.isMember(SBuf("garble")));
-    CPPUNIT_ASSERT(foo.isPrefix(SBuf("qui")));
-    CPPUNIT_ASSERT(foo.isPrefix(SBuf("qUi"),caseInsensitive));
-    CPPUNIT_ASSERT(!foo.isPrefix(SBuf("qUa"),caseInsensitive));
-}
-
-void testSBuf::testBaseName()
-{
-    SBuf totest("/foo/bar/gazonk");
-    CPPUNIT_ASSERT_EQUAL(BaseName(totest),SBuf("gazonk"));
-    CPPUNIT_ASSERT_EQUAL(BaseName(totest,'.'),totest);
 }
 
 void testSBuf::testSBufStream()
