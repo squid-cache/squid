@@ -600,6 +600,7 @@ configDoConfigure(void)
     memConfigure();
     /* Sanity checks */
 
+    Config.cacheSwap.n_strands = 0; // no diskers by default
     if (Config.cacheSwap.swapDirs == NULL) {
         /* Memory-only cache probably in effect. */
         /* turn off the cache rebuild delays... */
