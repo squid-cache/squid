@@ -277,6 +277,21 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
 }
 
 bool
+Ip::Intercept::PfTransparent(const Comm::ConnectionPointer &newConn, int silent)
+{
+#if PF_TRANSPARENT && defined(SO_BINDANY)
+    /* Trust the user configured properly. If not no harm done.
+     * We will simply attempt a bind outgoing on our own IP.
+     */
+    newConn->remote.SetPort(0); // allow random outgoing port to prevent address clashes
+    debugs(89, 5, HERE << "address DIVERT: " << newConn);
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool
 Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
@@ -352,6 +367,7 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     /* NP: try TPROXY first, its much quieter than NAT when non-matching */
     if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
         if (NetfilterTransparent(newConn, silent)) return true;
+        if (PfTransparent(newConn, silent)) return true;
     }
 
     /* NAT is only available in IPv4 */
@@ -378,9 +394,8 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
 bool
 Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 {
-    debugs(3, 3, "Detect TPROXY support on port " << test);
-
 #if defined(IP_TRANSPARENT)
+    debugs(3, 3, "Detect TPROXY support on port " << test);
 
     int tos = 1;
     int tmp_sock = -1;
@@ -435,8 +450,55 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         }
     }
 
-#else /* undefined IP_TRANSPARENT */
-    debugs(3, 3, "setsockopt(IP_TRANSPARENT) not supported on this platform. Disabling TPROXYv4.");
+#elif defined(SO_BINDANY)
+    debugs(3, 3, "Detect BINDANY support on port " << test);
+
+    int tos = 1;
+    int tmp_sock = -1;
+
+    if (test.IsIPv6()) {
+        debugs(3, 3, "...Probing for IPv6 SO_BINDANY support.");
+
+        struct sockaddr_in6 tmp_ip6;
+        Ip::Address tmp = "::2";
+        tmp.SetPort(0);
+        tmp.GetSockAddr(tmp_ip6);
+
+        enter_suid();
+        if ((tmp_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP)) >=0 &&
+                (setsockopt(tmp_sock, SOL_SOCKET, SO_BINDANY, (char *)&tos,
+                            sizeof(tos)) == 0) &&
+                (bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0)) {
+            leave_suid();
+            debugs(3, 3, "IPv6 BINDANY support detected. Using.");
+            close(tmp_sock);
+            return true;
+        }
+    }
+
+    if (test.IsIPv4()) {
+        debugs(3, 3, "...Probing for IPv4 SO_BINDANY support.");
+
+        struct sockaddr_in tmp_ip4;
+        Ip::Address tmp = "127.0.0.2";
+        tmp.SetPort(0);
+        tmp.GetSockAddr(tmp_ip4);
+
+        enter_suid();
+        if ((tmp_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) >=0 &&
+                (setsockopt(tmp_sock, SOL_SOCKET, SO_BINDANY, (char *)&tos,
+                            sizeof(tos)) == 0) &&
+                (bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0)) {
+            leave_suid();
+            debugs(3, 3, "IPv4 BINDANY support detected. Using.");
+            close(tmp_sock);
+            return true;
+        }
+    }
+
+#else
+    debugs(3, 3, "TPROXY setsockopt() not supported on this platform. Disabling TPROXY.");
+
 #endif
     return false;
 }

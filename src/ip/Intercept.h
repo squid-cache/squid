@@ -124,13 +124,22 @@ private:
     bool IpfInterception(const Comm::ConnectionPointer &newConn, int silent);
 
     /**
-     * perform Lookups on PF interception.
+     * perform Lookups on PF interception target (REDIRECT).
      *
      * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
      * \return         Whether successfuly located the new address.
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn, int silent);
+
+    /**
+     * perform Lookups on PF fully-transparent interception target (DIVERT).
+     *
+     * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
+     * \param newConn  Details known, to be updated where relevant.
+     * \return         Whether successfuly located the new address.
+     */
+    bool PfTransparent(const Comm::ConnectionPointer &newConn, int silent);
 
     int transparentActive_;
     int interceptActive_;
