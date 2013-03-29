@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
         int serial = (getCurrentTime() -  1200000000);
         size_t max_db_size = 0;
         size_t fs_block_size = 2048;
-        char c;
+        int8_t c;
         bool create_new_db = false;
         bool show_sn = false;
         std::string db_path;
