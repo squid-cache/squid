@@ -60,7 +60,7 @@ public:
     void set(const Http::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
 
     /// retrieve the status code for this status line
-    const Http::StatusCode status() const { return status_; }
+    Http::StatusCode status() const { return status_; }
 
     /// retrieve the reason string for this status line
     const char *reason() const;
