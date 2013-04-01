@@ -2214,6 +2214,10 @@ DOC_START
 		the client, using a mimicked server certificate. Works with both
 		CONNECT requests and intercepted SSL connections.
 
+	   peek-and-splice
+		Decides if the connection should bumped or not based on 
+		client-to-squid and server-to-squid SSL hello messages.
+
 	    none
 		Become a TCP tunnel without decoding the connection.
 		Works with both CONNECT requests and intercepted SSL

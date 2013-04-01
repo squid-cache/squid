@@ -332,6 +332,14 @@ public:
     void quitAfterError(HttpRequest *request); // meant to be private
 
 #if USE_SSL
+    /// Initializes and starts a peek-and-splice negotiation with the SSL client
+    void startPeekAndSplice();
+    /// Called when the initialization of peek-and-splice negotiation finidhed
+    void startPeekAndSpliceDone();
+    /// Called when a peek-and-splice step finished. For example after
+    /// server-side SSL certificates received and client-side SSL certificates
+    /// generated
+    void doPeekAndSpliceStep();
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
