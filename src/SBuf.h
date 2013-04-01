@@ -32,7 +32,6 @@
 #define SQUID_SBUF_H
 
 #include "base/InstanceId.h"
-#include "Debug.h"
 #include "MemBlob.h"
 #include "SquidString.h"
 
@@ -46,7 +45,7 @@
 #include <iosfwd>
 #endif
 
-/* squid string placeholder (for printf) */
+/* SBuf placeholder for printf */
 #ifndef SQUIDSBUFPH
 #define SQUIDSBUFPH "%.*s"
 #define SQUIDSBUFPRINT(s) (s).plength(),(s).rawContent()
@@ -90,9 +89,7 @@ public:
     u_int64_t cowSlow; ///<number of cow operations requiring a copy
     u_int64_t live;  ///<number of currently-allocated SBuf
 
-    /**
-     * Dump statistics to an ostream.
-     */
+    ///Dump statistics to an ostream.
     std::ostream& dump(std::ostream &os) const;
     SBufStats();
 
@@ -135,7 +132,10 @@ public:
      *
      * This method will be removed once SquidString has gone.
      */
-    SBuf(const String &S);
+    explicit SBuf(const String &S);
+
+    /// Constructor: import std::string. Contents are copied.
+    explicit SBuf(const std::string &s);
 
     ~SBuf();
     /** Explicit assignment.
@@ -222,17 +222,17 @@ public:
      *       of side-effects
      */
     SBuf& appendf(const char *fmt, ...);
+
     /** Append operation, with vsprintf(3)-style arguments.
      * \note arguments may be evaluated more than once, be careful
      *       of side-effects
      */
     SBuf& vappendf(const char *fmt, va_list vargs);
 
-    /** print a SBuf.
-     */
+    /// print the SBuf contents to the supplied ostream
     std::ostream& print(std::ostream &os) const;
 
-    /** print the sbuf, debug information and stats
+    /** print SBuf contents and debug information about the SBuf to an ostream
      *
      * Debug function, dumps to a stream informations on the current SBuf,
      * including low-level details and statistics.
@@ -279,8 +279,6 @@ public:
      */
     bool startsWith(const SBuf &S, SBufCaseSensitive isCaseSensitive = caseSensitive) const;
 
-    /** equality check
-     */
     bool operator ==(const SBuf & S) const;
     bool operator !=(const SBuf & S) const;
     _SQUID_INLINE_ bool operator <(const SBuf &S) const;
@@ -299,9 +297,7 @@ public:
      */
     SBuf consume(size_type n = npos);
 
-    /** gets global statistic informations
-     *
-     */
+    /// gets global statistic informations
     static const SBufStats& GetStats();
 
     /** Copy SBuf contents into user-supplied C buffer.
@@ -315,8 +311,8 @@ public:
     /** exports a pointer to the SBuf internal storage.
      * \warning ACCESSING RAW STORAGE IS DANGEROUS!
      *
-     * Returns a pointer to SBuf's content. No terminating null character
-     * is appended (use c_str() for that).
+     * Returns a ead-only pointer to SBuf's content. No terminating null
+     * character is appended (use c_str() for that).
      * The returned value points to an internal location whose contents
      * are guaranteed to remain unchanged only until the next call
      * to a non-constant member function of the SBuf object. Such a
@@ -347,12 +343,12 @@ public:
      * that at least minsize bytes will be available for writing. Otherwise
      * it is guaranteed that at least as much storage as is currently
      * available will be available for the call. A COW will be performed
-     * if necessary to ensure that a following write will not trample
-     * a shared MemBlob. The returned pointer must not be stored, and will
-     * become invalid at the first call to a non-const method call
+     * if necessary so that the returned pointer can be written to without
+     * unwanted side-effects.
+     * The returned pointer must not be stored, and will
+     * be invalidated by the first call to a non-const method call
      * on the SBuf.
      * This call guarantees to never return NULL
-     * This call always forces a cow()
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     char *rawSpace(size_type minSize = npos);
@@ -379,14 +375,13 @@ public:
      * This call never returns NULL.
      * \see rawContent
      * \note the memory management system guarantees that the exported region
-     *    of memory will remain valid if the caller keeps holding
-     *    a valid reference to the SBuf object and does not write or append to
-     *    it
+     *    of memory will remain valid will remain valid only if the
+     *    caller keeps holding a valid reference to the SBuf object and
+     *    does not write or append to it
      */
     const char* c_str();
 
-    /** Returns the number of bytes stored in SBuf.
-     */
+    /// Returns the number of bytes stored in SBuf.
     _SQUID_INLINE_ size_type length() const;
 
     /** Get the length of the SBuf, as a signed integer
@@ -405,8 +400,8 @@ public:
     /** Request to extend the SBuf's free store space.
      *
      * After the reserveSpace request, the SBuf is guaranteed to have at
-     * least minSpace bytes of append-able backing store (on top of the
-     * currently-used portion).
+     * least minSpace bytes of unused backing store
+     * following the currently used portion
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     void reserveSpace(size_type minSpace);
@@ -414,21 +409,25 @@ public:
     /** Request to resize the SBuf's store
      *
      * After this method is called, the SBuf is guaranteed to have at least
-     * minCapcity bytes of total space, including the currently-used portion
+     * minCapacity bytes of total space, including the currently-used portion
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     void reserveCapacity(size_type minCapacity);
 
     /** slicing method
      *
-     * Removes SBuf prefix and suffix, leaving a sequence of <i>n</i>
-     * bytes starting from position <i>pos</i> first byte is at pos 0.
+     * Removes SBuf prefix and suffix, leaving a sequence of 'n'
+     * bytes starting from position 'pos', first byte is at pos 0.
+     * It is an in-place-modifying version of substr.
      * \param pos start sub-stringing from this byte. If it is
-     *      greater than the SBuf length, the SBuf is emptied and
-     *      an empty SBuf is returned
+     *      npos or it is greater than the SBuf length, the SBuf is cleared and
+     *      an empty SBuf is returned. If it is <0, it is ignored
      * \param n maximum number of bytes of the resulting SBuf.
      *     SBuf::npos means "to end of SBuf".
-     *     if 0 returns an empty SBuf.
+     *     if it is 0, the SBuf is cleared and an empty SBuf is returned.
+     *     if it is < 0, it is ignored (same as supplying npos)
+     *     if it overflows the end of the SBuf, it is capped to the end of SBuf
+     * \see substr, trim
      */
     SBuf& chop(size_type pos, size_type n = npos);
 
@@ -443,8 +442,9 @@ public:
 
     /** Extract a part of the current SBuf.
      *
-     * Return a fresh a fresh copy of a portion the current SBuf, which is left untouched.
-     * \see trim
+     * Return a fresh a fresh copy of a portion the current SBuf, which is
+     * left untouched. The same parameter convetions apply as for chop.
+     * \see trim, chop
      */
     SBuf substr(size_type pos, size_type n = npos) const;
 
@@ -453,7 +453,7 @@ public:
      * Returns the index in the SBuf of the first occurrence of char c.
      * \return SBuf::npos if the char was not found
      * \param startPos if specified, ignore any occurrences before that position
-     *     if startPos is SBuf::npos, npos is always returned
+     *     if startPos is npos or greater than length() npos is always returned
      *     if startPos is < 0, it is ignored
      */
     size_type find(char c, size_type startPos = 0) const;
@@ -463,7 +463,7 @@ public:
      * Returns the index in the SBuf of the first occurrence of the
      * sequence contained in the str argument.
      * \param startPos if specified, ignore any occurrences before that position
-     *     if startPos is SBuf::npos, npos is always returned
+     *     if startPos is npos or greater than length() npos is always returned
      *     if startPos is < 0, it is ignored
      * \return SBuf::npos if the SBuf was not found
      */
@@ -474,8 +474,8 @@ public:
      * Returns the index in the SBuf of the last occurrence of char c.
      * \return SBuf::npos if the char was not found
      * \param endPos if specified, ignore any occurrences after that position.
-     *   if unspecified or npos, the whole SBuf is considered.
-     *   If < 0, npos is returned
+     *   if npos or greater than length(), the whole SBuf is considered
+     *   if < 0, npos is always returned
      */
     size_type rfind(char c, size_type endPos = npos) const;
 
@@ -485,8 +485,8 @@ public:
      * sequence contained in the str argument.
      * \return SBuf::npos if the sequence  was not found
      * \param endPos if specified, ignore any occurrences after that position
-     *   if unspecified or npos, the whole SBuf is considered
-     *   if < 0, then npos is always returned
+     *   if npos or greater than length(), the whole SBuf is considered
+     *   if < 0, npos is always returned
      */
     size_type rfind(const SBuf &str, size_type endPos = npos) const;
 
@@ -524,12 +524,13 @@ public:
     SBuf toUpper() const;
 
     /** String export function
-     * converts the SBuf to a legacy String, by copy. Transitional.
+     * converts the SBuf to a legacy String, by copy.
+     * \deprecated
      */
     String toString() const;
 
-    /// TODO: possibly implement erase() similar to std::string's erase
-    /// TODO: possibly implement a replace() call
+    // TODO: possibly implement erase() similar to std::string's erase
+    // TODO: possibly implement a replace() call
 private:
 
     MemBlob::Pointer store_; ///< memory block, possibly shared with other SBufs
@@ -554,10 +555,8 @@ private:
 
 };
 
-/**
- * Prints a SBuf to the supplied stream, allowing for chaining
- */
-std::ostream& operator <<(std::ostream &os, const SBuf &S);
+/// ostream output operator
+_SQUID_INLINE_ std::ostream& operator <<(std::ostream &os, const SBuf &S);
 
 #if _USE_INLINE_
 #include "SBuf.cci"

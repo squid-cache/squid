@@ -26,7 +26,7 @@ class testSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testComparisons );
     CPPUNIT_TEST( testConsume );
     CPPUNIT_TEST( testRawContent );
-    //CPPUNIT_TEST( testRawSpace );
+    CPPUNIT_TEST( testRawSpace );
     CPPUNIT_TEST( testChop );
     CPPUNIT_TEST( testChomp );
     CPPUNIT_TEST( testSubstr );
@@ -42,9 +42,7 @@ class testSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testGrow );
     CPPUNIT_TEST( testSBufStream );
     CPPUNIT_TEST( testAutoFind );
-
 //    CPPUNIT_TEST( testDumpStats ); //fake test, to print alloc stats
-
     CPPUNIT_TEST_SUITE_END();
 protected:
     void commonInit();

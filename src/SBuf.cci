@@ -29,6 +29,7 @@
  */
 
 #include "base/RefCount.h"
+#include "Debug.h"
 #include "OutOfBoundsException.h"
 #include "SBufExceptions.h"
 
@@ -100,6 +101,8 @@ SBuf::buf() const
 
 /** returns the pointer to the first char after this SBuf end
  *
+ *  No checks are made that the space returned is safe, checking that is
+ *  up to the caller.
  */
 char *
 SBuf::bufEnd() const
@@ -178,8 +181,6 @@ const char
 SBuf::operator [](SBuf::size_type pos) const
 {
     ++stats.getChar;
-    if (pos < 0 || pos >= length())
-        return '\0';
     return store_->mem[off_+pos];
 }
 
@@ -194,4 +195,10 @@ bool
 SBuf::isEmpty() const
 {
     return (len_ == 0);
+}
+
+std::ostream &
+operator <<(std::ostream& os, const SBuf& S)
+{
+    return S.print(os);
 }

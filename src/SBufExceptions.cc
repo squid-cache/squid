@@ -33,19 +33,17 @@
 #include "SBuf.h"
 #include "SBufExceptions.h"
 
-// Note: the SBuf is intentionally passed by copy rather than reference,
-//   to let refcounting act.
 OutOfBoundsException::OutOfBoundsException(const SBuf &throwingBuf,
         SBuf::size_type &pos,
         const char *aFileName, int aLineNo)
-        :TextException(NULL, aFileName, aLineNo)
+        : TextException(NULL, aFileName, aLineNo),
+          theThrowingBuf(throwingBuf),
+          accessedPosition(pos)
 {
-    _buf = throwingBuf;
-    _pos = pos;
     SBuf explanatoryText("OutOfBoundsException");
     if (aLineNo != -1)
         explanatoryText.appendf(" at line %d", aLineNo);
-    if (aFileName != 0)
+    if (aFileName != NULL)
         explanatoryText.appendf(" in file %s", aFileName);
     explanatoryText.appendf(" while accessing position %d in a SBuf long %d",
             pos, throwingBuf.length());
