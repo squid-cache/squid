@@ -155,7 +155,7 @@ public:
     /// returns raw sslBump mode value
     Ssl::BumpMode sslBumpNeed() const { return sslBumpNeed_; }
     /// returns true if and only if the request needs to be bumped
-    bool sslBumpNeeded() const { return sslBumpNeed_ == Ssl::bumpServerFirst || sslBumpNeed_ == Ssl::bumpClientFirst; }
+    bool sslBumpNeeded() const { return sslBumpNeed_ == Ssl::bumpServerFirst || sslBumpNeed_ == Ssl::bumpClientFirst || sslBumpNeed_ == Ssl::bumpPeekAndSplice; }
     /// set the sslBumpNeeded state
     void sslBumpNeed(Ssl::BumpMode mode);
     void sslBumpStart();

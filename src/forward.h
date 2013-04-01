@@ -70,8 +70,11 @@ public:
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
+#if USE_SSL
     void initiateSSL();
     void negotiateSSL(int fd);
+    void checkForPeekAndSplice();
+#endif
     bool checkRetry();
     bool checkRetriable();
     void dispatch();

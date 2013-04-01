@@ -72,6 +72,7 @@
 #include "urn.h"
 #include "whois.h"
 #if USE_SSL
+#include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -651,6 +652,8 @@ FwdState::negotiateSSL(int fd)
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
     int ret;
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
     if ((ret = SSL_connect(ssl)) <= 0) {
         int ssl_error = SSL_get_error(ssl, ret);
@@ -667,6 +670,11 @@ FwdState::negotiateSSL(int fd)
             return;
 
         case SSL_ERROR_WANT_WRITE:
+            if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice && srvBio->holdWrite()) {
+                debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
+                checkForPeekAndSplice();
+                return;
+            }
             Comm::SetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
             return;
 
@@ -794,6 +802,23 @@ FwdState::negotiateSSL(int fd)
     }
 
     dispatch();
+}
+
+void
+FwdState::checkForPeekAndSplice()
+{
+    SSL *ssl = fd_table[serverConn->fd].ssl;
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    debugs(83,5, "Will check for peek and splice on fd " << serverConn->fd);
+    const bool splice = false;
+    if (!splice) {
+        //Allow write, proceed with the connection
+        srvBio->holdWrite(false);
+        srvBio->recordInput(false);
+        Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
+        debugs(83,5, "Retry the fwdNegotiateSSL on fd " << serverConn->fd);
+    }
 }
 
 void
@@ -928,7 +953,7 @@ FwdState::initiateSSL()
 
     assert(sslContext);
 
-    SSL *ssl = Ssl::Create(sslContext, fd, "server https start");
+    SSL *ssl = Ssl::CreateClient(sslContext, fd, "server https start");
     if (!ssl) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         // TODO: create Ssl::ErrorDetail with OpenSSL-supplied error code
@@ -954,6 +979,28 @@ FwdState::initiateSSL()
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
 
+    } else if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice) {
+        SSL *clientSsl = fd_table[request->clientConnectionManager->clientConnection->fd].ssl;
+        BIO *b = SSL_get_rbio(clientSsl);
+        Ssl::ClientBio *clnBio = static_cast<Ssl::ClientBio *>(b->ptr);
+        const Ssl::Bio::sslFeatures &features = clnBio->getFeatures();
+        if (features.sslVersion != -1) {
+            SSL_set_ssl_method(ssl, Ssl::method(features.toSquidSSLVersion()));
+            if (!features.serverName.empty())
+                SSL_set_tlsext_host_name(ssl, features.serverName.c_str());
+            if (!features.clientRequestedCiphers.empty())
+                SSL_set_cipher_list(ssl, features.clientRequestedCiphers.c_str());
+#ifdef SSL_OP_NO_COMPRESSION /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
+            if (features.compressMethod == 0)
+                SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
+#endif
+            if (features.sslVersion >= 3) {
+                b = SSL_get_rbio(ssl);
+                Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+                srvBio->setClientRandom(features.client_random);
+                srvBio->recordInput(true);
+            }
+        }
     } else {
         // While we are peeking at the certificate, we may not know the server
         // name that the client will request (after interception or CONNECT)
