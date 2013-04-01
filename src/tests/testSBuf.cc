@@ -111,6 +111,15 @@ testSBuf::testSBufConstructDestruct()
         SBuf s1(str);
         CPPUNIT_ASSERT_EQUAL(s1,literal);
     }
+
+    // TEST: go via std::string adapter.
+    {
+        std::string str(fox);
+        SBuf s1(str);
+        CPPUNIT_ASSERT_EQUAL(s1,literal);
+    }
+
+
 }
 
 void
@@ -119,9 +128,6 @@ testSBuf::testSBufConstructDestructAfterMemInit()
     Mem::Init();
     testSBufConstructDestruct();
 
-// XXX: or perhapse ...
-// repeat all of the tests inside testSBufConstructDestructBeforeMemInit()
-// with additional checks on Mem usage stats after each operation ??
 }
 
 void
@@ -202,7 +208,6 @@ testSBuf::testSubscriptOp()
     chg.setAt(5,'e');
     CPPUNIT_ASSERT_EQUAL(literal[5],'u');
     CPPUNIT_ASSERT_EQUAL(chg[5],'e');
-//    std::cout << chg << std::endl << empty_sbuf << std::endl ;
 }
 
 // note: can't use cppunit's CPPUNIT_TEST_EXCEPTION because TextException asserts, and
@@ -211,7 +216,7 @@ void
 testSBuf::testSubscriptOpFail()
 {
     char c;
-    c=literal.at(1234); //out of bounds
+    c=literal.at(literal.length()); //out of bounds by 1
     //notreached
     std::cout << c << std::endl;
 }
@@ -274,8 +279,10 @@ testSBuf::testRawSpace()
 {
     SBuf s1(literal);
     SBuf s2(fox1);
+    SBuf::size_type sz=s2.length();
     char *rb=s2.rawSpace(strlen(fox2)+1);
-    strcat(rb,fox2);
+    strcpy(rb,fox2);
+    s2.forceSize(sz+strlen(fox2));
     CPPUNIT_ASSERT_EQUAL(s1,s2);
 }
 
@@ -290,6 +297,57 @@ testSBuf::testChop()
     s2.clear();
     s1.chop(5,0);
     CPPUNIT_ASSERT_EQUAL(s1,s2);
+    const char *alphabet="abcdefghijklmnopqrstuvwxyz";
+    SBuf a(alphabet);
+    std::string s(alphabet); // TODO
+    { //regular chopping
+        SBuf b(a);
+        b.chop(3,3);
+        SBuf ref("def");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // chop at end
+        SBuf b(a);
+        b.chop(b.length()-3);
+        SBuf ref("xyz");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // chop at beginning
+        SBuf b(a);
+        b.chop(0,3);
+        SBuf ref("abc");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // chop to zero length
+        SBuf b(a);
+        b.chop(5,0);
+        SBuf ref("");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // chop beyond end (at npos)
+        SBuf b(a);
+        b.chop(SBuf::npos,4);
+        SBuf ref("");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // chop beyond end
+        SBuf b(a);
+        b.chop(b.length()+2,4);
+        SBuf ref("");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // null-chop
+        SBuf b(a);
+        b.chop(0,b.length());
+        SBuf ref(a);
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+    { // overflow chopped area
+        SBuf b(a);
+        b.chop(b.length()-3,b.length());
+        SBuf ref("xyz");
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
 }
 
 void
@@ -308,6 +366,29 @@ testSBuf::testChomp()
     CPPUNIT_ASSERT_EQUAL(s1,s2);
 }
 
+// inspired to SBufFindTest; to be expanded.
+class SBufSubstrAutoTest
+{
+    SBuf fullString, sb;
+    std::string fullReference, str;
+ public:
+    void performEqualityTest()
+    {
+        SBuf ref(str);
+        CPPUNIT_ASSERT_EQUAL(ref,sb);
+    }
+    SBufSubstrAutoTest() : fullString(fox), fullReference(fox)
+    {
+        for (int offset=fullString.length()-1; offset >= 0; --offset ) {
+            for (int length=fullString.length()-1-offset; length >= 0; --length) {
+                sb=fullString.substr(offset,length);
+                str=fullReference.substr(offset,length);
+                performEqualityTest();
+            }
+        }
+    }
+};
+
 void
 testSBuf::testSubstr()
 {
@@ -317,6 +398,7 @@ testSBuf::testSubstr()
     CPPUNIT_ASSERT_EQUAL(s2,s3);
     s1.chop(4,5);
     CPPUNIT_ASSERT_EQUAL(s1,s2);
+    SBufSubstrAutoTest sat; // work done in the constructor
 }
 
 void
