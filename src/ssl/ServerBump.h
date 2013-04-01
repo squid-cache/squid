@@ -20,7 +20,7 @@ namespace Ssl
 class ServerBump
 {
 public:
-    explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL);
+    explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
 
     /// faked, minimal request; required by server-side API
@@ -28,6 +28,7 @@ public:
     StoreEntry *entry; ///< for receiving Squid-generated error messages
     Ssl::X509_Pointer serverCert; ///< HTTPS server certificate
     Ssl::Errors *sslErrors; ///< SSL [certificate validation] errors
+    Ssl::BumpMode mode; ///< The SSL server bump mode
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming

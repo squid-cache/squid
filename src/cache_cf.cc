@@ -4561,6 +4561,9 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpServerFirst]) == 0) {
         A->allow.kind = Ssl::bumpServerFirst;
         bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpPeekAndSplice]) == 0) {
+        A->allow.kind = Ssl::bumpPeekAndSplice;
+        bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpNone]) == 0) {
         A->allow.kind = Ssl::bumpNone;
         bumpCfgStyleNow = bcsNew;
