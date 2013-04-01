@@ -495,7 +495,8 @@ comm_set_v6only(int fd, int tos)
 }
 
 /**
- * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support.
+ * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support,
+ * or set the socket SO_BINDANY option for BSD divert-to support.
  */
 void
 comm_set_transparent(int fd)
@@ -509,7 +510,7 @@ comm_set_transparent(int fd)
         fd_table[fd].flags.transparent = true;
     }
 
-#elif _SQUID_OPENBSD_ && defined(SO_BINDANY)
+#elif defined(SO_BINDANY)
     int tos = 1;
     enter_suid();
     if (setsockopt(fd, SOL_SOCKET, SO_BINDANY, (char *) &tos, sizeof(int)) < 0) {
