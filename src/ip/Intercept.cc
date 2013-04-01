@@ -464,12 +464,10 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.SetPort(0);
         tmp.GetSockAddr(tmp_ip6);
 
-        enter_suid();
         if ((tmp_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP)) >=0 &&
                 (setsockopt(tmp_sock, SOL_SOCKET, SO_BINDANY, (char *)&tos,
                             sizeof(tos)) == 0) &&
                 (bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0)) {
-            leave_suid();
             debugs(3, 3, "IPv6 BINDANY support detected. Using.");
             close(tmp_sock);
             return true;
@@ -484,12 +482,10 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.SetPort(0);
         tmp.GetSockAddr(tmp_ip4);
 
-        enter_suid();
         if ((tmp_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) >=0 &&
                 (setsockopt(tmp_sock, SOL_SOCKET, SO_BINDANY, (char *)&tos,
                             sizeof(tos)) == 0) &&
                 (bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0)) {
-            leave_suid();
             debugs(3, 3, "IPv4 BINDANY support detected. Using.");
             close(tmp_sock);
             return true;
