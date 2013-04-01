@@ -125,6 +125,16 @@ SBuf::SBuf(const String &S)
     ++stats.live;
 }
 
+SBuf::SBuf(const std::string &s)
+    : store_(GetStorePrototype()), off_(0), len_(0)
+{
+    debugs(24, 8, id << " created from string");
+    assign(s.data(),0,s.size());
+    ++stats.alloc;
+    ++stats.allocFromString;
+    ++stats.live;
+}
+
 SBuf::SBuf(const char *S, size_type pos, size_type n)
         : store_(GetStorePrototype()), off_(0), len_(0)
 {
@@ -276,7 +286,6 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     Must(fmt != NULL);
 
     //we can assume that we'll need to append at least strlen(fmt) bytes,
-    //times 1.2 for instance...
     reserveSpace(strlen(fmt)*2);
 
     while (length() <= maxSize) {
@@ -295,8 +304,10 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         /* snprintf on Linux returns -1 on overflows */
         /* snprintf on FreeBSD returns at least free_space on overflows */
 
-        if (sz < 0 || sz >= (int)store_->spaceSize())
+        if (sz >= static_cast<int>(store_->spaceSize()))
             reserveSpace(sz*2); // TODO: tune heuristics
+        else if (sz < 0) // output error in vsnprintf
+            throw TextException("output error in vsnprintf",__FILE__, __LINE__);
         else
             break;
     }
@@ -307,7 +318,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     /* on XXX it might be counted */
     /* check that '\0' is appended and not counted */
 
-    if (operator[](len_-1) == 0) {
+    if (operator[](len_-1) == '\0') {
         --sz;
         --len_;
     }
@@ -353,10 +364,10 @@ int
 SBuf::compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n) const
 {
     Must(n == npos || n >= 0);
+    ++stats.compareSlow;
     size_type sz = min(S.length(), length());
     if (n != npos)
         sz = min(n, sz);
-    ++stats.compareSlow;
     int rv;
     if (isCaseSensitive == caseSensitive)
         rv = strncmp(buf(), S.buf(), sz);
@@ -374,7 +385,10 @@ SBuf::compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n) con
 bool
 SBuf::startsWith(const SBuf &S, SBufCaseSensitive isCaseSensitive) const
 {
+    debugs(24, 8, id << " startsWith " << S.id << ", caseSensitive: " <<
+                    isCaseSensitive);
     if (length() < S.length()) {
+        debugs(24, 8, "no, too short");
         ++stats.compareFast;
         return false;
     }
@@ -431,12 +445,8 @@ SBuf::copy(char *dest, SBuf::size_type n) const
 {
     Must(n >= 0);
 
-    SBuf::size_type toexport = length();
-    if (toexport > n)
-        toexport = n;
-
+    SBuf::size_type toexport = min(n,length());
     memcpy(dest, buf(), toexport);
-
     ++stats.copyOut;
     return toexport;
 }
@@ -480,14 +490,11 @@ SBuf::c_str()
 SBuf&
 SBuf::chop(SBuf::size_type pos, SBuf::size_type n)
 {
-    Must(pos >= 0);
-    Must(n == npos || n >= 0);
-    /*
-     * TODO: possible optimization: if the SBuf is at the tail of the
-     * MemBlob we could decrease the MemBlob tail-pointer so that a subsequent
-     * append will reuse the freed space.
-     */
-    if (pos > length() || n == 0) {
+    if (pos != npos && pos < 0)
+        pos = 0;
+    if (n != npos && n < 0)
+        n = npos;
+    if (pos == npos || pos > length() || n == 0) {
         clear();
         return *this;
     }
@@ -669,7 +676,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
         // NP: off-by-one weirdness:
         // endPos is an offset ... 0-based
         // length() is a count ... 1-based
-        // memrhr() requires a 1-based count of space to scan.
+        // memrchr() requires a 1-based count of space to scan.
         ++endPos;
     }
 
@@ -728,12 +735,6 @@ SBuf::scanf(const char *format, ...)
     rv = vsscanf(c_str(), format, arg);
     va_end(arg);
     return rv;
-}
-
-std::ostream &
-operator <<(std::ostream& os, const SBuf& S)
-{
-    return S.print(os);
 }
 
 std::ostream &
@@ -808,7 +809,7 @@ SBuf::checkAccessBounds(SBuf::size_type pos) const
 {
     if (pos < 0)
         throw OutOfBoundsException(*this, pos, __FILE__, __LINE__);
-    if (pos > length())
+    if (pos >= length())
         throw OutOfBoundsException(*this, pos, __FILE__, __LINE__);
 }
 
@@ -821,8 +822,8 @@ SBuf::toString() const
     return rv;
 }
 
-/*
- * re-allocate the backing store of the SBuf.
+/** re-allocate the backing store of the SBuf.
+ *
  * If there are contents in the SBuf, they will be copied over.
  * NO verifications are made on the size parameters, it's up to the caller to
  * make sure that the new size is big enough to hold the copied contents.

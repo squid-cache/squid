@@ -15,8 +15,8 @@ public:
     virtual ~OutOfBoundsException() throw();
 
 protected:
-    SBuf _buf;
-    SBuf::size_type _pos;
+    SBuf theThrowingBuf;
+    SBuf::size_type accessedPosition;
 };
 
 #endif /* _SQUID_SRC_OUTOFBOUNDSEXCEPTION_H */

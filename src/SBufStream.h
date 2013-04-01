@@ -36,15 +36,16 @@
 #include <ostream>
 #endif
 
-/**
- * streambuf class for a SBuf-backed stream interface.
+/** streambuf class for a SBuf-backed stream interface.
  *
+ * Auxiliary class to be able to leverage an ostream generating SBuf's
+ * analogous to std::ostrstream.
  */
 class SBufStreamBuf : public std::streambuf
 {
 public:
     /// initialize streambuf; use supplied SBuf as backing store
-    SBufStreamBuf(SBuf aBuf) : theBuf(aBuf) {}
+    explicit SBufStreamBuf(SBuf aBuf) : theBuf(aBuf) {}
 
     /// get a copy of the stream's contents
     SBuf getBuf() {
@@ -74,7 +75,7 @@ protected:
         return aChar;
     }
 
-    /* push the streambuf to the backing SBuf */
+    /// push the streambuf to the backing SBuf
     virtual int sync() {
         std::streamsize pending(pptr() - pbase());
 
@@ -84,8 +85,8 @@ protected:
         return 0;
     }
 
-    /* write multiple characters to the store entry
-     * - this is an optimisation method.
+    /** write multiple characters to the store entry
+     * \note this is an optimisation consistent with std::streambuf API
      */
     virtual std::streamsize xsputn(const char * chars, std::streamsize number) {
         if (number)
@@ -107,10 +108,10 @@ private:
 class SBufStream : public std::ostream
 {
 public:
-    /** Create a SBufStream preinitialized with the argument's SBuf.
+    /** Create a SBufStream preinitialized with the contents of a SBuf
      *
-     * The supplied SBuf is not aliased: in order to retrieve the altered contents
-     * they must be fetched using the buf() class method.
+     * The supplied SBuf copied: in order to retrieve the written-to contents
+     * they must be later fetched using the buf() class method.
      */
     SBufStream(SBuf aBuf): std::ostream(0), theBuffer(aBuf) {
         rdbuf(&theBuffer); // set the buffer to now-initialized theBuffer
