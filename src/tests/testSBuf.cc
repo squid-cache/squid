@@ -119,7 +119,6 @@ testSBuf::testSBufConstructDestruct()
         CPPUNIT_ASSERT_EQUAL(s1,literal);
     }
 
-
 }
 
 void
@@ -371,14 +370,12 @@ class SBufSubstrAutoTest
 {
     SBuf fullString, sb;
     std::string fullReference, str;
- public:
-    void performEqualityTest()
-    {
+public:
+    void performEqualityTest() {
         SBuf ref(str);
         CPPUNIT_ASSERT_EQUAL(ref,sb);
     }
-    SBufSubstrAutoTest() : fullString(fox), fullReference(fox)
-    {
+    SBufSubstrAutoTest() : fullString(fox), fullReference(fox) {
         for (int offset=fullString.length()-1; offset >= 0; --offset ) {
             for (int length=fullString.length()-1-offset; length >= 0; --length) {
                 sb=fullString.substr(offset,length);
@@ -525,7 +522,6 @@ testSBuf::testFindSBuf()
         idx = h2.find(SBuf("xyzab"));
         CPPUNIT_ASSERT_EQUAL(23,idx);
     }
-
 
     // REVERSE search
     // needle in haystack

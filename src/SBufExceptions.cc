@@ -37,8 +37,8 @@ OutOfBoundsException::OutOfBoundsException(const SBuf &throwingBuf,
         SBuf::size_type &pos,
         const char *aFileName, int aLineNo)
         : TextException(NULL, aFileName, aLineNo),
-          theThrowingBuf(throwingBuf),
-          accessedPosition(pos)
+        theThrowingBuf(throwingBuf),
+        accessedPosition(pos)
 {
     SBuf explanatoryText("OutOfBoundsException");
     if (aLineNo != -1)
@@ -46,7 +46,7 @@ OutOfBoundsException::OutOfBoundsException(const SBuf &throwingBuf,
     if (aFileName != NULL)
         explanatoryText.appendf(" in file %s", aFileName);
     explanatoryText.appendf(" while accessing position %d in a SBuf long %d",
-            pos, throwingBuf.length());
+                            pos, throwingBuf.length());
     // we can safely alias c_str as both are local to the object
     //  and will not further manipulated.
     message = xstrndup(explanatoryText.c_str(),explanatoryText.length());

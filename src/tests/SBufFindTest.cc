@@ -4,27 +4,25 @@
 #include <cppunit/Message.h>
 #include <limits>
 
-
 /* TODO: The whole SBufFindTest class is currently implemented as a single
    CppUnit test case (because we do not want to register and report every one
    of the thousands of generated test cases). Is there a better way to
    integrate with CppUnit?
  */
 
-
 SBufFindTest::SBufFindTest():
-    caseLimit(std::numeric_limits<int>::max()),
-    errorLimit(std::numeric_limits<int>::max()),
-    randomSeed(1),
-    hushSimilar(true),
-    maxHayLength(40),
-    thePos(0),
-    thePlacement(placeEof),
-    theStringPos(0),
-    theBareNeedlePos(0),
-    caseCount(0),
-    errorCount(0),
-    reportCount(0)
+        caseLimit(std::numeric_limits<int>::max()),
+        errorLimit(std::numeric_limits<int>::max()),
+        randomSeed(1),
+        hushSimilar(true),
+        maxHayLength(40),
+        thePos(0),
+        thePlacement(placeEof),
+        theStringPos(0),
+        theBareNeedlePos(0),
+        caseCount(0),
+        errorCount(0),
+        reportCount(0)
 {
 }
 
@@ -45,7 +43,7 @@ SBufFindTest::run()
                 placeNeedle(cleanHay);
 
                 const SBuf::size_type maxArg =
-                   max(theSBufHay.length(), theSBufNeedle.length()) + 10;
+                    max(theSBufHay.length(), theSBufNeedle.length()) + 10;
                 for (thePos = 0; thePos <= maxArg; nextLen(thePos, maxArg))
                     testAllMethods();
 
@@ -69,7 +67,8 @@ SBufFindTest::run()
 
 /// tests SBuf::find(string needle)
 void
-SBufFindTest::testFindDefs() {
+SBufFindTest::testFindDefs()
+{
     theFindString = theBareNeedlePos = theStringHay.find(theStringNeedle);
     theFindSBuf = theSBufHay.find(theSBufNeedle);
     checkResults("find");
@@ -77,7 +76,8 @@ SBufFindTest::testFindDefs() {
 
 /// tests SBuf::rfind(string needle)
 void
-SBufFindTest::testRFindDefs() {
+SBufFindTest::testRFindDefs()
+{
     theFindString = theBareNeedlePos = theStringHay.rfind(theStringNeedle);
     theFindSBuf = theSBufHay.rfind(theSBufNeedle);
     checkResults("rfind");
@@ -85,7 +85,8 @@ SBufFindTest::testRFindDefs() {
 
 /// tests SBuf::find(string needle, pos)
 void
-SBufFindTest::testFind() {
+SBufFindTest::testFind()
+{
     theFindString = theStringHay.find(theStringNeedle, thePos);
     theBareNeedlePos = theStringHay.find(theStringNeedle);
     theFindSBuf = theSBufHay.find(theSBufNeedle, thePos);
@@ -94,17 +95,18 @@ SBufFindTest::testFind() {
 
 /// tests SBuf::find_first_of(string needle, pos)
 void
-SBufFindTest::testFindFirstOf() {
+SBufFindTest::testFindFirstOf()
+{
     theFindString = theStringHay.find_first_of(theStringNeedle, thePos);
     theBareNeedlePos = theStringHay.find_first_of(theStringNeedle);
     theFindSBuf = theSBufHay.find_first_of(theSBufNeedle, thePos);
     checkResults("find_first_of");
 }
 
-
 /// tests SBuf::rfind(string needle, pos)
 void
-SBufFindTest::testRFind() {
+SBufFindTest::testRFind()
+{
     theFindString = theStringHay.rfind(theStringNeedle, thePos);
     theBareNeedlePos = theStringHay.rfind(theStringNeedle);
     theFindSBuf = theSBufHay.rfind(theSBufNeedle, thePos);
@@ -113,7 +115,8 @@ SBufFindTest::testRFind() {
 
 /// tests SBuf::find(char needle)
 void
-SBufFindTest::testFindCharDefs() {
+SBufFindTest::testFindCharDefs()
+{
     const char c = theStringNeedle[0];
     theFindString = theBareNeedlePos = theStringHay.find(c);
     theFindSBuf = theSBufHay.find(c);
@@ -122,7 +125,8 @@ SBufFindTest::testFindCharDefs() {
 
 /// tests SBuf::find(char needle, pos)
 void
-SBufFindTest::testFindChar() {
+SBufFindTest::testFindChar()
+{
     const char c = theStringNeedle[0];
     theFindString = theStringHay.find(c, thePos);
     theBareNeedlePos = theStringHay.find(c);
@@ -132,7 +136,8 @@ SBufFindTest::testFindChar() {
 
 /// tests SBuf::rfind(char needle)
 void
-SBufFindTest::testRFindCharDefs() {
+SBufFindTest::testRFindCharDefs()
+{
     const char c = theStringNeedle[0];
     theFindString = theBareNeedlePos = theStringHay.rfind(c);
     theFindSBuf = theSBufHay.rfind(c);
@@ -141,7 +146,8 @@ SBufFindTest::testRFindCharDefs() {
 
 /// tests SBuf::rfind(char needle, pos)
 void
-SBufFindTest::testRFindChar() {
+SBufFindTest::testRFindChar()
+{
     const char c = theStringNeedle[0];
     theFindString = theStringHay.rfind(c, thePos);
     theBareNeedlePos = theStringHay.rfind(c);
@@ -151,7 +157,8 @@ SBufFindTest::testRFindChar() {
 
 /// whether the last SBuf and std::string find() results are the same
 bool
-SBufFindTest::resultsMatch() const {
+SBufFindTest::resultsMatch() const
+{
     // this method is needed because SBuf and std::string use different
     // size_types (and npos values); comparing the result values directly
     // would lead to bugs
@@ -160,7 +167,7 @@ SBufFindTest::resultsMatch() const {
         return true; // both npos
 
     if (theFindSBuf < 0) // should not happen, treat as error
-       return false;
+        return false;
 
     // now safe to cast a non-negative SBuf result
     return theFindString == static_cast<std::string::size_type>(theFindSBuf);
@@ -168,7 +175,8 @@ SBufFindTest::resultsMatch() const {
 
 /// called at the end of test case to update state, detect and report failures
 void
-SBufFindTest::checkResults(const char *method) {
+SBufFindTest::checkResults(const char *method)
+{
     ++caseCount;
     if (!resultsMatch())
         handleFailure(method);
@@ -200,7 +208,8 @@ PosToString(const std::string::size_type pos)
 
 /// tests each supported SBuf::*find() method using generated hay, needle, pos
 void
-SBufFindTest::testAllMethods() {
+SBufFindTest::testAllMethods()
+{
     theStringHay = std::string(theSBufHay.rawContent(), theSBufHay.length());
     theStringNeedle = std::string(theSBufNeedle.rawContent(), theSBufNeedle.length());
     theBareNeedlePos = std::string::npos;
@@ -298,7 +307,8 @@ SBufFindTest::placementKey() const
 
 /// called when a test case fails; counts and possibly reports the failure
 void
-SBufFindTest::handleFailure(const char *method) {
+SBufFindTest::handleFailure(const char *method)
+{
     // line break after "........." printed for previous tests
     if (!errorCount)
         std::cerr << std::endl;
@@ -307,8 +317,8 @@ SBufFindTest::handleFailure(const char *method) {
 
     if (errorCount > errorLimit) {
         std::cerr << "Will stop generating SBuf test cases because the " <<
-            "number of failed ones is over the limit: " << errorCount <<
-            " (after " << caseCount << " test cases)" << std::endl;
+                  "number of failed ones is over the limit: " << errorCount <<
+                  " (after " << caseCount << " test cases)" << std::endl;
         CPPUNIT_ASSERT(errorCount <= errorLimit);
         /* NOTREACHED */
     }
@@ -316,7 +326,7 @@ SBufFindTest::handleFailure(const char *method) {
     // format test case category; category allows us to hush failure reports
     // for already seen categories with failed cases (to reduce output noise)
     std::string category = "hay" + lengthKey(theStringHay) +
-        "." + method + '(';
+                           "." + method + '(';
     if (theReportQuote == '"')
         category += "needle" + lengthKey(theStringNeedle);
     else
@@ -336,30 +346,31 @@ SBufFindTest::handleFailure(const char *method) {
         reportPos = ", " + reportPos;
 
     std::cerr << "case" << caseCount << ": " <<
-        "SBuf(\"" << theStringHay << "\")." << method <<
-        "(" << theReportQuote << theReportNeedle << theReportQuote <<
-        reportPos << ") returns " << PosToString(theFindSBuf) <<
-        " instead of " << PosToString(theFindString) <<
-        std::endl <<
-        "    std::string(\""  << theStringHay << "\")." << method <<
-        "(" << theReportQuote << theReportNeedle << theReportQuote <<
-        reportPos << ") returns " << PosToString(theFindString) <<
-        std::endl <<
-        "    category: " << category << std::endl;
+              "SBuf(\"" << theStringHay << "\")." << method <<
+              "(" << theReportQuote << theReportNeedle << theReportQuote <<
+              reportPos << ") returns " << PosToString(theFindSBuf) <<
+              " instead of " << PosToString(theFindString) <<
+              std::endl <<
+              "    std::string(\""  << theStringHay << "\")." << method <<
+              "(" << theReportQuote << theReportNeedle << theReportQuote <<
+              reportPos << ") returns " << PosToString(theFindString) <<
+              std::endl <<
+              "    category: " << category << std::endl;
 
-   ++reportCount;
+    ++reportCount;
 }
 
 /// generates a random string of the specified length
 SBuf
-SBufFindTest::RandomSBuf(const int length) {
-    static const char characters[] = 
+SBufFindTest::RandomSBuf(const int length)
+{
+    static const char characters[] =
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklomnpqrstuvwxyz";
     // sizeof() counts the terminating zero at the end of characters
     // TODO: add \0 character (needs reporting adjustments to print it as \0)
-    static const size_t charCount = sizeof(characters)-1; 
+    static const size_t charCount = sizeof(characters)-1;
 
     char buf[length];
     for (int i = 0; i < length; ++i) {
@@ -375,7 +386,8 @@ SBufFindTest::RandomSBuf(const int length) {
 /// increments len to quickly cover [0, max] range, slowing down in risky areas
 /// jumps to max+1 if caseLimit is reached
 void
-SBufFindTest::nextLen(int &len, const int max) {
+SBufFindTest::nextLen(int &len, const int max)
+{
     assert(len <= max);
 
     if (caseCount >= caseLimit)
@@ -396,20 +408,19 @@ SBufFindTest::nextLen(int &len, const int max) {
 
 /// Places the needle into the hay using cleanHay as a starting point.
 void
-SBufFindTest::placeNeedle(const SBuf &cleanHay) {
+SBufFindTest::placeNeedle(const SBuf &cleanHay)
+{
     // For simplicity, we do not overwrite clean hay characters but use them as
     // needle suffix and/or prefix. Should not matter since hay length varies?
 
     // TODO: support two needles per hay (explicitly)
     // TODO: better handle cases where clean hay already contains needle
-    switch (thePlacement)
-    {
+    switch (thePlacement) {
     case placeBeginning:
         theSBufHay.assign(theSBufNeedle).append(cleanHay);
         break;
 
-    case placeMiddle:
-    {
+    case placeMiddle: {
         const SBuf firstHalf = cleanHay.substr(0, cleanHay.length()/2);
         const SBuf secondHalf = cleanHay.substr(cleanHay.length()/2);
         theSBufHay.assign(firstHalf).append(theSBufNeedle).append(secondHalf);
