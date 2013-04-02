@@ -604,7 +604,6 @@ private:
     }
 
     void checkAccessBounds(size_type pos) const;
-    _SQUID_INLINE_ int commonCompareChecksPre(const SBuf &S) const;
 
     /**
      * To be called after having determined that the buffers are equal up to the
