@@ -32,9 +32,17 @@
 #define SQUID_SBUF_H
 
 #include "base/InstanceId.h"
+// Debug.h only needed for for SBuf::cow() debug statements.
+#include "Debug.h"
 #include "MemBlob.h"
+#include "SBufExceptions.h"
 #include "SquidString.h"
 
+#if HAVE_CLIMITS
+#include <climits>
+#elif HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -138,16 +146,18 @@ public:
     explicit SBuf(const std::string &s);
 
     ~SBuf();
+
     /** Explicit assignment.
      *
      * Current SBuf will share backing store with the assigned one.
      */
     SBuf& assign(const SBuf &S);
+
     /** Assignment operator.
      *
      * Current SBuf will share backing store with the assigned one.
      */
-    _SQUID_INLINE_ SBuf& operator =(const SBuf & S);
+    SBuf& operator =(const SBuf & S) {return assign(S);}
 
     /** Import a c-string into a SBuf, copying the data.
      *
@@ -166,7 +176,7 @@ public:
      * Copy a c-style string into a SBuf. Shortcut for SBuf.assign(S)
      * It is the caller's duty to free the imported string, if needed.
      */
-    _SQUID_INLINE_ SBuf& operator =(const char *S);
+    SBuf& operator =(const char *S) {return assign(S);}
 
     /** Import a std::string into a SBuf. Contents are copied.
      *
@@ -243,14 +253,14 @@ public:
      *
      * does not check access bounds. If you need that, use at()
      */
-    _SQUID_INLINE_ const char operator [](size_type pos) const;
+    const char operator [](size_type pos) const {++stats.getChar; return store_->mem[off_+pos];}
 
     /** random-access read to any char within the SBuf.
      *
      * \throw OutOfBoundsException when access is out of bounds
      * \note bounds is 0 <= pos < length()
      */
-    _SQUID_INLINE_ const char at(size_type pos) const;
+    const char at(size_type pos) const {checkAccessBounds(pos); return operator[](pos);}
 
     /** direct-access set a byte at a specified operation.
      *
@@ -281,10 +291,10 @@ public:
 
     bool operator ==(const SBuf & S) const;
     bool operator !=(const SBuf & S) const;
-    _SQUID_INLINE_ bool operator <(const SBuf &S) const;
-    _SQUID_INLINE_ bool operator >(const SBuf &S) const;
-    _SQUID_INLINE_ bool operator <=(const SBuf &S) const;
-    _SQUID_INLINE_ bool operator >=(const SBuf &S) const;
+    bool operator <(const SBuf &S) const {return (compare(S) < 0);}
+    bool operator >(const SBuf &S) const {return (compare(S) > 0);}
+    bool operator <=(const SBuf &S) const {return (compare(S) <= 0);}
+    bool operator >=(const SBuf &S) const {return (compare(S) >= 0);}
 
     /** Consume bytes at the head of the SBuf
      *
@@ -382,20 +392,24 @@ public:
     const char* c_str();
 
     /// Returns the number of bytes stored in SBuf.
-    _SQUID_INLINE_ size_type length() const;
+    size_type length() const {return len_;}
 
     /** Get the length of the SBuf, as a signed integer
      *
      * Compatibility function for printf(3) which requires a signed int
      * \throw SBufTooBigException if the SBuf is too big for a signed integer
      */
-    _SQUID_INLINE_ int plength() const;
+    int plength() const {
+        if (length()>INT_MAX)
+            throw SBufTooBigException(__FILE__, __LINE__);
+        return static_cast<int>(length());
+    }
 
     /** Check whether the SBuf is empty
      *
      * \return true if length() == 0
      */
-    _SQUID_INLINE_ bool isEmpty() const;
+    bool isEmpty() const {return (len_==0);}
 
     /** Request to extend the SBuf's free store space.
      *
@@ -540,26 +554,80 @@ private:
 
     const InstanceId<SBuf> id; ///< blob identifier
 
-    _SQUID_INLINE_ static MemBlob::Pointer GetStorePrototype();
+    /** obtain prototype store
+     *
+     * Just-created SBufs all share to the same MemBlob.
+     * This call instantiates and returns it.
+     */
+    static MemBlob::Pointer GetStorePrototype();
 
-    _SQUID_INLINE_ char * buf() const;
-    _SQUID_INLINE_ char * bufEnd() const;
-    _SQUID_INLINE_ const size_type estimateCapacity(size_type desired) const;
+    /**
+     * obtains a char* to the beginning of this SBuf in memory.
+     * \note the obtained string is NOT null-terminated.
+     */
+    char * buf() const {return (store_->mem+off_);}
+
+    /** returns the pointer to the first char after this SBuf end
+     *
+     *  No checks are made that the space returned is safe, checking that is
+     *  up to the caller.
+     */
+    char * bufEnd() const {return (store_->mem+off_+len_);}
+
+    /**
+     * Try to guesstimate how big a MemBlob to allocate.
+     * The result is guarranteed to be to be at least the desired size.
+     */
+    const size_type estimateCapacity(size_type desired) const {return (2*desired);}
+
     void reAlloc(size_type newsize);
 
-    _SQUID_INLINE_ bool cow(size_type minsize = npos);
+    /**
+     * copy-on-write: make sure that we are the only holder of the backing store.
+     * If not, reallocate. If a new size is specified, and it is greater than the
+     * current length, the backing store will be extended as needed
+     * \retval false no grow was needed
+     * \retval true had to copy
+     */
+    bool cow(size_type minsize = npos) {
+        debugs(24, DBG_DATA, "new size (minimum):" << minsize);
+        if (minsize == npos || minsize < length())
+            minsize = length();
+
+        if (store_->LockCount() == 1 && minsize == length()) {
+            debugs(24, DBG_DATA, "no cow needed");
+            ++stats.cowFast;
+            return false;
+        }
+        reAlloc(minsize);
+        return true;
+    }
 
     void checkAccessBounds(size_type pos) const;
     _SQUID_INLINE_ int commonCompareChecksPre(const SBuf &S) const;
-    _SQUID_INLINE_ int commonCompareChecksPost(const SBuf &S) const;
+
+    /**
+     * To be called after having determined that the buffers are equal up to the
+     * length of the shortest one.
+     * If the buffers' length is the same, then they're equal. Otherwise, the
+     * longest one is deemed to be greater than the other.
+     * This matches the behavior of strcmp(1) and strcasecmp(1)
+     */
+    int commonCompareChecksPost(const SBuf &S) const {
+        if (length() == S.length())
+            return 0;
+        if (length() > S.length())
+            return 1;
+        return -1;
+    }
 
 };
 
 /// ostream output operator
-_SQUID_INLINE_ std::ostream& operator <<(std::ostream &os, const SBuf &S);
-
-#if _USE_INLINE_
-#include "SBuf.cci"
-#endif
+inline std::ostream &
+operator <<(std::ostream& os, const SBuf& S)
+{
+    return S.print(os);
+}
 
 #endif /* SQUID_SBUF_H */
