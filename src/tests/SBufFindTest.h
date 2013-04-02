@@ -24,11 +24,12 @@ public:
     /// whether to report only one failed test case per "category"
     bool hushSimilar;
     /// approximate maximum generated hay string length
-    SBuf::size_type maxHayLength; 
+    SBuf::size_type maxHayLength;
 
     /// Supported algorithms for placing needle in the hay.
     typedef enum { placeBeginning, placeMiddle, placeEnd, placeNowhere,
-        placeEof } Placement; // placeLast marker must terminate
+                   placeEof
+                 } Placement; // placeLast marker must terminate
 protected:
 
     static SBuf RandomSBuf(const int length);

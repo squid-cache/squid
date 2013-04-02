@@ -126,7 +126,7 @@ SBuf::SBuf(const String &S)
 }
 
 SBuf::SBuf(const std::string &s)
-    : store_(GetStorePrototype()), off_(0), len_(0)
+        : store_(GetStorePrototype()), off_(0), len_(0)
 {
     debugs(24, 8, id << " created from string");
     assign(s.data(),0,s.size());
@@ -148,6 +148,17 @@ SBuf::~SBuf()
 {
     debugs(24, 8, id << " destructed");
     --stats.live;
+}
+
+MemBlob::Pointer
+SBuf::GetStorePrototype()
+{
+    static MemBlob::Pointer InitialStore = NULL;
+    if (InitialStore == NULL) {
+        static char lowPrototype[] = "";
+        InitialStore = new MemBlob(lowPrototype, 0);
+    }
+    return InitialStore;
 }
 
 SBuf&
@@ -386,7 +397,7 @@ bool
 SBuf::startsWith(const SBuf &S, SBufCaseSensitive isCaseSensitive) const
 {
     debugs(24, 8, id << " startsWith " << S.id << ", caseSensitive: " <<
-                    isCaseSensitive);
+           isCaseSensitive);
     if (length() < S.length()) {
         debugs(24, 8, "no, too short");
         ++stats.compareFast;
@@ -593,7 +604,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
     char needleBegin = needle[0];
 
     debugs(24, 7, "looking for " << needle << "starting at " << startPos <<
-                    " in id " << id);
+           " in id " << id);
     while (begin < lastPossible) {
         char *tmp;
         debugs(24, 8, " begin=" << (void *) begin <<
@@ -638,10 +649,10 @@ SBuf::rfind(const SBuf &needle, SBuf::size_type endPos) const
     if (needle.length() == 0)
         return endPos;
 
-/* std::string permits needle to overhang endPos
-    if (endPos <= needle.length())
-        return npos;
-*/
+    /* std::string permits needle to overhang endPos
+        if (endPos <= needle.length())
+            return npos;
+    */
 
     char *bufBegin = buf();
     char *cur = bufBegin+endPos;
@@ -844,8 +855,3 @@ SBuf::reAlloc(SBuf::size_type newsize)
     ++stats.cowSlow;
     debugs(24, 7, "new store capacity: " << store_->capacity);
 }
-
-#if !_USE_INLINE_
-#include "SBuf.cci"
-#endif
-

@@ -28,7 +28,6 @@ SBUF_SOURCE= \
 	OutOfBoundsException.h \
 	SBuf.h \
 	SBuf.cc \
-	SBuf.cci \
 	SBufExceptions.h \
 	SBufExceptions.cc
 
