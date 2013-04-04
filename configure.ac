@@ -259,7 +259,7 @@ case $withval in
 ])
 AC_SUBST(DEFAULT_SWAP_DIR)
 
-if test "x$GCC" = "xyes"; then
+if test "$squid_cv_compiler" = "gcc"; then
   GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
   GCCVER2=`echo $GCCVER | awk '{print $1 * 100}'`
   case "$host" in
@@ -276,7 +276,7 @@ fi
 
 dnl Set Default CFLAGS
 if test "x$PRESET_CFLAGS" = "x"; then
-  if test "x$GCC" = "xyes"; then
+  if test "$squid_cv_compiler" = "gcc"; then
     case "$host" in
       *-sun-sunos*)
         # sunos has too many warnings for this to be useful
@@ -310,7 +310,7 @@ if test "x$PRESET_CFLAGS" = "x"; then
 fi
 
 dnl set squid required flags
-if test "x$GCC" = "xyes"; then
+if test "$squid_cv_compiler" = "gcc"; then
   case "$squid_host_os" in
   mingw)
 dnl Guido Serassio (serassio@squid-cache.org) 20070811
