@@ -616,8 +616,8 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
                                 http->request,
                                 NULL,
 #if USE_AUTH
-                                http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                http->getConn()->auth_user_request : http->request->auth_user_request);
+                                http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                http->getConn()->getAuth() : http->request->auth_user_request);
 #else
                                 NULL);
 #endif
@@ -785,8 +785,8 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";
-    if (http->getConn() != NULL && http->getConn()->auth_user_request != NULL)
-        proxy_auth_msg = http->getConn()->auth_user_request->denyMessage("<null>");
+    if (http->getConn() != NULL && http->getConn()->getAuth() != NULL)
+        proxy_auth_msg = http->getConn()->getAuth()->denyMessage("<null>");
     else if (http->request->auth_user_request != NULL)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
@@ -849,8 +849,8 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
 #if USE_AUTH
         error->auth_user_request =
-            http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-            http->getConn()->auth_user_request : http->request->auth_user_request;
+            http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+            http->getConn()->getAuth() : http->request->auth_user_request;
 #endif
 
         readNextRequest = true;
@@ -1607,7 +1607,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 #if USE_AUTH
     // Preserve authentication info for the ssl-bumped request
     if (request->auth_user_request != NULL)
-        getConn()->auth_user_request = request->auth_user_request;
+        getConn()->setAuth(request->auth_user_request, "SSL-bumped CONNECT");
 #endif
 
     assert(sslBumpNeeded());
@@ -2089,7 +2089,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
                                                 );
 #if USE_AUTH
         calloutContext->error->auth_user_request =
-            c != NULL && c->auth_user_request != NULL ? c->auth_user_request : request->auth_user_request;
+            c != NULL && c->getAuth() != NULL ? c->getAuth() : request->auth_user_request;
 #endif
         calloutContext->error->detailError(errDetail);
         calloutContext->readNextRequest = true;
