@@ -1284,6 +1284,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	cache_cf.h \
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
+	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \

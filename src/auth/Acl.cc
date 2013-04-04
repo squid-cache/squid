@@ -26,7 +26,7 @@ AuthenticateAcl(ACLChecklist *ch)
         return ACCESS_DENIED;
     } else if (request->flags.sslBumped) {
         debugs(28, 5, "SslBumped request: It is an encapsulated request do not authenticate");
-        checklist->auth_user_request = checklist->conn() != NULL ? checklist->conn()->auth_user_request : request->auth_user_request;
+        checklist->auth_user_request = checklist->conn() != NULL ? checklist->conn()->getAuth() : request->auth_user_request;
         if (checklist->auth_user_request != NULL)
             return ACCESS_ALLOWED;
         else
