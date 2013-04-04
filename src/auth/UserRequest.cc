@@ -221,7 +221,7 @@ Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated
 {}
 
 void
-Auth::UserRequest::onConnectionClose(ConnStateData *)
+Auth::UserRequest::releaseAuthServer()
 {}
 
 const char *
@@ -253,7 +253,7 @@ authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * con
     else if (request != NULL && request->auth_user_request != NULL)
         return request->auth_user_request;
     else if (conn != NULL)
-        return conn->auth_user_request;
+        return conn->getAuth();
     else
         return NULL;
 }
@@ -303,7 +303,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
 
         /* connection auth we must reset on auth errors */
         if (conn != NULL) {
-            conn->auth_user_request = NULL;
+            conn->setAuth(NULL, "HTTP request missing credentials");
         }
 
         *auth_user_request = NULL;
@@ -315,13 +315,13 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
      * No check for function required in the if: its compulsory for conn based
      * auth modules
      */
-    if (proxy_auth && conn != NULL && conn->auth_user_request != NULL &&
-            authenticateUserAuthenticated(conn->auth_user_request) &&
-            conn->auth_user_request->connLastHeader() != NULL &&
-            strcmp(proxy_auth, conn->auth_user_request->connLastHeader())) {
+    if (proxy_auth && conn != NULL && conn->getAuth() != NULL &&
+            authenticateUserAuthenticated(conn->getAuth()) &&
+            conn->getAuth()->connLastHeader() != NULL &&
+            strcmp(proxy_auth, conn->getAuth()->connLastHeader())) {
         debugs(29, 2, "WARNING: DUPLICATE AUTH - authentication header on already authenticated connection!. AU " <<
-               conn->auth_user_request << ", Current user '" <<
-               conn->auth_user_request->username() << "' proxy_auth " <<
+               conn->getAuth() << ", Current user '" <<
+               conn->getAuth()->username() << "' proxy_auth " <<
                proxy_auth);
 
         /* remove this request struct - the link is already authed and it can't be to reauth. */
@@ -330,7 +330,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
          * authenticateAuthenticate
          */
         assert(*auth_user_request == NULL);
-        conn->auth_user_request = NULL;
+        conn->setAuth(NULL, "changed credentials token");
     }
 
     /* we have a proxy auth header and as far as we know this connection has
@@ -342,20 +342,20 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
             debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConnection);
         }
 
-        if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
+        if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->getAuth() != NULL) {
             Auth::Config * scheme = Auth::Config::Find(proxy_auth);
 
-            if (conn->auth_user_request->user() == NULL || conn->auth_user_request->user()->config != scheme) {
+            if (conn->getAuth()->user() == NULL || conn->getAuth()->user()->config != scheme) {
                 debugs(29, DBG_IMPORTANT, "WARNING: Unexpected change of authentication scheme from '" <<
-                       conn->auth_user_request->user()->config->type() <<
+                       (conn->getAuth()->user()!=NULL?conn->getAuth()->user()->config->type():"[no user]") <<
                        "' to '" << proxy_auth << "' (client " <<
                        src_addr << ")");
 
-                conn->auth_user_request = NULL;
+                conn->setAuth(NULL, "changed auth scheme");
             }
         }
 
-        if (request->auth_user_request == NULL && (conn == NULL || conn->auth_user_request == NULL)) {
+        if (request->auth_user_request == NULL && (conn == NULL || conn->getAuth() == NULL)) {
             /* beginning of a new request check */
             debugs(29, 4, HERE << "No connection authentication type");
 
@@ -378,15 +378,11 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
             *auth_user_request = request->auth_user_request;
         } else {
             assert (conn != NULL);
-            if (conn->auth_user_request != NULL) {
-                *auth_user_request = conn->auth_user_request;
+            if (conn->getAuth() != NULL) {
+                *auth_user_request = conn->getAuth();
             } else {
                 /* failed connection based authentication */
-                debugs(29, 4, HERE << "Auth user request " <<
-                       *auth_user_request << " conn-auth user request " <<
-                       conn->auth_user_request << " conn type " <<
-                       conn->auth_user_request->user()->auth_type << " authentication failed.");
-
+                debugs(29, 4, HERE << "Auth user request " << *auth_user_request << " conn-auth missing and failed to authenticate.");
                 *auth_user_request = NULL;
                 return AUTH_ACL_CHALLENGE;
             }

@@ -301,8 +301,8 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
                                     http->request,
                                     NULL,
 #if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                    http->getConn()->auth_user_request : http->request->auth_user_request);
+                                    http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                    http->getConn()->getAuth() : http->request->auth_user_request);
 #else
                                     NULL);
 #endif

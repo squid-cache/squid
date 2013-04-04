@@ -2,6 +2,13 @@ In addition to the numerous volunteer developers (see CONTRIBUTORS),
 the following organizations have provided non-financial support for
 the Squid Project:
 
+@Squid-3.3:
+Netbox Blue Pty (http://netboxblue.com/)
+
+	Netbox Blue Pty. contributed development resources towards
+	testing and stabilizing of authentication systems in Squid-3.2
+	and Squid-3.3.
+
 @Squid-3.2:
 iiNet Ltd - http://www.iinet.net.au/
 

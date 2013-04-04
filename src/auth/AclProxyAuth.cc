@@ -163,7 +163,7 @@ ProxyAuthLookup::LookupDone(void *data)
         checklist->auth_user_request = NULL;
 
         if (checklist->conn() != NULL) {
-            checklist->conn()->auth_user_request = NULL;
+            checklist->conn()->setAuth(NULL, "proxy_auth ACL failure");
         }
     }
 
