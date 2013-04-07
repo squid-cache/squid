@@ -63,10 +63,27 @@
 #include <errno.h>
 #endif
 
+/**
+ * TunnelStateData is the state engine performing the tasks for
+ * setup of a TCP tunnel from an existing open client FD to a server
+ * then shuffling binary data between the resulting FD pair.
+ */
+/*
+ * TODO 1: implement a read/write API on ConnStateData to send/receive blocks
+ * of pre-formatted data. Then we can use that as the client side of the tunnel
+ * instead of re-implementing it here and occasionally getting the ConnStateData
+ * read/write state wrong.
+ *
+ * TODO 2: then convert this into a AsyncJob, possibly a child of 'Server'
+ */
 class TunnelStateData
 {
 
 public:
+    TunnelStateData();
+    ~TunnelStateData();
+    TunnelStateData(const TunnelStateData &); // do not implement
+    TunnelStateData &operator =(const TunnelStateData &); // do not implement
 
     class Connection;
     void *operator new(size_t);
@@ -139,7 +156,6 @@ static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
-static void tunnelStateFree(TunnelStateData * tunnelState);
 static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
 static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
@@ -151,7 +167,7 @@ tunnelServerClosed(const CommCloseCbParams &params)
     tunnelState->server.conn = NULL;
 
     if (tunnelState->noConnections()) {
-        tunnelStateFree(tunnelState);
+        delete tunnelState;
         return;
     }
 
@@ -169,7 +185,7 @@ tunnelClientClosed(const CommCloseCbParams &params)
     tunnelState->client.conn = NULL;
 
     if (tunnelState->noConnections()) {
-        tunnelStateFree(tunnelState);
+        delete tunnelState;
         return;
     }
 
@@ -179,16 +195,21 @@ tunnelClientClosed(const CommCloseCbParams &params)
     }
 }
 
-static void
-tunnelStateFree(TunnelStateData * tunnelState)
+TunnelStateData::TunnelStateData() :
+        url(NULL),
+        request(NULL),
+        status_ptr(NULL)
 {
-    debugs(26, 3, HERE << "tunnelState=" << tunnelState);
-    assert(tunnelState != NULL);
-    assert(tunnelState->noConnections());
-    safe_free(tunnelState->url);
-    tunnelState->serverDestinations.clean();
-    HTTPMSGUNLOCK(tunnelState->request);
-    delete tunnelState;
+    debugs(26, 3, "TunnelStateData constructed this=" << this);
+}
+
+TunnelStateData::~TunnelStateData()
+{
+    debugs(26, 3, "TunnelStateData destructed this=" << this);
+    assert(noConnections());
+    xfree(url);
+    serverDestinations.clean();
+    HTTPMSGUNLOCK(request);
 }
 
 TunnelStateData::Connection::~Connection()
