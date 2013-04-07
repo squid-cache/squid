@@ -589,6 +589,16 @@ for module in $squid_disk_module_candidates none; do
               fi
             fi
             ;;
+          openbsd)
+            if test `echo "$squid_host_os_version" | tr -d .` -lt 52 ; then
+                AC_MSG_NOTICE(pthread library requires OpenBSD 5.2 or later)
+                squid_opt_use_diskthreads="no"
+            else
+              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+              LDFLAGS="$LDFLAGS -lpthread"
+            fi
+            ;;
           solaris)
             if test "x$GCC" = "xyes" ; then
               SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -pthreads"
