@@ -86,8 +86,6 @@ public:
     TunnelStateData &operator =(const TunnelStateData &); // do not implement
 
     class Connection;
-    void *operator new(size_t);
-    void operator delete (void *);
     static void ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
     static void ReadServer(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
     static void WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
@@ -140,7 +138,7 @@ public:
     void copyRead(Connection &from, IOCB *completion);
 
 private:
-    CBDATA_CLASS(TunnelStateData);
+    CBDATA_CLASS2(TunnelStateData);
     void copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *);
     void readServer(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void readClient(char *buf, size_t len, comm_err_t errcode, int xerrno);
@@ -340,7 +338,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
      * - RBC 20030229
      * from.conn->close() / to.conn->close() done here trigger close callbacks which may free TunnelStateData
      */
-    cbdataInternalLock(this);	/* ??? should be locked by the caller... */
+    const CbcPointer<TunnelStateData> safetyLock(this);
 
     /* Bump the source connection read timeout on any activity */
     if (Comm::IsConnOpen(from.conn)) {
@@ -373,8 +371,6 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
                                              CommIoCbPtrFun(completion, this));
         Comm::Write(to.conn, from.buf, len, call, NULL);
     }
-
-    cbdataInternalUnlock(this);	/* ??? */
 }
 
 /* Writes data from the client buffer to the server side */
@@ -420,12 +416,10 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
         return;
     }
 
-    cbdataInternalLock(this);	/* ??? should be locked by the caller... */
+    const CbcPointer<TunnelStateData> safetyLock(this);	/* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
         copyRead(client, ReadClient);
-
-    cbdataInternalUnlock(this);	/* ??? */
 }
 
 /* Writes data from the server buffer to the client side */
@@ -482,12 +476,10 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
         return;
     }
 
-    cbdataInternalLock(this);	/* ??? should be locked by the caller... */
+    CbcPointer<TunnelStateData> safetyLock(this);	/* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
         copyRead(server, ReadServer);
-
-    cbdataInternalUnlock(this);	/* ??? */
 }
 
 static void
@@ -496,11 +488,10 @@ tunnelTimeout(const CommTimeoutCbParams &io)
     TunnelStateData *tunnelState = static_cast<TunnelStateData *>(io.data);
     debugs(26, 3, HERE << io.conn);
     /* Temporary lock to protect our own feets (comm_close -> tunnelClientClosed -> Free) */
-    cbdataInternalLock(tunnelState);
+    CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
     tunnelState->client.closeIfOpen();
     tunnelState->server.closeIfOpen();
-    cbdataInternalUnlock(tunnelState);
 }
 
 void
@@ -578,15 +569,13 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
     debugs(26, 3, HERE << "FD " << fd);
     assert(tunnelState != NULL);
     /* temporary lock to save our own feets (comm_close -> tunnelClientClosed -> Free) */
-    cbdataInternalLock(tunnelState);
+    CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
     if (Comm::IsConnOpen(tunnelState->client.conn))
         tunnelState->client.conn->close();
 
     if (Comm::IsConnOpen(tunnelState->server.conn))
         tunnelState->server.conn->close();
-
-    cbdataInternalUnlock(tunnelState);
 }
 
 static void
@@ -796,21 +785,6 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
-
-void *
-TunnelStateData::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(TunnelStateData);
-    TunnelStateData *result = cbdataAlloc(TunnelStateData);
-    return result;
-}
-
-void
-TunnelStateData::operator delete (void *address)
-{
-    TunnelStateData *t = static_cast<TunnelStateData *>(address);
-    cbdataFree(t);
-}
 
 bool
 TunnelStateData::noConnections() const
