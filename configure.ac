@@ -1469,7 +1469,17 @@ AC_ARG_ENABLE(pf-transparent,
               [unrecognized argument to --enable-pf-transparent: $enableval])
 ])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
-AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=auto}])
+AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=no}])
+
+dnl Enable /dev/pf support for older PF Transparent Proxy systems (OpenBSD 4.x and older)
+AC_ARG_WITH(nat-devpf,
+  AS_HELP_STRING([--with-nat-devpf],
+    [Enable /dev/pf support for NAT on older OpenBSD and FreeBSD kernels.]), [
+  SQUID_YESNO([$enableval],
+              [unrecognized argument to --with-nat-devpf: $enableval])
+])
+#will be AC_DEFINEd later, after checking for appropriate infrastructure
+AC_MSG_NOTICE([NAT lookups via /dev/pf: ${with_nat_devpf:=no}])
 
 # Linux Netfilter Transparent Proxy
 AC_ARG_ENABLE(linux-netfilter,
@@ -3359,22 +3369,24 @@ dnl Solaris minor version (8, 9, 10, ...)
   CXXFLAGS="-DSOLARIS2=$solrev $CXXFLAGS" 
 fi
 
-dnl PF support requires a header file.
-if test "x$enable_pf_transparent" != "xno" ; then
+dnl PF /dev/pf support requires a header file.
+if test "x$with_nat_devpf" != "xno" ; then
   if test "x$ac_cv_header_net_pfvar_h" = "xyes" -o \
     "x$ac_cv_header_net_pf_pfvar_h" = "xyes"; then
-    if test "x$enable_pf_transparent" = "xauto" ; then
-      enable_pf_transparent="yes"
+    if test "x$with_nat_devpf" = "xauto" ; then
+      with_nat_devpf="no"
     fi
   else
-    if test "x$enable_pf_transparent" = "xyes" ; then
-      AC_MSG_ERROR([PF-based transparent proxy requested but needed header not found])
+    if test "x$with_nat_devpf" = "xyes" ; then
+      AC_MSG_ERROR([PF /dev/pf based NAT requested but needed header not found])
     fi
-    enable_pf_transparent="no"
+    with_nat_devpf="no"
   fi
 fi
-SQUID_DEFINE_BOOL(PF_TRANSPARENT,$enable_pf_transparent,
+SQUID_DEFINE_BOOL(PF_TRANSPARENT,${enable_pf_transparent:=no},
   [Enable support for PF-style transparent proxying])
+SQUID_DEFINE_BOOL(USE_NAT_DEVPF,${with_nat_devpf:=no},
+  [Enable support for /dev/pf NAT lookups])
 
 if test "x$enable_linux_netfilter" != "xno" ; then
   if test "x$ac_cv_header_linux_netfilter_ipv4_h" = "xyes"; then
