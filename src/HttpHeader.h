@@ -146,6 +146,10 @@ typedef enum {
     HDR_SURROGATE_CAPABILITY,           /**< Edge Side Includes (ESI) header */
     HDR_SURROGATE_CONTROL,              /**< Edge Side Includes (ESI) header */
     HDR_FRONT_END_HTTPS,                /**< MS Exchange custom header we may have to add */
+    HDR_FTP_COMMAND,                    /**< Internal header for FTP command */
+    HDR_FTP_ARGUMENTS,                  /**< Internal header for FTP command arguments */
+    HDR_FTP_STATUS,                     /**< Internal header for FTP reply status */
+    HDR_FTP_REASON,                     /**< Internal header for FTP reply reason */
     HDR_OTHER,                          /**< internal tag value for "unknown" headers */
     HDR_ENUM_END
 } http_hdr_type;

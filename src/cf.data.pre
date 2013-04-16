@@ -1848,6 +1848,13 @@ DOC_START
 	See http_port for a list of available options.
 DOC_END
 
+NAME: ftp_port
+TYPE: PortCfg
+DEFAULT: none
+LOC: Config.Sockaddr.ftp
+DOC_START
+	Usage:  [ip:]port
+
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
 TYPE: acl_tos
 DEFAULT: none

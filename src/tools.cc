@@ -107,8 +107,8 @@ releaseServerSockets(void)
 {
     // Release the main ports as early as possible
 
-    // clear both http_port and https_port lists.
-    clientHttpConnectionsClose();
+    // clear http_port, https_port and ftp_port lists
+    clientConnectionsClose();
 
     // clear icp_port's
     icpClosePorts();

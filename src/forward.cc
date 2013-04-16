@@ -49,6 +49,7 @@
 #include "fde.h"
 #include "forward.h"
 #include "ftp.h"
+#include "FtpGatewayServer.h"
 #include "globals.h"
 #include "gopher.h"
 #include "hier_code.h"
@@ -1045,6 +1046,13 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     }
 #endif
 
+    const CbcPointer<ConnStateData> &clientConnState =
+        request->clientConnectionManager;
+    if (clientConnState->isFtp) {
+        clientConnState->pinConnection(serverConnection(), request,
+                                       serverConnection()->getPeer(), false);
+    }
+
     dispatch();
 }
 
@@ -1298,7 +1306,10 @@ FwdState::dispatch()
             break;
 
         case AnyP::PROTO_FTP:
-            ftpStart(this);
+            if (request->clientConnectionManager->isFtp)
+                ftpGatewayServerStart(this);
+            else
+                ftpStart(this);
             break;
 
         case AnyP::PROTO_CACHE_OBJECT:
