@@ -355,6 +355,10 @@ squid_SOURCES = \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FtpServer.h \
+	FtpServer.cc \
+	FtpGatewayServer.h \
+	FtpGatewayServer.cc \
 	Generic.h \
 	globals.h \
 	gopher.h \

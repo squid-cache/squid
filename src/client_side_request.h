@@ -124,6 +124,7 @@ public:
         bool internal;
         bool done_copying;
         bool purging;
+        bool ftp;
     } flags;
 
     struct {
