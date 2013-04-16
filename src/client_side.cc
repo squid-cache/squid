@@ -428,7 +428,7 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
     AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
                                          CommIoCbPtrFun(&WroteControlMsg, this));
 
-    if (http->flags.ftp) {
+    if (getConn()->isFtp) {
         FtpWriteForwardedReply(this, rep.getRaw(), call);
         return;
     }
@@ -4897,7 +4897,6 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     http->request = request;
     HTTPMSGLOCK(http->request);
     http->req_sz = eor - connState->in.buf + 1;
-    http->flags.ftp = true;
     http->uri = xstrdup(connState->ftp.uri.termedBuf());
 
     ClientSocketContext *const result =
