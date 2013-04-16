@@ -503,22 +503,22 @@ comm_set_v6only(int fd, int tos)
 void
 comm_set_transparent(int fd)
 {
-    bool doneSuid = false;
 #if _SQUID_LINUX_ && defined(IP_TRANSPARENT) // Linux
 # define soLevel SOL_IP
 # define soFlag  IP_TRANSPARENT
+    bool doneSuid = false;
 
 #elif defined(SO_BINDANY) // OpenBSD 4.7+ and NetBSD with PF
 # define soLevel SOL_SOCKET
 # define soFlag  SO_BINDANY
     enter_suid();
-    doneSuid = true;
+    bool doneSuid = true;
 
 #elif defined(IP_BINDANY) // FreeBSD with IPFW
 # define soLevel IPPROTO_IP
 # define soFlag  IP_BINDANY
     enter_suid();
-    doneSuid = true;
+    bool doneSuid = true;
 
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(TPROXY) not supported on this platform");
