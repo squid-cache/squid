@@ -145,6 +145,7 @@ public:
 #if USE_SSL
         AnyP::PortCfg *https;
 #endif
+        AnyP::PortCfg *ftp;
     } Sockaddr;
 #if SQUID_SNMP
 

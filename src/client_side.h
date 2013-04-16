@@ -138,6 +138,7 @@ public:
     void buildRangeHeader(HttpReply * rep);
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
+    ConnStateData *getConn() const;
     void connIsFinished();
     void removeFromConnectionList(ConnStateData * conn);
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
@@ -194,7 +195,7 @@ class ConnStateData : public BodyProducer, public HttpControlMsgSink
 
 public:
 
-    ConnStateData();
+    ConnStateData(const char *protocol);
     ~ConnStateData();
 
     void readSomeData();
@@ -331,6 +332,22 @@ public:
     /// the client-side-detected error response instead of getting stuck.
     void quitAfterError(HttpRequest *request); // meant to be private
 
+    const bool isFtp;
+    enum FtpState {
+        FTP_BEGIN,
+        FTP_CONNECTED,
+        FTP_HANDLE_PASV,
+        FTP_HANDLE_DATA_REQUEST,
+        FTP_ERROR
+    };
+    struct {
+        String uri;
+        FtpState state;
+        Comm::ConnectionPointer dataListenConn;
+        Comm::ConnectionPointer dataConn;
+        Ip::Address serverDataAddr;
+    } ftp;
+
 #if USE_SSL
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
@@ -418,7 +435,7 @@ const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *e
 int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
 void clientOpenListenSockets(void);
-void clientHttpConnectionsClose(void);
+void clientConnectionsClose(void);
 void httpRequestFree(void *);
 
 #endif /* SQUID_CLIENTSIDE_H */

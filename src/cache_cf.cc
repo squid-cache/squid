@@ -3791,6 +3791,8 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         protocol = "http";
     else if (strcmp(optionName, "https_port") == 0)
         protocol = "https";
+    else if (strcmp(optionName, "ftp_port") == 0)
+        protocol = "ftp";
     if (!protocol) {
         self_destruct();
         return;
@@ -3821,6 +3823,12 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         }
         if (hijacked && !s->flags.tunnelSslBumping) {
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
+            self_destruct();
+        }
+    } else if (strcmp(protocol, "ftp") == 0) {
+        /* ftp_port does not support ssl-bump */
+        if (s->flags.tunnelSslBumping) {
+            debugs(3, DBG_CRITICAL, "FATAL: ssl-bump is not supported for ftp_port.");
             self_destruct();
         }
     }

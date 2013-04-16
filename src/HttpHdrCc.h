@@ -75,7 +75,7 @@ public:
     //manipulation for Cache-Control: private header
     bool hasPrivate() const {return isSet(CC_PRIVATE);}
     const String &Private() const {return private_;}
-    void Private(String &v) {
+    void Private(const String &v = "") {
         setMask(CC_PRIVATE,true);
         // uses append for multi-line headers
         if (private_.defined())

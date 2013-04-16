@@ -219,6 +219,7 @@ static IOACB httpAccept;
 #if USE_SSL
 static IOACB httpsAccept;
 #endif
+static IOACB ftpAccept;
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
@@ -248,6 +249,37 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 
 static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port);
 
+static IOACB FtpAcceptDataConnection;
+static void FtpCloseDataConnection(ConnStateData *conn);
+static void FtpWriteGreeting(ConnStateData *conn);
+static ClientSocketContext *FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::ProtocolVersion *http_ver);
+
+static void FtpHandleReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data);
+typedef void FtpReplyHandler(ClientSocketContext *context, const HttpReply *reply);
+static FtpReplyHandler FtpHandlePasvReply;
+static FtpReplyHandler FtpHandleErrorReply;
+
+static void FtpHandleReplyData(ClientSocketContext *context, StoreIOBuffer data);
+static IOCB FtpWroteReplyData;
+
+static void FtpWriteEarlyReply(ConnStateData *conn, const int code, const char *msg);
+static void FtpWriteReply(ClientSocketContext *context, MemBuf &mb);
+static void FtpWriteCustomReply(ClientSocketContext *context, const int code, const char *msg, const HttpReply *reply = NULL);
+static void FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply);
+static void FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, AsyncCall::Pointer call);
+static void FtpPrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix = "");
+static IOCB FtpWroteEarlyReply;
+static IOCB FtpWroteReply;
+
+typedef bool FtpRequestHandler(ConnStateData *connState, String &cmd, String &params);
+static FtpRequestHandler FtpHandleRequest;
+static FtpRequestHandler FtpHandleUserRequest;
+static FtpRequestHandler FtpHandlePasvRequest;
+static FtpRequestHandler FtpHandlePortRequest;
+static FtpRequestHandler FtpHandleDataRequest;
+
+static bool FtpCheckDataConnection(ConnStateData *connState);
+
 clientStreamNode *
 ClientSocketContext::getTail() const
 {
@@ -261,6 +293,12 @@ clientStreamNode *
 ClientSocketContext::getClientReplyContext() const
 {
     return (clientStreamNode *)http->client_stream.tail->prev->data;
+}
+
+ConnStateData *
+ClientSocketContext::getConn() const
+{
+    return http->getConn();
 }
 
 /**
@@ -384,22 +422,28 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
     const HttpReply::Pointer rep(msg.reply);
     Must(rep != NULL);
 
+    // remember the callback
+    cbControlMsgSent = msg.cbSuccess;
+
+    AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
+                                         CommIoCbPtrFun(&WroteControlMsg, this));
+
+    if (http->flags.ftp) {
+        FtpWriteForwardedReply(this, rep.getRaw(), call);
+        return;
+    }
+
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
     rep->header.putStr(HDR_CONNECTION, "keep-alive");
     httpHdrMangleList(&rep->header, http->request, ROR_REPLY);
 
-    // remember the callback
-    cbControlMsgSent = msg.cbSuccess;
-
     MemBuf *mb = rep->pack();
 
     debugs(11, 2, "HTTP Client " << clientConnection);
     debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
 
-    AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
-                                         CommIoCbPtrFun(&WroteControlMsg, this));
     Comm::Write(clientConnection, mb, call);
 
     delete mb;
@@ -833,6 +877,8 @@ ConnStateData::~ConnStateData()
 {
     assert(this != NULL);
     debugs(33, 3, HERE << clientConnection);
+
+    FtpCloseDataConnection(this);
 
     if (isOpen())
         debugs(33, DBG_IMPORTANT, "BUG: ConnStateData did not close " << clientConnection);
@@ -1442,6 +1488,7 @@ static void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
+    debugs(33,7, HERE << "rep->content_length=" << (rep ? rep->content_length : -2) << " receivedData.length=" << receivedData.length);
     /* Test preconditions */
     assert(node != NULL);
     PROF_start(clientSocketRecipient);
@@ -1460,6 +1507,13 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     if (context != http->getConn()->getCurrentContext()) {
         context->deferRecipientForLater(node, rep, receivedData);
+        PROF_stop(clientSocketRecipient);
+        return;
+    }
+
+    if (http->getConn()->isFtp) {
+        assert(context->http == http);
+        FtpHandleReply(context.getRaw(), rep, receivedData);
         PROF_stop(clientSocketRecipient);
         return;
     }
@@ -2623,6 +2677,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
+    if (conn->isFtp) {
+        assert(http->request);
+        request = http->request;
+    } else
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
@@ -2660,7 +2718,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     /* compile headers */
     /* we should skip request line! */
     /* XXX should actually know the damned buffer size here */
-    if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
+    if (!conn->isFtp && http_ver.major >= 1 &&
+        !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
         conn->quitAfterError(request.getRaw());
@@ -2781,8 +2840,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         }
     }
 
-    http->request = request.getRaw();
-    HTTPMSGLOCK(http->request);
+    if (!conn->isFtp) {
+        http->request = request.getRaw();
+        HTTPMSGLOCK(http->request);
+    }
     clientSetKeepaliveFlag(http);
 
     // Let tunneling code be fully responsible for CONNECT requests
@@ -2867,7 +2928,8 @@ connStripBufferWhitespace (ConnStateData * conn)
 static int
 connOkToAddRequest(ConnStateData * conn)
 {
-    int result = conn->getConcurrentRequestCount() < (Config.onoff.pipeline_prefetch ? 2 : 1);
+    const int limit = !conn->isFtp && Config.onoff.pipeline_prefetch ? 2 : 1;
+    const int result = conn->getConcurrentRequestCount() < limit;
 
     if (!result) {
         debugs(33, 3, HERE << conn->clientConnection << " max concurrent requests reached");
@@ -2908,14 +2970,18 @@ ConnStateData::clientParseRequests()
         /* Terminate the string */
         in.buf[in.notYetUsed] = '\0';
 
-        /* Begin the parsing */
-        PROF_start(parseHttpRequest);
-        HttpParserInit(&parser_, in.buf, in.notYetUsed);
-
-        /* Process request */
         Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseHttpRequest(this, &parser_, &method, &http_ver);
-        PROF_stop(parseHttpRequest);
+        ClientSocketContext *context = NULL;
+        if (!isFtp) {
+            /* Begin the parsing */
+            PROF_start(parseHttpRequest);
+            HttpParserInit(&parser_, in.buf, in.notYetUsed);
+
+            /* Process request */
+            context = parseHttpRequest(this, &parser_, &method, &http_ver);
+            PROF_stop(parseHttpRequest);
+        } else
+            context = FtpParseRequest(this, &method, &http_ver);
 
         /* partial or incomplete request */
         if (!context) {
@@ -3063,7 +3129,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
 /**
  * called when new request body data has been buffered in in.buf
  * may close the connection if we were closing and piped everything out
- *
+e *
  * \retval false called comm_close or setReplyToError (the caller should bail)
  * \retval true  we did not call comm_close or setReplyToError
  */
@@ -3296,7 +3362,7 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
 ConnStateData *
 connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
 {
-    ConnStateData *result = new ConnStateData;
+    ConnStateData *result = new ConnStateData(port->protocol);
 
     result->clientConnection = client;
     result->log_addr = client->remote;
@@ -3349,7 +3415,9 @@ connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
 
     clientdbEstablished(client->remote, 1);
 
-    result->flags.readMore = true;
+    if (!result->isFtp)
+        result->flags.readMore = true;
+
     return result;
 }
 
@@ -3703,6 +3771,33 @@ httpsAccept(const CommAcceptCbParams &params)
         SSL_CTX *sslContext = s->staticSslContext.get();
         httpsEstablish(connState, sslContext, Ssl::bumpNone);
     }
+}
+
+/** handle a new FTP connection */
+static void
+ftpAccept(const CommAcceptCbParams &params)
+{
+    AnyP::PortCfg *s = static_cast<AnyP::PortCfg *>(params.data);
+
+    if (params.flag != COMM_OK) {
+        // Its possible the call was still queued when the client disconnected
+        debugs(33, 2, "ftpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        return;
+    }
+
+    debugs(33, 4, HERE << params.conn << ": accepted");
+    fd_note(params.conn->fd, "client ftp connect");
+
+    if (s->tcp_keepalive.enabled) {
+        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+    }
+
+    ++incoming_sockets_accepted;
+
+    // Socket is ready, setup the connection manager to start using it
+    ConnStateData *connState = connStateCreate(params.conn, s);
+
+    FtpWriteGreeting(connState);
 }
 
 void
@@ -4129,6 +4224,38 @@ clientHttpsConnectionsOpen(void)
 }
 #endif
 
+static void
+clientFtpConnectionsOpen(void)
+{
+    AnyP::PortCfg *s;
+
+    for (s = Config.Sockaddr.ftp; s; s = s->next) {
+        if (MAXTCPLISTENPORTS == NHttpSockets) {
+            debugs(1, DBG_IMPORTANT, "Ignoring 'ftp_port' lines exceeding the limit.");
+            debugs(1, DBG_IMPORTANT, "The limit is " << MAXTCPLISTENPORTS << " FTP ports.");
+            continue;
+        }
+
+        // Fill out a Comm::Connection which IPC will open as a listener for us
+        s->listenConn = new Comm::Connection;
+        s->listenConn->local = s->s;
+        s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
+                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0);
+
+        // setup the subscriptions such that new connections accepted by listenConn are handled by FTP
+        typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+        RefCount<AcceptCall> subCall = commCbCall(5, 5, "ftpAccept", CommAcceptCbPtrFun(ftpAccept, s));
+        Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+
+        AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
+                                        ListeningStartedDialer(&clientListenerConnectionOpened,
+                                                               s, Ipc::fdnFtpSocket, sub));
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnFtpSocket, listenCall);
+        HttpSockets[NHttpSockets] = -1;
+        ++NHttpSockets;
+    }
+}
+
 /// process clientHttpConnectionsOpen result
 static void
 clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub)
@@ -4160,13 +4287,14 @@ clientOpenListenSockets(void)
 #if USE_SSL
     clientHttpsConnectionsOpen();
 #endif
+    clientFtpConnectionsOpen();
 
     if (NHttpSockets < 1)
-        fatal("No HTTP or HTTPS ports configured");
+        fatal("No HTTP, HTTPS or FTP ports configured");
 }
 
 void
-clientHttpConnectionsClose(void)
+clientConnectionsClose(void)
 {
     for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
         if (s->listenConn != NULL) {
@@ -4185,6 +4313,14 @@ clientHttpConnectionsClose(void)
         }
     }
 #endif
+
+    for (AnyP::PortCfg *s = Config.Sockaddr.ftp; s; s = s->next) {
+        if (s->listenConn != NULL) {
+            debugs(1, DBG_IMPORTANT, "Closing FTP port " << s->listenConn->local);
+            s->listenConn->close();
+            s->listenConn = NULL;
+        }
+    }
 
     // TODO see if we can drop HttpSockets array entirely */
     for (int i = 0; i < NHttpSockets; ++i) {
@@ -4274,8 +4410,9 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 
 CBDATA_CLASS_INIT(ConnStateData);
 
-ConnStateData::ConnStateData() :
+ConnStateData::ConnStateData(const char *protocol) :
         AsyncJob("ConnStateData"),
+        isFtp(strcmp(protocol, "ftp") == 0),
 #if USE_SSL
         sslBumpMode(Ssl::bumpEnd),
         switchedToHttps_(false),
@@ -4453,6 +4590,14 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
         debugs(33, 3, "Closing client connection on pinned zero reply.");
         clientConnection->close();
     }
+    if (isFtp) {
+        // XXX
+        /*
+        debugs(33, 5, HERE << "FTP server connection closed, closing client "
+               "connection.");
+        clientConnection->close();
+        */
+    }
 }
 
 void
@@ -4554,4 +4699,578 @@ ConnStateData::unpinConnection()
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */
+}
+
+
+static void
+FtpAcceptDataConnection(const CommAcceptCbParams &params)
+{
+    ConnStateData *connState = static_cast<ConnStateData *>(params.data);
+
+    if (params.flag != COMM_OK) {
+        // Its possible the call was still queued when the client disconnected
+        debugs(33, 2, HERE << connState->ftp.dataListenConn << ": accept "
+               "failure: " << xstrerr(params.xerrno));
+        return;
+    }
+
+    debugs(33, 4, HERE << params.conn << ": accepted");
+    fd_note(params.conn->fd, "client ftp data connect");
+    ++incoming_sockets_accepted;
+
+    FtpCloseDataConnection(connState);
+    connState->ftp.dataConn = params.conn;
+}
+
+static void
+FtpCloseDataConnection(ConnStateData *conn)
+{
+    if (Comm::IsConnOpen(conn->ftp.dataListenConn)) {
+        debugs(33, 5, HERE << "FTP closing client data listen socket: " <<
+               *conn->ftp.dataListenConn);
+        conn->ftp.dataListenConn->close();
+    }
+    conn->ftp.dataListenConn = NULL;
+
+    if (Comm::IsConnOpen(conn->ftp.dataConn)) {
+        debugs(33, 5, HERE << "FTP closing client data connection: " <<
+               *conn->ftp.dataConn);
+        conn->ftp.dataConn->close();
+    }
+    conn->ftp.dataConn = NULL;
+}
+
+static void
+FtpWriteGreeting(ConnStateData *conn)
+{
+    MemBuf mb;
+    const String msg = "220 Service ready\r\n";
+    mb.init(msg.size(), msg.size());
+    mb.append(msg.rawBuf(), msg.size());
+
+    AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteEarlyReply",
+        CommIoCbPtrFun(&FtpWroteEarlyReply, conn));
+    Comm::Write(conn->clientConnection, &mb, call);
+}
+
+static void
+FtpWriteEarlyReply(ConnStateData *connState, const int code, const char *msg)
+{
+    debugs(33, 7, HERE << code << ' ' << msg);
+    assert(99 < code && code < 1000);
+
+    MemBuf mb;
+    mb.init();
+    mb.Printf("%i %s\r\n", code, msg);
+
+    AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteEarlyReply",
+        CommIoCbPtrFun(&FtpWroteEarlyReply, connState));
+    Comm::Write(connState->clientConnection, &mb, call);
+
+    connState->flags.readMore = false;
+}
+
+static void
+FtpWriteReply(ClientSocketContext *context, MemBuf &mb)
+{
+    AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteReply",
+        CommIoCbPtrFun(&FtpWroteReply, context));
+    Comm::Write(context->clientConnection, &mb, call);
+}
+
+static void
+FtpWriteCustomReply(ClientSocketContext *context, const int code, const char *msg, const HttpReply *reply)
+{
+    debugs(33, 7, HERE << code << ' ' << msg);
+    assert(99 < code && code < 1000);
+
+    const bool sendDetails = reply != NULL &&
+        reply->header.has(HDR_FTP_STATUS) && reply->header.has(HDR_FTP_REASON);
+
+    MemBuf mb;
+    mb.init();
+    if (sendDetails) {
+        mb.Printf("%i-%s\r\n", code, msg);
+        mb.Printf(" Server reply:\r\n");
+        FtpPrintReply(mb, reply, " ");
+        mb.Printf("%i \r\n", code);
+    } else
+        mb.Printf("%i %s\r\n", code, msg);
+
+    FtpWriteReply(context, mb);
+}
+
+/** Parse an FTP request
+ *
+ *  \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
+ *          to 1 if the request was correctly parsed.
+ *  \param[in] connState a ConnStateData. The caller must make sure it is not null
+ *  \param[out] mehtod_p will be set as a side-effect of the parsing.
+ *          Pointed-to value will be set to Http::METHOD_NONE in case of
+ *          parsing failure
+ *  \param[out] http_ver will be set as a side-effect of the parsing
+ *  \return NULL on incomplete requests,
+ *          a ClientSocketContext structure on success or failure.
+ */
+static ClientSocketContext *
+FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::ProtocolVersion *http_ver)
+{
+    *method_p = Http::METHOD_GET;
+    *http_ver = Http::ProtocolVersion(1, 1);
+
+    const char *const eor =
+        static_cast<const char *>(memchr(connState->in.buf, '\n',
+            min(connState->in.notYetUsed, Config.maxRequestHeaderSize)));
+
+    if (eor == NULL && connState->in.notYetUsed >= Config.maxRequestHeaderSize) {
+        connState->ftp.state = ConnStateData::FTP_ERROR;
+        FtpWriteEarlyReply(connState, 421, "Too large request");
+        return NULL;
+    }
+
+    if (eor == NULL) {
+        debugs(33, 5, HERE << "Incomplete request, waiting for end of request");
+        return NULL;
+    }
+
+    // skip leading whitespaces
+    const char *boc = connState->in.buf;
+    while (boc < eor && isspace(*boc)) ++boc;
+    if (boc >= eor) {
+        debugs(33, 5, HERE << "Empty request, ignoring");
+        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
+        return NULL;
+    }
+
+    const char *eoc = boc;
+    while (eoc < eor && !isspace(*eoc)) ++eoc;
+    connState->in.buf[eoc - connState->in.buf] = '\0';
+
+    const char *bop = eoc + 1;
+    while (bop < eor && isspace(*bop)) ++bop;
+    if (bop < eor) {
+        const char *eop = eor - 1;
+        while (isspace(*eop)) --eop;
+        assert(eop >= bop);
+        connState->in.buf[eop + 1 - connState->in.buf] = '\0';
+    } else
+        bop = NULL;
+
+    debugs(33, 7, HERE << "Parsed FTP command " << boc << " with " <<
+           (bop == NULL ? "no " : "") << "parameters" <<
+           (bop != NULL ? ": " : "") << bop);
+
+    String cmd = boc;
+    String params = bop;
+
+    // the first command must be USER
+    if (connState->ftp.uri.size() == 0 && cmd.caseCmp("USER") != 0) {
+        debugs(33, 5, HERE << "Unexpected FTP command: expected USER, got " <<
+               boc);
+        FtpWriteEarlyReply(connState, 530, "Must login first");
+        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
+        return NULL;
+    }
+
+    if (!FtpHandleRequest(connState, cmd, params)) {
+        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
+        return NULL;
+    }
+
+    char *uri = xstrdup(connState->ftp.uri.termedBuf());
+    HttpRequest *const request =
+        HttpRequest::CreateFromUrlAndMethod(uri, *method_p);
+    if (request == NULL) {
+        debugs(33, 5, HERE << "Invalid FTP URL: " << connState->ftp.uri);
+        FtpWriteEarlyReply(connState, 501, "Invalid host");
+        connState->ftp.uri.clean();
+        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
+        safe_free(uri);
+        return NULL;
+    }
+
+    request->header.putStr(HDR_FTP_COMMAND, cmd.termedBuf());
+    if (params.size() > 0)
+        request->header.putStr(HDR_FTP_ARGUMENTS, params.termedBuf());
+
+    ClientHttpRequest *const http = new ClientHttpRequest(connState);
+    http->request = request;
+    HTTPMSGLOCK(http->request);
+    http->req_sz = eor - connState->in.buf + 1;
+    http->flags.ftp = true;
+    http->uri = xstrdup(connState->ftp.uri.termedBuf());
+
+    ClientSocketContext *const result =
+        ClientSocketContextNew(connState->clientConnection, http);
+
+    StoreIOBuffer tempBuffer;
+    tempBuffer.data = result->reqbuf;
+    tempBuffer.length = HTTP_REQBUF_SZ;
+
+    ClientStreamData newServer = new clientReplyContext(http);
+    ClientStreamData newClient = result;
+    clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
+                     clientReplyStatus, newServer, clientSocketRecipient,
+                     clientSocketDetach, newClient, tempBuffer);
+
+    result->flags.parsed_ok = 1;
+    connState->flags.readMore = false;
+    return result;
+}
+
+static void
+FtpHandleReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
+{
+    if (reply == NULL || reply->content_length == -1) {
+        FtpHandleReplyData(context, data);
+        return;
+    }
+
+    assert(reply != NULL);
+    assert(reply->content_length == 0);
+    assert(context->startOfOutput());
+
+    const ConnStateData::FtpState state = context->getConn()->ftp.state;
+    assert(state != ConnStateData::FTP_BEGIN);
+
+    static FtpReplyHandler *handlers[] = {
+        NULL, // FTP_BEGIN
+        NULL, // FTP_CONNECTED
+        FtpHandlePasvReply, // FTP_HANDLE_PASV
+        NULL, // FTP_HANDLE_DATA_REQUEST
+        FtpHandleErrorReply // FTP_ERROR
+    };
+    FtpReplyHandler *const handler = handlers[state];
+    if (handler)
+        (*handler)(context, reply);
+    else
+        FtpWriteForwardedReply(context, reply);
+}
+
+static void
+FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply)
+{
+    if (context->http->request->errType != ERR_NONE) {
+        FtpWriteCustomReply(context, 502, "Server does not support PASV", reply);
+        return;
+    }
+
+    FtpCloseDataConnection(context->getConn());
+
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    conn->flags = COMM_NONBLOCKING;
+    conn->local = context->clientConnection->local;
+    conn->local.SetPort(0);
+    ConnStateData *const connState = context->getConn();
+    const char *const note = connState->ftp.uri.termedBuf();
+    comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
+    if (!Comm::IsConnOpen(conn)) {
+            debugs(5, DBG_CRITICAL, HERE << "comm_open_listener failed:" <<
+                   conn->local << " error: " << errno);
+            FtpWriteCustomReply(context, 451, "Internal error");
+            return;
+    }
+
+    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+    RefCount<AcceptCall> subCall = commCbCall(5, 5, "FtpAcceptDataConnection",
+        CommAcceptCbPtrFun(FtpAcceptDataConnection, connState));
+    Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
+
+    connState->ftp.dataListenConn = conn;
+
+    char addr[MAX_IPSTRLEN];
+    conn->local.NtoA(addr, MAX_IPSTRLEN, AF_INET);
+    addr[MAX_IPSTRLEN - 1] = '\0';
+    for (char *c = addr; *c != '\0'; ++c) {
+        if (*c == '.')
+            *c = ',';
+    }
+
+    const unsigned short port = comm_local_port(conn->fd);
+    conn->local.SetPort(port);
+
+    MemBuf mb;
+    mb.init();
+    mb.Printf("227 =%s,%i,%i\r\n", addr, static_cast<int>(port >> 8),
+              static_cast<int>(port % 256));
+
+    FtpWriteReply(context, mb);
+}
+
+static void
+FtpHandleErrorReply(ClientSocketContext *context, const HttpReply *reply)
+{
+    int code;
+    ConnStateData *const connState = context->getConn();
+    if (!connState->pinning.pinned) { // we failed to connect to server
+        connState->ftp.uri.clean();
+        code = 530;
+    } else
+        code = 421;
+    const char *const msg = err_type_str[context->http->request->errType];
+    FtpWriteCustomReply(context, code, msg, reply);
+}
+
+static void
+FtpHandleReplyData(ClientSocketContext *context, StoreIOBuffer data)
+{
+    debugs(33, 7, HERE << data.length);
+
+    ConnStateData *const conn = context->getConn();
+
+    if (data.length <= 0) {
+        FtpWroteReplyData(conn->clientConnection, NULL, 0, COMM_OK, 0, context);
+        return;
+    }
+
+    if (!Comm::IsConnOpen(conn->ftp.dataConn)) {
+        debugs(33, 3, HERE << "got FTP reply data when client data connection "
+               "is closed, ignoring");
+        return;
+    }
+
+    MemBuf mb;
+    mb.init(data.length, data.length);
+    mb.append(data.data, data.length);
+
+    AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteReplyData",
+        CommIoCbPtrFun(&FtpWroteReplyData, context));
+    Comm::Write(conn->ftp.dataConn, &mb, call);
+
+    context->noteSentBodyBytes(data.length);
+}
+
+static void
+FtpWroteReplyData(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+{
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+
+    ClientSocketContext *const context = static_cast<ClientSocketContext*>(data);
+    ConnStateData *const connState = context->getConn();
+
+    if (errflag != COMM_OK) {
+        debugs(33, 3, HERE << "FTP reply data writing failed: " <<
+               xstrerr(xerrno));
+        FtpCloseDataConnection(connState);
+        FtpWriteCustomReply(context, 426, "Data connection error; transfer aborted");
+        return;
+    }
+
+    switch (context->socketState()) {
+    case STREAM_NONE:
+        context->pullData();
+        return;
+    case STREAM_COMPLETE:
+        debugs(33, 3, HERE << "FTP reply data transfer successfully complete");
+        FtpWriteCustomReply(context, 226, "Transfer complete");
+        break;
+    case STREAM_UNPLANNED_COMPLETE:
+        debugs(33, 3, HERE << "FTP reply data transfer failed: STREAM_UNPLANNED_COMPLETE");
+        FtpWriteCustomReply(context, 451, "Server error; transfer aborted");
+        break;
+    case STREAM_FAILED:
+        debugs(33, 3, HERE << "FTP reply data transfer failed: STREAM_FAILED");
+        FtpWriteCustomReply(context, 451, "Server error; transfer aborted");
+        break;
+    default:
+        fatal("unreachable code");
+    }
+
+    FtpCloseDataConnection(connState);
+}
+
+static void
+FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply)
+{
+    const AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteReply",
+        CommIoCbPtrFun(&FtpWroteReply, context));
+    FtpWriteForwardedReply(context, reply, call);
+}
+
+static void
+FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, AsyncCall::Pointer call)
+{
+    assert(reply != NULL);
+    const HttpHeader &header = reply->header;
+    assert(header.has(HDR_FTP_STATUS));
+    assert(header.has(HDR_FTP_REASON));
+
+    const int status = header.getInt(HDR_FTP_STATUS);
+    debugs(33, 7, HERE << "status: " << status);
+
+    MemBuf mb;
+    mb.init();
+    FtpPrintReply(mb, reply);
+
+    Comm::Write(context->clientConnection, &mb, call);
+}
+
+static void
+FtpPrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix)
+{
+    const HttpHeader &header = reply->header;
+
+    char status[4];
+    if (header.has(HDR_FTP_STATUS))
+        snprintf(status, sizeof(status), "%i", header.getInt(HDR_FTP_STATUS));
+    else
+        status[0] = '\0';
+
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    const HttpHeaderEntry *e = header.getEntry(&pos);
+    while (e) {
+        const HttpHeaderEntry *const next = header.getEntry(&pos);
+        if (e->id == HDR_FTP_REASON) {
+            const bool isLastLine = next == NULL || next->id != HDR_FTP_REASON;
+            const int separator = status[0] == '\0' || isLastLine ? ' ' : '-';
+            mb.Printf("%s%s%c%s\r\n", prefix, status, separator,
+                      e->value.termedBuf());
+        }
+        e = next;
+    }
+}
+
+static void
+FtpWroteEarlyReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+{
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+
+    if (errflag != COMM_OK) {
+        debugs(33, 3, HERE << "FTP reply writing failed: " << xstrerr(xerrno));
+        conn->close();
+        return;
+    }
+
+    ConnStateData *const connState = static_cast<ConnStateData*>(data);
+    connState->flags.readMore = true;
+    connState->readSomeData();
+}
+
+static void
+FtpWroteReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+{
+    if (errflag == COMM_ERR_CLOSING)
+        return;
+
+    if (errflag != COMM_OK) {
+        debugs(33, 3, HERE << "FTP reply writing failed: " <<
+               xstrerr(xerrno));
+        conn->close();
+        return;
+    }
+
+    ClientSocketContext *const context =
+        static_cast<ClientSocketContext*>(data);
+    ConnStateData *const connState = context->getConn();
+
+    if (connState->ftp.state == ConnStateData::FTP_ERROR) {
+        conn->close();
+        return;
+    }
+
+    assert(context->socketState() == STREAM_COMPLETE);
+    connState->flags.readMore = true;
+    connState->ftp.state = ConnStateData::FTP_CONNECTED;
+    context->keepaliveNextRequest();
+}
+
+bool
+FtpHandleRequest(ConnStateData *connState, String &cmd, String &params) {
+    static std::pair<const char *, FtpRequestHandler *> handlers[] = {
+        std::make_pair("PASV", FtpHandlePasvRequest),
+        std::make_pair("PORT", FtpHandlePortRequest),
+        std::make_pair("RETR", FtpHandleDataRequest),
+        std::make_pair("LIST", FtpHandleDataRequest),
+        std::make_pair("NLST", FtpHandleDataRequest),
+        std::make_pair("USER", FtpHandleUserRequest)
+    };
+
+    FtpRequestHandler *handler = NULL;
+    for (size_t i = 0; i < sizeof(handlers) / sizeof(*handlers); ++i) {
+        if (cmd.caseCmp(handlers[i].first) == 0) {
+            handler = handlers[i].second;
+            break;
+        }
+    }
+
+    return handler != NULL ? (*handler)(connState, cmd, params) : true;
+}
+
+bool
+FtpHandleUserRequest(ConnStateData *connState, String &cmd, String &params)
+{
+    if (params.size() == 0) {
+        FtpWriteEarlyReply(connState, 501, "Missing username");
+        return false;
+    }
+
+    const String::size_type eou = params.find('@');
+    if (eou == String::npos || eou + 1 >= params.size()) {
+        FtpWriteEarlyReply(connState, 501, "Missing host");
+        return false;
+    }
+
+    static const String scheme = "ftp://";
+    const String host = params.substr(eou + 1, params.size());
+    String uri = scheme;
+    uri.append(host);
+    uri.append("/");
+
+    if (connState->ftp.uri.size() == 0)
+        connState->ftp.uri = uri;
+    else if (uri.caseCmp(connState->ftp.uri) != 0) {
+        FtpWriteEarlyReply(connState, 501, "Cannot change host");
+        return false;
+    }
+
+    params.cut(eou);
+
+    return true;
+}
+
+bool
+FtpHandlePasvRequest(ConnStateData *connState, String &cmd, String &params)
+{
+    if (params.size() > 0) {
+        FtpWriteEarlyReply(connState, 501, "Unexpected parameter");
+        return false;
+    }
+
+    connState->ftp.state = ConnStateData::FTP_HANDLE_PASV;
+
+    return true;
+}
+
+bool
+FtpHandlePortRequest(ConnStateData *connState, String &cmd, String &params)
+{
+    FtpWriteEarlyReply(connState, 502, "Command not supported");
+    return false;
+}
+
+bool
+FtpHandleDataRequest(ConnStateData *connState, String &cmd, String &params)
+{
+    if (!FtpCheckDataConnection(connState))
+        return false;
+
+    connState->ftp.state = ConnStateData::FTP_HANDLE_DATA_REQUEST;
+
+    return true;
+}
+
+bool
+FtpCheckDataConnection(ConnStateData *connState)
+{
+    if (Comm::IsConnOpen(connState->ftp.dataConn))
+        return true;
+
+    if (!Comm::IsConnOpen(connState->ftp.dataListenConn))
+        FtpWriteEarlyReply(connState, 425, "Use PASV first");
+    else
+        FtpWriteEarlyReply(connState, 425, "Data connection is not established");
+    return false;
 }
