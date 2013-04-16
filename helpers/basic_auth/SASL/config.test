@@ -1,8 +1,8 @@
 #!/bin/sh
-if [ -f /usr/include/sasl.h ]; then
+if [ -f /usr/include/sasl.h -o -f /usr/local/include/sasl.h ]; then
 	exit 0
 fi
-if [ -f /usr/include/sasl/sasl.h ]; then
+if [ -f /usr/include/sasl/sasl.h -o -f /usr/local/include/sasl/sasl.h ]; then
 	exit 0
 fi
 exit 1
