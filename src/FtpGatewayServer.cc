@@ -161,7 +161,8 @@ ServerStateData::processReplyBody()
 
 #endif
 
-    if (const int csize = data.readBuf->contentSize()) {
+    if (data.readBuf != NULL && data.readBuf->hasContent()) {
+        const mb_size_t csize = data.readBuf->contentSize();
         debugs(9, 5, HERE << "writing " << csize << " bytes to the reply");
         addVirginReplyBody(data.readBuf->content(), csize);
         data.readBuf->consume(csize);
