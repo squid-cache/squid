@@ -254,13 +254,11 @@ static void FtpCloseDataConnection(ConnStateData *conn);
 static void FtpWriteGreeting(ConnStateData *conn);
 static ClientSocketContext *FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::ProtocolVersion *http_ver);
 
-static void FtpHandleReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data);
-typedef void FtpReplyHandler(ClientSocketContext *context, const HttpReply *reply);
+static void FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data);
+typedef void FtpReplyHandler(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data);
 static FtpReplyHandler FtpHandlePasvReply;
 static FtpReplyHandler FtpHandleErrorReply;
-
-static void FtpHandleReplyData(ClientSocketContext *context, StoreIOBuffer data);
-static IOCB FtpWroteReplyData;
+static FtpReplyHandler FtpHandleDataReply;
 
 static void FtpWriteEarlyReply(ConnStateData *conn, const int code, const char *msg);
 static void FtpWriteReply(ClientSocketContext *context, MemBuf &mb);
@@ -270,6 +268,7 @@ static void FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply
 static void FtpPrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix = "");
 static IOCB FtpWroteEarlyReply;
 static IOCB FtpWroteReply;
+static IOCB FtpWroteReplyData;
 
 typedef bool FtpRequestHandler(ConnStateData *connState, String &cmd, String &params);
 static FtpRequestHandler FtpHandleRequest;
@@ -4918,36 +4917,33 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
 }
 
 static void
-FtpHandleReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
+FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data)
 {
-    if (reply == NULL || reply->content_length == -1) {
-        FtpHandleReplyData(context, data);
-        return;
+    if (reply != NULL) {
+        MemBuf *const mb = reply->pack();
+        debugs(11, 2, "FTP Client " << context->clientConnection);
+        debugs(11, 2, "FTP Client REPLY:\n---------\n" << mb->buf <<
+               "\n----------");
+        delete mb;
     }
-
-    assert(reply != NULL);
-    assert(reply->content_length == 0);
-    assert(context->startOfOutput());
-
-    const ConnStateData::FtpState state = context->getConn()->ftp.state;
-    assert(state != ConnStateData::FTP_BEGIN);
 
     static FtpReplyHandler *handlers[] = {
         NULL, // FTP_BEGIN
         NULL, // FTP_CONNECTED
         FtpHandlePasvReply, // FTP_HANDLE_PASV
-        NULL, // FTP_HANDLE_DATA_REQUEST
+        FtpHandleDataReply, // FTP_HANDLE_DATA_REQUEST
         FtpHandleErrorReply // FTP_ERROR
     };
+    const ConnStateData::FtpState state = context->getConn()->ftp.state;
     FtpReplyHandler *const handler = handlers[state];
     if (handler)
-        (*handler)(context, reply);
+        (*handler)(context, reply, data);
     else
         FtpWriteForwardedReply(context, reply);
 }
 
 static void
-FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply)
+FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
     if (context->http->request->errType != ERR_NONE) {
         FtpWriteCustomReply(context, 502, "Server does not support PASV", reply);
@@ -4998,7 +4994,7 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply)
 }
 
 static void
-FtpHandleErrorReply(ClientSocketContext *context, const HttpReply *reply)
+FtpHandleErrorReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
     int code;
     ConnStateData *const connState = context->getConn();
@@ -5012,8 +5008,13 @@ FtpHandleErrorReply(ClientSocketContext *context, const HttpReply *reply)
 }
 
 static void
-FtpHandleReplyData(ClientSocketContext *context, StoreIOBuffer data)
+FtpHandleDataReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
+    if (reply != NULL && reply->sline.status() != Http::scOkay) {
+        FtpWriteForwardedReply(context, reply);
+        return;
+    }
+
     debugs(33, 7, HERE << data.length);
 
     ConnStateData *const conn = context->getConn();
@@ -5093,7 +5094,14 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
 {
     assert(reply != NULL);
     const HttpHeader &header = reply->header;
-    assert(header.has(HDR_FTP_STATUS));
+
+    if (!header.has(HDR_FTP_STATUS)) {
+        // Reply without FTP-Status header may come from ICAP or ACL.
+        context->getConn()->ftp.state = ConnStateData::FTP_ERROR;
+        FtpWriteCustomReply(context, 421, reply->sline.reason());
+        return;
+    }
+
     assert(header.has(HDR_FTP_REASON));
 
     const int status = header.getInt(HDR_FTP_STATUS);
