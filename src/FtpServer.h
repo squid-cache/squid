@@ -86,6 +86,7 @@ public:
 protected:
     virtual void start();
 
+    void initReadBuf();
     virtual void closeServer();
     virtual bool doneWithServer() const;
     virtual void failedErrorMessage(err_type error, int xerrno);
