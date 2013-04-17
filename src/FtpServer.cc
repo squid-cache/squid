@@ -148,6 +148,15 @@ ServerStateData::start()
     scheduleReadControlReply(0);
 }
 
+void
+ServerStateData::initReadBuf()
+{
+    if (data.readBuf == NULL) {
+        data.readBuf = new MemBuf;
+        data.readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
+    }
+}
+
 /**
  * Close the FTP server connection(s). Used by serverComplete().
  */
@@ -569,10 +578,8 @@ ServerStateData::maybeReadVirginBody()
     if (data.read_pending)
         return;
 
-    if (data.readBuf == NULL) {
-        data.readBuf = new MemBuf;
-        data.readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
-    }
+    initReadBuf();
+
     const int read_sz = replyBodySpace(*data.readBuf, 0);
 
     debugs(11,9, HERE << "FTP may read up to " << read_sz << " bytes");

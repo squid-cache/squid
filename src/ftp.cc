@@ -411,6 +411,8 @@ FtpStateData::FtpStateData(FwdState *fwdState): AsyncJob("FtpStateData"),
 
     if (request->method == Http::METHOD_PUT)
         flags.put = 1;
+
+    initReadBuf();
 }
 
 FtpStateData::~FtpStateData()
