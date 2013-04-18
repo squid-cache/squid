@@ -399,6 +399,7 @@ private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
+    void processFtpRequest(ClientSocketContext *const context);
 
 private:
     HttpParser parser_;
