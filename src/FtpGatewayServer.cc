@@ -340,19 +340,21 @@ ServerStateData::sendCommand()
         return;
     }
 
-    String cmd = fwd->request->header.findEntry(HDR_FTP_COMMAND)->value;
-    const String *const params = fwd->request->header.has(HDR_FTP_ARGUMENTS) ?
-        &fwd->request->header.findEntry(HDR_FTP_ARGUMENTS)->value : NULL;
+    HttpHeader &header = fwd->request->header;
+    assert(header.has(HDR_FTP_COMMAND));
+    const String &cmd = header.findEntry(HDR_FTP_COMMAND)->value;
+    assert(header.has(HDR_FTP_ARGUMENTS));
+    const String &params = header.findEntry(HDR_FTP_ARGUMENTS)->value;
 
-    if (params != NULL)
-        debugs(9, 5, HERE << "command: " << cmd << ", parameters: " << *params);
+    if (params.size() > 0)
+        debugs(9, 5, HERE << "command: " << cmd << ", parameters: " << params);
     else
         debugs(9, 5, HERE << "command: " << cmd << ", no parameters");
 
     static MemBuf mb;
     mb.reset();
-    if (params != NULL)
-        mb.Printf("%s %s%s", cmd.termedBuf(), params->termedBuf(), Ftp::crlf);
+    if (params.size() > 0)
+        mb.Printf("%s %s%s", cmd.termedBuf(), params.termedBuf(), Ftp::crlf);
     else
         mb.Printf("%s%s", cmd.termedBuf(), Ftp::crlf);
 

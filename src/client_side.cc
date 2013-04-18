@@ -105,6 +105,7 @@
 #include "fqdncache.h"
 #include "globals.h"
 #include "http.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -253,6 +254,7 @@ static IOACB FtpAcceptDataConnection;
 static void FtpCloseDataConnection(ConnStateData *conn);
 static void FtpWriteGreeting(ConnStateData *conn);
 static ClientSocketContext *FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::ProtocolVersion *http_ver);
+static bool FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params);
 
 static void FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data);
 typedef void FtpReplyHandler(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data);
@@ -270,14 +272,14 @@ static IOCB FtpWroteEarlyReply;
 static IOCB FtpWroteReply;
 static IOCB FtpWroteReplyData;
 
-typedef bool FtpRequestHandler(ConnStateData *connState, String &cmd, String &params);
+typedef bool FtpRequestHandler(ClientSocketContext *context, String &cmd, String &params);
 static FtpRequestHandler FtpHandleRequest;
-static FtpRequestHandler FtpHandleUserRequest;
 static FtpRequestHandler FtpHandlePasvRequest;
 static FtpRequestHandler FtpHandlePortRequest;
 static FtpRequestHandler FtpHandleDataRequest;
 
-static bool FtpCheckDataConnection(ConnStateData *connState);
+static bool FtpCheckDataConnection(ClientSocketContext *context);
+static void FtpSetReply(ClientSocketContext *context, const int code, const char *msg);
 
 clientStreamNode *
 ClientSocketContext::getTail() const
@@ -2649,7 +2651,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
-    context->registerWithConn();
+    if (!conn->isFtp)
+        context->registerWithConn();
 
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
@@ -2679,6 +2682,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (conn->isFtp) {
         assert(http->request);
         request = http->request;
+        notedUseOfBuffer = true;
     } else
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
@@ -2862,9 +2866,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->body_pipe = conn->expectRequestBody(
                                  chunked ? -1 : request->content_length);
 
-        // consume header early so that body pipe gets just the body
-        connNoteUseOfBuffer(conn, http->req_sz);
-        notedUseOfBuffer = true;
+        if (!notedUseOfBuffer) {
+            // consume header early so that body pipe gets just the body
+            connNoteUseOfBuffer(conn, http->req_sz);
+            notedUseOfBuffer = true;
+        }
 
         /* Is it too large? */
         if (!chunked && // if chunked, we will check as we accumulate
@@ -2913,6 +2919,31 @@ finish:
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);
     }
+}
+
+void
+ConnStateData::processFtpRequest(ClientSocketContext *const context)
+{
+    ClientHttpRequest *const http = context->http;
+    assert(http != NULL);
+    HttpRequest *const request = http->request;
+    assert(request != NULL);
+    HttpHeader &header = request->header;
+    assert(header.has(HDR_FTP_COMMAND));
+    String &cmd = header.findEntry(HDR_FTP_COMMAND)->value;
+    assert(header.has(HDR_FTP_ARGUMENTS));
+    String &params = header.findEntry(HDR_FTP_ARGUMENTS)->value;
+
+    if (!FtpHandleRequest(context, cmd, params)) {
+        assert(http->storeEntry() != NULL);
+        clientSetKeepaliveFlag(http);
+        context->pullData();
+        return;
+    }
+
+    assert(http->storeEntry() == NULL);
+    clientProcessRequest(this, &parser_, context, request->method,
+                         request->http_ver);
 }
 
 static void
@@ -2997,7 +3028,14 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            clientProcessRequest(this, &parser_, context, method, http_ver);
+            if (!isFtp)
+                clientProcessRequest(this, &parser_, context, method, http_ver);
+            else {
+                // Process FTP request asynchronously to make sure FTP
+                // data connection accept callback is fired first.
+                CallJobHere1(33, 4, CbcPointer<ConnStateData>(this),
+                    ConnStateData, ConnStateData::processFtpRequest, context);
+            }
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
@@ -4820,6 +4858,7 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     const char *const eor =
         static_cast<const char *>(memchr(connState->in.buf, '\n',
             min(connState->in.notYetUsed, Config.maxRequestHeaderSize)));
+    const size_t req_sz = eor + 1 - connState->in.buf;
 
     if (eor == NULL && connState->in.notYetUsed >= Config.maxRequestHeaderSize) {
         connState->ftp.state = ConnStateData::FTP_ERROR;
@@ -4832,12 +4871,13 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
         return NULL;
     }
 
+    connNoteUseOfBuffer(connState, req_sz);
+
     // skip leading whitespaces
     const char *boc = connState->in.buf;
     while (boc < eor && isspace(*boc)) ++boc;
     if (boc >= eor) {
         debugs(33, 5, HERE << "Empty request, ignoring");
-        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
         return NULL;
     }
 
@@ -4859,23 +4899,28 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
            (bop == NULL ? "no " : "") << "parameters" <<
            (bop != NULL ? ": " : "") << bop);
 
-    String cmd = boc;
+    const String cmd = boc;
     String params = bop;
 
-    // the first command must be USER
-    if (connState->ftp.uri.size() == 0 && cmd.caseCmp("USER") != 0) {
-        debugs(33, 5, HERE << "Unexpected FTP command: expected USER, got " <<
-               boc);
-        FtpWriteEarlyReply(connState, 530, "Must login first");
-        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
-        return NULL;
+    if (connState->ftp.uri.size() == 0) {
+        // the first command must be USER
+        if (cmd.caseCmp("USER") != 0) {
+            FtpWriteEarlyReply(connState, 530, "Must login first");
+            return NULL;
+        }
+
+        if (params.size() == 0) {
+            FtpWriteEarlyReply(connState, 501, "Missing username");
+            return NULL;
+        }
     }
 
-    if (!FtpHandleRequest(connState, cmd, params)) {
-        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
+    // We need to process USER request now because it sets request URI.
+    if (cmd.caseCmp("USER") == 0 &&
+        !FtpHandleUserRequest(connState, cmd, params))
         return NULL;
-    }
 
+    assert(connState->ftp.uri.size() > 0);
     char *uri = xstrdup(connState->ftp.uri.termedBuf());
     HttpRequest *const request =
         HttpRequest::CreateFromUrlAndMethod(uri, *method_p);
@@ -4883,20 +4928,20 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
         debugs(33, 5, HERE << "Invalid FTP URL: " << connState->ftp.uri);
         FtpWriteEarlyReply(connState, 501, "Invalid host");
         connState->ftp.uri.clean();
-        connNoteUseOfBuffer(connState, eor + 1 - connState->in.buf);
         safe_free(uri);
         return NULL;
     }
 
+    request->http_ver = *http_ver;
     request->header.putStr(HDR_FTP_COMMAND, cmd.termedBuf());
-    if (params.size() > 0)
-        request->header.putStr(HDR_FTP_ARGUMENTS, params.termedBuf());
+    request->header.putStr(HDR_FTP_ARGUMENTS, params.termedBuf() != NULL ?
+                           params.termedBuf() : "");
 
     ClientHttpRequest *const http = new ClientHttpRequest(connState);
     http->request = request;
     HTTPMSGLOCK(http->request);
-    http->req_sz = eor - connState->in.buf + 1;
-    http->uri = xstrdup(connState->ftp.uri.termedBuf());
+    http->req_sz = req_sz;
+    http->uri = uri;
 
     ClientSocketContext *const result =
         ClientSocketContextNew(connState->clientConnection, http);
@@ -4911,6 +4956,7 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
+    result->registerWithConn();
     result->flags.parsed_ok = 1;
     connState->flags.readMore = false;
     return result;
@@ -5185,14 +5231,13 @@ FtpWroteReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size
 }
 
 bool
-FtpHandleRequest(ConnStateData *connState, String &cmd, String &params) {
+FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
     static std::pair<const char *, FtpRequestHandler *> handlers[] = {
         std::make_pair("PASV", FtpHandlePasvRequest),
         std::make_pair("PORT", FtpHandlePortRequest),
         std::make_pair("RETR", FtpHandleDataRequest),
         std::make_pair("LIST", FtpHandleDataRequest),
-        std::make_pair("NLST", FtpHandleDataRequest),
-        std::make_pair("USER", FtpHandleUserRequest)
+        std::make_pair("NLST", FtpHandleDataRequest)
     };
 
     FtpRequestHandler *handler = NULL;
@@ -5203,11 +5248,11 @@ FtpHandleRequest(ConnStateData *connState, String &cmd, String &params) {
         }
     }
 
-    return handler != NULL ? (*handler)(connState, cmd, params) : true;
+    return handler != NULL ? (*handler)(context, cmd, params) : true;
 }
 
 bool
-FtpHandleUserRequest(ConnStateData *connState, String &cmd, String &params)
+FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params)
 {
     if (params.size() == 0) {
         FtpWriteEarlyReply(connState, 501, "Missing username");
@@ -5239,45 +5284,77 @@ FtpHandleUserRequest(ConnStateData *connState, String &cmd, String &params)
 }
 
 bool
-FtpHandlePasvRequest(ConnStateData *connState, String &cmd, String &params)
+FtpHandlePasvRequest(ClientSocketContext *context, String &cmd, String &params)
 {
     if (params.size() > 0) {
-        FtpWriteEarlyReply(connState, 501, "Unexpected parameter");
+        FtpSetReply(context, 501, "Unexpected parameter");
         return false;
     }
 
-    connState->ftp.state = ConnStateData::FTP_HANDLE_PASV;
+    context->getConn()->ftp.state = ConnStateData::FTP_HANDLE_PASV;
 
     return true;
 }
 
 bool
-FtpHandlePortRequest(ConnStateData *connState, String &cmd, String &params)
+FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
 {
-    FtpWriteEarlyReply(connState, 502, "Command not supported");
+    FtpSetReply(context, 502, "Command not supported");
     return false;
 }
 
 bool
-FtpHandleDataRequest(ConnStateData *connState, String &cmd, String &params)
+FtpHandleDataRequest(ClientSocketContext *context, String &cmd, String &params)
 {
-    if (!FtpCheckDataConnection(connState))
+    if (!FtpCheckDataConnection(context))
         return false;
 
-    connState->ftp.state = ConnStateData::FTP_HANDLE_DATA_REQUEST;
+    context->getConn()->ftp.state = ConnStateData::FTP_HANDLE_DATA_REQUEST;
 
     return true;
 }
 
 bool
-FtpCheckDataConnection(ConnStateData *connState)
+FtpCheckDataConnection(ClientSocketContext *context)
 {
+    const ConnStateData *const connState = context->getConn();
     if (Comm::IsConnOpen(connState->ftp.dataConn))
         return true;
 
     if (!Comm::IsConnOpen(connState->ftp.dataListenConn))
-        FtpWriteEarlyReply(connState, 425, "Use PASV first");
+        FtpSetReply(context, 425, "Use PASV first");
     else
-        FtpWriteEarlyReply(connState, 425, "Data connection is not established");
+        FtpSetReply(context, 425, "Data connection is not established");
     return false;
+}
+
+void
+FtpSetReply(ClientSocketContext *context, const int code, const char *msg)
+{
+    ClientHttpRequest *const http = context->http;
+    assert(http != NULL);
+    assert(http->storeEntry() == NULL);
+
+    HttpReply *const reply = new HttpReply;
+    reply->sline.set(Http::ProtocolVersion(1, 1), Http::scNoContent);
+    HttpHeader &header = reply->header;
+    header.putTime(HDR_DATE, squid_curtime);
+    {
+        HttpHdrCc cc;
+        cc.Private();
+        header.putCc(&cc);
+    }
+    header.putInt64(HDR_CONTENT_LENGTH, 0);
+    header.putInt(HDR_FTP_STATUS, code);
+    header.putStr(HDR_FTP_REASON, msg);
+    reply->hdrCacheInit();
+
+    setLogUri(http, http->uri,  true);
+
+    clientStreamNode *const node = context->getClientReplyContext();
+    clientReplyContext *const repContext =
+        dynamic_cast<clientReplyContext *>(node->data.getRaw());
+    assert(repContext != NULL);
+    repContext->createStoreEntry(http->request->method, RequestFlags());
+    http->storeEntry()->replaceHttpReply(reply);
 }
