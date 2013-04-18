@@ -154,7 +154,7 @@ main(int argc, char **argv)
         // Bug 3831: given algorithms more secure than DES crypt() does not truncate, so we can ignore the bug 3107 length checks below
         // '$1$' = MD5, '$2a$' = Blowfish, '$5$' = SHA256 (Linux), '$6$' = SHA256 (BSD) and SHA512
         if (passwordLength > 1 && u->passwd[0] == '$' &&
-            (crypted = crypt(passwd, u->passwd)) && strcmp(u->passwd, crypted) == 0) {
+                (crypted = crypt(passwd, u->passwd)) && strcmp(u->passwd, crypted) == 0) {
             SEND_OK("");
             continue;
         }
