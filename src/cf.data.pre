@@ -8378,20 +8378,32 @@ DOC_START
 	URI.  Options:
 
 	strip:  The whitespace characters are stripped out of the URL.
-		This is the behavior recommended by RFC2396.
+		This is the behavior recommended by RFC2396 and RFC3986
+		for tolerant handling of generic URI.
+		NOTE: This is one difference between generic URI and HTTP URLs.
+
 	deny:   The request is denied.  The user receives an "Invalid
 		Request" message.
+		This is the behaviour recommended by RFC2616 for safe
+		handling of HTTP request URL.
+
 	allow:  The request is allowed and the URI is not changed.  The
 		whitespace characters remain in the URI.  Note the
 		whitespace is passed to redirector processes if they
 		are in use.
+		Note this may be considered a violation of RFC2616
+		request parsing where whitespace is prohibited in the
+		URL field.
+
 	encode:	The request is allowed and the whitespace characters are
-		encoded according to RFC1738.  This could be considered
-		a violation of the HTTP/1.1
-		RFC because proxies are not allowed to rewrite URI's.
+		encoded according to RFC1738.
+
 	chop:	The request is allowed and the URI is chopped at the
-		first whitespace.  This might also be considered a
-		violation.
+		first whitespace.
+
+
+	NOTE the current Squid implementation of encode and chop violates
+	RFC2616 by not using a 301 redirect after altering the URL.
 DOC_END
 
 NAME: chroot
