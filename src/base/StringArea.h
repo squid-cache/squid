@@ -35,6 +35,7 @@
 #if HAVE_CSTRING
 #include <cstring>
 #endif
+#include <ostream>
 
 /** A char* plus length combination. Useful for temporary storing
  * and quickly looking up strings.
@@ -56,11 +57,20 @@ public:
         return (theLen < s.theLen || (theLen == s.theLen && memcmp(theStart,s.theStart,theLen) < 0)) ;
     }
 
+    void print(std::ostream &os) const { os.write(theStart, theLen); }
+
 private:
     /// pointed to the externally-managed memory area
     const char *theStart;
     /// length of the string
     size_t theLen;
 };
+
+inline std::ostream &
+operator <<(std::ostream &os, const StringArea &a)
+{
+    a.print(os);
+    return os;
+}
 
 #endif /* SQUID_STRINGAREA_H */
