@@ -497,7 +497,7 @@ DOC_START
 	of type proxy_auth.  By default, the NTLM authenticator program
 	is not used.
 
-	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
+	auth_param ntlm program /usr/bin/ntlm_auth
 
 	"children" numberofchildren [startup=N] [idle=N]
 	The maximum number of authenticator processes to spawn (default 5).
@@ -538,7 +538,7 @@ DOC_START
 	The only supported program for this role is the ntlm_auth
 	program distributed as part of Samba, version 4 or later.
 
-	auth_param negotiate program @DEFAULT_PREFIX@/bin/ntlm_auth --helper-protocol=gss-spnego
+	auth_param negotiate program /usr/bin/ntlm_auth --helper-protocol=gss-spnego
 
 	"children" numberofchildren [startup=N] [idle=N]
 	The maximum number of authenticator processes to spawn (default 5).
