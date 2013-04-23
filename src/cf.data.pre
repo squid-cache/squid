@@ -336,7 +336,7 @@ DOC_START
 	If you want to use the traditional NCSA proxy authentication, set
 	this line to something like
 
-	auth_param basic program @DEFAULT_PREFIX@/libexec/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
+	auth_param basic program @DEFAULT_PREFIX@/libexec/basic_ncsa_auth @DEFAULT_PREFIX@/etc/passwd
 
 	"utf8" on|off
 	HTTP uses iso-latin-1 as character set, while some authentication
