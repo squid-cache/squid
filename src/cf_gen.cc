@@ -190,9 +190,9 @@ usage(const char *program_name)
 }
 
 static void
-printError(const char *filename, int line, const char *detail)
+errorMsg(const char *filename, int line, const char *detail)
 {
-    std::cerr << "Error in '" << filename << "' on line " << linenum <<
+    std::cerr << "Error in '" << filename << "' on line " << line <<
               "--> " << detail << std::endl;
 }
 
