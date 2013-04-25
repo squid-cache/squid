@@ -839,7 +839,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             debugs(82, 2, HERE << "\"" << key << "\": entry=@" <<
                    entry << ", age=" << (entry ? (long int) squid_curtime - entry->date : 0));
 
-            if (acl->def->theHelper->stats.queue_size <= (int)acl->def->theHelper->childs.n_active) {
+            if (acl->def->theHelper->stats.queue_size < (int)acl->def->theHelper->childs.n_active) {
                 debugs(82, 2, HERE << "\"" << key << "\": queueing a call.");
                 ch->changeState(ExternalACLLookup::Instance());
                 debugs(82, 2, HERE << "\"" << key << "\": return -1.");
