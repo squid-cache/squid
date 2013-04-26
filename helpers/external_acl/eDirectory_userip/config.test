@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -f /usr/include/ldap.h ]; then
+if [ -f /usr/include/ldap.h -o -f /usr/local/include/ldap.h ]; then
 	exit 0
 fi
 if [ -f /usr/include/winldap.h ]; then
