@@ -144,19 +144,20 @@ main(int argc, char **argv)
         rfc1738_unescape(user);
         rfc1738_unescape(passwd);
         u = (user_data *) hash_lookup(hash, user);
+        char *crypted = NULL;
         if (u == NULL) {
             SEND_ERR("No such user");
 #if HAVE_CRYPT
-        } else if (strlen(passwd) <= 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+        } else if (strlen(passwd) <= 8 && (crypted = crypt(passwd, u->passwd)) && (strcmp(u->passwd, crypted) == 0)) {
             // Bug 3107: crypt() DES functionality silently truncates long passwords.
             SEND_OK("");
-        } else if (strlen(passwd) > 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+        } else if (strlen(passwd) > 8 && (crypted = crypt(passwd, u->passwd)) && (strcmp(u->passwd, crypted) == 0)) {
             // Bug 3107: crypt() DES functionality silently truncates long passwords.
             SEND_ERR("Password too long. Only 8 characters accepted.");
 #endif
-        } else if (strcmp(u->passwd, (char *) crypt_md5(passwd, u->passwd)) == 0) {
+        } else if ( (crypted = crypt_md5(passwd, u->passwd)) && strcmp(u->passwd, crypted) == 0) {
             SEND_OK("");
-        } else if (strcmp(u->passwd, (char *) md5sum(passwd)) == 0) {
+        } else if ( (crypted =  md5sum(passwd)) && strcmp(u->passwd, crypted) == 0) {
             SEND_OK("");
         } else {
             SEND_ERR("Wrong password");
