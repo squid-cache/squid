@@ -2520,12 +2520,14 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
                    "does not match domainname " << request->GetHost());
 
-            ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
-            check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
-            const bool allowDomainMismatch =
-                check.fastCheck() == ACCESS_ALLOWED;
-            delete check.sslErrors;
-            check.sslErrors = NULL;
+            bool allowDomainMismatch = false;
+            if (Config.ssl_client.cert_error) {
+                ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+                check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
+                allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
+                delete check.sslErrors;
+                check.sslErrors = NULL;
+            }
 
             if (!allowDomainMismatch) {
                 quitAfterError(request);

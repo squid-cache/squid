@@ -429,9 +429,9 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    /* absent an explicit allow, we deny all */
+    /* absent any explicit rules, we deny all */
     if (!Config.accessList.icp)
-        return true;
+        return false;
 
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
     checklist.src_addr = from;

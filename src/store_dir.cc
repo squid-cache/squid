@@ -240,7 +240,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
  * in the *tightest fit* swapdir to conserve space, along with the
  * actual swapdir usage. But for now, this hack will do while
  * testing, so you should order your swapdirs in the config file
- * from smallest maxobjsize to unlimited (-1) maxobjsize.
+ * from smallest max-size= to largest max-size=.
  *
  * We also have to choose nleast == nconf since we need to consider
  * ALL swapdirs, regardless of state. Again, this is a hack while

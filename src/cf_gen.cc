@@ -189,6 +189,13 @@ usage(const char *program_name)
     exit(1);
 }
 
+static void
+errorMsg(const char *filename, int line, const char *detail)
+{
+    std::cerr << "Error in '" << filename << "' on line " << line <<
+              "--> " << detail << std::endl;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -218,7 +225,7 @@ main(int argc, char *argv[])
      *-------------------------------------------------------------------*/
     fp.open(type_depend, std::ifstream::in);
     if (fp.fail()) {
-        std::cerr << "error while opening type dependencies file '" <<
+        std::cerr << "Error while opening type dependencies file '" <<
                   type_depend << "': " << strerror(errno) << std::endl;
         exit(1);
     }
@@ -245,7 +252,7 @@ main(int argc, char *argv[])
     /* Open input file */
     fp.open(input_filename, std::ifstream::in);
     if (fp.fail()) {
-        std::cerr << "error while opening input file '" <<
+        std::cerr << "Error while opening input file '" <<
                   input_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
@@ -262,14 +269,14 @@ main(int argc, char *argv[])
 
         if (strncmp(buff, "IF ", 3) == 0) {
             if ((ptr = strtok(buff + 3, WS)) == NULL) {
-                std::cerr << "Missing IF parameter on line" << linenum << std::endl;
+                errorMsg(input_filename, linenum, "Missing IF parameter");
                 exit(1);
             }
             IFDEFS.push(ptr);
             continue;
         } else if (strcmp(buff, "ENDIF") == 0) {
             if (IFDEFS.size() == 0) {
-                std::cerr << "ENDIF without IF before on line " << linenum << std::endl;
+                errorMsg(input_filename, linenum, "ENDIF without IF first");
                 exit(1);
             }
             IFDEFS.pop();
@@ -285,7 +292,7 @@ main(int argc, char *argv[])
                     char *name, *aliasname;
 
                     if ((name = strtok(buff + 5, WS)) == NULL) {
-                        std::cerr << "Error in input file\n";
+                        errorMsg(input_filename, linenum, buff);
                         exit(1);
                     }
 
@@ -302,8 +309,7 @@ main(int argc, char *argv[])
                     entries.back().loc = "none";
                     state = sDOC;
                 } else {
-                    std::cerr << "Error on line " << linenum << std::endl <<
-                              "--> " << buff << std::endl;
+                    errorMsg(input_filename, linenum, buff);
                     exit(1);
                 }
 
@@ -352,14 +358,14 @@ main(int argc, char *argv[])
                     curr.defaults.docs.push_back(ptr);
                 } else if (!strncmp(buff, "LOC:", 4)) {
                     if ((ptr = strtok(buff + 4, WS)) == NULL) {
-                        std::cerr << "Error on line " << linenum << std::endl;
+                        errorMsg(input_filename, linenum, buff);
                         exit(1);
                     }
 
                     curr.loc = ptr;
                 } else if (!strncmp(buff, "TYPE:", 5)) {
                     if ((ptr = strtok(buff + 5, WS)) == NULL) {
-                        std::cerr << "Error on line " << linenum << std::endl;
+                        errorMsg(input_filename, linenum, buff);
                         exit(1);
                     }
 
@@ -373,7 +379,7 @@ main(int argc, char *argv[])
                     curr.type = ptr;
                 } else if (!strncmp(buff, "IFDEF:", 6)) {
                     if ((ptr = strtok(buff + 6, WS)) == NULL) {
-                        std::cerr << "Error on line " << linenum << std::endl;
+                        errorMsg(input_filename, linenum, buff);
                         exit(1);
                     }
 
@@ -383,7 +389,7 @@ main(int argc, char *argv[])
                 } else if (!strcmp(buff, "DOC_NONE")) {
                     state = sSTART;
                 } else {
-                    std::cerr << "Error on line " << linenum << std::endl;
+                    errorMsg(input_filename, linenum, buff);
                     exit(1);
                 }
             }
@@ -417,7 +423,7 @@ main(int argc, char *argv[])
     }
 
     if (state != sEXIT) {
-        std::cerr << "Error: unexpected EOF\n";
+        errorMsg(input_filename, linenum, "Error: unexpected EOF");
         exit(1);
     }
 
@@ -435,7 +441,7 @@ main(int argc, char *argv[])
 
     std::ofstream fout(output_filename,std::ostream::out);
     if (!fout.good()) {
-        std::cerr << "error while opening output .c file '" <<
+        std::cerr << "Error while opening output .c file '" <<
                   output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
@@ -466,7 +472,7 @@ main(int argc, char *argv[])
     /* Open output x.conf file */
     fout.open(conf_filename,std::ostream::out);
     if (!fout.good()) {
-        std::cerr << "error while opening output conf file '" <<
+        std::cerr << "Error while opening output conf file '" <<
                   output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
@@ -477,7 +483,7 @@ main(int argc, char *argv[])
 
     fout.open(conf_filename_short,std::ostream::out);
     if (!fout.good()) {
-        std::cerr << "error while opening output short conf file '" <<
+        std::cerr << "Error while opening output short conf file '" <<
                   output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
