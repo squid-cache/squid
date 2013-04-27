@@ -1,3 +1,22 @@
+
+Changes to squid-3.3.4 (27 Apr 2013):
+
+	- Bug 3831: basic_ncsa_auth Blowfish and SHA support
+	- Bug 3816: SSL_get_certificate call inside Ssl::verifySslCertificate crashes
+	- Bug 3794: MacOS: workaround compiler errors and case-insensitivity
+	- Bug 3781: Proxy Authentication not sent to cache_peer
+	- Bug 3720 pt1: SourceLayout: shuffle fd_table definition into fde.h
+	- Bug 3720 pt2: Add missing include in /dev/poll I/O module
+	- Bug 3674: Improve compiler detection, better support warnings-as-errors on clang
+	- Add support for TPROXY on BSD
+	- Fix SSL Bump bypass for intercepted traffic
+	- Fix memory leaks in ConnStateData pinning
+	- Fix external_acl.cc "inBackground" assertion on queue overloads
+	- CacheMgr: fix missing column separator in helper stats
+	- OpenBSD: libpthreads requires OpenBSD 5.2 or later
+	- ... and lots of documentation updates
+	- ... and all changes from squid 3.2.10
+
 Changes to squid-3.3.3 (12 Mar 2013):
 
 	- Bug 3720: Add missing include in /dev/poll I/O module (pt2)
@@ -54,6 +73,19 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.10 (27 Apr 2013):
+
+	- Bug 3833: squidclient: Option '-k' is not present in man(1) page
+	- Bug 3825: basic_ncsa_auth: segfaulting with glibc-2.17
+	- Bug 3822: Locate LDAP and SASL headers for BSD support
+	- Bug 3817: Memory leak in SSL cert validate for alt_name peer certs
+	- Bug 3774: 'squid -k reconfigure' drops rock cache
+	- Bug 3565: Resuming postponed accept kills Squid
+	- HTTP/1.1: partial support for no-cache and private controls with parameters
+	- ssl_crtd: fix helpers dying during startup on ARM
+	- GNU Hurd: define MAP_NORESERVE as no-op when missing
+	- BSD: fix enter_suid/leave_suid build errors in ip/Intercept.cc
 
 Changes to squid-3.2.9 (12 Mar 2013):
 
