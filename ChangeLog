@@ -1,3 +1,17 @@
+
+Changes to squid-3.2.10 (27 Apr 2013):
+
+	- Bug 3833: squidclient: Option '-k' is not present in man(1) page
+	- Bug 3825: basic_ncsa_auth: segfaulting with glibc-2.17
+	- Bug 3822: Locate LDAP and SASL headers for BSD support
+	- Bug 3817: Memory leak in SSL cert validate for alt_name peer certs
+	- Bug 3774: 'squid -k reconfigure' drops rock cache
+	- Bug 3565: Resuming postponed accept kills Squid
+	- HTTP/1.1: partial support for no-cache and private controls with parameters
+	- ssl_crtd: fix helpers dying during startup on ARM
+	- GNU Hurd: define MAP_NORESERVE as no-op when missing
+	- BSD: fix enter_suid/leave_suid build errors in ip/Intercept.cc
+
 Changes to squid-3.2.9 (12 Mar 2013):
 
 	- Regression fix: Accept-Language header parse
