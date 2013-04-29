@@ -168,10 +168,7 @@ HttpRequest::clean()
 
     myportname.clean();
 
-    if (helperNotes) {
-        delete helperNotes;
-        helperNotes = NULL;
-    }
+    helperNotes = NULL;
 
     tag.clean();
 #if USE_AUTH
@@ -231,10 +228,7 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_domain?
 
     copy->myportname = myportname;
-    if (helperNotes) {
-        copy->helperNotes = new Notes;
-        copy->helperNotes->notes = helperNotes->notes;
-    }
+    copy->helperNotes = helperNotes;
     copy->tag = tag;
 #if USE_AUTH
     copy->extacl_user = extacl_user;

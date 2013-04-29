@@ -598,7 +598,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
             packerToMemInit(&p, &mb);
             ah->lastMeta.packInto(&p);
             aLogEntry->adapt.last_meta = xstrdup(mb.buf);
-            aLogEntry->notes.append(&ah->metaHeaders);
         }
 #endif
 
@@ -615,8 +614,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
-    if (request->helperNotes)
-        aLogEntry->notes.append(request->helperNotes->notes);
     if (request->content_length > 0) // negative when no body or unknown length
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
@@ -700,7 +697,9 @@ ClientHttpRequest::logRequest()
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
         if (const char *value = (*i)->match(request, al->reply)) {
-            al->notes.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), value));
+            if (al->configNotes == NULL)
+                al->configNotes = new NotePairs;
+            al->configNotes->add((*i)->key.termedBuf(), value);
             debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
         }
     }

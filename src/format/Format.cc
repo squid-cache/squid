@@ -1042,17 +1042,39 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
         case LFT_NOTE:
             if (fmt->data.string) {
-                sb = al->notes.getByName(fmt->data.string);
+#if USE_ADAPTATION
+                Adaptation::History::Pointer ah = al->request->adaptHistory();
+                if (ah != NULL && ah->metaHeaders != NULL) {
+                    if (const char *meta = ah->metaHeaders->find(fmt->data.string))
+                        sb.append(meta);
+                }
+#endif
+                if (al->helperNotes != NULL) {
+                    if (const char *note = al->helperNotes->find(fmt->data.string)) {
+                        if (sb.size())
+                            sb.append(", ");
+                        sb.append(note);
+                    }
+                }
+                if (al->configNotes != NULL) {
+                    if (const char *note = al->configNotes->find(fmt->data.string)) {
+                        if (sb.size())
+                            sb.append(", ");
+                        sb.append(note);
+                    }
+                }
                 out = sb.termedBuf();
                 quote = 1;
             } else {
-                HttpHeaderPos pos = HttpHeaderInitPos;
-                while (const HttpHeaderEntry *e = al->notes.getEntry(&pos)) {
-                    sb.append(e->name);
-                    sb.append(": ");
-                    sb.append(e->value);
-                    sb.append("\r\n");
-                }
+#if USE_ADAPTATION
+                Adaptation::History::Pointer ah = al->request->adaptHistory();
+                if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
+                    sb.append(ah->metaHeaders->toString());
+#endif
+                if (al->helperNotes != NULL && !al->helperNotes->empty())
+                    sb.append(al->helperNotes->toString());
+                if (al->configNotes != NULL && !al->configNotes->empty())
+                    sb.append(al->configNotes->toString());
                 out = sb.termedBuf();
                 quote = 1;
             }
