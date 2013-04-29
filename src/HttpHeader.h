@@ -176,7 +176,6 @@ typedef enum {
 #if USE_SSL
     hoErrorDetail,
 #endif
-    hoNote,
     hoEnd
 } http_hdr_owner_type;
 

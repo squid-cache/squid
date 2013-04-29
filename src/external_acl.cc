@@ -1328,26 +1328,26 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 
     // XXX: make entryData store a proper HelperReply object instead of copying.
 
-    Note::Pointer label = reply.notes.find("tag");
-    if (label != NULL && label->values[0]->value.size() > 0)
-        entryData.tag = label->values[0]->value;
+    const char *label = reply.notes.findFirst("tag");
+    if (label != NULL && *label != '\0')
+        entryData.tag = label;
 
-    label = reply.notes.find("message");
-    if (label != NULL && label->values[0]->value.size() > 0)
-        entryData.message = label->values[0]->value;
+    label = reply.notes.findFirst("message");
+    if (label != NULL && *label != '\0')
+        entryData.message = label;
 
-    label = reply.notes.find("log");
-    if (label != NULL && label->values[0]->value.size() > 0)
-        entryData.log = label->values[0]->value;
+    label = reply.notes.findFirst("log");
+    if (label != NULL && *label != '\0')
+        entryData.log = label;
 
 #if USE_AUTH
-    label = reply.notes.find("user");
-    if (label != NULL && label->values[0]->value.size() > 0)
-        entryData.user = label->values[0]->value;
+    label = reply.notes.findFirst("user");
+    if (label != NULL && *label != '\0')
+        entryData.user = label;
 
-    label = reply.notes.find("password");
-    if (label != NULL && label->values[0]->value.size() > 0)
-        entryData.password = label->values[0]->value;
+    label = reply.notes.findFirst("password");
+    if (label != NULL && *label != '\0')
+        entryData.password = label;
 #endif
 
     dlinkDelete(&state->list, &state->def->queue);

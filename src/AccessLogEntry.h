@@ -232,9 +232,11 @@ public:
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
 
-    /// key:value pairs set by note and adaptation_meta directives
-    /// plus key=value pairs returned from URL rewrite/redirect helper
-    NotePairs notes;
+    // TODO: merge configNotes and helperNotes
+    /// key:value pairs set by note.
+    NotePairs::Pointer configNotes;
+    /// key=value pairs returned from URL rewrite/redirect helper
+    NotePairs::Pointer helperNotes;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request

@@ -1256,12 +1256,14 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
     assert(redirect_state == REDIRECT_PENDING);
     redirect_state = REDIRECT_DONE;
 
-    // copy the URL rewriter response Notes to the HTTP request for logging
+    // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    // TODO put them straight into the transaction state record (ALE?) eventually
-    if (!old_request->helperNotes)
-        old_request->helperNotes = new Notes;
-    old_request->helperNotes->add(reply.notes);
+    if (http->al != NULL) {
+        if (!http->al->helperNotes)
+            http->al->helperNotes = new NotePairs;
+        http->al->helperNotes->append(&reply.notes);
+        old_request->helperNotes = http->al->helperNotes;
+    }
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1289,8 +1291,8 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
         // #2: redirect with a default status code     OK url="..."
         // #3: re-write the URL                        OK rewrite-url="..."
 
-        Note::Pointer statusNote = reply.notes.find("status");
-        Note::Pointer urlNote = reply.notes.find("url");
+        const char *statusNote = reply.notes.findFirst("status");
+        const char *urlNote = reply.notes.findFirst("url");
 
         if (urlNote != NULL) {
             // HTTP protocol redirect to be done.
@@ -1302,7 +1304,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
             // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
             Http::StatusCode status = Http::scMovedTemporarily;
             if (statusNote != NULL) {
-                const char * result = statusNote->firstValue();
+                const char * result = statusNote;
                 status = static_cast<Http::StatusCode>(atoi(result));
             }
 
@@ -1312,21 +1314,21 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     || status == Http::scPermanentRedirect
                     || status == Http::scTemporaryRedirect) {
                 http->redirect.status = status;
-                http->redirect.location = xstrdup(urlNote->firstValue());
+                http->redirect.location = xstrdup(urlNote);
                 // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
             } else {
-                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << urlNote->firstValue());
+                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << urlNote);
             }
         } else {
             // URL-rewrite wanted. Ew.
-            urlNote = reply.notes.find("rewrite-url");
+            urlNote = reply.notes.findFirst("rewrite-url");
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
-            if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri)) {
+            if (urlNote != NULL && strcmp(urlNote, http->uri)) {
                 // XXX: validate the URL properly *without* generating a whole new request object right here.
                 // XXX: the clone() should be done only AFTER we know the new URL is valid.
                 HttpRequest *new_request = old_request->clone();
-                if (urlParse(old_request->method, const_cast<char*>(urlNote->firstValue()), new_request)) {
+                if (urlParse(old_request->method, const_cast<char*>(urlNote), new_request)) {
                     debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
 
                     // update the new request to flag the re-writing was done on it
@@ -1347,7 +1349,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     HTTPMSGLOCK(http->request);
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
-                           old_request->method << " " << urlNote->firstValue() << " " << old_request->http_ver);
+                           old_request->method << " " << urlNote << " " << old_request->http_ver);
                     delete new_request;
                 }
             }
@@ -1377,12 +1379,14 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
     assert(store_id_state == REDIRECT_PENDING);
     store_id_state = REDIRECT_DONE;
 
-    // copy the helper response Notes to the HTTP request for logging
+    // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    // TODO put them straight into the transaction state record (ALE?) eventually
-    if (!old_request->helperNotes)
-        old_request->helperNotes = new Notes;
-    old_request->helperNotes->add(reply.notes);
+    if (http->al != NULL) {
+        if (!http->al->helperNotes)
+            http->al->helperNotes = new NotePairs;
+        http->al->helperNotes->append(&reply.notes);
+        old_request->helperNotes = http->al->helperNotes;
+    }
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1406,14 +1410,14 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
         break;
 
     case HelperReply::Okay: {
-        Note::Pointer urlNote = reply.notes.find("store-id");
+        const char *urlNote = reply.notes.findFirst("store-id");
 
         // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
-        if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri) ) {
+        if (urlNote != NULL && strcmp(urlNote, http->uri) ) {
             // Debug section required for some very specific cases.
-            debugs(85, 9, "Setting storeID with: " << urlNote->firstValue() );
-            http->request->store_id = urlNote->firstValue();
-            http->store_id = urlNote->firstValue();
+            debugs(85, 9, "Setting storeID with: " << urlNote );
+            http->request->store_id = urlNote;
+            http->store_id = urlNote;
         }
     }
     break;
