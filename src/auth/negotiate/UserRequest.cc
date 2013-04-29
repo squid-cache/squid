@@ -247,11 +247,11 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = true;
         if (lm_request->request->flags.proxyKeepalive) {
-            Note::Pointer tokenNote = reply.notes.find("token");
-            lm_request->server_blob = xstrdup(tokenNote->firstValue());
+            const char *tokenNote = reply.notes.findFirst("token");
+            lm_request->server_blob = xstrdup(tokenNote);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << tokenNote->firstValue() << "'");
+            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << tokenNote << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("Negotiate authentication requires a persistent connection");
@@ -259,8 +259,8 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         break;
 
     case HelperReply::Okay: {
-        Note::Pointer userNote = reply.notes.find("user");
-        Note::Pointer tokenNote = reply.notes.find("token");
+        const char *userNote = reply.notes.findFirst("user");
+        const char *tokenNote = reply.notes.findFirst("token");
         if (userNote == NULL || tokenNote == NULL) {
             // XXX: handle a success with no username better
             /* protocol error */
@@ -269,10 +269,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
 
         /* we're finished, release the helper */
-        auth_user_request->user()->username(userNote->firstValue());
+        auth_user_request->user()->username(userNote);
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(tokenNote->firstValue());
+        lm_request->server_blob = xstrdup(tokenNote);
         lm_request->releaseAuthServer();
 
         /* connection is authenticated */
@@ -306,18 +306,18 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     break;
 
     case HelperReply::Error: {
-        Note::Pointer messageNote = reply.notes.find("message");
-        Note::Pointer tokenNote = reply.notes.find("token");
+        const char *messageNote = reply.notes.find("message");
+        const char *tokenNote = reply.notes.findFirst("token");
 
         /* authentication failure (wrong password, etc.) */
         if (messageNote != NULL)
-            auth_user_request->denyMessage(messageNote->firstValue());
+            auth_user_request->denyMessage(messageNote);
         else
             auth_user_request->denyMessage("Negotiate Authentication denied with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         if (tokenNote != NULL)
-            lm_request->server_blob = xstrdup(tokenNote->firstValue());
+            lm_request->server_blob = xstrdup(tokenNote);
         lm_request->releaseAuthServer();
         debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << reply << "'");
     }
@@ -333,11 +333,11 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
          * Authenticate Negotiate start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
-        Note::Pointer errNote = reply.notes.find("message");
+        const char *errNote = reply.notes.find("message");
         if (reply.result == HelperReply::Unknown)
             auth_user_request->denyMessage("Internal Error");
         else if (errNote != NULL)
-            auth_user_request->denyMessage(errNote->firstValue());
+            auth_user_request->denyMessage(errNote);
         else
             auth_user_request->denyMessage("Negotiate Authentication failed with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);

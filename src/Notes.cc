@@ -36,6 +36,7 @@
 #include "HttpReply.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "StrList.h"
 
 #include <algorithm>
 #include <string>
@@ -74,57 +75,17 @@ Note::match(HttpRequest *request, HttpReply *reply)
 }
 
 Note::Pointer
-Notes::find(const String &noteKey) const
+Notes::add(const String &noteKey)
 {
-    typedef Notes::NotesList::const_iterator AMLI;
+    typedef Notes::NotesList::iterator AMLI;
     for (AMLI i = notes.begin(); i != notes.end(); ++i) {
         if ((*i)->key == noteKey)
             return (*i);
     }
 
-    return Note::Pointer();
-}
-
-void
-Notes::add(const String &noteKey, const String &noteValue)
-{
-    Note::Pointer key = add(noteKey);
-    key->addValue(noteValue);
-}
-
-Note::Pointer
-Notes::add(const String &noteKey)
-{
-    Note::Pointer note = find(noteKey);
-    if (note == NULL) {
-        note = new Note(noteKey);
-        notes.push_back(note);
-    }
+    Note::Pointer note = new Note(noteKey);
+    notes.push_back(note);
     return note;
-}
-
-void
-Notes::add(const Notes &src)
-{
-    typedef Notes::NotesList::const_iterator AMLI;
-    typedef Note::Values::iterator VLI;
-
-    for (AMLI i = src.notes.begin(); i != src.notes.end(); ++i) {
-
-        // ensure we have a key by that name to fill out values for...
-        // NP: not sharing pointers at the key level since merging other helpers
-        // details later would affect this src objects keys, which is a bad idea.
-        Note::Pointer ourKey = add((*i)->key);
-
-        // known key names, merge the values lists...
-        for (VLI v = (*i)->values.begin(); v != (*i)->values.end(); ++v ) {
-            // 2012-11-29: values are read-only and Pointer can safely be shared
-            // for now we share pointers to save memory and gain speed.
-            // If that ever ceases to be true, convert this to a full copy.
-            ourKey->values.push_back(*v);
-            // TODO: prune/skip duplicates ?
-        }
-    }
 }
 
 Note::Pointer
@@ -169,4 +130,81 @@ void
 Notes::clean()
 {
     notes.clean();
+}
+
+const char *
+NotePairs::find(const char *noteKey) const
+{
+    static String value;
+    value.clean();
+    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        if ((*i)->name.cmp(noteKey) == 0) {
+            if (value.size())
+                value.append(", ");
+            value.append(ConfigParser::QuoteString((*i)->value));
+        }
+    }
+    return value.size() ? value.termedBuf() : NULL;
+}
+
+const char *
+NotePairs::toString(const char *sep) const
+{
+   static String value;
+    value.clean();
+    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        value.append((*i)->name);
+        value.append(": ");
+        value.append(ConfigParser::QuoteString((*i)->value));
+        value.append(sep);
+    }
+    return value.size() ? value.termedBuf() : NULL;
+}
+
+const char *
+NotePairs::findFirst(const char *noteKey) const
+{
+    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        if ((*i)->name.cmp(noteKey) == 0)
+            return (*i)->value.termedBuf();
+    }
+    return NULL;
+}
+
+void
+NotePairs::add(const char *key, const char *note)
+{
+    entries.push_back(new NotePairs::Entry(key, note));
+}
+
+void
+NotePairs::addStrList(const char *key, const char *values)
+{
+    String strValues(values);
+    const char *item;
+    const char *pos = NULL;
+    int ilen = 0;
+    while(strListGetItem(&strValues, ',', &item, &ilen, &pos)) {
+        String v;
+        v.append(item, ilen);
+        entries.push_back(new NotePairs::Entry(key, v.termedBuf()));
+    }
+}
+
+bool
+NotePairs::hasPair(const char *key, const char *value) const
+{
+    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        if ((*i)->name.cmp(key) == 0 || (*i)->value.cmp(value) == 0)
+            return true;
+    }
+    return false;
+}
+
+void
+NotePairs::append(const NotePairs *src)
+{
+    for (Vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+        entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
+    }
 }

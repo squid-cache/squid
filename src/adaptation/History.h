@@ -53,7 +53,7 @@ public:
     HttpHeader allMeta;
     /// key:value pairs set by adaptation_meta, to be added to
     /// AccessLogEntry::notes when ALE becomes available
-    NotePairs metaHeaders;
+    NotePairs::Pointer metaHeaders;
 
     /// sets future services for the Adaptation::AccessCheck to notice
     void setFutureServices(const DynamicGroupCfg &services);
