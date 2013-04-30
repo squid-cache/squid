@@ -185,7 +185,7 @@ operator <<(std::ostream &os, const HelperReply &r)
     // dump the helper key=pair "notes" list
     if (!r.notes.empty()) {
         os << ", notes={";
-	os << r.notes.toString("; ");
+        os << r.notes.toString("; ");
         os << "}";
     }
 
