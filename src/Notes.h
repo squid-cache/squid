@@ -113,9 +113,10 @@ public:
     /**
      * Used to store a note key/value pair.
      */
-    class Entry {
+    class Entry
+    {
     public:
-        Entry(const char *aKey, const char *aValue): name(aKey), value(aValue) {} 
+        Entry(const char *aKey, const char *aValue): name(aKey), value(aValue) {}
         String name;
         String value;
         MEMPROXY_CLASS(Entry);
