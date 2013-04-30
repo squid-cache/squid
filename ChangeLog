@@ -74,6 +74,11 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
 
+Changes to squid-3.2.11 (30 Apr 2013):
+
+	- Regression Bug 3839: build error: src/tools.h: No such file or directory
+	- Update copyright on SN.png
+
 Changes to squid-3.2.10 (27 Apr 2013):
 
 	- Bug 3833: squidclient: Option '-k' is not present in man(1) page
