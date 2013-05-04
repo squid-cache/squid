@@ -253,7 +253,7 @@ AS_VAR_POPDEF([ac_Search])dnl
 dnl Check for Cyrus SASL
 AC_DEFUN([SQUID_CHECK_SASL],[
   squid_sasl_present="auto"
-  AC_CHECK_HEADERS(sasl/sasl.h sasl.h)
+  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
   AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
     AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
       squid_sasl_present="no"
@@ -272,7 +272,7 @@ AC_DEFUN([SQUID_CHECK_SASL],[
       ;;
   esac
   if test "x$squid_sasl_present" != "yes"; then
-    AC_MSG_WARN(Neither SASL nor SASL2 found)
+    AC_MSG_WARN([Neither SASL nor SASL2 found])
   fi
   AC_SUBST(LIBSASL)
 ])
