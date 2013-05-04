@@ -33,7 +33,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "CachePeer.h"
 #include "client_side_request.h"
 #include "client_side.h"

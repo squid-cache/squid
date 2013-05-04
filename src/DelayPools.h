@@ -32,6 +32,12 @@
 #ifndef SQUID_DELAYPOOLS_H
 #define SQUID_DELAYPOOLS_H
 
+#include "base/Vector.h"
+
+class DelayPool;
+class Updateable;
+class StoreEntry;
+
 /**
  \defgroup DelayPoolsAPI Delay Pools API
  \ingroup Components
@@ -46,14 +52,6 @@ public:
 
     virtual void update(int) = 0;
 };
-
-/* forward decls */
-class DelayPool;
-class Updateable;
-class StoreEntry;
-
-/* for Vector<> */
-#include "Array.h"
 
 /// \ingroup DelayPoolsAPI
 class DelayPools

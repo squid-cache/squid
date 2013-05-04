@@ -42,7 +42,7 @@
 #include "DelayIdComposite.h"
 #include "DelayBucket.h"
 #include "DelaySpec.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "splay.h"
 
 /// \ingroup DelayPoolsAPI
