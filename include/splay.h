@@ -1,8 +1,7 @@
 #ifndef SQUID_SPLAY_H
 #define SQUID_SPLAY_H
 
-#ifndef __cplusplus
-#else
+#if defined(__cplusplus)
 
 #include "Stack.h"
 
