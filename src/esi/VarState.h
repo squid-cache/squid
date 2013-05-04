@@ -34,7 +34,7 @@
 
 #include "esi/Segment.h"
 #include "Trie.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "HttpHeader.h"
 
 class HttpReply;

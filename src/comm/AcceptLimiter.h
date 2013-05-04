@@ -1,7 +1,7 @@
 #ifndef _SQUID_SRC_COMM_ACCEPT_LIMITER_H
 #define _SQUID_SRC_COMM_ACCEPT_LIMITER_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "comm/TcpAcceptor.h"
 
 namespace Comm

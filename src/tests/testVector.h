@@ -1,6 +1,5 @@
-
-#ifndef SQUID_LIB_TEST_ARRAY_H
-#define SQUID_LIB_TEST_ARRAY_H
+#ifndef SQUID_SRC_TESTS_TESTVECTOR_H
+#define SQUID_SRC_TESTS_TESTVECTOR_H
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -10,9 +9,9 @@
  *
  */
 
-class testArray : public CPPUNIT_NS::TestFixture
+class testVector : public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testArray );
+    CPPUNIT_TEST_SUITE( testVector );
     CPPUNIT_TEST( all );
     CPPUNIT_TEST_SUITE_END();
 
@@ -23,4 +22,3 @@ protected:
 };
 
 #endif
-

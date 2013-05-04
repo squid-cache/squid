@@ -38,7 +38,7 @@
  */
 
 #include "squid.h"
-#include "Array.h"
+#include "base/Vector.h"
 
 #if HAVE_ASSERT_H
 #include <assert.h>

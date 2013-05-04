@@ -42,7 +42,7 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "Array.h"
+#include "base/Vector.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "CommonPool.h"
