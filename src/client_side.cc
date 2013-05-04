@@ -618,13 +618,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
-#if USE_AUTH
-    if (request->auth_user_request != NULL) {
-        if (request->auth_user_request->username())
-            aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
-    }
-#endif
-
     // Adapted request, if any, inherits and then collects all the stats, but
     // the virgin request gets logged instead; copy the stats to log them.
     // TODO: avoid losses by keeping these stats in a shared history object?
