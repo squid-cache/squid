@@ -18,4 +18,4 @@ digest_ldap_auth_LDADD = \
 	$(SSLLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = config.test
+EXTRA_DIST = required.m4

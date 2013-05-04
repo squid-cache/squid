@@ -26,9 +26,8 @@ enable_auth_basic="`echo $enable_auth_basic| sed -e 's/,/ /g;s/  */ /g'`"
 if test "x$enable_auth_basic" != "xno" ; then
     AUTH_MODULES="$AUTH_MODULES basic"
     AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
-    for helper in $enable_auth_basic
-    do
-    dir="$srcdir/helpers/basic_auth/$helper"
+    for helper in $enable_auth_basic; do
+      dir="$srcdir/helpers/basic_auth/$helper"
 
       # modules converted to autoconf macros already
       # NP: we only need this list because m4_include() does not accept variables
@@ -83,7 +82,7 @@ if test "x$enable_auth_basic" != "xno" ; then
           BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $BUILD_HELPER"
         fi
       else
-          AC_MSG_ERROR([Basic auth helper $helper ... not found])
+        AC_MSG_ERROR([Basic auth helper $helper ... not found])
       fi
     done
 fi

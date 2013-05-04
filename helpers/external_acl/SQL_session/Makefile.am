@@ -6,7 +6,7 @@ man_MANS = ext_sql_session_acl.8
 EXTRA_DIST= \
 	ext_sql_session_acl.8 \
 	ext_sql_session_acl.pl.in \
-	config.test
+	required.m4
 
 ext_sql_session_acl.8: ext_sql_session_acl
 	pod2man ext_sql_session_acl ext_sql_session_acl.8
