@@ -1,7 +1,7 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"

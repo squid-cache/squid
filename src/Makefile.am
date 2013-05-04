@@ -1090,6 +1090,7 @@ check_PROGRAMS+=\
 	tests/testURL \
 	tests/testConfigParser \
 	tests/testStatHist \
+	tests/testVector \
 	$(STORE_TESTS)
 
 ## NP: required to run the above list. check_PROGRAMS only builds the binaries...
@@ -3867,6 +3868,21 @@ tests_testStatHist_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
 tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
+
+tests_testVector_SOURCES = \
+	tests/testVector.cc \
+	tests/testMain.cc \
+	tests/testVector.h \
+	time.cc
+nodist_tests_testVector_SOURCES = \
+	$(TESTSOURCES)
+tests_testVector_LDADD= \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testVector_LDFLAGS = $(LIBADD_DL)
+tests_testVector_DEPENDENCIES = \
+	$(SQUID_CPPUNIT_LA)
 
 
 TESTS += testHeaders

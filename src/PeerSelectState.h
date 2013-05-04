@@ -34,7 +34,7 @@
 #define   SQUID_PEERSELECTSTATE_H
 
 #include "acl/Checklist.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "hier_code.h"

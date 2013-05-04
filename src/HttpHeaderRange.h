@@ -32,7 +32,7 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "MemPool.h"
 #include "Packer.h"
 #include "Range.h"

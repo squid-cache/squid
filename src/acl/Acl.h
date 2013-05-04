@@ -33,7 +33,7 @@
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"

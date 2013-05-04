@@ -1,7 +1,7 @@
 #ifndef SQUID_NOTES_H
 #define SQUID_NOTES_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "CbDataList.h"
 #include "MemPool.h"

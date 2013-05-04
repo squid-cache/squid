@@ -31,7 +31,7 @@
 #ifndef SQUID_EVENTLOOP_H
 #define SQUID_EVENTLOOP_H
 
-#include "Array.h"
+#include "base/Vector.h"
 
 #define EVENT_LOOP_TIMEOUT	1000 /* 1s timeout */
 
