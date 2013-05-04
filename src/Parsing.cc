@@ -75,9 +75,9 @@ xatoi(const char *token)
 }
 
 unsigned int
-xatoui(const char *token)
+xatoui(const char *token, char eov)
 {
-    int64_t input = xatoll(token, 10);
+    int64_t input = xatoll(token, 10, eov);
     if (input < 0) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The input value '" << token << "' cannot be less than 0.");
         self_destruct();
@@ -107,7 +107,7 @@ xatol(const char *token)
 }
 
 int64_t
-xatoll(const char *token, int base)
+xatoll(const char *token, int base, char eov)
 {
     char *end = NULL;
     int64_t ret = strtoll(token, &end, base);
@@ -117,7 +117,7 @@ xatoll(const char *token, int base)
         self_destruct();
     }
 
-    if (*end) {
+    if (*end != eov) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid value: '" << token << "' is supposed to be a number.");
         self_destruct();
     }
