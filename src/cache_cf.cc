@@ -3699,17 +3699,16 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
         char *t = token + 13;
         s->tcp_keepalive.enabled = true;
-        s->tcp_keepalive.idle = xatoui(t);
+        s->tcp_keepalive.idle = xatoui(t,',');
         t = strchr(t, ',');
         if (t) {
             ++t;
-            s->tcp_keepalive.interval = xatoui(t);
+            s->tcp_keepalive.interval = xatoui(t,',');
             t = strchr(t, ',');
         }
         if (t) {
             ++t;
             s->tcp_keepalive.timeout = xatoui(t);
-            // t = strchr(t, ','); // not really needed, left in as documentation
         }
 #if USE_SSL
     } else if (strcmp(token, "sslBump") == 0) {
