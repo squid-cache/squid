@@ -346,7 +346,11 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // lookup the local-end details of this new connection
     details->local.InitAddrInfo(gai);
     details->local.SetEmpty();
-    getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
+    if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
+        debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
+        details->local.FreeAddrInfo(gai);
+        return COMM_ERROR;
+    }
     details->local = *gai;
     details->local.FreeAddrInfo(gai);
 
