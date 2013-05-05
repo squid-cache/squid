@@ -70,8 +70,8 @@ public:
     void makeSet(const ACLFlag f) { flags_ |= flagToInt(f); } ///< Set the given flag
     /// Return true if the given flag is set
     bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
-    /// Parse a flags given in the form -[A..Z|a..z]
-    void parseFlags(char * &nextToken);
+    /// Parse optional flags given in the form -[A..Z|a..z]
+    void parseFlags();
     const char *flagsStr() const; ///< Convert the flags to a string representation
 
 private:

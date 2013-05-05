@@ -52,8 +52,9 @@ bool ACLFlags::supported(const ACLFlag f) const
 }
 
 void
-ACLFlags::parseFlags(char * &nextToken)
+ACLFlags::parseFlags()
 {
+    char *nextToken;
     while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
 
         //if token is the "--" break flag
@@ -235,8 +236,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      */
     AclMatchedName = A->name;	/* ugly */
 
-    char *aTok;
-    A->flags.parseFlags(aTok);
+    A->flags.parseFlags();
 
     /*split the function here */
     A->parse();
