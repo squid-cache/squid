@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(libTrie, 0.1, rbtcollins@squid-cache.org)
 AC_CONFIG_SRCDIR([src/Trie.cc])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 
 enable_inline=${enable_inline:=yes}
