@@ -300,14 +300,10 @@ update_maxobjsize(void)
 static void
 SetConfigFilename(char const *file_name, bool is_pipe)
 {
-    cfg_filename = file_name;
-
-    char const *token;
-
     if (is_pipe)
         cfg_filename = file_name + 1;
-    else if ((token = strrchr(cfg_filename, '/')))
-        cfg_filename = token + 1;
+    else
+        cfg_filename = file_name;
 }
 
 static const char*
@@ -528,7 +524,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 if ((token = strchr(new_file_name, '"')))
                     *token = '\0';
 
-                cfg_filename = new_file_name;
+                SetConfigFilename(new_file_name, false);
             }
 
             config_lineno = new_lineno;
@@ -598,7 +594,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         fclose(fp);
     }
 
-    cfg_filename = orig_cfg_filename;
+    SetConfigFilename(orig_cfg_filename, false);
     config_lineno = orig_config_lineno;
 
     xfree(tmp_line);
