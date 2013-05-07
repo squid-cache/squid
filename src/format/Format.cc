@@ -760,7 +760,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_NAME:
-            out = strOrNull(al->cache.authuser);
+#if USE_AUTH
+            if (al->request && al->request->auth_user_request != NULL)
+                out = strOrNull(al->request->auth_user_request->username());
+#endif
             if (!out)
                 out = strOrNull(al->cache.extuser);
 #if USE_SSL
@@ -772,7 +775,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_LOGIN:
-            out = strOrNull(al->cache.authuser);
+#if USE_AUTH
+            if (al->request && al->request->auth_user_request != NULL)
+                out = strOrNull(al->request->auth_user_request->username());
+#endif
             break;
 
         case LFT_USER_IDENT:

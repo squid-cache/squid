@@ -151,7 +151,6 @@ public:
                 code (LOG_TAG_NONE),
                 msec(0),
                 rfc931 (NULL),
-                authuser (NULL),
                 extuser(NULL),
 #if USE_SSL
                 ssluser(NULL),
@@ -170,7 +169,6 @@ public:
         log_type code;
         int msec;
         const char *rfc931;
-        const char *authuser;
         const char *extuser;
 #if USE_SSL
 

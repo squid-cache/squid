@@ -37,7 +37,6 @@ AccessLogEntry::~AccessLogEntry()
 #endif
 
     safe_free(headers.reply);
-    safe_free(cache.authuser);
 
     safe_free(headers.adapted_request);
     HTTPMSGUNLOCK(adapted_request);
