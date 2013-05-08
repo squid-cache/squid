@@ -41,6 +41,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
+#include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -380,6 +381,16 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         // Failed.
         return COMM_ERROR;
     }
+
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (conn->remote.IsIPv4()) {
+            conn->remoteEui48.lookup(conn->remote);
+        } else if (conn->remote.IsIPv6()) {
+            conn->remoteEui64.lookup(conn->remote);
+        }
+    }
+#endif
 
     PROF_stop(comm_accept);
     return COMM_OK;
