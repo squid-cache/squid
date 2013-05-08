@@ -4192,7 +4192,7 @@ DOC_START
 DOC_END
 
 NAME: debug_options
-TYPE: eol
+TYPE: debug_options
 DEFAULT: ALL,1
 DEFAULT_DOC: Log all critical and important messages.
 LOC: Debug::debugOptions
