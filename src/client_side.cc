@@ -98,7 +98,6 @@
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "errorpage.h"
-#include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
 #include "forward.h"
@@ -3406,16 +3405,6 @@ connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
         identChecklist.my_addr = client->local;
         if (identChecklist.fastCheck() == ACCESS_ALLOWED)
             Ident::Start(client, clientIdentDone, result);
-    }
-#endif
-
-#if USE_SQUID_EUI
-    if (Eui::TheConfig.euiLookup) {
-        if (client->remote.IsIPv4()) {
-            result->clientConnection->remoteEui48.lookup(client->remote);
-        } else if (client->remote.IsIPv6()) {
-            result->clientConnection->remoteEui64.lookup(client->remote);
-        }
     }
 #endif
 

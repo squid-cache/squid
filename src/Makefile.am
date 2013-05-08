@@ -615,7 +615,6 @@ squid_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	$(DISK_LIBS) \
@@ -1583,7 +1582,6 @@ tests_testCacheManager_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -1592,6 +1590,7 @@ tests_testCacheManager_LDADD = \
 	ip/libip.la \
 	fs/libfs.la \
 	comm/libcomm.la \
+	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	format/libformat.la \
@@ -1725,6 +1724,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
@@ -1765,7 +1765,6 @@ tests_testDiskIO_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	libsquid.la \
@@ -1980,6 +1979,7 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
 	tools.h \
@@ -2006,7 +2006,6 @@ tests_testEvent_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -2226,6 +2225,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
 	tools.h \
@@ -2252,7 +2252,6 @@ tests_testEventLoop_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -2465,6 +2464,7 @@ tests_test_http_range_SOURCES = \
 	SwapDir.cc \
 	tests/test_http_range.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libeui.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_store_stats.cc \
@@ -2492,7 +2492,6 @@ tests_test_http_range_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -2588,6 +2587,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
 	BodyPipe.cc \
@@ -2770,7 +2770,6 @@ tests_testHttpRequest_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -2903,6 +2902,7 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2951,7 +2951,6 @@ tests_testStore_LDADD= \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -3022,7 +3021,6 @@ SWAP_TEST_DS =\
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -3044,6 +3042,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
+	tests/stub_libeui.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
@@ -3177,7 +3176,6 @@ tests_testUfs_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
@@ -3320,6 +3318,7 @@ tests_testRock_SOURCES = \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
@@ -3362,7 +3361,6 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
-	eui/libeui.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	base/libbase.la \
@@ -3391,6 +3389,7 @@ tests_testCoss_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
+	tests/stub_libeui.cc \
 	tests/stub_pconn.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
@@ -3514,7 +3513,6 @@ tests_testCoss_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
-	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
