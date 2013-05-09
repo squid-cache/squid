@@ -3651,9 +3651,15 @@ DOC_START
 
 	HTTP related format codes:
 
-		[http::]>h	Original request header. Optional header name argument
-				on the format header[:[separator]element]
-		[http::]>ha	The HTTP request headers after adaptation and redirection. 
+		[http::]>h	Original received request header. 
+				Usually differs from the request header sent by
+				Squid, although most fields are often preserved.
+				Accepts optional header field name/value filter
+				argument using name[:[separator]element] format.
+		[http::]>ha	Received request header after adaptation and
+				redirection (pre-cache REQMOD vectoring point).
+				Usually differs from the request header sent by
+				Squid, although most fields are often preserved.
 				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
