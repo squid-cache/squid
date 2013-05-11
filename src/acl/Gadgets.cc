@@ -209,7 +209,7 @@ aclParseAclList(ConfigParser &parser, ACLList ** head)
     /* next expect a list of ACL names, possibly preceeded
      * by '!' for negation */
 
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = parser.strtokFile())) {
         ACLList *L = new ACLList;
 
         if (*t == '!') {
