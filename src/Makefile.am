@@ -1488,6 +1488,7 @@ tests_testCacheManager_SOURCES = \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
+	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -1902,6 +1903,7 @@ tests_testEvent_SOURCES = \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
+	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -2145,6 +2147,7 @@ tests_testEventLoop_SOURCES = \
 	internal.cc \
 	SquidList.h \
 	SquidList.cc \
+	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
@@ -2388,6 +2391,7 @@ tests_test_http_range_SOURCES = \
 	ipcache.cc \
 	SquidList.h \
 	SquidList.cc \
+	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
@@ -2679,6 +2683,7 @@ tests_testHttpRequest_SOURCES = \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
+	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -3647,6 +3652,7 @@ tests_testURL_SOURCES = \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
+	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
