@@ -26,18 +26,18 @@ const size_t Log::TcpLogger::BufferCapacityMin = 2*Log::TcpLogger::IoBufSize;
 CBDATA_NAMESPACED_CLASS_INIT(Log, TcpLogger);
 
 Log::TcpLogger::TcpLogger(size_t bufCap, bool dieOnErr, Ip::Address them):
-    AsyncJob("TcpLogger"),
-    dieOnError(dieOnErr),
-    bufferCapacity(bufCap),
-    bufferedSize(0),
-    flushDebt(0),
-    quitOnEmpty(false),
-    reconnectScheduled(false),
-    writeScheduled(false),
-    conn(NULL),
-    remote(them),
-    connectFailures(0),
-    drops(0)
+        AsyncJob("TcpLogger"),
+        dieOnError(dieOnErr),
+        bufferCapacity(bufCap),
+        bufferedSize(0),
+        flushDebt(0),
+        quitOnEmpty(false),
+        reconnectScheduled(false),
+        writeScheduled(false),
+        conn(NULL),
+        remote(them),
+        connectFailures(0),
+        drops(0)
 {
     if (bufferCapacity < BufferCapacityMin) {
         debugs(MY_DEBUG_SECTION, DBG_IMPORTANT,
@@ -134,7 +134,7 @@ void Log::TcpLogger::writeIfPossible()
     // XXX: Squid shutdown sequence starts closing our connection before
     // calling LogfileClose, leading to loss of log records during shutdown.
     if (!writeScheduled && bufferedSize > 0 && conn != NULL &&
-        !fd_table[conn->fd].closing()) {
+            !fd_table[conn->fd].closing()) {
         debugs(MY_DEBUG_SECTION, 5, "writing first buffer");
 
         typedef CommCbMemFunT<TcpLogger, CommIoCbParams> WriteDialer;
@@ -162,9 +162,9 @@ Log::TcpLogger::canFit(const size_t len) const
             // problem: A huge record that does not fit and is dropped blocks
             // subsequent regular records from being buffered until we write.
             debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "tcp:" << remote <<
-               " logger stops dropping records after " << drops << " drops" <<
-               "; current buffer use: " << (bufferedSize+len) <<
-               " out of " << bufferCapacity << " bytes");
+                   " logger stops dropping records after " << drops << " drops" <<
+                   "; current buffer use: " << (bufferedSize+len) <<
+                   " out of " << bufferCapacity << " bytes");
         }
         return true;
     }
@@ -308,7 +308,8 @@ Log::TcpLogger::DelayedReconnect(void *data)
 
 /// "sleep a little before trying to connect again" event callback
 void
-Log::TcpLogger::delayedReconnect() {
+Log::TcpLogger::delayedReconnect()
+{
     Must(reconnectScheduled);
     Must(!conn);
     reconnectScheduled = false;
@@ -323,8 +324,7 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
     if (io.flag == COMM_ERR_CLOSING) {
         debugs(MY_DEBUG_SECTION, 7, "closing");
         // do nothing here -- our comm_close_handler will be called to clean up
-    } else
-    if (io.flag != COMM_OK) {
+    } else if (io.flag != COMM_OK) {
         debugs(MY_DEBUG_SECTION, 2, "write failure: " << xstrerr(io.xerrno));
         // keep the first buffer (the one we failed to write)
         disconnect();
@@ -351,7 +351,7 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
     }
 }
 
-/// This is our comm_close_handler. It is called when some external force 
+/// This is our comm_close_handler. It is called when some external force
 /// (e.g., reconfigure or shutdown) is closing the connection (rather than us).
 void
 Log::TcpLogger::handleClosure(const CommCloseCbParams &io)
@@ -377,7 +377,7 @@ Log::TcpLogger::disconnect()
     }
 }
 
-/// Converts Logfile into a pointer to a valid TcpLogger job or, 
+/// Converts Logfile into a pointer to a valid TcpLogger job or,
 /// if the logger job has quit, into a nill pointer
 Log::TcpLogger *
 Log::TcpLogger::StillLogging(Logfile *lf)
