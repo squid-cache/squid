@@ -3018,21 +3018,6 @@ parse_eol(char *volatile *var)
 #define dump_eol dump_string
 #define free_eol free_string
 
-void
-parse_debug_options(char* volatile* var)
-{
-    parse_eol(var);
-    if (!Config.chroot_dir) {
-        leave_suid();
-        setUmask(Config.umask);
-        _db_init(Debug::cache_log, Debug::debugOptions);
-        enter_suid();
-    }
-}
-
-#define dump_debug_options dump_string
-#define free_debug_options free_string
-
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
