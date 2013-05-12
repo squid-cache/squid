@@ -23,9 +23,9 @@ my %Pairs = (
 		'AsyncCall.* constructed, this=(\S+)',
 		'AsyncCall.* destruct.*, this=(\S+)',
 	],
-	HttpReq => [
-		'\bHttpRequest.* constructed, this=(\S+)',
-		'\bHttpRequest.* destructed, this=(\S+)',
+	HttpHeaderEntry => [
+		'\bHttpHeaderEntry.* created HttpHeaderEntry (\S+)',
+		'\bHttpHeaderEntry.* destroying entry (\S+)',
 	],
 	ClientSocketContext => [
 		'\bClientSocketContext constructing, this=(\S+)',
