@@ -11,7 +11,8 @@
 class MemBlob;
 typedef RefCount<MemBlob> MemBlobPointer;
 
-namespace Log {
+namespace Log
+{
 
 /**
  * Sends log records to a remote TCP logger at the configured IP:port address.
