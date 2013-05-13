@@ -441,6 +441,7 @@ HttpHeader::clean()
 
     PROF_start(HttpHeaderClean);
 
+    if (owner <= hoReply) {
     /*
      * An unfortunate bug.  The entries array is initialized
      * such that count is set to zero.  httpHeaderClean() seems to
@@ -451,14 +452,13 @@ HttpHeader::clean()
      * has been used.  As a hack, just never count zero-sized header
      * arrays.
      */
-
-    if (owner <= hoReply) {
         if (0 != entries.count)
             HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
 
         ++ HttpHeaderStats[owner].destroyedCount;
 
         HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
+    } // if (owner <= hoReply)
 
         while ((e = getEntry(&pos))) {
             /* tmp hack to try to avoid coredumps */
@@ -466,12 +466,12 @@ HttpHeader::clean()
             if (e->id < 0 || e->id >= HDR_ENUM_END) {
                 debugs(55, DBG_CRITICAL, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
             } else {
+                if (owner <= hoReply)
                 HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
                 /* yes, this deletion leaves us in an inconsistent state */
                 delete e;
             }
         }
-    } // if (owner <= hoReply)
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
     len = 0;
@@ -1741,6 +1741,7 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");
     hs->hdrUCountDistr.dump(e, httpHeaderFldsPerHdrDumper);
+    storeAppendPrintf(e, "\n");
     dump_stat = NULL;
 }
 
@@ -1762,7 +1763,6 @@ httpHeaderStoreReport(StoreEntry * e)
 
     for (i = 1; i < HttpHeaderStatCount; ++i) {
         httpHeaderStatDump(HttpHeaderStats + i, e);
-        storeAppendPrintf(e, "%s\n", "<br>");
     }
 
     /* field stats for all messages */

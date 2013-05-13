@@ -41,6 +41,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
+#include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -346,7 +347,11 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // lookup the local-end details of this new connection
     details->local.InitAddrInfo(gai);
     details->local.SetEmpty();
-    getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
+    if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
+        debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
+        details->local.FreeAddrInfo(gai);
+        return COMM_ERROR;
+    }
     details->local = *gai;
     details->local.FreeAddrInfo(gai);
 
@@ -376,6 +381,16 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         // Failed.
         return COMM_ERROR;
     }
+
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (conn->remote.IsIPv4()) {
+            conn->remoteEui48.lookup(conn->remote);
+        } else if (conn->remote.IsIPv6()) {
+            conn->remoteEui64.lookup(conn->remote);
+        }
+    }
+#endif
 
     PROF_stop(comm_accept);
     return COMM_OK;

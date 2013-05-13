@@ -2,7 +2,7 @@
 #define SQUID_NOTES_H
 
 #include "acl/forward.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "CbDataList.h"
 #include "MemPool.h"
@@ -113,9 +113,10 @@ public:
     /**
      * Used to store a note key/value pair.
      */
-    class Entry {
+    class Entry
+    {
     public:
-        Entry(const char *aKey, const char *aValue): name(aKey), value(aValue) {} 
+        Entry(const char *aKey, const char *aValue): name(aKey), value(aValue) {}
         String name;
         String value;
         MEMPROXY_CLASS(Entry);

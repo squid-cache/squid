@@ -4,7 +4,7 @@
 #ifndef SQUID_IPC_KIDS_H
 #define SQUID_IPC_KIDS_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "ipc/Kid.h"
 
 /// a collection of kids

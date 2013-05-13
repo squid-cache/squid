@@ -181,6 +181,7 @@ static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * definitions);
 static void free_access_log(CustomLog ** definitions);
+static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMissing);
 
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
@@ -301,14 +302,10 @@ update_maxobjsize(void)
 static void
 SetConfigFilename(char const *file_name, bool is_pipe)
 {
-    cfg_filename = file_name;
-
-    char const *token;
-
     if (is_pipe)
         cfg_filename = file_name + 1;
-    else if ((token = strrchr(cfg_filename, '/')))
-        cfg_filename = token + 1;
+    else
+        cfg_filename = file_name;
 }
 
 static const char*
@@ -529,7 +526,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 if ((token = strchr(new_file_name, '"')))
                     *token = '\0';
 
-                cfg_filename = new_file_name;
+                SetConfigFilename(new_file_name, false);
             }
 
             config_lineno = new_lineno;
@@ -599,7 +596,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         fclose(fp);
     }
 
-    cfg_filename = orig_cfg_filename;
+    SetConfigFilename(orig_cfg_filename, false);
     config_lineno = orig_config_lineno;
 
     xfree(tmp_line);
@@ -1225,7 +1222,6 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
 }
 #endif
 
-#if USE_SSL
 /**
  * Parse bytes from a string.
  * Similar to the parseBytesLine function but parses the string value instead of
@@ -1261,7 +1257,6 @@ static void parseBytesOptionValue(size_t * bptr, const char *units, char const *
     if (static_cast<double>(*bptr) * 2 != (m * d / u) * 2)
         self_destruct();
 }
-#endif
 
 static size_t
 parseBytesUnits(const char *unit)
@@ -3607,8 +3602,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         s->flags.tproxyIntercept = true;
         Ip::Interceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
-        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
-        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 
         if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
@@ -3700,17 +3694,16 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
         char *t = token + 13;
         s->tcp_keepalive.enabled = true;
-        s->tcp_keepalive.idle = xatoui(t);
+        s->tcp_keepalive.idle = xatoui(t,',');
         t = strchr(t, ',');
         if (t) {
             ++t;
-            s->tcp_keepalive.interval = xatoui(t);
+            s->tcp_keepalive.interval = xatoui(t,',');
             t = strchr(t, ',');
         }
         if (t) {
             ++t;
             s->tcp_keepalive.timeout = xatoui(t);
-            // t = strchr(t, ','); // not really needed, left in as documentation
         }
 #if USE_SSL
     } else if (strcmp(token, "sslBump") == 0) {
@@ -4025,14 +4018,39 @@ strtokFile(void)
 
 #include "AccessLogEntry.h"
 
+/**
+ * We support several access_log configuration styles:
+ *
+ * #1: Deprecated ancient style without an explicit logging module:
+ * access_log /var/log/access.log
+ *
+ * #2: The "none" logging module (i.e., no logging [of matching transactions]):
+ * access_log none [acl ...]
+ *
+ * #3: Configurable logging module without named options:
+ * Logformat or the first ACL name, whichever comes first, may not contain '='.
+ * If no explicit logformat name is given, the first ACL name, if any,
+ * should not be an existing logformat name or it will be treated as such.
+ * access_log module:place [logformat_name] [acl ...]
+ *
+ * #4: Configurable logging module with name=value options such as logformat=x:
+ * The first ACL name may not contain '='.
+ * access_log module:place [option ...] [acl ...]
+ *
+ */
 static void
 parse_access_log(CustomLog ** logs)
 {
-    const char *filename, *logdef_name;
-
     CustomLog *cl = (CustomLog *)xcalloc(1, sizeof(*cl));
 
-    if ((filename = strtok(NULL, w_space)) == NULL) {
+    // default buffer size and fatal settings
+    cl->bufferSize = 8*MAX_URL;
+    cl->fatal = true;
+
+    /* determine configuration style */
+
+    const char *filename = strtok(NULL, w_space);
+    if (!filename) {
         self_destruct();
         return;
     }
@@ -4046,12 +4064,72 @@ parse_access_log(CustomLog ** logs)
         return;
     }
 
-    if ((logdef_name = strtok(NULL, w_space)) == NULL)
-        logdef_name = "squid";
-
-    debugs(3, 9, "Log definition name '" << logdef_name << "' file '" << filename << "'");
-
     cl->filename = xstrdup(filename);
+    cl->type = Log::Format::CLF_UNKNOWN;
+
+    const char *token = ConfigParser::strtokFile();
+    if (!token) { // style #1
+        // no options to deal with
+    } else if (!strchr(token, '=')) { // style #3
+        // if logformat name is not recognized,
+        // put back the token; it must be an ACL name
+        if (!setLogformat(cl, token, false))
+            ConfigParser::strtokFileUndo();
+    } else { // style #4
+        do {
+            if (strncasecmp(token, "on-error=", 9) == 0) {
+                if (strncasecmp(token+9, "die", 3) == 0) {
+                    cl->fatal = true;
+                } else if (strncasecmp(token+9, "drop", 4) == 0) {
+                    cl->fatal = false;
+                } else {
+                    debugs(3, DBG_CRITICAL, "Unknown value for on-error '" <<
+                           token << "' expected 'drop' or 'die'");
+                    self_destruct();
+                }
+            } else if (strncasecmp(token, "buffer-size=", 12) == 0) {
+                parseBytesOptionValue(&cl->bufferSize, B_BYTES_STR, token+12);
+            } else if (strncasecmp(token, "logformat=", 10) == 0) {
+                setLogformat(cl, token+10, true);
+            } else if (!strchr(token, '=')) {
+                // put back the token; it must be an ACL name
+                ConfigParser::strtokFileUndo();
+                break; // done with name=value options, now to ACLs
+            } else {
+                debugs(3, DBG_CRITICAL, "Unknown access_log option " << token);
+                self_destruct();
+            }
+        } while ((token = ConfigParser::strtokFile()) != NULL);
+    }
+
+    // set format if it has not been specified explicitly
+    if (cl->type == Log::Format::CLF_UNKNOWN)
+        setLogformat(cl, "squid", true);
+
+    aclParseAclList(LegacyParser, &cl->aclList, cl->filename);
+
+    while (*logs)
+        logs = &(*logs)->next;
+
+    *logs = cl;
+}
+
+/// sets CustomLog::type and, if needed, CustomLog::lf
+/// returns false iff there is no named log format
+static bool
+setLogformat(CustomLog *cl, const char *logdef_name, const bool dieWhenMissing)
+{
+    assert(cl);
+    assert(logdef_name);
+
+    debugs(3, 9, "possible " << cl->filename << " logformat: " << logdef_name);
+
+    if (cl->type != Log::Format::CLF_UNKNOWN) {
+        debugs(3, DBG_CRITICAL, "Second logformat name in one access_log: " <<
+               logdef_name << " " << cl->type << " ? " << Log::Format::CLF_NONE);
+        self_destruct();
+        return false;
+    }
 
     /* look for the definition pointer corresponding to this name */
     Format::Format *lf = Log::TheConfig.logformats;
@@ -4085,18 +4163,15 @@ parse_access_log(CustomLog ** logs)
         cl->type = Log::Format::CLF_USERAGENT;
     } else if (strcmp(logdef_name, "referrer") == 0) {
         cl->type = Log::Format::CLF_REFERER;
-    } else {
+    } else if (dieWhenMissing) {
         debugs(3, DBG_CRITICAL, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
-        return;
+        return false;
+    } else {
+        return false;
     }
 
-    aclParseAclList(LegacyParser, &cl->aclList, filename);
-
-    while (*logs)
-        logs = &(*logs)->next;
-
-    *logs = cl;
+    return true;
 }
 
 static int

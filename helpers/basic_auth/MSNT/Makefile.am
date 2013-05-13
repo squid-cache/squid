@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	msntauth.conf.default \
 	msntauth-v2.0.lsm \
 	README.html \
-	config.test
+	required.m4
 
 sysconf_DATA = \
 	msntauth.conf.default

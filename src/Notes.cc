@@ -154,7 +154,7 @@ NotePairs::find(const char *noteKey) const
 const char *
 NotePairs::toString(const char *sep) const
 {
-   static String value;
+    static String value;
     value.clean();
     for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         value.append((*i)->name);
@@ -188,7 +188,7 @@ NotePairs::addStrList(const char *key, const char *values)
     const char *item;
     const char *pos = NULL;
     int ilen = 0;
-    while(strListGetItem(&strValues, ',', &item, &ilen, &pos)) {
+    while (strListGetItem(&strValues, ',', &item, &ilen, &pos)) {
         String v;
         v.append(item, ilen);
         entries.push_back(new NotePairs::Entry(key, v.termedBuf()));
