@@ -48,6 +48,10 @@ public:
     Logfile *logfile;
     CustomLog *next;
     Log::Format::log_type type;
+    /// how much to buffer before dropping or dying (access_log buffer-size)
+    size_t bufferSize;
+    /// whether unrecoverable errors (e.g., dropping a log record) kill worker
+    bool fatal;
 };
 
 #endif /* SQUID_CUSTOMLOG_H_ */

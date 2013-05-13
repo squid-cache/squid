@@ -1247,6 +1247,26 @@ DOC_START
 	sources is required to prevent abuse of your proxy.
 DOC_END
 
+NAME: spoof_client_ip
+TYPE: acl_access
+LOC: Config.accessList.spoof_client_ip
+DEFAULT: none
+DEFAULT_DOC: Allow spoofing on all TPROXY traffic.
+DOC_START
+	Control client IP address spoofing of TPROXY traffic based on
+	defined access lists.
+
+	spoof_client_ip allow|deny [!]aclname ...
+
+	If there are no "spoof_client_ip" lines present, the default
+	is to "allow" spoofing of any suitable request.
+
+	Note that the cache_peer "no-tproxy" option overrides this ACL.
+
+	This clause supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
 NAME: http_access
 TYPE: acl_access
 LOC: Config.accessList.http
@@ -2983,6 +3003,7 @@ DOC_START
 	
 	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
 			requests to this peer. Use normal address selection instead.
+			This overrides the spoof_client_ip ACL.
 	
 	proxy-only	objects fetched from the peer will not be stored locally.
 	
@@ -3674,9 +3695,15 @@ DOC_START
 
 	HTTP related format codes:
 
-		[http::]>h	Original request header. Optional header name argument
-				on the format header[:[separator]element]
-		[http::]>ha	The HTTP request headers after adaptation and redirection. 
+		[http::]>h	Original received request header. 
+				Usually differs from the request header sent by
+				Squid, although most fields are often preserved.
+				Accepts optional header field name/value filter
+				argument using name[:[separator]element] format.
+		[http::]>ha	Received request header after adaptation and
+				redirection (pre-cache REQMOD vectoring point).
+				Usually differs from the request header sent by
+				Squid, although most fields are often preserved.
 				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
@@ -3814,16 +3841,47 @@ TYPE: access_log
 LOC: Config.Log.accesslogs
 DEFAULT_IF_NONE: daemon:@DEFAULT_ACCESS_LOG@ squid
 DOC_START
-	These files log client request activities. Has a line every HTTP or
-	ICP request. The format is:
+	Configures whether and how Squid logs HTTP and ICP transactions.
+	If access logging is enabled, a single line is logged for every 
+	matching HTTP or ICP request. The recommended directive formats are:
+
+	access_log <module>:<place> [option ...] [acl acl ...]
+	access_log none [acl acl ...]
+
+	The following directive format is accepted but may be deprecated:
 	access_log <module>:<place> [<logformat name> [acl acl ...]]
-	access_log none [acl acl ...]]
+
+        In most cases, the first ACL name must not contain the '=' character
+	and should not be equal to an existing logformat name. You can always
+	start with an 'all' ACL to work around those restrictions.
 	
 	Will log to the specified module:place using the specified format (which
 	must be defined in a logformat directive) those entries which match
 	ALL the acl's specified (which must be defined in acl clauses).
 	If no acl is specified, all requests will be logged to this destination.
 	
+	===== Available options for the recommended directive format =====
+
+	logformat=name		Names log line format (either built-in or
+				defined by a logformat directive). Defaults
+				to 'squid'.
+
+	buffer-size=64KB	Defines approximate buffering limit for log
+				records (see buffered_logs).  Squid should not
+				keep more than the specified size and, hence,
+				should flush records before the buffer becomes
+				full to avoid overflows under normal
+				conditions (the exact flushing algorithm is
+				module-dependent though).  The on-error option
+				controls overflow handling.
+
+	on-error=die|drop	Defines action on unrecoverable errors. The
+				'drop' action ignores (i.e., does not log)
+				affected log records. The default 'die' action
+				kills the affected worker. The drop action 
+				support has not been tested for modules other
+				than tcp.
+
 	===== Modules Currently available =====
 	
 	none	Do not log any requests matching these ACL.
@@ -3854,6 +3912,7 @@ DOC_START
 		Place Format:   //host:port
 
 	tcp	To send each log line as text data to a TCP receiver.
+		Lines may be accumulated before sending (see buffered_logs).
 		Place: The destination host name or IP and port.
 		Place Format:   //host:port
 
@@ -4182,7 +4241,7 @@ DOC_START
 	records if it cannot write/send them immediately due to pending I/Os
 	(e.g., the I/O writing the previous log record) or connectivity loss.
 
-	Currently honored by 'daemon' access_log module only.
+	Currently honored by 'daemon' and 'tcp' access_log modules only.
 DOC_END
 
 NAME: netdb_filename

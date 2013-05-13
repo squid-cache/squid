@@ -234,7 +234,7 @@ Adaptation::Ecap::XactionRep::start()
             if (v) {
                 if (ah->metaHeaders == NULL)
                     ah->metaHeaders = new NotePairs();
-                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), v)) 
+                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), v))
                     ah->metaHeaders->add((*i)->key.termedBuf(), v);
             }
         }

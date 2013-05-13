@@ -1,8 +1,9 @@
 #ifndef SQUID_CLIENTDELAYCONFIG_H
 #define SQUID_CLIENTDELAYCONFIG_H
 
-#include "Array.h"
 #include "acl/forward.h"
+#include "base/Vector.h"
+
 class StoreEntry;
 class ConfigParser;
 

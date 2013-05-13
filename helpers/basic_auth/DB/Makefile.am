@@ -7,7 +7,7 @@ EXTRA_DIST= \
 	basic_db_auth.8 \
 	passwd.sql \
 	basic_db_auth.pl.in \
-	config.test
+	required.m4
 
 basic_db_auth.8: basic_db_auth
 	pod2man basic_db_auth basic_db_auth.8
