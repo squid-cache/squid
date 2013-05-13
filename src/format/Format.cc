@@ -383,7 +383,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_LOCAL_LISTENING_IP: {
             // avoid logging a dash if we have reliable info
             const bool interceptedAtKnownPort = al->request ?
-                                                (al->request->flags.spoofClientIp ||
+                                                (al->request->flags.interceptTproxy ||
                                                  al->request->flags.intercepted) && al->cache.port :
                                                 false;
             if (interceptedAtKnownPort) {

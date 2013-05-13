@@ -87,7 +87,11 @@ public:
     bool intercepted :1;
     /** set if the Host: header passed verification */
     bool hostVerified :1;
-    /** request to spoof the client ip */
+    /// Set for requests handled by a "tproxy" port.
+    bool interceptTproxy :1;
+    /// The client IP address should be spoofed when connecting to the web server.
+    /// This applies to TPROXY traffic that has not had spoofing disabled through
+    /// the spoof_client_ip squid.conf ACL.
     bool spoofClientIp :1;
     /** set if the request is internal (\see ClientHttpRequest::flags.internal)*/
     bool internal :1;
