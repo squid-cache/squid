@@ -29,6 +29,7 @@
  *
  */
 
+#include "acl/forward.h"
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
@@ -40,7 +41,6 @@
 #include <openssl/ssl.h>
 #endif
 
-class acl_access;
 class CachePeerDomainList;
 class NeighborTypeDomainList;
 class PeerDigest;

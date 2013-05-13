@@ -58,8 +58,10 @@ AuthenticateAcl(ACLChecklist *ch)
         break;
 
     case AUTH_ACL_HELPER:
-        debugs(28, 4, HERE << "returning " << ACCESS_DUNNO << " sending credentials to helper.");
-        checklist->changeState(ProxyAuthLookup::Instance());
+        if (checklist->goAsync(ProxyAuthLookup::Instance()))
+            debugs(28, 4, "returning " << ACCESS_DUNNO << " sending credentials to helper.");
+        else
+            debugs(28, 2, "cannot go async; returning " << ACCESS_DUNNO);
         return ACCESS_DUNNO; // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
 
     case AUTH_ACL_CHALLENGE:
