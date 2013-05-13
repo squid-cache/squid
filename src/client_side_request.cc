@@ -780,8 +780,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
     debugs(85, 2, "The request " <<
            RequestMethodStr(http->request->method) << " " <<
            http->uri << " is " << answer <<
-           ", because it matched '" <<
-           (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
+           "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";

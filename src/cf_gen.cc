@@ -631,6 +631,7 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
     fout << "    if (!strcmp(token, \"" << aName << "\")) {" << std::endl;
     if (ifdef.size())
         fout << "#if " << ifdef << std::endl;
+    fout << "        cfg_directive = \"" << aName << "\";" << std::endl;
     fout << "        ";
     if (type.compare("obsolete") == 0) {
         fout << "debugs(0, DBG_CRITICAL, \"ERROR: Directive '" << aName << "' is obsolete.\");\n";
@@ -645,6 +646,7 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
         fout << "parse_" << type << "(&" << loc << (array_flag ? "[0]" : "") << ");";
     }
     fout << std::endl;
+    fout << "        cfg_directive = NULL;" << std::endl;
     if (ifdef.size()) {
         fout <<
         "#else" << std::endl <<

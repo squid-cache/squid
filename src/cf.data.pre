@@ -1076,6 +1076,29 @@ IF USE_SSL
 	  # The SHA1 digest algorithm is the default and is currently
 	  # the only algorithm supported (-sha1).
 ENDIF
+	acl aclname any-of acl1 acl2 ...
+	  # match any one of the acls [fast or slow]
+	  # The first matching ACL stops further ACL evaluation.
+	  #
+	  # ACLs from multiple any-of lines with the same name are ORed.
+	  # For example, A = (a1 or a2) or (a3 or a4) can be written as
+	  #   acl A any-of a1 a2
+	  #   acl A any-of a3 a4
+	  #
+	  # This group ACL is fast if all evaluated ACLs in the group are fast
+	  # and slow otherwise.
+
+	acl aclname all-of acl1 acl2 ... 
+	  # match all of the acls [fast or slow]
+	  # The first mismatching ACL stops further ACL evaluation.
+	  #
+	  # ACLs from multiple all-of lines with the same name are ORed.
+	  # For example, B = (b1 and b2) or (b3 and b4) can be written as
+	  #   acl B all-of b1 b2
+	  #   acl B all-of b3 b4
+	  #
+	  # This group ACL is fast if all evaluated ACLs in the group are fast
+	  # and slow otherwise.
 
 	Examples:
 		acl macaddress arp 09:00:2b:23:45:67

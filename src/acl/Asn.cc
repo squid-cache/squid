@@ -39,7 +39,7 @@
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
 #include "cache_cf.h"
-#include "forward.h"
+#include "src/forward.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
@@ -638,14 +638,13 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
         /* No entry in cache, lookup not attempted */
         /* XXX FIXME: allow accessing the acl name here */
         debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");
-        checklist->changeState (DestinationIPLookup::Instance());
-    } else {
+        if (checklist->goAsync(DestinationIPLookup::Instance()))
+            return -1;
+        // else fall through to noaddr match, hiding the lookup failure (XXX)
+    }
         Ip::Address noaddr;
         noaddr.SetNoAddr();
         return data->match(noaddr);
-    }
-
-    return 0;
 }
 
 ACLDestinationASNStrategy *
