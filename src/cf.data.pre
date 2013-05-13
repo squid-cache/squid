@@ -1224,6 +1224,26 @@ DOC_START
 	sources is required to prevent abuse of your proxy.
 DOC_END
 
+NAME: spoof_client_ip
+TYPE: acl_access
+LOC: Config.accessList.spoof_client_ip
+DEFAULT: none
+DEFAULT_DOC: Allow spoofing on all TPROXY traffic.
+DOC_START
+	Control client IP address spoofing of TPROXY traffic based on
+	defined access lists.
+
+	spoof_client_ip allow|deny [!]aclname ...
+
+	If there are no "spoof_client_ip" lines present, the default
+	is to "allow" spoofing of any suitable request.
+
+	Note that the cache_peer "no-tproxy" option overrides this ACL.
+
+	This clause supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
 NAME: http_access
 TYPE: acl_access
 LOC: Config.accessList.http
@@ -2960,6 +2980,7 @@ DOC_START
 	
 	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
 			requests to this peer. Use normal address selection instead.
+			This overrides the spoof_client_ip ACL.
 	
 	proxy-only	objects fetched from the peer will not be stored locally.
 	
