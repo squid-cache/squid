@@ -336,7 +336,7 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
         const MemBlob::Pointer &written = buffers.front();
         const size_t writtenSize = static_cast<size_t>(written->size);
         // and we wrote the whole buffer
-        Must(io.size >= 0 && writtenSize >= 0 && io.size == writtenSize);
+        Must(io.size == writtenSize);
         Must(bufferedSize >= writtenSize);
         bufferedSize -= writtenSize;
 
