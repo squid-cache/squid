@@ -2,8 +2,8 @@
 #define SQUID_CLIENTDELAYCONFIG_H
 
 #include "Array.h"
+#include "acl/forward.h"
 class StoreEntry;
-class acl_access;
 class ConfigParser;
 
 /// \ingroup DelayPoolsAPI

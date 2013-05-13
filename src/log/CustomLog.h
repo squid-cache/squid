@@ -29,9 +29,9 @@
  *
  */
 //#include "format/Format.h"
+#include "acl/forward.h"
 #include "log/Formats.h"
 
-class ACLList;
 class Logfile;
 namespace Format
 {

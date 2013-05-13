@@ -8,7 +8,14 @@ libapi_la_SOURCES = \
 	Acl.cc \
 	Acl.h \
 	Checklist.cc \
-	Checklist.h
+	Checklist.h \
+	forward.h \
+	InnerNode.cc \
+	InnerNode.h \
+	BoolOps.cc \
+	BoolOps.h \
+	Tree.cc \
+	Tree.h
 
 ## Data-dependent Squid/transaction state used by specific ACLs.
 ## Does not refer to specific ACLs to avoid circular dependencies.
@@ -36,6 +43,10 @@ libacls_la_SOURCES = \
 	TimeData.h \
 	Asn.cc \
 	Asn.h \
+	AllOf.cc \
+	AllOf.h \
+	AnyOf.cc \
+	AnyOf.h \
 	Browser.cc \
 	Browser.h \
 	DestinationAsn.h \

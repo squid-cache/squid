@@ -2,6 +2,7 @@
 #define SQUID_ADAPTATION__CONFIG_H
 
 #include "event.h"
+#include "acl/forward.h"
 #include "acl/Gadgets.h"
 #include "base/AsyncCall.h"
 #include "adaptation/forward.h"
@@ -9,7 +10,6 @@
 #include "Notes.h"
 #include "SquidString.h"
 
-class acl_access;
 class ConfigParser;
 class HttpRequest;
 class HttpReply;

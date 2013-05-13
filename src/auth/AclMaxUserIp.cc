@@ -139,8 +139,8 @@ ACLMaxUserIP::match(ACLChecklist *cl)
     case ACCESS_AUTH_REQUIRED:
     default:
         // If the answer is not allowed or denied (matches/not matches) and
-        // async authentication is not needed (asyncNeeded), then we are done.
-        if (!checklist->asyncNeeded())
+        // async authentication is not in progress, then we are done.
+        if (checklist->keepMatching())
             checklist->markFinished(answer, "AuthenticateAcl exception");
         return -1; // other
     }

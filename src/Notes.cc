@@ -96,7 +96,11 @@ Notes::parse(ConfigParser &parser)
     ConfigParser::ParseQuotedString(&value);
     Note::Pointer note = add(key);
     Note::Value::Pointer noteValue = note->addValue(value);
-    aclParseAclList(parser, &noteValue->aclList);
+
+    String label(key);
+    label.append('=');
+    label.append(value);
+    aclParseAclList(parser, &noteValue->aclList, label.termedBuf());
 
     if (blacklisted) {
         for (int i = 0; blacklisted[i] != NULL; ++i) {

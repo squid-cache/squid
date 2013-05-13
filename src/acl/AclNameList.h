@@ -29,7 +29,7 @@
  *
  */
 
-#include "defines.h"
+#include "acl/forward.h"
 
 /// list of name-based ACLs. Currently a POD.
 class AclNameList

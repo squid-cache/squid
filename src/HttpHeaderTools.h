@@ -1,6 +1,7 @@
 #ifndef SQUID_HTTPHEADERTOOLS_H
 #define SQUID_HTTPHEADERTOOLS_H
 
+#include "acl/forward.h"
 #include "format/Format.h"
 #include "HttpHeader.h"
 #include "typedefs.h"
@@ -15,8 +16,6 @@
 #include <string>
 #endif
 
-class acl_access;
-class ACLList;
 class HeaderWithAcl;
 class HttpHeader;
 class HttpHeaderFieldInfo;

@@ -777,14 +777,17 @@ copyResultsFromEntry(HttpRequest *req, external_acl_entry *entry)
 static allow_t
 aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 {
-    const char *key = "";
     debugs(82, 9, HERE << "acl=\"" << acl->def->name << "\"");
     external_acl_entry *entry = ch->extacl_entry;
+
+    external_acl_message = "MISSING REQUIRED INFORMATION";
 
     if (entry) {
         if (cbdataReferenceValid(entry) && entry->def == acl->def) {
             /* Ours, use it.. if the key matches */
-            key = makeExternalAclKey(ch, acl);
+            const char *key = makeExternalAclKey(ch, acl);
+            if (!key)
+                return ACCESS_DUNNO; // insufficent data to continue
             if (strcmp(key, (char*)entry->key) != 0) {
                 debugs(82, 9, HERE << "entry key='" << (char *)entry->key << "', our key='" << key << "' dont match. Discarded.");
                 // too bad. need a new lookup.
@@ -796,15 +799,13 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             debugs(82, 9, HERE << "entry " << entry << " not valid or not ours. Discarded.");
             if (entry) {
                 debugs(82, 9, HERE << "entry def=" << entry->def << ", our def=" << acl->def);
-                key = makeExternalAclKey(ch, acl);
+                const char *key = makeExternalAclKey(ch, acl); // may be nil
                 debugs(82, 9, HERE << "entry key='" << (char *)entry->key << "', our key='" << key << "'");
             }
             cbdataReferenceDone(ch->extacl_entry);
             entry = NULL;
         }
     }
-
-    external_acl_message = "MISSING REQUIRED INFORMATION";
 
     if (!entry) {
         debugs(82, 9, HERE << "No helper entry available");
@@ -820,7 +821,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             debugs(82, 3, HERE << acl->def->name << " user is authenticated.");
         }
 #endif
-        key = makeExternalAclKey(ch, acl);
+        const char *key = makeExternalAclKey(ch, acl);
 
         if (!key) {
             /* Not sufficient data to process */
@@ -847,7 +848,8 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
             if (acl->def->theHelper->stats.queue_size < (int)acl->def->theHelper->childs.n_active) {
                 debugs(82, 2, HERE << "\"" << key << "\": queueing a call.");
-                ch->changeState(ExternalACLLookup::Instance());
+                if (!ch->goAsync(ExternalACLLookup::Instance()))
+                    debugs(82, 2, "\"" << key << "\": no async support!");
                 debugs(82, 2, HERE << "\"" << key << "\": return -1.");
                 return ACCESS_DUNNO; // expired cached or simply absent entry
             } else {
@@ -900,8 +902,8 @@ ACLExternal::match(ACLChecklist *checklist)
     case ACCESS_AUTH_REQUIRED:
     default:
         // If the answer is not allowed or denied (matches/not matches) and
-        // async authentication is not needed (asyncNeeded), then we are done.
-        if (!checklist->asyncNeeded())
+        // async authentication is not in progress, then we are done.
+        if (checklist->keepMatching())
             checklist->markFinished(answer, "aclMatchExternal exception");
         return -1; // other
     }
@@ -974,7 +976,9 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             str = ch->rfc931;
 
             if (!str || !*str) {
-                ch->changeState(IdentLookup::Instance());
+                // if we fail to go async, we still return NULL and the caller
+                // will detect the failure in ACLExternal::match().
+                (void)ch->goAsync(IdentLookup::Instance());
                 return NULL;
             }
 
@@ -1392,7 +1396,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
 
     ACLFilledChecklist *ch = Filled(checklist);
     const char *key = makeExternalAclKey(ch, acl);
-    assert(key);
+    assert(key); // XXX: will fail if EXT_ACL_IDENT case needs an async lookup
 
     debugs(82, 2, HERE << (inBackground ? "bg" : "fg") << " lookup in '" <<
            def->name << "' for '" << key << "'");
@@ -1542,7 +1546,6 @@ ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
     assert(acl);
     ACLExternal *me = dynamic_cast<ACLExternal *> (acl);
     assert (me);
-    checklist->asyncInProgress(true);
     ACLExternal::ExternalAclLookup(checklist, me);
 }
 
@@ -1552,9 +1555,7 @@ ExternalACLLookup::LookupDone(void *data, void *result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
-    checklist->asyncInProgress(false);
-    checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->matchNonBlocking();
+    checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 
 /* This registers "external" in the registry. To do dynamic definitions
