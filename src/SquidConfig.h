@@ -403,6 +403,10 @@ public:
 #if ICAP_CLIENT
         acl_access* icap;
 #endif
+
+        /// spoof_client_ip squid.conf acl.
+        /// nil unless configured
+        acl_access* spoof_client_ip;
     } accessList;
     AclDenyInfoList *denyInfoList;
 

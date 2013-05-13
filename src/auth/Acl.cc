@@ -34,7 +34,7 @@ AuthenticateAcl(ACLChecklist *ch)
     } else if (request->flags.accelerated) {
         /* WWW authorization on accelerated requests */
         headertype = HDR_AUTHORIZATION;
-    } else if (request->flags.intercepted || request->flags.spoofClientIp) {
+    } else if (request->flags.intercepted || request->flags.interceptTproxy) {
         debugs(28, DBG_IMPORTANT, "NOTICE: Authentication not applicable on intercepted requests.");
         return ACCESS_DENIED;
     } else {

@@ -590,7 +590,7 @@ HttpRequest::maybeCacheable()
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the reponse for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
+    if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
     switch (protocol) {

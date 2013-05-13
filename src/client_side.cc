@@ -2766,7 +2766,16 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      */
     if (http->clientConnection != NULL) {
         request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
-        request->flags.spoofClientIp = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        request->flags.interceptTproxy = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        if (request->flags.interceptTproxy) {
+            if (Config.accessList.spoof_client_ip) {
+                ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.spoof_client_ip, http);
+                request->flags.spoofClientIp = (checklist->fastCheck() == ACCESS_ALLOWED);
+                delete checklist;
+            } else
+                request->flags.spoofClientIp = true;
+        } else
+            request->flags.spoofClientIp = false;
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -3658,7 +3667,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
     else {
         char buf[MAX_IPSTRLEN];
         assert(bumpMode != Ssl::bumpNone && bumpMode != Ssl::bumpEnd);
-        HttpRequest *fakeRequest = new HttpRequest;
+        HttpRequest::Pointer fakeRequest(new HttpRequest);
         fakeRequest->SetHost(details->local.NtoA(buf, sizeof(buf)));
         fakeRequest->port = details->local.GetPort();
         fakeRequest->clientConnectionManager = connState;
@@ -3667,10 +3676,19 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
         fakeRequest->indirect_client_addr = connState->clientConnection->remote;
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
-        fakeRequest->flags.spoofClientIp = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        fakeRequest->flags.interceptTproxy = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
         fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        fakeRequest->myportname = connState->port->name;
+        if (fakeRequest->flags.interceptTproxy) {
+            if (Config.accessList.spoof_client_ip) {
+                ACLFilledChecklist checklist(Config.accessList.spoof_client_ip, fakeRequest.getRaw(), NULL);
+                fakeRequest->flags.spoofClientIp = (checklist.fastCheck() == ACCESS_ALLOWED);
+            } else
+                fakeRequest->flags.spoofClientIp = true;
+        } else
+            fakeRequest->flags.spoofClientIp = false;
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
-        connState->switchToHttps(fakeRequest, bumpMode);
+        connState->switchToHttps(fakeRequest.getRaw(), bumpMode);
     }
 }
 
@@ -4205,7 +4223,7 @@ clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNot
 
     debugs(1, DBG_IMPORTANT, "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
-           (s->flags.tproxyIntercept ? "TPROXY spoofing " : "") <<
+           (s->flags.tproxyIntercept ? "TPROXY intercepted " : "") <<
            (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
            (s->flags.accelSurrogate ? "reverse-proxy " : "")
            << FdNote(portTypeNote) << " connections at "
