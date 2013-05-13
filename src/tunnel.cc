@@ -33,7 +33,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "CachePeer.h"
 #include "client_side_request.h"
 #include "client_side.h"
@@ -553,7 +553,7 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
 
-    if (tunnelState->request && (tunnelState->request->flags.spoofClientIp || tunnelState->request->flags.intercepted))
+    if (tunnelState->request && (tunnelState->request->flags.interceptTproxy || tunnelState->request->flags.intercepted))
         tunnelStartShoveling(tunnelState); // ssl-bumped connection, be quiet
     else {
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",

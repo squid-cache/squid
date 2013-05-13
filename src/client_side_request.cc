@@ -670,7 +670,7 @@ ClientRequestContext::hostHeaderVerify()
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
-    if (http->request->flags.intercepted || http->request->flags.spoofClientIp) {
+    if (http->request->flags.intercepted || http->request->flags.interceptTproxy) {
         // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
             debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
@@ -969,7 +969,7 @@ clientHierarchical(ClientHttpRequest * http)
     const wordlist *p = NULL;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
-    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.spoofClientIp))
+    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.interceptTproxy))
         return 0;
 
     /*

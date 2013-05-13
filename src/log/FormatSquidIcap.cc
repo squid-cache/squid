@@ -59,7 +59,10 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
             client = al->cache.caddr.NtoA(clientbuf, MAX_IPSTRLEN);
     }
 
-    user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
+#if USE_AUTH
+    if (al->request != NULL && al->request->auth_user_request != NULL)
+        user = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
+#endif
 
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);

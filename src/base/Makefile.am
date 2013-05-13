@@ -22,4 +22,6 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
-	StringArea.h
+	StringArea.h \
+	Vector.cc \
+	Vector.h

@@ -1726,45 +1726,7 @@ AC_ARG_ENABLE(auth-basic,
       To see available helpers, see the helpers/basic_auth directory. ]),[
 #nothing to do really
 ])
-#not specified. Inherit global
-if test "x$enable_auth_basic" = "x"; then
-    enable_auth_basic=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_basic" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([Basic auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_basic" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/basic_auth],[enable_auth_basic])
-fi
-#handle the "none" special case
-if test "x$enable_auth_basic" = "xnone" ; then
-    enable_auth_basic=""
-fi
-BASIC_AUTH_HELPERS=""
-#enable_auth_basic contains either "no" or the list of modules to be built
-enable_auth_basic="`echo $enable_auth_basic| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_basic" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES basic"
-    AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
-    for helper in $enable_auth_basic
-    do
-    dir="$srcdir/helpers/basic_auth/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-      BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
-      # special case
-      if test "x$helper" = "xSASL" ; then
-        squid_require_sasl=yes
-      fi
-    elif test -d "$srcdir/helpers/basic_auth/$helper" ; then
-      AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
-    fi
-    done
-fi
-AC_MSG_NOTICE([Basic auth helpers to be built: $BASIC_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_BASIC, test "x$enable_auth_basic" != "xno")
-AC_SUBST(BASIC_AUTH_HELPERS)
+m4_include([helpers/basic_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-ntlm,
   AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
@@ -1775,38 +1737,7 @@ AC_ARG_ENABLE(auth-ntlm,
       To enable but build no helpers, specify "none".
       To see available helpers, see the helpers/ntlm_auth directory. ]),[
 ])
-if test "x$enable_auth_ntlm" = "x"; then
-    enable_auth_ntlm=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_ntlm" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([NTLM auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_ntlm" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/ntlm_auth],[enable_auth_ntlm])
-fi
-#handle the "none" special case
-if test "x$enable_auth_ntlm" = "xnone" ; then
-    enable_auth_ntlm=""
-fi
-NTLM_AUTH_HELPERS=""
-enable_auth_ntlm="`echo $enable_auth_ntlm| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_ntlm" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES ntlm"
-    AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
-    for helper in $enable_auth_ntlm ; do
-        dir="$srcdir/helpers/ntlm_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-            NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
-        elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
-            AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
-        fi
-    done
-fi
-AC_MSG_NOTICE([NTLM auth helpers built: $NTLM_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_NTLM, test "x$enable_auth_ntlm" != "xno")
-AC_SUBST(NTLM_AUTH_HELPERS)
+m4_include([helpers/ntlm_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
@@ -1820,38 +1751,7 @@ AC_ARG_ENABLE(auth-negotiate,
       To see available helpers, see the helpers/negotiate_auth directory. ]),[
 #nothing to do, really
 ])
-if test "x$enable_auth_negotiate" = "x"; then
-    enable_auth_negotiate=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_negotiate" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([Negotiate auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_negotiate" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/negotiate_auth],[enable_auth_negotiate])
-fi
-#handle the "none" special case
-if test "x$enable_auth_negotiate" = "xnone" ; then
-    enable_auth_negotiate=""
-fi
-NEGOTIATE_AUTH_HELPERS=""
-enable_auth_negotiate="`echo $enable_auth_negotiate| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_negotiate" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES negotiate"
-    AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
-    for helper in $enable_auth_negotiate ; do
-        dir="$srcdir/helpers/negotiate_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-            NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
-        elif test -d "$srcdir/helpers/negotiate_auth/$helper" ; then
-            AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
-        fi
-    done
-fi
-AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_NEGOTIATE, test "x$enable_auth_negotiate" != "xno")
-AC_SUBST(NEGOTIATE_AUTH_HELPERS)
+m4_include([helpers/negotiate_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-digest,
   AS_HELP_STRING([--enable-auth-digest="list of helpers"],
@@ -1863,38 +1763,7 @@ AC_ARG_ENABLE(auth-digest,
       To see available helpers, see the helpers/digest_auth directory. ]),[
 #nothing to do, really
 ])
-if test "x$enable_auth_digest" = "x"; then
-    enable_auth_digest=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_digest" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([Digest auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_digest" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/digest_auth],[enable_auth_digest])
-fi
-#handle the "none" special case
-if test "x$enable_auth_digest" = "xnone" ; then
-    enable_auth_digest=""
-fi
-DIGEST_AUTH_HELPERS=""
-enable_auth_digest="`echo $enable_auth_digest| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_digest" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES digest"
-    AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
-    for helper in $enable_auth_digest ; do
-        dir="$srcdir/helpers/digest_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-            DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
-        elif test -d "$srcdir/helpers/digest_auth/$helper" ; then
-            AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
-        fi
-    done
-fi
-AC_MSG_NOTICE([Digest auth helpers built: $DIGEST_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_DIGEST, test "x$enable_auth_digest" != "xno")
-AC_SUBST(DIGEST_AUTH_HELPERS)
+m4_include([helpers/digest_auth/modules.m4])
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
@@ -1920,20 +1789,7 @@ case "$enableval" in
   *)   squid_opt_logdaemon_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
   esac
 ])
-if test "x$squid_opt_logdaemon_helpers" = "xauto" ; then
-  squid_opt_logdaemon_helpers=""
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/log_daemon],[squid_opt_logdaemon_helpers])
-fi
-for helper in $squid_opt_logdaemon_helpers ; do
-  dir="$srcdir/helpers/log_daemon/$helper"
-  if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-    LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $helper"
-  elif test -d "$srcdir/helpers/log_daemon/$helper" ; then
-    AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
-  fi
-done
-AC_MSG_NOTICE([Log daemon helpers built: $LOG_DAEMON_HELPERS])
-AC_SUBST(LOG_DAEMON_HELPERS)
+m4_include([helpers/log_daemon/modules.m4])
 
 dnl
 dnl Check Kerberos/GSSAPI/SPNEGO
@@ -2080,33 +1936,7 @@ AC_ARG_ENABLE(external-acl-helpers,
                   directory]), [
 #nothing to do, really
 ])
-if test "x${enable_external_acl_helpers:=yes}" = "xyes" ;then
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/external_acl],
-    [enable_external_acl_helpers])
-fi
-if test "x$enable_external_acl_helpers" = "xnone" ; then
-  enable_external_acl_helpers=""
-fi
-EXTERNAL_ACL_HELPERS=""
-enable_external_acl_helpers="`echo $enable_external_acl_helpers| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_external_acl_helpers" != "xno" ; then
-  for helper in $enable_external_acl_helpers ; do
-    dir="$srcdir/helpers/external_acl/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-      EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
-      # special case
-      if test "x$helper" = "xkerberos_ldap_group" ; then
-        squid_require_sasl=yes
-      fi
-    else
-      AC_MSG_NOTICE([external acl helper $helper ... found but cannot be built])
-    fi
-  done
-fi
-AC_MSG_NOTICE([External acl helpers built: $EXTERNAL_ACL_HELPERS])
-AC_SUBST(EXTERNAL_ACL_HELPERS)
-
-
+m4_include([helpers/external_acl/modules.m4])
 
 dnl Select url_rewrite helpers to build
 AC_ARG_ENABLE(url-rewrite-helpers,
@@ -2118,28 +1948,7 @@ AC_ARG_ENABLE(url-rewrite-helpers,
                   For a list of available helpers see the
                   helpers/url_rewrite directory.]),[
 ])
-if test "x${enable_url_rewrite_helpers:=yes}" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/url_rewrite],
-                           [enable_url_rewrite_helpers])
-fi
-enable_url_rewrite_helpers="`echo $enable_url_rewrite_helpers| sed -e 's/,/ /g;s/  */ /g'`"
-AC_MSG_NOTICE([URL rewrite helper candidates: $enable_url_rewrite_helpers])
-URL_REWRITE_HELPERS=""
-if test "x$enable_url_rewrite_helpers" != "xno" ; then
-  for helper in $enable_url_rewrite_helpers; do
-    dir="$srcdir/helpers/url_rewrite/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-      URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
-    elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
-      AC_MSG_NOTICE([URL rewrite helper $helper ... found but cannot be built])
-    else
-      AC_MSG_NOTICE([URL rewrite helper $helper ... not found])
-    fi
-  done
-fi
-AC_MSG_NOTICE([URL rewrite helpers built: $URL_REWRITE_HELPERS])
-AC_SUBST(URL_REWRITE_HELPERS)
-
+m4_include([helpers/url_rewrite/modules.m4])
 
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
@@ -2183,27 +1992,6 @@ SQUID_DEFINE_BOOL(USE_WIN32_SERVICE,${enable_win32_service:=no},
    [Enable code supporting MS Windows service mode])
 AC_MSG_NOTICE([MS Windows service mode enabled: $enable_win32_service])
 
-
-# Check for Cyrus SASL
-if test "x$squid_require_sasl" = "xyes"; then
-  AC_CHECK_HEADERS(sasl/sasl.h sasl.h)
-  AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
-    AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
-      AC_MSG_ERROR(Neither SASL nor SASL2 found)
-    ])
-  ])
-  case "$squid_host_os" in
-    Darwin)
-      if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
-        AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
-        echo "checking for MAC Darwin without sasl.h ... yes"
-      else
-        echo "checking for MAC Darwin without sasl.h ... no"
-      fi
-      ;;
-  esac
-  AC_SUBST(LIBSASL)
-fi
 
 # Disable "unlinkd" code
 AC_ARG_ENABLE(unlinkd,

@@ -8,7 +8,7 @@ EXTRA_DIST = \
 	example.conf \
 	example-deny_all_but.conf \
 	ext_file_userip_acl.8 \
-	config.test
+	required.m4
 
 LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
