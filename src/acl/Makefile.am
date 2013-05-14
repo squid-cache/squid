@@ -7,13 +7,13 @@ noinst_LTLIBRARIES = libapi.la libstate.la libacls.la
 libapi_la_SOURCES = \
 	Acl.cc \
 	Acl.h \
+	BoolOps.cc \
+	BoolOps.h \
 	Checklist.cc \
 	Checklist.h \
 	forward.h \
 	InnerNode.cc \
 	InnerNode.h \
-	BoolOps.cc \
-	BoolOps.h \
 	Tree.cc \
 	Tree.h
 
@@ -41,12 +41,12 @@ libacls_la_SOURCES = \
 	Time.h \
 	TimeData.cc \
 	TimeData.h \
-	Asn.cc \
-	Asn.h \
 	AllOf.cc \
 	AllOf.h \
 	AnyOf.cc \
 	AnyOf.h \
+	Asn.cc \
+	Asn.h \
 	Browser.cc \
 	Browser.h \
 	DestinationAsn.h \
