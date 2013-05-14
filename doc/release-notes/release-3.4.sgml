@@ -135,6 +135,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Use ACLs to annotate a transaction with customized annotations
 	   which can be logged in access.log
 
+	<tag>spoof_client_ip</tag>
+	<p>Access control to determine whether to disable the TPROXY spoofing on upstream traffic.
+
 	<tag>sslcrtvalidator_children</tag>
 	<p>Specifies the settings for how many SSL server certificate
 	   validator helpers are run and when they are started.
