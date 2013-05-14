@@ -81,7 +81,7 @@ ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterat
 {
     assert(current && child);
 
-    // Remember the curernt tree location to prevent "async loop" cases where
+    // Remember the current tree location to prevent "async loop" cases where
     // the same child node wants to go async more than once.
     matchLoc_ = Breadcrumb(current, pos);
 

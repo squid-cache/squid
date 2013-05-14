@@ -32,7 +32,7 @@ MEMPROXY_CLASS_INLINE(Acl::NotNode);
 
 /// An inner ACL expression tree node representing a boolean conjuction (AND)
 /// operator applied to a list of child tree nodes.
-/// For example, conditions expressed on a single http_access line are ORed.
+/// For example, conditions expressed on a single http_access line are ANDed.
 class AndNode: public InnerNode
 {
 public:
