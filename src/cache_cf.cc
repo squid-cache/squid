@@ -1912,8 +1912,10 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
     fs = find_fstype(type_str);
 
-    if (fs < 0)
-        self_destruct();
+    if (fs < 0) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: This proxy does not support the '" << type_str << "' cache type. Ignoring.");
+        return;
+    }
 
     /* reconfigure existing dir */
 
