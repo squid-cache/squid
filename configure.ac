@@ -1264,6 +1264,9 @@ if test "x$SSLLIBDIR" != "x" ; then
 fi
 AC_SUBST(SSLLIB)
 
+if test "x$with_openssl" = "xyes"; then
+SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+fi
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
