@@ -61,7 +61,7 @@ Acl::Tree::treeDump(const char *prefix, const ActionToString &convert) const
 
         if (action != actions.end()) {
             const char *act = convert ? convert[action->kind] :
-                (*action == ACCESS_ALLOWED ? "Allow" : "Deny");
+                (*action == ACCESS_ALLOWED ? "allow" : "deny");
             wordlistAdd(&text, act ? act : "???");
             ++action;
         }
