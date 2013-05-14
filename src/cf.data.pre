@@ -709,6 +709,13 @@ DOC_START
 	  		list separator. ; can be any non-alphanumeric
 			character.
 
+	  %ACL		The name of the ACL being tested.
+	  %DATA		The ACL arguments. If not used then any arguments
+			is automatically added at the end of the line
+			sent to the helper.
+			NOTE: this will encode the arguments as one token,
+			whereas the default will pass each separately.
+
 	  %%		The percent sign. Useful for helpers which need
 			an unchanging input format.
 
