@@ -101,7 +101,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
   AH_TEMPLATE(SQUID_SSLGETCERTIFICATE_BUGGY, "Define to 1 if the SSL_get_certificate crashes squid")
   AH_TEMPLATE(SQUID_USE_SSLGETCERTIFICATE_HACK, "Define to 1 to use squid workaround for SSL_get_certificate")
   SQUID_STATE_SAVE(check_SSL_get_certificate)
-  LIBS="$LIBS $SSLLIB"
+  LIBS="$SSLLIB $LIBS"
   if test "x$SSLLIBDIR" != "x"; then
      LIBS="$LIBS -Wl,-rpath -Wl,$SSLLIBDIR"
   fi
