@@ -165,7 +165,7 @@ bool
 LruMap<EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
 {
     if (i != storage.end()) {
-        LruMap::Entry *e = *i->second;
+        Entry *e = *i->second;
         index.erase(i->second);
         storage.erase(i);
         delete e;
