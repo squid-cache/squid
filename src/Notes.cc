@@ -132,6 +132,13 @@ Notes::clean()
     notes.clean();
 }
 
+
+NotePairs::~NotePairs()
+{
+    while (!entries.empty())
+        delete entries.pop_back();
+}
+
 const char *
 NotePairs::find(const char *noteKey) const
 {
