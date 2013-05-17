@@ -22,9 +22,6 @@ class HttpReply;
 class ACLFilledChecklist: public ACLChecklist
 {
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident);
     ~ACLFilledChecklist();
@@ -89,7 +86,7 @@ private:
     /// not implemented; will cause link failures if used
     ACLFilledChecklist &operator=(const ACLFilledChecklist &);
 
-    CBDATA_CLASS(ACLFilledChecklist);
+    CBDATA_CLASS2(ACLFilledChecklist);
 };
 
 /// convenience and safety wrapper for dynamic_cast<ACLFilledChecklist*>
