@@ -132,7 +132,6 @@ Notes::clean()
     notes.clean();
 }
 
-
 NotePairs::~NotePairs()
 {
     while (!entries.empty())
