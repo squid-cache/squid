@@ -990,7 +990,7 @@ cf_parser.cci: cf.data cf_gen$(EXEEXT)
 
 # The cf_gen_defines.cci is auto-generated and does not exist when the 
 # dependencies computed. We need to add its include files (autoconf.h) here
-cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(srcdir)/../include/autoconf.h
+cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 
