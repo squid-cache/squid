@@ -5,6 +5,9 @@
 #include "HttpHeader.h"
 #include "typedefs.h"
 
+#if HAVE_FUNCTIONAL
+#include <functional>
+#endif
 #if HAVE_LIST
 #include <list>
 #endif
@@ -13,6 +16,9 @@
 #endif
 #if HAVE_STRING
 #include <string>
+#endif
+#if HAVE_STRINGS_H
+#include <strings.h>
 #endif
 
 class acl_access;
@@ -56,8 +62,18 @@ public:
     void dumpReplacement(StoreEntry *entry, const char *optionName) const;
 
 private:
+    /// Case-insensitive std::string "less than" comparison functor.
+    /// Fast version recommended by Meyers' "Effective STL" for ASCII c-strings.
+    class NoCaseLessThan: public std::binary_function<std::string, std::string, bool>
+    {
+    public:
+        bool operator()(const std::string &lhs, const std::string &rhs) const {
+            return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
+        }
+    };
+
     /// a name:mangler map; optimize: use unordered map or some such
-    typedef std::map<std::string, headerMangler> ManglersByName;
+    typedef std::map<std::string, headerMangler, NoCaseLessThan> ManglersByName;
 
     /// one mangler for each known header
     headerMangler known[HDR_ENUM_END];
