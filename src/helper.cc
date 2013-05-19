@@ -765,7 +765,7 @@ helperServerFree(helper_server *srv)
     safe_free(srv->requests);
 
     cbdataReferenceDone(srv->parent);
-    cbdataFree(srv);
+    delete srv;
 }
 
 static void
@@ -831,7 +831,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
 
     cbdataReferenceDone(srv->parent);
 
-    cbdataFree(srv);
+    delete srv;
 }
 
 /// Calls back with a pointer to the buffer with the helper output
