@@ -194,6 +194,8 @@ struct _external_acl_format {
 #endif
         EXT_ACL_EXT_LOG,
         EXT_ACL_TAG,
+        EXT_ACL_ACLNAME,
+        EXT_ACL_ACLDATA,
         EXT_ACL_PERCENT,
         EXT_ACL_END
     } type;
@@ -479,6 +481,10 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_EXT_LOG;
         else if (strcmp(token, "%TAG") == 0)
             format->type = _external_acl_format::EXT_ACL_TAG;
+        else if (strcmp(token, "%ACL") == 0)
+            format->type = _external_acl_format::EXT_ACL_ACLNAME;
+        else if (strcmp(token, "%DATA") == 0)
+            format->type = _external_acl_format::EXT_ACL_ACLDATA;
         else if (strcmp(token, "%%") == 0)
             format->type = _external_acl_format::EXT_ACL_PERCENT;
         else {
@@ -675,6 +681,7 @@ external_acl::trimCache()
 
 struct _external_acl_data {
     external_acl *def;
+    const char *name;
     wordlist *arguments;
 };
 
@@ -683,6 +690,7 @@ static void
 free_external_acl_data(void *data)
 {
     external_acl_data *p = static_cast<external_acl_data *>(data);
+    safe_free(p->name);
     wordlistDestroy(&p->arguments);
     cbdataReferenceDone(p->def);
 }
@@ -708,6 +716,10 @@ ACLExternal::parse()
 
     if (!data->def)
         self_destruct();
+
+    // def->name is the name of the external_acl_type.
+    // this is the name of the 'acl' directive being tested
+    data->name = xstrdup(AclMatchedName);
 
     while ((token = strtokFile())) {
         wordlistAdd(&data->arguments, token);
@@ -946,6 +958,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
     HttpRequest *request = ch->request;
     HttpReply *reply = ch->reply;
     mb.reset();
+    bool data_used = false;
 
     for (format = acl_data->def->format; format; format = format->next) {
         const char *str = NULL;
@@ -1136,6 +1149,29 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case _external_acl_format::EXT_ACL_TAG:
             str = request->tag.termedBuf();
             break;
+        case _external_acl_format::EXT_ACL_ACLNAME:
+            str = acl_data->name;
+            break;
+        case _external_acl_format::EXT_ACL_ACLDATA:
+            data_used = true;
+            for (arg = acl_data->arguments; arg; arg = arg->next) {
+                if (!first)
+                    sb.append(" ", 1);
+
+                if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
+                    const char *quoted = rfc1738_escape(arg->key);
+                    sb.append(quoted, strlen(quoted));
+                } else {
+                    static MemBuf mb2;
+                    mb2.init();
+                    strwordquote(&mb2, arg->key);
+                    sb.append(mb2.buf, mb2.size);
+                    mb2.clean();
+                }
+
+                first = 0;
+            }
+            break;
         case _external_acl_format::EXT_ACL_PERCENT:
             str = "%";
             break;
@@ -1168,18 +1204,20 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         first = 0;
     }
 
-    for (arg = acl_data->arguments; arg; arg = arg->next) {
-        if (!first)
-            mb.append(" ", 1);
+    if (!data_used) {
+        for (arg = acl_data->arguments; arg; arg = arg->next) {
+            if (!first)
+                mb.append(" ", 1);
 
-        if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
-            const char *quoted = rfc1738_escape(arg->key);
-            mb.append(quoted, strlen(quoted));
-        } else {
-            strwordquote(&mb, arg->key);
+            if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
+                const char *quoted = rfc1738_escape(arg->key);
+                mb.append(quoted, strlen(quoted));
+            } else {
+                strwordquote(&mb, arg->key);
+            }
+
+            first = 0;
         }
-
-        first = 0;
     }
 
     return mb.buf;
