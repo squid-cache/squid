@@ -136,17 +136,17 @@ private:
 
     /// Definitions required by openSSL, to use the index_* functions defined above
     ///with TXT_DB_create_index.
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
-    static unsigned long index_serial_LHASH_HASH(const void *a) {
+#if SQUID_USE_SSLLHASH_HACK
+    static unsigned long index_serial_hash_LHASH_HASH(const void *a) {
         return index_serial_hash((const char **)a);
     }
-    static int index_serial_LHASH_COMP(const void *arg1, const void *arg2) {
+    static int index_serial_cmp_LHASH_COMP(const void *arg1, const void *arg2) {
         return index_serial_cmp((const char **)arg1, (const char **)arg2);
     }
-    static unsigned long index_name_LHASH_HASH(const void *a) {
+    static unsigned long index_name_hash_LHASH_HASH(const void *a) {
         return index_name_hash((const char **)a);
     }
-    static int index_name_LHASH_COMP(const void *arg1, const void *arg2) {
+    static int index_name_cmp_LHASH_COMP(const void *arg1, const void *arg2) {
         return index_name_cmp((const char **)arg1, (const char **)arg2);
     }
 #else

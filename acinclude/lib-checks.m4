@@ -158,3 +158,65 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
 
 SQUID_STATE_ROLLBACK(check_SSL_get_certificate)
 ])
+
+
+dnl Try to handle TXT_DB related  problems:
+dnl 1) The type of TXT_DB::data member changed in openSSL-1.0.1 version
+dnl 2) The IMPLEMENT_LHASH_* openSSL macros in openSSL-1.0.1 and later releases is not
+dnl    implemented correctly and causes type conversion errors while compiling squid
+
+AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
+  AH_TEMPLATE(SQUID_SSLTXTDB_PSTRINGDATA, "Define to 1 if the TXT_DB uses OPENSSL_PSTRING data member")
+  AH_TEMPLATE(SQUID_USE_SSLLHASH_HACK, "Define to 1 to use squid workaround for openssl IMPLEMENT_LHASH_* type conversion errors")
+
+  SQUID_STATE_SAVE(check_TXTDB)
+
+  LIBS="$LIBS $SSLLIB"
+  AC_MSG_CHECKING(whether the TXT_DB use OPENSSL_PSTRING data member)
+  AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM(
+    [
+     #include <openssl/txt_db.h>
+    ],
+    [
+    TXT_DB *db = NULL;
+    int i = sk_OPENSSL_PSTRING_num(db->data);
+    return 0;
+    ])
+  ],
+  [
+   AC_DEFINE(SQUID_SSLTXTDB_PSTRINGDATA, 1)
+   AC_MSG_RESULT([yes])
+  ],
+  [
+   AC_MSG_RESULT([no])
+  ],
+  [])
+
+  AC_MSG_CHECKING(whether the workaround for OpenSSL IMPLEMENT_LHASH_  macros should used)
+  AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM(
+    [
+     #include <openssl/txt_db.h>
+
+     static unsigned long index_serial_hash(const char **a){}
+     static int index_serial_cmp(const char **a, const char **b){}
+     static IMPLEMENT_LHASH_HASH_FN(index_serial_hash,const char **)
+     static IMPLEMENT_LHASH_COMP_FN(index_serial_cmp,const char **)
+    ],
+    [
+    TXT_DB *db = NULL;
+    TXT_DB_create_index(db, 1, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp));
+    ])
+  ],
+  [
+   AC_MSG_RESULT([no])
+  ],
+  [
+   AC_MSG_RESULT([yes])
+   AC_DEFINE(SQUID_USE_SSLLHASH_HACK, 1)
+  ],
+[])
+
+SQUID_STATE_ROLLBACK(check_TXTDB)
+])
