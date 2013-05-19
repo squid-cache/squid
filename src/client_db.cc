@@ -79,8 +79,9 @@ static ClientInfo *
 clientdbAdd(const Ip::Address &addr)
 {
     ClientInfo *c;
-    char *buf = new char[MAX_IPSTRLEN];
+    char *buf = static_cast<char*>(xmalloc(MAX_IPSTRLEN)); // becomes hash.key
     c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
+    debugs(77, 9, "ClientInfo constructed, this=" << c);
     c->hash.key = addr.NtoA(buf,MAX_IPSTRLEN);
     c->addr = addr;
 #if USE_DELAY_POOLS
@@ -362,6 +363,7 @@ clientdbFreeItem(void *data)
     }
 #endif
 
+    debugs(77, 9, "ClientInfo destructed, this=" << c);
     memFree(c, MEM_CLIENT_INFO);
 }
 
