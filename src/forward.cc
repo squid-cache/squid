@@ -518,9 +518,6 @@ FwdState::checkRetry()
     if (n_tries > Config.forward_max_tries)
         return false;
 
-    if (origin_tries > 2)
-        return false;
-
     if (squid_curtime - start_t > Config.Timeout.forward)
         return false;
 
@@ -940,9 +937,6 @@ FwdState::connectStart()
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         ++n_tries;
 
-        if (!serverConnection()->getPeer())
-            ++origin_tries;
-
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
         /* Update server side TOS and Netfilter mark on the connection. */
@@ -1129,9 +1123,6 @@ FwdState::reforward()
     }
 
     if (n_tries > Config.forward_max_tries)
-        return 0;
-
-    if (origin_tries > 1)
         return 0;
 
     if (request->bodyNibbled())
