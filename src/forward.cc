@@ -545,7 +545,7 @@ FwdState::checkRetry()
     if (!entry->isEmpty())
         return false;
 
-    if (n_tries > 10)
+    if (n_tries > Config.forward_max_tries)
         return false;
 
     if (squid_curtime - start_t > Config.Timeout.forward)
