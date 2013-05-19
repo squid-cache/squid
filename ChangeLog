@@ -1,4 +1,20 @@
 
+Changes to squid-3.3.5 (20 May 2013):
+
+	- Bug 3851: Delay Pool class 5 tag:levels displayed incorrectly in cache manager
+	- Bug 3845: http_port tcpkeepalive= option fails parsing
+	- Bug 3840: assertion failed 'sde' in UFS cache loading
+	- Bug 3836: make check failures with automake-1.13
+	- Bug 3827: Remove AccessLogEntry::cache.authuser
+	- Bug 3816 pt2: SSL_get_certificate call inside Ssl::verifySslCertificate crashes
+	- Bug 3780: cachemgr.cgi: output problem in HTTP Header Statistics
+	- Bug 3759: OpenSSL compilation error on stock Fedora17, RHEL, CentOS 6 systems
+	- Bug 3744: squid terminated: FATAL: Bungled (null) line 3: sslproxy_cert_sign signTrusted all
+	- Port from 2.6: external acl %ACL and %DATA tags
+	- Update copyright on SN.png
+	- ... and several minor memory leaks
+	- ... and some documentation polish
+
 Changes to squid-3.3.4 (27 Apr 2013):
 
 	- Bug 3831: basic_ncsa_auth Blowfish and SHA support
