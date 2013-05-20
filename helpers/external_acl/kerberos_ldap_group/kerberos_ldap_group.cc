@@ -404,7 +404,6 @@ main(int argc, char *const argv[])
         }
         if (!domain && margs.ddomain) {
             domain = xstrdup(margs.ddomain);
-            dp = xstrdup(rfc1738_escape(domain));
             if (debug_enabled)
                 debug((char *) "%s| %s: INFO: Got User: %s set default domain: %s\n", LogTime(), PROGRAM, user, domain);
             else
