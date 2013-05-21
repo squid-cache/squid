@@ -136,7 +136,7 @@ ProxyAuthLookup::Instance()
 }
 
 void
-ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
+ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
 {
     ACLFilledChecklist *checklist = Filled(cl);
 
