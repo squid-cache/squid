@@ -35,9 +35,20 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
-# might be cross-compiling
+# Clang 3.2 on some CPUs requires -march-native to detect correctly
+# GCC 4.3+ can also produce faster executables when its used
+SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+
+# might be cross-compiling.
 if test "x$HOSTCXX" = "x"; then
   HOSTCXX="$CXX"
+  if test "x$squid_cv_check_marchnative" = "xyes"; then
+    CXXFLAGS="$CXXFLAGS -march=native"
+  fi
+fi
+if test "x$squid_cv_check_marchnative" = "xyes"; then
+  # always valid for the Host compiler.
+  HOSTCXX="$HOSTCXX -march=native"
 fi
 AC_SUBST(HOSTCXX)
 
