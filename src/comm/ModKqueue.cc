@@ -199,9 +199,9 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     if (type & COMM_SELECT_READ) {
         if (F->flags.read_pending)
             kq_update_events(fd, EVFILT_WRITE, handler);
- 
+
         kq_update_events(fd, EVFILT_READ, handler);
-        
+
         F->read_handler = handler;
         F->read_data = client_data;
     }
