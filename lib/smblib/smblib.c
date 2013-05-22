@@ -120,8 +120,10 @@ SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
     strcpy(con -> password, "");
     strcpy(con -> sock_options, "");
     strcpy(con -> address, "");
-    strcpy(con -> desthost, server);
-    strcpy(con -> PDomain, NTdomain);
+    strncpy(con -> desthost, server, sizeof(con->desthost));
+    con->desthost[sizeof(con->desthost) - 1] = '\0';
+    strncpy(con -> PDomain, NTdomain, sizeof(con->PDomain));
+    con->PDomain[sizeof(con->PDomain) - 1] = '\0';
     strcpy(con -> OSName, SMBLIB_DEFAULT_OSNAME);
     strcpy(con -> LMType, SMBLIB_DEFAULT_LMTYPE);
     con -> first_tree = con -> last_tree = NULL;
@@ -213,9 +215,12 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
 
     /* Init some things ... */
 
-    strcpy(con -> service, service);
-    strcpy(con -> username, username);
-    strcpy(con -> password, password);
+    strncpy(con -> service, service, sizeof(con -> service));
+    con -> service[sizeof(con -> service) - 1] = '\0';
+    strncpy(con -> username, username, sizeof(con -> username));
+    con -> username[sizeof(con -> username) - 1] = '\0';
+    strncpy(con -> password, password, sizeof(con -> password));
+    con -> password[sizeof(con -> password) - 1] = '\0';
     strcpy(con -> sock_options, "");
     strcpy(con -> address, "");
     strcpy(con -> PDomain, SMBLIB_DEFAULT_DOMAIN);
@@ -236,9 +241,19 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
 
     /* Now figure out the host portion of the service */
 
-    strcpy(temp, service);
+    strncpy(temp, service, sizeof(temp));
+    temp[sizeof(temp) - 1] = '\0';
     host = strtok(temp, "/\\");     /* Separate host name portion */
-    strcpy(con -> desthost, host);
+    if (!host) {
+        if (Con_Handle == NULL) {
+            free(con);
+            Con_Handle = NULL;
+        }
+        SMBlib_errno = -SMBlibE_CallFailed;
+        return NULL;
+    }
+    strncpy(con->desthost, host, sizeof(con->desthost));
+    con->desthost[sizeof(con->desthost)-1]='\0';
 
     /* Now connect to the remote end, but first upper case the name of the
        service we are going to call, sine some servers want it in uppercase */
@@ -280,9 +295,10 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
 
     if (SMB_Negotiate(con, SMB_Prots_Restrict) < 0) {
 
-        /* Hmmm what should we do here ... We have a connection, but could not
-           negotiate ...                                                      */
-
+        if (Con_Handle == NULL) {
+            free(con);
+        }
+        SMBlib_errno = -SMBlibE_NegNoProt;
         return NULL;
 
     }
@@ -291,6 +307,10 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
 
     if ((*tree = SMB_TreeConnect(con, NULL, service, password, "A:")) == NULL) {
 
+        if (Con_Handle == NULL) {
+            free(con);
+        }
+        SMBlib_errno = -SMBlibE_BAD;
         return NULL;
 
     }
@@ -325,7 +345,8 @@ int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
         pass_len = 24;
         memcpy(pword, PassWord, 24);
     } else {
-        strcpy(pword, PassWord);
+        strncpy(pword, PassWord, sizeof(pword));
+        pword[sizeof(pword) - 1] = '\0';
 #ifdef PAM_SMB_ENC_PASS
         if (Con_Handle->encrypt_passwords) {
             pass_len = 24;
@@ -391,7 +412,7 @@ int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
 
         p = p + 1;
 
-        if (NtDomain != NULL) {
+        if (NtDomain == NULL) {
             strcpy(p, Con_Handle -> PDomain);
             p = p + strlen(Con_Handle -> PDomain);
         } else {

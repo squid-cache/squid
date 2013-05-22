@@ -131,8 +131,8 @@ Mgr::InfoAction::Create(const CommandPointer &cmd)
     return new InfoAction(cmd);
 }
 
-Mgr::InfoAction::InfoAction(const CommandPointer &cmd):
-        Action(cmd), data()
+Mgr::InfoAction::InfoAction(const CommandPointer &aCmd):
+        Action(aCmd), data()
 {
     debugs(16, 5, HERE);
 }

@@ -121,16 +121,16 @@ Auth::Ntlm::Config::Config() : keep_alive(1)
 void
 Auth::Ntlm::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
-    if (strcasecmp(param_str, "program") == 0) {
+    if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
             wordlistDestroy(&authenticateProgram);
 
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param ntlm program", authenticateProgram->key);
-    } else if (strcasecmp(param_str, "children") == 0) {
+    } else if (strcmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
-    } else if (strcasecmp(param_str, "keep_alive") == 0) {
+    } else if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
         debugs(29, DBG_CRITICAL, "ERROR unrecognised NTLM auth scheme parameter '" << param_str << "'");
@@ -215,7 +215,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
 
         if (!keep_alive) {
             /* drop the connection */
-            request->flags.proxyKeepalive = 0;
+            request->flags.proxyKeepalive = false;
         }
     } else {
         Auth::Ntlm::UserRequest *ntlm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
@@ -226,7 +226,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         case Auth::Failed:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
-            request->flags.proxyKeepalive = 0;
+            request->flags.proxyKeepalive = false;
             /* fall through */
 
         case Auth::Ok:

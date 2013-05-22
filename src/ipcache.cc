@@ -113,8 +113,8 @@ public:
     dlink_node lru;
     unsigned short locks;
     struct {
-        unsigned int negcached:1;
-        unsigned int fromhosts:1;
+        bool negcached;
+        bool fromhosts;
     } flags;
 
     int age() const; ///< time passed since request_time or -1 if unknown
@@ -473,7 +473,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
     int cname_found = 0;
 
     i->expires = squid_curtime + Config.negativeDnsTtl;
-    i->flags.negcached = 1;
+    i->flags.negcached = true;
     safe_free(i->addrs.in_addrs);
     assert(i->addrs.in_addrs == NULL);
     safe_free(i->addrs.bad_mask);
@@ -585,7 +585,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
 
     i->expires = squid_curtime + ttl;
 
-    i->flags.negcached = 0;
+    i->flags.negcached = false;
 
     return i->addrs.count;
 }
@@ -1218,7 +1218,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     i->addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     i->addrs.in_addrs[0] = ip;
     i->addrs.bad_mask[0] = FALSE;
-    i->flags.fromhosts = 1;
+    i->flags.fromhosts = true;
     ipcacheAddEntry(i);
     ipcacheLockEntry(i);
     return 0;

@@ -103,7 +103,7 @@ static const char *const crlf = "\r\n";
 static void clientFollowXForwardedForCheck(allow_t answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-ErrorState *clientBuildError(err_type, http_status, char const *url, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *);
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -132,6 +132,7 @@ static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static HLPCB clientRedirectDoneWrapper;
+static HLPCB clientStoreIdDoneWrapper;
 static void checkNoCacheDoneWrapper(allow_t, void *);
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSS clientReplyStatus;
@@ -152,11 +153,13 @@ ClientRequestContext::~ClientRequestContext()
     debugs(85,3, HERE << this << " ClientRequestContext destructed");
 }
 
-ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE), error(NULL), readNextRequest(false)
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE), store_id_state(REDIRECT_NONE),error(NULL), readNextRequest(false)
 {
     http_access_done = false;
     redirect_done = false;
     redirect_fail_count = 0;
+    store_id_done = false;
+    store_id_fail_count = 0;
     no_cache_done = false;
     interpreted_req_hdrs = false;
 #if USE_SSL
@@ -364,7 +367,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* Set flags */
     /* internal requests only makes sense in an
      * accelerator today. TODO: accept flags ? */
-    http->flags.accel = 1;
+    http->flags.accel = true;
     /* allow size for url rewriting */
     url_sz = strlen(url) + Config.appendDomainLen + 5;
     http->uri = (char *)xcalloc(url_sz, 1);
@@ -392,7 +395,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
      */
     request->flags.accelerated = http->flags.accel;
 
-    request->flags.internalClient = 1;
+    request->flags.internalClient = true;
 
     /* this is an internally created
      * request, not subject to acceleration
@@ -416,10 +419,10 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     request->my_addr.SetPort(0);
 
     /* Our version is HTTP/1.1 */
-    HttpVersion http_ver(1,1);
-    request->http_ver = http_ver;
+    request->http_ver = Http::ProtocolVersion(1,1);
 
-    http->request = HTTPMSGLOCK(request);
+    http->request = request;
+    HTTPMSGLOCK(http->request);
 
     /* optional - skip the access check ? */
     http->calloutContext = new ClientRequestContext(http);
@@ -537,7 +540,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         conn->log_addr = request->indirect_client_addr;
     }
     request->x_forwarded_for_iterator.clean();
-    request->flags.done_follow_x_forwarded_for=true;
+    request->flags.done_follow_x_forwarded_for = true;
 
     if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
         debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
@@ -568,7 +571,7 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         for (int i = 0; i < ia->count; ++i) {
             if (clientConn->local.matchIPAddr(ia->in_addrs[i]) == 0) {
                 debugs(85, 3, HERE << "validate IP " << clientConn->local << " possible from Host:");
-                http->request->flags.hostVerified = 1;
+                http->request->flags.hostVerified = true;
                 http->doCallouts();
                 return;
             }
@@ -590,9 +593,9 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 
         // NP: it is tempting to use 'flags.noCache' but that is all about READing cache data.
         // The problems here are about WRITE for new cache content, which means flags.cachable
-        http->request->flags.cachable = 0; // MUST NOT cache (for now)
+        http->request->flags.cachable = false; // MUST NOT cache (for now)
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
-        http->request->flags.hierarchical = 0; // MUST NOT pass to peers (for now)
+        http->request->flags.hierarchical = false; // MUST NOT pass to peers (for now)
         // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
         http->doCallouts();
         return;
@@ -607,7 +610,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
-    repContext->setReplyToError(ERR_CONFLICT_HOST, HTTP_CONFLICT,
+    repContext->setReplyToError(ERR_CONFLICT_HOST, Http::scConflict,
                                 http->request->method, NULL,
                                 http->getConn()->clientConnection->remote,
                                 http->request,
@@ -702,7 +705,7 @@ ClientRequestContext::hostHeaderVerify()
     } else {
         // Okay no problem.
         debugs(85, 3, HERE << "validate passed.");
-        http->request->flags.hostVerified = 1;
+        http->request->flags.hostVerified = true;
         http->doCallouts();
     }
     safe_free(hostB);
@@ -773,7 +776,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 {
     acl_checklist = NULL;
     err_type page_id;
-    http_status status;
+    Http::StatusCode status;
     debugs(85, 2, "The request " <<
            RequestMethodStr(http->request->method) << " " <<
            http->uri << " is " << answer <<
@@ -815,22 +818,22 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 #if USE_AUTH
             if (http->request->flags.sslBumped) {
                 /*SSL Bumped request, authentication is not possible*/
-                status = HTTP_FORBIDDEN;
+                status = Http::scForbidden;
             } else if (!http->flags.accel) {
                 /* Proxy authorisation needed */
-                status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
+                status = Http::scProxyAuthenticationRequired;
             } else {
                 /* WWW authorisation needed */
-                status = HTTP_UNAUTHORIZED;
+                status = Http::scUnauthorized;
             }
 #else
             // need auth, but not possible to do.
-            status = HTTP_FORBIDDEN;
+            status = Http::scForbidden;
 #endif
             if (page_id == ERR_NONE)
                 page_id = ERR_CACHE_ACCESS_DENIED;
         } else {
-            status = HTTP_FORBIDDEN;
+            status = Http::scForbidden;
 
             if (page_id == ERR_NONE)
                 page_id = ERR_ACCESS_DENIED;
@@ -920,6 +923,44 @@ ClientRequestContext::clientRedirectStart()
         redirectStart(http, clientRedirectDoneWrapper, this);
 }
 
+/**
+ * This methods handles Access checks result of StoreId access list.
+ * Will handle as "ERR" (no change) in a case Access is not allowed.
+ */
+static void
+clientStoreIdAccessCheckDone(allow_t answer, void *data)
+{
+    ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
+    ClientHttpRequest *http = context->http;
+    context->acl_checklist = NULL;
+
+    if (answer == ACCESS_ALLOWED)
+        storeIdStart(http, clientStoreIdDoneWrapper, context);
+    else {
+        debugs(85, 3, "access denied expected ERR reply handling: " << answer);
+        HelperReply nilReply;
+        nilReply.result = HelperReply::Error;
+        context->clientStoreIdDone(nilReply);
+    }
+}
+
+/**
+ * Start locating an alternative storeage ID string (if any) from admin
+ * configured helper program. This is an asynchronous operation terminating in
+ * ClientRequestContext::clientStoreIdDone() when completed.
+ */
+void
+ClientRequestContext::clientStoreIdStart()
+{
+    debugs(33, 5,"'" << http->uri << "'");
+
+    if (Config.accessList.store_id) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.store_id, http);
+        acl_checklist->nonBlockingCheck(clientStoreIdAccessCheckDone, this);
+    } else
+        storeIdStart(http, clientStoreIdDoneWrapper, this);
+}
+
 static int
 clientHierarchical(ClientHttpRequest * http)
 {
@@ -990,10 +1031,10 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!request->flags.connectionAuthDisabled) {
         if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {
             if (http_conn->pinning.auth) {
-                request->flags.connectionAuth = 1;
-                request->flags.auth = 1;
+                request->flags.connectionAuth = true;
+                request->flags.auth = true;
             } else {
-                request->flags.connectionProxyAuth = 1;
+                request->flags.connectionProxyAuth = true;
             }
             // These should already be linked correctly.
             assert(request->clientConnectionManager == http_conn);
@@ -1019,10 +1060,10 @@ clientCheckPinning(ClientHttpRequest * http)
                             ||
                             strncasecmp(value, "Kerberos ", 9) == 0) {
                         if (e->id == HDR_AUTHORIZATION) {
-                            request->flags.connectionAuth = 1;
+                            request->flags.connectionAuth = true;
                             may_pin = 1;
                         } else {
-                            request->flags.connectionProxyAuth = 1;
+                            request->flags.connectionProxyAuth = true;
                             may_pin = 1;
                         }
                     }
@@ -1048,7 +1089,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     request->ims = req_hdr->getTime(HDR_IF_MODIFIED_SINCE);
 
     if (request->ims > 0)
-        request->flags.ims = 1;
+        request->flags.ims = true;
 
     if (!request->flags.ignoreCc) {
         if (request->cache_control) {
@@ -1090,13 +1131,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 #if USE_HTTP_VIOLATIONS
 
         if (Config.onoff.reload_into_ims)
-            request->flags.nocacheHack = 1;
+            request->flags.nocacheHack = true;
         else if (refresh_nocache_hack)
-            request->flags.nocacheHack = 1;
+            request->flags.nocacheHack = true;
         else
 #endif
 
-            request->flags.noCache = 1;
+            request->flags.noCache = true;
     }
 
     /* ignore range header in non-GETs or non-HEADs */
@@ -1106,7 +1147,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->range = req_hdr->getRange();
 
         if (request->range) {
-            request->flags.isRanged=true;
+            request->flags.isRanged = true;
             clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->data;
             /* XXX: This is suboptimal. We should give the stream the range set,
              * and thereby let the top of the stream set the offset when the
@@ -1132,12 +1173,12 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
     if (req_hdr->has(HDR_AUTHORIZATION))
-        request->flags.auth = 1;
+        request->flags.auth = true;
 
     clientCheckPinning(http);
 
     if (request->login[0] != '\0')
-        request->flags.auth = 1;
+        request->flags.auth = true;
 
     if (req_hdr->has(HDR_VIA)) {
         String s = req_hdr->getList(HDR_VIA);
@@ -1150,7 +1191,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         if (strListIsSubstr(&s, ThisCache2, ',')) {
             debugObj(33, 1, "WARNING: Forwarding loop detected for:\n",
                      request, (ObjPackMethod) & httpRequestPack);
-            request->flags.loopDetected = 1;
+            request->flags.loopDetected = true;
         }
 
 #if USE_FORW_VIA_DB
@@ -1174,7 +1215,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     request->flags.cachable = http->request->maybeCacheable();
 
     if (clientHierarchical(http))
-        request->flags.hierarchical = 1;
+        request->flags.hierarchical = true;
 
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_NOCACHE = " <<
            (request->flags.noCache ? "SET" : "NOT SET"));
@@ -1194,6 +1235,17 @@ clientRedirectDoneWrapper(void *data, const HelperReply &result)
         return;
 
     calloutContext->clientRedirectDone(result);
+}
+
+void
+clientStoreIdDoneWrapper(void *data, const HelperReply &result)
+{
+    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+
+    calloutContext->clientStoreIdDone(result);
 }
 
 void
@@ -1245,20 +1297,20 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
             // TODO: change default redirect status for appropriate requests
             // Squid defaults to 302 status for now for better compatibility with old clients.
-            // HTTP/1.0 client should get 302 (HTTP_MOVED_TEMPORARILY)
-            // HTTP/1.1 client contacting reverse-proxy should get 307 (HTTP_TEMPORARY_REDIRECT)
-            // HTTP/1.1 client being diverted by forward-proxy should get 303 (HTTP_SEE_OTHER)
-            http_status status = HTTP_MOVED_TEMPORARILY;
+            // HTTP/1.0 client should get 302 (Http::scMovedTemporarily)
+            // HTTP/1.1 client contacting reverse-proxy should get 307 (Http::scTemporaryRedirect)
+            // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
+            Http::StatusCode status = Http::scMovedTemporarily;
             if (statusNote != NULL) {
                 const char * result = statusNote->firstValue();
-                status = (http_status) atoi(result);
+                status = static_cast<Http::StatusCode>(atoi(result));
             }
 
-            if (status == HTTP_MOVED_PERMANENTLY
-                    || status == HTTP_MOVED_TEMPORARILY
-                    || status == HTTP_SEE_OTHER
-                    || status == HTTP_PERMANENT_REDIRECT
-                    || status == HTTP_TEMPORARY_REDIRECT) {
+            if (status == Http::scMovedPermanently
+                    || status == Http::scMovedTemporarily
+                    || status == Http::scSeeOther
+                    || status == Http::scPermanentRedirect
+                    || status == Http::scTemporaryRedirect) {
                 http->redirect.status = status;
                 http->redirect.location = xstrdup(urlNote->firstValue());
                 // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
@@ -1278,7 +1330,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
 
                     // update the new request to flag the re-writing was done on it
-                    new_request->flags.redirected = 1;
+                    new_request->flags.redirected = true;
 
                     // unlink bodypipe from the old request. Not needed there any longer.
                     if (old_request->body_pipe != NULL) {
@@ -1291,7 +1343,8 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     safe_free(http->uri);
                     http->uri = xstrdup(urlCanonical(new_request));
                     HTTPMSGUNLOCK(old_request);
-                    http->request = HTTPMSGLOCK(new_request);
+                    http->request = new_request;
+                    HTTPMSGLOCK(http->request);
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                            old_request->method << " " << urlNote->firstValue() << " " << old_request->http_ver);
@@ -1309,6 +1362,62 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
         fd_note(http->getConn()->clientConnection->fd, http->uri);
 
     assert(http->uri);
+
+    http->doCallouts();
+}
+
+/**
+ * This method handles the different replies from StoreID helper.
+ */
+void
+ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
+{
+    HttpRequest *old_request = http->request;
+    debugs(85, 5, "'" << http->uri << "' result=" << reply);
+    assert(store_id_state == REDIRECT_PENDING);
+    store_id_state = REDIRECT_DONE;
+
+    // copy the helper response Notes to the HTTP request for logging
+    // do it early to ensure that no matter what the outcome the notes are present.
+    // TODO put them straight into the transaction state record (ALE?) eventually
+    if (!old_request->helperNotes)
+        old_request->helperNotes = new Notes;
+    old_request->helperNotes->add(reply.notes);
+
+    switch (reply.result) {
+    case HelperReply::Unknown:
+    case HelperReply::TT:
+        // Handler in redirect.cc should have already mapped Unknown
+        // IF it contained valid entry for the old helper protocol
+        debugs(85, DBG_IMPORTANT, "ERROR: storeID helper returned invalid result code. Wrong helper? " << reply);
+        break;
+
+    case HelperReply::BrokenHelper:
+        debugs(85, DBG_IMPORTANT, "ERROR: storeID helper: " << reply << ", attempt #" << (store_id_fail_count+1) << " of 2");
+        if (store_id_fail_count < 2) { // XXX: make this configurable ?
+            ++store_id_fail_count;
+            // reset state flag to try StoreID again from scratch.
+            store_id_done = false;
+        }
+        break;
+
+    case HelperReply::Error:
+        // no change to be done.
+        break;
+
+    case HelperReply::Okay: {
+        Note::Pointer urlNote = reply.notes.find("store-id");
+
+        // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
+        if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri) ) {
+            // Debug section required for some very specific cases.
+            debugs(85, 9, "Setting storeID with: " << urlNote->firstValue() );
+            http->request->store_id = urlNote->firstValue();
+            http->store_id = urlNote->firstValue();
+        }
+    }
+    break;
+    }
 
     http->doCallouts();
 }
@@ -1366,7 +1475,8 @@ ClientRequestContext::sslBumpAccessCheck()
     // (bumping of intercepted SSL conns is decided before we get 1st request).
     // We also do not bump redirected CONNECT requests.
     if (http->request->method != Http::METHOD_CONNECT || http->redirect.status ||
-            !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
+            !Config.accessList.ssl_bump ||
+            !http->getConn()->port->flags.tunnelSslBumping) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "cannot SslBump this request");
         return false;
@@ -1374,7 +1484,7 @@ ClientRequestContext::sslBumpAccessCheck()
 
     // Do not bump during authentication: clients would not proxy-authenticate
     // if we delay a 407 response and respond with 200 OK to CONNECT.
-    if (error && error->httpStatus == HTTP_PROXY_AUTHENTICATION_REQUIRED) {
+    if (error && error->httpStatus == Http::scProxyAuthenticationRequired) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "no SslBump during proxy authentication");
         return false;
@@ -1382,8 +1492,8 @@ ClientRequestContext::sslBumpAccessCheck()
 
     debugs(85, 5, HERE << "SslBump possible, checking ACL");
 
-    ACLFilledChecklist *acl_checklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
-    acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+    ACLFilledChecklist *aclChecklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+    aclChecklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
     return true;
 }
 
@@ -1447,7 +1557,7 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     logType = LOG_TAG_NONE;
-    debugs(85, 4, "ClientHttpRequest::httpStart: " << Format::log_tags[logType] << " for '" << uri << "'");
+    debugs(85, 4, LogTags_str[logType] << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);
@@ -1594,8 +1704,10 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     /*Save the original request for logging purposes*/
-    if (!calloutContext->http->al->request)
-        calloutContext->http->al->request = HTTPMSGLOCK(request);
+    if (!calloutContext->http->al->request) {
+        calloutContext->http->al->request = request;
+        HTTPMSGLOCK(calloutContext->http->al->request);
+    }
 
     if (!calloutContext->error) {
         // CVE-2009-0801: verify the Host: header is consistent with other known details.
@@ -1640,6 +1752,18 @@ ClientHttpRequest::doCallouts()
             calloutContext->adapted_http_access_done = true;
             calloutContext->clientAccessCheck2();
             return;
+        }
+
+        if (!calloutContext->store_id_done) {
+            calloutContext->store_id_done = true;
+            assert(calloutContext->store_id_state == REDIRECT_NONE);
+
+            if (Config.Program.store_id) {
+                debugs(83, 3,"Doing calloutContext->clientStoreIdStart()");
+                calloutContext->store_id_state = REDIRECT_PENDING;
+                calloutContext->clientStoreIdStart();
+                return;
+            }
         }
 
         if (!calloutContext->interpreted_req_hdrs) {
@@ -1695,8 +1819,8 @@ ClientHttpRequest::doCallouts()
 #endif
 
     if (calloutContext->error) {
-        const char *uri = urlCanonical(request);
-        StoreEntry *e= storeCreateEntry(uri, uri, request->flags, request->method);
+        const char *storeUri = request->storeId();
+        StoreEntry *e= storeCreateEntry(storeUri, storeUri, request->flags, request->method);
 #if USE_SSL
         if (sslBumpNeeded()) {
             // set final error but delay sending until we bump
@@ -1771,7 +1895,7 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 
     switch (answer.kind) {
     case Adaptation::Answer::akForward:
-        handleAdaptedHeader(answer.message);
+        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
         break;
 
     case Adaptation::Answer::akBlock:
@@ -1794,7 +1918,8 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
          * Replace the old request with the new request.
          */
         HTTPMSGUNLOCK(request);
-        request = HTTPMSGLOCK(new_req);
+        request = new_req;
+        HTTPMSGLOCK(request);
         /*
          * Store the new URI for logging
          */
@@ -1814,6 +1939,7 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
 
         clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert(repContext);
         repContext->createStoreEntry(request->method, request->flags);
 
         EBIT_CLR(storeEntry()->flags, ENTRY_FWD_HDR_WAIT);
@@ -1956,7 +2082,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         Ip::Address noAddr;
         noAddr.SetNoAddr();
         ConnStateData * c = getConn();
-        calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
+        calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, Http::scInternalServerError,
                                 NULL,
                                 c != NULL ? c->clientConnection->remote : noAddr,
                                 request
@@ -1967,7 +2093,8 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 #endif
         calloutContext->error->detailError(errDetail);
         calloutContext->readNextRequest = true;
-        c->expectNoForwarding();
+        if (c != NULL)
+            c->expectNoForwarding();
         doCallouts();
     }
     //else if(calloutContext == NULL) is it possible?

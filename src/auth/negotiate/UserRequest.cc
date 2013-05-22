@@ -266,7 +266,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.mustKeepalive = 1;
+        lm_request->request->flags.mustKeepalive = true;
         if (lm_request->request->flags.proxyKeepalive) {
             Note::Pointer tokenNote = reply.notes.find("token");
             lm_request->server_blob = xstrdup(tokenNote->firstValue());
@@ -329,17 +329,16 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     case HelperReply::Error: {
         Note::Pointer messageNote = reply.notes.find("message");
         Note::Pointer tokenNote = reply.notes.find("token");
-        if (tokenNote == NULL) {
-            /* protocol error */
-            fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
-            break;
-        }
 
         /* authentication failure (wrong password, etc.) */
-        auth_user_request->denyMessage(messageNote->firstValue());
+        if (messageNote != NULL)
+            auth_user_request->denyMessage(messageNote->firstValue());
+        else
+            auth_user_request->denyMessage("Negotiate Authentication denied with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(tokenNote->firstValue());
+        if (tokenNote != NULL)
+            lm_request->server_blob = xstrdup(tokenNote->firstValue());
         lm_request->releaseAuthServer();
         debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << reply << "'");
     }
@@ -386,8 +385,8 @@ Auth::Negotiate::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int a
         return;
 
     /* don't add to authentication error pages */
-    if ((!accel && rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
-            || (accel && rep->sline.status == HTTP_UNAUTHORIZED))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;

@@ -63,7 +63,7 @@ static StoreIOState::STRCB storeClientReadBody;
 static StoreIOState::STRCB storeClientReadHeader;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
 static EVH storeClientCopyEvent;
-static int CheckQuickAbort2(StoreEntry * entry);
+static bool CheckQuickAbortIsReasonable(StoreEntry * entry);
 static void CheckQuickAbort(StoreEntry * entry);
 
 CBDATA_CLASS_INIT(store_client);
@@ -175,7 +175,7 @@ storeClientCopyEvent(void *data)
     store_client *sc = (store_client *)data;
     debugs(90, 3, "storeClientCopyEvent: Running");
     assert (sc->flags.copy_event_pending);
-    sc->flags.copy_event_pending = 0;
+    sc->flags.copy_event_pending = false;
 
     if (!sc->_callback.pending())
         return;
@@ -191,7 +191,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
         ,  object_ok(true)
 {
     cmp_offset = 0;
-    flags.disk_io_pending = 0;
+    flags.disk_io_pending = false;
     ++ entry->refcount;
 
     if (getType() == STORE_DISK_CLIENT)
@@ -315,7 +315,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     }
 
     if (sc->flags.store_copying) {
-        sc->flags.copy_event_pending = 1;
+        sc->flags.copy_event_pending = true;
         debugs(90, 3, "storeClientCopy2: Queueing storeClientCopyEvent()");
         eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0.0, 0);
         return;
@@ -335,9 +335,9 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * this function
      */
     cbdataInternalLock(sc);
-    assert (sc->flags.store_copying == 0);
+    assert (!sc->flags.store_copying);
     sc->doCopy(e);
-    assert (sc->flags.store_copying == 0);
+    assert (!sc->flags.store_copying);
     cbdataInternalUnlock(sc);
 }
 
@@ -345,7 +345,7 @@ void
 store_client::doCopy(StoreEntry *anEntry)
 {
     assert (anEntry == entry);
-    flags.store_copying = 1;
+    flags.store_copying = true;
     MemObject *mem = entry->mem_obj;
 
     debugs(33, 5, "store_client::doCopy: co: " <<
@@ -356,14 +356,14 @@ store_client::doCopy(StoreEntry *anEntry)
         /* There is no more to send! */
         debugs(33, 3, HERE << "There is no more to send!");
         callback(0);
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     }
 
     /* Check that we actually have data */
     if (anEntry->store_status == STORE_PENDING && copyInto.offset >= mem->endOffset()) {
         debugs(90, 3, "store_client::doCopy: Waiting for more");
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     }
 
@@ -394,7 +394,7 @@ store_client::startSwapin()
     if (storeTooManyDiskFilesOpen()) {
         /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
         fail();
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     } else if (!flags.disk_io_pending) {
         /* Don't set store_io_pending here */
@@ -402,7 +402,7 @@ store_client::startSwapin()
 
         if (swapin_sio == NULL) {
             fail();
-            flags.store_copying = 0;
+            flags.store_copying = false;
             return;
         }
 
@@ -415,7 +415,7 @@ store_client::startSwapin()
         return;
     } else {
         debugs(90, DBG_IMPORTANT, "WARNING: Averted multiple fd operation (1)");
-        flags.store_copying = 0;
+        flags.store_copying = false;
         return;
     }
 }
@@ -443,7 +443,7 @@ store_client::scheduleDiskRead()
 
     fileRead();
 
-    flags.store_copying = 0;
+    flags.store_copying = false;
 }
 
 void
@@ -454,7 +454,7 @@ store_client::scheduleMemRead()
     debugs(90, 3, "store_client::doCopy: Copying normal from memory");
     size_t sz = entry->mem_obj->data_hdr.copy(copyInto);
     callback(sz);
-    flags.store_copying = 0;
+    flags.store_copying = false;
 }
 
 void
@@ -464,7 +464,7 @@ store_client::fileRead()
 
     assert(_callback.pending());
     assert(!flags.disk_io_pending);
-    flags.disk_io_pending = 1;
+    flags.disk_io_pending = true;
 
     if (mem->swap_hdr_sz != 0)
         if (entry->swap_status == SWAPOUT_WRITING)
@@ -491,11 +491,11 @@ store_client::readBody(const char *buf, ssize_t len)
     int parsed_header = 0;
 
     // Don't assert disk_io_pending here.. may be called by read_header
-    flags.disk_io_pending = 0;
+    flags.disk_io_pending = false;
     assert(_callback.pending());
     debugs(90, 3, "storeClientReadBody: len " << len << "");
 
-    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {
+    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status() == Http::scNone) {
         /* Our structure ! */
         HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 
@@ -615,7 +615,7 @@ store_client::readHeader(char const *buf, ssize_t len)
     MemObject *const mem = entry->mem_obj;
 
     assert(flags.disk_io_pending);
-    flags.disk_io_pending = 0;
+    flags.disk_io_pending = false;
     assert(_callback.pending());
 
     unpackHeader (buf, len);
@@ -783,72 +783,72 @@ storePendingNClients(const StoreEntry * e)
     return npend;
 }
 
-/* return 1 if the request should be aborted */
-static int
-CheckQuickAbort2(StoreEntry * entry)
+/* return true if the request should be aborted */
+static bool
+CheckQuickAbortIsReasonable(StoreEntry * entry)
 {
     MemObject * const mem = entry->mem_obj;
     assert(mem);
-    debugs(90, 3, "CheckQuickAbort2: entry=" << entry << ", mem=" << mem);
+    debugs(90, 3, "entry=" << entry << ", mem=" << mem);
 
     if (mem->request && !mem->request->flags.cachable) {
-        debugs(90, 3, "CheckQuickAbort2: YES !mem->request->flags.cachable");
-        return 1;
+        debugs(90, 3, "quick-abort? YES !mem->request->flags.cachable");
+        return true;
     }
 
     if (EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-        debugs(90, 3, "CheckQuickAbort2: YES KEY_PRIVATE");
-        return 1;
+        debugs(90, 3, "quick-abort? YES KEY_PRIVATE");
+        return true;
     }
 
     int64_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
 
-    if (expectlen < 0)
+    if (expectlen < 0) {
         /* expectlen is < 0 if *no* information about the object has been received */
-        return 1;
-
-    int64_t curlen =  mem->endOffset ();
-
-    if (Config.quickAbort.min < 0) {
-        debugs(90, 3, "CheckQuickAbort2: NO disabled");
-        return 0;
+        debugs(90, 3, "quick-abort? YES no object data received yet");
+        return true;
     }
 
-    int64_t roffLimit = mem->request->getRangeOffsetLimit();
+    int64_t curlen =  mem->endOffset();
 
-    if ( roffLimit < 0 && mem->request && mem->request->range ) {
+    if (Config.quickAbort.min < 0) {
+        debugs(90, 3, "quick-abort? NO disabled");
+        return false;
+    }
+
+    if (mem->request && mem->request->range && mem->request->getRangeOffsetLimit() < 0) {
         /* Don't abort if the admin has configured range_ofset -1 to download fully for caching. */
-        debugs(90, 3, "CheckQuickAbort2: NO admin configured range replies to full-download");
-        return 0;
+        debugs(90, 3, "quick-abort? NO admin configured range replies to full-download");
+        return false;
     }
 
     if (curlen > expectlen) {
-        debugs(90, 3, "CheckQuickAbort2: YES bad content length");
-        return 1;
+        debugs(90, 3, "quick-abort? YES bad content length");
+        return true;
     }
 
     if ((expectlen - curlen) < (Config.quickAbort.min << 10)) {
-        debugs(90, 3, "CheckQuickAbort2: NO only little more left");
-        return 0;
+        debugs(90, 3, "quick-abort? NO only a little more object left to receive");
+        return false;
     }
 
     if ((expectlen - curlen) > (Config.quickAbort.max << 10)) {
-        debugs(90, 3, "CheckQuickAbort2: YES too much left to go");
-        return 1;
+        debugs(90, 3, "quick-abort? YES too much left to go");
+        return true;
     }
 
     if (expectlen < 100) {
-        debugs(90, 3, "CheckQuickAbort2: NO avoid FPE");
-        return 0;
+        debugs(90, 3, "quick-abort? NO avoid FPE");
+        return false;
     }
 
     if ((curlen / (expectlen / 100)) > (Config.quickAbort.pct)) {
-        debugs(90, 3, "CheckQuickAbort2: NO past point of no return");
-        return 0;
+        debugs(90, 3, "quick-abort? NO past point of no return");
+        return false;
     }
 
-    debugs(90, 3, "CheckQuickAbort2: YES default, returning 1");
-    return 1;
+    debugs(90, 3, "quick-abort? YES default");
+    return true;
 }
 
 static void
@@ -865,7 +865,7 @@ CheckQuickAbort(StoreEntry * entry)
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
         return;
 
-    if (CheckQuickAbort2(entry) == 0)
+    if (!CheckQuickAbortIsReasonable(entry))
         return;
 
     entry->abort();

@@ -86,9 +86,9 @@ MemObject::resetUrls(char const *aUrl, char const *aLog_url)
 MemObject::MemObject(char const *aUrl, char const *aLog_url)
 {
     debugs(20, 3, HERE << "new MemObject " << this);
-    HttpReply *rep = new HttpReply;
+    _reply = new HttpReply;
+    HTTPMSGLOCK(_reply);
 
-    _reply  = HTTPMSGLOCK(rep);
     url = xstrdup(aUrl);
 
 #if URL_CHECKSUM_DEBUG
@@ -182,7 +182,7 @@ MemObject::dump() const
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
     debugs(20, DBG_IMPORTANT, "MemObject->reply: " << _reply);
     debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
-    debugs(20, DBG_IMPORTANT, "MemObject->log_url: " << log_url << " " << checkNullString(log_url));
+    debugs(20, DBG_IMPORTANT, "MemObject->log_url: " << checkNullString(log_url));
 }
 
 HttpReply const *
@@ -195,7 +195,8 @@ void
 MemObject::replaceHttpReply(HttpReply *newrep)
 {
     HTTPMSGUNLOCK(_reply);
-    _reply = HTTPMSGLOCK(newrep);
+    _reply = newrep;
+    HTTPMSGLOCK(_reply);
 }
 
 struct LowestMemReader : public unary_function<store_client, void> {

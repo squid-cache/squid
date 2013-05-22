@@ -388,6 +388,11 @@ create_gd(struct main_args *margs)
                 cleanup();
                 return (1);
             }
+            if (dp) {  /* end of domain name - twice */
+                debug((char *) "%s| %s: @ is not allowed in group name %s@%s\n",LogTime(), PROGRAM,gp,dp);
+                cleanup();
+                return(1);
+            }
             *p = '\0';
             ++p;
             gdsp = init_gd();

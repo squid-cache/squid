@@ -40,12 +40,22 @@ private:
 
     void earlyAbort(const CommCloseCbParams &);
     void timeout(const CommTimeoutCbParams &);
-    void doneConnecting(comm_err_t status, int xerrno);
+    void sendAnswer(comm_err_t errFlag, int xerrno, const char *why);
     static void InProgressConnectRetry(int fd, void *data);
     static void DelayedConnectRetry(void *data);
     void connect();
     void connected();
     void lookupLocalAddress();
+
+    void sleep();
+    void restart();
+
+    bool createFd();
+    void closeFd();
+    void keepFd();
+    void cleanFd();
+
+    void cancelSleep();
 
 private:
     char *host_;                         ///< domain name we are trying to connect to.
@@ -56,19 +66,16 @@ private:
     int totalTries_;   ///< total number of connection attempts over all destinations so far.
     int failRetries_;  ///< number of retries current destination has been tried.
 
-    /**
-     * time at which to abandon the connection.
-     * the connection-done callback will be passed COMM_TIMEOUT
-     */
-    time_t connectTimeout_;
-
-    /// time at which this series of connection attempts was started.
-    time_t connectStart_;
+    /// if we are not done by then, we will call back with COMM_TIMEOUT
+    time_t deadline_;
 
     /// handles to calls which we may need to cancel.
     struct Calls {
         AsyncCall::Pointer earlyAbort_;
         AsyncCall::Pointer timeout_;
+        /// Whether we are idling before retrying to connect; not yet a call
+        /// [that we can cancel], but it will probably become one eventually.
+        bool sleep_;
     } calls_;
 
     CBDATA_CLASS2(ConnOpener);

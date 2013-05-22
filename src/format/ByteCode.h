@@ -209,8 +209,6 @@ enum Quoting {
     LOG_QUOTE_RAW
 };
 
-extern const char *log_tags[];
-
 } // namespace Format
 
 #endif /* _SQUID_FMT_BYTECODE_H */

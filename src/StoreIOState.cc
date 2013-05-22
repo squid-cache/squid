@@ -46,9 +46,13 @@ StoreIOState::operator new (size_t amount)
 void
 StoreIOState::operator delete (void *address) {assert (0);}
 
-StoreIOState::StoreIOState()
+StoreIOState::StoreIOState() :
+        swap_dirn(-1), swap_filen(-1), e(NULL), mode(O_BINARY),
+        offset_(0), file_callback(NULL), callback(NULL), callback_data(NULL)
 {
-    mode = O_BINARY;
+    read.callback = NULL;
+    read.callback_data = NULL;
+    flags.closing = false;
 }
 
 off_t

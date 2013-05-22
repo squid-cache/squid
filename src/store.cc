@@ -380,32 +380,47 @@ StoreEntry::storeClientType() const
     return STORE_DISK_CLIENT;
 }
 
-StoreEntry::StoreEntry():
+StoreEntry::StoreEntry() :
+        mem_obj(NULL),
         hidden_mem_obj(NULL),
-        swap_file_sz(0)
+        timestamp(-1),
+        lastref(-1),
+        expires(-1),
+        lastmod(-1),
+        swap_file_sz(0),
+        refcount(0),
+        flags(0),
+        swap_filen(-1),
+        swap_dirn(-1),
+        lock_count(0),
+        mem_status(NOT_IN_MEMORY),
+        ping_status(PING_NONE),
+        store_status(STORE_PENDING),
+        swap_status(SWAPOUT_NONE)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
-    mem_obj = NULL;
-
-    expires = lastmod = lastref = timestamp = -1;
-
-    swap_status = SWAPOUT_NONE;
-    swap_filen = -1;
-    swap_dirn = -1;
 }
 
-StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
+StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl) :
+        mem_obj(NULL),
         hidden_mem_obj(NULL),
-        swap_file_sz(0)
+        timestamp(-1),
+        lastref(-1),
+        expires(-1),
+        lastmod(-1),
+        swap_file_sz(0),
+        refcount(0),
+        flags(0),
+        swap_filen(-1),
+        swap_dirn(-1),
+        lock_count(0),
+        mem_status(NOT_IN_MEMORY),
+        ping_status(PING_NONE),
+        store_status(STORE_PENDING),
+        swap_status(SWAPOUT_NONE)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = new MemObject(aUrl, aLogUrl);
-
-    expires = lastmod = lastref = timestamp = -1;
-
-    swap_status = SWAPOUT_NONE;
-    swap_filen = -1;
-    swap_dirn = -1;
 }
 
 StoreEntry::~StoreEntry()
@@ -755,7 +770,7 @@ StoreEntry::setPublicKey()
             StoreEntry *pe = storeCreateEntry(mem_obj->url, mem_obj->log_url, request->flags, request->method);
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
-            rep->setHeaders(HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
+            rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = mem_obj->getReply()->header.getList(HDR_VARY);
 
             if (vary.size()) {
@@ -992,9 +1007,8 @@ StoreEntry::checkCachable()
             ++store_check_cachable_hist.no.negative_cached;
             return 0;           /* avoid release call below */
         } else if ((getReply()->content_length > 0 &&
-                    getReply()->content_length
-                    > Config.Store.maxObjectSize) ||
-                   mem_obj->endOffset() > Config.Store.maxObjectSize) {
+                    getReply()->content_length > store_maxobjsize) ||
+                   mem_obj->endOffset() > store_maxobjsize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
@@ -1382,10 +1396,10 @@ StoreEntry::validLength() const
         return 1;
     }
 
-    if (reply->sline.status == HTTP_NOT_MODIFIED)
+    if (reply->sline.status() == Http::scNotModified)
         return 1;
 
-    if (reply->sline.status == HTTP_NO_CONTENT)
+    if (reply->sline.status() == Http::scNoContent)
         return 1;
 
     diff = reply->hdr_sz + reply->content_length - objectLen();
@@ -1673,6 +1687,8 @@ StoreEntry::url() const
 void
 StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
 {
+    debugs(20, 3, "A mem_obj create attempted using : " << aUrl);
+
     if (mem_obj)
         return;
 

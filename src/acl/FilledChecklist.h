@@ -73,6 +73,8 @@ public:
 #if USE_SSL
     /// SSL [certificate validation] errors, in undefined order
     Ssl::Errors *sslErrors;
+    /// The peer certificate
+    Ssl::X509_Pointer serverCert;
 #endif
 
     ExternalACLEntry *extacl_entry;

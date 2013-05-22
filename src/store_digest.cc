@@ -392,13 +392,14 @@ storeDigestRewriteStart(void *datanotused)
     debugs(71, 2, "storeDigestRewrite: start rewrite #" << sd_state.rewrite_count + 1);
     /* make new store entry */
     url = internalLocalUri("/squid-internal-periodic/", StoreDigestFileName);
-    flags.cachable = 1;
+    flags.cachable = true;
     e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
-    e->mem_obj->request = HTTPMSGLOCK(req);
+    e->mem_obj->request = req;
+    HTTPMSGLOCK(e->mem_obj->request);
     /* wait for rebuild (if any) to finish */
 
     if (sd_state.rebuild_lock) {
@@ -423,7 +424,7 @@ storeDigestRewriteResume(void)
     e->setPublicKey();
     /* fake reply */
     HttpReply *rep = new HttpReply;
-    rep->setHeaders(HTTP_OK, "Cache Digest OK",
+    rep->setHeaders(Http::scOkay, "Cache Digest OK",
                     "application/cache-digest", (store_digest->mask_size + sizeof(sd_state.cblock)),
                     squid_curtime, (squid_curtime + Config.digest.rewrite_period) );
     debugs(71, 3, "storeDigestRewrite: entry expires on " << rep->expires <<

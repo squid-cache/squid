@@ -75,7 +75,7 @@ public:
     /// replaces current response store entry with the given one
     void setReplyToStoreEntry(StoreEntry *e);
     /// builds error using clientBuildError() and calls setReplyToError() below
-    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
+    void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
 #else
@@ -91,8 +91,9 @@ public:
     clientStream_status_t replyStatus();
     void processMiss();
     void traceReply(clientStreamNode * node);
+    const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
-    http_status purgeStatus;
+    Http::StatusCode purgeStatus;
 
     /* state variable - replace with class to handle storeentries at some point */
     int lookingforstore;
@@ -134,7 +135,7 @@ private:
     void processReplyAccessResult(const allow_t &accessAllowed);
     void cloneReply();
     void buildReplyHeader ();
-    bool alwaysAllowResponse(http_status sline) const;
+    bool alwaysAllowResponse(Http::StatusCode sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
     void processConditional(StoreIOBuffer &result);

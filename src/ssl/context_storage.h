@@ -3,11 +3,13 @@
 
 #if USE_SSL
 
+#include "base/LruMap.h"
 #include "SquidTime.h"
 #include "CacheManager.h"
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
+#include "ssl/gadgets.h"
 #if HAVE_MAP
 #include <map>
 #endif
@@ -38,53 +40,7 @@ public:
     virtual bool aggregatable() const { return false; }
 };
 
-/**
- * Memory cache for store generated SSL context. Enforces total size limits
- * using an LRU algorithm.
- */
-class LocalContextStorage
-{
-    friend class CertificateStorageAction;
-public:
-    /// Cache item is an (SSL_CTX, host name) tuple.
-    class Item
-    {
-    public:
-        Item(SSL_CTX * aSsl_ctx, std::string const & aName);
-        ~Item();
-    public:
-        SSL_CTX * ssl_ctx; ///< The SSL context.
-        std::string host_name; ///< The host name of the SSL context.
-    };
-
-    typedef std::list<Item *> Queue;
-    typedef Queue::iterator QueueIterator;
-
-    /// host_name:queue_item mapping for fast lookups by host name
-    typedef std::map<std::string, QueueIterator> Map;
-    typedef Map::iterator MapIterator;
-    typedef std::pair<std::string, QueueIterator> MapPair;
-
-    LocalContextStorage(size_t aMax_memory);
-    ~LocalContextStorage();
-    /// Set maximum memory size for this storage.
-    void SetSize(size_t aMax_memory);
-    /// Return a pointer to the  added ssl_ctx or NULL if fails (eg. max cache size equal 0).
-    SSL_CTX * add(char const * host_name, SSL_CTX * ssl_ctx);
-    /// Find SSL_CTX in storage by host name. Lru queue will be updated.
-    SSL_CTX * find(char const * host_name);
-    void remove(char const * host_name); ///< Delete the SSL context by hostname
-
-private:
-    void purgeOne(); ///< Delete oldest object.
-    /// Delete object by iterator. It is used in deletePurge() and remove(...) methods.
-    void deleteAt(MapIterator i);
-
-    size_t max_memory; ///< Max cache size.
-    size_t memory_used; ///< Used cache size.
-    Map storage; ///< The hostnames/SSL_CTX * pairs
-    Queue lru_queue; ///< LRU cache index
-};
+typedef LruMap<SSL_CTX_Pointer, SSL_CTX_SIZE> LocalContextStorage;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage

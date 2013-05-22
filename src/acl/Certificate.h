@@ -40,11 +40,11 @@
 #include "acl/Strategised.h"
 
 /// \ingroup ACLAPI
-class ACLCertificateStrategy : public ACLStrategy<SSL *>
+class ACLCertificateStrategy : public ACLStrategy<X509 *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLCertificateStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
@@ -64,9 +64,9 @@ class ACLCertificate
 
 private:
     static ACL::Prototype UserRegistryProtoype;
-    static ACLStrategised<SSL*> UserRegistryEntry_;
+    static ACLStrategised<X509*> UserRegistryEntry_;
     static ACL::Prototype CARegistryProtoype;
-    static ACLStrategised<SSL *> CARegistryEntry_;
+    static ACLStrategised<X509 *> CARegistryEntry_;
 };
 
 #endif /* SQUID_ACLCERTIFICATE_H */

@@ -1,6 +1,7 @@
 #ifndef SQUID_ANYP_PORTCFG_H
 #define SQUID_ANYP_PORTCFG_H
 
+#include "anyp/TrafficMode.h"
 #include "cbdata.h"
 #include "comm/Connection.h"
 
@@ -29,24 +30,23 @@ public:
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
 
-    unsigned int intercepted:1;        /**< intercepting proxy port */
-    unsigned int spoof_client_ip:1;    /**< spoof client ip if possible */
-    unsigned int accel:1;              /**< HTTP accelerator */
-    unsigned int allow_direct:1;       /**< Allow direct forwarding in accelerator mode */
-    unsigned int vhost:1;              /**< uses host header */
-    unsigned int sslBump:1;            /**< intercepts CONNECT requests */
-    unsigned int actAsOrigin:1;        ///< update replies to conform with RFC 2616
-    unsigned int ignore_cc:1;          /**< Ignore request Cache-Control directives */
+    TrafficMode flags;  ///< flags indicating what type of traffic to expect via this port.
 
-    int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
-    bool connection_auth_disabled;     /* Don't support connection oriented auth */
+    bool allow_direct;       ///< Allow direct forwarding in accelerator mode
+    bool vhost;              ///< uses host header
+    bool actAsOrigin;        ///< update replies to conform with RFC 2616
+    bool ignore_cc;          ///< Ignore request Cache-Control directives
+
+    bool connection_auth_disabled; ///< Don't support connection oriented auth
+
+    int vport;               ///< virtual port support. -1 if dynamic, >0 static
     int disable_pmtu_discovery;
 
     struct {
-        unsigned int enabled;
         unsigned int idle;
         unsigned int interval;
         unsigned int timeout;
+        bool enabled;
     } tcp_keepalive;
 
     /**

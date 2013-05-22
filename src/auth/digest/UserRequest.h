@@ -48,9 +48,9 @@ public:
     char *response;
 
     struct {
-        unsigned int authinfo_sent:1;
-        unsigned int invalid_password:1;
-        unsigned int helper_queried:1;
+        bool authinfo_sent;
+        bool invalid_password;
+        bool helper_queried;
     } flags;
     digest_nonce_h *nonce;
 

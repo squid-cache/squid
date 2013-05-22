@@ -39,12 +39,10 @@
 extern "C" {
 #endif
 
-    typedef struct sockaddr_in ipaddr;
-
     /* An SNMP PDU */
     struct snmp_pdu {
         int command;		/* Type of this PDU */
-        ipaddr address;		/* Address of peer */
+        struct sockaddr_in address;		/* Address of peer */
 
         int reqid;			/* Integer32: Request id */
         int errstat;		/* INTEGER:   Error status */
@@ -59,7 +57,7 @@ extern "C" {
         /* Trap information */
         oid *enterprise;		/* System OID */
         int enterprise_length;
-        ipaddr agent_addr;		/* address of object generating trap */
+        struct sockaddr_in agent_addr;		/* address of object generating trap */
         int trap_type;		/* generic trap type */
         int specific_type;		/* specific type */
         u_int time;			/* Uptime */
