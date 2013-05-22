@@ -71,12 +71,17 @@ DestinationDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &de
 }
 
 int
-ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
 {
     assert(checklist != NULL && checklist->request != NULL);
 
     if (data->match(checklist->request->GetHost())) {
         return 1;
+    }
+
+    if (flags.isSet(ACL_F_NO_LOOKUP)) {
+        debugs(28, 3, "aclMatchAcl:  No-lookup DNS ACL '" << AclMatchedName << "' for '" << checklist->request->GetHost() << "'");
+        return 0;
     }
 
     /* numeric IPA? no, trust the above result. */

@@ -237,16 +237,15 @@ asnCacheStart(int as)
 {
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
-    HttpRequest *req;
     ASState *asState;
     asState = cbdataAlloc(ASState);
     asState->dataRead = 0;
     debugs(53, 3, "asnCacheStart: AS " << as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
-    req = HttpRequest::CreateFromUrl(asres);
-    assert(NULL != req);
-    asState->request = HTTPMSGLOCK(req);
+    asState->request = HttpRequest::CreateFromUrl(asres);
+    assert(NULL != asState->request);
+    HTTPMSGLOCK(asState->request);
 
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
@@ -297,7 +296,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         asStateFree(asState);
         return;
-    } else if (HTTP_OK != e->getReply()->sline.status) {
+    } else if (e->getReply()->sline.status() != Http::scOkay) {
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
         asStateFree(asState);
         return;
@@ -395,8 +394,6 @@ asStateFree(void *data)
 static int
 asnAddNet(char *as_string, int as_number)
 {
-    rtentry_t *e;
-
     struct squid_radix_node *rn;
     CbDataList<int> **Tail = NULL;
     CbDataList<int> *q = NULL;
@@ -430,9 +427,7 @@ asnAddNet(char *as_string, int as_number)
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
-    e = (rtentry_t *)xmalloc(sizeof(rtentry_t));
-
-    memset(e, '\0', sizeof(rtentry_t));
+    rtentry_t *e = (rtentry_t *)xcalloc(1, sizeof(rtentry_t));
 
     e->e_addr.addr = addr;
 
@@ -459,7 +454,7 @@ asnAddNet(char *as_string, int as_number)
         q = new CbDataList<int> (as_number);
         asinfo = (as_info *)xmalloc(sizeof(as_info));
         asinfo->as_number = q;
-        rn = squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
+        squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
         rn = squid_rn_match(&e->e_addr, AS_tree_head);
         assert(rn != NULL);
         e->e_info = asinfo;
@@ -613,7 +608,7 @@ ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryE
 ACLStrategised<Ip::Address> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int
-ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist)
+ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     return data->match(checklist->src_addr);
 }
@@ -627,7 +622,7 @@ ACLSourceASNStrategy::Instance()
 ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
 
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 

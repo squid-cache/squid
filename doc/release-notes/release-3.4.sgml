@@ -1,0 +1,294 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid 3.4.0.0 release notes</title>
+<author>Squid Developers</author>
+
+<abstract>
+This document contains the release notes for version 3.4 of Squid.
+Squid is a WWW Cache application developed by the National Laboratory
+for Applied Network Research and members of the Web Caching community.
+</abstract>
+
+<toc>
+
+<sect>Notice
+<p>
+The Squid Team are pleased to announce the release of Squid-3.4.0.0 for testing.
+
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.HEAD/"> or the
+ <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+
+While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+
+We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+ for how to submit a report with a stack trace.
+
+<sect1>Known issues
+<p>
+Although this release is deemed good enough for use in many setups, please note the existence of 
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.4" name="open bugs against Squid-3.4">.
+
+
+<sect1>Changes since earlier releases of Squid-3.4
+<p>
+The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.HEAD/changesets/" name="viewed here">.
+
+<sect>Major new features since Squid-3.3
+<p>Squid 3.4 represents a new feature release above 3.3.
+
+<p>The most important of these new features are:
+<itemize>
+	<item>Helper protocol extensions
+	<item>SSL Server Certificate Validator
+</itemize>
+
+Most user-facing changes are reflected in squid.conf (see below).
+
+
+<sect1>Helper protocol extensions
+<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
+
+<p>The Squid helper protocol used to communicate with authenticators,
+   URL-rewriters, Redirectors, and External ACL helpers has been updated
+   and extended.
+
+<p><em>BH</em> status code is now accepted from all helpers to report
+   internal error events separate from <em>ERR</em> rejection code.
+   Permitting Squid to perform recovery operations specific to
+   helper failure instead of a blanket client rejection.
+
+<p>Arbitrary key-value pairs can be returned from any helper.
+   Allowing future helpers to be forward- and backward- compatible
+   with this and future version of Squid.
+
+
+<sect1>SSL Server Certificate Validator
+<p>Details at <url url="http://wiki.squid-cache.org/Features/SslServerCertValidator">.
+
+<p>The helper consulted after the internal OpenSSL validation, regardless of the
+   validation results. The helper will receive:
+
+<itemize>
+	<item>the origin server certificate (chain),
+	<item>the intended domain name, and
+	<item>a list of OpenSSL validation errors (if any).
+</itemize>
+
+<p>If the helper decides to honor an OpenSSL error or report another validation 
+   error(s), the helper will return:
+
+<itemize>
+	<item>A list of certificates.
+	<item>A list of items consists the the validation error name (see <em>%err_name</em>
+        error page macro and <em>%err_details</em> code for <em>logformat</em>), error reason
+        (<em>%ssl_lib_error macro</em>), and the offending certificate.
+</itemize>
+
+<p>The returned information mimics what the internal OpenSSL-based validation code
+   collects now. Returned errors, if any, are fed to <em>sslproxy_cert_error</em>,
+   triggering the existing SSL error processing code.
+
+<p>The helper invocation controlled by the <em>sslcrtvalidator_program</em> and
+   <em>sslcrtvalidator_children</em> configurations options which are similar to the
+   <em>ssl_crtd</em> related options. 
+
+
+<sect>Changes to squid.conf since Squid-3.3
+<p>
+There have been changes to Squid's configuration file since Squid-3.3.
+
+This section gives a thorough account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newtags" name="New tags">
+	<item><ref id="modifiedtags" name="Changes to existing tags">
+	<item><ref id="removedtags" name="Removed tags">
+</itemize>
+<p>
+
+<sect1>New tags<label id="newtags">
+<p>
+<descrip>
+	<tag>note</tag>
+	<p>Use ACLs to annotate a transaction with customized annotations
+	   which can be logged in access.log
+
+	<tag>sslcrtvalidator_children</tag>
+	<p>Specifies the settings for how many SSL server certificate
+	   validator helpers are run and when they are started.
+
+	<tag>sslcrtvalidator_program</tag>
+	<p>Specifies the location of a SSL server certificate validator helper.
+
+</descrip>
+
+<sect1>Changes to existing tags<label id="modifiedtags">
+<p>
+<descrip>
+	<tag>acl</tag>
+	<p>New test type <em>server_cert_fingerprint</em> to match against 
+	   server SSL certificate fingerprint.
+
+	<tag>auth_param</tag>
+	<p>New result code <em>BH</em> to signal helper internal errors
+	   available in all authentication schemes.
+	<p>New key <em>message=</em> for error message details in all authentication schemes.
+	<p>New result code <em>OK</em> and key <em>ha1=</em> in Digest authentication.
+	<p>New result codes <em>OK</em>, <em>ERR</em> replace result codes <em>AF</em>,
+	   and <em>NA</em> in NTLM and Negotiate authentication.
+	<p>New key <em>token=</em> for NTLM and Negotiate authentication <em>OK</em> responses.
+	<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
+
+	<tag>external_acl_type</tag>
+	<p>Deprecated <em>protocol=3.0</em> option. No longer necessary.
+	<p>New result code <em>BH</em> to signal helper internal errors
+	<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
+
+	<tag>logformat</tag>
+	<p>New format code <em>%note</em> to log a transaction annotation linked to the
+	   transaction by ICAP, eCAP, a helper, or the <em>note</em> squid.conf directive.
+
+	<tag>unlinkd_program</tag>
+	<p>New helper response format utilizing result codes <em>OK</em> and <em>BH</em>,
+	   to signal helper lookup results. Also, key-value response values to return
+	   multiple values to Squid.
+	<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
+
+	<tag>url_rewrite_program</tag>
+	<p>New helper response format utilizing result codes <em>OK</em>, <em>ERR</em>,
+	   and <em>BH</em> to signal helper lookup results. Also, key-value response
+	   values to return multiple values to Squid.
+	<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
+
+</descrip>
+
+<sect1>Removed tags<label id="removedtags">
+<p>
+<descrip>
+	<p><em>There are no removed squid.conf tags in Squid-3.4.</em>
+
+</descrip>
+
+
+<sect>Changes to ./configure options since Squid-3.3
+<p>
+There have been some changes to Squid's build configuration since Squid-3.3.
+
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newoptions" name="New options">
+	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="removedoptions" name="Removed options">
+</itemize>
+
+
+<sect1>New options<label id="newoptions">
+<p>
+<descrip>
+	<p><em>There are no new ./configure options in Squid-3.4.</em>
+
+</descrip>
+
+<sect1>Changes to existing options<label id="modifiedoptions">
+<p>
+<descrip>
+	<p><em>There are no changed ./configure options in Squid-3.4.</em>
+
+</descrip>
+</p>
+
+<sect1>Removed options<label id="removedoptions">
+<p>
+<descrip>
+	<p><em>There are no removed ./configure options in Squid-3.4.</em>
+
+</descrip>
+
+
+<sect>Regressions since Squid-2.7
+
+<p>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.3
+
+<p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<sect1>Missing squid.conf options available in Squid-2.7
+<p>
+<descrip>
+	<tag>broken_vary_encoding</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>cache_dir</tag>
+	<p><em>COSS</em> storage type is lacking stability fixes from 2.6
+	<p>COSS <em>overwrite-percent=</em> option not yet ported from 2.6
+	<p>COSS <em>max-stripe-waste=</em> option not yet ported from 2.6
+	<p>COSS <em>membufs=</em> option not yet ported from 2.6
+	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
+
+	<tag>cache_peer</tag>
+	<p><em>idle=</em> not yet ported from 2.7
+	<p><em>monitorinterval=</em> not yet ported from 2.6
+	<p><em>monitorsize=</em> not yet ported from 2.6
+	<p><em>monitortimeout=</em> not yet ported from 2.6
+	<p><em>monitorurl=</em> not yet ported from 2.6
+
+	<tag>cache_vary</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>collapsed_forwarding</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>error_map</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>external_acl_type</tag>
+	<p><em>%ACL</em> format tag not yet ported from 2.6
+	<p><em>%DATA</em> format tag not yet ported from 2.6
+
+	<tag>external_refresh_check</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>http_port</tag>
+	<p><em>act-as-origin</em> not yet ported from 2.7
+
+	<tag>ignore_ims_on_miss</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>location_rewrite_access</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_children</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_program</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>refresh_pattern</tag>
+	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>negative-ttl=</em> not yet ported from 2.7
+
+	<tag>refresh_stale_hit</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_access</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_rewrite_children</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_rewrite_program</tag>
+	<p>Not yet ported from 2.7
+	
+	<tag>update_headers</tag>
+	<p>Not yet ported from 2.7
+
+</descrip>
+
+</article>

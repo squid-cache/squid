@@ -49,7 +49,7 @@ public:
     void operator delete(void *);
 
     ~ACLStrategised();
-    ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
+    ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *, const ACLFlag flags[] = ACLFlags::NoFlags);
     ACLStrategised (ACLStrategised const &);
     ACLStrategised &operator= (ACLStrategised const &);
 
@@ -107,7 +107,7 @@ ACLStrategised<MatchType>::~ACLStrategised()
 }
 
 template <class MatchType>
-ACLStrategised<MatchType>::ACLStrategised(ACLData<MatchType> *newData, ACLStrategy<MatchType> *theStrategy, char const *theType) : data (newData), type_(theType), matcher(theStrategy) {}
+ACLStrategised<MatchType>::ACLStrategised(ACLData<MatchType> *newData, ACLStrategy<MatchType> *theStrategy, char const *theType, const ACLFlag flgs[]) : ACL(flgs), data (newData), type_(theType), matcher(theStrategy) {}
 
 template <class MatchType>
 ACLStrategised<MatchType>::ACLStrategised (ACLStrategised const &old) : data (old.data->clone()), type_(old.type_), matcher (old.matcher)
@@ -150,7 +150,7 @@ ACLStrategised<MatchType>::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = dynamic_cast<ACLFilledChecklist*>(cl);
     assert(checklist);
-    return matcher->match(data, checklist);
+    return matcher->match(data, checklist, flags);
 }
 
 template <class MatchType>

@@ -34,16 +34,16 @@
 #include "base/RefCount.h"
 #include "comm/Connection.h"
 #include "HttpHeader.h"
-#include "HttpVersion.h"
+#include "http/ProtocolVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
-#include "HttpRequestMethod.h"
+#include "LogTags.h"
+#include "Notes.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#include "Notes.h"
 #if USE_SSL
 #include "ssl/gadgets.h"
 #endif
@@ -89,7 +89,7 @@ public:
         HttpRequestMethod method;
         int code;
         const char *content_type;
-        HttpVersion version;
+        Http::ProtocolVersion version;
         bool timedout; ///< terminated due to a lifetime or I/O timeout
         bool aborted; ///< other abnormal termination (e.g., I/O error)
 
@@ -169,7 +169,7 @@ public:
         int replyHeadersSize; ///< sent, including status line
         int64_t highOffset;
         int64_t objectSize;
-        log_type code;
+        LogTags code;
         int msec;
         const char *rfc931;
         const char *authuser;
@@ -243,7 +243,10 @@ public:
     class IcapLogEntry
     {
     public:
-        IcapLogEntry():bodyBytesRead(-1),request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE) {}
+        IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
+                bodyBytesRead(-1), request(NULL), reply(NULL),
+                outcome(Adaptation::Icap::xoUnknown), trTime(0),
+                ioTime(0), resStatus(Http::scNone), processingTime(0) {}
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -271,7 +274,7 @@ public:
          * ICAP response is received.
          */
         int ioTime;
-        http_status resStatus;   ///< ICAP response status code
+        Http::StatusCode resStatus;   ///< ICAP response status code
         int processingTime;      ///< total ICAP processing time in milliseconds
     }
     icap;

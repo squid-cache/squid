@@ -53,6 +53,7 @@
 #if USE_DEVPOLL
 
 #include "comm/Loops.h"
+#include "fd.h"
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
@@ -68,10 +69,13 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 #define DEBUG_DEVPOLL 0
 
-/* OPEN_MAX is defined in <limits.h>, presumably included by sys/devpoll.h */
+// OPEN_MAX is defined in <limits.h>
 #define	DEVPOLL_UPDATESIZE	OPEN_MAX
 #define	DEVPOLL_QUERYSIZE	OPEN_MAX
 

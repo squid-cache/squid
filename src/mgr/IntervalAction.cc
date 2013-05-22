@@ -115,8 +115,8 @@ Mgr::IntervalAction::Create60min(const CommandPointer &cmd)
     return new IntervalAction(cmd, 60, 0);
 }
 
-Mgr::IntervalAction::IntervalAction(const CommandPointer &cmd, int aMinutes, int aHours):
-        Action(cmd), minutes(aMinutes), hours(aHours), data()
+Mgr::IntervalAction::IntervalAction(const CommandPointer &aCmd, int aMinutes, int aHours):
+        Action(aCmd), minutes(aMinutes), hours(aHours), data()
 {
     debugs(16, 5, HERE);
 }

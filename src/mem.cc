@@ -201,7 +201,7 @@ Mem::Stats(StoreEntry * sentry)
  * Relies on Mem::Init() having been called beforehand.
  */
 void
-memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused, bool zeroOnPush)
+memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused, bool doZero)
 {
     assert(name && size);
 
@@ -209,7 +209,7 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused,
         return;
 
     MemPools[type] = memPoolCreate(name, size);
-    MemPools[type]->zeroOnPush(zeroOnPush);
+    MemPools[type]->zeroBlocks(doZero);
 }
 
 /* find appropriate pool and use it (pools always init buffer with 0s) */
@@ -477,7 +477,7 @@ Mem::Init(void)
     /** Lastly init the string pools. */
     for (i = 0; i < mem_str_pool_count; ++i) {
         StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
-        StrPools[i].pool->zeroOnPush(false);
+        StrPools[i].pool->zeroBlocks(false);
 
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
             debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");

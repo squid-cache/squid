@@ -130,13 +130,16 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
     if (!info.icapReply) // did not get to read an ICAP reply; a timeout?
         return true;
 
-    debugs(93,9, HERE << info.icapReply->sline.status);
-    if (!info.icapReply->sline.status) // failed to parse the reply; I/O err
+    debugs(93,9, info.icapReply->sline.status());
+    // XXX: Http::scNone is not the only sign of parse error
+    // XXX: if there is a specific HTTP error code describing the problem, that may be set
+    if (info.icapReply->sline.status() == Http::scNone) // failed to parse the reply; I/O err
         return true;
 
     ACLFilledChecklist *cl =
         new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
-    cl->reply = HTTPMSGLOCK(info.icapReply);
+    cl->reply = info.icapReply;
+    HTTPMSGLOCK(cl->reply);
 
     bool result = cl->fastCheck() == ACCESS_ALLOWED;
     delete cl;
@@ -147,17 +150,27 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(HttpRequest *anIcapRequest,
         HttpReply *anIcapReply, bool beRetriable, bool beRepeatable):
-        icapRequest(anIcapRequest ? HTTPMSGLOCK(anIcapRequest) : NULL),
-        icapReply(anIcapReply ? HTTPMSGLOCK(anIcapReply) : NULL),
-        isRetriable(beRetriable), isRepeatable(beRepeatable)
+        icapRequest(anIcapRequest),
+        icapReply(anIcapReply),
+        isRetriable(beRetriable),
+        isRepeatable(beRepeatable)
 {
+    if (icapRequest)
+        HTTPMSGLOCK(icapRequest);
+    if (icapReply)
+        HTTPMSGLOCK(icapReply);
 }
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(const Adaptation::Icap::XactAbortInfo &i):
-        icapRequest(i.icapRequest ? HTTPMSGLOCK(i.icapRequest) : NULL),
-        icapReply(i.icapReply ? HTTPMSGLOCK(i.icapReply) : NULL),
-        isRetriable(i.isRetriable), isRepeatable(i.isRepeatable)
+        icapRequest(i.icapRequest),
+        icapReply(i.icapReply),
+        isRetriable(i.isRetriable),
+        isRepeatable(i.isRepeatable)
 {
+    if (icapRequest)
+        HTTPMSGLOCK(icapRequest);
+    if (icapReply)
+        HTTPMSGLOCK(icapReply);
 }
 
 Adaptation::Icap::XactAbortInfo::~XactAbortInfo()

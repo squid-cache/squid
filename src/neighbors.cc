@@ -74,7 +74,7 @@ static int peerWouldBePinged(const CachePeer *, HttpRequest *);
 static void neighborRemove(CachePeer *);
 static void neighborAlive(CachePeer *, const MemObject *, const icp_common_t *);
 #if USE_HTCP
-static void neighborAliveHtcp(CachePeer *, const MemObject *, const htcpReplyData *);
+static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyData *);
 #endif
 static void neighborCountIgnored(CachePeer *);
 static void peerRefreshDNS(void *);
@@ -893,7 +893,7 @@ neighborUpdateRtt(CachePeer * p, MemObject * mem)
 
 #if USE_HTCP
 static void
-neighborAliveHtcp(CachePeer * p, const MemObject * mem, const htcpReplyData * htcp)
+neighborAliveHtcp(CachePeer * p, const MemObject * mem, const HtcpReplyData * htcp)
 {
     peerAlive(p);
     ++ p->stats.pings_acked;
@@ -1360,7 +1360,7 @@ peerCountMcastPeersSchedule(CachePeer * p, time_t when)
              p,
              (double) when, 1);
 
-    p->mcast.flags.count_event_pending = 1;
+    p->mcast.flags.count_event_pending = true;
 }
 
 static void
@@ -1374,20 +1374,22 @@ peerCountMcastPeersStart(void *data)
     int reqnum;
     LOCAL_ARRAY(char, url, MAX_URL);
     assert(p->type == PEER_MULTICAST);
-    p->mcast.flags.count_event_pending = 0;
+    p->mcast.flags.count_event_pending = false;
     snprintf(url, MAX_URL, "http://");
     p->in_addr.ToURL(url+7, MAX_URL -8 );
     strcat(url, "/");
     fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
     psstate = new ps_state;
-    psstate->request = HTTPMSGLOCK(req);
+    psstate->request = req;
+    HTTPMSGLOCK(psstate->request);
     psstate->entry = fake;
     psstate->callback = NULL;
     psstate->callback_data = cbdataReference(p);
     psstate->ping.start = current_time;
     mem = fake->mem_obj;
-    mem->request = HTTPMSGLOCK(psstate->request);
+    mem->request = psstate->request;
+    HTTPMSGLOCK(mem->request);
     mem->start_ping = current_time;
     mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
@@ -1401,7 +1403,7 @@ peerCountMcastPeersStart(void *data)
              peerCountMcastPeersDone,
              psstate,
              Config.Timeout.mcast_icp_query / 1000.0, 1);
-    p->mcast.flags.counting = 1;
+    p->mcast.flags.counting = true;
     peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }
 
@@ -1413,7 +1415,7 @@ peerCountMcastPeersDone(void *data)
 
     if (cbdataReferenceValid(psstate->callback_data)) {
         CachePeer *p = (CachePeer *)psstate->callback_data;
-        p->mcast.flags.counting = 0;
+        p->mcast.flags.counting = false;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
         debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
@@ -1689,7 +1691,7 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
 
 #if USE_HTCP
 void
-neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Address &from)
+neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Address &from)
 {
     StoreEntry *e = Store::Root().get(key);
     MemObject *mem = NULL;

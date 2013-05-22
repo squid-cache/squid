@@ -35,7 +35,7 @@ void RFCNB_Print_Pkt(FILE * fd, char *dirn, struct RFCNB_Pkt *pkt, int len);
 
 int RFCNB_Name_To_IP(char *host, struct in_addr *Dest_IP);
 
-int RFCNB_Close(int socket);
+int RFCNB_Close(int fd);
 
 int RFCNB_IP_Connect(struct in_addr Dest_IP, int port);
 

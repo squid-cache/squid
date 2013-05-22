@@ -46,7 +46,7 @@
 
 static void aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);
-static int aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, http_status status);
+static int aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, Http::StatusCode status);
 
 acl_httpstatus_data::acl_httpstatus_data(int x) : status1(x), status2(x) { ; }
 
@@ -156,11 +156,11 @@ aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist)
 int
 ACLHTTPStatus::match(ACLChecklist *checklist)
 {
-    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status);
+    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status());
 }
 
 int
-aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, http_status status)
+aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, const Http::StatusCode status)
 {
 
     acl_httpstatus_data X(status);

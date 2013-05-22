@@ -87,7 +87,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
          * back to the beginning
          */
         ++ StoreFScoss::GetInstance().stats.disk_overflows;
-        current_membuf->flags.full = 1;
+        current_membuf->flags.full = true;
         current_membuf->diskend = current_offset;
         current_membuf->maybeWrite(this);
         current_offset = 0;	/* wrap back to beginning */
@@ -102,7 +102,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
          * Skip the blank space at the end of the stripe. start over.
          */
         ++ StoreFScoss::GetInstance().stats.stripe_overflows;
-        current_membuf->flags.full = 1;
+        current_membuf->flags.full = true;
         current_offset = current_membuf->diskend;
         current_membuf->maybeWrite(this);
         debugs(79, 2, "CossSwapDir::allocate: New offset - " << current_offset);
@@ -183,8 +183,8 @@ CossSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, 
     sio->callback_data = cbdataReference(callback_data);
     sio->e = &e;
 
-    cstate->flags.writing = 0;
-    cstate->flags.reading = 0;
+    cstate->flags.writing = false;
+    cstate->flags.reading = false;
     cstate->readbuffer = NULL;
     cstate->reqdiskoffset = -1;
 
@@ -220,8 +220,8 @@ CossSwapDir::openStoreIO(StoreEntry & e, StoreIOState::STFNCB * file_callback,
     cstate->st_size = e.swap_file_sz;
     sio->e = &e;
 
-    cstate->flags.writing = 0;
-    cstate->flags.reading = 0;
+    cstate->flags.writing = false;
+    cstate->flags.reading = false;
     cstate->readbuffer = NULL;
     cstate->reqdiskoffset = -1;
     p = storeCossMemPointerFromDiskOffset(storeCossFilenoToDiskOffset(f), NULL);
@@ -308,7 +308,7 @@ CossState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *c
     read.callback_data = cbdataReference(callback_data);
     debugs(79, 3, "storeCossRead: offset " << offset);
     offset_ = offset;
-    flags.reading = 1;
+    flags.reading = true;
 
     if ((offset + (off_t)size) > st_size)
         size = st_size - offset;
@@ -543,7 +543,7 @@ CossMemBuf::write(CossSwapDir * SD)
 {
     ++ StoreFScoss::GetInstance().stats.stripe_write.ops;
     debugs(79, 3, "CossMemBuf::write: offset " << diskstart << ", len " << (diskend - diskstart));
-    flags.writing = 1;
+    flags.writing = true;
     /* XXX Remember that diskstart/diskend are block offsets! */
     SD->theFile->write(new CossWrite(WriteRequest((char const *)&buffer, diskstart, diskend - diskstart, NULL), this));
 }
@@ -563,8 +563,6 @@ CossSwapDir::createMemBuf(off_t start, sfileno curfn, int *collision)
     debugs(79, 3, "CossSwapDir::createMemBuf: creating new membuf at " << newmb->diskstart);
     debugs(79, 3, "CossSwapDir::createMemBuf: at " << newmb);
     newmb->diskend = newmb->diskstart + COSS_MEMBUF_SZ;
-    newmb->flags.full = 0;
-    newmb->flags.writing = 0;
     newmb->lockcount = 0;
     newmb->SD = this;
     /* XXX This should be reversed, with the new buffer last in the chain */

@@ -109,9 +109,6 @@ ldap_sasl_rebind(
     void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
-    url = url;
-    request = request;
-    msgid = msgid;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
 }
 #endif
@@ -127,9 +124,6 @@ ldap_simple_rebind(
     void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
-    url = url;
-    request = request;
-    msgid = msgid;
     return ldap_bind_s(ld, cp->dn, cp->pw, LDAP_AUTH_SIMPLE);
 }
 
@@ -192,9 +186,6 @@ ldap_sasl_rebind(
     void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
-    url = url;
-    request = request;
-    msgid = msgid;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
 }
 #endif
@@ -211,9 +202,6 @@ ldap_simple_rebind(
 {
 
     struct ldap_creds *cp = (struct ldap_creds *) params;
-    url = url;
-    request = request;
-    msgid = msgid;
     return ldap_bind_s(ld, cp->dn, cp->pw, LDAP_AUTH_SIMPLE);
 }
 
@@ -1165,8 +1153,10 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
 
             debug((char *) "%s| %s: DEBUG: Users primary group %s %s\n", LogTime(), PROGRAM, retval ? "matches" : "does not match", group);
 
-        } else
+        } else {
+            ldap_msgfree(res);
             debug((char *) "%s| %s: DEBUG: Did not find ldap entry for group %s\n", LogTime(), PROGRAM, group);
+        }
         /*
          * Cleanup
          */

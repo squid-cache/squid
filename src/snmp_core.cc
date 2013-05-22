@@ -310,9 +310,9 @@ snmpOpenPorts(void)
         if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.IsAnyAddr()) {
             snmpOutgoingConn->local.SetIPv4();
         }
-        AsyncCall::Pointer call = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                            Comm::UdpOpenDialer(&snmpPortOpened));
-        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, call);
+        AsyncCall::Pointer c = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
+                                         Comm::UdpOpenDialer(&snmpPortOpened));
+        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
         debugs(1, DBG_IMPORTANT, "Sending SNMP messages from " << snmpOutgoingConn->local);
@@ -617,7 +617,6 @@ static oid_ParseFn *
 snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 {
     oid_ParseFn *Fn = NULL;
-    mib_tree_entry *mibTreeEntry = NULL, *nextoid = NULL;
     int count = 0;
 
     debugs(49, 5, "snmpTreeNext: Called");
@@ -625,9 +624,9 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     MemBuf tmp;
     debugs(49, 6, "snmpTreeNext: Current : " << snmpDebugOid(Current, CurrentLen, tmp));
 
-    mibTreeEntry = mib_tree_head;
+    mib_tree_entry *mibTreeEntry = mib_tree_head;
 
-    if (Current[count] == mibTreeEntry->name[count]) {
+    if (mibTreeEntry && Current[count] == mibTreeEntry->name[count]) {
         ++count;
 
         while ((mibTreeEntry) && (count < CurrentLen) && (!mibTreeEntry->parsefunction)) {
@@ -652,7 +651,6 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
         *NextLen = CurrentLen;
         *Next = (*mibTreeEntry->instancefunction) (Current, NextLen, mibTreeEntry, &Fn);
         if (*Next) {
-            MemBuf tmp;
             debugs(49, 6, "snmpTreeNext: Next : " << snmpDebugOid(*Next, *NextLen, tmp));
             return (Fn);
         }
@@ -660,7 +658,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
         --count;
-        nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
+        mib_tree_entry *nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
         if (nextoid) {
             debugs(49, 5, "snmpTreeNext: Next OID found for sibling" << nextoid );
             mibTreeEntry = nextoid;
@@ -696,7 +694,6 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     }
 
     if (*Next) {
-        MemBuf tmp;
         debugs(49, 6, "snmpTreeNext: Next : " << snmpDebugOid(*Next, *NextLen, tmp));
         return (Fn);
     } else
@@ -708,8 +705,8 @@ static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 {
     oid *instance = NULL;
     if (*len <= current->len) {
-        instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = 0;
         *len += 1;
     }
@@ -725,8 +722,8 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     int index[TIME_INDEX_LEN] = {TIME_INDEX};
 
     if (*len <= current->len) {
-        instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = *index;
         *len += 1;
     } else {
@@ -736,8 +733,8 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             ++loop;
 
         if (loop < (TIME_INDEX_LEN - 1)) {
-            instance = (oid *)xmalloc(sizeof(name) * (*len));
-            memcpy(instance, name, (sizeof(name) * *len));
+            instance = (oid *)xmalloc(sizeof(*name) * (*len));
+            memcpy(instance, name, sizeof(*name) * (*len));
             instance[*len - 1] = index[++loop];
         }
     }
@@ -758,11 +755,14 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         while ((current) && (!current->parsefunction))
             current = current->leaves[0];
 
+        if (!current)
+            return (instance);
+
         instance = client_Inst(current->name, len, current, Fn);
     } else if (*len <= current->len) {
         debugs(49, 6, "snmp peer_Inst: *len <= current->len ???");
-        instance = (oid *)xmalloc(sizeof(name) * ( *len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * ( *len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = 1 ;
         *len += 1;
     } else {
@@ -773,8 +773,8 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 
         if (peers) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
-            instance = (oid *)xmalloc(sizeof(name) * (current->len + 1 ));
-            memcpy(instance, name, (sizeof(name) * current->len ));
+            instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
+            memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
@@ -808,8 +808,8 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 
         debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
 
-        instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
-        memcpy(instance, name, (sizeof(name) * (*len)));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + size ));
+        memcpy(instance, name, (sizeof(*name) * (*len)));
 
         if ( !laddr.IsAnyAddr() ) {
             addr2oid(laddr, &instance[ *len]);  // the addr
@@ -832,8 +832,8 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 
             debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
 
-            instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
-            memcpy(instance, name, (sizeof(name) * (current->len)));
+            instance = (oid *)xmalloc(sizeof(*name) * (current->len +  newshift));
+            memcpy(instance, name, (sizeof(*name) * (current->len)));
             addr2oid(laddr, &instance[current->len]);  // the addr.
             *len = current->len + newshift ;
         }
@@ -1160,7 +1160,7 @@ class ACLSNMPCommunityStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLSNMPCommunityStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g++ warnings about
@@ -1186,7 +1186,7 @@ ACL::Prototype ACLSNMPCommunity::RegistryProtoype(&ACLSNMPCommunity::RegistryEnt
 ACLStrategised<char const *> ACLSNMPCommunity::RegistryEntry_(new ACLStringData, ACLSNMPCommunityStrategy::Instance(), "snmp_community");
 
 int
-ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     return data->match (checklist->snmp_community);
 }

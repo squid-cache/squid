@@ -173,6 +173,11 @@
 #define IPC_UNIX_STREAM 4
 #define IPC_UNIX_DGRAM 5
 
+/* required for AF_UNIX below to be defined [on FreeBSD] */
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
 #if HAVE_SOCKETPAIR && defined (AF_UNIX)
 #define IPC_STREAM IPC_UNIX_STREAM
 #define IPC_DGRAM IPC_UNIX_DGRAM

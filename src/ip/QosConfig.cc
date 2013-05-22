@@ -184,22 +184,14 @@ Ip::Qos::doNfmarkLocalHit(const Comm::ConnectionPointer &conn)
 
 Ip::Qos::Config Ip::Qos::TheConfig;
 
-Ip::Qos::Config::Config()
+Ip::Qos::Config::Config() : tosLocalHit(0), tosSiblingHit(0), tosParentHit(0),
+        tosMiss(0), tosMissMask(0), preserveMissTos(false),
+        preserveMissTosMask(0xFF), markLocalHit(0), markSiblingHit(0),
+        markParentHit(0), markMiss(0), markMissMask(0),
+        preserveMissMark(false), preserveMissMarkMask(0xFFFFFFFF),
+        tosToServer(NULL), tosToClient(NULL), nfmarkToServer(NULL),
+        nfmarkToClient(NULL)
 {
-    tosLocalHit = 0;
-    tosSiblingHit = 0;
-    tosParentHit = 0;
-    tosMiss = 0;
-    tosMissMask = 0;
-    preserveMissTos = false;
-    preserveMissTosMask = 0xFF;
-    markLocalHit = 0;
-    markSiblingHit = 0;
-    markParentHit = 0;
-    markMiss = 0;
-    markMissMask = 0;
-    preserveMissMark = false;
-    preserveMissMarkMask = 0xFFFFFFFF;
 }
 
 void

@@ -69,14 +69,14 @@ void
 Mgr::Forwarder::handleError()
 {
     debugs(16, DBG_CRITICAL, "ERROR: uri " << entry->url() << " exceeds buffer size");
-    sendError(new ErrorState(ERR_INVALID_URL, HTTP_REQUEST_URI_TOO_LARGE, httpRequest));
+    sendError(new ErrorState(ERR_INVALID_URL, Http::scRequestUriTooLarge, httpRequest));
     mustStop("long URI");
 }
 
 void
 Mgr::Forwarder::handleTimeout()
 {
-    sendError(new ErrorState(ERR_LIFETIME_EXP, HTTP_REQUEST_TIMEOUT, httpRequest));
+    sendError(new ErrorState(ERR_LIFETIME_EXP, Http::scRequestTimeout, httpRequest));
     Ipc::Forwarder::handleTimeout();
 }
 
@@ -84,7 +84,7 @@ void
 Mgr::Forwarder::handleException(const std::exception& e)
 {
     if (entry != NULL && httpRequest != NULL && Comm::IsConnOpen(conn))
-        sendError(new ErrorState(ERR_INVALID_RESP, HTTP_INTERNAL_SERVER_ERROR, httpRequest));
+        sendError(new ErrorState(ERR_INVALID_RESP, Http::scInternalServerError, httpRequest));
     Ipc::Forwarder::handleException(e);
 }
 

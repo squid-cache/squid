@@ -45,6 +45,7 @@ int Debug::log_stderr = -1;
 bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
+int Debug::sectionLevel;
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
 FILE *debug_log = NULL;
@@ -800,4 +801,27 @@ SkipBuildPrefix(const char* path)
     static const size_t BuildPrefixLength = BuildPrefixInit();
 
     return path+BuildPrefixLength;
+}
+
+std::ostream &
+Raw::print(std::ostream &os) const
+{
+    if (label_)
+        os << ' ' << label_ << '[' << size_ << ']';
+
+    if (!size_)
+        return os;
+
+    // finalize debugging level if no level was set explicitly via minLevel()
+    const int finalLevel = (level >= 0) ? level :
+                           (size_ > 40 ? DBG_DATA : Debug::sectionLevel);
+    if (finalLevel <= Debug::sectionLevel) {
+        os << (label_ ? '=' : ' ');
+        if (data_)
+            os.write(data_, size_);
+        else
+            os << "[null]";
+    }
+
+    return os;
 }

@@ -38,7 +38,7 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "wordlist.h"
-#include "URL.h"
+#include "src/URL.h"
 
 template<class T>
 inline void

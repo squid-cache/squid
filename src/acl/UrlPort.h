@@ -40,7 +40,7 @@ class ACLUrlPortStrategy : public ACLStrategy<int>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     virtual bool requiresRequest() const {return true;}
 
     static ACLUrlPortStrategy *Instance();

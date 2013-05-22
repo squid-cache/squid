@@ -34,6 +34,8 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "Parsing.h"
+#include "globals.h"
+#include "Debug.h"
 
 /*
  * These functions is the same as atoi/l/f, except that they check for errors
@@ -42,11 +44,18 @@
 double
 xatof(const char *token)
 {
-    char *end;
+    char *end = NULL;
     double ret = strtod(token, &end);
 
-    if (ret == 0 && end == token)
+    if (ret == 0 && end == token) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: No digits were found in the input value '" << token << "'.");
         self_destruct();
+    }
+
+    if (*end) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid value: '" << token << "' is supposed to be a number.");
+        self_destruct();
+    }
 
     return ret;
 }
@@ -54,17 +63,64 @@ xatof(const char *token)
 int
 xatoi(const char *token)
 {
-    return xatol(token);
+    int64_t input = xatoll(token, 10);
+    int ret = (int) input;
+
+    if (input != static_cast<int64_t>(ret)) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'int'.");
+        self_destruct();
+    }
+
+    return ret;
+}
+
+unsigned int
+xatoui(const char *token)
+{
+    int64_t input = xatoll(token, 10);
+    if (input < 0) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The input value '" << token << "' cannot be less than 0.");
+        self_destruct();
+    }
+
+    unsigned int ret = (unsigned int) input;
+    if (input != static_cast<int64_t>(ret)) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'unsigned int'.");
+        self_destruct();
+    }
+
+    return ret;
 }
 
 long
 xatol(const char *token)
 {
-    char *end;
-    long ret = strtol(token, &end, 10);
+    int64_t input = xatoll(token, 10);
+    long ret = (long) input;
 
-    if (end == token || *end)
+    if (input != static_cast<int64_t>(ret)) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'long'.");
         self_destruct();
+    }
+
+    return ret;
+}
+
+int64_t
+xatoll(const char *token, int base)
+{
+    char *end = NULL;
+    int64_t ret = strtoll(token, &end, base);
+
+    if (end == token) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: No digits were found in the input value '" << token << "'.");
+        self_destruct();
+    }
+
+    if (*end) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid value: '" << token << "' is supposed to be a number.");
+        self_destruct();
+    }
 
     return ret;
 }
@@ -74,8 +130,15 @@ xatos(const char *token)
 {
     long port = xatol(token);
 
-    if (port & ~0xFFFF)
+    if (port < 0) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' cannot be less than 0.");
         self_destruct();
+    }
+
+    if (port & ~0xFFFF) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'short'.");
+        self_destruct();
+    }
 
     return port;
 }
@@ -84,16 +147,17 @@ int64_t
 GetInteger64(void)
 {
     char *token = strtok(NULL, w_space);
-    int i;
 
     if (token == NULL)
         self_destruct();
 
-    i = strtoll(token, NULL, 10);
-
-    return i;
+    return xatoll(token, 10);
 }
 
+/*
+ * This function is different from others (e.g., GetInteger64, GetShort)
+ * because it supports octal and hexadecimal numbers
+ */
 int
 GetInteger(void)
 {
@@ -103,11 +167,49 @@ GetInteger(void)
     if (token == NULL)
         self_destruct();
 
-    // %i honors 0 and 0x prefixes, which are important for things like umask
-    if (sscanf(token, "%i", &i) != 1)
+    // The conversion must honor 0 and 0x prefixes, which are important for things like umask
+    int64_t ret = xatoll(token, 0);
+
+    i = (int) ret;
+    if (ret != static_cast<int64_t>(i)) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'int'.");
         self_destruct();
+    }
 
     return i;
+}
+
+/*
+ * This function is similar as GetInteger() but the token might contain
+ * the percentage symbol (%) and we check whether the value is in the range
+ * of [0, 100]
+ * So, we accept two types of input: 1. XX% or 2. XX , 0<=XX<=100
+ */
+int
+GetPercentage(void)
+{
+    int p;
+    char *token = strtok(NULL, w_space);
+
+    if (!token) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: A percentage value is missing.");
+        self_destruct();
+    }
+
+    //if there is a % in the end of the digits, we remove it and go on.
+    char* end = &token[strlen(token)-1];
+    if (*end == '%') {
+        *end = '\0';
+    }
+
+    p = xatoi(token);
+
+    if (p < 0 || p > 100) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
+        self_destruct();
+    }
+
+    return p;
 }
 
 unsigned short
@@ -191,8 +293,8 @@ GetHostWithPort(char *token, Ip::Address *ipa)
 
         if (0 == port)
             return false;
-    } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
-        /* port */
+    } else if (strtol(token, &tmp, 10) && !*tmp) {
+        port = xatos(token);
     } else {
         host = token;
         port = 0;

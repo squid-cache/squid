@@ -35,14 +35,29 @@
 #include "squid.h"
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
+#include "Debug.h"
 #include "cache_cf.h"
 #include "wordlist.h"
 
-ACLCertificateData::ACLCertificateData(SSLGETATTRIBUTE *sslStrategy) : attribute (NULL), values (), sslAttributeCall (sslStrategy)
-{}
+ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const char *attrs, bool optionalAttr) : validAttributesStr(attrs), attributeIsOptional(optionalAttr), attribute (NULL), values (), sslAttributeCall (sslStrategy)
+{
+    if (attrs) {
+        size_t current = 0;
+        size_t next = std::string::npos;
+        std::string valid(attrs);
+        do {
+            next = valid.find_first_of( "|", current);
+            validAttributes.push_back(valid.substr( current, (next == std::string::npos ? std::string::npos : next - current)));
+            current = next + 1;
+        } while (next != std::string::npos);
+    }
+}
 
 ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribute (NULL), values (old.values), sslAttributeCall (old.sslAttributeCall)
 {
+    validAttributesStr = old.validAttributesStr;
+    validAttributes.assign (old.validAttributes.begin(), old.validAttributes.end());
+    attributeIsOptional = old.attributeIsOptional;
     if (old.attribute)
         attribute = xstrdup (old.attribute);
 }
@@ -67,13 +82,13 @@ splaystrcmp (T&l, T&r)
 }
 
 bool
-ACLCertificateData::match(SSL *ssl)
+ACLCertificateData::match(X509 *cert)
 {
-    if (!ssl)
+    if (!cert)
         return 0;
 
-    char const *value = sslAttributeCall(ssl, attribute);
-
+    char const *value = sslAttributeCall(cert, attribute);
+    debugs(28, 6, (attribute ? attribute : "value") << "=" << value);
     if (value == NULL)
         return 0;
 
@@ -91,7 +106,8 @@ wordlist *
 ACLCertificateData::dump()
 {
     wordlist *wl = NULL;
-    wordlistAdd(&wl, attribute);
+    if (validAttributesStr)
+        wordlistAdd(&wl, attribute);
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
@@ -104,17 +120,45 @@ ACLCertificateData::dump()
 void
 ACLCertificateData::parse()
 {
-    char *newAttribute = strtokFile();
+    if (validAttributesStr) {
+        char *newAttribute = strtokFile();
 
-    if (!newAttribute)
-        self_destruct();
+        if (!newAttribute) {
+            if (attributeIsOptional)
+                return;
 
-    /* an acl must use consistent attributes in all config lines */
-    if (attribute) {
-        if (strcasecmp(newAttribute, attribute) != 0)
+            debugs(28, DBG_CRITICAL, "FATAL: required attribute argument missing");
             self_destruct();
-    } else
-        attribute = xstrdup(newAttribute);
+        }
+
+        // Handle the cases where we have optional -x type attributes
+        if (attributeIsOptional && newAttribute[0] != '-')
+            // The read token is not an attribute/option, so add it to values list
+            values.insert(newAttribute);
+        else {
+            bool valid = false;
+            for (std::list<std::string>::const_iterator it = validAttributes.begin(); it != validAttributes.end(); ++it) {
+                if (*it == "*" || *it == newAttribute) {
+                    valid = true;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                debugs(28, DBG_CRITICAL, "FATAL: Unknown option. Supported option(s) are: " << validAttributesStr);
+                self_destruct();
+            }
+
+            /* an acl must use consistent attributes in all config lines */
+            if (attribute) {
+                if (strcasecmp(newAttribute, attribute) != 0) {
+                    debugs(28, DBG_CRITICAL, "FATAL: An acl must use consistent attributes in all config lines (" << newAttribute << "!=" << attribute << ").");
+                    self_destruct();
+                }
+            } else
+                attribute = xstrdup(newAttribute);
+        }
+    }
 
     values.parse();
 }
@@ -125,7 +169,7 @@ ACLCertificateData::empty() const
     return values.empty();
 }
 
-ACLData<SSL *> *
+ACLData<X509 *> *
 ACLCertificateData::clone() const
 {
     /* Splay trees don't clone yet. */

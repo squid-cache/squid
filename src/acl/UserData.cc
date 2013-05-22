@@ -132,10 +132,10 @@ ACLUserData::parse()
 
         if (strcmp("-i", t) == 0) {
             debugs(28, 5, "aclParseUserList: Going case-insensitive");
-            flags.case_insensitive = 1;
+            flags.case_insensitive = true;
         } else if (strcmp("REQUIRED", t) == 0) {
             debugs(28, 5, "aclParseUserList: REQUIRED-type enabled");
-            flags.required = 1;
+            flags.required = true;
         } else {
             if (flags.case_insensitive)
                 Tolower(t);

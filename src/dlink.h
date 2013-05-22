@@ -41,7 +41,11 @@ public:
     dlink_node *next;
 };
 
-struct dlink_list {
+class dlink_list
+{
+public:
+    dlink_list() : head(NULL), tail(NULL) {}
+
     dlink_node *head;
     dlink_node *tail;
 };

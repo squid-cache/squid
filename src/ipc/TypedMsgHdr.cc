@@ -132,38 +132,38 @@ Ipc::TypedMsgHdr::putString(const String &s)
 }
 
 void
-Ipc::TypedMsgHdr::getFixed(void *raw, size_t size) const
+Ipc::TypedMsgHdr::getFixed(void *rawBuf, size_t rawSize) const
 {
     // no need to load size because it is constant
-    getRaw(raw, size);
+    getRaw(rawBuf, rawSize);
 }
 
 void
-Ipc::TypedMsgHdr::putFixed(const void *raw, size_t size)
+Ipc::TypedMsgHdr::putFixed(const void *rawBuf, size_t rawSize)
 {
     // no need to store size because it is constant
-    putRaw(raw, size);
+    putRaw(rawBuf, rawSize);
 }
 
 /// low-level loading of exactly size bytes of raw data
 void
-Ipc::TypedMsgHdr::getRaw(void *raw, size_t size) const
+Ipc::TypedMsgHdr::getRaw(void *rawBuf, size_t rawSize) const
 {
-    if (size > 0) {
-        Must(size <= data.size - offset);
-        memcpy(raw, data.raw + offset, size);
-        offset += size;
+    if (rawSize > 0) {
+        Must(rawSize <= data.size - offset);
+        memcpy(rawBuf, data.raw + offset, rawSize);
+        offset += rawSize;
     }
 }
 
 /// low-level storage of exactly size bytes of raw data
 void
-Ipc::TypedMsgHdr::putRaw(const void *raw, size_t size)
+Ipc::TypedMsgHdr::putRaw(const void *rawBuf, size_t rawSize)
 {
-    if (size > 0) {
-        Must(size <= sizeof(data.raw) - data.size);
-        memcpy(data.raw + data.size, raw, size);
-        data.size += size;
+    if (rawSize > 0) {
+        Must(rawSize <= sizeof(data.raw) - data.size);
+        memcpy(data.raw + data.size, rawBuf, rawSize);
+        data.size += rawSize;
     }
 }
 

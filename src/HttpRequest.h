@@ -66,18 +66,13 @@ class HttpRequest: public HttpMsg
 {
 
 public:
-    typedef HttpMsgPointerT<HttpRequest> Pointer;
+    typedef RefCount<HttpRequest> Pointer;
 
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
-
-    // use HTTPMSGLOCK() instead of calling this directly
-    virtual HttpRequest *_lock() {
-        return static_cast<HttpRequest*>(HttpMsg::_lock());
-    };
 
     void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
 
@@ -165,6 +160,14 @@ public:
 
     char *canonical;
 
+    /**
+     * If defined, store_id_program mapped the request URL to this ID.
+     * Store uses this ID (and not the URL) to find and store entries,
+     * avoiding caching duplicate entries when different URLs point to
+     * "essentially the same" cachable resource.
+     */
+    String store_id;
+
     RequestFlags flags;
 
     HttpHdrRange *range;
@@ -242,6 +245,14 @@ public:
     ConnStateData *pinnedConnection();
 
     /**
+     * Returns the current StoreID for the request as a nul-terminated char*.
+     * Always returns the current id for the request
+     * (either the request canonical url or modified ID by the helper).
+     * Does not return NULL.
+     */
+    const char *storeId();
+
+    /**
      * The client connection manager, if known;
      * Used for any response actions needed directly to the client.
      * ie 1xx forwarding or connection pinning state changes
@@ -258,7 +269,7 @@ private:
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;
 
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error);
+    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error);
 
     virtual void hdrCacheInit();
 

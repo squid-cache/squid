@@ -79,6 +79,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address, int port
     con->errn = 0;              /* no error yet */
     con->timeout = 0;           /* no timeout   */
     con->redirects = 0;
+    con->redirect_list = con->last_addr = NULL;
 
     /* Resolve that name into an IP address */
 
@@ -208,6 +209,7 @@ RFCNB_Send(struct RFCNB_Con *Con_Handle, struct RFCNB_Pkt *udata, int Length)
 
         /* No need to change RFCNB_errno as it was done by put_pkt ...     */
 
+        RFCNB_Free_Pkt(pkt);
         return (RFCNBE_Bad);    /* Should be able to write that lot ... */
 
     }
@@ -256,7 +258,7 @@ RFCNB_Recv(void *con_Handle, struct RFCNB_Pkt *Data, int Length)
 #ifdef RFCNB_DEBUG
         fprintf(stderr, "Bad packet return in RFCNB_Recv... \n");
 #endif
-
+        RFCNB_Free_Pkt(pkt);
         return (RFCNBE_Bad);
 
     }

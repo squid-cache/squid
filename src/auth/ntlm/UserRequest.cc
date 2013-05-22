@@ -259,7 +259,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     case HelperReply::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
-        lm_request->request->flags.mustKeepalive = 1;
+        lm_request->request->flags.mustKeepalive = true;
         if (lm_request->request->flags.proxyKeepalive) {
             Note::Pointer serverBlob = reply.notes.find("token");
             lm_request->server_blob = xstrdup(serverBlob->firstValue());

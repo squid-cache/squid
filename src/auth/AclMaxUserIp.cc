@@ -63,7 +63,7 @@ ACLMaxUserIP::parse()
 
     if (strcmp("-s", t) == 0) {
         debugs(28, 5, "aclParseUserMaxIP: Going strict");
-        flags.strict = 1;
+        flags.strict = true;
         t = ConfigParser::strtokFile();
     }
 

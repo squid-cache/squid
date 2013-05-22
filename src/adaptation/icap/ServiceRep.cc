@@ -530,13 +530,13 @@ void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(const Answer &answer)
     }
 
     Must(answer.kind == Answer::akForward); // no akBlock for OPTIONS requests
-    HttpMsg *msg = answer.message;
+    const HttpMsg *msg = answer.message.getRaw();
     Must(msg);
 
     debugs(93,5, HERE << "is interpreting new options " << status());
 
     Adaptation::Icap::Options *newOptions = NULL;
-    if (HttpReply *r = dynamic_cast<HttpReply*>(msg)) {
+    if (const HttpReply *r = dynamic_cast<const HttpReply*>(msg)) {
         newOptions = new Adaptation::Icap::Options;
         newOptions->configure(r);
     } else {
