@@ -13,8 +13,8 @@ class InspectingStatHist : public StatHist
 {
 public:
     bool operator==(const InspectingStatHist &);
-    bins_type counter(double val) {
-        return bins[findBin(val)];
+    bins_type counter(double v) {
+        return bins[findBin(v)];
     }
 };
 

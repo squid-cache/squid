@@ -584,6 +584,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
     strncpy(pwd, password, sizeof(pwd));
+    pwd[sizeof(pwd) - 1] = '\0';
 
     ws = (struct wccp2_security_md5_t *) ptr;
     assert(ntohs(ws->security_type) == WCCP2_SECURITY_INFO);
@@ -651,6 +652,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
     strncpy(pwd, srv->wccp_password, sizeof(pwd));
+    pwd[sizeof(pwd) - 1] = '\0';
 
     /* Take a copy of the challenge: we need to NUL it before comparing */
     memcpy(md5_challenge, ws->security_implementation, 16);
@@ -679,8 +681,6 @@ wccp2Init(void)
 
     struct wccp2_router_list_t *router_list_ptr;
 
-    struct wccp2_security_md5_t wccp2_security_md5;
-
     debugs(80, 5, "wccp2Init: Called");
 
     if (wccp2_connected == 1)
@@ -699,6 +699,9 @@ wccp2Init(void)
     if (wccp2_numrouters == 0) {
         return;
     }
+
+    struct wccp2_security_md5_t wccp2_security_md5;
+    memset(&wccp2_security_md5, 0, sizeof(wccp2_security_md5));
 
     /* Initialise the list of services */
     wccp2InitServices();
@@ -998,7 +1001,8 @@ wccp2ConnectionOpen(void)
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
     {
         int i = IP_PMTUDISC_DONT;
-        setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
+        if (setsockopt(theWccp2Connection, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i) < 0)
+            debugs(80, 2, "WARNING: Path MTU discovery could not be disabled on FD " << theWccp2Connection << ": " << xstrerror());
     }
 
 #endif
@@ -1037,8 +1041,9 @@ wccp2ConnectionOpen(void)
             /* Disconnect the sending socket. Note: FreeBSD returns error
              * but disconnects anyway so we have to just assume it worked
              */
-            if (wccp2_numrouters > 1)
-                connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
+            if (wccp2_numrouters > 1) {
+                (void)connect(theWccp2Connection, (struct sockaddr *) &null, router_len);
+            }
         }
 
         service_list_ptr = service_list_ptr->next;
@@ -1596,10 +1601,9 @@ wccp2HereIam(void *voidnotused)
                                 &service_list_ptr->wccp_packet,
                                 service_list_ptr->wccp_packet_size);
             } else {
-                send(theWccp2Connection,
-                     &service_list_ptr->wccp_packet,
-                     service_list_ptr->wccp_packet_size,
-                     0);
+                errno = 0;
+                if (send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < static_cast<int>(service_list_ptr->wccp_packet_size))
+                    debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << router << " : " << xstrerror());
             }
         }
 
@@ -1973,20 +1977,21 @@ wccp2AssignBuckets(void *voidnotused)
             if (ntohl(router_list_ptr->num_caches)) {
                 /* send packet */
 
+                /* FIXME INET6 : drop temp conversion */
+                Ip::Address tmp_rtr(router);
+
                 if (wccp2_numrouters > 1) {
-                    /* FIXME INET6 : drop temp conversion */
-                    Ip::Address tmp_rtr(router);
                     comm_udp_sendto(theWccp2Connection,
                                     tmp_rtr,
                                     &wccp_packet,
                                     offset);
                 } else {
-                    send(theWccp2Connection,
-                         &wccp_packet,
-                         offset,
-                         0);
+                    errno = 0;
+                    if (send(theWccp2Connection, &wccp_packet, offset, 0) < static_cast<int>(offset))
+                        debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << tmp_rtr << " : " << xstrerror());
                 }
             }
+            safe_free(weight);
         }
 
         service_list_ptr = service_list_ptr->next;
@@ -2247,7 +2252,7 @@ parse_wccp2_service_ports(char *options, int portlist[])
 {
     int i = 0;
     int p;
-    char *tmp, *tmp2, *port, *end;
+    char *tmp, *tmp2, *port;
 
     if (!options) {
         return;
@@ -2259,7 +2264,7 @@ parse_wccp2_service_ports(char *options, int portlist[])
     port = strsep(&tmp2, ",");
 
     while (port && i < WCCP2_NUMPORTS) {
-        p = strtol(port, &end, 0);
+        p = xatoi(port);
 
         if (p < 1 || p > 65535) {
             fatalf("parse_wccp2_service_ports: port value '%s' isn't valid (1..65535)\n", port);

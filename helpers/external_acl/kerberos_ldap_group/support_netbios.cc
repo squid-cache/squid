@@ -89,6 +89,11 @@ create_nd(struct main_args *margs)
                 free_nd(ndsp);
                 return (1);
             }
+            if (dp) {  /* end of domain name - twice */
+                debug((char *) "%s| %s: @ is not allowed in netbios name %s@%s\n",LogTime(), PROGRAM,np,dp);
+                free_nd(ndsp);
+                return(1);
+            }
             *p = '\0';
             ++p;
             ndsp = init_nd();

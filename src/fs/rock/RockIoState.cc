@@ -126,8 +126,8 @@ Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
     try {
         tryWrite(buf, size, coreOff);
         success = true;
-    } catch (const std::exception &e) { // TODO: should we catch ... as well?
-        debugs(79, 2, "db write error: " << e.what());
+    } catch (const std::exception &ex) { // TODO: should we catch ... as well?
+        debugs(79, 2, "db write error: " << ex.what());
         dir->writeError(swap_filen);
         finishedWriting(DISK_ERROR);
         // 'this' might be gone beyond this point; fall through to free buf

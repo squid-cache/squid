@@ -116,6 +116,7 @@ HttpRequest::init()
     errDetail = ERR_DETAIL_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
     peer_domain = NULL;		// not allocated/deallocated by this class
+    peer_host = NULL;
     vary_headers = NULL;
     myportname = null_string;
     tag = null_string;
@@ -292,7 +293,7 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
+HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
@@ -300,7 +301,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
         // this is ony a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
-            *error = HTTP_INVALID_HEADER;
+            *error = Http::scInvalidHeader;
         }
         return false;
     }
@@ -308,7 +309,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
     /* See if the request buffer starts with a known HTTP request method. */
     if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
-        *error = HTTP_INVALID_HEADER;
+        *error = Http::scInvalidHeader;
         return false;
     }
 
@@ -674,7 +675,7 @@ HttpRequest::canHandle1xx() const
 {
     // old clients do not support 1xx unless they sent Expect: 100-continue
     // (we reject all other HDR_EXPECT values so just check for HDR_EXPECT)
-    if (http_ver <= HttpVersion(1,0) && !header.has(HDR_EXPECT))
+    if (http_ver <= Http::ProtocolVersion(1,0) && !header.has(HDR_EXPECT))
         return false;
 
     // others must support 1xx control messages
@@ -687,4 +688,17 @@ HttpRequest::pinnedConnection()
     if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
         return clientConnectionManager.get();
     return NULL;
+}
+
+const char *
+HttpRequest::storeId()
+{
+    if (store_id.size() != 0) {
+        debugs(73, 3, "sent back store_id:" << store_id);
+
+        return store_id.termedBuf();
+    }
+    debugs(73, 3, "sent back canonicalUrl:" << urlCanonical(this) );
+
+    return urlCanonical(this);
 }

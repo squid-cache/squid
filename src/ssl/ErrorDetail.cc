@@ -390,7 +390,7 @@ void Ssl::ErrorDetail::buildDetail() const
     char const *t;
     int code_len = 0;
 
-    if (ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request.raw(), detailEntry))
+    if (ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
         s = detailEntry.detail.termedBuf();
 
     if (!s)

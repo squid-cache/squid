@@ -41,18 +41,18 @@ public:
     RefreshPattern *next;
 
     struct {
-        unsigned int icase:1;
-        unsigned int refresh_ims:1;
-        unsigned int store_stale:1;
+        bool icase;
+        bool refresh_ims;
+        bool store_stale;
 #if USE_HTTP_VIOLATIONS
-        unsigned int override_expire:1;
-        unsigned int override_lastmod:1;
-        unsigned int reload_into_ims:1;
-        unsigned int ignore_reload:1;
-        unsigned int ignore_no_store:1;
-        unsigned int ignore_must_revalidate:1;
-        unsigned int ignore_private:1;
-        unsigned int ignore_auth:1;
+        bool override_expire;
+        bool override_lastmod;
+        bool reload_into_ims;
+        bool ignore_reload;
+        bool ignore_no_store;
+        bool ignore_must_revalidate;
+        bool ignore_private;
+        bool ignore_auth;
 #endif
     } flags;
     int max_stale;

@@ -93,45 +93,45 @@ public:
     acl_access *access;
 
     struct {
-        unsigned int proxy_only:1;
-        unsigned int no_query:1;
-        unsigned int background_ping:1;
-        unsigned int no_digest:1;
-        unsigned int default_parent:1;
-        unsigned int roundrobin:1;
-        unsigned int weighted_roundrobin:1;
-        unsigned int mcast_responder:1;
-        unsigned int closest_only:1;
+        bool proxy_only;
+        bool no_query;
+        bool background_ping;
+        bool no_digest;
+        bool default_parent;
+        bool roundrobin;
+        bool weighted_roundrobin;
+        bool mcast_responder;
+        bool closest_only;
 #if USE_HTCP
-        unsigned int htcp:1;
-        unsigned int htcp_oldsquid:1;
-        unsigned int htcp_no_clr:1;
-        unsigned int htcp_no_purge_clr:1;
-        unsigned int htcp_only_clr:1;
-        unsigned int htcp_forward_clr:1;
+        bool htcp;
+        bool htcp_oldsquid;
+        bool htcp_no_clr;
+        bool htcp_no_purge_clr;
+        bool htcp_only_clr;
+        bool htcp_forward_clr;
 #endif
-        unsigned int no_netdb_exchange:1;
+        bool no_netdb_exchange;
 #if USE_DELAY_POOLS
-        unsigned int no_delay:1;
+        bool no_delay;
 #endif
-        unsigned int allow_miss:1;
-        unsigned int carp:1;
+        bool allow_miss;
+        bool carp;
         struct {
-            unsigned int set:1; //If false, whole url is to be used. Overrides others
-            unsigned int scheme:1;
-            unsigned int host:1;
-            unsigned int port:1;
-            unsigned int path:1;
-            unsigned int params:1;
+            bool set; //If false, whole url is to be used. Overrides others
+            bool scheme;
+            bool host;
+            bool port;
+            bool path;
+            bool params;
         } carp_key;
 #if USE_AUTH
-        unsigned int userhash:1;
+        bool userhash;
 #endif
-        unsigned int sourcehash:1;
-        unsigned int originserver:1;
-        unsigned int no_tproxy:1;
+        bool sourcehash;
+        bool originserver;
+        bool no_tproxy;
 #if PEER_MULTICAST_SIBLINGS
-        unsigned int mcast_siblings:1;
+        bool mcast_siblings;
 #endif
     } options;
 
@@ -146,8 +146,8 @@ public:
         int id;
 
         struct {
-            unsigned int count_event_pending:1;
-            unsigned int counting:1;
+            bool count_event_pending;
+            bool counting;
         } flags;
     } mcast;
 #if USE_CACHE_DIGESTS

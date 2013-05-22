@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "helper.h"
 #include "ssl/support.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
@@ -20,11 +21,12 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
         }
     }
 
-    if (vcert.peerCerts) {
+    STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
+    if (peerCerts) {
         body +="\n";
         Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
-        for (int i = 0; i < sk_X509_num(vcert.peerCerts); ++i) {
-            X509 *cert = sk_X509_value(vcert.peerCerts, i);
+        for (int i = 0; i < sk_X509_num(peerCerts); ++i) {
+            X509 *cert = sk_X509_value(peerCerts, i);
             PEM_write_bio_X509(bio.get(), cert);
             body = body + "cert_" + xitoa(i) + "=";
             char *ptr;
@@ -132,7 +134,7 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
     /*Run through parsed errors to check for errors*/
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
-        if (i->error_no != SSL_ERROR_NONE) {
+        if (i->error_no == SSL_ERROR_NONE) {
             debugs(83, DBG_IMPORTANT, "WARNING: cert validator incomplete response: Missing error name from error_id: " << i->id);
             return false;
         }

@@ -277,16 +277,23 @@ self_destruct(void)
 static void
 update_maxobjsize(void)
 {
-    int i;
     int64_t ms = -1;
 
-    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    // determine the maximum size object that can be stored to disk
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         assert (Config.cacheSwap.swapDirs[i].getRaw());
 
-        if (dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->
-                max_objsize > ms)
-            ms = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->max_objsize;
+        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
+        if (ms < storeMax)
+            ms = storeMax;
     }
+
+    // Ensure that we do not discard objects which could be stored only in memory.
+    // It is governed by maximum_object_size_in_memory (for now)
+    // TODO: update this to check each in-memory location (SMP and local memory limits differ)
+    if (ms < static_cast<int64_t>(Config.Store.maxInMemObjSize))
+        ms = Config.Store.maxInMemObjSize;
+
     store_maxobjsize = ms;
 }
 
@@ -679,7 +686,7 @@ configDoConfigure(void)
 
     if (Config.Announce.period > 0) {
         Config.onoff.announce = 1;
-    } else if (Config.Announce.period < 1) {
+    } else {
         Config.Announce.period = 86400 * 365;	/* one year */
         Config.onoff.announce = 0;
     }
@@ -698,6 +705,13 @@ configDoConfigure(void)
         if (Config.redirectChildren.n_max < 1) {
             Config.redirectChildren.n_max = 0;
             wordlistDestroy(&Config.Program.redirect);
+        }
+    }
+
+    if (Config.Program.store_id) {
+        if (Config.storeIdChildren.n_max < 1) {
+            Config.storeIdChildren.n_max = 0;
+            wordlistDestroy(&Config.Program.store_id);
         }
     }
 
@@ -762,6 +776,9 @@ configDoConfigure(void)
     requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
+
+    if (Config.Program.store_id)
+        requirePathnameExists("store_id_program", Config.Program.store_id->key);
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 
@@ -928,7 +945,7 @@ configDoConfigure(void)
     }
 
     for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
-        if (!s->sslBump)
+        if (!s->flags.tunnelSslBumping)
             continue;
 
         debugs(3, DBG_IMPORTANT, "Initializing http_port " << s->s << " SSL context");
@@ -1017,6 +1034,12 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
         self_destruct();
 
     *tptr = static_cast<time_msec_t>(m * d);
+
+    if (static_cast<double>(*tptr) * 2 != m * d * 2) {
+        debugs(3, DBG_CRITICAL, "ERROR: Invalid value '" <<
+               d << " " << token << ": integer overflow (time_msec_t).");
+        self_destruct();
+    }
 }
 
 static uint64_t
@@ -1097,8 +1120,11 @@ parseBytesLine64(int64_t * bptr, const char *units)
 
     *bptr = static_cast<int64_t>(m * d / u);
 
-    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+    if (static_cast<double>(*bptr) * 2 != (m * d / u) * 2) {
+        debugs(3, DBG_CRITICAL, "ERROR: Invalid value '" <<
+               d << " " << token << ": integer overflow (int64_t).");
         self_destruct();
+    }
 }
 
 static void
@@ -1141,8 +1167,11 @@ parseBytesLine(size_t * bptr, const char *units)
 
     *bptr = static_cast<size_t>(m * d / u);
 
-    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+    if (static_cast<double>(*bptr) * 2 != (m * d / u) * 2) {
+        debugs(3, DBG_CRITICAL, "ERROR: Invalid value '" <<
+               d << " " << token << ": integer overflow (size_t).");
         self_destruct();
+    }
 }
 
 #if !USE_DNSHELPER
@@ -1184,10 +1213,13 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
         return;
     }
 
-    *bptr = static_cast<size_t>(m * d / u);
+    *bptr = static_cast<ssize_t>(m * d / u);
 
-    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+    if (static_cast<double>(*bptr) * 2 != (m * d / u) * 2) {
+        debugs(3, DBG_CRITICAL, "ERROR: Invalid value '" <<
+               d << " " << token << ": integer overflow (ssize_t).");
         self_destruct();
+    }
 }
 #endif
 
@@ -1224,7 +1256,7 @@ static void parseBytesOptionValue(size_t * bptr, const char *units, char const *
     }
 
     *bptr = static_cast<size_t>(m * d / u);
-    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+    if (static_cast<double>(*bptr) * 2 != (m * d / u) * 2)
         self_destruct();
 }
 #endif
@@ -1261,10 +1293,11 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 
     while (ae != NULL) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        storeAppendPrintf(entry, "%s %s %s ",
+        storeAppendPrintf(entry, "%s %s %s %s ",
                           name,
                           ae->name,
-                          ae->typeString());
+                          ae->typeString(),
+                          ae->flags.flagsStr());
         v = w = ae->dump();
 
         while (v != NULL) {
@@ -2092,8 +2125,8 @@ parse_peer(CachePeer ** head)
     p->type = parseNeighborType(token);
 
     if (p->type == PEER_MULTICAST) {
-        p->options.no_digest = 1;
-        p->options.no_netdb_exchange = 1;
+        p->options.no_digest = true;
+        p->options.no_netdb_exchange = true;
     }
 
     p->http_port = GetTcpService();
@@ -2105,29 +2138,29 @@ parse_peer(CachePeer ** head)
     p->connection_auth = 2;    /* auto */
 
     while ((token = strtok(NULL, w_space))) {
-        if (!strcasecmp(token, "proxy-only")) {
-            p->options.proxy_only = 1;
-        } else if (!strcasecmp(token, "no-query")) {
-            p->options.no_query = 1;
-        } else if (!strcasecmp(token, "background-ping")) {
-            p->options.background_ping = 1;
-        } else if (!strcasecmp(token, "no-digest")) {
-            p->options.no_digest = 1;
-        } else if (!strcasecmp(token, "no-tproxy")) {
-            p->options.no_tproxy = 1;
-        } else if (!strcasecmp(token, "multicast-responder")) {
-            p->options.mcast_responder = 1;
+        if (!strcmp(token, "proxy-only")) {
+            p->options.proxy_only = true;
+        } else if (!strcmp(token, "no-query")) {
+            p->options.no_query = true;
+        } else if (!strcmp(token, "background-ping")) {
+            p->options.background_ping = true;
+        } else if (!strcmp(token, "no-digest")) {
+            p->options.no_digest = true;
+        } else if (!strcmp(token, "no-tproxy")) {
+            p->options.no_tproxy = true;
+        } else if (!strcmp(token, "multicast-responder")) {
+            p->options.mcast_responder = true;
 #if PEER_MULTICAST_SIBLINGS
-        } else if (!strcasecmp(token, "multicast-siblings")) {
-            p->options.mcast_siblings = 1;
+        } else if (!strcmp(token, "multicast-siblings")) {
+            p->options.mcast_siblings = true;
 #endif
-        } else if (!strncasecmp(token, "weight=", 7)) {
+        } else if (!strncmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
-        } else if (!strncasecmp(token, "basetime=", 9)) {
+        } else if (!strncmp(token, "basetime=", 9)) {
             p->basetime = xatoi(token + 9);
-        } else if (!strcasecmp(token, "closest-only")) {
-            p->options.closest_only = 1;
-        } else if (!strncasecmp(token, "ttl=", 4)) {
+        } else if (!strcmp(token, "closest-only")) {
+            p->options.closest_only = true;
+        } else if (!strncmp(token, "ttl=", 4)) {
             p->mcast.ttl = xatoi(token + 4);
 
             if (p->mcast.ttl < 0)
@@ -2135,18 +2168,18 @@ parse_peer(CachePeer ** head)
 
             if (p->mcast.ttl > 128)
                 p->mcast.ttl = 128;
-        } else if (!strcasecmp(token, "default")) {
-            p->options.default_parent = 1;
-        } else if (!strcasecmp(token, "round-robin")) {
-            p->options.roundrobin = 1;
-        } else if (!strcasecmp(token, "weighted-round-robin")) {
-            p->options.weighted_roundrobin = 1;
+        } else if (!strcmp(token, "default")) {
+            p->options.default_parent = true;
+        } else if (!strcmp(token, "round-robin")) {
+            p->options.roundrobin = true;
+        } else if (!strcmp(token, "weighted-round-robin")) {
+            p->options.weighted_roundrobin = true;
 #if USE_HTCP
-        } else if (!strcasecmp(token, "htcp")) {
-            p->options.htcp = 1;
-        } else if (!strncasecmp(token, "htcp=", 5) || !strncasecmp(token, "htcp-", 5)) {
+        } else if (!strcmp(token, "htcp")) {
+            p->options.htcp = true;
+        } else if (!strncmp(token, "htcp=", 5) || !strncmp(token, "htcp-", 5)) {
             /* Note: The htcp- form is deprecated, replaced by htcp= */
-            p->options.htcp = 1;
+            p->options.htcp = true;
             char *tmp = xstrdup(token+5);
             char *mode, *nextmode;
             for (mode = nextmode = tmp; mode; mode = nextmode) {
@@ -2155,101 +2188,101 @@ parse_peer(CachePeer ** head)
                     *nextmode = '\0';
                     ++nextmode;
                 }
-                if (!strcasecmp(mode, "no-clr")) {
+                if (!strcmp(mode, "no-clr")) {
                     if (p->options.htcp_only_clr)
                         fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
-                    p->options.htcp_no_clr = 1;
-                } else if (!strcasecmp(mode, "no-purge-clr")) {
-                    p->options.htcp_no_purge_clr = 1;
-                } else if (!strcasecmp(mode, "only-clr")) {
+                    p->options.htcp_no_clr = true;
+                } else if (!strcmp(mode, "no-purge-clr")) {
+                    p->options.htcp_no_purge_clr = true;
+                } else if (!strcmp(mode, "only-clr")) {
                     if (p->options.htcp_no_clr)
                         fatalf("parse_peer: can't set htcp no-clr and only-clr simultaneously");
-                    p->options.htcp_only_clr = 1;
-                } else if (!strcasecmp(mode, "forward-clr")) {
-                    p->options.htcp_forward_clr = 1;
-                } else if (!strcasecmp(mode, "oldsquid")) {
-                    p->options.htcp_oldsquid = 1;
+                    p->options.htcp_only_clr = true;
+                } else if (!strcmp(mode, "forward-clr")) {
+                    p->options.htcp_forward_clr = true;
+                } else if (!strcmp(mode, "oldsquid")) {
+                    p->options.htcp_oldsquid = true;
                 } else {
                     fatalf("invalid HTCP mode '%s'", mode);
                 }
             }
             safe_free(tmp);
 #endif
-        } else if (!strcasecmp(token, "no-netdb-exchange")) {
-            p->options.no_netdb_exchange = 1;
+        } else if (!strcmp(token, "no-netdb-exchange")) {
+            p->options.no_netdb_exchange = true;
 
-        } else if (!strcasecmp(token, "carp")) {
+        } else if (!strcmp(token, "carp")) {
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
 
-            p->options.carp = 1;
-        } else if (!strncasecmp(token, "carp-key=", 9)) {
-            if (p->options.carp != 1)
+            p->options.carp = true;
+        } else if (!strncmp(token, "carp-key=", 9)) {
+            if (p->options.carp != true)
                 fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
-            p->options.carp_key.set=1;
+            p->options.carp_key.set = true;
             char *nextkey=token+strlen("carp-key="), *key=nextkey;
             for (; key; key = nextkey) {
                 nextkey=strchr(key,',');
                 if (nextkey) ++nextkey; // skip the comma, any
-                if (0==strncasecmp(key,"scheme",6)) {
-                    p->options.carp_key.scheme=1;
-                } else if (0==strncasecmp(key,"host",4)) {
-                    p->options.carp_key.host=1;
-                } else if (0==strncasecmp(key,"port",4)) {
-                    p->options.carp_key.port=1;
-                } else if (0==strncasecmp(key,"path",4)) {
-                    p->options.carp_key.path=1;
-                } else if (0==strncasecmp(key,"params",6)) {
-                    p->options.carp_key.params=1;
+                if (0==strncmp(key,"scheme",6)) {
+                    p->options.carp_key.scheme = true;
+                } else if (0==strncmp(key,"host",4)) {
+                    p->options.carp_key.host = true;
+                } else if (0==strncmp(key,"port",4)) {
+                    p->options.carp_key.port = true;
+                } else if (0==strncmp(key,"path",4)) {
+                    p->options.carp_key.path = true;
+                } else if (0==strncmp(key,"params",6)) {
+                    p->options.carp_key.params = true;
                 } else {
                     fatalf("invalid carp-key '%s'",key);
                 }
             }
-        } else if (!strcasecmp(token, "userhash")) {
+        } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
 
-            p->options.userhash = 1;
+            p->options.userhash = true;
 #else
             fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
 #endif
-        } else if (!strcasecmp(token, "sourcehash")) {
+        } else if (!strcmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
 
-            p->options.sourcehash = 1;
+            p->options.sourcehash = true;
 
-        } else if (!strcasecmp(token, "no-delay")) {
+        } else if (!strcmp(token, "no-delay")) {
 #if USE_DELAY_POOLS
-            p->options.no_delay = 1;
+            p->options.no_delay = true;
 #else
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option 'no-delay' requires --enable-delay-pools");
 #endif
-        } else if (!strncasecmp(token, "login=", 6)) {
+        } else if (!strncmp(token, "login=", 6)) {
             p->login = xstrdup(token + 6);
             rfc1738_unescape(p->login);
-        } else if (!strncasecmp(token, "connect-timeout=", 16)) {
+        } else if (!strncmp(token, "connect-timeout=", 16)) {
             p->connect_timeout = xatoi(token + 16);
-        } else if (!strncasecmp(token, "connect-fail-limit=", 19)) {
+        } else if (!strncmp(token, "connect-fail-limit=", 19)) {
             p->connect_fail_limit = xatoi(token + 19);
 #if USE_CACHE_DIGESTS
-        } else if (!strncasecmp(token, "digest-url=", 11)) {
+        } else if (!strncmp(token, "digest-url=", 11)) {
             p->digest_url = xstrdup(token + 11);
 #endif
 
-        } else if (!strcasecmp(token, "allow-miss")) {
-            p->options.allow_miss = 1;
-        } else if (!strncasecmp(token, "max-conn=", 9)) {
+        } else if (!strcmp(token, "allow-miss")) {
+            p->options.allow_miss = true;
+        } else if (!strncmp(token, "max-conn=", 9)) {
             p->max_conn = xatoi(token + 9);
-        } else if (!strcasecmp(token, "originserver")) {
-            p->options.originserver = 1;
-        } else if (!strncasecmp(token, "name=", 5)) {
+        } else if (!strcmp(token, "originserver")) {
+            p->options.originserver = true;
+        } else if (!strncmp(token, "name=", 5)) {
             safe_free(p->name);
 
             if (token[5])
                 p->name = xstrdup(token + 5);
-        } else if (!strncasecmp(token, "forceddomain=", 13)) {
+        } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
 
             if (token[13])
@@ -2266,7 +2299,7 @@ parse_peer(CachePeer ** head)
             safe_free(p->sslkey);
             p->sslkey = xstrdup(token + 7);
         } else if (strncmp(token, "sslversion=", 11) == 0) {
-            p->sslversion = atoi(token + 11);
+            p->sslversion = xatoi(token + 11);
         } else if (strncmp(token, "ssloptions=", 11) == 0) {
             safe_free(p->ssloptions);
             p->ssloptions = xstrdup(token + 11);
@@ -2281,7 +2314,7 @@ parse_peer(CachePeer ** head)
             p->sslcapath = xstrdup(token + 10);
         } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
             safe_free(p->sslcrlfile);
-            p->sslcapath = xstrdup(token + 10);
+            p->sslcrlfile = xstrdup(token + 11);
         } else if (strncmp(token, "sslflags=", 9) == 0) {
             safe_free(p->sslflags);
             p->sslflags = xstrdup(token + 9);
@@ -2597,10 +2630,20 @@ parse_onoff(int *var)
     if (token == NULL)
         self_destruct();
 
-    if (!strcasecmp(token, "on") || !strcasecmp(token, "enable"))
+    if (!strcmp(token, "on")) {
         *var = 1;
-    else
+    } else if (!strcmp(token, "enable")) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'enable' is deprecated. Please update to use 'on'.");
+        *var = 1;
+    } else if (!strcmp(token, "off")) {
         *var = 0;
+    } else if (!strcmp(token, "disable")) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'disable' is deprecated. Please update to use 'off'.");
+        *var = 0;
+    } else {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid option: Boolean options can only be 'on' or 'off'.");
+        self_destruct();
+    }
 }
 
 #define free_onoff free_int
@@ -2628,12 +2671,22 @@ parse_tristate(int *var)
     if (token == NULL)
         self_destruct();
 
-    if (!strcasecmp(token, "on") || !strcasecmp(token, "enable"))
+    if (!strcmp(token, "on")) {
         *var = 1;
-    else if (!strcasecmp(token, "warn"))
+    } else if (!strcmp(token, "enable")) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'enable' is deprecated. Please update to use value 'on'.");
+        *var = 1;
+    } else if (!strcmp(token, "warn")) {
         *var = -1;
-    else
+    } else if (!strcmp(token, "off")) {
         *var = 0;
+    } else if (!strcmp(token, "disable")) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'disable' is deprecated. Please update to use value 'off'.");
+        *var = 0;
+    } else {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid option: Tristate options can only be 'on', 'off', or 'warn'.");
+        self_destruct();
+    }
 }
 
 #define free_tristate free_int
@@ -2757,7 +2810,7 @@ parse_refreshpattern(RefreshPattern ** head)
 
     min = (time_t) (i * 60);	/* convert minutes to seconds */
 
-    i = GetInteger();		/* token: pct */
+    i = GetPercentage();	/* token: pct */
 
     pct = (double) i / 100.0;
 
@@ -2782,7 +2835,7 @@ parse_refreshpattern(RefreshPattern ** head)
         } else if (!strcmp(token, "store-stale")) {
             store_stale = 1;
         } else if (!strncmp(token, "max-stale=", 10)) {
-            max_stale = atoi(token + 10);
+            max_stale = xatoi(token + 10);
 #if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2831,41 +2884,41 @@ parse_refreshpattern(RefreshPattern ** head)
     t->max = max;
 
     if (flags & REG_ICASE)
-        t->flags.icase = 1;
+        t->flags.icase = true;
 
     if (refresh_ims)
-        t->flags.refresh_ims = 1;
+        t->flags.refresh_ims = true;
 
     if (store_stale)
-        t->flags.store_stale = 1;
+        t->flags.store_stale = true;
 
     t->max_stale = max_stale;
 
 #if USE_HTTP_VIOLATIONS
 
     if (override_expire)
-        t->flags.override_expire = 1;
+        t->flags.override_expire = true;
 
     if (override_lastmod)
-        t->flags.override_lastmod = 1;
+        t->flags.override_lastmod = true;
 
     if (reload_into_ims)
-        t->flags.reload_into_ims = 1;
+        t->flags.reload_into_ims = true;
 
     if (ignore_reload)
-        t->flags.ignore_reload = 1;
+        t->flags.ignore_reload = true;
 
     if (ignore_no_store)
-        t->flags.ignore_no_store = 1;
+        t->flags.ignore_no_store = true;
 
     if (ignore_must_revalidate)
-        t->flags.ignore_must_revalidate = 1;
+        t->flags.ignore_must_revalidate = true;
 
     if (ignore_private)
-        t->flags.ignore_private = 1;
+        t->flags.ignore_private = true;
 
     if (ignore_auth)
-        t->flags.ignore_auth = 1;
+        t->flags.ignore_auth = true;
 
 #endif
 
@@ -3213,18 +3266,20 @@ parse_uri_whitespace(int *var)
     if (token == NULL)
         self_destruct();
 
-    if (!strcasecmp(token, "strip"))
+    if (!strcmp(token, "strip"))
         *var = URI_WHITESPACE_STRIP;
-    else if (!strcasecmp(token, "deny"))
+    else if (!strcmp(token, "deny"))
         *var = URI_WHITESPACE_DENY;
-    else if (!strcasecmp(token, "allow"))
+    else if (!strcmp(token, "allow"))
         *var = URI_WHITESPACE_ALLOW;
-    else if (!strcasecmp(token, "encode"))
+    else if (!strcmp(token, "encode"))
         *var = URI_WHITESPACE_ENCODE;
-    else if (!strcasecmp(token, "chop"))
+    else if (!strcmp(token, "chop"))
         *var = URI_WHITESPACE_CHOP;
-    else
+    else {
+        debugs(0, DBG_PARSE_NOTE(2), "ERROR: Invalid option '" << token << "': 'uri_whitespace' accepts 'strip', 'deny', 'allow', 'encode', and 'chop'.");
         self_destruct();
+    }
 }
 
 static void
@@ -3335,8 +3390,10 @@ parse_memcachemode(SquidConfig * config)
     } else if (strcmp(token, "never") == 0) {
         Config.onoff.memory_cache_first = 0;
         Config.onoff.memory_cache_disk = 0;
-    } else
+    } else {
+        debugs(0, DBG_PARSE_NOTE(2), "ERROR: Invalid option '" << token << "': 'memory_cache_mode' accepts 'always', 'disk', 'network', and 'never'.");
         self_destruct();
+    }
 }
 
 static void
@@ -3359,19 +3416,19 @@ dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &config)
 peer_t
 parseNeighborType(const char *s)
 {
-    if (!strcasecmp(s, "parent"))
+    if (!strcmp(s, "parent"))
         return PEER_PARENT;
 
-    if (!strcasecmp(s, "neighbor"))
+    if (!strcmp(s, "neighbor"))
         return PEER_SIBLING;
 
-    if (!strcasecmp(s, "neighbour"))
+    if (!strcmp(s, "neighbour"))
         return PEER_SIBLING;
 
-    if (!strcasecmp(s, "sibling"))
+    if (!strcmp(s, "sibling"))
         return PEER_SIBLING;
 
-    if (!strcasecmp(s, "multicast"))
+    if (!strcmp(s, "multicast"))
         return PEER_MULTICAST;
 
     debugs(15, DBG_CRITICAL, "WARNING: Unknown neighbor type: " << s);
@@ -3473,8 +3530,8 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
         *t = '\0';
         port = xatos(t + 1);
 
-    } else if ((port = strtol(token, &junk, 10)), !*junk) {
-        /* port */
+    } else if (strtol(token, &junk, 10) && !*junk) {
+        port = xatos(token);
         debugs(3, 3, s->protocol << "_port: found Listen on Port: " << port);
     } else {
         debugs(3, DBG_CRITICAL, s->protocol << "_port: missing Port: " << token);
@@ -3516,17 +3573,18 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     /* modes first */
 
     if (strcmp(token, "accel") == 0) {
-        if (s->intercepted || s->spoof_client_ip) {
+        if (s->flags.isIntercepted()) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->accel = s->vhost = 1;
+        s->flags.accelSurrogate = true;
+        s->vhost = true;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
-        if (s->accel || s->spoof_client_ip) {
+        if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->intercepted = 1;
+        s->flags.natIntercept = true;
         Ip::Interceptor.StartInterception();
         /* Log information regarding the port modes under interception. */
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
@@ -3540,11 +3598,11 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
         }
     } else if (strcmp(token, "tproxy") == 0) {
-        if (s->intercepted || s->accel) {
+        if (s->flags.natIntercept || s->flags.accelSurrogate) {
             debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->spoof_client_ip = 1;
+        s->flags.tproxyIntercept = true;
         Ip::Interceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
@@ -3556,59 +3614,60 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         }
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: defaultsite option requires Acceleration mode flag.");
             self_destruct();
         }
         safe_free(s->defaultsite);
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
         }
-        s->accel = s->vhost = 1;
+        s->flags.accelSurrogate = true;
+        s->vhost = true;
     } else if (strcmp(token, "no-vhost") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
         }
-        s->vhost = 0;
+        s->vhost = false;
     } else if (strcmp(token, "vport") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = -1;
     } else if (strncmp(token, "vport=", 6) == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = xatos(token + 6);
     } else if (strncmp(token, "protocol=", 9) == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
             self_destruct();
         }
         s->protocol = xstrdup(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
-        s->allow_direct = 1;
+        s->allow_direct = true;
     } else if (strcmp(token, "act-as-origin") == 0) {
-        if (!s->accel) {
+        if (!s->flags.accelSurrogate) {
             debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
         } else
-            s->actAsOrigin = 1;
+            s->actAsOrigin = true;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
-        if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Scceleration mode flag.");
+        if (!s->flags.accelSurrogate) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Acceleration mode flag.");
             self_destruct();
         }
 #endif
-        s->ignore_cc = 1;
+        s->ignore_cc = true;
     } else if (strncmp(token, "name=", 5) == 0) {
         safe_free(s->name);
         s->name = xstrdup(token + 5);
@@ -3621,11 +3680,11 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strcmp(token, "connection-auth=on") == 0) {
         s->connection_auth_disabled = false;
     } else if (strncmp(token, "disable-pmtu-discovery=", 23) == 0) {
-        if (!strcasecmp(token + 23, "off"))
+        if (!strcmp(token + 23, "off"))
             s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
-        else if (!strcasecmp(token + 23, "transparent"))
+        else if (!strcmp(token + 23, "transparent"))
             s->disable_pmtu_discovery = DISABLE_PMTU_TRANSPARENT;
-        else if (!strcasecmp(token + 23, "always"))
+        else if (!strcmp(token + 23, "always"))
             s->disable_pmtu_discovery = DISABLE_PMTU_ALWAYS;
         else
             self_destruct();
@@ -3635,29 +3694,29 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
         }
     } else if (strcmp(token, "tcpkeepalive") == 0) {
-        s->tcp_keepalive.enabled = 1;
+        s->tcp_keepalive.enabled = true;
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
         char *t = token + 13;
-        s->tcp_keepalive.enabled = 1;
-        s->tcp_keepalive.idle = atoi(t);
+        s->tcp_keepalive.enabled = true;
+        s->tcp_keepalive.idle = xatoui(t);
         t = strchr(t, ',');
         if (t) {
             ++t;
-            s->tcp_keepalive.interval = atoi(t);
+            s->tcp_keepalive.interval = xatoui(t);
             t = strchr(t, ',');
         }
         if (t) {
             ++t;
-            s->tcp_keepalive.timeout = atoi(t);
+            s->tcp_keepalive.timeout = xatoui(t);
             // t = strchr(t, ','); // not really needed, left in as documentation
         }
 #if USE_SSL
-    } else if (strcasecmp(token, "sslBump") == 0) {
+    } else if (strcmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
                "in http_port. Use 'ssl-bump' instead.");
-        s->sslBump = 1; // accelerated when bumped, otherwise not
+        s->flags.tunnelSslBumping = true;
     } else if (strcmp(token, "ssl-bump") == 0) {
-        s->sslBump = 1; // accelerated when bumped, otherwise not
+        s->flags.tunnelSslBumping = true;
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
@@ -3705,6 +3764,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         parseBytesOptionValue(&s->dynamicCertMemCacheSize, B_BYTES_STR, token + 28);
 #endif
     } else {
+        debugs(3, DBG_CRITICAL, "FATAL: Unknown http(s)_port option '" << token << "'.");
         self_destruct();
     }
 }
@@ -3751,14 +3811,14 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     }
 
 #if USE_SSL
-    if (strcasecmp(protocol, "https") == 0) {
+    if (strcmp(protocol, "https") == 0) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
-        const bool hijacked = s->spoof_client_ip || s->intercepted;
-        if (s->sslBump && !hijacked) {
+        const bool hijacked = s->flags.isIntercepted();
+        if (s->flags.tunnelSslBumping && !hijacked) {
             debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy/intercept which is missing.");
             self_destruct();
         }
-        if (hijacked && !s->sslBump) {
+        if (hijacked && !s->flags.tunnelSslBumping) {
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
             self_destruct();
         }
@@ -3788,13 +3848,13 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
                       s->s.ToURL(buf,MAX_IPSTRLEN));
 
     // MODES and specific sub-options.
-    if (s->intercepted)
+    if (s->flags.natIntercept)
         storeAppendPrintf(e, " intercept");
 
-    else if (s->spoof_client_ip)
+    else if (s->flags.tproxyIntercept)
         storeAppendPrintf(e, " tproxy");
 
-    else if (s->accel) {
+    else if (s->flags.accelSurrogate) {
         storeAppendPrintf(e, " accel");
 
         if (s->vhost)
@@ -3825,7 +3885,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
         storeAppendPrintf(e, " name=%s", s->name);
 
 #if USE_HTTP_VIOLATIONS
-    if (!s->accel && s->ignore_cc)
+    if (!s->flags.accelSurrogate && s->ignore_cc)
         storeAppendPrintf(e, " ignore-cc");
 #endif
 
@@ -3857,7 +3917,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
     }
 
 #if USE_SSL
-    if (s->sslBump)
+    if (s->flags.tunnelSslBumping)
         storeAppendPrintf(e, " ssl-bump");
 
     if (s->cert)
@@ -4178,7 +4238,7 @@ dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAf
                               cpuAffinityMap->processes()[i]);
         }
         storeAppendPrintf(entry, " cores=");
-        for (size_t i = 0; i < cpuAffinityMap->processes().size(); ++i) {
+        for (size_t i = 0; i < cpuAffinityMap->cores().size(); ++i) {
             storeAppendPrintf(entry, "%s%i", (i ? "," : ""),
                               cpuAffinityMap->cores()[i]);
         }

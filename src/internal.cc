@@ -48,7 +48,7 @@
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects,
- * return HTTP_NOT_FOUND for others
+ * return Http::scNotFound for others
  */
 void
 internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry)
@@ -68,7 +68,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
 #endif
 
         HttpReply *reply = new HttpReply;
-        reply->setHeaders(HTTP_NOT_FOUND, "Not Found", "text/plain", strlen(msgbuf), squid_curtime, -2);
+        reply->setHeaders(Http::scNotFound, "Not Found", "text/plain", strlen(msgbuf), squid_curtime, -2);
         entry->replaceHttpReply(reply);
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
@@ -77,7 +77,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = new ErrorState(ERR_INVALID_REQ, HTTP_NOT_FOUND, request);
+        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request);
         errorAppendEntry(entry, err);
     }
 }

@@ -134,7 +134,6 @@ interaction(
 {
     const char *dflt = interact->defresult;
 
-    flags = flags;
     switch (interact->id) {
     case SASL_CB_GETREALM:
         if (defaults)
@@ -231,11 +230,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
     char *sasl_realm = NULL;
     char *sasl_authc_id = NULL;
     char *sasl_authz_id = NULL;
-#ifdef HAVE_SUN_LDAP_SDK
     char *sasl_mech = (char *) "GSSAPI";
-#else
-    char *sasl_mech = NULL;
-#endif
     /*
      * Force encryption
      */

@@ -270,6 +270,10 @@ msg_handle(diomsg * r, int rl, diomsg * s)
 
     if (s->shm_offset > -1)
         buf = shmbuf + s->shm_offset;
+    else if (r->mtype != _MQD_CLOSE) {
+        fprintf(stderr, "%d UNLNK id(%u) Error: no filename in shm buffer\n", (int) mypid, s->id);
+        return;
+    }
 
     switch (r->mtype) {
 
@@ -374,7 +378,10 @@ main(int argc, char *argv[])
 
     hash = hash_create(fsCmp, 1 << 4, fsHash);
     assert(hash);
-    fcntl(0, F_SETFL, SQUID_NONBLOCK);
+    if (fcntl(0, F_SETFL, SQUID_NONBLOCK) < 0) {
+        perror(xstrerror());
+        return 1;
+    }
     memset(&sa, '\0', sizeof(sa));
     sa.sa_handler = alarm_handler;
     sa.sa_flags = SA_RESTART;

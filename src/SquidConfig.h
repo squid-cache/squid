@@ -203,6 +203,7 @@ public:
 #endif
 
         wordlist *redirect;
+        wordlist *store_id;
 #if USE_UNLINKD
 
         char *unlinkd;
@@ -220,6 +221,7 @@ public:
 #endif
 
     HelperChildConfig redirectChildren;
+    HelperChildConfig storeIdChildren;
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;
@@ -318,6 +320,7 @@ public:
         int nonhierarchical_direct;
         int strip_query_terms;
         int redirector_bypass;
+        int store_id_bypass;
         int ignore_unknown_nameservers;
         int client_pconns;
         int server_pconns;
@@ -382,6 +385,7 @@ public:
         acl_access *brokenPosts;
 #endif
         acl_access *redirector;
+        acl_access *store_id;
         acl_access *reply;
         AclAddress *outgoing_address;
 #if USE_HTCP

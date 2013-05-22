@@ -18,7 +18,7 @@
 #include <stdexcept>
 #endif
 
-#define TESTDIR "testCoss__testCossSearch"
+#define TESTDIR "testCoss_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testCoss );
 
@@ -190,10 +190,10 @@ testCoss::testCossSearch()
     {
         /* Create "vary" base object */
         RequestFlags flags;
-        flags.cachable = 1;
+        flags.cachable = true;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
-        rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
+        rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 

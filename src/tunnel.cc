@@ -46,6 +46,7 @@
 #include "http.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
+#include "ip/QosConfig.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
@@ -504,7 +505,7 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
-    *tunnelState->status_ptr = HTTP_OK;
+    *tunnelState->status_ptr = Http::scOkay;
     if (cbdataReferenceValid(tunnelState)) {
         tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
         tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
@@ -523,7 +524,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
     debugs(26, 3, HERE << conn << ", flag=" << flag);
 
     if (flag != COMM_OK) {
-        *tunnelState->status_ptr = HTTP_INTERNAL_SERVER_ERROR;
+        *tunnelState->status_ptr = Http::scInternalServerError;
         tunnelErrorComplete(conn->fd, data, 0);
         return;
     }
@@ -580,6 +581,15 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelState->serverDestinations.shift();
         if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
+
+            if (Ip::Qos::TheConfig.isAclTosActive()) {
+                tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request);
+            }
+
+#if SO_MARK && USE_LIBCAP
+            tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request);
+#endif
+
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
             Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
@@ -587,8 +597,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             AsyncJob::Start(cs);
         } else {
             debugs(26, 4, HERE << "terminate with error.");
-            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
-            *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
+            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request);
+            *tunnelState->status_ptr = Http::scServiceUnavailable;
             err->xerrno = xerrno;
             // on timeout is this still:    err->xerrno = ETIMEDOUT;
             err->port = conn->remote.GetPort();
@@ -614,10 +624,10 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     debugs(26, 4, HERE << "determine post-connect handling pathway.");
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
-        tunnelState->request->flags.proxying = (conn->getPeer()->options.originserver?0:1);
+        tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
-        tunnelState->request->flags.proxying = 0;
+        tunnelState->request->flags.proxying = false;
     }
 
     if (tunnelState->request->flags.proxying)
@@ -660,8 +670,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         ch.my_addr = request->my_addr;
         if (ch.fastCheck() == ACCESS_DENIED) {
             debugs(26, 4, HERE << "MISS access forbidden.");
-            err = new ErrorState(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
-            *status_ptr = HTTP_FORBIDDEN;
+            err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request);
+            *status_ptr = Http::scForbidden;
             errorSend(http->getConn()->clientConnection, err);
             return;
         }
@@ -676,7 +686,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
     tunnelState->url = xstrdup(url);
-    tunnelState->request = HTTPMSGLOCK(request);
+    tunnelState->request = request;
+    HTTPMSGLOCK(tunnelState->request);
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = http->getConn()->clientConnection;
@@ -736,7 +747,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     if (peer_paths == NULL || peer_paths->size() < 1) {
         debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
         if (!err) {
-            err = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
+            err = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, tunnelState->request);
         }
         *tunnelState->status_ptr = err->httpStatus;
         err->callback = tunnelErrorComplete;
@@ -745,6 +756,14 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
         return;
     }
     delete err;
+
+    if (Ip::Qos::TheConfig.isAclTosActive()) {
+        tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request);
+    }
+
+#if SO_MARK && USE_LIBCAP
+    tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request);
+#endif
 
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");

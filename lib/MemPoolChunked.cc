@@ -141,7 +141,11 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
     next = NULL;
     pool = aPool;
 
-    objCache = xcalloc(1, pool->chunk_size);
+    if (pool->doZero)
+        objCache = xcalloc(1, pool->chunk_size);
+    else
+        objCache = xmalloc(pool->chunk_size);
+
     freeList = objCache;
     void **Free = (void **)freeList;
 
@@ -196,7 +200,7 @@ MemPoolChunked::push(void *obj)
      * not really need to be cleared.. There was a condition based on
      * the object size here, but such condition is not safe.
      */
-    if (doZeroOnPush)
+    if (doZero)
         memset(obj, 0, obj_size);
     Free = (void **)obj;
     *Free = freeCache;

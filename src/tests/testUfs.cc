@@ -19,7 +19,7 @@
 #include <stdexcept>
 #endif
 
-#define TESTDIR "testUfs__testUfsSearch"
+#define TESTDIR "testUfs_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
 
@@ -111,6 +111,7 @@ testUfs::testUfsSearch()
     strtok(config_line, w_space);
 
     aStore->parse(0, path);
+    store_maxobjsize = 1024*1024*2;
 
     safe_free(path);
 
@@ -142,10 +143,10 @@ testUfs::testUfsSearch()
     {
         /* Create "vary" base object */
         RequestFlags flags;
-        flags.cachable = 1;
+        flags.cachable = true;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
-        rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
+        rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 

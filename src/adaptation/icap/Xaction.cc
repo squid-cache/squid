@@ -50,7 +50,8 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
-    icapRequest = HTTPMSGLOCK(new HttpRequest);
+    icapRequest = new HttpRequest;
+    HTTPMSGLOCK(icapRequest);
     icap_tr_start = current_time;
 }
 
@@ -438,7 +439,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse");
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     const bool parsed = msg->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
@@ -536,7 +537,7 @@ void Adaptation::Icap::Xaction::swanSong()
 void Adaptation::Icap::Xaction::tellQueryAborted()
 {
     if (theInitiator.set()) {
-        Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply,
+        Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply.getRaw(),
                 retriable(), repeatable());
         Launcher *launcher = dynamic_cast<Launcher*>(theInitiator.get());
         // launcher may be nil if initiator is invalid
@@ -571,10 +572,12 @@ void Adaptation::Icap::Xaction::finalizeLogInfo()
     al.icap.ioTime = tvSubMsec(icap_tio_start, icap_tio_finish);
     al.icap.trTime = tvSubMsec(icap_tr_start, current_time);
 
-    al.icap.request = HTTPMSGLOCK(icapRequest);
-    if (icapReply) {
-        al.icap.reply = HTTPMSGLOCK(icapReply);
-        al.icap.resStatus = icapReply->sline.status;
+    al.icap.request = icapRequest;
+    HTTPMSGLOCK(al.icap.request);
+    if (icapReply != NULL) {
+        al.icap.reply = icapReply.getRaw();
+        HTTPMSGLOCK(al.icap.reply);
+        al.icap.resStatus = icapReply->sline.status();
     }
 }
 

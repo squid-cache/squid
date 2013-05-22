@@ -105,8 +105,6 @@ public:
     bool connectionProxyAuth :1;
     /** set if the request was sent on a pinned connection */
     bool pinned :1;
-    /** OK to reopen a failed pinned connection */
-    bool canRePin :1;
     /** Authentication was already sent upstream (e.g. due tcp-level auth) */
     bool authSent :1;
     /** Deny direct forwarding unless overriden by always_direct

@@ -218,9 +218,9 @@ serverSocket( struct in_addr host, unsigned short port,
     }
 
     if ( reuse ) {
-        int reuse = 1;
+        int opt = 1;
         if ( setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR,
-                         (char*) &reuse, sizeof(int) ) == -1) {
+                         (char*) &opt, sizeof(int) ) == -1) {
             perror( "setsockopt( SO_REUSEADDR )" );
             close( sockfd );
             return -1;

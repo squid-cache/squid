@@ -42,6 +42,8 @@ class DelayBucket
 {
 
 public:
+    DelayBucket() : level_(0) {}
+
     int const& level() const {return level_;}
 
     int & level() {return level_;}

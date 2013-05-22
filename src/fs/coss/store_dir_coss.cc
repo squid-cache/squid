@@ -176,7 +176,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
     ssize_t rlen;
 
     debugs(79, 3, "storeCossReadDone: fileno " << sio->swap_filen << ", len " << len);
-    cstate->flags.reading = 0;
+    cstate->flags.reading = false;
 
     if (errflag) {
         ++ StoreFScoss::GetInstance().stats.read.fail;

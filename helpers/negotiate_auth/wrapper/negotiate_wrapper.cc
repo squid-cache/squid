@@ -114,7 +114,6 @@ main(int argc, char *const argv[])
     int nend = 0, kend = 0;
     char *token;
     char **nargs, **kargs;
-    int i,j;
     int fpid;
     FILE *FDKIN,*FDKOUT;
     FILE *FDNIN,*FDNOUT;
@@ -131,13 +130,13 @@ main(int argc, char *const argv[])
         return 0;
     }
 
-    j = 1;
+    int j = 1;
     if (!strncasecmp(argv[1],"-d",2)) {
         debug = 1;
         j = 2;
     }
 
-    for (i=j; i<argc; ++i) {
+    for (int i=j; i<argc; ++i) {
         if (!strncasecmp(argv[i],"--ntlm",6))
             nstart = i;
         if (!strncasecmp(argv[i],"--kerberos",10))
@@ -167,7 +166,7 @@ main(int argc, char *const argv[])
     nargs[nend-nstart]=NULL;
     if (debug) {
         fprintf(stderr, "%s| %s: NTLM command: ", LogTime(), PROGRAM);
-        for (i=0; i<nend-nstart; ++i)
+        for (int i=0; i<nend-nstart; ++i)
             fprintf(stderr, "%s ", nargs[i]);
         fprintf(stderr, "\n");
     }
@@ -179,7 +178,7 @@ main(int argc, char *const argv[])
     kargs[kend-kstart]=NULL;
     if (debug) {
         fprintf(stderr, "%s| %s: Kerberos command: ", LogTime(), PROGRAM);
-        for (i=0; i<kend-kstart; ++i)
+        for (int i=0; i<kend-kstart; ++i)
             fprintf(stderr, "%s ", kargs[i]);
         fprintf(stderr, "\n");
     }

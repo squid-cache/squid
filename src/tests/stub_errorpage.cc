@@ -9,4 +9,4 @@ void errorAppendEntry(StoreEntry * entry, ErrorState * err) STUB
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos) STUB_RETVAL(false)
 bool TemplateFile::loadDefault() STUB_RETVAL(false)
 TemplateFile::TemplateFile(char const*, err_type) STUB
-bool TemplateFile::loadFor(HttpRequest*) STUB_RETVAL(false)
+bool TemplateFile::loadFor(const HttpRequest *) STUB_RETVAL(false)

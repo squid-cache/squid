@@ -38,29 +38,41 @@
 #include "acl/Data.h"
 #include "ssl/support.h"
 #include "acl/StringData.h"
+#include <string>
+#include <list>
 
 /// \ingroup ACLAPI
-class ACLCertificateData : public ACLData<SSL *>
+class ACLCertificateData : public ACLData<X509 *>
 {
 
 public:
     MEMPROXY_CLASS(ACLCertificateData);
 
-    ACLCertificateData(SSLGETATTRIBUTE *);
+    ACLCertificateData(Ssl::GETX509ATTRIBUTE *, const char *attributes, bool optionalAttr = false);
     ACLCertificateData(ACLCertificateData const &);
     ACLCertificateData &operator= (ACLCertificateData const &);
     virtual ~ACLCertificateData();
-    bool match(SSL *);
+    bool match(X509 *);
     wordlist *dump();
     void parse();
     bool empty() const;
-    virtual ACLData<SSL *> *clone() const;
+    virtual ACLData<X509 *> *clone() const;
 
+    /// A '|'-delimited list of valid ACL attributes.
+    /// A "*" item means that any attribute is acceptable.
+    /// Assumed to be a const-string and is never duped/freed.
+    /// Nil unless ACL form is: acl Name type attribute value1 ...
+    const char *validAttributesStr;
+    /// Parsed list of valid attribute names
+    std::list<std::string> validAttributes;
+    /// True if the attribute is optional (-xxx options)
+    bool attributeIsOptional;
     char *attribute;
     ACLStringData values;
 
 private:
-    SSLGETATTRIBUTE *sslAttributeCall;
+    /// The callback used to retrieve the data from X509 cert
+    Ssl::GETX509ATTRIBUTE *sslAttributeCall;
 };
 
 MEMPROXY_CLASS_INLINE(ACLCertificateData);

@@ -45,7 +45,7 @@ class ACLRequestHeaderStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *);
+    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *, ACLFlags &);
     virtual bool requiresRequest() const {return true;}
 
     static ACLRequestHeaderStrategy *Instance();
@@ -63,7 +63,7 @@ private:
 
 template <http_hdr_type header>
 int
-ACLRequestHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+ACLRequestHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
     char const *theHeader = checklist->request->header.getStr(header);
 
