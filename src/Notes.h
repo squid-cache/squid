@@ -175,4 +175,10 @@ public:
 
 MEMPROXY_CLASS_INLINE(NotePairs::Entry);
 
+class AccessLogEntry;
+/**
+ * Keep in sync HttpRequest and the corresponding AccessLogEntry objects
+ */
+NotePairs &SyncNotes(AccessLogEntry &ale, HttpRequest &request);
+
 #endif

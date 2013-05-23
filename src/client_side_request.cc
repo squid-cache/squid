@@ -1259,10 +1259,8 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
     if (http->al != NULL) {
-        if (!http->al->helperNotes)
-            http->al->helperNotes = new NotePairs;
-        http->al->helperNotes->append(&reply.notes);
-        old_request->helperNotes = http->al->helperNotes;
+        NotePairs &notes = SyncNotes(*http->al, *old_request);
+        notes.append(&reply.notes);
     }
 
     switch (reply.result) {
@@ -1382,10 +1380,8 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
     if (http->al != NULL) {
-        if (!http->al->helperNotes)
-            http->al->helperNotes = new NotePairs;
-        http->al->helperNotes->append(&reply.notes);
-        old_request->helperNotes = http->al->helperNotes;
+        NotePairs &notes = SyncNotes(*http->al, *old_request);
+        notes.append(&reply.notes);
     }
 
     switch (reply.result) {
