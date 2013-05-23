@@ -29,6 +29,7 @@
 
 #include "squid.h"
 #include "globals.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
@@ -213,4 +214,17 @@ NotePairs::append(const NotePairs *src)
     for (Vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
         entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
     }
+}
+
+
+NotePairs &
+SyncNotes(AccessLogEntry &ale, HttpRequest &request)
+{
+    if (!ale.notes) {
+        assert(!request.notes);
+        ale.notes = request.notes = new NotePairs;
+    } else {
+        assert(ale.notes == request.notes);
+    }
+    return *ale.notes;
 }

@@ -1055,15 +1055,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                         sb.append(meta);
                 }
 #endif
-                if (al->helperNotes != NULL) {
-                    if (const char *note = al->helperNotes->find(fmt->data.string)) {
-                        if (sb.size())
-                            sb.append(", ");
-                        sb.append(note);
-                    }
-                }
-                if (al->configNotes != NULL) {
-                    if (const char *note = al->configNotes->find(fmt->data.string)) {
+                if (al->notes != NULL) {
+                    if (const char *note = al->notes->find(fmt->data.string)) {
                         if (sb.size())
                             sb.append(", ");
                         sb.append(note);
@@ -1077,10 +1070,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
                     sb.append(ah->metaHeaders->toString());
 #endif
-                if (al->helperNotes != NULL && !al->helperNotes->empty())
-                    sb.append(al->helperNotes->toString());
-                if (al->configNotes != NULL && !al->configNotes->empty())
-                    sb.append(al->configNotes->toString());
+                if (al->notes != NULL && !al->notes->empty())
+                    sb.append(al->notes->toString());
+
                 out = sb.termedBuf();
                 quote = 1;
             }
