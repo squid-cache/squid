@@ -216,7 +216,6 @@ NotePairs::append(const NotePairs *src)
     }
 }
 
-
 NotePairs &
 SyncNotes(AccessLogEntry &ale, HttpRequest &request)
 {
