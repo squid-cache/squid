@@ -629,7 +629,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ICAP_REQ_HEADER_ELEM:
-            if (al->request)
+            if (al->icap.request)
                 sb = al->icap.request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.termedBuf();
@@ -1049,7 +1049,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_NOTE:
             if (fmt->data.string) {
 #if USE_ADAPTATION
-                Adaptation::History::Pointer ah = al->request->adaptHistory();
+                Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL) {
                     if (const char *meta = ah->metaHeaders->find(fmt->data.string))
                         sb.append(meta);
@@ -1066,7 +1066,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 quote = 1;
             } else {
 #if USE_ADAPTATION
-                Adaptation::History::Pointer ah = al->request->adaptHistory();
+                Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
                     sb.append(ah->metaHeaders->toString());
 #endif
