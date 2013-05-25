@@ -37,6 +37,8 @@
 #include "acl/MethodData.h"
 #include "acl/Method.h"
 #include "acl/MyPortName.h"
+#include "acl/Note.h"
+#include "acl/NoteData.h"
 #include "acl/PeerName.h"
 #include "acl/ProtocolData.h"
 #include "acl/Protocol.h"
@@ -181,3 +183,6 @@ ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
 
 ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
 ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
+
+ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
+ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
