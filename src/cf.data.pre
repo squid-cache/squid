@@ -1052,6 +1052,15 @@ DOC_START
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
 
+	acl aclname note name [value ...]
+	  # match transaction annotation [fast]
+	  # Without values, matches any annotation with a given name.
+	  # With value(s), matches any annotation with a given name that
+	  # also has one of the given values.
+	  # Names and values are compared using a string equality test.
+	  # Annotation sources include note and adaptation_meta directives
+	  # as well as helper and eCAP responses.
+
 IF USE_SSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
