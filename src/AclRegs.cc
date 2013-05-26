@@ -38,6 +38,8 @@
 #include "acl/MethodData.h"
 #include "acl/Method.h"
 #include "acl/MyPortName.h"
+#include "acl/Note.h"
+#include "acl/NoteData.h"
 #include "acl/PeerName.h"
 #include "acl/ProtocolData.h"
 #include "acl/Protocol.h"
@@ -188,3 +190,6 @@ Acl::AnyOf Acl::AnyOf::RegistryEntry_;
 
 ACL::Prototype Acl::AllOf::RegistryProtoype(&Acl::AllOf::RegistryEntry_, "all-of");
 Acl::AllOf Acl::AllOf::RegistryEntry_;
+
+ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
+ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");

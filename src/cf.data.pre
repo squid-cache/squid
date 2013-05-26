@@ -709,6 +709,13 @@ DOC_START
 	  		list separator. ; can be any non-alphanumeric
 			character.
 
+	  %ACL		The name of the ACL being tested.
+	  %DATA		The ACL arguments. If not used then any arguments
+			is automatically added at the end of the line
+			sent to the helper.
+			NOTE: this will encode the arguments as one token,
+			whereas the default will pass each separately.
+
 	  %%		The percent sign. Useful for helpers which need
 			an unchanging input format.
 
@@ -1044,6 +1051,15 @@ DOC_START
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
+
+	acl aclname note name [value ...]
+	  # match transaction annotation [fast]
+	  # Without values, matches any annotation with a given name.
+	  # With value(s), matches any annotation with a given name that
+	  # also has one of the given values.
+	  # Names and values are compared using a string equality test.
+	  # Annotation sources include note and adaptation_meta directives
+	  # as well as helper and eCAP responses.
 
 IF USE_SSL
 	acl aclname ssl_error errorname

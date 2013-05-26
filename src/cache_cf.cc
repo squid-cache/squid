@@ -1911,8 +1911,10 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
     fs = find_fstype(type_str);
 
-    if (fs < 0)
-        self_destruct();
+    if (fs < 0) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: This proxy does not support the '" << type_str << "' cache type. Ignoring.");
+        return;
+    }
 
     /* reconfigure existing dir */
 
@@ -2332,9 +2334,11 @@ parse_peer(CachePeer ** head)
             p->connection_auth = 1;
         } else if (strcmp(token, "connection-auth=auto") == 0) {
             p->connection_auth = 2;
+        } else if (token[0] == '#') {
+            // start of a text comment. stop reading this line.
+            break;
         } else {
-            debugs(3, DBG_CRITICAL, "parse_peer: token='" << token << "'");
-            self_destruct();
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Ignoring unknown cache_peer option '" << token << "'");
         }
     }
 

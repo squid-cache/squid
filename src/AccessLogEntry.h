@@ -230,11 +230,9 @@ public:
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
 
-    // TODO: merge configNotes and helperNotes
-    /// key:value pairs set by note.
-    NotePairs::Pointer configNotes;
+    /// key:value pairs set by squid.conf note directive and
     /// key=value pairs returned from URL rewrite/redirect helper
-    NotePairs::Pointer helperNotes;
+    NotePairs::Pointer notes;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request

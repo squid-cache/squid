@@ -84,6 +84,10 @@ libacls_la_SOURCES = \
 	Method.h \
 	MyPortName.cc \
 	MyPortName.h \
+	Note.h \
+	Note.cc \
+	NoteData.h \
+	NoteData.cc \
 	PeerName.cc \
 	PeerName.h \
 	Protocol.cc \
