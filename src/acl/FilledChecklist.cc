@@ -13,22 +13,6 @@
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
-void *
-ACLFilledChecklist::operator new (size_t size)
-{
-    assert (size == sizeof(ACLFilledChecklist));
-    CBDATA_INIT_TYPE(ACLFilledChecklist);
-    ACLFilledChecklist *result = cbdataAlloc(ACLFilledChecklist);
-    return result;
-}
-
-void
-ACLFilledChecklist::operator delete (void *address)
-{
-    ACLFilledChecklist *t = static_cast<ACLFilledChecklist *>(address);
-    cbdataFree(t);
-}
-
 ACLFilledChecklist::ACLFilledChecklist() :
         dst_peer(NULL),
         dst_rdns(NULL),
@@ -194,4 +178,3 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         xstrncpy(rfc931, ident, USER_IDENT_SZ);
 #endif
 }
-

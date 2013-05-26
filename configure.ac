@@ -35,9 +35,20 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
-# might be cross-compiling
+# Clang 3.2 on some CPUs requires -march-native to detect correctly
+# GCC 4.3+ can also produce faster executables when its used
+SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+
+# might be cross-compiling.
 if test "x$HOSTCXX" = "x"; then
   HOSTCXX="$CXX"
+  if test "x$squid_cv_check_marchnative" = "xyes"; then
+    CXXFLAGS="$CXXFLAGS -march=native"
+  fi
+fi
+if test "x$squid_cv_check_marchnative" = "xyes"; then
+  # always valid for the Host compiler.
+  HOSTCXX="$HOSTCXX -march=native"
 fi
 AC_SUBST(HOSTCXX)
 
@@ -60,8 +71,7 @@ fi
 
 # Check for C++0x compiler support
 AX_CXX_COMPILE_STDCXX_0X
-if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
-  "x$squid_host_os" != "xmingw" ; then
+if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" ; then
     #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
     # in the system libraries, which makes some c99 methods unavailable
     # (e.g. strtoll), yet configure detects them as avilable.
@@ -1265,6 +1275,10 @@ if test "x$SSLLIBDIR" != "x" ; then
 fi
 AC_SUBST(SSLLIB)
 
+if test "x$with_openssl" = "xyes"; then
+SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+SQUID_CHECK_OPENSSL_TXTDB
+fi
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -1776,18 +1790,13 @@ AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 
 dnl Select logging daemon helpers to build
-squid_opt_logdaemon_helpers="auto"
 AC_ARG_ENABLE(log-daemon-helpers,
   AS_HELP_STRING([--enable-log-daemon-helpers="list of helpers"],
                  [This option selects which logging daemon helpers to 
                   build and install as part of the normal build process
                   For a list of available helpers see the helpers/log_daemon
                   directory.]),[
-case "$enableval" in
-  yes) : ;;
-  no)  squid_opt_logdaemon_helpers="" ;;
-  *)   squid_opt_logdaemon_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
-  esac
+#nothing to do, really
 ])
 m4_include([helpers/log_daemon/modules.m4])
 

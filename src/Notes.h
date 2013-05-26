@@ -122,7 +122,7 @@ public:
         MEMPROXY_CLASS(Entry);
     };
 
-    NotePairs() {}
+    ~NotePairs();
 
     /**
      * Append the entries of the src NotePairs list to our list.
@@ -174,5 +174,11 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(NotePairs::Entry);
+
+class AccessLogEntry;
+/**
+ * Keep in sync HttpRequest and the corresponding AccessLogEntry objects
+ */
+NotePairs &SyncNotes(AccessLogEntry &ale, HttpRequest &request);
 
 #endif
