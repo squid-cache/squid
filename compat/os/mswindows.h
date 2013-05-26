@@ -461,6 +461,9 @@ index(const char *s, int c)
     return (char *)strchr(s,c);
 }
 
+// stdlib <functional> definitions are required before std API redefinitions.
+#include <functional>
+
 /** \cond AUTODOCS-IGNORE */
 namespace Squid
 {

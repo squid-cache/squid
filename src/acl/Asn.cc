@@ -636,8 +636,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
 
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
-        /* XXX FIXME: allow accessing the acl name here */
-        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");
+        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->request->GetHost() << "'");
         if (checklist->goAsync(DestinationIPLookup::Instance()))
             return -1;
         // else fall through to noaddr match, hiding the lookup failure (XXX)

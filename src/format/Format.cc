@@ -629,7 +629,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ICAP_REQ_HEADER_ELEM:
-            if (al->request)
+            if (al->icap.request)
                 sb = al->icap.request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.termedBuf();
@@ -1049,21 +1049,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_NOTE:
             if (fmt->data.string) {
 #if USE_ADAPTATION
-                Adaptation::History::Pointer ah = al->request->adaptHistory();
+                Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL) {
                     if (const char *meta = ah->metaHeaders->find(fmt->data.string))
                         sb.append(meta);
                 }
 #endif
-                if (al->helperNotes != NULL) {
-                    if (const char *note = al->helperNotes->find(fmt->data.string)) {
-                        if (sb.size())
-                            sb.append(", ");
-                        sb.append(note);
-                    }
-                }
-                if (al->configNotes != NULL) {
-                    if (const char *note = al->configNotes->find(fmt->data.string)) {
+                if (al->notes != NULL) {
+                    if (const char *note = al->notes->find(fmt->data.string)) {
                         if (sb.size())
                             sb.append(", ");
                         sb.append(note);
@@ -1073,14 +1066,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 quote = 1;
             } else {
 #if USE_ADAPTATION
-                Adaptation::History::Pointer ah = al->request->adaptHistory();
+                Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
                     sb.append(ah->metaHeaders->toString());
 #endif
-                if (al->helperNotes != NULL && !al->helperNotes->empty())
-                    sb.append(al->helperNotes->toString());
-                if (al->configNotes != NULL && !al->configNotes->empty())
-                    sb.append(al->configNotes->toString());
+                if (al->notes != NULL && !al->notes->empty())
+                    sb.append(al->notes->toString());
+
                 out = sb.termedBuf();
                 quote = 1;
             }

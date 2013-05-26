@@ -685,13 +685,15 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-    /*Add meta headers*/
+    /*Add notes*/
+    // The al->notes and request->notes must point to the same object.
+    // Enable the following assertion to check for possible bugs.
+    // assert(request->notes == al->notes);
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
         if (const char *value = (*i)->match(request, al->reply)) {
-            if (al->configNotes == NULL)
-                al->configNotes = new NotePairs;
-            al->configNotes->add((*i)->key.termedBuf(), value);
+            NotePairs &notes = SyncNotes(*al, *request);
+            notes.add((*i)->key.termedBuf(), value);
             debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
         }
     }
