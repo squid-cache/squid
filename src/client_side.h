@@ -178,7 +178,7 @@ class ServerBump;
 /**
  * Manages a connection to a client.
  *
- * Multiple requests (up to 2) can be pipelined. This object is responsible for managing
+ * Multiple requests (up to pipeline_prefetch) can be pipelined. This object is responsible for managing
  * which one is currently being fulfilled and what happens to the queue if the current one
  * causes the client connection to be closed early.
  *
@@ -392,6 +392,7 @@ private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
+    bool concurrentRequestQueueFilled() const;
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection

@@ -179,6 +179,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format code <em>%note</em> to log a transaction annotation linked to the
 	   transaction by ICAP, eCAP, a helper, or the <em>note</em> squid.conf directive.
 
+	<tag>pipeline_prefetch</tag>
+	<p>Updated to take a numeric count of prefetched pipeline requests instead of ON/OFF.
+
 	<tag>unlinkd_program</tag>
 	<p>New helper response format utilizing result codes <em>OK</em> and <em>BH</em>,
 	   to signal helper lookup results. Also, key-value response values to return
