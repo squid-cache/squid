@@ -971,7 +971,7 @@ configDoConfigure(void)
      */
     if (Config.pipeline_max_prefetch > 0 && !Config.onoff.client_pconns) {
         debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: pipeline_prefetch " << Config.pipeline_max_prefetch <<
-                   " requires client_persistent_connections ON. Forced pipeline_prefetch 0.");
+               " requires client_persistent_connections ON. Forced pipeline_prefetch 0.");
         Config.pipeline_max_prefetch = 0;
     }
 
