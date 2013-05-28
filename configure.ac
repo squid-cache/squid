@@ -1583,6 +1583,9 @@ case "$withval" in
 esac
 ])
 
+#hack. Let's early-detect sizeof(long)
+AC_CHECK_SIZEOF(long)
+
 if test "x$squid_opt_enable_large_files" = "xyes" -a "x$buildmodel" = "x"; then
   for model in POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG; do
     if test "`getconf _$model 2>/dev/null || true`" = 1 || test "`getconf $model 2>/dev/null || true`" ; then
@@ -1595,7 +1598,8 @@ if test "x$squid_opt_enable_large_files" = "xyes" -a "x$buildmodel" = "x"; then
   fi
 fi
 if test "x$buildmodel" = "xdefault" -o "x$buildmodel" = "x"; then
-  if test "x$squid_opt_enable_large_files" = "xyes" ; then
+  # define _FILE_OFFSET_BITS if requested and needed
+  if test "x$squid_opt_enable_large_files" = "xyes" -a $ac_cv_sizeof_long -le 4 ; then
     AC_MSG_NOTICE([Enabling -D_FILE_OFFSET_BITS=64])
     CFLAGS="-D_FILE_OFFSET_BITS=64 $CFLAGS"
     CXXFLAGS="-D_FILE_OFFSET_BITS=64 $CXXFLAGS"
