@@ -401,7 +401,6 @@ ACL::~ACL()
     AclMatchedName = NULL; // in case it was pointing to our name
 }
 
-
 ACL::Prototype::Prototype() : prototype (NULL), typeString (NULL) {}
 
 ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype (aPrototype), typeString (aType)

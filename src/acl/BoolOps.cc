@@ -4,7 +4,6 @@
 #include "Debug.h"
 #include "wordlist.h"
 
-
 /* Acl::NotNode */
 
 Acl::NotNode::NotNode(ACL *acl)
@@ -20,7 +19,7 @@ Acl::NotNode::parse()
 {
     // Not implemented: by the time an upper level parser discovers
     // an '!' operator, there is nothing left for us to parse.
-    assert(false);    
+    assert(false);
 }
 
 int
@@ -61,7 +60,6 @@ Acl::NotNode::dump() const
     return text;
 }
 
-
 /* Acl::AndNode */
 
 char const *
@@ -93,9 +91,8 @@ void
 Acl::AndNode::parse()
 {
     // Not implemented: AndNode cannot be configured directly. See Acl::AllOf.
-    assert(false);    
+    assert(false);
 }
-
 
 /* Acl::OrNode */
 

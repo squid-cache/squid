@@ -3,7 +3,8 @@
 
 #include "acl/BoolOps.h"
 
-namespace Acl {
+namespace Acl
+{
 
 /// An ORed set of rules at the top of the ACL expression tree, providing two
 /// unique properties: cbdata protection and optional rule actions.
@@ -37,7 +38,6 @@ private:
     // refcounted as well. Otherwise, async lookups will reach deleted ACLs.
     CBDATA_CLASS2(Tree);
 };
-
 
 } // namespace Acl
 

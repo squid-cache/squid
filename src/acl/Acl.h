@@ -89,10 +89,9 @@ public:
     static const ACLFlag NoFlags[1]; ///< An empty flags list
 };
 
-
 /// A configurable condition. A node in the ACL expression tree.
 /// Can evaluate itself in FilledChecklist context.
-/// Does not change during evaluation. 
+/// Does not change during evaluation.
 /// \ingroup ACLAPI
 class ACL
 {

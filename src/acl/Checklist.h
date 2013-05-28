@@ -157,7 +157,7 @@ public:
     /// Otherwise, returns false; the caller is expected to handle the failure.
     bool goAsync(AsyncState *);
 
-    /// Matches (or resumes matching of) a child node while maintaning 
+    /// Matches (or resumes matching of) a child node while maintaning
     /// resumption breadcrumbs if a [grand]child node goes async.
     bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const ACL *child);
 
@@ -201,7 +201,8 @@ public:
 
 private: /* internal methods */
     /// Position of a child node within an ACL tree.
-    class Breadcrumb {
+    class Breadcrumb
+    {
     public:
         Breadcrumb(): parent(NULL) {}
         Breadcrumb(const Acl::InnerNode *aParent, Acl::Nodes::const_iterator aPos): parent(aParent), position(aPos) {}
