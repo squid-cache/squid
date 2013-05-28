@@ -23,7 +23,8 @@ class Tree;
 
 #define ACL_NAME_SZ 64
 
-// XXX: remove after review and before commit, after renaming all users?
+// TODO: Consider renaming all users and removing. Cons: hides the difference
+// between ACLList tree without actions and acl_access Tree with actions.
 #define acl_access Acl::Tree
 #define ACLList Acl::Tree
 

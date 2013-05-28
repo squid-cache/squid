@@ -20,7 +20,7 @@ ACLChecklist::prepNonBlocking()
     }
 
     /** \par
-     * If the _acl_access is no longer valid (i.e. its been
+     * If the accessList is no longer valid (i.e. its been
      * freed because of a reconfigure), then bail with ACCESS_DUNNO.
      */
 
@@ -293,7 +293,7 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
     assert(!accessList);
     accessList = list;
 
-    // assume DENY/ALLOW on mis/matches due to not having acl_access object
+    // assume DENY/ALLOW on mis/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
     cbdataReference(accessList); // required for cbdataReferenceValid()
     if (accessList && cbdataReferenceValid(accessList))
@@ -340,24 +340,22 @@ ACLChecklist::fastCheck()
     return currentAnswer();
 }
 
-/// When no rules matched, the answer is the inversion of the last seen rule
-/// action (or ACCESS_DUNNO if the reversal is not possible). The caller
-/// should set lastSeenAction to ACCESS_DUNNO if there were no rules to see.
+/// When no rules matched, the answer is the inversion of the last rule
+/// action (or ACCESS_DUNNO if the reversal is not possible).
 void
 ACLChecklist::calcImplicitAnswer()
 {
-    // XXX: rename lastSeenAction after review and before commit
-    const allow_t lastSeenAction = (accessList && cbdataReferenceValid(accessList)) ?
-                                   accessList->lastAction() : allow_t(ACCESS_DUNNO);
+    const allow_t lastAction = (accessList && cbdataReferenceValid(accessList)) ?
+                               accessList->lastAction() : allow_t(ACCESS_DUNNO);
     allow_t implicitRuleAnswer = ACCESS_DUNNO;
-    if (lastSeenAction == ACCESS_DENIED) // reverse last seen "deny"
+    if (lastAction == ACCESS_DENIED) // reverse last seen "deny"
         implicitRuleAnswer = ACCESS_ALLOWED;
-    else if (lastSeenAction == ACCESS_ALLOWED) // reverse last seen "allow"
+    else if (lastAction == ACCESS_ALLOWED) // reverse last seen "allow"
         implicitRuleAnswer = ACCESS_DENIED;
     // else we saw no rules and will respond with ACCESS_DUNNO
 
     debugs(28, 3, HERE << this << " NO match found, last action " <<
-           lastSeenAction << " so returning " << implicitRuleAnswer);
+           lastAction << " so returning " << implicitRuleAnswer);
     markFinished(implicitRuleAnswer, "implicit rule won");
 }
 
