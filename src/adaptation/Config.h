@@ -3,7 +3,6 @@
 
 #include "event.h"
 #include "acl/forward.h"
-#include "acl/Gadgets.h"
 #include "base/AsyncCall.h"
 #include "adaptation/forward.h"
 #include "adaptation/Elements.h"
