@@ -5,7 +5,8 @@
     does not get linked in, because nobody is using these classes by name.
 */
 
-#include "acl/Acl.h"
+#include "acl/AllOf.h"
+#include "acl/AnyOf.h"
 #if USE_SQUID_EUI
 #include "acl/Arp.h"
 #include "acl/Eui64.h"
@@ -183,6 +184,12 @@ ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
 
 ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
 ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
+
+ACL::Prototype Acl::AnyOf::RegistryProtoype(&Acl::AnyOf::RegistryEntry_, "any-of");
+Acl::AnyOf Acl::AnyOf::RegistryEntry_;
+
+ACL::Prototype Acl::AllOf::RegistryProtoype(&Acl::AllOf::RegistryEntry_, "all-of");
+Acl::AllOf Acl::AllOf::RegistryEntry_;
 
 ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
 ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
