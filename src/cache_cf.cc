@@ -38,6 +38,7 @@
 #include "acl/AclSizeLimit.h"
 #include "acl/Gadgets.h"
 #include "acl/MethodData.h"
+#include "acl/Tree.h"
 #include "anyp/PortCfg.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
@@ -1292,11 +1293,15 @@ parseBytesUnits(const char *unit)
  *****************************************************************************/
 
 static void
+dump_wordlist(StoreEntry * entry, wordlist *words)
+{
+    for (wordlist *word = words; word; word = words->next)
+        storeAppendPrintf(entry, "%s ", word->key);
+}
+
+static void
 dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
-    wordlist *w;
-    wordlist *v;
-
     while (ae != NULL) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
         storeAppendPrintf(entry, "%s %s %s %s ",
@@ -1304,13 +1309,8 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
                           ae->name,
                           ae->typeString(),
                           ae->flags.flagsStr());
-        v = w = ae->dump();
-
-        while (v != NULL) {
-            debugs(3, 3, "dump_acl: " << name << " " << ae->name << " " << v->key);
-            storeAppendPrintf(entry, "%s ", v->key);
-            v = v->next;
-        }
+        wordlist *w = ae->dump();
+        dump_wordlist(entry, w);
 
         storeAppendPrintf(entry, "\n");
         wordlistDestroy(&w);
@@ -1333,33 +1333,29 @@ free_acl(ACL ** ae)
 void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
-    ACLList *l;
-
-    for (l = head; l; l = l->next) {
-        storeAppendPrintf(entry, " %s%s",
-                          l->op ? null_string : "!",
-                          l->_acl->name);
-    }
+    wordlist *values = head->dump();
+    dump_wordlist(entry, values);
+    wordlistDestroy(&values);
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
-    acl_access *l;
-
-    for (l = head; l; l = l->next) {
-        storeAppendPrintf(entry, "%s %s",
-                          name,
-                          l->allow ? "Allow" : "Deny");
-        dump_acl_list(entry, l->aclList);
-        storeAppendPrintf(entry, "\n");
-    }
+    wordlist *lines = head->treeDump(name, NULL);
+    dump_wordlist(entry, lines);
+    wordlistDestroy(&lines);
 }
 
 static void
 parse_acl_access(acl_access ** head)
 {
-    aclParseAccessLine(LegacyParser, head);
+    aclParseAccessLine(cfg_directive, LegacyParser, head);
+}
+
+static void
+parse_acl_access(const char *directive, acl_access ** head)
+{
+    aclParseAccessLine(directive, LegacyParser, head);
 }
 
 static void
@@ -1436,7 +1432,7 @@ parse_acl_address(AclAddress ** head)
     CBDATA_INIT_TYPE_FREECB(AclAddress, freed_acl_address);
     l = cbdataAlloc(AclAddress);
     parse_address(&l->addr);
-    aclParseAclList(LegacyParser, &l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList, l->addr);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -1504,7 +1500,7 @@ parse_acl_tos(acl_tos ** head)
 
     l->tos = (tos_t)tos;
 
-    aclParseAclList(LegacyParser, &l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList, token);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -1575,7 +1571,7 @@ parse_acl_nfmark(acl_nfmark ** head)
 
     l->nfmark = mark;
 
-    aclParseAclList(LegacyParser, &l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList, token);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -1633,7 +1629,7 @@ parse_acl_b_size_t(AclSizeLimit ** head)
 
     parse_b_int64_t(&l->size);
 
-    aclParseAclList(LegacyParser, &l->aclList);
+    aclParseAclList(LegacyParser, &l->aclList, l->size);
 
     while (*tail)
         tail = &(*tail)->next;
@@ -1770,7 +1766,10 @@ parse_http_header_access(HeaderManglers **pm)
     HeaderManglers *manglers = *pm;
     headerMangler *mangler = manglers->track(t);
     assert(mangler);
-    parse_acl_access(&mangler->access_list);
+
+    std::string directive = "http_header_access ";
+    directive += t;
+    parse_acl_access(directive.c_str(), &mangler->access_list);
 }
 
 static void
@@ -2537,7 +2536,9 @@ parse_peer_access(void)
         return;
     }
 
-    aclParseAccessLine(LegacyParser, &p->access);
+    std::string directive = "peer_access ";
+    directive += host;
+    aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
 }
 
 static void
@@ -4093,7 +4094,7 @@ parse_access_log(CustomLog ** logs)
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
-        aclParseAclList(LegacyParser, &cl->aclList);
+        aclParseAclList(LegacyParser, &cl->aclList, filename);
         while (*logs)
             logs = &(*logs)->next;
         *logs = cl;
@@ -4142,7 +4143,7 @@ parse_access_log(CustomLog ** logs)
     if (cl->type == Log::Format::CLF_UNKNOWN)
         setLogformat(cl, "squid", true);
 
-    aclParseAclList(LegacyParser, &cl->aclList);
+    aclParseAclList(LegacyParser, &cl->aclList, cl->filename);
 
     while (*logs)
         logs = &(*logs)->next;
@@ -4544,7 +4545,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         return;
     }
 
-    aclParseAclList(LegacyParser, &ca->aclList);
+    aclParseAclList(LegacyParser, &ca->aclList, al);
 
     while (*cert_adapt)
         cert_adapt = &(*cert_adapt)->next;
@@ -4598,7 +4599,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         return;
     }
 
-    aclParseAclList(LegacyParser, &cs->aclList);
+    aclParseAclList(LegacyParser, &cs->aclList, al);
 
     while (*cert_sign)
         cert_sign = &(*cert_sign)->next;
@@ -4684,31 +4685,30 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
     }
 
-    acl_access *A = new acl_access;
-    A->allow = allow_t(ACCESS_ALLOWED);
+    allow_t action = allow_t(ACCESS_ALLOWED);
 
     if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpClientFirst]) == 0) {
-        A->allow.kind = Ssl::bumpClientFirst;
+        action.kind = Ssl::bumpClientFirst;
         bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpServerFirst]) == 0) {
-        A->allow.kind = Ssl::bumpServerFirst;
+        action.kind = Ssl::bumpServerFirst;
         bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpNone]) == 0) {
-        A->allow.kind = Ssl::bumpNone;
+        action.kind = Ssl::bumpNone;
         bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, "allow") == 0) {
         debugs(3, DBG_CRITICAL, "SECURITY NOTICE: auto-converting deprecated "
                "\"ssl_bump allow <acl>\" to \"ssl_bump client-first <acl>\" which "
                "is usually inferior to the newer server-first "
                "bumping mode. Update your ssl_bump rules.");
-        A->allow.kind = Ssl::bumpClientFirst;
+        action.kind = Ssl::bumpClientFirst;
         bumpCfgStyleNow = bcsOld;
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpClientFirst;
     } else if (strcmp(bm, "deny") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: auto-converting deprecated "
                "\"ssl_bump deny <acl>\" to \"ssl_bump none <acl>\". Update "
                "your ssl_bump rules.");
-        A->allow.kind = Ssl::bumpNone;
+        action.kind = Ssl::bumpNone;
         bumpCfgStyleNow = bcsOld;
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpNone;
     } else {
@@ -4726,22 +4726,26 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 
     bumpCfgStyleLast = bumpCfgStyleNow;
 
-    aclParseAclList(LegacyParser, &A->aclList);
+    ACL *rule = new Acl::AndNode;
+    rule->parse();
+    // empty rule OK
+    rule->context("(ssl_bump rule)", config_input_line);
 
-    acl_access *B, **T;
-    for (B = *ssl_bump, T = ssl_bump; B; T = &B->next, B = B->next);
-    *T = A;
+    assert(ssl_bump);
+    if (!*ssl_bump) {
+        *ssl_bump = new Acl::Tree;
+        (*ssl_bump)->context("(ssl_bump rules)", config_input_line);
+    }
+
+    (*ssl_bump)->add(rule, action);
 }
 
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
-    acl_access *sb;
-    for (sb = ssl_bump; sb != NULL; sb = sb->next) {
-        storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s ", Ssl::bumpMode(sb->allow.kind));
-        if (sb->aclList)
-            dump_acl_list(entry, sb->aclList);
-        storeAppendPrintf(entry, "\n");
+    if (ssl_bump) {
+        wordlist *lines = ssl_bump->treeDump(name, Ssl::BumpModeStr);
+        dump_wordlist(entry, lines);
+        wordlistDestroy(&lines);
     }
 }
 
@@ -4795,7 +4799,8 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
         }
         hwa.valueFormat = nlf;
     }
-    aclParseAclList(LegacyParser, &hwa.aclList);
+
+    aclParseAclList(LegacyParser, &hwa.aclList, (hwa.fieldName + ':' + hwa.fieldValue).c_str());
     (*headers)->push_back(hwa);
 }
 
