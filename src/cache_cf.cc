@@ -123,6 +123,9 @@
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
+#if HAVE_SSTREAM
+#include <sstream>
+#endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
