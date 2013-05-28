@@ -329,7 +329,6 @@ public:
 
         int ie_refresh;
         int vary_ignore_expire;
-        int pipeline_prefetch;
         int surrogate_is_remote;
         int request_entities;
         int detect_broken_server_pconns;
@@ -357,6 +356,8 @@ public:
         int hostStrictVerify;
         int client_dst_passthru;
     } onoff;
+
+    int pipeline_max_prefetch;
 
     int forward_max_tries;
     int connect_retries;

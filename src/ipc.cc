@@ -36,6 +36,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
+#include "ipc/Kid.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "tools.h"
@@ -310,6 +311,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     /* child */
+    TheProcessKind = pkHelper;
     no_suid();			/* give up extra priviliges */
 
     /* close shared socket with parent */

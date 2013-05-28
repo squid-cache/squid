@@ -2946,17 +2946,28 @@ connStripBufferWhitespace (ConnStateData * conn)
     }
 }
 
-static int
-connOkToAddRequest(ConnStateData * conn)
+/**
+ * Limit the number of concurrent requests.
+ * \return true  when there are available position(s) in the pipeline queue for another request.
+ * \return false when the pipeline queue is full or disabled.
+ */
+bool
+ConnStateData::concurrentRequestQueueFilled() const
 {
-    int result = conn->getConcurrentRequestCount() < (Config.onoff.pipeline_prefetch ? 2 : 1);
+    const int existingRequestCount = getConcurrentRequestCount();
 
-    if (!result) {
-        debugs(33, 3, HERE << conn->clientConnection << " max concurrent requests reached");
-        debugs(33, 5, HERE << conn->clientConnection << " defering new request until one is done");
+    // default to the configured pipeline size.
+    // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
+    const int concurrentRequestLimit = Config.pipeline_max_prefetch + 1;
+
+    // when queue filled already we cant add more.
+    if (existingRequestCount >= concurrentRequestLimit) {
+        debugs(33, 3, clientConnection << " max concurrent requests reached (" << concurrentRequestLimit << ")");
+        debugs(33, 5, clientConnection << " deferring new request until one is done");
+        return true;
     }
 
-    return result;
+    return false;
 }
 
 /**
@@ -2981,10 +2992,9 @@ ConnStateData::clientParseRequests()
         if (in.notYetUsed == 0)
             break;
 
-        /* Limit the number of concurrent requests to 2 */
-        if (!connOkToAddRequest(this)) {
+        /* Limit the number of concurrent requests */
+        if (concurrentRequestQueueFilled())
             break;
-        }
 
         /* Should not be needed anymore */
         /* Terminate the string */
