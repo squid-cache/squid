@@ -3,7 +3,8 @@
 
 #include "acl/InnerNode.h"
 
-namespace Acl {
+namespace Acl
+{
 
 /// Configurable all-of ACL. Each ACL line is a conjuction of ACLs.
 /// Uses AndNode and OrNode to handle squid.conf configuration where multiple

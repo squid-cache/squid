@@ -11,9 +11,9 @@
 #include "wordlist.h"
 #include <algorithm>
 
-
 // "delete acl" class to use with std::for_each() in InnerNode::~InnerNode()
-class AclDeleter {
+class AclDeleter
+{
 public:
     void operator()(ACL* acl) {
         // Do not delete explicit ACLs; they are maintained by Config.aclList.
@@ -21,7 +21,6 @@ public:
             delete acl;
     }
 };
-
 
 Acl::InnerNode::~InnerNode()
 {

@@ -25,7 +25,8 @@ void aclParseAclList(ConfigParser &parser, Acl::Tree **, const char *label);
 /// Template to convert various context lables to strings. \ingroup ACLAPI
 template <class Any>
 inline
-void aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any) {
+void aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
+{
     std::ostringstream buf;
     buf << any;
     aclParseAclList(parser, tree, buf.str().c_str());
