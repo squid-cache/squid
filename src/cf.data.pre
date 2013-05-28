@@ -8733,16 +8733,22 @@ DOC_START
 DOC_END
 
 NAME: pipeline_prefetch
-TYPE: onoff
-LOC: Config.onoff.pipeline_prefetch
-DEFAULT: off
+TYPE: pipelinePrefetch
+LOC: Config.pipeline_max_prefetch
+DEFAULT: 0
+DEFAULT_DOC: Do not pre-parse pipelined requests.
 DOC_START
-	To boost the performance of pipelined requests to closer
-	match that of a non-proxied environment Squid can try to fetch
-	up to two requests in parallel from a pipeline.
+	HTTP clients may send a pipeline of 1+N requests to Squid using a
+	single connection, without waiting for Squid to respond to the first
+	of those requests. This option limits the number of concurrent
+	requests Squid will try to handle in parallel. If set to N, Squid
+	will try to receive and process up to 1+N requests on the same
+	connection concurrently.
 
-	Defaults to off for bandwidth management and access logging
+	Defaults to 0 (off) for bandwidth management and access logging
 	reasons.
+
+	NOTE: pipelining requires persistent connections to clients.
 
 	WARNING: pipelining breaks NTLM and Negotiate/Kerberos authentication.
 DOC_END

@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "compat/strtoll.h"
+#include "ConfigParser.h"
 #include "Parsing.h"
 #include "globals.h"
 #include "Debug.h"
@@ -161,7 +162,7 @@ GetInteger64(void)
 int
 GetInteger(void)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::strtokFile();
     int i;
 
     if (token == NULL)
