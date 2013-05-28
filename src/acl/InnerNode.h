@@ -4,7 +4,8 @@
 #include "acl/Acl.h"
 #include <vector>
 
-namespace Acl {
+namespace Acl
+{
 
 typedef std::vector<ACL*> Nodes; ///< a collection of nodes
 

@@ -4,7 +4,6 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Acl, Tree);
 
-
 allow_t
 Acl::Tree::winningAction() const
 {
@@ -61,7 +60,7 @@ Acl::Tree::treeDump(const char *prefix, const ActionToString &convert) const
 
         if (action != actions.end()) {
             const char *act = convert ? convert[action->kind] :
-                (*action == ACCESS_ALLOWED ? "allow" : "deny");
+                              (*action == ACCESS_ALLOWED ? "allow" : "deny");
             wordlistAdd(&text, act ? act : "???");
             ++action;
         }

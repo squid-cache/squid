@@ -19,31 +19,31 @@ ACLChecklist::prepNonBlocking()
         return false;
     }
 
-        /** \par
-         * If the _acl_access is no longer valid (i.e. its been
-         * freed because of a reconfigure), then bail with ACCESS_DUNNO.
-         */
+    /** \par
+     * If the _acl_access is no longer valid (i.e. its been
+     * freed because of a reconfigure), then bail with ACCESS_DUNNO.
+     */
 
-        if (!cbdataReferenceValid(accessList)) {
-            cbdataReferenceDone(accessList);
-            debugs(28, 4, "ACLChecklist::check: " << this << " accessList is invalid");
-            checkCallback(ACCESS_DUNNO);
-            return false;
-        }
+    if (!cbdataReferenceValid(accessList)) {
+        cbdataReferenceDone(accessList);
+        debugs(28, 4, "ACLChecklist::check: " << this << " accessList is invalid");
+        checkCallback(ACCESS_DUNNO);
+        return false;
+    }
 
-        // If doNonBlocking() was called for a finished() checklist to call
-        // the callbacks, then do not try to match again. XXX: resumeNonBlockingCheck() should check for this instead.
-        if (!finished())
-            return true;
+    // If doNonBlocking() was called for a finished() checklist to call
+    // the callbacks, then do not try to match again. XXX: resumeNonBlockingCheck() should check for this instead.
+    if (!finished())
+        return true;
 
-            /** \par
-             * Either the request is allowed, denied, requires authentication.
-             */
-            debugs(28, 3, this << " calling back with " << currentAnswer());
-            cbdataReferenceDone(accessList); /* A */
-            checkCallback(currentAnswer());
-            /* From here on in, this may be invalid */
-            return false;
+    /** \par
+     * Either the request is allowed, denied, requires authentication.
+     */
+    debugs(28, 3, this << " calling back with " << currentAnswer());
+    cbdataReferenceDone(accessList); /* A */
+    checkCallback(currentAnswer());
+    /* From here on in, this may be invalid */
+    return false;
 }
 
 void
@@ -139,7 +139,7 @@ ACLChecklist::goAsync(AsyncState *state)
         asyncStage_ = asyncNone; // sanity restored
         return false;
     }
- 
+
     // yes, we must pause until the async callback calls resumeNonBlockingCheck
     asyncStage_ = asyncRunning;
     return true;
@@ -275,7 +275,8 @@ ACLChecklist::resumeNonBlockingCheck(AsyncState *state)
 
 /// performs (or resumes) an ACL tree match and, if successful, sets the action
 void
-ACLChecklist::matchAndFinish() {
+ACLChecklist::matchAndFinish()
+{
     bool result = false;
     if (matchPath.empty()) {
         result = accessList->matches(this);
@@ -284,7 +285,7 @@ ACLChecklist::matchAndFinish() {
         matchPath.pop();
         result = top.parent->resumeMatchingAt(this, top.position);
     }
-    
+
     if (result) // the entire tree matched
         markFinished(accessList->winningAction(), "match");
 }
@@ -358,7 +359,7 @@ ACLChecklist::calcImplicitAnswer()
 {
     // XXX: rename lastSeenAction after review and before commit
     const allow_t lastSeenAction = (accessList && cbdataReferenceValid(accessList)) ?
-        accessList->lastAction() : allow_t(ACCESS_DUNNO);
+                                   accessList->lastAction() : allow_t(ACCESS_DUNNO);
     allow_t implicitRuleAnswer = ACCESS_DUNNO;
     if (lastSeenAction == ACCESS_DENIED) // reverse last seen "deny"
         implicitRuleAnswer = ACCESS_ALLOWED;

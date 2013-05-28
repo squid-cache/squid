@@ -10,8 +10,8 @@ class AclAddress;
 class AclDenyInfoList;
 class AclSizeLimit;
 
-
-namespace Acl {
+namespace Acl
+{
 
 class InnerNode;
 class NotNode;

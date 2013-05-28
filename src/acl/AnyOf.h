@@ -3,7 +3,8 @@
 
 #include "acl/BoolOps.h"
 
-namespace Acl {
+namespace Acl
+{
 
 /// Configurable any-of ACL. Each ACL line is a disjuction of ACLs.
 class AnyOf: public Acl::OrNode

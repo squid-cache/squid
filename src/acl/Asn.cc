@@ -641,9 +641,9 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
             return -1;
         // else fall through to noaddr match, hiding the lookup failure (XXX)
     }
-        Ip::Address noaddr;
-        noaddr.SetNoAddr();
-        return data->match(noaddr);
+    Ip::Address noaddr;
+    noaddr.SetNoAddr();
+    return data->match(noaddr);
 }
 
 ACLDestinationASNStrategy *
