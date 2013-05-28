@@ -34,6 +34,9 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc .
 
+stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc
+	cp $(top_srcdir)/src/tests/stub_fd.cc .
+
 time.cc: $(top_srcdir)/src/time.cc
 	cp $(top_srcdir)/src/time.cc .
 
@@ -42,7 +45,7 @@ time.cc: $(top_srcdir)/src/time.cc
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc stub_debug.cc time.cc
+CLEANFILES += test_tools.cc stub_debug.cc stub_fd.cc time.cc
 
 ## ##### helper-mux #####
 
@@ -58,6 +61,7 @@ bin_PROGRAMS = squidclient
 
 squidclient_SOURCES = squidclient.cc \
 	stub_debug.cc \
+	stub_fd.cc \
 	test_tools.cc \
 	time.cc
 
