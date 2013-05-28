@@ -1,6 +1,7 @@
 #ifndef SQUID_QOSCONFIG_H
 #define SQUID_QOSCONFIG_H
 
+#include "acl/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 
@@ -16,7 +17,6 @@
 #include <limits>
 #endif
 
-class ACLList;
 class fde;
 
 // TODO: move to new ACL framework

@@ -1,6 +1,7 @@
 #ifndef SQUID_NOTES_H
 #define SQUID_NOTES_H
 
+#include "acl/forward.h"
 #include "base/Vector.h"
 #include "base/RefCount.h"
 #include "CbDataList.h"
@@ -14,7 +15,6 @@
 
 class HttpRequest;
 class HttpReply;
-class ACLList;
 
 /**
  * Used to store a note configuration. The notes are custom key:value

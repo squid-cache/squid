@@ -2,6 +2,7 @@
 #define SQUID_ACLFILLED_CHECKLIST_H
 
 #include "acl/Checklist.h"
+#include "acl/forward.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"

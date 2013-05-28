@@ -36,10 +36,9 @@
 
 #include "event.h"
 #include "base/AsyncCall.h"
+#include "acl/forward.h"
 #include "adaptation/Config.h"
 #include "adaptation/icap/ServiceRep.h"
-
-class acl_access;
 
 namespace Adaptation
 {
