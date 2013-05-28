@@ -31,19 +31,7 @@ ACLChecklist::prepNonBlocking()
         return false;
     }
 
-    // If doNonBlocking() was called for a finished() checklist to call
-    // the callbacks, then do not try to match again. XXX: resumeNonBlockingCheck() should check for this instead.
-    if (!finished())
-        return true;
-
-    /** \par
-     * Either the request is allowed, denied, requires authentication.
-     */
-    debugs(28, 3, this << " calling back with " << currentAnswer());
-    cbdataReferenceDone(accessList); /* A */
-    checkCallback(currentAnswer());
-    /* From here on in, this may be invalid */
-    return false;
+    return true;
 }
 
 void
@@ -265,7 +253,8 @@ ACLChecklist::resumeNonBlockingCheck(AsyncState *state)
     if (!prepNonBlocking())
         return; // checkCallback() has been called
 
-    matchAndFinish();
+    if (!finished())
+        matchAndFinish();
 
     if (asyncInProgress())
         assert(!matchPath.empty()); // we have breadcrumbs to resume matching
