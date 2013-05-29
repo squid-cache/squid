@@ -175,11 +175,14 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
             const SlotId sidNext = reserveSlotForWriting(); // throws
             assert(sidNext >= 0);
             writeToDisk(sidNext);
+        } else if (Config.onoff.collapsed_forwarding) {
+            // write partial buffer for all collapsed hit readers to see
+            // XXX: can we check that this is needed w/o stalling readers
+            // that appear right after our check?
+            writeBufToDisk(false);
         }
     }
 
-    // XXX: check that there are workers waiting for data, i.e. readers > 0
-    writeBufToDisk();
 }
 
 /// Buffers incoming data for the current slot.
@@ -242,6 +245,7 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     sidCurrent = sidNext;
 }
 
+/// Write header-less (XXX) or complete buffer to disk.
 void
 Rock::IoState::writeBufToDisk(const bool last)
 {

@@ -748,8 +748,10 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         return;
     }
 
-    // XXX: check that there are workers waiting for data, i.e. readers > 0
-    CollapsedForwarding::NewData(sio);
+    // XXX: can we check that this is needed w/o stalling readers
+    // that appear right after our check?
+    if (Config.onoff.collapsed_forwarding)
+        CollapsedForwarding::NewData(sio);
 
     if (errflag == DISK_OK) {
         // do not increment sio.offset_ because we do it in sio->write()
