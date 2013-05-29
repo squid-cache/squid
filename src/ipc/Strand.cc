@@ -19,6 +19,7 @@
 #include "mgr/Forwarder.h"
 #include "SwapDir.h" /* XXX: scope boundary violation */
 #include "CacheManager.h"
+#include "CollapsedForwarding.h"
 #if USE_DISKIO_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
 #endif
@@ -88,6 +89,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         handleCacheMgrResponse(resp);
     }
     break;
+
+    case mtCollapsedForwardingNotification:
+        CollapsedForwarding::HandleNotification(message);
+        break;
 
 #if SQUID_SNMP
     case mtSnmpRequest: {

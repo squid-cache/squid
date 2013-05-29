@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "CollapsedForwarding.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -746,6 +747,9 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         debugs(79, 3, "ignoring closed entry " << sio.swap_filen);
         return;
     }
+
+    // XXX: check that there are workers waiting for data, i.e. readers > 0
+    CollapsedForwarding::NewData(sio);
 
     if (errflag == DISK_OK) {
         // do not increment sio.offset_ because we do it in sio->write()
