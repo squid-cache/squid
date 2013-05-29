@@ -1353,12 +1353,6 @@ parse_acl_access(acl_access ** head)
 }
 
 static void
-parse_acl_access(const char *directive, acl_access ** head)
-{
-    aclParseAccessLine(directive, LegacyParser, head);
-}
-
-static void
 free_acl_access(acl_access ** head)
 {
     aclDestroyAccessList(head);
@@ -1769,7 +1763,7 @@ parse_http_header_access(HeaderManglers **pm)
 
     std::string directive = "http_header_access ";
     directive += t;
-    parse_acl_access(directive.c_str(), &mangler->access_list);
+    aclParseAccessLine(directive.c_str(), LegacyParser, &mangler->access_list);
 }
 
 static void
