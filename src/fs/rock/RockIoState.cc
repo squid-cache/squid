@@ -177,6 +177,9 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
             writeToDisk(sidNext);
         }
     }
+
+    // XXX: check that there are workers waiting for data, i.e. readers > 0
+    writeBufToDisk();
 }
 
 /// Buffers incoming data for the current slot.
@@ -215,10 +218,6 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     // TODO: if DiskIO module is mmap-based, we should be writing whole pages
     // to avoid triggering read-page;new_head+old_tail;write-page overheads
 
-    const uint64_t diskOffset = dir->diskOffset(sidCurrent);
-    debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
-           theBuf.size);
-
     // finalize map slice
     Ipc::StoreMap::Slice &slice =
         dir->map->writeableSlice(swap_filen, sidCurrent);
@@ -237,6 +236,15 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     // copy finalized db cell header into buffer
     memcpy(theBuf.mem, &header, sizeof(DbCellHeader));
 
+    writeBufToDisk(sidNext < 0);
+    theBuf.clear();
+
+    sidCurrent = sidNext;
+}
+
+void
+Rock::IoState::writeBufToDisk(const bool last)
+{
     // and now allocate another buffer for the WriteRequest so that
     // we can support concurrent WriteRequests (and to ease cleaning)
     // TODO: should we limit the number of outstanding requests?
@@ -244,12 +252,13 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     void *wBuf = memAllocBuf(theBuf.size, &wBufCap);
     memcpy(wBuf, theBuf.mem, theBuf.size);
 
+    const uint64_t diskOffset = dir->diskOffset(sidCurrent);
+    debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
+           theBuf.size);
+
     WriteRequest *const r = new WriteRequest(
         ::WriteRequest(static_cast<char*>(wBuf), diskOffset, theBuf.size,
-            memFreeBufFunc(wBufCap)), this, sidNext < 0);
-    theBuf.clear();
-
-    sidCurrent = sidNext;
+            memFreeBufFunc(wBufCap)), this, last);
 
     // theFile->write may call writeCompleted immediatelly
     theFile->write(r);
