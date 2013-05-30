@@ -2,7 +2,6 @@
 #define _SQUID_SSL_ERRORDETAILMANAGER_H
 
 #include "base/RefCount.h"
-#include "ssl/gadgets.h"
 #include "ssl/support.h"
 #include "SquidString.h"
 
