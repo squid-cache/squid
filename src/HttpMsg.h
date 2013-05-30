@@ -37,7 +37,6 @@
 #include "HttpRequestMethod.h"
 #include "http/StatusCode.h"
 #include "http/ProtocolVersion.h"
-#include "typedefs.h"
 
 /// common parts of HttpRequest and HttpReply
 class HttpMsg : public RefCountable
