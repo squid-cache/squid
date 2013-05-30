@@ -31,12 +31,9 @@
 #define SQUID_CLIENTSIDEREQUEST_H
 
 #include "acl/forward.h"
-#include "HttpHeader.h"
+#include "AccessLogEntry.h"
 #include "clientStream.h"
 #include "client_side.h"
-#include "AccessLogEntry.h"
-#include "dlink.h"
-#include "base/AsyncJob.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
 
