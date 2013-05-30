@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "helpers/defines.h"
-#include "ssl/gadgets.h"
 #include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
 
