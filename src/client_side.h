@@ -33,15 +33,9 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
-#include "base/AsyncJob.h"
-#include "base/RefCount.h"
-#include "BodyPipe.h"
 #include "comm.h"
-#include "CommCalls.h"
-#include "HttpRequest.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
-#include "StoreIOBuffer.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
