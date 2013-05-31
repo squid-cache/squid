@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Loops.h"
+#include "defines.h"
 #include "fd.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
