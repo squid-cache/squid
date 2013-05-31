@@ -628,6 +628,7 @@ main(int argc, char *argv[])
         }
 
         /* Send the HTTP request */
+        fprintf(stderr, "Sending HTTP request ... ");
         bytesWritten = mywrite(conn, msg, strlen(msg));
 
         if (bytesWritten < 0) {
@@ -637,8 +638,10 @@ main(int argc, char *argv[])
             fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
             exit(1);
         }
+        fprintf(stderr, "done.\n");
 
         if (put_file) {
+            fprintf(stderr, "Sending HTTP request payload ... ");
             int x;
             lseek(put_fd, 0, SEEK_SET);
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
@@ -653,6 +656,8 @@ main(int argc, char *argv[])
 
             if (x != 0)
                 fprintf(stderr, "client: ERROR: Cannot send file.\n");
+            else
+                fprintf(stderr, "done.\n");
         }
         /* Read the data */
 
