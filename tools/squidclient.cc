@@ -145,6 +145,13 @@ static struct stat sb;
 int total_bytes = 0;
 int io_timeout = 120;
 
+#if _SQUID_AIX_
+/* Bug 3854: AIX 6.1 tries to link in this fde.h global symbol
+ * despite squidclient not using any of the fd_* code.
+ */
+fde *fde::Table = NULL;
+#endif
+
 #if _SQUID_WINDOWS_
 void
 Win32SockCleanup(void)
