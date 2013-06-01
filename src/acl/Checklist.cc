@@ -291,11 +291,10 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
     // tell whether this Checklist is used by some other concurent call, which
     // is not supported.
     assert(!accessList);
-    accessList = list;
+    accessList = cbdataReference(list);
 
     // assume DENY/ALLOW on mis/matches due to action-free accessList
     // matchAndFinish() takes care of the ALLOW case
-    cbdataReference(accessList); // required for cbdataReferenceValid()
     if (accessList && cbdataReferenceValid(accessList))
         matchAndFinish(); // calls markFinished() on success
     if (!finished())
