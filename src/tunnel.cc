@@ -93,7 +93,7 @@ public:
 
     bool noConnections() const;
     char *url;
-    HttpRequest *request;
+    HttpRequest::Pointer request;
     Comm::ConnectionList serverDestinations;
 
     const char * getHost() const {
@@ -207,7 +207,6 @@ TunnelStateData::~TunnelStateData()
     assert(noConnections());
     xfree(url);
     serverDestinations.clean();
-    HTTPMSGUNLOCK(request);
 }
 
 TunnelStateData::Connection::~Connection()
@@ -553,7 +552,7 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
 
-    if (tunnelState->request && (tunnelState->request->flags.interceptTproxy || tunnelState->request->flags.intercepted))
+    if (tunnelState->request != NULL && (tunnelState->request->flags.interceptTproxy || tunnelState->request->flags.intercepted))
         tunnelStartShoveling(tunnelState); // ssl-bumped connection, be quiet
     else {
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
@@ -593,11 +592,11 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             /* Try another IP of this destination host */
 
             if (Ip::Qos::TheConfig.isAclTosActive()) {
-                tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request);
+                tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request.getRaw());
             }
 
 #if SO_MARK && USE_LIBCAP
-            tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request);
+            tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request.getRaw());
 #endif
 
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
@@ -607,7 +606,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             AsyncJob::Start(cs);
         } else {
             debugs(26, 4, HERE << "terminate with error.");
-            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request);
+            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw());
             *tunnelState->status_ptr = Http::scServiceUnavailable;
             err->xerrno = xerrno;
             // on timeout is this still:    err->xerrno = ETIMEDOUT;
@@ -697,7 +696,6 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
 #endif
     tunnelState->url = xstrdup(url);
     tunnelState->request = request;
-    HTTPMSGLOCK(tunnelState->request);
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = http->getConn()->clientConnection;
@@ -729,7 +727,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     MemBuf mb;
     mb.init();
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
-    HttpStateData::httpBuildRequestHeader(tunnelState->request,
+    HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(),
                                           NULL,			/* StoreEntry */
                                           NULL,			/* AccessLogEntry */
                                           &hdr_out,
@@ -757,7 +755,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     if (peer_paths == NULL || peer_paths->size() < 1) {
         debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
         if (!err) {
-            err = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, tunnelState->request);
+            err = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, tunnelState->request.getRaw());
         }
         *tunnelState->status_ptr = err->httpStatus;
         err->callback = tunnelErrorComplete;
@@ -768,11 +766,11 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     delete err;
 
     if (Ip::Qos::TheConfig.isAclTosActive()) {
-        tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request);
+        tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request.getRaw());
     }
 
 #if SO_MARK && USE_LIBCAP
-    tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request);
+    tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request.getRaw());
 #endif
 
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
