@@ -301,7 +301,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
     }
 
     if (*cur == '0') {
-        zero = false;
+        zero = true;
         ++cur;
     }
 

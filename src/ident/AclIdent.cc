@@ -89,14 +89,18 @@ ACLIdent::match(ACLChecklist *cl)
     } else if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && checklist->conn()->clientConnection->rfc931[0]) {
         return data->match(checklist->conn()->clientConnection->rfc931);
     } else if (checklist->conn() != NULL && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
-        debugs(28, 3, HERE << "switching to ident lookup state");
-        checklist->changeState(IdentLookup::Instance());
-        return 0;
+        if (checklist->goAsync(IdentLookup::Instance())) {
+            debugs(28, 3, "switching to ident lookup state");
+            return -1;
+        }
+        // else fall through to ACCESS_DUNNO failure below
     } else {
         debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
-        checklist->markFinished(ACCESS_DUNNO, "cannot start ident lookup");
-        return -1;
+        // fall through to ACCESS_DUNNO failure below
     }
+
+    checklist->markFinished(ACCESS_DUNNO, "cannot start ident lookup");
+    return -1;
 }
 
 wordlist *
@@ -133,7 +137,6 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
     // check that ACLIdent::match() tested this lookup precondition
     assert(conn && Comm::IsConnOpen(conn->clientConnection));
     debugs(28, 3, HERE << "Doing ident lookup" );
-    checklist->asyncInProgress(true);
     Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
 }
 
@@ -141,7 +144,6 @@ void
 IdentLookup::LookupDone(const char *ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
-    assert(checklist->asyncState() == IdentLookup::Instance());
 
     if (ident) {
         xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
@@ -156,9 +158,7 @@ IdentLookup::LookupDone(const char *ident, void *data)
     if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && !checklist->conn()->clientConnection->rfc931[0])
         xstrncpy(checklist->conn()->clientConnection->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
-    checklist->asyncInProgress(false);
-    checklist->changeState(ACLChecklist::NullState::Instance());
-    checklist->matchNonBlocking();
+    checklist->resumeNonBlockingCheck(IdentLookup::Instance());
 }
 
 #endif /* USE_IDENT */

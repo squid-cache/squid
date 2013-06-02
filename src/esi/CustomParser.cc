@@ -32,7 +32,7 @@
  */
 
 #include "squid.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "esi/CustomParser.h"
 #include "Debug.h"
 #include "Trie.h"

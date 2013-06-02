@@ -19,6 +19,7 @@ Comm::Connection::Connection() :
         peerType(HIER_NONE),
         fd(-1),
         tos(0),
+        nfmark(0),
         flags(COMM_NONBLOCKING),
         peer_(NULL)
 {

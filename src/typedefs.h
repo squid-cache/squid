@@ -48,7 +48,6 @@ typedef struct {
 typedef struct _CommWriteStateData CommWriteStateData;
 
 #if SQUID_SNMP
-#include "snmp_vars.h"
 #include "cache_snmp.h"
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 #endif

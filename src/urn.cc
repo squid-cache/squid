@@ -68,8 +68,8 @@ public:
     StoreEntry *entry;
     store_client *sc;
     StoreEntry *urlres_e;
-    HttpRequest *request;
-    HttpRequest *urlres_r;
+    HttpRequest::Pointer request;
+    HttpRequest::Pointer urlres_r;
 
     struct {
         bool force_menu;
@@ -230,7 +230,6 @@ UrnState::setUriResFromRequest(HttpRequest *r)
         return;
     }
 
-    HTTPMSGLOCK(urlres_r);
     urlres_r->header.putStr(HDR_ACCEPT, "text/plain");
 }
 
@@ -240,7 +239,6 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     debugs(52, 3, "urnStart: '" << e->url() << "'" );
     entry = e;
     request = r;
-    HTTPMSGLOCK(request);
 
     entry->lock();
     setUriResFromRequest(r);
@@ -259,9 +257,8 @@ UrnState::created(StoreEntry *newEntry)
     if (urlres_e->isNull()) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
-        FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r);
+        FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());
     } else {
-
         urlres_e->lock();
         sc = storeClientListAdd(urlres_e, this);
     }
@@ -305,8 +302,6 @@ urnHandleReplyError(UrnState *urnState, StoreEntry *urlres_e)
 {
     urlres_e->unlock();
     urnState->entry->unlock();
-    HTTPMSGUNLOCK(urnState->request);
-    HTTPMSGUNLOCK(urnState->urlres_r);
     delete urnState;
 }
 
@@ -376,7 +371,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (rep->sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
-        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request);
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
@@ -397,8 +392,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
     if (urls == NULL) {		/* unkown URN error */
-        debugs(52, 3, "urnTranslateDone: unknown URN " << e->url()  );
-        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request);
+        debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         urnHandleReplyError(urnState, urlres_e);
