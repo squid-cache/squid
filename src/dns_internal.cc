@@ -141,6 +141,7 @@ struct _idns_query {
 
     int nsends;
     int need_vc;
+    bool permit_mdns;
     int pending;
 
     struct timeval start_t;
@@ -179,6 +180,7 @@ struct _ns {
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
     int last_seen_edns;
 #endif
+    bool mDNSResolver;
     nsvc *vc;
 };
 
@@ -231,15 +233,16 @@ static int max_shared_edns = RFC1035_DEFAULT_PACKET_SZ;
 
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
+static void idnsAddMDNSNameservers();
 static void idnsAddPathComponent(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
-static void idnsParseNameservers(void);
-#if !_SQUID_WINDOWS_
-static void idnsParseResolvConf(void);
+static bool idnsParseNameservers(void);
+#if _SQUID_WINDOWS_
+static bool idnsParseResolvConf(void);
 #endif
 #if _SQUID_WINDOWS_
-static void idnsParseWIN32Registry(void);
+static bool idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
 #endif
 static void idnsStartQuery(idns_query * q, IDNSCB * callback, void *data);
@@ -260,6 +263,30 @@ static void idnsRcodeCount(int, int);
 static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 static void idnsSendSlaveAAAAQuery(idns_query *q);
+
+static void
+idnsCheckMDNS(idns_query *q)
+{
+    size_t slen = strlen(q->name);
+    if (slen > 6 && memcmp(q->name +(slen-6),".local", 6) == 0) {
+        q->permit_mdns = true;
+    }
+}
+
+static void
+idnsAddMDNSNameservers()
+{
+#define MDNS_RESOLVER_COUNT 2
+
+    // mDNS resolver addresses are explicit multicast group IPs
+    idnsAddNameserver("FF02::FB");
+    nameservers[nns-1].S.SetPort(5353);
+    nameservers[nns-1].mDNSResolver = true;
+
+    idnsAddNameserver("224.0.0.251");
+    nameservers[nns-1].S.SetPort(5353);
+    nameservers[nns-1].mDNSResolver = true;
+}
 
 static void
 idnsAddNameserver(const char *buf)
@@ -354,29 +381,31 @@ idnsFreeSearchpath(void)
     npc = npc_alloc = 0;
 }
 
-static void
+static bool
 idnsParseNameservers(void)
 {
-    wordlist *w;
-
-    for (w = Config.dns_nameservers; w; w = w->next) {
+    bool result = false;
+    for (wordlist *w = Config.dns_nameservers; w; w = w->next) {
         debugs(78, DBG_IMPORTANT, "Adding nameserver " << w->key << " from squid.conf");
         idnsAddNameserver(w->key);
+        result = true;
     }
+    return result;
 }
 
 #if !_SQUID_WINDOWS_
-static void
+static bool
 idnsParseResolvConf(void)
 {
     FILE *fp;
     char buf[RESOLV_BUFSZ];
     const char *t;
+    bool result = false;
     fp = fopen(_PATH_RESCONF, "r");
 
     if (fp == NULL) {
         debugs(78, DBG_IMPORTANT, "" << _PATH_RESCONF << ": " << xstrerror());
-        return;
+        return false;
     }
 
 #if _SQUID_CYGWIN_
@@ -397,6 +426,7 @@ idnsParseResolvConf(void)
             debugs(78, DBG_IMPORTANT, "Adding nameserver " << t << " from " << _PATH_RESCONF);
 
             idnsAddNameserver(t);
+            result = true;
         } else if (strcmp(t, "domain") == 0) {
             idnsFreeSearchpath();
             t = strtok(NULL, w_space);
@@ -444,6 +474,7 @@ idnsParseResolvConf(void)
     }
 
     fclose(fp);
+    return result;
 }
 
 #endif
@@ -493,12 +524,13 @@ idnsParseWIN32SearchList(const char * Separator)
     }
 }
 
-static void
+static bool
 idnsParseWIN32Registry(void)
 {
     char *t;
     char *token;
     HKEY hndKey, hndKey2;
+    bool result = false;
 
     switch (WIN32_OS_version) {
 
@@ -518,6 +550,7 @@ idnsParseWIN32Registry(void)
 
                 while (token) {
                     idnsAddNameserver(token);
+                    result = true;
                     debugs(78, DBG_IMPORTANT, "Adding DHCP nameserver " << token << " from Registry");
                     token = strtok(NULL, ",");
                 }
@@ -534,6 +567,7 @@ idnsParseWIN32Registry(void)
                 while (token) {
                     debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
                     idnsAddNameserver(token);
+                    result = true;
                     token = strtok(NULL, ", ");
                 }
                 xfree(t);
@@ -587,6 +621,7 @@ idnsParseWIN32Registry(void)
                                 while (token) {
                                     debugs(78, DBG_IMPORTANT, "Adding DHCP nameserver " << token << " from Registry");
                                     idnsAddNameserver(token);
+                                    result = true;
                                     token = strtok(NULL, ", ");
                                 }
                                 xfree(t);
@@ -600,6 +635,7 @@ idnsParseWIN32Registry(void)
                                 while (token) {
                                     debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
                                     idnsAddNameserver(token);
+                                    result = true;
                                     token = strtok(NULL, ", ");
                                 }
 
@@ -644,6 +680,7 @@ idnsParseWIN32Registry(void)
                 while (token) {
                     debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
                     idnsAddNameserver(token);
+                    result = true;
                     token = strtok(NULL, ", ");
                 }
                 xfree(t);
@@ -656,8 +693,9 @@ idnsParseWIN32Registry(void)
 
     default:
         debugs(78, DBG_IMPORTANT, "Failed to read nameserver from Registry: Unknown System Type.");
-        return;
     }
+
+    return result;
 }
 
 #endif
@@ -690,14 +728,15 @@ idnsStats(StoreEntry * sentry)
         storeAppendPrintf(sentry, "DNS jumbo-grams: not working\n");
 
     storeAppendPrintf(sentry, "\nNameservers:\n");
-    storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES\n");
-    storeAppendPrintf(sentry, "---------------------------------------------- --------- ---------\n");
+    storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES Type\n");
+    storeAppendPrintf(sentry, "---------------------------------------------- --------- --------- --------\n");
 
     for (i = 0; i < nns; ++i) {
-        storeAppendPrintf(sentry, "%-45s %9d %9d\n",  /* Let's take the maximum: (15 IPv4/45 IPv6) */
+        storeAppendPrintf(sentry, "%-45s %9d %9d %s\n",  /* Let's take the maximum: (15 IPv4/45 IPv6) */
                           nameservers[i].S.NtoA(buf,MAX_IPSTRLEN),
                           nameservers[i].nqueries,
-                          nameservers[i].nreplies);
+                          nameservers[i].nreplies,
+                          nameservers[i].mDNSResolver?"multicast":"recurse");
     }
 
     storeAppendPrintf(sentry, "\nRcode Matrix:\n");
@@ -915,7 +954,11 @@ idnsSendQuery(idns_query * q)
     int nsn;
 
     do {
-        nsn = q->nsends % nns;
+        // only use mDNS resolvers for mDNS compatible queries
+        if (!q->permit_mdns)
+            nsn = MDNS_RESOLVER_COUNT + q->nsends % (nns-MDNS_RESOLVER_COUNT);
+        else
+            nsn = q->nsends % nns;
 
         if (q->need_vc) {
             idnsSendQueryVC(q, nsn);
@@ -1227,6 +1270,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
             q->nsends = 0;
 
+            idnsCheckMDNS(q);
             idnsSendQuery(q);
             if (Ip::EnableIpv6)
                 idnsSendSlaveAAAAQuery(q);
@@ -1531,19 +1575,20 @@ dnsInit(void)
     }
 
     assert(0 == nns);
-    idnsParseNameservers();
+    idnsAddMDNSNameservers();
+    bool nsFound = idnsParseNameservers();
 #if !_SQUID_WINDOWS_
 
-    if (0 == nns)
-        idnsParseResolvConf();
+    if (!nsFound)
+        nsFound = idnsParseResolvConf();
 
 #endif
 #if _SQUID_WINDOWS_
-    if (0 == nns)
-        idnsParseWIN32Registry();
+    if (!nsFound)
+        nsFound = idnsParseWIN32Registry();
 #endif
 
-    if (0 == nns) {
+    if (!nsFound) {
         debugs(78, DBG_IMPORTANT, "Warning: Could not find any nameservers. Trying to use localhost");
 #if _SQUID_WINDOWS_
         debugs(78, DBG_IMPORTANT, "Please check your TCP-IP settings or /etc/resolv.conf file");
@@ -1657,6 +1702,7 @@ idnsSendSlaveAAAAQuery(idns_query *master)
         cbdataFree(q);
         return;
     }
+    idnsCheckMDNS(q);
     master->slave = q;
     idnsSendQuery(q);
 }
@@ -1709,6 +1755,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << std::hex << q->query_id);
 
+    idnsCheckMDNS(q);
     idnsStartQuery(q, callback, data);
 
     if (Ip::EnableIpv6)
@@ -1757,6 +1804,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     debugs(78, 3, "idnsPTRLookup: buf is " << q->sz << " bytes for " << ip <<
            ", id = 0x" << std::hex << q->query_id);
 
+    q->permit_mdns = true;
     idnsStartQuery(q, callback, data);
 }
 
