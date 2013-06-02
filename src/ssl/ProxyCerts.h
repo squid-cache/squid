@@ -30,7 +30,7 @@
  */
 
 #if USE_SSL
-class ACLList;
+#include "acl/forward.h"
 
 class sslproxy_cert_sign
 {

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
  <TITLE>Squid 3.4.0.0 release notes</TITLE>
 </HEAD>
 <BODY>
@@ -26,6 +26,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <UL>
 <LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Helper protocol extensions</A>
 <LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">SSL Server Certificate Validator</A>
+<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.3</A></H2>
@@ -55,17 +56,19 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <P>The Squid Team are pleased to announce the release of Squid-3.4.0.0 for testing.</P>
 <P>This new release is available for download from 
-<A HREF="http://www.squid-cache.org/Versions/v3/3.HEAD/">http://www.squid-cache.org/Versions/v3/3.HEAD/</A> or the 
+<A HREF="http://www.squid-cache.org/Versions/v3/3.HEAD/">http://www.squid-cache.org/Versions/v3/3.HEAD/</A> or the
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
 <P>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.</P>
 <P>We welcome feedback and bug reports. If you find a bug, please see 
-<A HREF="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d">http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d</A> for how to submit a report with a stack trace.</P>
+<A HREF="http://wiki.squid-cache.org/SquidFaq/BugReporting">http://wiki.squid-cache.org/SquidFaq/BugReporting</A>
+for how to submit a report with a stack trace.</P>
 
 <H2><A NAME="ss1.1">1.1</A> <A HREF="#toc1.1">Known issues</A>
 </H2>
 
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
-<A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.4&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.4</A>.</P>
+<A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.4">open bugs against Squid-3.4</A>.</P>
+
 
 <H2><A NAME="ss1.2">1.2</A> <A HREF="#toc1.2">Changes since earlier releases of Squid-3.4</A>
 </H2>
@@ -81,6 +84,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <UL>
 <LI>Helper protocol extensions</LI>
 <LI>SSL Server Certificate Validator</LI>
+<LI>TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -142,6 +146,30 @@ triggering the existing SSL error processing code.</P>
 <EM>ssl_crtd</EM> related options. </P>
 
 
+<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+</A>
+</H2>
+
+<P>Details at 
+<A HREF="http://wiki.squid-cache.org/ConfigExamples/Intercept/OpenBsdPf">http://wiki.squid-cache.org/ConfigExamples/Intercept/OpenBsdPf</A>.</P>
+
+<P>The Packet Filter (PF) firewall in OpenBSD 4.4 and later offers traffic interception
+using several very simple methods. One of which is the <EM>divert-to</EM> rule type
+which acts as a simple routing diversion instead of performing NAT packet alterations.</P>
+
+<P>The IP Firewall (IPFW) on FreeBSD 9+ contains a port of the Linux Netfilter TPROXY feature.</P>
+
+<P>This version of Squid adds support for these features through the ./configure
+options --enable-pf-transparent and --enable-ipfw-transparent when Squid is built on
+systems with the required support. No special extras are required to enable
+<EM>http_port ... tproxy</EM> configuration to work.</P>
+
+<P>NOTE: To resolve NAT lookup issues on recent PF firewall versions the code behind
+<EM>./configure --enable-pf-transparent</EM> has been altered and is expected to
+break on the version of PF firewall shipped with BSD systems such as NetBSD and FreeBSD
+which do not yet support the getsockname() API.
+These systems require <EM>--with-nat-devpf</EM> to enable /dev/pf support when using PF firewall.</P>
+
+
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.3</A></H2>
 
 <P>There have been changes to Squid's configuration file since Squid-3.3.</P>
@@ -166,6 +194,9 @@ triggering the existing SSL error processing code.</P>
 <DT><B>note</B><DD>
 <P>Use ACLs to annotate a transaction with customized annotations
 which can be logged in access.log</P>
+
+<DT><B>spoof_client_ip</B><DD>
+<P>Access control to determine whether to disable the TPROXY spoofing on upstream traffic.</P>
 
 <DT><B>sslcrtvalidator_children</B><DD>
 <P>Specifies the settings for how many SSL server certificate
@@ -203,6 +234,12 @@ and <EM>NA</EM> in NTLM and Negotiate authentication.</P>
 <P>Details at 
 <A HREF="http://wiki.squid-cache.org/Features/AddonHelpers">http://wiki.squid-cache.org/Features/AddonHelpers</A>.</P>
 
+<DT><B>http_port</B><DD>
+<P>Support <EM>tproxy</EM> mode traffic on BSD systems with BINDANY support
+(OpenBSD 5+, FreeBSD 9+ so far).</P>
+<P>Changed build options behind <EM>intercept</EM> traffic mode handling on BSD.
+see <EM>--enable-pf-transparent</EM> for more details.</P>
+
 <DT><B>logformat</B><DD>
 <P>New format code <EM>%note</EM> to log a transaction annotation linked to the
 transaction by ICAP, eCAP, a helper, or the <EM>note</EM> squid.conf directive.</P>
@@ -231,6 +268,18 @@ values to return multiple values to Squid.</P>
 <DL>
 <P><EM>There are no removed squid.conf tags in Squid-3.4.</EM></P>
 
+<DT><B>storeurl_access</B><DD>
+<P>Not yet ported from 2.7</P>
+
+<DT><B>storeurl_rewrite_children</B><DD>
+<P>Not yet ported from 2.7</P>
+
+<DT><B>storeurl_rewrite_concurrency</B><DD>
+<P>Not yet ported from 2.7</P>
+
+<DT><B>storeurl_rewrite_program</B><DD>
+<P>Not yet ported from 2.7</P>
+
 </DL>
 </P>
 
@@ -256,7 +305,14 @@ values to return multiple values to Squid.</P>
 
 <P>
 <DL>
-<P><EM>There are no new ./configure options in Squid-3.4.</EM></P>
+<DT><B>--with-nat-pf</B><DD>
+<P>New option to alter the behaviour of <EM>http_port ... intercept</EM> option
+in squid.conf.</P>
+<P>When this option is used Squid performs the /dev/pf lookups required to
+support PF <EM>rdr-to</EM> rules. Otherwise Squid will perform perform the
+getsockname() API calls to support PF <EM>divert-to</EM> rules.</P>
+<P>NOTE: systems such as NetBSD and FreeBSD which do not yet support
+the getsockname() API in recent PF versions require this option.</P>
 
 </DL>
 </P>
@@ -266,7 +322,14 @@ values to return multiple values to Squid.</P>
 
 <P>
 <DL>
-<P><EM>There are no changed ./configure options in Squid-3.4.</EM></P>
+<DT><B>--enable-pf-transparent</B><DD>
+<P>NAT table support updated to use the getsockname() API provided by the
+latest PF versions <EM>divert-to</EM>. This allows <EM>http_port</EM>
+in squid.conf to support both <EM>intercept</EM> and <EM>tproxy</EM> traffic
+and to silence NAT lookup failure messages on recent BSD.</P>
+<P>NOTE: systems such as NetBSD and FreeBSD which do not yet support
+the getsockname() API in recent PF versions require <EM>--with-nat-devpf</EM>
+to re-enable /dev/pf support when using PF firewall.</P>
 
 </DL>
 </P>
@@ -318,15 +381,8 @@ values to return multiple values to Squid.</P>
 <DT><B>error_map</B><DD>
 <P>Not yet ported from 2.6</P>
 
-<DT><B>external_acl_type</B><DD>
-<P><EM>%ACL</EM> format tag not yet ported from 2.6</P>
-<P><EM>%DATA</EM> format tag not yet ported from 2.6</P>
-
 <DT><B>external_refresh_check</B><DD>
 <P>Not yet ported from 2.7</P>
-
-<DT><B>http_port</B><DD>
-<P><EM>act-as-origin</EM> not yet ported from 2.7</P>
 
 <DT><B>ignore_ims_on_miss</B><DD>
 <P>Not yet ported from 2.7</P>
@@ -349,18 +405,6 @@ values to return multiple values to Squid.</P>
 <P><EM>negative-ttl=</EM> not yet ported from 2.7</P>
 
 <DT><B>refresh_stale_hit</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>storeurl_access</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>storeurl_rewrite_children</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>storeurl_rewrite_concurrency</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>storeurl_rewrite_program</B><DD>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>update_headers</B><DD>

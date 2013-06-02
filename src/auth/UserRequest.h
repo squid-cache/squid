@@ -155,7 +155,7 @@ public:
     /* add the [Proxy-]Authentication-Info trailer */
     virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
 
-    virtual void onConnectionClose(ConnStateData *);
+    virtual void releaseAuthServer();
 
     /**
      * Called when squid is ready to put the request on hold and wait for a callback from the auth module

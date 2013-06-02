@@ -31,15 +31,12 @@
 #ifndef SQUID_CLIENTSIDEREPLY_H
 #define SQUID_CLIENTSIDEREPLY_H
 
-#include "base/RefCount.h"
 #include "client_side_request.h"
-#include "clientStream.h"
-#include "HttpHeader.h"
+#include "ip/forward.h"
 #include "RequestFlags.h"
 #include "StoreClient.h"
 
 class ErrorState;
-#include "ip/forward.h"
 
 /* XXX make static method */
 

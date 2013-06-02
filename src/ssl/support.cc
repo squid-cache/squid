@@ -191,8 +191,10 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
             }
             ASN1_STRING *cn_data = check->d.dNSName;
 
-            if ( (*check_func)(check_data, cn_data) == 0)
+            if ( (*check_func)(check_data, cn_data) == 0) {
+                sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
                 return 1;
+            }
         }
         sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
     }
@@ -1450,9 +1452,21 @@ Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &
 
 bool Ssl::verifySslCertificate(SSL_CTX * sslContext, CertificateProperties const &properties)
 {
+    // SSL_get_certificate is buggy in openssl versions 1.0.1d and 1.0.1e
+    // Try to retrieve certificate directly from SSL_CTX object
+#if SQUID_USE_SSLGETCERTIFICATE_HACK
+    X509 ***pCert = (X509 ***)sslContext->cert;
+    X509 * cert = pCert && *pCert ? **pCert : NULL;
+#elif SQUID_SSLGETCERTIFICATE_BUGGY
+    X509 * cert = NULL;
+    assert(0);
+#else
     // Temporary ssl for getting X509 certificate from SSL_CTX.
     Ssl::SSL_Pointer ssl(SSL_new(sslContext));
     X509 * cert = SSL_get_certificate(ssl.get());
+#endif
+    if (!cert)
+        return false;
     ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
     ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
     bool ret = (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
@@ -1548,7 +1562,10 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
         chain.reset(sk_X509_new_null());
     if (!chain)
         debugs(83, DBG_IMPORTANT, "WARNING: unable to allocate memory for cert chain");
-    pkey.reset(readSslPrivateKey(keyFilename, ssl_ask_password_cb));
+    // XXX: ssl_ask_password_cb needs SSL_CTX_set_default_passwd_cb_userdata()
+    // so this may not fully work iff Config.Program.ssl_password is set.
+    pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
+    pkey.reset(readSslPrivateKey(keyFilename, cb));
     cert.reset(readSslX509CertificatesChain(certFilename, chain.get()));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
         pkey.reset(NULL);

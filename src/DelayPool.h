@@ -39,12 +39,11 @@
 
 #if USE_DELAY_POOLS
 #include "CompositePoolNode.h"
+#include "acl/forward.h"
 
 class StoreEntry;
 
 class CommonPool;
-
-class acl_access;
 
 /// \ingroup DelayPoolsAPI
 class DelayPool

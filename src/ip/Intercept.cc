@@ -34,6 +34,7 @@
 #include "comm/Connection.h"
 #include "ip/Intercept.h"
 #include "fde.h"
+#include "src/tools.h"
 
 #if IPF_TRANSPARENT
 
@@ -146,9 +147,12 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int
 }
 
 bool
-Ip::Intercept::NetfilterTransparent(const Comm::ConnectionPointer &newConn, int silent)
+Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int silent)
 {
-#if LINUX_NETFILTER
+#if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
+    (PF_TRANSPARENT && defined(SO_BINDANY)) || \
+    (IPFW_TRANSPARENT && defined(IP_BINDANY))
+
     /* Trust the user configured properly. If not no harm done.
      * We will simply attempt a bind outgoing on our own IP.
      */
@@ -164,26 +168,15 @@ bool
 Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if IPFW_TRANSPARENT
-    struct sockaddr_storage lookup;
-    socklen_t len = sizeof(struct sockaddr_storage);
-    newConn->local.GetSockAddr(lookup, AF_INET);
-
-    /** \par
-     * Try lookup for IPFW interception. */
-    if ( getsockname(newConn->fd, (struct sockaddr*)&lookup, &len) != 0 ) {
-        if ( !silent ) {
-            debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
-            lastReported_ = squid_curtime;
-        }
-        debugs(89, 9, HERE << "address: " << newConn);
-        return false;
-    } else {
-        newConn->local = lookup;
-        debugs(89, 5, HERE << "address NAT: " << newConn);
-        return true;
-    }
-#endif
+    /* The getsockname() call performed already provided the TCP packet details.
+     * There is no way to identify whether they came from NAT or not.
+     * Trust the user configured properly.
+     */
+    debugs(89, 5, HERE << "address NAT: " << newConn);
+    return true;
+#else
     return false;
+#endif
 }
 
 bool
@@ -277,24 +270,21 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
 }
 
 bool
-Ip::Intercept::PfTransparent(const Comm::ConnectionPointer &newConn, int silent)
-{
-#if PF_TRANSPARENT && defined(SO_BINDANY)
-    /* Trust the user configured properly. If not no harm done.
-     * We will simply attempt a bind outgoing on our own IP.
-     */
-    newConn->remote.SetPort(0); // allow random outgoing port to prevent address clashes
-    debugs(89, 5, HERE << "address DIVERT: " << newConn);
-    return true;
-#else
-    return false;
-#endif
-}
-
-bool
 Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
+
+#if !USE_NAT_DEVPF
+    /* On recent PF versions the getsockname() call performed already provided
+     * the required TCP packet details.
+     * There is no way to identify whether they came from NAT or not.
+     *
+     * Trust the user configured properly.
+     */
+    debugs(89, 5, HERE << "address NAT divert-to: " << newConn);
+    return true;
+
+#else /* USE_NAT_DEVPF / --with-nat-devpf */
 
     struct pfioc_natlook nl;
     static int pffd = -1;
@@ -338,7 +328,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
         debugs(89, 5, HERE << "address NAT: " << newConn);
         return true;
     }
-
+#endif /* --with-nat-devpf */
 #endif /* --enable-pf-transparent */
     return false;
 }
@@ -366,8 +356,7 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
 
     /* NP: try TPROXY first, its much quieter than NAT when non-matching */
     if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
-        if (NetfilterTransparent(newConn, silent)) return true;
-        if (PfTransparent(newConn, silent)) return true;
+        if (TproxyTransparent(newConn, silent)) return true;
     }
 
     /* NAT is only available in IPv4 */
@@ -394,7 +383,28 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
 bool
 Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 {
-#if defined(IP_TRANSPARENT)
+    bool doneSuid = false;
+
+#if _SQUID_LINUX_ && defined(IP_TRANSPARENT) // Linux
+# define soLevel SOL_IP
+# define soFlag  IP_TRANSPARENT
+
+#elif defined(SO_BINDANY) // OpenBSD 4.7+ and NetBSD with PF
+# define soLevel SOL_SOCKET
+# define soFlag  SO_BINDANY
+    enter_suid();
+    doneSuid = true;
+
+#elif defined(IP_BINDANY) // FreeBSD with IPFW
+# define soLevel IPPROTO_IP
+# define soFlag  IP_BINDANY
+    enter_suid();
+    doneSuid = true;
+
+#endif
+
+#if defined(soLevel) && defined(soFlag)
+
     debugs(3, 3, "Detect TPROXY support on port " << test);
 
     int tos = 1;
@@ -410,11 +420,13 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.GetSockAddr(tmp_ip6);
 
         if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
+                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
                 bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
             debugs(3, 3, "IPv6 TPROXY support detected. Using.");
             close(tmp_sock);
+            if (doneSuid)
+                leave_suid();
             return true;
         }
         if (tmp_sock >= 0) {
@@ -425,6 +437,8 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 
     if ( test.IsIPv6() && !test.SetIPv4() ) {
         debugs(3, DBG_CRITICAL, "TPROXY lacks IPv6 support for " << test );
+        if (doneSuid)
+            leave_suid();
         return false;
     }
 
@@ -438,11 +452,13 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         tmp.GetSockAddr(tmp_ip4);
 
         if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-                setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
+                setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
                 bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 
             debugs(3, 3, "IPv4 TPROXY support detected. Using.");
             close(tmp_sock);
+            if (doneSuid)
+                leave_suid();
             return true;
         }
         if (tmp_sock >= 0) {
@@ -450,51 +466,11 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         }
     }
 
-#elif defined(SO_BINDANY)
-    debugs(3, 3, "Detect BINDANY support on port " << test);
-
-    int tos = 1;
-    int tmp_sock = -1;
-
-    if (test.IsIPv6()) {
-        debugs(3, 3, "...Probing for IPv6 SO_BINDANY support.");
-
-        struct sockaddr_in6 tmp_ip6;
-        Ip::Address tmp = "::2";
-        tmp.SetPort(0);
-        tmp.GetSockAddr(tmp_ip6);
-
-        if ((tmp_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP)) >=0 &&
-                (setsockopt(tmp_sock, SOL_SOCKET, SO_BINDANY, (char *)&tos,
-                            sizeof(tos)) == 0) &&
-                (bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0)) {
-            debugs(3, 3, "IPv6 BINDANY support detected. Using.");
-            close(tmp_sock);
-            return true;
-        }
-    }
-
-    if (test.IsIPv4()) {
-        debugs(3, 3, "...Probing for IPv4 SO_BINDANY support.");
-
-        struct sockaddr_in tmp_ip4;
-        Ip::Address tmp = "127.0.0.2";
-        tmp.SetPort(0);
-        tmp.GetSockAddr(tmp_ip4);
-
-        if ((tmp_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) >=0 &&
-                (setsockopt(tmp_sock, SOL_SOCKET, SO_BINDANY, (char *)&tos,
-                            sizeof(tos)) == 0) &&
-                (bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0)) {
-            debugs(3, 3, "IPv4 BINDANY support detected. Using.");
-            close(tmp_sock);
-            return true;
-        }
-    }
-
 #else
     debugs(3, 3, "TPROXY setsockopt() not supported on this platform. Disabling TPROXY.");
 
 #endif
+    if (doneSuid)
+        leave_suid();
     return false;
 }

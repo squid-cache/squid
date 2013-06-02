@@ -1,7 +1,7 @@
 #ifndef SQUID_FADING_COUNTER_H
 #define SQUID_FADING_COUNTER_H
 
-#include "Array.h"
+#include "base/Vector.h"
 
 /// Counts events, forgetting old ones. Usefull for "3 errors/minute" limits.
 class FadingCounter

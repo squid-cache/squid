@@ -1,7 +1,7 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -120,7 +120,6 @@ private:
     Comm::ConnectionPointer clientConn;        ///< a possibly open connection to the client.
     time_t start_t;
     int n_tries;
-    int origin_tries;
 
     // AsyncCalls which we set and may need cancelling.
     struct {

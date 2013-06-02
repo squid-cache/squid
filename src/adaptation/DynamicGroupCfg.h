@@ -1,7 +1,7 @@
 #ifndef SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
 #define SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "SquidString.h"
 
 namespace Adaptation
