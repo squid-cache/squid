@@ -188,7 +188,7 @@ ConfigParser::ParseQuotedString(String *var, bool *wasQuoted)
 }
 
 const char *
-ConfigParser::QuoteString(String &var)
+ConfigParser::QuoteString(const String &var)
 {
     static String quotedStr;
     const char *s = var.termedBuf();

@@ -17,7 +17,7 @@ icapLogOpen()
         if (log->type == Log::Format::CLF_NONE)
             continue;
 
-        log->logfile = logfileOpen(log->filename, MAX_URL << 1, 1);
+        log->logfile = logfileOpen(log->filename, log->bufferSize, log->fatal);
 
         IcapLogfileStatus = LOG_ENABLE;
     }

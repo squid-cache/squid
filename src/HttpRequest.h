@@ -203,7 +203,7 @@ public:
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
-    Notes *helperNotes;         ///< collection of meta notes associated with this request by helper lookups.
+    NotePairs::Pointer notes; ///< annotations added by the note directive and helpers
 
     String tag;			/* Internal tag for this request */
 

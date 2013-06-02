@@ -78,8 +78,6 @@ TESTS += tests/testAll
 check_PROGRAMS += tests/testAll
 
 tests_testAll_SOURCES= \
-	tests/testArray.h \
-	tests/testArray.cc \
 	tests/testRFC1035.h \
 	tests/testRFC1035.cc \
 	tests/testRFC1738.h \

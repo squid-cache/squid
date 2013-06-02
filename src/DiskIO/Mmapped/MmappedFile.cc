@@ -21,6 +21,11 @@
 #include <errno.h>
 #endif
 
+// Some systems such as Hurd provide mmap() API but do not support MAP_NORESERVE
+#ifndef MAP_NORESERVE
+#define MAP_NORESERVE 0
+#endif
+
 CBDATA_CLASS_INIT(MmappedFile);
 
 // helper class to deal with mmap(2) offset alignment and other low-level specs

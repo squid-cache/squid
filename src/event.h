@@ -32,7 +32,7 @@
 #ifndef SQUID_EVENT_H
 #define SQUID_EVENT_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "AsyncEngine.h"
 #include "MemPool.h"
 

@@ -81,15 +81,12 @@ AC_DEFUN([SQUID_CC_REQUIRE_ARGUMENT],[
 #  - sunstudio
 #  - none (undetected)
 # 
-AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
+AC_DEFUN([SQUID_CC_GUESS_VARIANT], [ 
  AC_CACHE_CHECK([what kind of compiler we're using],[squid_cv_compiler],
  [
   AC_REQUIRE([AC_PROG_CC])
-  if test "$GCC" = "yes" ; then
-   squid_cv_compiler="gcc"
-  fi
   dnl repeat the next block for each compiler, changing the
-  dnl preprocessor definition type so that it depends on platform-specific
+  dnl preprocessor definition so that it depends on platform-specific
   dnl predefined macros
   dnl SunPro CC
   if test -z "$squid_cv_compiler" ; then
@@ -109,12 +106,39 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
 #endif
     ]])],[squid_cv_compiler="icc"],[])
   fi
+  dnl clang
+  if test -z "$squid_cv_compiler" ; then
+   AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#if !defined(__clang__)
+#error "not clang"
+#endif
+    ]])],[squid_cv_compiler="clang"],[])
+  fi
+  dnl microsoft visual c++
+  if test -z "$squid_cv_compiler" ; then
+   AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#if !defined(_MSC_VER)
+#error "not Microsoft VC++"
+#endif
+    ]])],[squid_cv_compiler="msvc"],[])
+  fi
+  dnl gcc. MUST BE LAST as many other compilers also define it for compatibility
+  if test -z "$squid_cv_compiler" ; then
+   AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#if !defined(__GNUC__)
+#error "not gcc"
+#endif
+    ]])],[squid_cv_compiler="gcc"],[])
+  fi
   dnl end of block to be repeated
   if test -z "$squid_cv_compiler" ; then
    squid_cv_compiler="none"
   fi
-  ])
- ])
+  ]) dnl AC_CACHE_CHECK
+ ]) dnl AC_DEFUN
 
 # define the flag to use to have the compiler treat warnings as errors
 # requirs SQUID_CC_GUESS_VARIANT
@@ -143,6 +167,13 @@ AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
    squid_cv_cxx_option_werror="-errwarn=%all,no%badargtype2w,no%wbadinit,no%wbadasg -errtags" 
    squid_cv_cc_option_wall="+w"
    squid_cv_cc_option_optimize="-fast"
+   squid_cv_cc_arg_pipe=""
+   ;;
+  clang) 
+   squid_cv_cxx_option_werror="-Werror -Wno-error=parentheses-equality"
+   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror" 
+   squid_cv_cc_option_wall="-Wall"
+   squid_cv_cc_option_optimize="-O2"
    squid_cv_cc_arg_pipe=""
    ;;
   icc) 

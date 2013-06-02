@@ -77,7 +77,7 @@ public:
     /// quotes. TODO: support quoted strings anywhere a token is accepted.
     static void ParseQuotedString(char **var, bool *wasQuoted = NULL);
     static void ParseQuotedString(String *var, bool *wasQuoted = NULL);
-    static const char *QuoteString(String &var);
+    static const char *QuoteString(const String &var);
     static void ParseWordList(wordlist **list);
     static char * strtokFile();
     static void strtokFileUndo();

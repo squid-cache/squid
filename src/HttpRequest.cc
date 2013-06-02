@@ -58,15 +58,13 @@
 #endif
 
 HttpRequest::HttpRequest() :
-        HttpMsg(hoRequest),
-        helperNotes(NULL)
+        HttpMsg(hoRequest)
 {
     init();
 }
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
-        HttpMsg(hoRequest),
-        helperNotes(NULL)
+        HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -168,10 +166,7 @@ HttpRequest::clean()
 
     myportname.clean();
 
-    if (helperNotes) {
-        delete helperNotes;
-        helperNotes = NULL;
-    }
+    notes = NULL;
 
     tag.clean();
 #if USE_AUTH
@@ -231,10 +226,6 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_domain?
 
     copy->myportname = myportname;
-    if (helperNotes) {
-        copy->helperNotes = new Notes;
-        copy->helperNotes->notes = helperNotes->notes;
-    }
     copy->tag = tag;
 #if USE_AUTH
     copy->extacl_user = extacl_user;
@@ -283,6 +274,7 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
 
+    notes = aReq->notes;
     return true;
 }
 
@@ -596,7 +588,7 @@ HttpRequest::maybeCacheable()
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the reponse for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
+    if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
     switch (protocol) {

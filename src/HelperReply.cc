@@ -145,16 +145,15 @@ HelperReply::parseResponseKeys()
         *p = '\0';
         ++p;
 
-        const String key(other().content());
+        const char *key = other().content();
 
         // the value may be a quoted string or a token
         const bool urlDecode = (*p != '"'); // check before moving p.
         char *v = strwordtok(NULL, &p);
         if (v != NULL && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
-        const String value(v?v:""); // value can be empty, but must not be NULL
 
-        notes.add(key, value);
+        notes.add(key, v ? v : ""); // value can be empty, but must not be NULL
 
         modifiableOther().consume(p - other().content());
         modifiableOther().consumeWhitespacePrefix();
@@ -184,13 +183,9 @@ operator <<(std::ostream &os, const HelperReply &r)
     }
 
     // dump the helper key=pair "notes" list
-    if (r.notes.notes.size() > 0) {
+    if (!r.notes.empty()) {
         os << ", notes={";
-        for (Notes::NotesList::const_iterator m = r.notes.notes.begin(); m != r.notes.notes.end(); ++m) {
-            for (Note::Values::iterator v = (*m)->values.begin(); v != (*m)->values.end(); ++v) {
-                os << ',' << (*m)->key << '=' << ConfigParser::QuoteString((*v)->value);
-            }
-        }
+        os << r.notes.toString("; ");
         os << "}";
     }
 

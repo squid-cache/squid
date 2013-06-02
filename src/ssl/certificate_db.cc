@@ -165,7 +165,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete(TXT_DB *db, const char **row)
     if (!db)
         return;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, i));
 #else
@@ -183,7 +183,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete(TXT_DB *db, const char **row)
 void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx)
 {
     char **rrow;
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     rrow = (char **)sk_OPENSSL_PSTRING_delete(db->data, idx);
 #else
     rrow = (char **)sk_delete(db->data, idx);
@@ -197,7 +197,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx)
     const Columns db_indexes[]={cnlSerial, cnlName};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
         void *data = NULL;
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
         if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db->index[db_indexes[i]])
             data = lh_OPENSSL_STRING_delete(fieldIndex, rrow);
 #else
@@ -471,19 +471,11 @@ void Ssl::CertificateDb::load()
         corrupt = true;
 
     // Create indexes in db.
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial), LHASH_COMP_FN(index_serial)))
-        corrupt = true;
-
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name), LHASH_COMP_FN(index_name)))
-        corrupt = true;
-#else
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
         corrupt = true;
 
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
         corrupt = true;
-#endif
 
     if (corrupt)
         throw std::runtime_error("The SSL certificate database " + db_path + " is corrupted. Please rebuild");
@@ -523,7 +515,7 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
         return false;
 
     bool removed_one = false;
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
@@ -548,14 +540,14 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
 #else
     if (sk_num(db.get()->data) == 0)
 #endif
         return false;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     const char **row = (const char **)sk_OPENSSL_PSTRING_value(db.get()->data, 0);
 #else
     const char **row = (const char **)sk_value(db.get()->data, 0);
@@ -571,7 +563,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else

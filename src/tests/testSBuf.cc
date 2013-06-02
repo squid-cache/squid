@@ -75,7 +75,7 @@ testSBuf::testSBufConstructDestruct()
     // TEST: copy-construct from a char*
     {
         SBuf s1(fox);
-        CPPUNIT_ASSERT_EQUAL(s1.length(),strlen(fox));
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(s1.length()),strlen(fox));
         CPPUNIT_ASSERT(0==strcmp(fox,s1.c_str()));
     }
 

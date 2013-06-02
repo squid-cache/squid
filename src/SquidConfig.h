@@ -29,7 +29,7 @@
  *
  */
 
-#include "acl/AclAddress.h"
+#include "acl/forward.h"
 #include "base/RefCount.h"
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
@@ -46,9 +46,6 @@ class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
 #endif
 
-class acl_access;
-class AclSizeLimit;
-class AclDenyInfoList;
 namespace Mgr
 {
 class ActionPasswordList;
@@ -332,7 +329,6 @@ public:
 
         int ie_refresh;
         int vary_ignore_expire;
-        int pipeline_prefetch;
         int surrogate_is_remote;
         int request_entities;
         int detect_broken_server_pconns;
@@ -360,6 +356,8 @@ public:
         int hostStrictVerify;
         int client_dst_passthru;
     } onoff;
+
+    int pipeline_max_prefetch;
 
     int forward_max_tries;
     int connect_retries;
@@ -403,6 +401,10 @@ public:
 #if ICAP_CLIENT
         acl_access* icap;
 #endif
+
+        /// spoof_client_ip squid.conf acl.
+        /// nil unless configured
+        acl_access* spoof_client_ip;
     } accessList;
     AclDenyInfoList *denyInfoList;
 

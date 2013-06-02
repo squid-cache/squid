@@ -145,6 +145,13 @@ static struct stat sb;
 int total_bytes = 0;
 int io_timeout = 120;
 
+#if _SQUID_AIX_
+/* Bug 3854: AIX 6.1 tries to link in this fde.h global symbol
+ * despite squidclient not using any of the fd_* code.
+ */
+fde *fde::Table = NULL;
+#endif
+
 #if _SQUID_WINDOWS_
 void
 Win32SockCleanup(void)
@@ -628,6 +635,7 @@ main(int argc, char *argv[])
         }
 
         /* Send the HTTP request */
+        fprintf(stderr, "Sending HTTP request ... ");
         bytesWritten = mywrite(conn, msg, strlen(msg));
 
         if (bytesWritten < 0) {
@@ -637,8 +645,10 @@ main(int argc, char *argv[])
             fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
             exit(1);
         }
+        fprintf(stderr, "done.\n");
 
         if (put_file) {
+            fprintf(stderr, "Sending HTTP request payload ... ");
             int x;
             lseek(put_fd, 0, SEEK_SET);
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
@@ -653,6 +663,8 @@ main(int argc, char *argv[])
 
             if (x != 0)
                 fprintf(stderr, "client: ERROR: Cannot send file.\n");
+            else
+                fprintf(stderr, "done.\n");
         }
         /* Read the data */
 

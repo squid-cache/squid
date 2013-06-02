@@ -383,7 +383,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_LOCAL_LISTENING_IP: {
             // avoid logging a dash if we have reliable info
             const bool interceptedAtKnownPort = al->request ?
-                                                (al->request->flags.spoofClientIp ||
+                                                (al->request->flags.interceptTproxy ||
                                                  al->request->flags.intercepted) && al->cache.port :
                                                 false;
             if (interceptedAtKnownPort) {
@@ -629,7 +629,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ICAP_REQ_HEADER_ELEM:
-            if (al->request)
+            if (al->icap.request)
                 sb = al->icap.request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.termedBuf();
@@ -760,7 +760,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_NAME:
-            out = strOrNull(al->cache.authuser);
+#if USE_AUTH
+            if (al->request && al->request->auth_user_request != NULL)
+                out = strOrNull(al->request->auth_user_request->username());
+#endif
             if (!out)
                 out = strOrNull(al->cache.extuser);
 #if USE_SSL
@@ -772,7 +775,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_LOGIN:
-            out = strOrNull(al->cache.authuser);
+#if USE_AUTH
+            if (al->request && al->request->auth_user_request != NULL)
+                out = strOrNull(al->request->auth_user_request->username());
+#endif
             break;
 
         case LFT_USER_IDENT:
@@ -1042,17 +1048,31 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
         case LFT_NOTE:
             if (fmt->data.string) {
-                sb = al->notes.getByName(fmt->data.string);
+#if USE_ADAPTATION
+                Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
+                if (ah != NULL && ah->metaHeaders != NULL) {
+                    if (const char *meta = ah->metaHeaders->find(fmt->data.string))
+                        sb.append(meta);
+                }
+#endif
+                if (al->notes != NULL) {
+                    if (const char *note = al->notes->find(fmt->data.string)) {
+                        if (sb.size())
+                            sb.append(", ");
+                        sb.append(note);
+                    }
+                }
                 out = sb.termedBuf();
                 quote = 1;
             } else {
-                HttpHeaderPos pos = HttpHeaderInitPos;
-                while (const HttpHeaderEntry *e = al->notes.getEntry(&pos)) {
-                    sb.append(e->name);
-                    sb.append(": ");
-                    sb.append(e->value);
-                    sb.append("\r\n");
-                }
+#if USE_ADAPTATION
+                Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
+                if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
+                    sb.append(ah->metaHeaders->toString());
+#endif
+                if (al->notes != NULL && !al->notes->empty())
+                    sb.append(al->notes->toString());
+
                 out = sb.termedBuf();
                 quote = 1;
             }

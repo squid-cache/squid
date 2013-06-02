@@ -36,7 +36,7 @@
 #include "adaptation/History.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpReply.h"
