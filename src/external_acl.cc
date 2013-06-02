@@ -185,7 +185,7 @@ struct _external_acl_format {
 
 #if USE_SSL
         EXT_ACL_USER_CERT,
-        EXT_ACL_CA_CERT,
+        EXT_ACL_USER_CA_CERT,
         EXT_ACL_USER_CERT_RAW,
         EXT_ACL_USER_CERTCHAIN_RAW,
 #endif
@@ -417,7 +417,7 @@ parse_externalAclHelper(external_acl ** list)
 
         if (strncmp(token, "%{", 2) == 0) {
             // deprecated. but assume the old configs all referred to request headers.
-            debugs(82, DBG_IMPORTANT, "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
             parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
         } else if (strncmp(token, "%>{", 3) == 0) {
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
@@ -471,8 +471,12 @@ parse_externalAclHelper(external_acl ** list)
         else if (strncmp(token, "%USER_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
+        } else if (strncmp(token, "%USER_CA_CERT_", 11) == 0) {
+            format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
+            format->header = xstrdup(token + 11);
         } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
-            format->type = _external_acl_format::EXT_ACL_USER_CERT;
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type %CA_CERT_* code is invalid. Should be %USER_CA_CERT_*");
+            format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
             format->header = xstrdup(token + 11);
         }
 #endif
@@ -618,7 +622,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT_RAW, " %%USER_CERT_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT, " %%USER_CERT_%s", format->header);
-                DUMP_EXT_ACL_TYPE_FMT(CA_CERT, " %%CA_CERT_%s", format->header);
+                DUMP_EXT_ACL_TYPE_FMT(USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
 #endif
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE(EXT_USER);
@@ -1137,7 +1141,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
             break;
 
-        case _external_acl_format::EXT_ACL_CA_CERT:
+        case _external_acl_format::EXT_ACL_USER_CA_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
                 SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
