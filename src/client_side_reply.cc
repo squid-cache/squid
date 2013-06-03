@@ -1853,7 +1853,7 @@ void
 clientReplyContext::sendBodyTooLargeError()
 {
     Ip::Address tmp_noaddr;
-    tmp_noaddr.SetNoAddr(); // TODO: make a global const
+    tmp_noaddr.setNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, Http::scForbidden, NULL,
                                        http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
@@ -1976,7 +1976,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
             page_id = ERR_ACCESS_DENIED;
 
         Ip::Address tmp_noaddr;
-        tmp_noaddr.SetNoAddr();
+        tmp_noaddr.setNoAddr();
         err = clientBuildError(page_id, Http::scForbidden, NULL,
                                http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                http->request);

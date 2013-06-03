@@ -341,7 +341,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             // for TPROXY spoofing we must skip unusable addresses.
             if (psstate->request->flags.spoofClientIp && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
-                if (ia->in_addrs[n].IsIPv4() != psstate->request->client_addr.IsIPv4()) {
+                if (ia->in_addrs[n].isIPv4() != psstate->request->client_addr.isIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
                 }
@@ -351,16 +351,16 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
             p->remote = ia->in_addrs[n];
 
             // when IPv6 is disabled we cannot use it
-            if (!Ip::EnableIpv6 && p->remote.IsIPv6()) {
+            if (!Ip::EnableIpv6 && p->remote.isIPv6()) {
                 const char *host = (fs->_peer ? fs->_peer->host : psstate->request->GetHost());
                 ipcacheMarkBadAddr(host, p->remote);
                 continue;
             }
 
             if (fs->_peer)
-                p->remote.SetPort(fs->_peer->http_port);
+                p->remote.port(fs->_peer->http_port);
             else
-                p->remote.SetPort(psstate->request->port);
+                p->remote.port(psstate->request->port);
             p->peerType = fs->code;
             p->setPeer(fs->_peer);
 
@@ -637,10 +637,10 @@ peerGetSomeNeighborReplies(ps_state * ps)
     if ((p = ps->hit)) {
         code = ps->hit_type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT;
     } else {
-        if (!ps->closest_parent_miss.IsAnyAddr()) {
+        if (!ps->closest_parent_miss.isAnyAddr()) {
             p = whichPeer(ps->closest_parent_miss);
             code = CLOSEST_PARENT_MISS;
-        } else if (!ps->first_parent_miss.IsAnyAddr()) {
+        } else if (!ps->first_parent_miss.isAnyAddr()) {
             p = whichPeer(ps->first_parent_miss);
             code = FIRST_PARENT_MISS;
         }
@@ -796,7 +796,7 @@ peerIcpParentMiss(CachePeer * p, icp_common_t * header, ps_state * ps)
         return;
 
     /* set FIRST_MISS if there is no CLOSEST parent */
-    if (!ps->closest_parent_miss.IsAnyAddr())
+    if (!ps->closest_parent_miss.isAnyAddr())
         return;
 
     rtt = (tvSubMsec(ps->ping.start, current_time) - p->basetime) / p->weight;
@@ -804,7 +804,7 @@ peerIcpParentMiss(CachePeer * p, icp_common_t * header, ps_state * ps)
     if (rtt < 1)
         rtt = 1;
 
-    if (ps->first_parent_miss.IsAnyAddr() || rtt < ps->ping.w_rtt) {
+    if (ps->first_parent_miss.isAnyAddr() || rtt < ps->ping.w_rtt) {
         ps->first_parent_miss = p->in_addr;
         ps->ping.w_rtt = rtt;
     }
@@ -894,7 +894,7 @@ peerHtcpParentMiss(CachePeer * p, HtcpReplyData * htcp, ps_state * ps)
         return;
 
     /* set FIRST_MISS if there is no CLOSEST parent */
-    if (!ps->closest_parent_miss.IsAnyAddr())
+    if (!ps->closest_parent_miss.isAnyAddr())
         return;
 
     rtt = (tvSubMsec(ps->ping.start, current_time) - p->basetime) / p->weight;
@@ -902,7 +902,7 @@ peerHtcpParentMiss(CachePeer * p, HtcpReplyData * htcp, ps_state * ps)
     if (rtt < 1)
         rtt = 1;
 
-    if (ps->first_parent_miss.IsAnyAddr() || rtt < ps->ping.w_rtt) {
+    if (ps->first_parent_miss.isAnyAddr() || rtt < ps->ping.w_rtt) {
         ps->first_parent_miss = p->in_addr;
         ps->ping.w_rtt = rtt;
     }

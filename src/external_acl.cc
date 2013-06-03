@@ -327,7 +327,7 @@ parse_externalAclHelper(external_acl ** list)
     a->children.n_max = DEFAULT_EXTERNAL_ACL_CHILDREN;
     a->children.n_startup = a->children.n_max;
     a->children.n_idle = 1;
-    a->local_addr.SetLocalhost();
+    a->local_addr.setLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
     token = strtok(NULL, w_space);
@@ -375,7 +375,7 @@ parse_externalAclHelper(external_acl ** list)
             /* INET6: allow admin to configure some helpers explicitly to
                       bind to IPv4/v6 localhost port. */
         } else if (strcmp(token, "ipv4") == 0) {
-            if ( !a->local_addr.SetIPv4() ) {
+            if ( !a->local_addr.setIPv4() ) {
                 debugs(3, DBG_CRITICAL, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
             }
         } else if (strcmp(token, "ipv6") == 0) {
@@ -535,7 +535,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
     for (node = list; node; node = node->next) {
         storeAppendPrintf(sentry, "%s %s", name, node->name);
 
-        if (!node->local_addr.IsIPv6())
+        if (!node->local_addr.isIPv6())
             storeAppendPrintf(sentry, " ipv4");
         else
             storeAppendPrintf(sentry, " ipv6");
@@ -1005,11 +1005,11 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_SRC:
-            str = ch->src_addr.NtoA(buf,sizeof(buf));
+            str = ch->src_addr.toStr(buf,sizeof(buf));
             break;
 
         case _external_acl_format::EXT_ACL_SRCPORT:
-            snprintf(buf, sizeof(buf), "%d", request->client_addr.GetPort());
+            snprintf(buf, sizeof(buf), "%d", request->client_addr.port());
             str = buf;
             break;
 
@@ -1028,11 +1028,11 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_MYADDR:
-            str = request->my_addr.NtoA(buf, sizeof(buf));
+            str = request->my_addr.toStr(buf, sizeof(buf));
             break;
 
         case _external_acl_format::EXT_ACL_MYPORT:
-            snprintf(buf, sizeof(buf), "%d", request->my_addr.GetPort());
+            snprintf(buf, sizeof(buf), "%d", request->my_addr.port());
             str = buf;
             break;
 

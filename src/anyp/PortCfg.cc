@@ -99,7 +99,7 @@ AnyP::PortCfg::configureSslServerContext()
 
     if (!signingCert) {
         char buf[128];
-        fatalf("No valid signing SSL certificate configured for %s_port %s", protocol,  s.ToURL(buf, sizeof(buf)));
+        fatalf("No valid signing SSL certificate configured for %s_port %s", protocol,  s.toUrl(buf, sizeof(buf)));
     }
 
     if (!signPkey)
@@ -110,7 +110,7 @@ AnyP::PortCfg::configureSslServerContext()
 
     if (!untrustedSigningCert) {
         char buf[128];
-        fatalf("Unable to generate  signing SSL certificate for untrusted sites for %s_port %s", protocol, s.ToURL(buf, sizeof(buf)));
+        fatalf("Unable to generate  signing SSL certificate for untrusted sites for %s_port %s", protocol, s.toUrl(buf, sizeof(buf)));
     }
 
     if (crlfile)
@@ -139,7 +139,7 @@ AnyP::PortCfg::configureSslServerContext()
 
     if (!staticSslContext) {
         char buf[128];
-        fatalf("%s_port %s initialization error", protocol,  s.ToURL(buf, sizeof(buf)));
+        fatalf("%s_port %s initialization error", protocol,  s.toUrl(buf, sizeof(buf)));
     }
 }
 #endif

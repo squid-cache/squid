@@ -538,7 +538,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
     fqdncache_entry *f = NULL;
     char name[MAX_IPSTRLEN];
     generic_cbdata *c;
-    addr.NtoA(name,MAX_IPSTRLEN);
+    addr.toStr(name,MAX_IPSTRLEN);
     debugs(35, 4, "fqdncache_nbgethostbyaddr: Name '" << name << "'.");
     ++FqdncacheStats.requests;
 
@@ -609,11 +609,11 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
     char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
 
-    if (addr.IsAnyAddr() || addr.IsNoAddr()) {
+    if (addr.isAnyAddr() || addr.isNoAddr()) {
         return NULL;
     }
 
-    addr.NtoA(name,MAX_IPSTRLEN);
+    addr.toStr(name,MAX_IPSTRLEN);
     ++ FqdncacheStats.requests;
     f = fqdncache_get(name);
 
