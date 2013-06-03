@@ -1362,7 +1362,7 @@ static void
 dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
 {
     char buf[MAX_IPSTRLEN];
-    storeAppendPrintf(entry, "%s %s\n", name, addr.NtoA(buf,MAX_IPSTRLEN) );
+    storeAppendPrintf(entry, "%s %s\n", name, addr.toStr(buf,MAX_IPSTRLEN) );
 }
 
 static void
@@ -1376,9 +1376,9 @@ parse_address(Ip::Address *addr)
     }
 
     if (!strcmp(token,"any_addr"))
-        addr->SetAnyAddr();
+        addr->setAnyAddr();
     else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
-        addr->SetNoAddr();
+        addr->setNoAddr();
     else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
     else
@@ -1388,7 +1388,7 @@ parse_address(Ip::Address *addr)
 static void
 free_address(Ip::Address *addr)
 {
-    addr->SetEmpty();
+    addr->setEmpty();
 }
 
 CBDATA_TYPE(AclAddress);
@@ -1400,8 +1400,8 @@ dump_acl_address(StoreEntry * entry, const char *name, AclAddress * head)
     AclAddress *l;
 
     for (l = head; l; l = l->next) {
-        if (!l->addr.IsAnyAddr())
-            storeAppendPrintf(entry, "%s %s", name, l->addr.NtoA(buf,MAX_IPSTRLEN));
+        if (!l->addr.isAnyAddr())
+            storeAppendPrintf(entry, "%s %s", name, l->addr.toStr(buf,MAX_IPSTRLEN));
         else
             storeAppendPrintf(entry, "%s autoselect", name);
 
@@ -3495,7 +3495,7 @@ dump_IpAddress_list(StoreEntry * e, const char *n, const Ip::Address_list * s)
     while (s) {
         storeAppendPrintf(e, "%s %s\n",
                           n,
-                          s->s.NtoA(ntoabuf,MAX_IPSTRLEN));
+                          s->s.toStr(ntoabuf,MAX_IPSTRLEN));
         s = s->next;
     }
 }
@@ -3572,22 +3572,22 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
     }
 
     if (NULL == host) {
-        s->s.SetAnyAddr();
-        s->s.SetPort(port);
+        s->s.setAnyAddr();
+        s->s.port(port);
         if (!Ip::EnableIpv6)
-            s->s.SetIPv4();
-        debugs(3, 3, s->protocol << "_port: found Listen on wildcard address: *:" << s->s.GetPort() );
+            s->s.setIPv4();
+        debugs(3, 3, s->protocol << "_port: found Listen on wildcard address: *:" << s->s.port() );
     } else if ( (s->s = host) ) { /* check/parse numeric IPA */
-        s->s.SetPort(port);
+        s->s.port(port);
         if (!Ip::EnableIpv6)
-            s->s.SetIPv4();
+            s->s.setIPv4();
         debugs(3, 3, s->protocol << "_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
         s->defaultsite = xstrdup(host);
-        s->s.SetPort(port);
+        s->s.port(port);
         if (!Ip::EnableIpv6)
-            s->s.SetIPv4();
+            s->s.setIPv4();
         debugs(3, 3, s->protocol << "_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
     } else {
         debugs(3, DBG_CRITICAL, s->protocol << "_port: failed to resolve Host/IP: " << host);
@@ -3621,7 +3621,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
         if (Ip::EnableIpv6)
             debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
-        if ( !s->s.SetIPv4() ) {
+        if ( !s->s.setIPv4() ) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot NAT intercept (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
@@ -3716,7 +3716,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         else
             self_destruct();
     } else if (strcmp(token, "ipv4") == 0) {
-        if ( !s->s.SetIPv4() ) {
+        if ( !s->s.setIPv4() ) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used as IPv4-Only. " << s->s );
             self_destruct();
         }
@@ -3851,10 +3851,10 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     }
 #endif
 
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.IsAnyAddr()) {
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
         s->next = cbdataReference(s->clone());
-        s->next->s.SetIPv4();
+        s->next->s.setIPv4();
         debugs(3, 3, protocol << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
@@ -3871,7 +3871,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 
     storeAppendPrintf(e, "%s %s",
                       n,
-                      s->s.ToURL(buf,MAX_IPSTRLEN));
+                      s->s.toUrl(buf,MAX_IPSTRLEN));
 
     // MODES and specific sub-options.
     if (s->flags.natIntercept)
@@ -3931,7 +3931,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
         storeAppendPrintf(e, " disable-pmtu-discovery=%s", pmtu);
     }
 
-    if (s->s.IsAnyAddr() && !s->s.IsIPv6())
+    if (s->s.isAnyAddr() && !s->s.isIPv6())
         storeAppendPrintf(e, " ipv4");
 
     if (s->tcp_keepalive.enabled) {

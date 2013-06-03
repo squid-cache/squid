@@ -195,7 +195,7 @@ DiskdIOStrategy::init()
     args[2] = skey2;
     args[3] = skey3;
     args[4] = NULL;
-    localhost.SetLocalhost();
+    localhost.setLocalhost();
     pid = ipcCreate(IPC_STREAM,
                     Config.Program.diskd,
                     args,

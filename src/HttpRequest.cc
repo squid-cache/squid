@@ -105,8 +105,8 @@ HttpRequest::init()
     ims = -1;
     imslen = 0;
     lastmod = -1;
-    client_addr.SetEmpty();
-    my_addr.SetEmpty();
+    client_addr.setEmpty();
+    my_addr.setEmpty();
     body_pipe = NULL;
     // hier
     dnsWait = -1;
@@ -126,7 +126,7 @@ HttpRequest::init()
     extacl_message = null_string;
     pstate = psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
-    indirect_client_addr.SetEmpty();
+    indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 #if USE_ADAPTATION
     adaptHistory_ = NULL;

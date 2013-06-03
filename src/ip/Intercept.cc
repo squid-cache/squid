@@ -126,7 +126,7 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int
 #if LINUX_NETFILTER
     struct sockaddr_in lookup;
     socklen_t len = sizeof(struct sockaddr_in);
-    newConn->local.GetSockAddr(lookup);
+    newConn->local.getSockAddr(lookup);
 
     /** \par
      * Try NAT lookup for REDIRECT or DNAT targets. */
@@ -156,7 +156,7 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int sil
     /* Trust the user configured properly. If not no harm done.
      * We will simply attempt a bind outgoing on our own IP.
      */
-    newConn->remote.SetPort(0); // allow random outgoing port to prevent address clashes
+    newConn->remote.port(0); // allow random outgoing port to prevent address clashes
     debugs(89, 5, HERE << "address TPROXY: " << newConn);
     return true;
 #else
@@ -191,10 +191,10 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
     // all fields must be set to 0
     memset(&natLookup, 0, sizeof(natLookup));
     // for NAT lookup set local and remote IP:port's
-    natLookup.nl_inport = htons(newConn->local.GetPort());
-    newConn->local.GetInAddr(natLookup.nl_inip);
-    natLookup.nl_outport = htons(newConn->remote.GetPort());
-    newConn->remote.GetInAddr(natLookup.nl_outip);
+    natLookup.nl_inport = htons(newConn->local.port());
+    newConn->local.getInAddr(natLookup.nl_inip);
+    natLookup.nl_outport = htons(newConn->remote.port());
+    newConn->remote.getInAddr(natLookup.nl_outip);
     // ... and the TCP flag
     natLookup.nl_flags = IPN_TCP;
 
@@ -260,7 +260,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         return false;
     } else {
         newConn->local = natLookup.nl_realip;
-        newConn->local.SetPort(ntohs(natLookup.nl_realport));
+        newConn->local.port(ntohs(natLookup.nl_realport));
         debugs(89, 5, HERE << "address NAT: " << newConn);
         return true;
     }
@@ -301,11 +301,11 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
     }
 
     memset(&nl, 0, sizeof(struct pfioc_natlook));
-    newConn->remote.GetInAddr(nl.saddr.v4);
-    nl.sport = htons(newConn->remote.GetPort());
+    newConn->remote.getInAddr(nl.saddr.v4);
+    nl.sport = htons(newConn->remote.port());
 
-    newConn->local.GetInAddr(nl.daddr.v4);
-    nl.dport = htons(newConn->local.GetPort());
+    newConn->local.getInAddr(nl.daddr.v4);
+    nl.dport = htons(newConn->local.port());
 
     nl.af = AF_INET;
     nl.proto = IPPROTO_TCP;
@@ -324,7 +324,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
         return false;
     } else {
         newConn->local = nl.rdaddr.v4;
-        newConn->local.SetPort(ntohs(nl.rdport));
+        newConn->local.port(ntohs(nl.rdport));
         debugs(89, 5, HERE << "address NAT: " << newConn);
         return true;
     }
@@ -360,8 +360,8 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     }
 
     /* NAT is only available in IPv4 */
-    if ( !newConn->local.IsIPv4()  ) return false;
-    if ( !newConn->remote.IsIPv4() ) return false;
+    if ( !newConn->local.isIPv4()  ) return false;
+    if ( !newConn->remote.isIPv4() ) return false;
 
     if (interceptActive_ && listenConn->flags&COMM_INTERCEPTION) {
         /* NAT methods that use sock-opts to return client address */
@@ -411,13 +411,13 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
     int tmp_sock = -1;
 
     /* Probe to see if the Kernel TPROXY support is IPv6-enabled */
-    if (test.IsIPv6()) {
+    if (test.isIPv6()) {
         debugs(3, 3, "...Probing for IPv6 TPROXY support.");
 
         struct sockaddr_in6 tmp_ip6;
         Ip::Address tmp = "::2";
-        tmp.SetPort(0);
-        tmp.GetSockAddr(tmp_ip6);
+        tmp.port(0);
+        tmp.getSockAddr(tmp_ip6);
 
         if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
                 setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&
@@ -435,7 +435,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         }
     }
 
-    if ( test.IsIPv6() && !test.SetIPv4() ) {
+    if ( test.isIPv6() && !test.setIPv4() ) {
         debugs(3, DBG_CRITICAL, "TPROXY lacks IPv6 support for " << test );
         if (doneSuid)
             leave_suid();
@@ -443,13 +443,13 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
     }
 
     /* Probe to see if the Kernel TPROXY support is IPv4-enabled (aka present) */
-    if (test.IsIPv4()) {
+    if (test.isIPv4()) {
         debugs(3, 3, "...Probing for IPv4 TPROXY support.");
 
         struct sockaddr_in tmp_ip4;
         Ip::Address tmp = "127.0.0.2";
-        tmp.SetPort(0);
-        tmp.GetSockAddr(tmp_ip4);
+        tmp.port(0);
+        tmp.getSockAddr(tmp_ip4);
 
         if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
                 setsockopt(tmp_sock, soLevel, soFlag, (char *)&tos, sizeof(int)) == 0 &&

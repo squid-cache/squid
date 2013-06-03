@@ -133,7 +133,7 @@ Comm::TcpAcceptor::status() const
 
     static char ipbuf[MAX_IPSTRLEN] = {'\0'};
     if (ipbuf[0] == '\0')
-        conn->local.ToHostname(ipbuf, MAX_IPSTRLEN);
+        conn->local.toHostStr(ipbuf, MAX_IPSTRLEN);
 
     static MemBuf buf;
     buf.reset();
@@ -310,13 +310,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
-    details->local.InitAddrInfo(gai);
+    Ip::Address::InitAddrInfo(gai);
 
     errcode = 0; // reset local errno copy.
     if ((sock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
         errcode = errno; // store last accept errno locally.
 
-        details->local.FreeAddrInfo(gai);
+        Ip::Address::FreeAddrInfo(gai);
 
         PROF_stop(comm_accept);
 
@@ -339,21 +339,21 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if ( Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            details->local.FreeAddrInfo(gai);
+            Ip::Address::FreeAddrInfo(gai);
             return COMM_ERROR;
         }
     }
 
     // lookup the local-end details of this new connection
-    details->local.InitAddrInfo(gai);
-    details->local.SetEmpty();
+    Ip::Address::InitAddrInfo(gai);
+    details->local.setEmpty();
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
-        details->local.FreeAddrInfo(gai);
+        Ip::Address::FreeAddrInfo(gai);
         return COMM_ERROR;
     }
     details->local = *gai;
-    details->local.FreeAddrInfo(gai);
+    Ip::Address::FreeAddrInfo(gai);
 
     /* fdstat update */
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
@@ -364,10 +364,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     fdd_table[sock].close_line = 0;
 
     fde *F = &fd_table[sock];
-    details->remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
-    F->remote_port = details->remote.GetPort();
+    details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
+    F->remote_port = details->remote.port();
     F->local_addr = details->local;
-    F->sock_family = details->local.IsIPv6()?AF_INET6:AF_INET;
+    F->sock_family = details->local.isIPv6()?AF_INET6:AF_INET;
 
     // set socket flags
     commSetCloseOnExec(sock);
@@ -384,9 +384,9 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
 #if USE_SQUID_EUI
     if (Eui::TheConfig.euiLookup) {
-        if (conn->remote.IsIPv4()) {
+        if (conn->remote.isIPv4()) {
             conn->remoteEui48.lookup(conn->remote);
-        } else if (conn->remote.IsIPv6()) {
+        } else if (conn->remote.isIPv6()) {
             conn->remoteEui64.lookup(conn->remote);
         }
     }

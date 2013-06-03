@@ -177,7 +177,7 @@ IcmpSquid::Recv()
 
     F = preply.from;
 
-    F.SetPort(0);
+    F.port(0);
 
     switch (preply.opcode) {
 
@@ -224,7 +224,7 @@ IcmpSquid::Open(void)
 
     args[0] = "(pinger)";
     args[1] = NULL;
-    localhost.SetLocalhost();
+    localhost.setLocalhost();
 
     /*
      * Do NOT use IPC_DGRAM (=IPC_UNIX_DGRAM) here because you can't
@@ -258,7 +258,7 @@ IcmpSquid::Open(void)
     /* Tests the pinger immediately using localhost */
     if (Ip::EnableIpv6)
         SendEcho(localhost, S_ICMP_ECHO, "ip6-localhost");
-    if (localhost.SetIPv4())
+    if (localhost.setIPv4())
         SendEcho(localhost, S_ICMP_ECHO, "localhost");
 
 #if _SQUID_WINDOWS_

@@ -549,12 +549,12 @@ getMyHostname(void)
 
     host[0] = '\0';
 
-    if (Config.Sockaddr.http && sa.IsAnyAddr())
+    if (Config.Sockaddr.http && sa.isAnyAddr())
         sa = Config.Sockaddr.http->s;
 
 #if USE_SSL
 
-    if (Config.Sockaddr.https && sa.IsAnyAddr())
+    if (Config.Sockaddr.https && sa.isAnyAddr())
         sa = Config.Sockaddr.https->s;
 
 #endif
@@ -563,9 +563,9 @@ getMyHostname(void)
      * If the first http_port address has a specific address, try a
      * reverse DNS lookup on it.
      */
-    if ( !sa.IsAnyAddr() ) {
+    if ( !sa.isAnyAddr() ) {
 
-        sa.GetAddrInfo(AI);
+        sa.getAddrInfo(AI);
         /* we are looking for a name. */
         if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
@@ -574,13 +574,13 @@ getMyHostname(void)
 
             present = 1;
 
-            sa.FreeAddrInfo(AI);
+            Ip::Address::FreeAddrInfo(AI);
 
             if (strchr(host, '.'))
                 return host;
         }
 
-        sa.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         debugs(50, 2, "WARNING: failed to resolve " << sa << " to a fully qualified hostname");
     }
 
@@ -600,15 +600,14 @@ getMyHostname(void)
             present = 1;
 
             /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
-            if (AI) {
+            if (AI)
                 freeaddrinfo(AI);
-                AI = NULL;
-            }
 
             return host;
         }
 
-        if (AI) freeaddrinfo(AI);
+        if (AI)
+            freeaddrinfo(AI);
         debugs(50, DBG_IMPORTANT, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
     }
 
@@ -1210,7 +1209,7 @@ getMyPort(void)
         while (p && p->flags.isIntercepted())
             p = p->next;
         if (p)
-            return p->s.GetPort();
+            return p->s.port();
     }
 
 #if USE_SSL
@@ -1219,7 +1218,7 @@ getMyPort(void)
         while (p && p->flags.isIntercepted())
             p = p->next;
         if (p)
-            return p->s.GetPort();
+            return p->s.port();
     }
 #endif
 

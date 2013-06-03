@@ -166,7 +166,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 
     connection = new Comm::Connection;
     connection->remote = ia->in_addrs[ia->cur];
-    connection->remote.SetPort(s.cfg().port);
+    connection->remote.port(s.cfg().port);
     getOutgoingAddress(NULL, connection);
 
     // TODO: service bypass status may differ from that of a transaction

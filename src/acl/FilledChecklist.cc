@@ -33,9 +33,9 @@ ACLFilledChecklist::ACLFilledChecklist() :
         destinationDomainChecked_(false),
         sourceDomainChecked_(false)
 {
-    my_addr.SetEmpty();
-    src_addr.SetEmpty();
-    dst_addr.SetEmpty();
+    my_addr.setEmpty();
+    src_addr.setEmpty();
+    dst_addr.setEmpty();
     rfc931[0] = '\0';
 }
 
@@ -149,9 +149,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         destinationDomainChecked_(false),
         sourceDomainChecked_(false)
 {
-    my_addr.SetEmpty();
-    src_addr.SetEmpty();
-    dst_addr.SetEmpty();
+    my_addr.setEmpty();
+    src_addr.setEmpty();
+    dst_addr.setEmpty();
     rfc931[0] = '\0';
 
     // cbdataReferenceDone() is in either fastCheck() or the destructor
