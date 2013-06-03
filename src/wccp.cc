@@ -120,7 +120,7 @@ wccpInit(void)
     last_assign_buckets_change = 0;
     number_caches = 0;
 
-    if (!Config.Wccp.router.IsAnyAddr())
+    if (!Config.Wccp.router.isAnyAddr())
         if (!eventFind(wccpHereIam, NULL))
             eventAdd("wccpHereIam", wccpHereIam, NULL, 5.0, 1);
 }
@@ -130,23 +130,23 @@ wccpConnectionOpen(void)
 {
     debugs(80, 5, "wccpConnectionOpen: Called");
 
-    if (Config.Wccp.router.IsAnyAddr()) {
+    if (Config.Wccp.router.isAnyAddr()) {
         debugs(80, 2, "WCCPv1 disabled.");
         return;
     }
 
-    if ( !Config.Wccp.router.SetIPv4() ) {
+    if ( !Config.Wccp.router.setIPv4() ) {
         debugs(80, DBG_CRITICAL, "WCCPv1 Disabled. Router " << Config.Wccp.router << " is not an IPv4 address.");
         return;
     }
 
-    if ( !Config.Wccp.address.SetIPv4() ) {
+    if ( !Config.Wccp.address.setIPv4() ) {
         debugs(80, DBG_CRITICAL, "WCCPv1 Disabled. Local address " << Config.Wccp.address << " is not an IPv4 address.");
         return;
     }
 
-    Config.Wccp.address.SetPort(WCCP_PORT);
-    Config.Wccp.router.SetPort(WCCP_PORT);
+    Config.Wccp.address.port(WCCP_PORT);
+    Config.Wccp.router.port(WCCP_PORT);
 
     theWccpConnection = comm_open_listener(SOCK_DGRAM,
                                            IPPROTO_UDP,
@@ -164,7 +164,7 @@ wccpConnectionOpen(void)
     // Sadly WCCP only does IPv4
 
     struct sockaddr_in router;
-    Config.Wccp.router.GetSockAddr(router);
+    Config.Wccp.router.getSockAddr(router);
     if (connect(theWccpConnection, (struct sockaddr*)&router, sizeof(router)))
         fatal("Unable to connect WCCP out socket");
 

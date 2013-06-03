@@ -245,7 +245,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 
     case MESH_PTBL_ADDR_TYPE: {
         int ival;
-        ival = laddr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
+        ival = laddr.isIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       ival, SMI_INTEGER);
     }
@@ -257,7 +257,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
         // See: rfc4001.txt
         Answer->type = ASN_OCTET_STR;
         char host[MAX_IPSTRLEN];
-        laddr.NtoA(host,MAX_IPSTRLEN);
+        laddr.toStr(host,MAX_IPSTRLEN);
         Answer->val_len = strlen(host);
         Answer->val.string =  (u_char *) xstrdup(host);
     }

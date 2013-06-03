@@ -130,7 +130,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
                 static int seen_broken_client = 0;
 
                 if (!seen_broken_client) {
-                    last_broken_addr.SetNoAddr();
+                    last_broken_addr.setNoAddr();
                     seen_broken_client = 1;
                 }
 

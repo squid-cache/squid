@@ -610,7 +610,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             *tunnelState->status_ptr = Http::scServiceUnavailable;
             err->xerrno = xerrno;
             // on timeout is this still:    err->xerrno = ETIMEDOUT;
-            err->port = conn->remote.GetPort();
+            err->port = conn->remote.port();
             err->callback = tunnelErrorComplete;
             err->callback_data = tunnelState;
             errorSend(tunnelState->client.conn, err);
@@ -664,12 +664,12 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     char *url = http->uri;
 
     /*
-     * client_addr.IsNoAddr()  indicates this is an "internal" request
+     * client_addr.isNoAddr()  indicates this is an "internal" request
      * from peer_digest.c, asn.c, netdb.c, etc and should always
      * be allowed.  yuck, I know.
      */
 
-    if (Config.accessList.miss && !request->client_addr.IsNoAddr()) {
+    if (Config.accessList.miss && !request->client_addr.isNoAddr()) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.

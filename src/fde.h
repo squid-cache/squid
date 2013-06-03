@@ -157,7 +157,7 @@ private:
     inline void clear() {
         type = 0;
         remote_port = 0;
-        local_addr.SetEmpty();
+        local_addr.setEmpty();
         tosToServer = '\0';
         nfmarkToServer = 0;
         sock_family = 0;

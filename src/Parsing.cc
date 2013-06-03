@@ -302,14 +302,14 @@ GetHostWithPort(char *token, Ip::Address *ipa)
     }
 
     if (NULL == host)
-        ipa->SetAnyAddr();
+        ipa->setAnyAddr();
     else if ( ipa->GetHostByName(host) ) /* dont use ipcache. Accept either FQDN or IPA. */
         (void) 0;
     else
         return false;
 
     /* port MUST be set after the IPA lookup/conversion is performed. */
-    ipa->SetPort(port);
+    ipa->port(port);
 
     return true;
 }
