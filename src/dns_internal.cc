@@ -280,11 +280,11 @@ idnsAddMDNSNameservers()
 
     // mDNS resolver addresses are explicit multicast group IPs
     idnsAddNameserver("FF02::FB");
-    nameservers[nns-1].S.SetPort(5353);
+    nameservers[nns-1].S.port(5353);
     nameservers[nns-1].mDNSResolver = true;
 
     idnsAddNameserver("224.0.0.251");
-    nameservers[nns-1].S.SetPort(5353);
+    nameservers[nns-1].S.port(5353);
     nameservers[nns-1].mDNSResolver = true;
 }
 
