@@ -47,16 +47,6 @@ public:
     /*@{*/
     Address() { setEmpty(); }
     Address(const Ip::Address &);
-
-    /**
-     * This constructor takes its own copy of the object pointed to for memory-safe usage later.
-     * The caller must itself perform and ptr memory-management needed.
-     *
-     \deprecated Use of pointers can be nasty. Consider this a last-resort.
-     *           Prefer the by-reference (&) version instead.
-     */
-    Address(Address *);
-
     Address(const struct in_addr &);
     Address(const struct sockaddr_in &);
     Address(const struct in6_addr &);

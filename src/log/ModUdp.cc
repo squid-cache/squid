@@ -197,7 +197,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
             debugs(50, DBG_IMPORTANT, "Unable to open UDP socket for logging");
             return FALSE;
         }
-    } else if (!comm_connect_addr(ll->fd, &addr)) {
+    } else if (!comm_connect_addr(ll->fd, addr)) {
         if (lf->flags.fatal) {
             fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerror());
         } else {
