@@ -465,15 +465,6 @@ Ip::Address::Address(const Ip::Address &s)
     operator=(s);
 }
 
-#if 0
-Ip::Address::Address(Ip::Address *s)
-{
-    setEmpty();
-    if (s)
-        memcpy(this, s, sizeof(Ip::Address));
-}
-#endif
-
 Ip::Address::Address(const struct hostent &s)
 {
     setEmpty();
