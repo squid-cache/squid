@@ -319,7 +319,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         if (tokenNote != NULL)
             lm_request->server_blob = xstrdup(tokenNote);
         lm_request->releaseAuthServer();
-        debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << reply << "'");
+        debugs(29, 4, "Failed validating user via Negotiate. Result: " << reply);
     }
     break;
 
@@ -343,7 +343,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Error returned " << reply);
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Result: " << reply);
     } // break;
     }
 
