@@ -951,20 +951,31 @@ setEffectiveUser(void)
     }
 }
 
+/// set the working directory.
 static void
 mainSetCwd(void)
 {
     char pathbuf[MAXPATHLEN];
+    static bool chrooted = false;
 
-    if (Config.coredump_dir) {
-        if (0 == strcmp("none", Config.coredump_dir)) {
-            (void) 0;
-        } else if (chdir(Config.coredump_dir) == 0) {
-            debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
-            return;
-        } else {
-            debugs(50, DBG_CRITICAL, "chdir: " << Config.coredump_dir << ": " << xstrerror());
-        }
+    if (Config.chroot_dir && !chrooted) {
+        chrooted = true;
+
+        if (chroot(Config.chroot_dir) != 0);
+            fatal("failed to chroot");
+
+        strncpy(pathbuf, "/", sizeof(pathbuf)-1);
+    }
+
+    if (Config.coredump_dir && strcmp("none", Config.coredump_dir) == 0) {
+        strncpy(pathbuf, Config.coredump_dir, sizeof(pathbuf)-1);
+    }
+
+    if (chdir(pathbuf) == 0) {
+        debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
+        return;
+    } else {
+        debugs(50, DBG_CRITICAL, "chdir: " << pathbuf << ": " << xstrerror());
     }
 
     /* If we don't have coredump_dir or couldn't cd there, report current dir */
@@ -979,10 +990,7 @@ static void
 mainInitialize(void)
 {
     /* chroot if configured to run inside chroot */
-
-    if (Config.chroot_dir && (chroot(Config.chroot_dir) != 0 || chdir("/") != 0)) {
-        fatal("failed to chroot");
-    }
+    mainSetCwd();
 
     if (opt_catch_signals) {
         squid_signal(SIGSEGV, death, SA_NODEFER | SA_RESETHAND);
@@ -1425,11 +1433,8 @@ SquidMain(int argc, char **argv)
     /* send signal to running copy and exit */
     if (opt_send_signal != -1) {
         /* chroot if configured to run inside chroot */
-
+        mainSetCwd();
         if (Config.chroot_dir) {
-            if (chroot(Config.chroot_dir))
-                fatal("failed to chroot");
-
             no_suid();
         } else {
             leave_suid();
@@ -1451,10 +1456,7 @@ SquidMain(int argc, char **argv)
 
     if (opt_create_swap_dirs) {
         /* chroot if configured to run inside chroot */
-
-        if (Config.chroot_dir && chroot(Config.chroot_dir)) {
-            fatal("failed to chroot");
-        }
+        mainSetCwd();
 
         setEffectiveUser();
         debugs(0, DBG_CRITICAL, "Creating missing swap directories");
