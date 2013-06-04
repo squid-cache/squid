@@ -22,7 +22,7 @@ Acl::Tree::lastAction() const
 allow_t
 Acl::Tree::actionAt(const Nodes::size_type pos) const
 {
-    assert(0 <= pos && pos < nodes.size());
+    assert(pos < nodes.size());
     if (actions.size()) {
         assert(actions.size() == nodes.size());
         return actions[pos];
