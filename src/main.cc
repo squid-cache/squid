@@ -951,34 +951,42 @@ setEffectiveUser(void)
     }
 }
 
+/// changes working directory, providing error reporting
+static bool
+mainChangeDir(const char *dir)
+{
+    if (chdir(dir) == 0)
+        return true;
+
+    debugs(50, DBG_CRITICAL, "cannot change current directory to " << dir <<
+           ": " << xstrerror());
+    return false;
+}
+
 /// set the working directory.
 static void
 mainSetCwd(void)
 {
-    char pathbuf[MAXPATHLEN];
     static bool chrooted = false;
-
     if (Config.chroot_dir && !chrooted) {
         chrooted = true;
 
-        if (chroot(Config.chroot_dir) != 0);
-        fatal("failed to chroot");
+        if (chroot(Config.chroot_dir) != 0)
+            fatalf("chroot to %s failed: %s", Config.chroot_dir, xstrerror());
 
-        strncpy(pathbuf, "/", sizeof(pathbuf)-1);
+        if (!mainChangeDir("/"))
+            fatalf("chdir to / after chroot to %s failed", Config.chroot_dir);
     }
 
-    if (Config.coredump_dir && strcmp("none", Config.coredump_dir) == 0) {
-        strncpy(pathbuf, Config.coredump_dir, sizeof(pathbuf)-1);
-    }
-
-    if (chdir(pathbuf) == 0) {
-        debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
-        return;
-    } else {
-        debugs(50, DBG_CRITICAL, "chdir: " << pathbuf << ": " << xstrerror());
+    if (Config.coredump_dir && strcmp("none", Config.coredump_dir) != 0) {
+        if (mainChangeDir(Config.coredump_dir)) {
+            debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
+            return;
+        }
     }
 
     /* If we don't have coredump_dir or couldn't cd there, report current dir */
+    char pathbuf[MAXPATHLEN];
     if (getcwd(pathbuf, MAXPATHLEN)) {
         debugs(0, DBG_IMPORTANT, "Current Directory is " << pathbuf);
     } else {
