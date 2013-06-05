@@ -1295,7 +1295,7 @@ parseBytesUnits(const char *unit)
 static void
 dump_wordlist(StoreEntry * entry, wordlist *words)
 {
-    for (wordlist *word = words; word; word = words->next)
+    for (wordlist *word = words; word; word = word->next)
         storeAppendPrintf(entry, "%s ", word->key);
 }
 
@@ -1341,9 +1341,11 @@ dump_acl_list(StoreEntry * entry, ACLList * head)
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
-    wordlist *lines = head->treeDump(name, NULL);
-    dump_wordlist(entry, lines);
-    wordlistDestroy(&lines);
+    if (head) {
+        wordlist *lines = head->treeDump(name, NULL);
+        dump_wordlist(entry, lines);
+        wordlistDestroy(&lines);
+    }
 }
 
 static void
@@ -4720,10 +4722,10 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 
     bumpCfgStyleLast = bumpCfgStyleNow;
 
-    ACL *rule = new Acl::AndNode;
-    rule->parse();
-    // empty rule OK
+    Acl::AndNode *rule = new Acl::AndNode;
     rule->context("(ssl_bump rule)", config_input_line);
+    rule->lineParse();
+    // empty rule OK
 
     assert(ssl_bump);
     if (!*ssl_bump) {
