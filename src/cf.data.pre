@@ -7740,6 +7740,8 @@ DOC_START
 	can even specify multiple identical services as long as their
 	service_names differ.
 
+	To activate a service, use the adaptation_access directive. To group
+	services, use adaptation_service_chain and adaptation_service_set.
 
 	Service options are separated by white space. ICAP services support
 	the following name=value options:
@@ -7871,6 +7873,8 @@ DOC_START
 		eCAP service must have a unique URI. Obtain the right URI from
 		the service provider.
 
+	To activate a service, use the adaptation_access directive. To group
+	services, use adaptation_service_chain and adaptation_service_set.
 
 	Service options are separated by white space. eCAP services support
 	the following name=value options:
