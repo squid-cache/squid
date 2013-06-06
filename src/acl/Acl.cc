@@ -350,9 +350,9 @@ ACLList::matches (ACLChecklist *checklist) const
         result = (op == 0);
     }
 
-   debugs(28, 4, (op ? null_string : "!") << _acl->name << " result is " <<
-          (result ? "true" : "false"));
-   return result;
+    debugs(28, 4, (op ? null_string : "!") << _acl->name << " result is " <<
+           (result ? "true" : "false"));
+    return result;
 }
 
 /*********************/
