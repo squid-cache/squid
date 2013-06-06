@@ -906,6 +906,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
         HelperReply nilReply;
+        nilReply.result = HelperReply::Error;
         context->clientRedirectDone(nilReply);
     }
 }
