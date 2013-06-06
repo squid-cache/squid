@@ -261,16 +261,20 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (!ok) {
-        Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+        X509 *broken_cert =  X509_STORE_CTX_get_current_cert(ctx);
+        if (!broken_cert)
+            broken_cert = peer_cert;
+
+        Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
         if (!errs) {
-            errs = new Ssl::Errors(error_no);
+            errs = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
             if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
                 debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
                 delete errs;
                 errs = NULL;
             }
         } else // remember another error number
-            errs->push_back_unique(error_no);
+            errs->push_back_unique(Ssl::CertError(error_no, broken_cert));
 
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
@@ -280,7 +284,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (check) {
             ACLFilledChecklist *filledCheck = Filled(check);
             assert(!filledCheck->sslErrors);
-            filledCheck->sslErrors = new Ssl::Errors(error_no);
+            filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
             filledCheck->serverCert.resetAndLock(peer_cert);
             if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
@@ -635,7 +639,7 @@ static void
 ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
                    int, long, void *)
 {
-    Ssl::Errors *errs = static_cast <Ssl::Errors*>(ptr);
+    Ssl::CertErrors *errs = static_cast <Ssl::CertErrors*>(ptr);
     delete errs;
 }
 
@@ -1594,6 +1598,36 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
+}
+
+Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert): code(anErr)
+{ 
+    cert.resetAndLock(aCert);
+}
+
+Ssl::CertError::CertError(CertError const &err): code(err.code)
+{
+    cert.resetAndLock(err.cert.get());
+}
+
+Ssl::CertError &
+Ssl::CertError::operator = (const CertError &old) 
+{
+    code = old.code; 
+    cert.resetAndLock(old.cert.get());
+    return *this;
+}
+
+bool
+Ssl::CertError::operator == (const CertError &ce) const
+{
+    return code == ce.code && cert.get() == ce.cert.get();
+}
+
+bool
+Ssl::CertError::operator != (const CertError &ce) const
+{
+    return code != ce.code || cert.get() != ce.cert.get();
 }
 
 #endif /* USE_SSL */
