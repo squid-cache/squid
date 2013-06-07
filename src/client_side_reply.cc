@@ -38,7 +38,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"

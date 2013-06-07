@@ -38,7 +38,7 @@
 #include "DnsLookupDetails.h"
 #include "errorpage.h"
 #include "event.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "hier_code.h"
 #include "htcp.h"

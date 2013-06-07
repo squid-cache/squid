@@ -15,7 +15,7 @@
 #include "CommCalls.h"
 #include "err_detail_type.h"
 #include "fde.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
