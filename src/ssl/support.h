@@ -76,7 +76,8 @@ typedef CbDataList<Ssl::ssl_error_t> Errors;
 
 /// An SSL certificate-related error.
 /// Pairs an error code with the certificate experiencing the error.
-class CertError {
+class CertError
+{
 public:
     ssl_error_t code; ///< certificate error code
     X509_Pointer cert; ///< certificate with the above error code
