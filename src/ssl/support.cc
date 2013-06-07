@@ -1601,7 +1601,7 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
 }
 
 Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert): code(anErr)
-{ 
+{
     cert.resetAndLock(aCert);
 }
 
@@ -1611,9 +1611,9 @@ Ssl::CertError::CertError(CertError const &err): code(err.code)
 }
 
 Ssl::CertError &
-Ssl::CertError::operator = (const CertError &old) 
+Ssl::CertError::operator = (const CertError &old)
 {
-    code = old.code; 
+    code = old.code;
     cert.resetAndLock(old.cert.get());
     return *this;
 }
