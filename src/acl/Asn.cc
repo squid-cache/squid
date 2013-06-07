@@ -39,7 +39,7 @@
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
 #include "cache_cf.h"
-#include "src/forward.h"
+#include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"

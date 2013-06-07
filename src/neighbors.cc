@@ -39,7 +39,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "htcp.h"
 #include "HttpRequest.h"

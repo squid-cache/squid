@@ -36,7 +36,7 @@
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "event.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

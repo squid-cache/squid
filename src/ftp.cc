@@ -40,7 +40,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "html_quote.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
