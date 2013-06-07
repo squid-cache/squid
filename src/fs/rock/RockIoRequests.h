@@ -25,9 +25,14 @@ private:
 class WriteRequest: public ::WriteRequest
 {
 public:
-    WriteRequest(const ::WriteRequest &base, const IoState::Pointer &anSio, const bool last);
+    WriteRequest(const ::WriteRequest &base, const IoState::Pointer &anSio);
     IoState::Pointer sio;
-    const bool isLast;
+
+    /// slot being written using this write request
+    SlotId sidCurrent;
+
+    /// allocated next slot (negative if we are writing the last slot)
+    SlotId sidNext;
 
 private:
     CBDATA_CLASS2(WriteRequest);

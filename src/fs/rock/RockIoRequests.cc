@@ -16,10 +16,10 @@ Rock::ReadRequest::ReadRequest(const ::ReadRequest &base,
 }
 
 Rock::WriteRequest::WriteRequest(const ::WriteRequest &base,
-                                 const IoState::Pointer &anSio,
-                                 const bool last):
+                                 const IoState::Pointer &anSio):
         ::WriteRequest(base),
         sio(anSio),
-        isLast(last)
+        sidCurrent(-1),
+        sidNext(-1)
 {
 }

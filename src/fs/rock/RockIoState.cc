@@ -179,7 +179,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
             // write partial buffer for all collapsed hit readers to see
             // XXX: can we check that this is needed w/o stalling readers
             // that appear right after our check?
-            writeBufToDisk(false);
+            writeBufToDisk(-1);
         }
     }
 
@@ -221,12 +221,6 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     // TODO: if DiskIO module is mmap-based, we should be writing whole pages
     // to avoid triggering read-page;new_head+old_tail;write-page overheads
 
-    // finalize map slice
-    Ipc::StoreMap::Slice &slice =
-        dir->map->writeableSlice(swap_filen, sidCurrent);
-    slice.next = sidNext;
-    slice.size = theBuf.size - sizeof(DbCellHeader);
-
     // finalize db cell header
     DbCellHeader header;
     memcpy(header.key, e->key, sizeof(header.key));
@@ -239,7 +233,7 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     // copy finalized db cell header into buffer
     memcpy(theBuf.mem, &header, sizeof(DbCellHeader));
 
-    writeBufToDisk(sidNext < 0);
+    writeBufToDisk(sidNext);
     theBuf.clear();
 
     sidCurrent = sidNext;
@@ -247,7 +241,7 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
 
 /// Write header-less (XXX) or complete buffer to disk.
 void
-Rock::IoState::writeBufToDisk(const bool last)
+Rock::IoState::writeBufToDisk(const SlotId sidNext)
 {
     // and now allocate another buffer for the WriteRequest so that
     // we can support concurrent WriteRequests (and to ease cleaning)
@@ -262,7 +256,9 @@ Rock::IoState::writeBufToDisk(const bool last)
 
     WriteRequest *const r = new WriteRequest(
         ::WriteRequest(static_cast<char*>(wBuf), diskOffset, theBuf.size,
-            memFreeBufFunc(wBufCap)), this, last);
+            memFreeBufFunc(wBufCap)), this);
+    r->sidCurrent = sidCurrent;
+    r->sidNext = sidNext;
 
     // theFile->write may call writeCompleted immediatelly
     theFile->write(r);

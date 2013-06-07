@@ -50,7 +50,7 @@ private:
     void tryWrite(char const *buf, size_t size, off_t offset);
     size_t writeToBuffer(char const *buf, size_t size);
     void writeToDisk(const SlotId nextSlot);
-    void writeBufToDisk(const bool last);
+    void writeBufToDisk(const SlotId nextSlot);
     SlotId reserveSlotForWriting();
     
     void callBack(int errflag);
