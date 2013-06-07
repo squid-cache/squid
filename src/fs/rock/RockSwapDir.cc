@@ -69,34 +69,81 @@ Rock::SwapDir::get(const cache_key *key)
     if (!slot)
         return NULL;
 
-    const Ipc::StoreMapAnchor::Basics &basics = slot->basics;
-
     // create a brand new store entry and initialize it with stored basics
     StoreEntry *e = new StoreEntry();
     e->lock_count = 0;
-    e->swap_dirn = index;
-    e->swap_filen = filen;
-    e->swap_file_sz = basics.swap_file_sz;
-    e->lastref = basics.lastref;
-    e->timestamp = basics.timestamp;
-    e->expires = basics.expires;
-    e->lastmod = basics.lastmod;
-    e->refcount = basics.refcount;
-    e->flags = basics.flags;
-    e->store_status = STORE_OK;
-    e->setMemStatus(NOT_IN_MEMORY);
-    e->swap_status = SWAPOUT_DONE;
-    e->ping_status = PING_NONE;
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
-    EBIT_CLR(e->flags, RELEASE_REQUEST);
-    EBIT_CLR(e->flags, KEY_PRIVATE);
-    EBIT_SET(e->flags, ENTRY_VALIDATED);
+    anchorEntry(*e, filen, *slot);
+
     e->hashInsert(key);
     trackReferences(*e);
 
     return e;
     // the disk entry remains open for reading, protected from modifications
 }
+
+bool
+Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed)
+{
+    if (!map || !theFile || !theFile->canRead())
+        return false;
+
+    sfileno filen;
+    const Ipc::StoreMapAnchor *const slot = map->openForReading(
+        reinterpret_cast<cache_key*>(collapsed.key), filen);
+    if (!slot)
+        return false;
+
+    anchorEntry(collapsed, filen, *slot);
+    return updateCollapsedWith(collapsed, *slot);
+}
+
+bool
+Rock::SwapDir::updateCollapsed(StoreEntry &collapsed)
+{
+    if (!map || !theFile || !theFile->canRead())
+        return false;
+
+    if (collapsed.swap_filen < 0) // no longer using a disk cache
+        return true;
+    assert(collapsed.swap_dirn == index);
+
+    const Ipc::StoreMapAnchor &s = map->readableEntry(collapsed.swap_filen);
+    return updateCollapsedWith(collapsed, s);
+}
+
+bool
+Rock::SwapDir::updateCollapsedWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor)
+{
+    collapsed.swap_file_sz = anchor.basics.swap_file_sz; // XXX: make atomic
+    return true;
+}
+
+void
+Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor)
+{
+    const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
+
+    e.swap_file_sz = basics.swap_file_sz;
+    e.swap_dirn = index;
+    e.swap_filen = filen;
+    e.lastref = basics.lastref;
+    e.timestamp = basics.timestamp;
+    e.expires = basics.expires;
+    e.lastmod = basics.lastmod;
+    e.refcount = basics.refcount;
+    e.flags = basics.flags;
+
+    e.store_status = STORE_OK;
+    e.setMemStatus(NOT_IN_MEMORY);
+    e.swap_status = SWAPOUT_DONE;
+    e.ping_status = PING_NONE;
+
+    EBIT_SET(e.flags, ENTRY_CACHABLE);
+    EBIT_CLR(e.flags, RELEASE_REQUEST);
+    EBIT_CLR(e.flags, KEY_PRIVATE);
+    EBIT_SET(e.flags, ENTRY_VALIDATED);
+}
+
 
 void Rock::SwapDir::disconnect(StoreEntry &e)
 {
@@ -748,14 +795,16 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         return;
     }
 
-    // XXX: can we check that this is needed w/o stalling readers
-    // that appear right after our check?
-    if (Config.onoff.collapsed_forwarding)
-        CollapsedForwarding::NewData(sio);
-
     if (errflag == DISK_OK) {
         // do not increment sio.offset_ because we do it in sio->write()
-        if (request->isLast) {
+
+        // finalize the shared slice info after writing slice contents to disk
+        Ipc::StoreMap::Slice &slice =
+            map->writeableSlice(sio.swap_filen, request->sidCurrent);
+        slice.size = request->len - sizeof(DbCellHeader);
+        slice.next = request->sidNext;
+        
+        if (request->sidNext < 0) {
             // close, the entry gets the read lock
             map->closeForWriting(sio.swap_filen, true);
             sio.finishedWriting(errflag);
@@ -765,6 +814,8 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         sio.finishedWriting(errflag);
         // and hope that Core will call disconnect() to close the map entry
     }
+
+    CollapsedForwarding::Broadcast(static_cast<const cache_key*>(sio.e->key));
 }
 
 void

@@ -12,13 +12,16 @@ namespace Ipc
 typedef int32_t StoreMapSliceId;
 
 /// a piece of Store entry, linked to other pieces, forming a chain
+/// slices may be appended by writers while readers read the entry
 class StoreMapSlice
 {
 public:
-    StoreMapSlice(): next(-1), size(0) {}
+    typedef uint32_t Size;
 
-    StoreMapSliceId next; ///< ID of the next slice occupied by the entry
-    uint32_t size; ///< slice contents size
+    StoreMapSlice(): size(0), next(-1) {}
+
+    Atomic::WordT<Size> size; ///< slice contents size
+    Atomic::WordT<StoreMapSliceId> next; ///< ID of the next entry slice
 };
 
 
@@ -40,9 +43,18 @@ public:
     /// undo the effects of set(), setKey(), etc., but keep locks and state
     void rewind();
 
+    /* entry state may change immediately after calling these methods unless
+     * the caller holds an appropriate lock */
+    bool empty() const { return !key[0] && !key[1]; }
+    bool reading() const { return lock.readers; }
+    bool writing() const { return lock.writers; }
+    bool complete() const { return !empty() && !writing(); }
+
 public:
     mutable ReadWriteLock lock; ///< protects slot data below
     Atomic::WordT<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
+
+    // fields marked with [app] can be modified when appending-while-reading
 
     uint64_t key[2]; ///< StoreEntry key
 
@@ -52,13 +64,15 @@ public:
         time_t lastref;
         time_t expires;
         time_t lastmod;
-        uint64_t swap_file_sz;
+        uint64_t swap_file_sz; // [app]; XXX: make atomic
         uint16_t refcount;
         uint16_t flags;
     } basics;
 
-    StoreMapSliceId start; ///< where the chain of StoreEntry slices begins
+    /// where the chain of StoreEntry slices begins [app]; XXX: make atomic
+    StoreMapSliceId start; 
 
+#if 0
     /// possible persistent states
     typedef enum {
         Empty, ///< ready for writing, with nothing of value
@@ -66,6 +80,7 @@ public:
         Readable, ///< ready for reading
     } State;
     State state; ///< current state
+#endif
 };
 
 /// A hack to allocate one shared array for both anchors and slices.
@@ -126,6 +141,8 @@ public:
     /// locks and returns an anchor for the empty fileno position; if
     /// overwriteExisting is false and the position is not empty, returns nil
     Anchor *openForWritingAt(sfileno fileno, bool overwriteExisting = true);
+    /// restrict opened for writing entry to appending operations; allow reads
+    void startAppending(const sfileno fileno);
     /// successfully finish creating or updating the entry at fileno pos
     void closeForWriting(const sfileno fileno, bool lockForReading = false);
     /// unlock and "forget" openForWriting entry, making it Empty again
@@ -135,9 +152,11 @@ public:
     /// only works on locked entries; returns nil unless the slice is readable
     const Anchor *peekAtReader(const sfileno fileno) const;
 
-    /// if possible, free the entry and return true
-    /// otherwise mark it as waiting to be freed and return false
+    /// free the entry if possible or mark it as waiting to be freed if not
     void freeEntry(const sfileno fileno);
+    /// free the entry if possible or mark it as waiting to be freed if not
+    /// does nothing if we cannot check that the key matches the cached entry
+    void freeEntryByKey(const cache_key *const key);
 
     /// opens entry (identified by key) for reading, increments read level
     const Anchor *openForReading(const cache_key *const key, sfileno &fileno);
@@ -152,6 +171,8 @@ public:
     const Slice &readableSlice(const AnchorId anchorId, const SliceId sliceId) const;
     /// writeable anchor for the entry created by openForWriting()
     Anchor &writeableEntry(const AnchorId anchorId);
+    /// readable anchor for the entry created by openForReading()
+    const Anchor &readableEntry(const AnchorId anchorId) const;
 
     /// called by lock holder to terminate either slice writing or reading
     void abortIo(const sfileno fileno);

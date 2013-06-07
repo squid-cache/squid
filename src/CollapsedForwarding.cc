@@ -9,8 +9,10 @@
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
 #include "CollapsedForwarding.h"
-#include "SquidConfig.h"
 #include "globals.h"
+#include "SquidConfig.h"
+#include "Store.h"
+#include "store_key_md5.h"
 #include "tools.h"
 
 /// shared memory segment path to use for CollapsedForwarding queue
@@ -25,11 +27,11 @@ std::auto_ptr<CollapsedForwarding::Queue> CollapsedForwarding::queue;
 class CollapsedForwardingMsg
 {
 public:
-    CollapsedForwardingMsg(): processId(-1) {}
+    CollapsedForwardingMsg(): sender(-1) { key[0] = key[1] = 0; }
 
 public:
-    int processId; /// ID of sending process
-    // XXX: add entry info
+    int sender; /// kid ID of sending process
+    uint64_t key[2]; ///< StoreEntry key
 };
 
 // CollapsedForwarding
@@ -38,21 +40,26 @@ void
 CollapsedForwarding::Init()
 {
     Must(!queue.get());
-    queue.reset(new Queue(ShmLabel, KidIdentifier));
+    if (UsingSmp() && IamWorkerProcess())
+        queue.reset(new Queue(ShmLabel, KidIdentifier));
 }
 
 void
-CollapsedForwarding::NewData(const StoreIOState &sio)
+CollapsedForwarding::Broadcast(const cache_key *key)
 {
+    if (!queue.get())
+        return;
+
     CollapsedForwardingMsg msg;
-    msg.processId = KidIdentifier;
-    // XXX: copy data from sio
+    msg.sender = KidIdentifier;
+    memcpy(msg.key, key, sizeof(msg.key));
+
+    debugs(17, 5, storeKeyText(key) << " to " << Config.workers << "-1 workers");
 
     // TODO: send only to workers who are waiting for data
-    // XXX: does not work for non-daemon mode?
     for (int workerId = 1; workerId <= Config.workers; ++workerId) {
         try {
-            if (queue->push(workerId, msg))
+            if (workerId != KidIdentifier && queue->push(workerId, msg))
                 Notify(workerId);
         } catch (const Queue::Full &) {
             debugs(17, DBG_IMPORTANT, "Worker collapsed forwarding push queue "
@@ -66,7 +73,7 @@ void
 CollapsedForwarding::Notify(const int workerId)
 {
     // TODO: Count and report the total number of notifications, pops, pushes.
-    debugs(17, 7, HERE << "kid" << workerId);
+    debugs(17, 7, "to kid" << workerId);
     Ipc::TypedMsgHdr msg;
     // TODO: add proper message type?
     msg.setType(Ipc::mtCollapsedForwardingNotification);
@@ -78,17 +85,18 @@ CollapsedForwarding::Notify(const int workerId)
 void
 CollapsedForwarding::HandleNewData(const char *const when)
 {
-    debugs(17, 4, HERE << "popping all " << when);
+    debugs(17, 4, "popping all " << when);
     CollapsedForwardingMsg msg;
     int workerId;
     int poppedCount = 0;
     while (queue->pop(workerId, msg)) {
-        debugs(17, 3, HERE << "collapsed forwarding data message from " <<
-               workerId);
-        if (workerId != msg.processId) {
-            debugs(17, DBG_IMPORTANT, HERE << "mismatching IDs: " << workerId <<
-                   " != " << msg.processId);
+        debugs(17, 3, "message from kid" << workerId);
+        if (workerId != msg.sender) {
+            debugs(17, DBG_IMPORTANT, "mismatching kid IDs: " << workerId <<
+                   " != " << msg.sender);
         }
+
+        Store::Root().syncCollapsed(reinterpret_cast<const cache_key*>(msg.key));
 
         // XXX: stop and schedule an async call to continue
         assert(++poppedCount < SQUID_MAXFD);
@@ -100,6 +108,7 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
 {
     const int from = msg.getInt();
     debugs(17, 7, HERE << "from " << from);
+    assert(queue.get());
     queue->clearReaderSignal(from);
     HandleNewData("after notification");
 }
@@ -132,8 +141,7 @@ void CollapsedForwardingRr::create(const RunnerRegistry &)
 
 void CollapsedForwardingRr::open(const RunnerRegistry &)
 {
-    if (IamWorkerProcess())
-        CollapsedForwarding::Init();
+    CollapsedForwarding::Init();
 }
 
 CollapsedForwardingRr::~CollapsedForwardingRr()

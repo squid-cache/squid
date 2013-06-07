@@ -5,6 +5,7 @@
 
 #include "squid.h"
 #include "base/RunnersRegistry.h"
+#include "CollapsedForwarding.h"
 #include "HttpReply.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/Pages.h"
@@ -186,34 +187,26 @@ MemStore::get(const cache_key *key)
     if (!slot)
         return NULL;
 
-    const Ipc::StoreMapAnchor::Basics &basics = slot->basics;
-
     // create a brand new store entry and initialize it with stored info
     StoreEntry *e = new StoreEntry();
     e->lock_count = 0;
 
-    e->swap_file_sz = basics.swap_file_sz;
-    e->lastref = basics.lastref;
-    e->timestamp = basics.timestamp;
-    e->expires = basics.expires;
-    e->lastmod = basics.lastmod;
-    e->refcount = basics.refcount;
-    e->flags = basics.flags;
+    // XXX: We do not know the URLs yet, only the key, but we need to parse and
+    // store the response for the Root().get() callers to be happy because they
+    // expect IN_MEMORY entries to already have the response headers and body.
+    // At least one caller calls createMemObject() if there is not one, so
+    // we hide the true object until that happens (to avoid leaking TBD URLs).
+    e->createMemObject("TBD", "TBD");
 
-    e->store_status = STORE_OK;
-    e->mem_status = IN_MEMORY; // setMemStatus(IN_MEMORY) requires mem_obj
-    //e->swap_status = set in StoreEntry constructor to SWAPOUT_NONE;
-    e->ping_status = PING_NONE;
-
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
-    EBIT_CLR(e->flags, RELEASE_REQUEST);
-    EBIT_CLR(e->flags, KEY_PRIVATE);
-    EBIT_SET(e->flags, ENTRY_VALIDATED);
+    anchorEntry(*e, index, *slot);
 
     const bool copied = copyFromShm(*e, index, *slot);
 
     // we copied everything we could to local memory; no more need to lock
     map->closeForReading(index);
+    e->mem_obj->mem_index = -1;
+
+    e->hideMemObject();
 
     if (copied) {
         e->hashInsert(key);
@@ -232,34 +225,129 @@ MemStore::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
     fatal("MemStore::get(key,callback,data) should not be called");
 }
 
+bool
+MemStore::anchorCollapsed(StoreEntry &collapsed)
+{
+    if (!map)
+        return false;
+
+    sfileno index;
+    const Ipc::StoreMapAnchor *const slot = map->openForReading(
+        reinterpret_cast<cache_key*>(collapsed.key), index);
+    if (!slot)
+        return false;
+
+    anchorEntry(collapsed, index, *slot);
+    return updateCollapsedWith(collapsed, index, *slot);
+}
+
+bool
+MemStore::updateCollapsed(StoreEntry &collapsed)
+{
+    if (!map)
+        return false;
+
+    if (collapsed.mem_status != IN_MEMORY) // no longer using a memory cache
+        return false;
+
+    const sfileno index = collapsed.mem_obj->mem_index; 
+
+    // already disconnected from the cache, no need to update
+    if (index < 0) 
+        return true;
+
+    const Ipc::StoreMapAnchor &anchor = map->readableEntry(index);
+    return updateCollapsedWith(collapsed, index, anchor);
+}
+
+bool
+MemStore::updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const Ipc::StoreMapAnchor &anchor)
+{
+    collapsed.swap_file_sz = anchor.basics.swap_file_sz; // XXX: make atomic
+
+    const bool copied = copyFromShm(collapsed, index, anchor);
+
+    return copied; // XXX: when do we unlock the map slot?
+}
+
+/// anchors StoreEntry to an already locked map entry
+void
+MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
+{
+    const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
+
+    e.swap_file_sz = basics.swap_file_sz;
+    e.lastref = basics.lastref;
+    e.timestamp = basics.timestamp;
+    e.expires = basics.expires;
+    e.lastmod = basics.lastmod;
+    e.refcount = basics.refcount;
+    e.flags = basics.flags;
+
+    assert(e.mem_obj);
+    e.store_status = STORE_OK;
+    e.setMemStatus(IN_MEMORY);
+    e.mem_obj->mem_index = index;
+    assert(e.swap_status == SWAPOUT_NONE); // set in StoreEntry constructor
+    e.ping_status = PING_NONE;
+
+    EBIT_SET(e.flags, ENTRY_CACHABLE);
+    EBIT_CLR(e.flags, RELEASE_REQUEST);
+    EBIT_CLR(e.flags, KEY_PRIVATE);
+    EBIT_SET(e.flags, ENTRY_VALIDATED);
+}
+
 /// copies the entire entry from shared to local memory
 bool
 MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
     debugs(20, 7, "mem-loading entry " << index << " from " << anchor.start);
 
-    // XXX: We do not know the URLs yet, only the key, but we need to parse and
-    // store the response for the Root().get() callers to be happy because they
-    // expect IN_MEMORY entries to already have the response headers and body.
-    // At least one caller calls createMemObject() if there is not one, so
-    // we hide the true object until that happens (to avoid leaking TBD URLs).
-    e.createMemObject("TBD", "TBD");
-
     // emulate the usual Store code but w/o inapplicable checks and callbacks:
 
-    Ipc::StoreMapSliceId sid = anchor.start;
-    int64_t offset = 0;
+    Ipc::StoreMapSliceId sid = anchor.start; // optimize: remember the last sid
+    bool wasEof = anchor.complete() && sid < 0;
+    int64_t sliceOffset = 0;
     while (sid >= 0) {
         const Ipc::StoreMapSlice &slice = map->readableSlice(index, sid);
-        const MemStoreMap::Extras &extras = map->extras(sid);
-        StoreIOBuffer sliceBuf(slice.size, offset,
-                               static_cast<char*>(PagePointer(extras.page)));
-        if (!copyFromShmSlice(e, sliceBuf, slice.next < 0))
-            return false;
-        debugs(20, 9, "entry " << index << " slice " << sid << " filled " <<
-               extras.page);
-        offset += slice.size;
-        sid = slice.next;
+        // slice state may change during copying; take snapshots now
+        wasEof = anchor.complete() && slice.next < 0;
+        const Ipc::StoreMapSlice::Size wasSize = slice.size;
+ 
+       if (e.mem_obj->endOffset() < sliceOffset + wasSize) {
+            // size of the slice data that we already copied
+            const size_t prefixSize = e.mem_obj->endOffset() - sliceOffset;
+            assert(prefixSize <= wasSize);
+
+            const MemStoreMap::Extras &extras = map->extras(sid);
+            char *page = static_cast<char*>(PagePointer(extras.page));
+            const StoreIOBuffer sliceBuf(wasSize - prefixSize,
+                                         e.mem_obj->endOffset(),
+                                         page + prefixSize);
+            if (!copyFromShmSlice(e, sliceBuf, wasEof))
+                return false;
+            debugs(20, 9, "entry " << index << " copied slice " << sid <<
+                   " from " << extras.page << " +" << prefixSize);
+        }
+        // else skip a [possibly incomplete] slice that we copied earlier
+
+        // careful: the slice may have grown _and_ gotten the next slice ID!
+        if (slice.next >= 0) {
+            assert(!wasEof);
+            // here we know that slice.size may not change any more
+            if (wasSize >= slice.size) { // did not grow since we started copying
+                sliceOffset += wasSize;
+                sid = slice.next;
+			}
+        } else if (wasSize >= slice.size) { // did not grow
+            break;
+        }
+    }
+
+    if (!wasEof) {
+        debugs(20, 7, "mem-loaded " << e.mem_obj->endOffset() << '/' <<
+               anchor.basics.swap_file_sz << " bytes of " << e);
+        return true;
     }
 
     e.mem_obj->object_sz = e.mem_obj->endOffset(); // from StoreEntry::complete()
@@ -269,15 +357,13 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     assert(static_cast<uint64_t>(e.mem_obj->object_sz) == anchor.basics.swap_file_sz);
     // would be nice to call validLength() here, but it needs e.key
 
-
-    e.hideMemObject();
-
+    // XXX: unlock acnhor here!
     return true;
 }
 
 /// imports one shared memory slice into local memory
 bool
-MemStore::copyFromShmSlice(StoreEntry &e, StoreIOBuffer &buf, bool eof)
+MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
 {
     debugs(20, 7, "buf: " << buf.offset << " + " << buf.length);
 
@@ -392,6 +478,7 @@ MemStore::keep(StoreEntry &e)
         if (copyToShm(e, index, *slot)) {
             slot->set(e);
             map->closeForWriting(index, false);
+            CollapsedForwarding::Broadcast(static_cast<const cache_key*>(e.key));
             return;
         }
         // fall through to the error handling code
@@ -403,6 +490,7 @@ MemStore::keep(StoreEntry &e)
     }
 
     map->abortIo(index);
+    CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
 }
 
 /// copies all local data to shared memory
@@ -531,6 +619,29 @@ MemStore::noteFreeMapSlice(const sfileno sliceId)
         waitingFor.slot = NULL;
         waitingFor.page = NULL;
         pageId = Ipc::Mem::PageId();
+    }
+}
+
+void
+MemStore::unlink(StoreEntry &e)
+{
+    assert(e.mem_obj);
+    if (e.mem_obj->mem_index >= 0) {
+        map->freeEntry(e.mem_obj->mem_index);
+        disconnect(e);
+    } else {
+        map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
+    }
+    e.destroyMemObject();
+}
+
+void
+MemStore::disconnect(StoreEntry &e)
+{
+    assert(e.mem_obj);
+    if (e.mem_obj->mem_index >= 0) {
+        map->abortIo(e.mem_obj->mem_index);
+        e.mem_obj->mem_index = -1;
     }
 }
 

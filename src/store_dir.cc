@@ -811,6 +811,34 @@ StoreController::get(String const key, STOREGETCLIENT aCallback, void *aCallback
     fatal("not implemented");
 }
 
+/// updates the collapsed entry with the corresponding on-disk entry, if any
+bool
+StoreController::anchorCollapsedOnDisk(StoreEntry &collapsed)
+{
+    // TODO: move this loop to StoreHashIndex, just like the one in get().
+    if (const int cacheDirs = Config.cacheSwap.n_configured) {
+        // ask each cache_dir until the entry is found; use static starting
+        // point to avoid asking the same subset of disks more often
+        // TODO: coordinate with put() to be able to guess the right disk often
+        static int idx = 0;
+        for (int n = 0; n < cacheDirs; ++n) {
+            idx = (idx + 1) % cacheDirs;
+            SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(idx));
+            if (!sd->active())
+                continue;
+
+            if (sd->anchorCollapsed(collapsed)) {
+                debugs(20, 3, "cache_dir " << idx << " anchors " << collapsed);
+                return true;
+            }
+        }
+    }
+
+    debugs(20, 4, "none of " << Config.cacheSwap.n_configured <<
+           " cache_dirs have " << collapsed);
+    return false;
+}
+
 // move this into [non-shared] memory cache class when we have one
 /// whether e should be kept in local RAM for possible future caching
 bool
@@ -843,6 +871,18 @@ StoreController::maybeTrimMemory(StoreEntry &e, const bool preserveSwappable)
 
     if (!keepInLocalMemory)
         e.trimMemory(preserveSwappable);
+}
+
+void
+StoreController::memoryUnlink(StoreEntry &e)
+{
+    if (e.mem_status != IN_MEMORY)
+        return;
+
+    if (memStore)
+        memStore->unlink(e);
+    else // TODO: move into [non-shared] memory cache class when we have one
+        e.destroyMemObject();
 }
 
 void
@@ -893,6 +933,33 @@ StoreController::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     debugs(20, 3, "may " << (transients ? "SMP" : "") << " collapse " << *e);
 }
 
+void
+StoreController::syncCollapsed(const cache_key *key)
+{
+    StoreEntry *collapsed = swapDir->get(key);
+    if (!collapsed) // the entry is no longer locally active, ignore the update
+        return;
+
+    debugs(20, 7, "syncing " << *collapsed);
+
+    bool inSync = false;
+    if (memStore && collapsed->mem_status == IN_MEMORY)
+        inSync = memStore->updateCollapsed(*collapsed);
+    else if (collapsed->swap_filen >= 0)
+        inSync = collapsed->store()->updateCollapsed(*collapsed);
+    else if (memStore && memStore->anchorCollapsed(*collapsed))
+        inSync = true; // found in the memory cache
+    else if (anchorCollapsedOnDisk(*collapsed))
+        inSync = true; // found in a disk cache
+
+    if (inSync) {
+        debugs(20, 5, "synced " << *collapsed);
+        collapsed->invokeHandlers();
+    } else { // the backing entry is no longer cached; abort this hit
+        debugs(20, 3, "aborting cacheless " << *collapsed);
+        collapsed->abort();
+    }
+}
 
 StoreHashIndex::StoreHashIndex()
 {
