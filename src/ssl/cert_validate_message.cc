@@ -32,7 +32,7 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
             body +="\n";
             body = body + param_error_name + xitoa(i) + "=" + GetErrorName(err->element.code) + "\n";
             int errorCertPos = -1;
-            if (err->element.cert.get()) 
+            if (err->element.cert.get())
                 errorCertPos = sk_X509_find(peerCerts, err->element.cert.get());
             if (errorCertPos < 0) {
                 // assert this error ?
