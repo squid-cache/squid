@@ -44,7 +44,7 @@
 #include "disk.h"
 #include "event.h"
 #include "fde.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"

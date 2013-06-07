@@ -86,6 +86,15 @@ for FILENAME in `ls -1`; do
 	esac
 
 	#
+	# forward.h means different things to Squid code depending on the path
+	# require the full path is explicit for every include
+	#
+	FI=`grep "#include \"forward.h\"" ${FILENAME}`;
+	if test "x${FI}" != "x" ; then
+		echo "ERROR: ${PWD}/${FILENAME} contains reference to forward.h without path"
+	fi
+
+	#
 	# DEBUG Section list maintenance
 	#
 	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' >>${ROOT}/doc/debug-sections.tmp

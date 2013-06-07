@@ -349,12 +349,12 @@ squid_SOURCES = \
 	fde.h \
 	FileMap.h \
 	filemap.cc \
-	forward.cc \
-	forward.h \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	Generic.h \
 	globals.h \
 	gopher.h \
@@ -1444,11 +1444,12 @@ tests_testCacheManager_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	gopher.h \
 	gopher.cc \
 	hier_code.h \
@@ -1854,11 +1855,12 @@ tests_testEvent_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
@@ -2101,11 +2103,12 @@ tests_testEventLoop_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
@@ -2345,11 +2348,12 @@ tests_test_http_range_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
@@ -2640,11 +2644,12 @@ tests_testHttpRequest_SOURCES = \
 	fd.h \
 	fd.cc \
 	fde.cc \
-	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
@@ -3601,11 +3606,12 @@ tests_testURL_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	forward.cc \
 	fqdncache.h \
 	fqdncache.cc \
 	ftp.h \
 	ftp.cc \
+	FwdState.cc \
+	FwdState.h \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
