@@ -523,7 +523,7 @@ StoreEntry::purgeMem()
 
     debugs(20, 3, "StoreEntry::purgeMem: Freeing memory-copy of " << getMD5Text());
 
-    destroyMemObject();
+    Store::Root().memoryUnlink(*this);
 
     if (swap_status != SWAPOUT_DONE)
         release();
@@ -1279,11 +1279,10 @@ StoreEntry::release()
         return;
     }
 
+    Store::Root().memoryUnlink(*this);
+
     if (StoreController::store_dirs_rebuilding && swap_filen > -1) {
         setPrivateKey();
-
-        if (mem_obj)
-            destroyMemObject();
 
         if (swap_filen > -1) {
             /*
@@ -1312,7 +1311,6 @@ StoreEntry::release()
         unlink();
     }
 
-    setMemStatus(NOT_IN_MEMORY);
     destroyStoreEntry(static_cast<hash_link *>(this));
     PROF_stop(storeRelease);
 }

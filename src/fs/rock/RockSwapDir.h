@@ -65,6 +65,10 @@ public:
     uint64_t slotSize; ///< all db slots are of this size
 
 protected:
+    /* Store API */
+    virtual bool anchorCollapsed(StoreEntry &collapsed);
+    virtual bool updateCollapsed(StoreEntry &collapsed);
+
     /* protected ::SwapDir API */
     virtual bool needsDiskStrand() const;
     virtual void init();
@@ -106,6 +110,9 @@ protected:
     int entryLimit() const { return map->entryLimit(); }
     int entryMaxPayloadSize() const;
     int entriesNeeded(const int64_t objSize) const;
+
+    void anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor);
+    bool updateCollapsedWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor);
 
     friend class Rebuild;
     friend class IoState;

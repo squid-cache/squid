@@ -374,6 +374,22 @@ public:
     /// makes the entry available for collapsing future requests
     virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod) {}
 
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// Update local intransit entry after changes made by appending worker.
+    virtual void syncCollapsed(const cache_key *key) {}
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// removes the entry from the memory cache
+    virtual void memoryUnlink(StoreEntry &e) {}
+
+    /// if the entry is found, tie it to this cache and call updateCollapsed()
+    virtual bool anchorCollapsed(StoreEntry &collapsed) { return false; }
+
+    /// update a local collapsed entry with fresh info from this cache (if any)
+    virtual bool updateCollapsed(StoreEntry &collapsed) { return false; }
+
 private:
     static RefCount<Store> CurrentRoot;
 };

@@ -26,6 +26,12 @@ public:
     /// whether e should be kept in local RAM for possible future caching
     bool keepInLocalMemory(const StoreEntry &e) const;
 
+    /// remove from the cache
+    void unlink(StoreEntry &e);
+
+    /// called when the entry is about to forget its association with mem cache
+    void disconnect(StoreEntry &e);
+
     /* Store API */
     virtual int callback();
     virtual StoreEntry * get(const cache_key *);
@@ -42,6 +48,8 @@ public:
     virtual void reference(StoreEntry &);
     virtual bool dereference(StoreEntry &, bool);
     virtual void maintain();
+    virtual bool anchorCollapsed(StoreEntry &collapsed);
+    virtual bool updateCollapsed(StoreEntry &collapsed);
 
     static int64_t EntryLimit();
 
@@ -51,7 +59,10 @@ protected:
     bool copyToShm(StoreEntry &e, const sfileno index, Ipc::StoreMapAnchor &anchor);
     bool copyToShmSlice(StoreEntry &e, const sfileno index, Ipc::StoreMapAnchor &anchor, int64_t &offset);
     bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
-    bool copyFromShmSlice(StoreEntry &e, StoreIOBuffer &buf, bool eof);
+    bool copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof);
+
+    void anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
+    bool updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const Ipc::StoreMapAnchor &anchor);
 
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 

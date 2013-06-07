@@ -10,7 +10,7 @@ bool
 Ipc::ReadWriteLock::lockShared()
 {
     ++readers; // this locks "new" writers out
-    if (!writers) // there are no old writers
+    if (!writers || appending) // there are no old writers or sharing is OK
         return true;
     --readers;
     return false;
@@ -36,6 +36,7 @@ Ipc::ReadWriteLock::unlockShared()
 void
 Ipc::ReadWriteLock::unlockExclusive()
 {
+    appending = 0;
     assert(writers-- > 0);
 }
 
@@ -47,6 +48,13 @@ Ipc::ReadWriteLock::switchExclusiveToShared()
 }
 
 void
+Ipc::ReadWriteLock::startAppending()
+{
+    assert(writers > 0);
+    appending++;
+}
+
+void
 Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
 {
     if (readers) {
@@ -55,6 +63,7 @@ Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
     } else if (writers) {
         ++stats.writeable;
         stats.writers += writers;
+        stats.appenders += appending;
     } else {
         ++stats.idle;
     }
@@ -87,7 +96,9 @@ Ipc::ReadWriteLockStats::dump(StoreEntry &e) const
         const int locked = readers + writers;
         storeAppendPrintf(&e, "Readers:         %9d %6.2f%%\n",
                           readers, (100.0 * readers / locked));
-        storeAppendPrintf(&e, "Writers:         %9d %6.2f%%\n",
-                          writers, (100.0 * writers / locked));
+        const double appPerc = writers ? (100.0 * appenders / writers) : 0.0;
+        storeAppendPrintf(&e, "Writers:         %9d %6.2f%% including Appenders: %9d %6.2f%%\n",
+                          writers, (100.0 * writers / locked),
+                          appenders, appPerc);
     }
 }

@@ -8,6 +8,7 @@
 
 #include "ipc/Queue.h"
 #include "ipc/forward.h"
+#include "typedefs.h"
 
 #include <memory>
 
@@ -20,8 +21,11 @@ public:
     /// open shared memory segment
     static void Init();
 
-    /// notify other workers that new data is available
+    /// XXX: remove
     static void NewData(const StoreIOState &sio);
+
+    /// notify other workers that new data is available
+    static void Broadcast(const cache_key *key);
 
     /// kick worker with empty IPC queue
     static void Notify(const int workerId);

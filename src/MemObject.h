@@ -139,6 +139,7 @@ public:
     } abort;
     char *log_url;
     RemovalPolicyNode repl;
+    int32_t mem_index; ///< entry position inside the [shared] memory cache
     int id;
     int64_t object_sz;
     size_t swap_hdr_sz;

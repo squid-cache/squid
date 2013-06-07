@@ -175,8 +175,8 @@ Transients::get(const cache_key *key)
     // neighbors_do_private_keys (which is true in most cases and by default).
     // This is nothing but waste of CPU cycles. Need a better API to avoid it.
     e->setPublicKey();
+    assert(e->key);
 
-    assert(e->next); // e->hashInsert(key) is done in setPublicKey()
     return e;
 }
 

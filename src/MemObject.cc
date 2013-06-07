@@ -83,7 +83,7 @@ MemObject::resetUrls(char const *aUrl, char const *aLog_url)
     url = xstrdup(aUrl);
 }
 
-MemObject::MemObject(char const *aUrl, char const *aLog_url)
+MemObject::MemObject(char const *aUrl, char const *aLog_url): mem_index(-1)
 {
     debugs(20, 3, HERE << "new MemObject " << this);
     _reply = new HttpReply;
@@ -115,6 +115,7 @@ MemObject::~MemObject()
     assert(chksum == url_checksum(url));
 #endif
 
+    assert(mem_index < 0);
     if (!shutting_down)
         assert(swapout.sio == NULL);
 
