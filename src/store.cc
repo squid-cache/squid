@@ -74,8 +74,6 @@
 #include <limits.h>
 #endif
 
-static STMCB storeWriteComplete;
-
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
 #define STORE_IN_MEM_BUCKETS            (229)
@@ -870,21 +868,6 @@ StoreEntry::expireNow()
 }
 
 void
-storeWriteComplete (void *data, StoreIOBuffer wroteBuffer)
-{
-    PROF_start(storeWriteComplete);
-    StoreEntry *e = (StoreEntry *)data;
-
-    if (EBIT_TEST(e->flags, DELAY_SENDING)) {
-        PROF_stop(storeWriteComplete);
-        return;
-    }
-
-    e->invokeHandlers();
-    PROF_stop(storeWriteComplete);
-}
-
-void
 StoreEntry::write (StoreIOBuffer writeBuffer)
 {
     assert(mem_obj != NULL);
@@ -892,10 +875,17 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);
 
+    // XXX: caller uses content offset, but we also store headers
+    if (const HttpReply *reply = mem_obj->getReply())
+        writeBuffer.offset += reply->hdr_sz;
+
     debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
     PROF_stop(StoreEntry_write);
     storeGetMemSpace(writeBuffer.length);
-    mem_obj->write (writeBuffer, storeWriteComplete, this);
+    mem_obj->write(writeBuffer);
+
+    if (!EBIT_TEST(flags, DELAY_SENDING))
+        invokeHandlers();
 }
 
 /* Append incoming data from a primary server to an entry. */
