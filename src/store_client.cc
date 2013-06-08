@@ -479,12 +479,6 @@ store_client::fileRead()
               this);
 }
 
-static void
-storeClientMemWriteComplete(void *data, StoreIOBuffer wroteBuffer)
-{
-    // Nothin to do here but callback is needed
-}
-
 void
 store_client::readBody(const char *buf, ssize_t len)
 {
@@ -512,15 +506,11 @@ store_client::readBody(const char *buf, ssize_t len)
         // The above may start to free our object so we need to check again
         if (entry->mem_obj->inmem_lo == 0) {
             /* Copy read data back into memory.
-             * but first we need to adjust offset.. some parts of the code
-             * counts offset including headers, some parts count offset as
-             * withing the body.. copyInto is including headers, but the mem
-             * cache expects offset without headers (using negative for headers)
-             * eventually not storing packed headers in memory at all.
+             * copyInto.offset includes headers, which is what mem cache needs
              */
             int64_t mem_offset = entry->mem_obj->endOffset();
             if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
-                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset - rep->hdr_sz, copyInto.data), storeClientMemWriteComplete, this);
+                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset, copyInto.data));
             }
         }
     }
