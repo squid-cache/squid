@@ -63,7 +63,7 @@ public:
     /// replaces construction-time URLs with correct ones; see hidden_mem_obj
     void resetUrls(char const *aUrl, char const *aLog_url);
 
-    void write(StoreIOBuffer, STMCB *, void *);
+    void write(const StoreIOBuffer &buf);
     void unlinkRequest();
     HttpReply const *getReply() const;
     void replaceHttpReply(HttpReply *newrep);
