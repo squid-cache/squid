@@ -60,6 +60,11 @@ void
 ACLChecklist::preCheck(const char *what)
 {
     debugs(28, 3, HERE << this << " checking " << what);
+
+    // concurrent checks using the same Checklist are not supported
+    assert(!occupied_);
+    occupied_ = true;
+
     AclMatchedName = NULL;
     finished_ = false;
 }
@@ -148,6 +153,9 @@ ACLChecklist::checkCallback(allow_t answer)
     if (cbdataReferenceValidDone(callback_data, &cbdata_))
         callback_(answer, cbdata_);
 
+    // not really meaningful just before delete, but here for completeness sake
+    occupied_ = false;
+
     delete this;
 }
 
@@ -156,6 +164,7 @@ ACLChecklist::ACLChecklist() :
         callback (NULL),
         callback_data (NULL),
         asyncCaller_(false),
+        occupied_(false),
         finished_(false),
         allow_(ACCESS_DENIED),
         asyncStage_(asyncNone),
@@ -287,10 +296,10 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
     preCheck("fast ACLs");
     asyncCaller_ = false;
 
-    // This call is not compatible with a pre-set accessList because we cannot
-    // tell whether this Checklist is used by some other concurent call, which
-    // is not supported.
-    assert(!accessList);
+    // Concurrent checks are not supported, but sequential checks are, and they
+    // may use a mixture of fastCheck(void) and fastCheck(list) calls.
+    const Acl::Tree * const savedList = accessList;
+
     accessList = cbdataReference(list);
 
     // assume DENY/ALLOW on mis/matches due to action-free accessList
@@ -301,6 +310,8 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
         markFinished(ACCESS_DENIED, "ACLs failed to match");
 
     cbdataReferenceDone(accessList);
+    accessList = savedList;
+    occupied_ = false;
     PROF_stop(aclCheckFast);
     return currentAnswer();
 }
@@ -324,6 +335,7 @@ ACLChecklist::fastCheck()
         // if finished (on a match or in exceptional cases), stop
         if (finished()) {
             cbdataReferenceDone(acl);
+            occupied_ = false;
             PROF_stop(aclCheckFast);
             return currentAnswer();
         }
@@ -334,6 +346,7 @@ ACLChecklist::fastCheck()
     // There were no rules to match or no rules matched
     calcImplicitAnswer();
     cbdataReferenceDone(acl);
+    occupied_ = false;
     PROF_stop(aclCheckFast);
 
     return currentAnswer();
