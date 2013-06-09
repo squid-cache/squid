@@ -115,7 +115,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    resources and de-duplicate the cache content. <em>store_id_access</em> is provided to
    allow ACL-based tuning of which traffic gets sent to the helper and reduce overheads.
 
-<p>Once subtle and noteworthy difference between Squid-2 and Squid-3 which is highlighted by
+<p>One subtle and noteworthy difference between Squid-2 and Squid-3 which is highlighted by
    this feature is that <em>refresh_pattern</em> applies its regex argument against the Store
    ID key and not the transaction URL. So using the Store-ID feature to alter the value
    affects which <em>refresh_pattern</em> directive will be matched.
