@@ -1141,7 +1141,7 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "Դուք իրականացրեցիք հարցում <q>only-if-cached</q> քեշի կառավարման դիրեկտիվով: "
-"Փաստաթուղթը քեշում բացակայում է <em>կամ</em պահանջվում է <q>only-if-cached</"
+"Փաստաթուղթը քեշում բացակայում է <em>կամ</em> պահանջվում է <q>only-if-cached</"
 "q> դիրեկտիվի կողմից արգելված հաստատում:"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
