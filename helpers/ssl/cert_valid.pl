@@ -175,7 +175,7 @@ sub parseRequest
             my($vallen) = index($request, "\n");
             my $host = substr($request, 5, $vallen - 5);
             $$hostname = $host;
-            $request =~ s/^host=.*\n//;
+            $request =~ s/^host=.*$//m;
         }
         if ($request =~ /^cert_(\d+)=/) {
             my $certId = "cert_".$1;
