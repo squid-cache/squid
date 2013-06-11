@@ -3463,8 +3463,6 @@ AC_CONFIG_FILES([\
 	tools/purge/Makefile
 ])
 
-dnl AC_CONFIG_SUBDIRS(lib/libTrie)
-
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 #AC_CONFIG_SUBDIRS(libltdl)
 
