@@ -1254,9 +1254,11 @@ void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
     HttpRequest * request_ = NULL;
+    HttpRequest * adapted_request_ = NULL;
     HttpReply * reply_ = NULL;
-    if (!(request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
-        request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
+    request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
+    if (!(adapted_request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
+        adapted_request_ = request_;
         reply_ = dynamic_cast<HttpReply*>(adapted.header);
     }
 
@@ -1270,6 +1272,8 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     al.cache.caddr = request_->client_addr;
 
     al.request = HTTPMSGLOCK(request_);
+    al.adapted_request = HTTPMSGLOCK(adapted_request_);
+
     if (reply_)
         al.reply = HTTPMSGLOCK(reply_);
     else
@@ -1313,7 +1317,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         packerClean(&p);
         mb.clean();
     }
-    prepareLogWithRequestDetails(request_, alep);
+    prepareLogWithRequestDetails(adapted_request_, alep);
     Xaction::finalizeLogInfo();
 }
 
