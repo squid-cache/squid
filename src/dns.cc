@@ -39,6 +39,10 @@
 #include "Store.h"
 #include "wordlist.h"
 
+#if SQUID_SNMP
+#include "snmp_core.h"
+#endif
+
 /* MS VisualStudio Projects are monolitich, so we need the following
    #if to include the external DNS code in compile process when
    using external DNS.
