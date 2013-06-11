@@ -35,8 +35,8 @@
 #include "base/Vector.h"
 #include "esi/CustomParser.h"
 #include "Debug.h"
-#include "Trie.h"
-#include "TrieCharTransform.h"
+#include "libTrie/Trie.h"
+#include "libTrie/TrieCharTransform.h"
 
 Trie *ESICustomParser::SearchTrie=NULL;
 
