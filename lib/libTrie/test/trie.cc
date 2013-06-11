@@ -17,9 +17,9 @@
  *
  */
 
-#include "config.h"
-#include "Trie.h"
-#include "TrieCharTransform.h"
+#include "squid.h"
+#include "libTrie/Trie.h"
+#include "libTrie/TrieCharTransform.h"
 
 #if HAVE_IOSTREAM
 #include <iostream>

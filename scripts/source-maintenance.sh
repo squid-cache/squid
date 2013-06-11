@@ -120,7 +120,7 @@ for FILENAME in `ls -1`; do
 
     esac
 
-    if test "$FILENAME" = "libltdl" -o "$FILENAME" = "libTrie" ; then
+    if test "$FILENAME" = "libltdl" ; then
         :
     elif test -d $FILENAME ; then
 	cd $FILENAME
