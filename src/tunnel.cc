@@ -114,8 +114,10 @@ public:
     bool waitingForConnectExchange() const { return waitingForConnectRequest() || waitingForConnectResponse(); }
 
     /// Whether the client sent a CONNECT request to us.
-    bool clientExpectsConnectResponse() const { return !(request != NULL &&
-        (request->flags.interceptTproxy || request->flags.intercepted)); }
+    bool clientExpectsConnectResponse() const {
+        return !(request != NULL &&
+                 (request->flags.interceptTproxy || request->flags.intercepted));
+    }
 
     class Connection
     {
@@ -357,7 +359,7 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
 
     // Ideally, client and server should use MemBuf or better, but current code
     // never accumulates more than one read when shoveling data (XXX) so it does
-    // not need to deal with MemBuf complexity. To keep it simple, we use a 
+    // not need to deal with MemBuf complexity. To keep it simple, we use a
     // dedicated MemBuf for accumulating CONNECT responses. TODO: When shoveling
     // is optimized, reuse server.buf for CONNEC response accumulation instead.
 
@@ -508,10 +510,10 @@ TunnelStateData::keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, 
 void
 TunnelStateData::copy(size_t len, Connection &from, Connection &to, IOCB *completion)
 {
-        debugs(26, 3, HERE << "Schedule Write");
-        AsyncCall::Pointer call = commCbCall(5,5, "TunnelBlindCopyWriteHandler",
-                                             CommIoCbPtrFun(completion, this));
-        Comm::Write(to.conn, from.buf, len, call, NULL);
+    debugs(26, 3, HERE << "Schedule Write");
+    AsyncCall::Pointer call = commCbCall(5,5, "TunnelBlindCopyWriteHandler",
+                                         CommIoCbPtrFun(completion, this));
+    Comm::Write(to.conn, from.buf, len, call, NULL);
 }
 
 /* Writes data from the client buffer to the server side */
@@ -673,7 +675,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     *tunnelState->status_ptr = Http::scOkay;
     if (cbdataReferenceValid(tunnelState)) {
         if (!tunnelState->server.len)
-        tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
+            tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
         else
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
         tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
@@ -929,16 +931,16 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.append("\r\n", 2);
 
     if (tunnelState->clientExpectsConnectResponse()) {
-    // hack: blindly tunnel peer response (to our CONNECT request) to the client as ours.
-    AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                   CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
-    Comm::Write(srv, &mb, writeCall);
+        // hack: blindly tunnel peer response (to our CONNECT request) to the client as ours.
+        AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                       CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+        Comm::Write(srv, &mb, writeCall);
     } else {
         // we have to eat the connect response from the peer (so that the client
         // does not see it) and only then start shoveling data to the client
         AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectReqWriteDone",
                                        CommIoCbPtrFun(tunnelConnectReqWriteDone,
-                                       tunnelState));
+                                                      tunnelState));
         Comm::Write(srv, &mb, writeCall);
         tunnelState->connectReqWriting = true;
 
