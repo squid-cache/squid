@@ -510,7 +510,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_ADAPTED_REQUEST_HEADER:
 
-            if (al->request)
+            if (al->adapted_request)
                 sb = al->adapted_request->header.getByName(fmt->data.header.header);
 
             out = sb.termedBuf();
