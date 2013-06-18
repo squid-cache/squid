@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "globals.h"
 #include "helper.h"
 #include "ssl/support.h"
 #include "ssl/cert_validate_message.h"
@@ -10,7 +11,11 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
 {
     body.clear();
     body += Ssl::CertValidationMsg::param_host + "=" + vcert.domainName;
-    STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
+    STACK_OF(X509) *peerCerts = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(vcert.ssl, ssl_ex_index_ssl_cert_chain));
+
+    if (!peerCerts)
+        peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
+
     if (peerCerts) {
         Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
         for (int i = 0; i < sk_X509_num(peerCerts); ++i) {
