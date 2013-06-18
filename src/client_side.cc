@@ -698,27 +698,35 @@ ClientHttpRequest::logRequest()
         }
     }
 
-    ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
-
+    ACLFilledChecklist checklist(NULL, request, NULL);
     if (al->reply) {
-        checklist->reply = al->reply;
-        HTTPMSGLOCK(checklist->reply);
+        checklist.reply = al->reply;
+        HTTPMSGLOCK(checklist.reply);
     }
 
-    if (!Config.accessList.log || checklist->fastCheck() == ACCESS_ALLOWED) {
-        if (request) {
-            al->adapted_request = request;
-            HTTPMSGLOCK(al->adapted_request);
+    if (request) {
+        al->adapted_request = request;
+        HTTPMSGLOCK(al->adapted_request);
+    }
+    accessLogLog(al, &checklist);
+
+    bool updatePerformanceCounters = true;
+    if (Config.accessList.stats_collection) {
+        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, NULL);
+        if (al->reply) {
+            statsCheck.reply = al->reply;
+            HTTPMSGLOCK(statsCheck.reply);
         }
-        accessLogLog(al, checklist);
+        updatePerformanceCounters = (statsCheck.fastCheck() == ACCESS_ALLOWED);
+    }
+
+    if (updatePerformanceCounters) {
         if (request)
             updateCounters();
 
         if (getConn() != NULL && getConn()->clientConnection != NULL)
             clientdbUpdate(getConn()->clientConnection->remote, logType, AnyP::PROTO_HTTP, out.size);
     }
-
-    delete checklist;
 }
 
 void

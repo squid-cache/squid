@@ -373,7 +373,7 @@ public:
         acl_access *AlwaysDirect;
         acl_access *ASlists;
         acl_access *noCache;
-        acl_access *log;
+        acl_access *stats_collection;
 #if SQUID_SNMP
 
         acl_access *snmp;
@@ -397,10 +397,6 @@ public:
 #if FOLLOW_X_FORWARDED_FOR
         acl_access *followXFF;
 #endif /* FOLLOW_X_FORWARDED_FOR */
-
-#if ICAP_CLIENT
-        acl_access* icap;
-#endif
 
         /// spoof_client_ip squid.conf acl.
         /// nil unless configured
