@@ -187,8 +187,7 @@ class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 
 public:
-
-    ConnStateData();
+    explicit ConnStateData(const MasterXaction::Pointer &xact);
     ~ConnStateData();
 
     void readSomeData();
@@ -273,6 +272,7 @@ public:
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
+    /// Squid listening port details where this connection arrived.
     AnyP::PortCfg *port;
 
     bool transparent() const;
