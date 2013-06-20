@@ -122,6 +122,7 @@ public:
         MEMPROXY_CLASS(Entry);
     };
 
+    NotePairs(){}
     ~NotePairs();
 
     /**
@@ -171,6 +172,10 @@ public:
     bool empty() const {return entries.empty();}
 
     Vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+
+private:
+    NotePairs &operator = (NotePairs const &); // Not implemented
+    NotePairs(NotePairs const &); // Not implemented
 };
 
 MEMPROXY_CLASS_INLINE(NotePairs::Entry);
