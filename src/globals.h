@@ -136,6 +136,7 @@ extern int ssl_ex_index_cert_error_check;	/* -1 */
 extern int ssl_ex_index_ssl_error_detail;      /* -1 */
 extern int ssl_ex_index_ssl_peeked_cert;      /* -1 */
 extern int ssl_ex_index_ssl_errors;   /* -1 */
+extern int ssl_ex_index_ssl_cert_chain;  /* -1 */
 
 extern const char *external_acl_message;      /* NULL */
 extern int opt_send_signal;	/* -1 */
