@@ -5,6 +5,7 @@
 #include "base/AsyncJobCalls.h"
 #include "comm_err_t.h"
 #include "comm/forward.h"
+#include "MasterXaction.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
@@ -89,6 +90,11 @@ class CommAcceptCbParams: public CommCommonCbParams
 {
 public:
     CommAcceptCbParams(void *aData);
+
+    void print(std::ostream &os) const;
+
+    /// Transaction which this call is part of.
+    MasterXaction::Pointer xaction;
 };
 
 // connect parameters
