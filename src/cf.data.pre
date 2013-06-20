@@ -4046,29 +4046,29 @@ DOC_START
 DOC_END
 
 NAME: log_access
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with access_log directives to control access logging
+DOC_END
+
+NAME: log_icap
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with icap_log directives to control icap logging
+DOC_END
+
+NAME: stats_collection
 TYPE: acl_access
-LOC: Config.accessList.log
+LOC: Config.accessList.stats_collection
 DEFAULT: none
 DEFAULT_DOC: Allow logging for all transactions.
 COMMENT: allow|deny acl acl...
 DOC_START
-	This options allows you to control which requests gets logged
-	to access.log (see access_log directive). Requests denied for
-	logging will also not be accounted for in performance counters.
+	This options allows you to control which requests gets accounted
+	in performance counters.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-DOC_END
-
-NAME: log_icap
-TYPE: acl_access
-IFDEF: ICAP_CLIENT
-LOC: Config.accessList.icap
-DEFAULT: none
-DEFAULT_DOC: Allow logging for all ICAP transactions.
-DOC_START
-	This options allows you to control which requests get logged
-	to icap.log. See the icap_log directive for ICAP log details.
 DOC_END
 
 NAME: cache_store_log

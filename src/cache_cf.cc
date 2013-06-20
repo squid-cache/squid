@@ -1011,6 +1011,12 @@ parse_obsolete(const char *name)
         debugs(3, DBG_CRITICAL, "WARNING: url_rewrite_concurrency upgrade overriding url_rewrite_children settings.");
         Config.redirectChildren.concurrency = cval;
     }
+
+    if (!strcmp(name, "log_access"))
+        self_destruct();
+
+    if (!strcmp(name, "log_icap"))
+        self_destruct();
 }
 
 /* Parse a time specification from the config file.  Store the
