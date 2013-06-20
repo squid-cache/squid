@@ -3373,6 +3373,8 @@ AC_CONFIG_FILES([\
 	compat/Makefile \
 	lib/Makefile \
 	lib/ntlmauth/Makefile \
+	lib/libTrie/Makefile \
+	lib/libTrie/test/Makefile \
 	lib/profiler/Makefile \
 	lib/rfcnb/Makefile \
 	lib/smblib/Makefile \
@@ -3460,8 +3462,6 @@ AC_CONFIG_FILES([\
 	tools/Makefile
 	tools/purge/Makefile
 ])
-
-AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 #AC_CONFIG_SUBDIRS(libltdl)

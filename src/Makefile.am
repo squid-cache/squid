@@ -80,7 +80,7 @@ if USE_ESI
 SUBDIRS += esi
 ESI_LOCAL_LIBS = \
 	esi/libesi.la \
-	$(top_builddir)/lib/libTrie/src/libTrie.a
+	$(top_builddir)/lib/libTrie/libTrie.a
 ESI_LIBS = $(ESI_LOCAL_LIBS) \
 	$(XMLLIB) \
 	$(EXPATLIB)
