@@ -31,9 +31,13 @@ public:
     void updateStats(ReadWriteLockStats &stats) const;
 
 public:
-    mutable Atomic::Word readers; ///< number of users trying to read
-    Atomic::Word writers; ///< number of writers trying to modify protected data
+    mutable Atomic::Word readers; ///< number of reading users
+    Atomic::Word writing; ///< there is a writing user (there can be at most 1)
     Atomic::Word appending; ///< the writer has promissed to only append
+
+private:
+    mutable Atomic::Word readLevel; ///< number of users reading (or trying to)
+    Atomic::Word writeLevel; ///< number of users writing (or trying to write)
 };
 
 /// approximate stats of a set of ReadWriteLocks
