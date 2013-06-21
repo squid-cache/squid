@@ -397,10 +397,9 @@ OneToOneUniQueue::push(const Value &value, QueueReader *const reader)
     if (full())
         throw Full();
 
-    const bool wasEmpty = empty();
     const unsigned int pos = theIn++ % theCapacity * theMaxItemSize;
     memcpy(theBuffer + pos, &value, sizeof(value));
-    ++theSize;
+    const bool wasEmpty = !theSize++;
 
     return wasEmpty && (!reader || reader->raiseSignal());
 }
