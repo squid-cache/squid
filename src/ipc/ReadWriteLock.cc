@@ -9,49 +9,59 @@
 bool
 Ipc::ReadWriteLock::lockShared()
 {
-    ++readers; // this locks "new" writers out
-    if (!writers || appending) // there are no old writers or sharing is OK
+    ++readLevel; // this locks "new" writers out
+    if (!writeLevel || appending) { // nobody is writing, or sharing is OK
+        ++readers;
         return true;
-    --readers;
+    }
+    --readLevel;
     return false;
 }
 
 bool
 Ipc::ReadWriteLock::lockExclusive()
 {
-    if (!writers++) { // we are the first writer + this locks "new" readers out
-        if (!readers) // there are no old readers
+    if (!writeLevel++) { // we are the first writer + lock "new" readers out
+        if (!readLevel) { // no old readers and nobody is becoming one
+            writing = true;
             return true;
+        }
     }
-    --writers;
+    --writeLevel;
     return false;
 }
 
 void
 Ipc::ReadWriteLock::unlockShared()
 {
-    assert(readers-- > 0);
+    assert(readers > 0);
+    --readers;
+    --readLevel;
 }
 
 void
 Ipc::ReadWriteLock::unlockExclusive()
 {
-    appending = 0;
-    assert(writers-- > 0);
+    assert(writing);
+    appending = false;
+    writing = false;
+    --writeLevel;
 }
 
 void
 Ipc::ReadWriteLock::switchExclusiveToShared()
 {
-    ++readers; // must be done before we release exclusive control
+    assert(writing);
+    ++readLevel; // must be done before we release exclusive control
+    ++readers;
     unlockExclusive();
 }
 
 void
 Ipc::ReadWriteLock::startAppending()
 {
-    assert(writers > 0);
-    appending++;
+    assert(writing);
+    appending = true;
 }
 
 void
@@ -60,9 +70,9 @@ Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
     if (readers) {
         ++stats.readable;
         stats.readers += readers;
-    } else if (writers) {
+    } else if (writing) {
         ++stats.writeable;
-        stats.writers += writers;
+        ++stats.writers;
         stats.appenders += appending;
     } else {
         ++stats.idle;
