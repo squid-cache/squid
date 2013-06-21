@@ -62,8 +62,9 @@ CollapsedForwarding::Broadcast(const cache_key *key)
             if (workerId != KidIdentifier && queue->push(workerId, msg))
                 Notify(workerId);
         } catch (const Queue::Full &) {
-            debugs(17, DBG_IMPORTANT, "Worker collapsed forwarding push queue "
-                   "overflow: " << workerId); // TODO: report queue len
+            debugs(17, DBG_IMPORTANT, "ERROR: Collapsed forwarding " <<
+                   "queue overflow for kid" << workerId <<
+                   " at " << queue->outSize(workerId) << " items");
             // TODO: grow queue size
         }
     }
@@ -96,7 +97,10 @@ CollapsedForwarding::HandleNewData(const char *const when)
                    " != " << msg.sender);
         }
 
-        Store::Root().syncCollapsed(reinterpret_cast<const cache_key*>(msg.key));
+        const cache_key *key = reinterpret_cast<const cache_key*>(msg.key);
+        debugs(17, 7, "hadling " << storeKeyText(key));
+        Store::Root().syncCollapsed(key);
+        debugs(17, 7, "handled " << storeKeyText(key));
 
         // XXX: stop and schedule an async call to continue
         assert(++poppedCount < SQUID_MAXFD);
