@@ -192,11 +192,11 @@ public:
     void updateStats(ReadWriteLockStats &stats) const;
 
     StoreMapCleaner *cleaner; ///< notified before a readable entry is freed
-    const String path; ///< cache_dir path or similar cache name; for logging
 
 protected:
     static Owner *Init(const char *const path, const int limit, const size_t extrasSize);
 
+    const String path; ///< cache_dir path or similar cache name; for logging
     Mem::Pointer<Shared> shared;
 
 private:
