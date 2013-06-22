@@ -47,7 +47,7 @@ public:
      * the caller holds an appropriate lock */
     bool empty() const { return !key[0] && !key[1]; }
     bool reading() const { return lock.readers; }
-    bool writing() const { return lock.writers; }
+    bool writing() const { return lock.writing; }
     bool complete() const { return !empty() && !writing(); }
 
 public:
@@ -174,8 +174,8 @@ public:
     /// readable anchor for the entry created by openForReading()
     const Anchor &readableEntry(const AnchorId anchorId) const;
 
-    /// called by lock holder to terminate either slice writing or reading
-    void abortIo(const sfileno fileno);
+    /// stop writing the entry, freeing its slot for others to use if possible
+    void abortWriting(const sfileno fileno);
 
     /// finds an unlocked entry and frees it or returns false
     bool purgeOne();
@@ -192,18 +192,17 @@ public:
     void updateStats(ReadWriteLockStats &stats) const;
 
     StoreMapCleaner *cleaner; ///< notified before a readable entry is freed
+    const String path; ///< cache_dir path or similar cache name; for logging
 
 protected:
     static Owner *Init(const char *const path, const int limit, const size_t extrasSize);
 
-    const String path; ///< cache_dir path, used for logging
     Mem::Pointer<Shared> shared;
 
 private:
     Anchor &anchorByKey(const cache_key *const key);
 
     Anchor *openForReading(Slice &s);
-    void abortWriting(const sfileno fileno);
 
     void freeChain(const sfileno fileno, Anchor &inode, const bool keepLock);
 };
