@@ -26,11 +26,14 @@ public:
     /// add an in-transit entry suitable for collapsing future requests
     void put(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
 
-    /// cache the entry or forget about it until the next considerKeeping call
-    /// XXX: remove void considerKeeping(StoreEntry &e);
+    /// the calling entry writer no longer expects to cache this entry
+    void abandon(const StoreEntry &e);
 
-    /// whether e should be kept in local RAM for possible future caching
-    /// XXX: remove bool keepInLocalMemory(const StoreEntry &e) const;
+    /// whether an in-transit entry is now abandoned by its writer
+    bool abandoned(const StoreEntry &e) const;
+
+    /// the calling entry writer no longer expects to cache this entry
+    void disconnect(MemObject &mem_obj);
 
     /* Store API */
     virtual int callback();
@@ -52,7 +55,10 @@ public:
     static int64_t EntryLimit();
 
 protected:
+    StoreEntry *copyFromShm(const sfileno index);
     bool copyToShm(const StoreEntry &e, const sfileno index, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
+
+    bool abandonedAt(const sfileno index) const;
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const sfileno sliceId);

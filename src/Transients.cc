@@ -27,7 +27,6 @@ static const char *MapLabel = "transients_map";
 
 Transients::Transients(): map(NULL)
 {
-debugs(0,0, "Transients::ctor");
 }
 
 Transients::~Transients()
@@ -156,6 +155,17 @@ Transients::get(const cache_key *key)
     if (!map->openForReading(key, index))
         return NULL;
 
+    if (StoreEntry *e = copyFromShm(index))
+        return e; // keep read lock to receive updates from others
+
+    // loading failure
+    map->closeForReading(index);
+    return NULL;
+}
+
+StoreEntry *
+Transients::copyFromShm(const sfileno index)
+{
     const TransientsMap::Extras &extras = map->extras(index);
 
     // create a brand new store entry and initialize it with stored info
@@ -167,15 +177,18 @@ Transients::get(const cache_key *key)
 
     assert(e->mem_obj);
     e->mem_obj->method = extras.reqMethod;
-
-    // we copied everything we could to local memory; no more need to lock
-    map->closeForReading(index);
+    e->mem_obj->xitTable.index = index;
 
     // XXX: overwriting storeCreateEntry() which calls setPrivateKey() if
     // neighbors_do_private_keys (which is true in most cases and by default).
     // This is nothing but waste of CPU cycles. Need a better API to avoid it.
     e->setPublicKey();
     assert(e->key);
+
+    // How do we know its SMP- and not just locally-collapsed? A worker gets
+    // locally-collapsed entries from the local store_table, not Transients.
+    // TODO: Can we remove smpCollapsed by not syncing non-transient entries?
+    e->mem_obj->smpCollapsed = true;
 
     return e;
 }
@@ -192,6 +205,8 @@ Transients::put(StoreEntry *e, const RequestFlags &reqFlags,
                 const HttpRequestMethod &reqMethod)
 {
     assert(e);
+    assert(e->mem_obj);
+    assert(e->mem_obj->xitTable.index < 0);
 
     if (!map) {
         debugs(20, 5, "No map to add " << *e);
@@ -201,14 +216,16 @@ Transients::put(StoreEntry *e, const RequestFlags &reqFlags,
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e->key), index);
     if (!slot) {
-        debugs(20, 5, "No room in map to index " << *e);
+        debugs(20, 5, "collision registering " << *e);
         return;
 	}
 
     try {
         if (copyToShm(*e, index, reqFlags, reqMethod)) {
             slot->set(*e);
-            map->closeForWriting(index, false);
+            e->mem_obj->xitTable.index = index;
+            map->startAppending(index);
+            // keep write lock -- we will be supplying others with updates
             return;
 		}
         // fall through to the error handling code
@@ -219,7 +236,7 @@ Transients::put(StoreEntry *e, const RequestFlags &reqFlags,
         // fall through to the error handling code
 	}
 
-    map->abortIo(index);
+    map->abortWriting(index);
 }
 
 
@@ -238,7 +255,6 @@ Transients::copyToShm(const StoreEntry &e, const sfileno index,
 	extras.url[urlLen] = '\0';
 
     extras.reqFlags = reqFlags;
-    
 
     Must(reqMethod != Http::METHOD_OTHER);
     extras.reqMethod = reqMethod.id();
@@ -250,6 +266,42 @@ void
 Transients::noteFreeMapSlice(const sfileno sliceId)
 {
     // TODO: we should probably find the entry being deleted and abort it
+}
+
+void
+Transients::abandon(const StoreEntry &e)
+{
+    assert(e.mem_obj && map);
+    map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
+    // We do not unlock the entry now because the problem is most likely with
+    // the server resource rather than a specific cache writer, so we want to
+    // prevent other readers from collapsing requests for that resource.
+}
+
+bool
+Transients::abandoned(const StoreEntry &e) const
+{
+    assert(e.mem_obj);
+    return abandonedAt(e.mem_obj->xitTable.index);
+}
+
+/// whether an in-transit entry at the index is now abandoned by its writer
+bool
+Transients::abandonedAt(const sfileno index) const
+{
+    assert(map);
+    return map->readableEntry(index).waitingToBeFreed;
+}
+
+void
+Transients::disconnect(MemObject &mem_obj)
+{
+    assert(mem_obj.xitTable.index >= 0 && map);
+    map->freeEntry(mem_obj.xitTable.index); // just marks the locked entry
+    mem_obj.xitTable.index = -1;
+    // We do not unlock the entry now because the problem is most likely with
+    // the server resource rather than a specific cache writer, so we want to
+    // prevent other readers from collapsing requests for that resource.
 }
 
 /// calculates maximum number of entries we need to store and map
@@ -289,12 +341,10 @@ void TransientsRr::run(const RunnerRegistry &r)
 
 void TransientsRr::create(const RunnerRegistry &)
 {
-debugs(0,0, "TransientsRr::create1: " << Config.onoff.collapsed_forwarding);
     if (!Config.onoff.collapsed_forwarding)
         return;
 
     const int64_t entryLimit = Transients::EntryLimit();
-debugs(0,0, "TransientsRr::create2: " << entryLimit);
     if (entryLimit <= 0)
         return; // no SMP configured or a misconfiguration
 

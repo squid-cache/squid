@@ -55,7 +55,7 @@ int MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const STUB_RETVAL
 DelayId MemObject::mostBytesAllowed() const STUB_RETVAL(DelayId())
 #endif
 void MemObject::unlinkRequest() STUB
-void MemObject::write(StoreIOBuffer writeBuffer, STMCB *callback, void *callbackData) STUB
+void MemObject::write(const StoreIOBuffer &writeBuffer) STUB
 void MemObject::replaceHttpReply(HttpReply *newrep) STUB
 int64_t MemObject::lowestMemReaderOffset() const STUB_RETVAL(0)
 void MemObject::kickReads() STUB

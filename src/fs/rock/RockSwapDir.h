@@ -57,7 +57,7 @@ public:
 
     int64_t diskOffset(Ipc::Mem::PageId &pageId) const;
     int64_t diskOffset(int filen) const;
-    void writeError(const sfileno fileno);
+    void writeError(StoreEntry &e);
 
     /* StoreMapCleaner API */
     virtual void noteFreeMapSlice(const sfileno fileno);
@@ -66,7 +66,7 @@ public:
 
 protected:
     /* Store API */
-    virtual bool anchorCollapsed(StoreEntry &collapsed);
+    virtual bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
     virtual bool updateCollapsed(StoreEntry &collapsed);
 
     /* protected ::SwapDir API */

@@ -83,7 +83,8 @@ MemObject::resetUrls(char const *aUrl, char const *aLog_url)
     url = xstrdup(aUrl);
 }
 
-MemObject::MemObject(char const *aUrl, char const *aLog_url): mem_index(-1)
+MemObject::MemObject(char const *aUrl, char const *aLog_url):
+    smpCollapsed(false)
 {
     debugs(20, 3, HERE << "new MemObject " << this);
     _reply = new HttpReply;
@@ -115,9 +116,19 @@ MemObject::~MemObject()
     assert(chksum == url_checksum(url));
 #endif
 
-    assert(mem_index < 0);
-    if (!shutting_down)
+    if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
+        // TODO: Consider moving these to destroyMemoryObject while providing
+        // StoreEntry::memObjForDisconnect() or similar to get access to the
+        // hidden memory object
+        if (xitTable.index >= 0)
+            Store::Root().transientsDisconnect(*this);
+        if (memCache.index >= 0)
+            Store::Root().memoryDisconnect(*this);
+
+        assert(xitTable.index < 0);
+        assert(memCache.index < 0);
         assert(swapout.sio == NULL);
+    }
 
     data_hdr.freeContent();
 

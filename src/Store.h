@@ -121,6 +121,11 @@ public:
     bool memoryCachable() const; ///< may be cached in memory
     void createMemObject(const char *, const char *);
     void hideMemObject(); ///< no mem_obj for callers until createMemObject
+
+    /// Memory cache needs this to get access to memCache.index of entries for
+    /// which the caller did not call StoreEntry::createMemObject().
+    MemObject *findMemObject() { return mem_obj ? mem_obj : hidden_mem_obj; }
+
     void dump(int debug_lvl) const;
     void hashDelete();
     void hashInsert(const cache_key *);
@@ -367,7 +372,7 @@ public:
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // because test cases use non-StoreController derivatives as Root
     /// called to get rid of no longer needed entry data in RAM, if any
-    virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable) {}
+    virtual void memoryOut(StoreEntry &e, const bool preserveSwappable) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
@@ -381,11 +386,27 @@ public:
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// calls Root().transients->abandon() if transients are tracked
+    virtual void transientsAbandon(StoreEntry &e) {}
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// disassociates the entry from the intransit table
+    virtual void transientsDisconnect(MemObject &mem_obj) {}
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
     /// removes the entry from the memory cache
     virtual void memoryUnlink(StoreEntry &e) {}
 
-    /// if the entry is found, tie it to this cache and call updateCollapsed()
-    virtual bool anchorCollapsed(StoreEntry &collapsed) { return false; }
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// disassociates the entry from the memory cache, preserving cached data
+    virtual void memoryDisconnect(MemObject &mem_obj) {}
+
+    /// If the entry is not found, return false. Otherwise, return true after
+    /// tying the entry to this cache and setting inSync to updateCollapsed().
+    virtual bool anchorCollapsed(StoreEntry &collapsed, bool &inSync) { return false; }
 
     /// update a local collapsed entry with fresh info from this cache (if any)
     virtual bool updateCollapsed(StoreEntry &collapsed) { return false; }
