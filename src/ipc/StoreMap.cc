@@ -106,6 +106,7 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
             freeChain(fileno, s, true);
 
         assert(s.empty());
+        s.start = -1; // we have not allocated any slices yet
         ++shared->count;
 
         //s.setKey(key); // XXX: the caller should do that
@@ -180,7 +181,6 @@ Ipc::StoreMap::readableEntry(const AnchorId anchorId) const
     return shared->slots[anchorId].anchor;
 }
 
-/// terminate writing the entry, freeing its slot for others to use
 void
 Ipc::StoreMap::abortWriting(const sfileno fileno)
 {
@@ -194,25 +194,9 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
         debugs(54, 5, "closed clean entry " << fileno << " for writing " << path);
     } else {
         s.waitingToBeFreed = true;
-        // XXX: s.state &= !Anchor::Writeable;
         s.lock.unlockExclusive();
         debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
 	}
-}
-
-void
-Ipc::StoreMap::abortIo(const sfileno fileno)
-{
-    debugs(54, 5, "aborting entry " << fileno << " for I/O in " << path);
-    assert(valid(fileno));
-    Anchor &s = shared->slots[fileno].anchor;
-
-    // The caller is a lock holder. Thus, if we are Writeable, then the
-    // caller must be the writer; otherwise the caller must be the reader.
-    if (s.writing())
-        abortWriting(fileno);
-    else
-        closeForReading(fileno);
 }
 
 const Ipc::StoreMap::Anchor *
@@ -278,6 +262,7 @@ Ipc::StoreMap::freeChain(const sfileno fileno, Anchor &inode, const bool keepLoc
         while (sliceId >= 0) {
             Slice &slice = shared->slots[sliceId].slice;
             const sfileno nextId = slice.next;
+            slice.size = 0;
             slice.next = -1;
             if (cleaner)
                 cleaner->noteFreeMapSlice(sliceId); // might change slice state
