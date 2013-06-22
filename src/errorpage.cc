@@ -637,7 +637,6 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     entry->lock();
     entry->buffer();
     entry->replaceHttpReply( err->BuildHttpReply() );
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
     entry->complete();
     entry->negativeCache();
