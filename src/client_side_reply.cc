@@ -872,7 +872,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
                                            http->getConn()->clientConnection->remote, http->request);
         startError(err);
-        return;
+        return; // XXX: leaking unused entry is some store does not keep it
     }
 
     StoreIOBuffer localTempBuffer;
