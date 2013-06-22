@@ -62,8 +62,11 @@ public:
 
     /* Store parent API */
     virtual void handleIdleEntry(StoreEntry &e);
-    virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable);
+    virtual void transientsAbandon(StoreEntry &e);
+    virtual void transientsDisconnect(MemObject &mem_obj);
+    virtual void memoryOut(StoreEntry &e, const bool preserveSwappable);
     virtual void memoryUnlink(StoreEntry &e);
+    virtual void memoryDisconnect(MemObject &mem_obj);
     virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
     virtual void syncCollapsed(const cache_key *key);
 
@@ -98,7 +101,7 @@ public:
 private:
     void createOneStore(Store &aStore);
     bool keepForLocalMemoryCache(const StoreEntry &e) const;
-    bool anchorCollapsedOnDisk(StoreEntry &collapsed);
+    bool anchorCollapsedOnDisk(StoreEntry &collapsed, bool &inSync);
 
     StorePointer swapDir; ///< summary view of all disk caches
     MemStore *memStore; ///< memory cache

@@ -82,7 +82,7 @@ Rock::SwapDir::get(const cache_key *key)
 }
 
 bool
-Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed)
+Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 {
     if (!map || !theFile || !theFile->canRead())
         return false;
@@ -94,7 +94,8 @@ Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed)
         return false;
 
     anchorEntry(collapsed, filen, *slot);
-    return updateCollapsedWith(collapsed, *slot);
+    inSync = updateCollapsedWith(collapsed, *slot);
+    return false;
 }
 
 bool
@@ -155,8 +156,13 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
     // do not rely on e.swap_status here because there is an async delay
     // before it switches from SWAPOUT_WRITING to SWAPOUT_DONE.
 
-    // since e has swap_filen, its slot is locked for either reading or writing
-    map->abortIo(e.swap_filen);
+    // since e has swap_filen, its slot is locked for reading and/or writing
+    // but it is difficult to know whether THIS worker is reading or writing e
+    if (e.swap_status == SWAPOUT_WRITING ||
+        (e.mem_obj && e.mem_obj->swapout.sio != NULL))
+        map->abortWriting(e.swap_filen);
+    else
+        map->closeForReading(e.swap_filen);
     e.swap_dirn = -1;
     e.swap_filen = -1;
     e.swap_status = SWAPOUT_NONE;
@@ -810,7 +816,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
             sio.finishedWriting(errflag);
         }
     } else {
-        writeError(sio.swap_filen);
+        writeError(*sio.e);
         sio.finishedWriting(errflag);
         // and hope that Core will call disconnect() to close the map entry
     }
@@ -819,11 +825,14 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
 }
 
 void
-Rock::SwapDir::writeError(const sfileno fileno)
+Rock::SwapDir::writeError(StoreEntry &e)
 {
     // Do not abortWriting here. The entry should keep the write lock
     // instead of losing association with the store and confusing core.
-    map->freeEntry(fileno); // will mark as unusable, just in case
+    map->freeEntry(e.swap_filen); // will mark as unusable, just in case
+
+    Store::Root().transientsAbandon(e);
+
     // All callers must also call IoState callback, to propagate the error.
 }
 

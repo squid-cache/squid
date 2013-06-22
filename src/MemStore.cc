@@ -204,7 +204,8 @@ MemStore::get(const cache_key *key)
 
     // we copied everything we could to local memory; no more need to lock
     map->closeForReading(index);
-    e->mem_obj->mem_index = -1;
+    e->mem_obj->memCache.index = -1;
+    e->mem_obj->memCache.io = MemObject::MemCache::ioDone;
 
     e->hideMemObject();
 
@@ -226,7 +227,7 @@ MemStore::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 }
 
 bool
-MemStore::anchorCollapsed(StoreEntry &collapsed)
+MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 {
     if (!map)
         return false;
@@ -238,23 +239,25 @@ MemStore::anchorCollapsed(StoreEntry &collapsed)
         return false;
 
     anchorEntry(collapsed, index, *slot);
-    return updateCollapsedWith(collapsed, index, *slot);
+    inSync = updateCollapsedWith(collapsed, index, *slot);
+    return true; // even if inSync is false
 }
 
 bool
 MemStore::updateCollapsed(StoreEntry &collapsed)
 {
-    if (!map)
-        return false;
+    assert(collapsed.mem_status == IN_MEMORY);
+    MemObject *mem_obj = collapsed.findMemObject();
+    assert(mem_obj);
 
-    if (collapsed.mem_status != IN_MEMORY) // no longer using a memory cache
-        return false;
-
-    const sfileno index = collapsed.mem_obj->mem_index; 
+    const sfileno index = mem_obj->memCache.index; 
 
     // already disconnected from the cache, no need to update
     if (index < 0) 
         return true;
+
+    if (!map)
+        return false;
 
     const Ipc::StoreMapAnchor &anchor = map->readableEntry(index);
     return updateCollapsedWith(collapsed, index, anchor);
@@ -285,9 +288,14 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     e.flags = basics.flags;
 
     assert(e.mem_obj);
-    e.store_status = STORE_OK;
+    if (anchor.complete()) {
+        e.store_status = STORE_OK;
+        e.mem_obj->object_sz = e.swap_file_sz;
+    } else {
+        e.store_status = STORE_PENDING;
+        assert(e.mem_obj->object_sz < 0);
+    }
     e.setMemStatus(IN_MEMORY);
-    e.mem_obj->mem_index = index;
     assert(e.swap_status == SWAPOUT_NONE); // set in StoreEntry constructor
     e.ping_status = PING_NONE;
 
@@ -295,6 +303,10 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     EBIT_CLR(e.flags, RELEASE_REQUEST);
     EBIT_CLR(e.flags, KEY_PRIVATE);
     EBIT_SET(e.flags, ENTRY_VALIDATED);
+
+    MemObject::MemCache &mc = e.mem_obj->memCache;
+    mc.index = index;
+    mc.io = MemObject::MemCache::ioReading;
 }
 
 /// copies the entire entry from shared to local memory
@@ -302,6 +314,7 @@ bool
 MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
     debugs(20, 7, "mem-loading entry " << index << " from " << anchor.start);
+    assert(e.mem_obj);
 
     // emulate the usual Store code but w/o inapplicable checks and callbacks:
 
@@ -313,6 +326,11 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         // slice state may change during copying; take snapshots now
         wasEof = anchor.complete() && slice.next < 0;
         const Ipc::StoreMapSlice::Size wasSize = slice.size;
+
+        debugs(20, 9, "entry " << index << " slice " << sid << " eof " <<
+               wasEof << " wasSize " << wasSize << " <= " <<
+               anchor.basics.swap_file_sz << " sliceOffset " << sliceOffset <<
+               " mem.endOffset " << e.mem_obj->endOffset());
  
        if (e.mem_obj->endOffset() < sliceOffset + wasSize) {
             // size of the slice data that we already copied
@@ -379,6 +397,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
         const int result = rep->httpMsgParseStep(mb.buf, buf.length, eof);
         if (result > 0) {
             assert(rep->pstate == psParsed);
+            EBIT_CLR(e.flags, ENTRY_FWD_HDR_WAIT);
         } else if (result < 0) {
             debugs(20, DBG_IMPORTANT, "Corrupted mem-cached headers: " << e);
             return false;
@@ -398,17 +417,35 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
     return true;
 }
 
+/// whether we should cache the entry
 bool
-MemStore::keepInLocalMemory(const StoreEntry &e) const
+MemStore::shouldCache(const StoreEntry &e) const
 {
+    if (e.mem_status == IN_MEMORY) {
+        debugs(20, 5, "already loaded from mem-cache: " << e);
+        return false;
+    }
+
+    if (e.mem_obj && e.mem_obj->memCache.offset > 0) {
+        debugs(20, 5, "already written to mem-cache: " << e);
+        return false;
+    }
+
     if (!e.memoryCachable()) {
         debugs(20, 7, HERE << "Not memory cachable: " << e);
         return false; // will not cache due to entry state or properties
     }
 
     assert(e.mem_obj);
-    const int64_t loadedSize = e.mem_obj->endOffset();
     const int64_t expectedSize = e.mem_obj->expectedReplySize(); // may be < 0
+
+    // objects of unknown size are not allowed into memory cache, for now
+    if (expectedSize < 0) {
+        debugs(20, 5, HERE << "Unknown expected size: " << e);
+        return false;
+    }
+
+    const int64_t loadedSize = e.mem_obj->endOffset();
     const int64_t ramSize = max(loadedSize, expectedSize);
 
     if (ramSize > maxObjectSize()) {
@@ -417,151 +454,123 @@ MemStore::keepInLocalMemory(const StoreEntry &e) const
         return false; // will not cache due to cachable entry size limits
     }
 
+    if (!map) {
+        debugs(20, 5, HERE << "No map to mem-cache " << e);
+        return false;
+    }
+
     return true;
 }
 
-void
-MemStore::considerKeeping(StoreEntry &e)
+/// locks map anchor and preps to store the entry in shared memory
+bool
+MemStore::startCaching(StoreEntry &e)
 {
-    if (!keepInLocalMemory(e))
-        return;
-
-    // since we copy everything at once, we can only keep complete entries
-    if (e.store_status != STORE_OK) {
-        debugs(20, 7, HERE << "Incomplete: " << e);
-        return;
-    }
-
-    if (e.mem_status == IN_MEMORY) {
-        debugs(20, 5, "already mem-cached: " << e);
-        return;
-    }
-
-    assert(e.mem_obj);
-
-    const int64_t loadedSize = e.mem_obj->endOffset();
-    const int64_t expectedSize = e.mem_obj->expectedReplySize();
-
-    // objects of unknown size are not allowed into memory cache, for now
-    if (expectedSize < 0) {
-        debugs(20, 5, HERE << "Unknown expected size: " << e);
-        return;
-    }
-
-    // since we copy everything at once, we can only keep fully loaded entries
-    if (loadedSize != expectedSize) {
-        debugs(20, 7, HERE << "partially loaded: " << loadedSize << " != " <<
-               expectedSize);
-        return;
-    }
-
-    keep(e); // may still fail
-}
-
-/// locks map anchor and calls copyToShm to store the entry in shared memory
-void
-MemStore::keep(StoreEntry &e)
-{
-    if (!map) {
-        debugs(20, 5, HERE << "No map to mem-cache " << e);
-        return;
-    }
-
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e.key), index);
     if (!slot) {
         debugs(20, 5, HERE << "No room in mem-cache map to index " << e);
-        return;
-    }
-
-    try {
-        if (copyToShm(e, index, *slot)) {
-            slot->set(e);
-            map->closeForWriting(index, false);
-            CollapsedForwarding::Broadcast(static_cast<const cache_key*>(e.key));
-            return;
-        }
-        // fall through to the error handling code
-    } 
-    catch (const std::exception &x) { // TODO: should we catch ... as well?
-        debugs(20, 2, "mem-caching error writing entry " << index <<
-               ' ' << e << ": " << x.what());
-        // fall through to the error handling code
-    }
-
-    map->abortIo(index);
-    CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
-}
-
-/// copies all local data to shared memory
-bool
-MemStore::copyToShm(StoreEntry &e, const sfileno index, Ipc::StoreMapAnchor &anchor)
-{
-    const int64_t eSize = e.mem_obj->endOffset();
-    int64_t offset = 0;
-    lastWritingSlice = -1;
-    while (offset < eSize) {
-        if (!copyToShmSlice(e, index, anchor, offset))
-            return false;
-    }
-
-    // check that we kept everything or purge incomplete/sparse cached entry
-    if (eSize != offset) {
-        debugs(20, 2, "Failed to mem-cache " << e << ": " <<
-               eSize << " != " << offset);
         return false;
     }
 
-    debugs(20, 7, "mem-cached all " << eSize << " bytes of " << e);
-    e.swap_file_sz = eSize;
-
+    assert(e.mem_obj);
+    e.mem_obj->memCache.index = index;
+    e.mem_obj->memCache.io = MemObject::MemCache::ioWriting;
+    slot->set(e);
+    map->startAppending(index);
     return true;
 }
 
-/// copies one slice worth of local memory to shared memory
-bool
-MemStore::copyToShmSlice(StoreEntry &e, const sfileno index, Ipc::StoreMapAnchor &anchor, int64_t &offset)
+/// copies all local data to shared memory
+void
+MemStore::copyToShm(StoreEntry &e)
 {
-    Ipc::Mem::PageId page;
-    Ipc::StoreMapSliceId sid = reserveSapForWriting(page); // throws
-    assert(sid >= 0 && page);
-    map->extras(sid).page = page; // remember the page location for cleanup
-    debugs(20, 7, "entry " << index << " slice " << sid << " has " << page);
-
-    // link this slice with other entry slices to form a store entry chain
-    if (!offset) {
-        assert(lastWritingSlice < 0);
-        anchor.start = sid;
-        debugs(20, 7, "entry " << index << " starts at slice " << sid);
-    } else {
-        assert(lastWritingSlice >= 0);
-        map->writeableSlice(index, lastWritingSlice).next = sid;
-        debugs(20, 7, "entry " << index << " slice " << lastWritingSlice <<
-               " followed by slice " << sid);
+    // prevents remote readers from getting ENTRY_FWD_HDR_WAIT entries and
+    // not knowing when the wait is over
+    if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) {
+        debugs(20, 5, "postponing copying " << e << " for ENTRY_FWD_HDR_WAIT");
+        return;         
     }
-    lastWritingSlice = sid;
+
+    assert(map);
+    assert(e.mem_obj);
+
+    const int32_t index = e.mem_obj->memCache.index;
+    assert(index >= 0);
+    Ipc::StoreMapAnchor &anchor = map->writeableEntry(index);
+
+    const int64_t eSize = e.mem_obj->endOffset();
+    if (e.mem_obj->memCache.offset >= eSize) {
+        debugs(20, 5, "postponing copying " << e << " for lack of news: " <<
+               e.mem_obj->memCache.offset << " >= " << eSize);
+        return; // nothing to do (yet)
+    }
+
+    if (anchor.start < 0) { // must allocate the very first slot for e
+        Ipc::Mem::PageId page;
+        anchor.start = reserveSapForWriting(page); // throws
+        map->extras(anchor.start).page = page;
+    }
+
+    lastWritingSlice = anchor.start;
+    const size_t sliceCapacity = Ipc::Mem::PageSize();
+
+    // fill, skip slices that are already full
+    // Optimize: remember lastWritingSlice in e.mem_obj
+    while (e.mem_obj->memCache.offset < eSize) {
+        Ipc::StoreMap::Slice &slice =
+            map->writeableSlice(e.mem_obj->memCache.index, lastWritingSlice);
+
+        if (slice.size >= sliceCapacity) {
+            if (slice.next >= 0) {
+                lastWritingSlice = slice.next;
+                continue;
+            }
+
+            Ipc::Mem::PageId page;
+            slice.next = lastWritingSlice = reserveSapForWriting(page);
+            map->extras(lastWritingSlice).page = page;
+            debugs(20, 7, "entry " << index << " new slice: " << lastWritingSlice);
+         }
+
+         copyToShmSlice(e, anchor);
+    }
+
+    anchor.basics.swap_file_sz = e.mem_obj->memCache.offset;
+    debugs(20, 7, "mem-cached available " << eSize << " bytes of " << e);
+}
+
+/// copies at most one slice worth of local memory to shared memory
+void
+MemStore::copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor)
+{
+    Ipc::StoreMap::Slice &slice =
+        map->writeableSlice(e.mem_obj->memCache.index, lastWritingSlice);
+
+    Ipc::Mem::PageId page = map->extras(lastWritingSlice).page;
+    assert(lastWritingSlice >= 0 && page);
+    debugs(20, 7, "entry " << e << " slice " << lastWritingSlice << " has " <<
+           page);
 
     const int64_t bufSize = Ipc::Mem::PageSize();
-    StoreIOBuffer sharedSpace(bufSize, offset,
-                              static_cast<char*>(PagePointer(page)));
+    const int64_t sliceOffset = e.mem_obj->memCache.offset % bufSize;
+    StoreIOBuffer sharedSpace(bufSize - sliceOffset, e.mem_obj->memCache.offset,
+                              static_cast<char*>(PagePointer(page)) + sliceOffset);
 
     // check that we kept everything or purge incomplete/sparse cached entry
     const ssize_t copied = e.mem_obj->data_hdr.copy(sharedSpace);
     if (copied <= 0) {
-        debugs(20, 2, "Failed to mem-cache " << e << " using " <<
-               bufSize << " bytes from " << offset << " in " << page);
-        return false;
+        debugs(20, 2, "Failed to mem-cache " << (bufSize - sliceOffset) <<
+               " bytes of " << e << " from " << e.mem_obj->memCache.offset <<
+               " in " << page);
+        throw TexcHere("data_hdr.copy failure");
     }
 
     debugs(20, 7, "mem-cached " << copied << " bytes of " << e <<
-           " from " << offset << " to " << page);
+           " from " << e.mem_obj->memCache.offset << " in " << page);
 
-    Ipc::StoreMapSlice &slice = map->writeableSlice(index, sid);
-    slice.next = -1;
-    slice.size = copied;
-
-    offset += copied;
-    return true;
+    slice.size += copied;
+    e.mem_obj->memCache.offset += copied;
 }
 
 /// finds a slot and a free page to fill or throws
@@ -623,25 +632,91 @@ MemStore::noteFreeMapSlice(const sfileno sliceId)
 }
 
 void
-MemStore::unlink(StoreEntry &e)
+MemStore::write(StoreEntry &e)
 {
     assert(e.mem_obj);
-    if (e.mem_obj->mem_index >= 0) {
-        map->freeEntry(e.mem_obj->mem_index);
-        disconnect(e);
-    } else {
-        map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
+
+    debugs(20, 7, "entry " << e);
+
+    switch (e.mem_obj->memCache.io) {
+    case MemObject::MemCache::ioUndecided:
+        if (!shouldCache(e) || !startCaching(e)) {
+            e.mem_obj->memCache.io = MemObject::MemCache::ioDone;
+            Store::Root().transientsAbandon(e);
+            CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
+            return;
+        }
+        break;
+  
+    case MemObject::MemCache::ioDone:
+    case MemObject::MemCache::ioReading:
+        return; // we should not write in all of the above cases
+
+    case MemObject::MemCache::ioWriting:
+        break; // already decided to write and still writing
     }
-    e.destroyMemObject();
+
+    try {
+        copyToShm(e);
+        if (e.store_status == STORE_OK) // done receiving new content
+            completeWriting(e);
+        CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
+        return;
+    }
+    catch (const std::exception &x) { // TODO: should we catch ... as well?
+        debugs(20, 2, "mem-caching error writing entry " << e << ": " << x.what());
+        // fall through to the error handling code
+    }
+
+    Store::Root().transientsAbandon(e);
+    disconnect(*e.mem_obj);
+    CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
 }
 
 void
-MemStore::disconnect(StoreEntry &e)
+MemStore::completeWriting(StoreEntry &e)
 {
     assert(e.mem_obj);
-    if (e.mem_obj->mem_index >= 0) {
-        map->abortIo(e.mem_obj->mem_index);
-        e.mem_obj->mem_index = -1;
+    const int32_t index = e.mem_obj->memCache.index;
+    assert(index >= 0);
+    assert(map);
+
+    debugs(20, 5, "mem-cached all " << e.mem_obj->memCache.offset << " bytes of " << e);
+
+    e.mem_obj->memCache.index = -1;
+    e.mem_obj->memCache.io = MemObject::MemCache::ioDone;
+    map->closeForWriting(index, false);
+}
+
+void
+MemStore::unlink(StoreEntry &e)
+{
+    assert(e.mem_status == IN_MEMORY);
+    MemObject *mem_obj = e.findMemObject();
+    assert(mem_obj);
+    if (mem_obj->memCache.index >= 0) {
+        map->freeEntry(mem_obj->memCache.index);
+        disconnect(*mem_obj);
+    } else {
+        // the entry was loaded and then disconnected from the memory cache
+        map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
+    }
+        
+    e.destroyMemObject(); // XXX: but it may contain useful info such as a client list. The old code used to do that though, right?
+}
+
+void
+MemStore::disconnect(MemObject &mem_obj)
+{
+    if (mem_obj.memCache.index >= 0) {
+        if (mem_obj.memCache.io == MemObject::MemCache::ioWriting) {
+            map->abortWriting(mem_obj.memCache.index);
+        } else {
+            assert(mem_obj.memCache.io == MemObject::MemCache::ioReading);
+            map->closeForReading(mem_obj.memCache.index);
+        }
+        mem_obj.memCache.index = -1;
+        mem_obj.memCache.io = MemObject::MemCache::ioDone;
     }
 }
 

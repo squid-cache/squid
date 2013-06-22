@@ -202,7 +202,7 @@ StoreEntry::swapOut()
 
     const bool weAreOrMayBeSwappingOut = swappingOut() || mayStartSwapOut();
 
-    Store::Root().maybeTrimMemory(*this, weAreOrMayBeSwappingOut);
+    Store::Root().memoryOut(*this, weAreOrMayBeSwappingOut);
 
     if (mem_obj->swapout.decision != MemObject::SwapOut::swPossible)
         return; // nothing else to do
