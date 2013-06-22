@@ -21,10 +21,7 @@ public:
     /// open shared memory segment
     static void Init();
 
-    /// XXX: remove
-    static void NewData(const StoreIOState &sio);
-
-    /// notify other workers that new data is available
+    /// notify other workers about changes in entry state (e.g., new data)
     static void Broadcast(const cache_key *key);
 
     /// kick worker with empty IPC queue

@@ -264,12 +264,17 @@ store_client::copy(StoreEntry * anEntry,
     PROF_stop(storeClient_kickReads);
     copying = false;
 
+    anEntry->lock("store_client::copy"); // see deletion note below
+
     storeClientCopy2(entry, this);
 
+    // Bug 3480: This store_client object may be deleted now if, for example,
+    // the client rejects the hit response copied above. Use on-stack pointers!
+
 #if USE_ADAPTATION
-    if (entry)
-        entry->kickProducer();
+    anEntry->kickProducer();
 #endif
+    anEntry->unlock("store_client::copy");
 }
 
 /*
@@ -764,6 +769,8 @@ StoreEntry::invokeHandlers()
     PROF_stop(InvokeHandlers);
 }
 
+// XXX: Does not account for remote readers of local writers, causing
+// premature StoreEntry aborts.
 int
 storePendingNClients(const StoreEntry * e)
 {

@@ -497,7 +497,7 @@ destroyStoreEntry(void *data)
 void
 StoreEntry::hashInsert(const cache_key * someKey)
 {
-    debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << this << " key '" << storeKeyText(someKey) << "'");
+    debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << *this << " key '" << storeKeyText(someKey) << "'");
     key = storeKeyDup(someKey);
     hash_join(store_table, this);
 }
@@ -1625,8 +1625,6 @@ StoreEntry::setMemStatus(mem_status_t new_status)
 
     // are we using a shared memory cache?
     if (Config.memShared && IamWorkerProcess()) {
-        // enumerate calling cases if shared memory is enabled
-        assert(new_status != IN_MEMORY || EBIT_TEST(flags, ENTRY_SPECIAL));
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
         // Shared memory cache does not have a policy that needs updates.
@@ -1861,6 +1859,7 @@ StoreEntry::startWriting()
 
     rep->packHeadersInto(&p);
     mem_obj->markEndOfReplyHeaders();
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(&p);
 
@@ -2032,7 +2031,9 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     os << "e:";
 
     if (e.swap_filen > -1 || e.swap_dirn > -1)
-        os << e.swap_filen << '@' << e.swap_dirn << '=';
+        os << e.swap_filen << '@' << e.swap_dirn;
+
+    os << '=';
 
     // print only non-default status values, using unique letters
     if (e.mem_status != NOT_IN_MEMORY ||
@@ -2043,7 +2044,6 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         if (e.store_status != STORE_PENDING) os << 's';
         if (e.swap_status != SWAPOUT_NONE) os << 'w' << e.swap_status;
         if (e.ping_status != PING_NONE) os << 'p' << e.ping_status;
-        os << '.';
     }
 
     // print only set flags, using unique letters
@@ -2061,10 +2061,12 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         if (EBIT_TEST(e.flags, ENTRY_VALIDATED)) os << 'V';
         if (EBIT_TEST(e.flags, ENTRY_BAD_LENGTH)) os << 'L';
         if (EBIT_TEST(e.flags, ENTRY_ABORTED)) os << 'A';
-        os << '/';
     }
 
-    return os << &e << '*' << e.lock_count;
+    if (e.mem_obj && e.mem_obj->smpCollapsed)
+        os << 'O';
+
+    return os << '/' << &e << '*' << e.lock_count;
 }
 
 /* NullStoreEntry */

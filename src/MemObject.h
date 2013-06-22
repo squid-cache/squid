@@ -125,6 +125,31 @@ public:
 
     SwapOut swapout;
 
+    /// State of an entry with regards to the [shared] in-transit table.
+    class XitTable {
+    public:
+        XitTable(): index(-1) {}
+
+        int32_t index; ///< entry position inside the in-transit table
+    };
+    XitTable xitTable; ///< current [shared] memory caching state for the entry
+
+    /// State of an entry with regards to the [shared] memory caching.
+    class MemCache {
+    public:
+        MemCache(): index(-1), offset(0), io(ioUndecided) {}
+
+        int32_t index; ///< entry position inside the memory cache
+        int64_t offset; ///< bytes written/read to/from the memory cache so far
+        
+        /// I/O direction and status
+        typedef enum { ioUndecided, ioWriting, ioReading, ioDone } Io;
+        Io io; ///< current I/O state
+    };
+    MemCache memCache; ///< current [shared] memory caching state for the entry
+
+    bool smpCollapsed; ///< whether this entry gets data from another worker
+
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
     HttpRequest *request;
@@ -139,7 +164,6 @@ public:
     } abort;
     char *log_url;
     RemovalPolicyNode repl;
-    int32_t mem_index; ///< entry position inside the [shared] memory cache
     int id;
     int64_t object_sz;
     size_t swap_hdr_sz;
