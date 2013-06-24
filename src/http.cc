@@ -259,7 +259,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (e->mem_obj->request)
         pe = storeGetPublicByRequest(e->mem_obj->request);
     else
-        pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method);
+        pe = storeGetPublic(e->mem_obj->storeId(), e->mem_obj->method);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -276,7 +276,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (e->mem_obj->request)
         pe = storeGetPublicByRequestMethod(e->mem_obj->request, Http::METHOD_HEAD);
     else
-        pe = storeGetPublic(e->mem_obj->url, Http::METHOD_HEAD);
+        pe = storeGetPublic(e->mem_obj->storeId(), Http::METHOD_HEAD);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -339,7 +339,7 @@ HttpStateData::cacheableReply()
      * condition
      */
 #define REFRESH_OVERRIDE(flag) \
-    ((R = (R ? R : refreshLimits(entry->mem_obj->url))) , \
+    ((R = (R ? R : refreshLimits(entry->mem_obj->storeId()))) , \
     (R && R->flags.flag))
 #else
 #define REFRESH_OVERRIDE(flag) 0
@@ -689,7 +689,7 @@ HttpStateData::processReplyHeader()
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
     /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
+    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
 
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
@@ -899,7 +899,7 @@ HttpStateData::haveParsedReplyHeaders()
 {
     ServerStateData::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
+    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
 
     if (rep->sline.status() == Http::scPartialContent && rep->content_range)

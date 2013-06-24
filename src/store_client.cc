@@ -711,7 +711,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     if (sc->_callback.pending()) {
         /* callback with ssize = -1 to indicate unexpected termination */
-        debugs(90, 3, "storeUnregister: store_client for " << mem->url << " has a callback");
+        debugs(90, 3, "store_client for " << *e << " has a callback");
         sc->fail();
     }
 

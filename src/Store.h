@@ -80,7 +80,6 @@ public:
 
     virtual const char *getMD5Text() const;
     StoreEntry();
-    StoreEntry(const char *url, const char *log_url);
     virtual ~StoreEntry();
 
     virtual HttpReply const *getReply() const;
@@ -119,12 +118,12 @@ public:
     int locked() const;
     int validToSend() const;
     bool memoryCachable() const; ///< may be cached in memory
-    void createMemObject(const char *, const char *);
-    void hideMemObject(); ///< no mem_obj for callers until createMemObject
 
-    /// Memory cache needs this to get access to memCache.index of entries for
-    /// which the caller did not call StoreEntry::createMemObject().
-    MemObject *findMemObject() { return mem_obj ? mem_obj : hidden_mem_obj; }
+    /// if needed, initialize mem_obj member w/o URI-related information
+    MemObject *makeMemObject();
+
+    /// initialize mem_obj member (if needed) and supply URI-related info
+    void createMemObject(const char *storeId, const char *logUri, const HttpRequestMethod &aMethod);
 
     void dump(int debug_lvl) const;
     void hashDelete();
@@ -150,7 +149,6 @@ public:
     virtual RefCount<SwapDir> store() const;
 
     MemObject *mem_obj;
-    MemObject *hidden_mem_obj; ///< mem_obj created before URLs were known
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
     time_t timestamp;
