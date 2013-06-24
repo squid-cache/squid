@@ -57,11 +57,14 @@ public:
     MEMPROXY_CLASS(MemObject);
 
     void dump() const;
-    MemObject(char const *, char const *);
+    MemObject();
     ~MemObject();
 
-    /// replaces construction-time URLs with correct ones; see hidden_mem_obj
-    void resetUrls(char const *aUrl, char const *aLog_url);
+    /// sets store ID, log URI, and request method; TODO: find a better name
+    void setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod);
+
+    /// whether setUris() has been called
+    bool hasUris() const;
 
     void write(const StoreIOBuffer &buf);
     void unlinkRequest();
@@ -98,8 +101,19 @@ public:
     void checkUrlChecksum() const;
 #endif
 
+    /// Before StoreID, code assumed that MemObject stores Request URI.
+    /// After StoreID, some old code still incorrectly assumes that.
+    /// Use this method to mark that incorrect assumption.
+    const char *urlXXX() const { return storeId(); }
+
+    /// Entry StoreID (usually just Request URI); if a buggy code requests this
+    /// before the information is available, returns an "[unknown_URI]" string.
+    const char *storeId() const;
+
+    /// client request URI used for logging; storeId() by default
+    const char *logUri() const;
+
     HttpRequestMethod method;
-    char *url;
     mem_hdr data_hdr;
     int64_t inmem_lo;
     dlink_list clients;
@@ -162,7 +176,6 @@ public:
         STABH *callback;
         void *data;
     } abort;
-    char *log_url;
     RemovalPolicyNode repl;
     int id;
     int64_t object_sz;
@@ -179,6 +192,9 @@ public:
 
 private:
     HttpReply *_reply;
+
+    mutable String storeId_; ///< StoreId for our entry (usually request URI)
+    mutable String logUri_;  ///< URI used for logging (usually request URI)
 
     DeferredReadManager deferredReads;
 };

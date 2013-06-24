@@ -70,12 +70,6 @@ storeLog(int tag, const StoreEntry * e)
 
     ++storeLogTagsCounts[tag];
     if (mem != NULL) {
-        if (mem->log_url == NULL) {
-            debugs(20, DBG_IMPORTANT, "storeLog: NULL log_url for " << mem->url);
-            mem->dump();
-            mem->log_url = xstrdup(mem->url);
-        }
-
         reply = e->getReply();
         /*
          * XXX Ok, where should we print the dir number here?
@@ -101,7 +95,7 @@ storeLog(int tag, const StoreEntry * e)
                       reply->content_length,
                       e->contentLen(),
                       RequestMethodStr(mem->method),
-                      mem->log_url);
+                      mem->logUri());
         logfileLineEnd(storelog);
     } else {
         /* no mem object. Most RELEASE cases */

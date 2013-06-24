@@ -74,31 +74,49 @@ MemObject::inUseCount()
     return Pool().inUseCount();
 }
 
-void
-MemObject::resetUrls(char const *aUrl, char const *aLog_url)
-{
-    safe_free(url);
-    safe_free(log_url);    /* XXX account log_url */
-    log_url = xstrdup(aLog_url);
-    url = xstrdup(aUrl);
+const char *
+MemObject::storeId() const {
+    if (!storeId_.defined()) {
+        debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
+        dump();
+        storeId_ = "[unknown_URI]";
+    }
+    return storeId_.termedBuf();
 }
 
-MemObject::MemObject(char const *aUrl, char const *aLog_url):
-    smpCollapsed(false)
+const char *
+MemObject::logUri() const {
+    return logUri_.defined() ? logUri_.termedBuf() : storeId();
+}
+
+bool
+MemObject::hasUris() const {
+    return storeId_.defined();
+}
+
+void
+MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod)
+{
+    storeId_ = aStoreId;
+
+    // fast pointer comparison for a common storeCreateEntry(url,url,...) case
+    if (!aLogUri || aLogUri == aStoreId) 
+        logUri_.clean(); // use storeId_ by default to minimize copying
+    else
+        logUri_ = aLogUri;
+
+    method = aMethod;
+
+#if URL_CHECKSUM_DEBUG
+    chksum = url_checksum(urlXXX());
+#endif
+}
+
+MemObject::MemObject(): smpCollapsed(false)
 {
     debugs(20, 3, HERE << "new MemObject " << this);
     _reply = new HttpReply;
     HTTPMSGLOCK(_reply);
-
-    url = xstrdup(aUrl);
-
-#if URL_CHECKSUM_DEBUG
-
-    chksum = url_checksum(url);
-
-#endif
-
-    log_url = xstrdup(aLog_url);
 
     object_sz = -1;
 
@@ -110,16 +128,14 @@ MemObject::MemObject(char const *aUrl, char const *aLog_url):
 MemObject::~MemObject()
 {
     debugs(20, 3, HERE << "del MemObject " << this);
-    const Ctx ctx = ctx_enter(url);
-#if URL_CHECKSUM_DEBUG
+    const Ctx ctx = ctx_enter(storeId_.termedBuf()); /* XXX: need URI? */
 
-    assert(chksum == url_checksum(url));
+#if URL_CHECKSUM_DEBUG
+    checkUrlChecksum();
 #endif
 
     if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
-        // TODO: Consider moving these to destroyMemoryObject while providing
-        // StoreEntry::memObjForDisconnect() or similar to get access to the
-        // hidden memory object
+        // TODO: Consider moving these to destroyMemoryObject
         if (xitTable.index >= 0)
             Store::Root().transientsDisconnect(*this);
         if (memCache.index >= 0)
@@ -146,10 +162,6 @@ MemObject::~MemObject()
     HTTPMSGUNLOCK(request);
 
     ctx_exit(ctx);              /* must exit before we free mem->url */
-
-    safe_free(url);
-
-    safe_free(log_url);    /* XXX account log_url */
 
     safe_free(vary_headers);
 }
@@ -190,7 +202,8 @@ MemObject::dump() const
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
     debugs(20, DBG_IMPORTANT, "MemObject->reply: " << _reply);
     debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
-    debugs(20, DBG_IMPORTANT, "MemObject->log_url: " << checkNullString(log_url));
+    debugs(20, DBG_IMPORTANT, "MemObject->logUri: " << logUri_);
+    debugs(20, DBG_IMPORTANT, "MemObject->storeId: " << storeId_);
 }
 
 HttpReply const *
@@ -234,7 +247,7 @@ void
 MemObject::stat(MemBuf * mb) const
 {
     mb->Printf("\t%s %s\n",
-               RequestMethodStr(method), log_url);
+               RequestMethodStr(method), logUri());
     if (vary_headers)
         mb->Printf("\tvary_headers: %s\n", vary_headers);
     mb->Printf("\tinmem_lo: %" PRId64 "\n", inmem_lo);
@@ -329,7 +342,7 @@ MemObject::addClient(store_client *aClient)
 void
 MemObject::checkUrlChecksum () const
 {
-    assert(chksum == url_checksum(url));
+    assert(chksum == url_checksum(urlXXX()));
 }
 
 #endif

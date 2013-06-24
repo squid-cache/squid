@@ -48,8 +48,8 @@ int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
 int StoreEntry::locked() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
 bool StoreEntry::memoryCachable() const STUB_RETVAL(false)
-void StoreEntry::createMemObject(const char *, const char *) STUB
-void StoreEntry::hideMemObject() STUB
+void StoreEntry::makeMemObject() STUB
+void StoreEntry::createMemObject(const char *, const char *, const HttpRequestMethod &aMethod) STUB
 void StoreEntry::dump(int debug_lvl) const STUB
 void StoreEntry::hashDelete() STUB
 void StoreEntry::hashInsert(const cache_key *) STUB
