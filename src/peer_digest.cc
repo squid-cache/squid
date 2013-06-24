@@ -387,7 +387,7 @@ peerDigestRequest(PeerDigest * pd)
         debugs(72, 5, "peerDigestRequest: found old entry");
 
         old_e->lock();
-        old_e->createMemObject(url, url);
+        old_e->createMemObject(url, url, req->method);
 
         fetch->old_sc = storeClientListAdd(old_e, fetch);
     }

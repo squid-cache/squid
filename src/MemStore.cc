@@ -194,9 +194,7 @@ MemStore::get(const cache_key *key)
     // XXX: We do not know the URLs yet, only the key, but we need to parse and
     // store the response for the Root().get() callers to be happy because they
     // expect IN_MEMORY entries to already have the response headers and body.
-    // At least one caller calls createMemObject() if there is not one, so
-    // we hide the true object until that happens (to avoid leaking TBD URLs).
-    e->createMemObject("TBD", "TBD");
+    e->makeMemObject();
 
     anchorEntry(*e, index, *slot);
 
@@ -206,8 +204,6 @@ MemStore::get(const cache_key *key)
     map->closeForReading(index);
     e->mem_obj->memCache.index = -1;
     e->mem_obj->memCache.io = MemObject::MemCache::ioDone;
-
-    e->hideMemObject();
 
     if (copied) {
         e->hashInsert(key);
@@ -247,10 +243,9 @@ bool
 MemStore::updateCollapsed(StoreEntry &collapsed)
 {
     assert(collapsed.mem_status == IN_MEMORY);
-    MemObject *mem_obj = collapsed.findMemObject();
-    assert(mem_obj);
+    assert(collapsed.mem_obj);
 
-    const sfileno index = mem_obj->memCache.index; 
+    const sfileno index = collapsed.mem_obj->memCache.index; 
 
     // already disconnected from the cache, no need to update
     if (index < 0) 
@@ -692,11 +687,10 @@ void
 MemStore::unlink(StoreEntry &e)
 {
     assert(e.mem_status == IN_MEMORY);
-    MemObject *mem_obj = e.findMemObject();
-    assert(mem_obj);
-    if (mem_obj->memCache.index >= 0) {
-        map->freeEntry(mem_obj->memCache.index);
-        disconnect(*mem_obj);
+    assert(e.mem_obj);
+    if (e.mem_obj->memCache.index >= 0) {
+        map->freeEntry(e.mem_obj->memCache.index);
+        disconnect(*e.mem_obj);
     } else {
         // the entry was loaded and then disconnected from the memory cache
         map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));

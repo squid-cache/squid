@@ -380,7 +380,6 @@ StoreEntry::storeClientType() const
 
 StoreEntry::StoreEntry() :
         mem_obj(NULL),
-        hidden_mem_obj(NULL),
         timestamp(-1),
         lastref(-1),
         expires(-1),
@@ -397,28 +396,6 @@ StoreEntry::StoreEntry() :
         swap_status(SWAPOUT_NONE)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
-}
-
-StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl) :
-        mem_obj(NULL),
-        hidden_mem_obj(NULL),
-        timestamp(-1),
-        lastref(-1),
-        expires(-1),
-        lastmod(-1),
-        swap_file_sz(0),
-        refcount(0),
-        flags(0),
-        swap_filen(-1),
-        swap_dirn(-1),
-        lock_count(0),
-        mem_status(NOT_IN_MEMORY),
-        ping_status(PING_NONE),
-        store_status(STORE_PENDING),
-        swap_status(SWAPOUT_NONE)
-{
-    debugs(20, 3, HERE << "new StoreEntry " << this);
-    mem_obj = new MemObject(aUrl, aLogUrl);
 }
 
 StoreEntry::~StoreEntry()
@@ -427,7 +404,6 @@ StoreEntry::~StoreEntry()
         SwapDir &sd = dynamic_cast<SwapDir&>(*store());
         sd.disconnect(*this);
     }
-    delete hidden_mem_obj;
 }
 
 #if USE_ADAPTATION
@@ -459,18 +435,6 @@ StoreEntry::destroyMemObject()
     MemObject *mem = mem_obj;
     mem_obj = NULL;
     delete mem;
-    delete hidden_mem_obj;
-    hidden_mem_obj = NULL;
-}
-
-void
-StoreEntry::hideMemObject()
-{
-    debugs(20, 3, HERE << "hiding " << mem_obj);
-    assert(mem_obj);
-    assert(!hidden_mem_obj);
-    hidden_mem_obj = mem_obj;
-    mem_obj = NULL;
 }
 
 void
@@ -691,9 +655,9 @@ StoreEntry::setPrivateKey()
         hashDelete();
     }
 
-    if (mem_obj != NULL) {
+    if (mem_obj && mem_obj->hasUris()) {
         mem_obj->id = getKeyCounter();
-        newkey = storeKeyPrivate(mem_obj->url, mem_obj->method, mem_obj->id);
+        newkey = storeKeyPrivate(mem_obj->storeId(), mem_obj->method, mem_obj->id);
     } else {
         newkey = storeKeyPrivate("JUNK", Http::METHOD_NONE, getKeyCounter());
     }
@@ -706,7 +670,6 @@ StoreEntry::setPrivateKey()
 void
 StoreEntry::setPublicKey()
 {
-    StoreEntry *e2 = NULL;
     const cache_key *newkey;
 
     if (key && !EBIT_TEST(flags, KEY_PRIVATE))
@@ -745,9 +708,7 @@ StoreEntry::setPublicKey()
                  * to record the new variance key
                  */
                 safe_free(request->vary_headers);       /* free old "bad" variance key */
-                StoreEntry *pe = storeGetPublic(mem_obj->url, mem_obj->method);
-
-                if (pe)
+                if (StoreEntry *pe = storeGetPublic(mem_obj->storeId(), mem_obj->method))
                     pe->release();
             }
 
@@ -762,10 +723,10 @@ StoreEntry::setPublicKey()
 
         // TODO: storeGetPublic() calls below may create unlocked entries.
         // We should add/use storeHas() API or lock/unlock those entries.
-        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->url, mem_obj->method)) {
+        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
-            StoreEntry *pe = storeCreateEntry(mem_obj->url, mem_obj->log_url, request->flags, request->method);
+            StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
             rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
@@ -800,17 +761,17 @@ StoreEntry::setPublicKey()
 
         newkey = storeKeyPublicByRequest(mem_obj->request);
     } else
-        newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
+        newkey = storeKeyPublic(mem_obj->storeId(), mem_obj->method);
 
-    if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
-        debugs(20, 3, "StoreEntry::setPublicKey: Making old '" << mem_obj->url << "' private.");
+    if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
+        debugs(20, 3, "Making old " << *e2 << " private.");
         e2->setPrivateKey();
         e2->release();
 
         if (mem_obj->request)
             newkey = storeKeyPublicByRequest(mem_obj->request);
         else
-            newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
+            newkey = storeKeyPublic(mem_obj->storeId(), mem_obj->method);
     }
 
     if (key)
@@ -828,13 +789,12 @@ StoreEntry *
 storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
-    MemObject *mem = NULL;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
 
-    e = new StoreEntry(url, log_url);
+    e = new StoreEntry();
     e->lock_count = 1;          /* Note lock here w/o calling storeLock() */
-    mem = e->mem_obj;
-    mem->method = method;
+    e->makeMemObject();
+    e->mem_obj->setUris(url, log_url, method);
 
     if (neighbors_do_private_keys || !flags.hierarchical)
         e->setPrivateKey();
@@ -1638,19 +1598,19 @@ StoreEntry::setMemStatus(mem_status_t new_status)
         assert(mem_obj->inmem_lo == 0);
 
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-            debugs(20, 4, "StoreEntry::setMemStatus: not inserting special " << mem_obj->url << " into policy");
+            debugs(20, 4, "not inserting special " << *this << " into policy");
         } else {
             mem_policy->Add(mem_policy, this, &mem_obj->repl);
-            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url << " key: " << getMD5Text());
+            debugs(20, 4, "inserted " << *this << " key: " << getMD5Text());
         }
 
         ++hot_obj_count; // TODO: maintain for the shared hot cache as well
     } else {
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-            debugs(20, 4, "StoreEntry::setMemStatus: special entry " << mem_obj->url);
+            debugs(20, 4, "not removing special " << *this << " from policy");
         } else {
             mem_policy->Remove(mem_policy, this, &mem_obj->repl);
-            debugs(20, 4, "StoreEntry::setMemStatus: removed mem node " << mem_obj->url);
+            debugs(20, 4, "removed " << *this);
         }
 
         --hot_obj_count;
@@ -1667,26 +1627,22 @@ StoreEntry::url() const
     else if (mem_obj == NULL)
         return "[null_mem_obj]";
     else
-        return mem_obj->url;
+        return mem_obj->storeId();
+}
+
+MemObject *
+StoreEntry::makeMemObject()
+{
+    if (!mem_obj)
+        mem_obj = new MemObject();
+    return mem_obj;
 }
 
 void
-StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
+StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const HttpRequestMethod &aMethod)
 {
-    debugs(20, 3, "A mem_obj create attempted using : " << aUrl);
-
-    if (mem_obj)
-        return;
-
-    if (hidden_mem_obj) {
-        debugs(20, 3, HERE << "restoring " << hidden_mem_obj);
-        mem_obj = hidden_mem_obj;
-        hidden_mem_obj = NULL;
-        mem_obj->resetUrls(aUrl, aLogUrl);
-        return;
-    }
-
-    mem_obj = new MemObject(aUrl, aLogUrl);
+    makeMemObject();
+    mem_obj->setUris(aUrl, aLogUrl, aMethod);
 }
 
 /* this just sets DELAY_SENDING */
