@@ -283,6 +283,7 @@ store_client::copy(StoreEntry * anEntry,
  * do have more data to send.  If its STORE_OK, then
  * we continue checking.  If the object length is negative, then we
  * don't know the real length and must open the swap file to find out.
+ * However, if there is no swap file, then there is no more to send.
  * If the length is >= 0, then we compare it to the requested copy
  * offset.
  */
@@ -295,7 +296,7 @@ storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
         return 0;
 
     if ((len = e->objectLen()) < 0)
-        return 0;
+        return e->swap_filen < 0;
 
     if (sc->copyInto.offset < len)
         return 0;
