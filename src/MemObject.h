@@ -139,12 +139,16 @@ public:
 
     SwapOut swapout;
 
+    /// cache "I/O" direction and status
+    typedef enum { ioUndecided, ioWriting, ioReading, ioDone } Io;
+
     /// State of an entry with regards to the [shared] in-transit table.
     class XitTable {
     public:
-        XitTable(): index(-1) {}
+        XitTable(): index(-1), io(ioUndecided) {}
 
         int32_t index; ///< entry position inside the in-transit table
+        Io io; ///< current I/O state
     };
     XitTable xitTable; ///< current [shared] memory caching state for the entry
 
@@ -156,8 +160,6 @@ public:
         int32_t index; ///< entry position inside the memory cache
         int64_t offset; ///< bytes written/read to/from the memory cache so far
         
-        /// I/O direction and status
-        typedef enum { ioUndecided, ioWriting, ioReading, ioDone } Io;
         Io io; ///< current I/O state
     };
     MemCache memCache; ///< current [shared] memory caching state for the entry

@@ -12,7 +12,7 @@
 
 #include <memory>
 
-class StoreIOState;
+class StoreEntry;
 
 /// Sends and handles collapsed forwarding notifications.
 class CollapsedForwarding
@@ -22,7 +22,7 @@ public:
     static void Init();
 
     /// notify other workers about changes in entry state (e.g., new data)
-    static void Broadcast(const cache_key *key);
+    static void Broadcast(const StoreEntry &e);
 
     /// kick worker with empty IPC queue
     static void Notify(const int workerId);

@@ -200,11 +200,6 @@ MemStore::get(const cache_key *key)
 
     const bool copied = copyFromShm(*e, index, *slot);
 
-    // we copied everything we could to local memory; no more need to lock
-    map->closeForReading(index);
-    e->mem_obj->memCache.index = -1;
-    e->mem_obj->memCache.io = MemObject::MemCache::ioDone;
-
     if (copied) {
         e->hashInsert(key);
         return e;
@@ -301,7 +296,7 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
 
     MemObject::MemCache &mc = e.mem_obj->memCache;
     mc.index = index;
-    mc.io = MemObject::MemCache::ioReading;
+    mc.io = MemObject::ioReading;
 }
 
 /// copies the entire entry from shared to local memory
@@ -363,14 +358,19 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         return true;
     }
 
-    e.mem_obj->object_sz = e.mem_obj->endOffset(); // from StoreEntry::complete()
     debugs(20, 7, "mem-loaded all " << e.mem_obj->object_sz << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
+
+    // from StoreEntry::complete()
+    e.mem_obj->object_sz = e.mem_obj->endOffset();
+    e.store_status = STORE_OK;
+
     assert(e.mem_obj->object_sz >= 0);
     assert(static_cast<uint64_t>(e.mem_obj->object_sz) == anchor.basics.swap_file_sz);
     // would be nice to call validLength() here, but it needs e.key
 
-    // XXX: unlock acnhor here!
+    // we read the entire response into the local memory; no more need to lock
+    disconnect(*e.mem_obj);
     return true;
 }
 
@@ -454,6 +454,11 @@ MemStore::shouldCache(const StoreEntry &e) const
         return false;
     }
 
+    if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) {
+        debugs(20, 5, HERE << "Not mem-caching ENTRY_SPECIAL " << e);
+        return false;
+    }
+
     return true;
 }
 
@@ -470,7 +475,7 @@ MemStore::startCaching(StoreEntry &e)
 
     assert(e.mem_obj);
     e.mem_obj->memCache.index = index;
-    e.mem_obj->memCache.io = MemObject::MemCache::ioWriting;
+    e.mem_obj->memCache.io = MemObject::ioWriting;
     slot->set(e);
     map->startAppending(index);
     return true;
@@ -634,20 +639,20 @@ MemStore::write(StoreEntry &e)
     debugs(20, 7, "entry " << e);
 
     switch (e.mem_obj->memCache.io) {
-    case MemObject::MemCache::ioUndecided:
+    case MemObject::ioUndecided:
         if (!shouldCache(e) || !startCaching(e)) {
-            e.mem_obj->memCache.io = MemObject::MemCache::ioDone;
+            e.mem_obj->memCache.io = MemObject::ioDone;
             Store::Root().transientsAbandon(e);
-            CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
+            CollapsedForwarding::Broadcast(e);
             return;
         }
         break;
   
-    case MemObject::MemCache::ioDone:
-    case MemObject::MemCache::ioReading:
+    case MemObject::ioDone:
+    case MemObject::ioReading:
         return; // we should not write in all of the above cases
 
-    case MemObject::MemCache::ioWriting:
+    case MemObject::ioWriting:
         break; // already decided to write and still writing
     }
 
@@ -655,7 +660,8 @@ MemStore::write(StoreEntry &e)
         copyToShm(e);
         if (e.store_status == STORE_OK) // done receiving new content
             completeWriting(e);
-        CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
+        else
+            CollapsedForwarding::Broadcast(e);
         return;
     }
     catch (const std::exception &x) { // TODO: should we catch ... as well?
@@ -665,7 +671,7 @@ MemStore::write(StoreEntry &e)
 
     Store::Root().transientsAbandon(e);
     disconnect(*e.mem_obj);
-    CollapsedForwarding::Broadcast(static_cast<cache_key*>(e.key));
+    CollapsedForwarding::Broadcast(e);
 }
 
 void
@@ -679,8 +685,11 @@ MemStore::completeWriting(StoreEntry &e)
     debugs(20, 5, "mem-cached all " << e.mem_obj->memCache.offset << " bytes of " << e);
 
     e.mem_obj->memCache.index = -1;
-    e.mem_obj->memCache.io = MemObject::MemCache::ioDone;
+    e.mem_obj->memCache.io = MemObject::ioDone;
     map->closeForWriting(index, false);
+
+    CollapsedForwarding::Broadcast(e); // before we close our transient entry!
+    Store::Root().transientsCompleteWriting(e);
 }
 
 void
@@ -703,14 +712,14 @@ void
 MemStore::disconnect(MemObject &mem_obj)
 {
     if (mem_obj.memCache.index >= 0) {
-        if (mem_obj.memCache.io == MemObject::MemCache::ioWriting) {
+        if (mem_obj.memCache.io == MemObject::ioWriting) {
             map->abortWriting(mem_obj.memCache.index);
         } else {
-            assert(mem_obj.memCache.io == MemObject::MemCache::ioReading);
+            assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);
         }
         mem_obj.memCache.index = -1;
-        mem_obj.memCache.io = MemObject::MemCache::ioDone;
+        mem_obj.memCache.io = MemObject::ioDone;
     }
 }
 

@@ -1848,21 +1848,12 @@ StoreEntry::trimMemory(const bool preserveSwappable)
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
         return; // cannot trim because we do not load them again
 
-    if (!preserveSwappable) {
-        if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
-            /* Nothing to do */
-            return;
-        }
-        /*
-         * Its not swap-able, and we're about to delete a chunk,
-         * so we must make it PRIVATE.  This is tricky/ugly because
-         * for the most part, we treat swapable == cachable here.
-         */
-        releaseRequest();
-        mem_obj->trimUnSwappable ();
-    } else {
-        mem_obj->trimSwappable ();
-    }
+    if (preserveSwappable)
+        mem_obj->trimSwappable();
+    else
+        mem_obj->trimUnSwappable();
+
+    debugs(88, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
 }
 
 bool
@@ -1986,8 +1977,14 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
     os << "e:";
 
+    if (e.mem_obj) {
+        if (e.mem_obj->xitTable.index > -1)
+            os << 't' << e.mem_obj->xitTable.index;
+        if (e.mem_obj->memCache.index > -1)
+            os << 'm' << e.mem_obj->memCache.index;
+    }
     if (e.swap_filen > -1 || e.swap_dirn > -1)
-        os << e.swap_filen << '@' << e.swap_dirn;
+        os << 'd' << e.swap_filen << '@' << e.swap_dirn;
 
     os << '=';
 
@@ -2006,7 +2003,7 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     if (e.flags) {
         if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) os << 'S';
         if (EBIT_TEST(e.flags, ENTRY_REVALIDATE)) os << 'R';
-        if (EBIT_TEST(e.flags, DELAY_SENDING)) os << 'T';
+        if (EBIT_TEST(e.flags, DELAY_SENDING)) os << 'P';
         if (EBIT_TEST(e.flags, RELEASE_REQUEST)) os << 'X';
         if (EBIT_TEST(e.flags, REFRESH_REQUEST)) os << 'F';
         if (EBIT_TEST(e.flags, ENTRY_CACHABLE)) os << 'C';

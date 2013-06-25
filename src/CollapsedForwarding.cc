@@ -45,16 +45,17 @@ CollapsedForwarding::Init()
 }
 
 void
-CollapsedForwarding::Broadcast(const cache_key *key)
+CollapsedForwarding::Broadcast(const StoreEntry &e)
 {
     if (!queue.get())
         return;
 
     CollapsedForwardingMsg msg;
     msg.sender = KidIdentifier;
-    memcpy(msg.key, key, sizeof(msg.key));
+    memcpy(msg.key, e.key, sizeof(msg.key));
 
-    debugs(17, 5, storeKeyText(key) << " to " << Config.workers << "-1 workers");
+    debugs(17, 5, storeKeyText(static_cast<cache_key*>(e.key)) << " to " <<
+           Config.workers << "-1 workers");
 
     // TODO: send only to workers who are waiting for data
     for (int workerId = 1; workerId <= Config.workers; ++workerId) {
