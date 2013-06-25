@@ -15,8 +15,9 @@ struct TransientsMapExtras {
 };
 typedef Ipc::StoreMapWithExtras<TransientsMapExtras> TransientsMap;
 
-/// Stores HTTP entities in RAM. Current implementation uses shared memory.
-/// Unlike a disk store (SwapDir), operations are synchronous (and fast).
+/// Keeps track of hits being delivered to clients that arrived before those
+/// hits were [fully] cached. This shared table is necessary to synchronize hit
+/// caching (writing) workers with other workers serving (reading) those hits.
 class Transients: public Store, public Ipc::StoreMapCleaner
 {
 public:
@@ -24,7 +25,10 @@ public:
     virtual ~Transients();
 
     /// add an in-transit entry suitable for collapsing future requests
-    void put(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
+    void startWriting(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
+
+    /// called when the in-transit entry has been successfully cached
+    void completeWriting(const StoreEntry &e);
 
     /// the calling entry writer no longer expects to cache this entry
     void abandon(const StoreEntry &e);
@@ -32,7 +36,7 @@ public:
     /// whether an in-transit entry is now abandoned by its writer
     bool abandoned(const StoreEntry &e) const;
 
-    /// the calling entry writer no longer expects to cache this entry
+    /// the caller is done writing or reading this entry
     void disconnect(MemObject &mem_obj);
 
     /* Store API */

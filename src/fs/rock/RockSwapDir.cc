@@ -821,7 +821,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         // and hope that Core will call disconnect() to close the map entry
     }
 
-    CollapsedForwarding::Broadcast(static_cast<const cache_key*>(sio.e->key));
+    CollapsedForwarding::Broadcast(*sio.e);
 }
 
 void

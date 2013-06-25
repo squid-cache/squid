@@ -62,6 +62,7 @@ public:
 
     /* Store parent API */
     virtual void handleIdleEntry(StoreEntry &e);
+    virtual void transientsCompleteWriting(StoreEntry &e);
     virtual void transientsAbandon(StoreEntry &e);
     virtual void transientsDisconnect(MemObject &mem_obj);
     virtual void memoryOut(StoreEntry &e, const bool preserveSwappable);
@@ -101,6 +102,7 @@ public:
 private:
     void createOneStore(Store &aStore);
     bool keepForLocalMemoryCache(const StoreEntry &e) const;
+    bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
     bool anchorCollapsedOnDisk(StoreEntry &collapsed, bool &inSync);
 
     StorePointer swapDir; ///< summary view of all disk caches
