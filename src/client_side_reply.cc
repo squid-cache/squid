@@ -1202,13 +1202,9 @@ clientReplyContext::replyStatus()
             return STREAM_UNPLANNED_COMPLETE;
         }
 
-        if (http->request->flags.proxyKeepalive) {
-            debugs(88, 5, "clientReplyStatus: stream complete and can keepalive");
-            return STREAM_COMPLETE;
-        }
-
-        debugs(88, 5, "clientReplyStatus: stream was not expected to complete!");
-        return STREAM_UNPLANNED_COMPLETE;
+        debugs(88, 5, "clientReplyStatus: stream complete; keepalive=" <<
+               http->request->flags.proxyKeepalive);
+        return STREAM_COMPLETE;
     }
 
     // XXX: Should this be checked earlier? We could return above w/o checking.
