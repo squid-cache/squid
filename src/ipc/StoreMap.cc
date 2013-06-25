@@ -212,6 +212,13 @@ Ipc::StoreMap::peekAtReader(const sfileno fileno) const
     return NULL;
 }
 
+const Ipc::StoreMap::Anchor &
+Ipc::StoreMap::peekAtEntry(const sfileno fileno) const
+{
+    assert(valid(fileno));
+    return shared->slots[fileno].anchor;
+}
+
 void
 Ipc::StoreMap::freeEntry(const sfileno fileno)
 {

@@ -36,6 +36,9 @@ public:
     /// whether an in-transit entry is now abandoned by its writer
     bool abandoned(const StoreEntry &e) const;
 
+    /// number of entry readers some time ago
+    int readers(const StoreEntry &e) const;
+
     /// the caller is done writing or reading this entry
     void disconnect(MemObject &mem_obj);
 
