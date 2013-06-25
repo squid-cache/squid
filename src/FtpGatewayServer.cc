@@ -41,7 +41,8 @@ protected:
     void forwardError(err_type error = ERR_NONE, int xerrno = 0);
     HttpReply *createHttpReply(const Http::StatusCode httpStatus, const int clen = 0);
     void handleDataRequest();
-    void startDataTransfer();
+    void startDataDownload();
+    void startDataUpload();
 
     typedef void (ServerStateData::*PreliminaryCb)();
     void forwardPreliminaryReply(const PreliminaryCb cb);
@@ -54,6 +55,7 @@ protected:
         SENT_PASV,
         SENT_DATA_REQUEST,
         READING_DATA,
+        UPLOADING_DATA,
         DONE
     };
     typedef void (ServerStateData::*SM_FUNC)();
@@ -79,6 +81,7 @@ const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readPasvReply, // SENT_PASV
     &ServerStateData::readDataReply, // SENT_DATA_REQUEST
     &ServerStateData::readTransferDoneReply, // READING_DATA
+    &ServerStateData::readReply, // UPLOADING_DATA
     NULL // DONE
 };
 
@@ -101,7 +104,8 @@ ServerStateData::start()
     if (clientState() == ConnStateData::FTP_BEGIN)
         Ftp::ServerStateData::start();
     else
-    if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST)
+    if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ||
+        clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
         handleDataRequest();
     else
         sendCommand();
@@ -189,7 +193,7 @@ ServerStateData::handleRequestBodyProducerAborted()
 {
     ::ServerStateData::handleRequestBodyProducerAborted();
 
-    abortTransaction("request body producer aborted");
+    failed(ERR_READ_ERROR);
 }
 
 bool
@@ -293,7 +297,7 @@ ServerStateData::handleDataRequest()
 }
 
 void
-ServerStateData::startDataTransfer()
+ServerStateData::startDataDownload()
 {
     assert(Comm::IsConnOpen(data.conn));
 
@@ -308,6 +312,22 @@ ServerStateData::startDataTransfer()
     switchTimeoutToDataChannel();
     maybeReadVirginBody();
     state = READING_DATA;
+}
+
+void
+ServerStateData::startDataUpload()
+{
+    assert(Comm::IsConnOpen(data.conn));
+
+    debugs(9, 3, HERE << "begin data transfer to " << data.conn->remote <<
+           " (" << data.conn->local << ")");
+
+    if (!startRequestBodyFlow()) { // register to receive body data
+        failed();
+        return;
+    }
+
+    state = UPLOADING_DATA;
 }
 
 void
@@ -362,13 +382,15 @@ ServerStateData::sendCommand()
 
     state = clientState() == ConnStateData::FTP_HANDLE_PASV ? SENT_PASV :
         clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ? SENT_DATA_REQUEST :
+        clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST ? SENT_DATA_REQUEST :
         SENT_COMMAND;
 }
 
 void
 ServerStateData::readReply()
 {
-    assert(clientState() == ConnStateData::FTP_CONNECTED);
+    assert(clientState() == ConnStateData::FTP_CONNECTED ||
+           clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         forwardPreliminaryReply(&ServerStateData::scheduleReadControlReply);
@@ -394,11 +416,15 @@ ServerStateData::readPasvReply()
 void
 ServerStateData::readDataReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST);
+    assert(clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ||
+           clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST);
 
-    if (ctrl.replycode == 150)
-        forwardPreliminaryReply(&ServerStateData::startDataTransfer);
-    else
+    if (ctrl.replycode == 150) {
+        if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST)
+            forwardPreliminaryReply(&ServerStateData::startDataDownload);
+        else // clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST
+            forwardPreliminaryReply(&ServerStateData::startDataUpload);
+    } else
         forwardReply();
 }
 
