@@ -199,6 +199,7 @@ public:
     ~ConnStateData();
 
     void readSomeData();
+    void readSomeFtpData();
     int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
@@ -321,6 +322,7 @@ public:
 
     // comm callbacks
     void clientReadRequest(const CommIoCbParams &io);
+    void clientReadFtpData(const CommIoCbParams &io);
     void connStateClosed(const CommCloseCbParams &io);
     void requestTimeout(const CommTimeoutCbParams &params);
 
@@ -338,6 +340,7 @@ public:
         FTP_CONNECTED,
         FTP_HANDLE_PASV,
         FTP_HANDLE_DATA_REQUEST,
+        FTP_HANDLE_UPLOAD_REQUEST,
         FTP_ERROR
     };
     struct {
@@ -346,6 +349,9 @@ public:
         Comm::ConnectionPointer dataListenConn;
         Comm::ConnectionPointer dataConn;
         Ip::Address serverDataAddr;
+        char uploadBuf[CLIENT_REQ_BUF_SZ];
+        size_t uploadAvailSize;
+        AsyncCall::Pointer reader; ///< set when we are reading FTP data
     } ftp;
 
 #if USE_SSL
@@ -389,9 +395,10 @@ public:
     bool switchedToHttps() const { return false; }
 #endif
 
+    void finishDechunkingRequest(bool withSuccess);
+
 protected:
     void startDechunkingRequest();
-    void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody(size_t &putSize);
 
@@ -400,6 +407,7 @@ private:
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
     void processFtpRequest(ClientSocketContext *const context);
+    void handleFtpRequestData();
 
 private:
     HttpParser parser_;
