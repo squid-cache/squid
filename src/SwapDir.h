@@ -64,6 +64,7 @@ public:
     virtual void handleIdleEntry(StoreEntry &e);
     virtual void transientsCompleteWriting(StoreEntry &e);
     virtual void transientsAbandon(StoreEntry &e);
+    virtual int transientReaders(const StoreEntry &e) const;
     virtual void transientsDisconnect(MemObject &mem_obj);
     virtual void memoryOut(StoreEntry &e, const bool preserveSwappable);
     virtual void memoryUnlink(StoreEntry &e);
