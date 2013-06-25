@@ -394,6 +394,11 @@ public:
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// number of the transient entry readers some time ago
+    virtual int transientReaders(const StoreEntry &e) const { return 0; }
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
     /// disassociates the entry from the intransit table
     virtual void transientsDisconnect(MemObject &mem_obj) {}
 

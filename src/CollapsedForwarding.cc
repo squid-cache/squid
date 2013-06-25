@@ -8,6 +8,7 @@
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
+#include "MemObject.h"
 #include "CollapsedForwarding.h"
 #include "globals.h"
 #include "SquidConfig.h"
@@ -49,6 +50,12 @@ CollapsedForwarding::Broadcast(const StoreEntry &e)
 {
     if (!queue.get())
         return;
+
+    if (!e.mem_obj || e.mem_obj->xitTable.index < 0 ||
+        !Store::Root().transientReaders(e)) {
+        debugs(17, 7, "not broadcasting " << e << " changes to nobody");
+        return;
+    }
 
     CollapsedForwardingMsg msg;
     msg.sender = KidIdentifier;
