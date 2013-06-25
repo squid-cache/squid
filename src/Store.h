@@ -379,6 +379,11 @@ public:
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// marks the entry completed for collapsed requests
+    virtual void transientsCompleteWriting(StoreEntry &e) {}
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
     /// Update local intransit entry after changes made by appending worker.
     virtual void syncCollapsed(const cache_key *key) {}
 

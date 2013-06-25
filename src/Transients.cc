@@ -177,6 +177,7 @@ Transients::copyFromShm(const sfileno index)
 
     assert(e->mem_obj);
     e->mem_obj->method = extras.reqMethod;
+    e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
 
     // XXX: overwriting storeCreateEntry() which calls setPrivateKey() if
@@ -201,7 +202,7 @@ Transients::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 }
 
 void
-Transients::put(StoreEntry *e, const RequestFlags &reqFlags,
+Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
                 const HttpRequestMethod &reqMethod)
 {
     assert(e);
@@ -223,6 +224,7 @@ Transients::put(StoreEntry *e, const RequestFlags &reqFlags,
     try {
         if (copyToShm(*e, index, reqFlags, reqMethod)) {
             slot->set(*e);
+            e->mem_obj->xitTable.io = MemObject::ioWriting;
             e->mem_obj->xitTable.index = index;
             map->startAppending(index);
             // keep write lock -- we will be supplying others with updates
@@ -294,14 +296,30 @@ Transients::abandonedAt(const sfileno index) const
 }
 
 void
+Transients::completeWriting(const StoreEntry &e)
+{
+    if (e.mem_obj && e.mem_obj->xitTable.index >= 0) {
+        assert(e.mem_obj->xitTable.io == MemObject::ioWriting);
+        map->closeForWriting(e.mem_obj->xitTable.index);
+        e.mem_obj->xitTable.index = -1;
+        e.mem_obj->xitTable.io = MemObject::ioDone;
+    }
+}
+
+void
 Transients::disconnect(MemObject &mem_obj)
 {
-    assert(mem_obj.xitTable.index >= 0 && map);
-    map->freeEntry(mem_obj.xitTable.index); // just marks the locked entry
-    mem_obj.xitTable.index = -1;
-    // We do not unlock the entry now because the problem is most likely with
-    // the server resource rather than a specific cache writer, so we want to
-    // prevent other readers from collapsing requests for that resource.
+    if (mem_obj.xitTable.index >= 0) {
+        assert(map);
+        if (mem_obj.xitTable.io == MemObject::ioWriting) {
+            map->abortWriting(mem_obj.xitTable.index);
+        } else {
+            assert(mem_obj.xitTable.io == MemObject::ioReading);
+            map->closeForReading(mem_obj.xitTable.index);
+        }
+        mem_obj.xitTable.index = -1;
+        mem_obj.xitTable.io = MemObject::ioDone;
+    }
 }
 
 /// calculates maximum number of entries we need to store and map

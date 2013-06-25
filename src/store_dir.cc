@@ -761,6 +761,20 @@ StoreController::get(const cache_key *key)
         return e;
     }
 
+    // Must search transients before caches because we must sync those we find.
+    if (transients) {
+        if (StoreEntry *e = transients->get(key)) {
+            debugs(20, 3, "got shared in-transit entry: " << *e);
+            bool inSync = false;
+            const bool found = anchorCollapsed(*e, inSync);
+            if (!found || inSync)
+                return e;
+            assert(!e->locked()); // ensure release will destroyStoreEntry()
+            e->release(); // do not let others into the same trap
+            return NULL;
+        }
+    }
+
     if (memStore) {
         if (StoreEntry *e = memStore->get(key)) {
             debugs(20, 3, HERE << "got mem-cached entry: " << *e);
@@ -791,16 +805,6 @@ StoreController::get(const cache_key *key)
 
     debugs(20, 4, HERE << "none of " << Config.cacheSwap.n_configured <<
            " cache_dirs have " << storeKeyText(key));
-
-    // Last, check shared in-transit table if enabled.
-    // We speculate that collapsed forwarding hits are less frequent than
-    // proper cache hits checked above (the order does not matter for misses).
-    if (transients) {
-        if (StoreEntry *e = transients->get(key)) {
-            debugs(20, 3, "got shared in-transit entry: " << *e);
-            return e;
-        }
-    }
 
     return NULL;
 }
@@ -905,6 +909,16 @@ StoreController::transientsAbandon(StoreEntry &e)
 }
 
 void
+StoreController::transientsCompleteWriting(StoreEntry &e)
+{
+    if (transients) {
+        assert(e.mem_obj);
+        if (e.mem_obj->xitTable.index >= 0)
+            transients->completeWriting(e);
+    }
+}
+
+void
 StoreController::transientsDisconnect(MemObject &mem_obj)
 {
     if (transients)
@@ -954,7 +968,7 @@ StoreController::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 {
     e->makePublic(); // this is needed for both local and SMP collapsing
     if (transients)
-        transients->put(e, reqFlags, reqMethod);
+        transients->startWriting(e, reqFlags, reqMethod);
     debugs(20, 3, "may " << (transients && e->mem_obj->xitTable.index >= 0 ?
            "SMP-" : "locally-") << "collapse " << *e);
 }
@@ -963,15 +977,34 @@ void
 StoreController::syncCollapsed(const cache_key *key)
 {
     StoreEntry *collapsed = swapDir->get(key);
-    if (!collapsed) // the entry is no longer locally active, ignore the update
-        return;
-
-    if (collapsed->mem_obj && !collapsed->mem_obj->smpCollapsed) {
-        // this happens, e.g., when we tried collapsing but rejected the hit
-        debugs(20, 7, "not SMP-syncing not SMP-collapsed " << *collapsed);
+    if (!collapsed) { // the entry is no longer locally active, ignore update
+        debugs(20, 7, "not SMP-syncing not-local " << storeKeyText(key));
         return;
     }
-    // XXX: collapsed->mem_obj may be still hidden here
+
+    if (!collapsed->mem_obj) {
+        // without mem_obj, the entry cannot be transient so we ignore it
+        debugs(20, 7, "not SMP-syncing not-shared " << *collapsed);
+        return;
+    }
+
+    if (collapsed->mem_obj->xitTable.index < 0) {
+        debugs(20, 7, "not SMP-syncing not-transient " << *collapsed);
+        return;
+    }
+
+    assert(transients);
+    if (transients->abandoned(*collapsed)) {
+        debugs(20, 3, "aborting abandoned " << *collapsed);
+        collapsed->abort();
+        return;
+    }
+
+    if (!collapsed->mem_obj->smpCollapsed) {
+        // this happens, e.g., when we tried collapsing but rejected the hit
+        debugs(20, 7, "not SMP-syncing not-SMP-collapsed " << *collapsed);
+        return;
+    }
 
     debugs(20, 7, "syncing " << *collapsed);
 
@@ -984,21 +1017,49 @@ StoreController::syncCollapsed(const cache_key *key)
         found = true;
         inSync = collapsed->store()->updateCollapsed(*collapsed);
     } else {
-        if (memStore)
-            found = memStore->anchorCollapsed(*collapsed, inSync);
-        else if (Config.cacheSwap.n_configured)
-            found = anchorCollapsedOnDisk(*collapsed, inSync);
+        found = anchorCollapsed(*collapsed, inSync);
     }
 
     if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
         collapsed->invokeHandlers();
     } else if (found) { // unrecoverable problem syncing this entry
-        debugs(20, 3, "aborting " << *collapsed);
+        debugs(20, 3, "aborting unsyncable " << *collapsed);
         collapsed->abort();
     } else { // the entry is still not in one of the caches
         debugs(20, 7, "waiting " << *collapsed);
     }
+}
+
+/// Called for in-transit entries that are not yet anchored to a cache.
+/// For cached entries, return true after synchronizing them with their cache
+/// (making inSync true on success). For not-yet-cached entries, return false.
+bool
+StoreController::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+{
+    // this method is designed to work with collapsed transients only
+    assert(collapsed.mem_obj);
+    assert(collapsed.mem_obj->xitTable.index >= 0);
+    assert(collapsed.mem_obj->smpCollapsed);
+
+    debugs(20, 7, "anchoring " << collapsed);
+
+    bool found = false;
+    if (memStore)
+        found = memStore->anchorCollapsed(collapsed, inSync);
+    else if (Config.cacheSwap.n_configured)
+        found = anchorCollapsedOnDisk(collapsed, inSync);
+
+    if (found) {
+        if (inSync)
+            debugs(20, 7, "anchored " << collapsed);
+        else
+            debugs(20, 5, "failed to anchor " << collapsed);
+    } else {
+        debugs(20, 7, "skipping not yet cached " << collapsed);
+    }
+
+    return found;
 }
 
 StoreHashIndex::StoreHashIndex()
