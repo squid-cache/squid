@@ -3176,13 +3176,11 @@ ConnStateData::clientReadFtpData(const CommIoCbParams &io)
         if (io.size > 0) {
             kb_incr(&(statCounter.client_http.kbytes_in), io.size);
 
-            const bool uploadBufWasEmpty = ftp.uploadAvailSize <= 0;
             char *const current_buf = ftp.uploadBuf + ftp.uploadAvailSize;
             if (io.buf != current_buf)
                 memmove(current_buf, io.buf, io.size);
             ftp.uploadAvailSize += io.size;
-            if (uploadBufWasEmpty)
-                handleFtpRequestData();
+            handleFtpRequestData();
         } else if (io.size == 0) {
             debugs(33, 5, HERE << io.conn << " closed");
             FtpCloseDataConnection(this);
@@ -3372,6 +3370,11 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
 void
 ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
 {
+    if (isFtp) {
+        handleFtpRequestData();
+        return;
+    }
+
     if (!handleRequestBodyData())
         return;
 
