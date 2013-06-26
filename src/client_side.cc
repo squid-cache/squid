@@ -5170,7 +5170,7 @@ FtpHandleDataReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     }
 
     MemBuf mb;
-    mb.init(data.length, data.length);
+    mb.init(data.length + 1, data.length + 1);
     mb.append(data.data, data.length);
 
     AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteReplyData",
