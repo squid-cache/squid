@@ -27,7 +27,6 @@ bool ClientSocketContext::multipartRangeRequest() const STUB_RETVAL(false)
 void ClientSocketContext::registerWithConn() STUB
 void ClientSocketContext::noteIoError(const int xerrno) STUB
 void ClientSocketContext::writeControlMsg(HttpControlMsg &msg) STUB
-void ClientSocketContext::operator delete(void *address) STUB
 
 void ConnStateData::readSomeData() STUB
 int ConnStateData::getAvailableBufferLength() const STUB_RETVAL(0)

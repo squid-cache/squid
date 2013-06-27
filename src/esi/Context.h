@@ -48,8 +48,6 @@ class ESIContext : public esiTreeParent, public ESIParserClient
 
 public:
     typedef RefCount<ESIContext> Pointer;
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
     ESIContext() :
             thisNode(NULL),
             http(NULL),
@@ -181,7 +179,7 @@ private:
     virtual void parserComment (const char *s);
     bool processing;
 
-    CBDATA_CLASS(ESIContext);
+    CBDATA_CLASS2(ESIContext);
 };
 
 #endif /* SQUID_ESICONTEXT_H */
