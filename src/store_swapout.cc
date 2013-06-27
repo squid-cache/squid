@@ -98,7 +98,7 @@ storeSwapOutStart(StoreEntry * e)
     /* Don't lock until after create, or the replacement
      * code might get confused */
 
-    e->lock();
+    e->lock("storeSwapOutStart");
     /* Pick up the file number if it was assigned immediately */
     e->swap_filen = mem->swapout.sio->swap_filen;
 
@@ -356,7 +356,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
     mem->swapout.sio = NULL;
-    e->unlock();
+    e->unlock("storeSwapOutFileClosed");
 }
 
 bool

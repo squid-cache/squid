@@ -173,7 +173,7 @@ gopherStateFree(const CommCloseCbParams &params)
         return;
 
     if (gopherState->entry) {
-        gopherState->entry->unlock();
+        gopherState->entry->unlock("gopherState");
     }
 
     HTTPMSGUNLOCK(gopherState->req);
@@ -962,7 +962,7 @@ gopherStart(FwdState * fwd)
     gopherState = cbdataAlloc(GopherStateData);
     gopherState->buf = (char *)memAllocate(MEM_4K_BUF);
 
-    entry->lock();
+    entry->lock("gopherState");
     gopherState->entry = entry;
 
     gopherState->fwd = fwd;

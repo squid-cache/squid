@@ -110,7 +110,7 @@ peerSelectStateFree(ps_state * psstate)
 
     if (psstate->entry) {
         assert(psstate->entry->ping_status != PING_WAITING);
-        psstate->entry->unlock();
+        psstate->entry->unlock("peerSelect");
         psstate->entry = NULL;
     }
 
@@ -175,7 +175,7 @@ peerSelect(Comm::ConnectionList * paths,
 #endif
 
     if (psstate->entry)
-        psstate->entry->lock();
+        psstate->entry->lock("peerSelect");
 
     peerSelectFoo(psstate);
 }

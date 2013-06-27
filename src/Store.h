@@ -165,8 +165,6 @@ public:
 
     sdirno swap_dirn:7;
 
-    unsigned short lock_count;		/* Assume < 65536! */
-
     mem_status_t mem_status:3;
 
     ping_status_t ping_status:3;
@@ -201,21 +199,16 @@ public:
     virtual int64_t objectLen() const;
     virtual int64_t contentLen() const;
 
-    /** deprecated: lock() in anonymous context folowed by touch()
-     * RBC 20050104 this is wrong- memory ref counting
-     * is not at all equivalent to the store 'usage' concept
-     * which the replacement policies should be acting upon.
-     * specifically, object iteration within stores needs
-     * memory ref counting to prevent race conditions,
-     * but this should not influence store replacement.
-     */
-    void lock() { lock("somebody"); touch(); }
-
     /// claim shared ownership of this entry (for use in a given context)
     void lock(const char *context);
+
     /// disclaim shared ownership; may remove entry from store and delete it
     /// returns remaning lock level (zero for unlocked and possibly gone entry)
     int unlock(const char *context = "somebody");
+
+    /// returns a local concurrent use counter, for debugging
+    int locks() const { return static_cast<int>(lock_count); }
+
     /// update last reference timestamp and related Store metadata
     void touch();
 
@@ -230,6 +223,8 @@ public:
 
 private:
     static MemAllocator *pool;
+
+    unsigned short lock_count;		/* Assume < 65536! */
 
 #if USE_ADAPTATION
     /// producer callback registered with deferProducer
@@ -363,6 +358,11 @@ public:
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // to avoid casting Root() to StoreController until Root() API is fixed.
+    /// informs stores that this entry will be eventually unlinked
+    virtual void markForUnlink(StoreEntry &e) {}
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
     // because test cases use non-StoreController derivatives as Root
     /// called when the entry is no longer needed by any transaction
     virtual void handleIdleEntry(StoreEntry &e) {}
@@ -445,7 +445,12 @@ StoreEntry *storeGetPublicByRequest(HttpRequest * request);
 StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method);
 
 /// \ingroup StoreAPI
+/// Like storeCreatePureEntry(), but also locks the entry and sets entry key.
 StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&);
+
+/// \ingroup StoreAPI
+/// Creates a new StoreEntry with mem_obj and sets initial flags/states.
+StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const RequestFlags &, const HttpRequestMethod&);
 
 /// \ingroup StoreAPI
 void storeInit(void);

@@ -754,7 +754,6 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     e->swap_filen = file_number;
     e->swap_dirn = index;
     e->swap_file_sz = swap_file_sz;
-    e->lock_count = 0;
     e->lastref = lastref;
     e->timestamp = timestamp;
     e->expires = expires;

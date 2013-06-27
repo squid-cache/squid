@@ -73,7 +73,7 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
     fwd = theFwdState;
     entry = fwd->entry;
 
-    entry->lock();
+    entry->lock("ServerStateData");
 
     request = fwd->request;
     HTTPMSGLOCK(request);
@@ -88,7 +88,7 @@ ServerStateData::~ServerStateData()
     assert(!adaptedBodySource);
 #endif
 
-    entry->unlock();
+    entry->unlock("ServerStateData");
 
     HTTPMSGUNLOCK(request);
     HTTPMSGUNLOCK(theVirginReply);

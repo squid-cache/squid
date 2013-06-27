@@ -189,7 +189,6 @@ MemStore::get(const cache_key *key)
 
     // create a brand new store entry and initialize it with stored info
     StoreEntry *e = new StoreEntry();
-    e->lock_count = 0;
 
     // XXX: We do not know the URLs yet, only the key, but we need to parse and
     // store the response for the Root().get() callers to be happy because they
@@ -237,7 +236,6 @@ MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 bool
 MemStore::updateCollapsed(StoreEntry &collapsed)
 {
-    assert(collapsed.mem_status == IN_MEMORY);
     assert(collapsed.mem_obj);
 
     const sfileno index = collapsed.mem_obj->memCache.index; 
@@ -281,11 +279,12 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     if (anchor.complete()) {
         e.store_status = STORE_OK;
         e.mem_obj->object_sz = e.swap_file_sz;
+        e.setMemStatus(IN_MEMORY);
     } else {
         e.store_status = STORE_PENDING;
         assert(e.mem_obj->object_sz < 0);
+        e.setMemStatus(NOT_IN_MEMORY);
     }
-    e.setMemStatus(IN_MEMORY);
     assert(e.swap_status == SWAPOUT_NONE); // set in StoreEntry constructor
     e.ping_status = PING_NONE;
 
@@ -364,6 +363,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     // from StoreEntry::complete()
     e.mem_obj->object_sz = e.mem_obj->endOffset();
     e.store_status = STORE_OK;
+    e.setMemStatus(IN_MEMORY);
 
     assert(e.mem_obj->object_sz >= 0);
     assert(static_cast<uint64_t>(e.mem_obj->object_sz) == anchor.basics.swap_file_sz);
@@ -693,15 +693,22 @@ MemStore::completeWriting(StoreEntry &e)
 }
 
 void
+MemStore::markForUnlink(StoreEntry &e)
+{
+    assert(e.mem_obj);
+    if (e.mem_obj->memCache.index >= 0)
+        map->freeEntry(e.mem_obj->memCache.index);
+}
+
+void
 MemStore::unlink(StoreEntry &e)
 {
-    assert(e.mem_status == IN_MEMORY);
     assert(e.mem_obj);
     if (e.mem_obj->memCache.index >= 0) {
         map->freeEntry(e.mem_obj->memCache.index);
         disconnect(*e.mem_obj);
     } else {
-        // the entry was loaded and then disconnected from the memory cache
+        // the entry may bave been loaded and then disconnected from the cache
         map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
     }
         

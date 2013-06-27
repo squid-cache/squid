@@ -723,7 +723,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     delete sc;
 
-    assert(e->lock_count > 0);
+    assert(e->locked());
 
     if (mem->nclients == 0)
         CheckQuickAbort(e);

@@ -71,7 +71,6 @@ Rock::SwapDir::get(const cache_key *key)
 
     // create a brand new store entry and initialize it with stored basics
     StoreEntry *e = new StoreEntry();
-    e->lock_count = 0;
     anchorEntry(*e, filen, *slot);
 
     e->hashInsert(key);
@@ -894,6 +893,13 @@ Rock::SwapDir::unlink(StoreEntry &e)
     ignoreReferences(e);
     map->freeEntry(e.swap_filen);
     disconnect(e);
+}
+
+void
+Rock::SwapDir::markForUnlink(StoreEntry &e)
+{
+    debugs(47, 5, e);
+    map->freeEntry(e.swap_filen);
 }
 
 void

@@ -141,7 +141,7 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
 
 void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
 {
-    entry->lock(); // removeClientStoreReference() unlocks
+    entry->lock("clientReplyContext::setReplyToStoreEntry"); // removeClientStoreReference() unlocks
     sc = storeClientListAdd(entry, this);
 #if USE_DELAY_POOLS
     sc->setDelayId(DelayId::DelayClient(http));
@@ -163,7 +163,7 @@ clientReplyContext::removeStoreReference(store_client ** scp,
         *ep = NULL;
         storeUnregister(sc_tmp, e, this);
         *scp = NULL;
-        e->unlock();
+        e->unlock("clientReplyContext::removeStoreReference");
     }
 }
 
@@ -802,7 +802,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
             if (StoreEntry *entry = storeGetPublic(url, m)) {
-                debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
+                debugs(88, 5, "purging " << *entry << ' ' << RequestMethodStr(m) << ' ' << url);
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
                 if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
@@ -879,7 +879,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     /* Swap in the metadata */
     http->storeEntry(entry);
 
-    http->storeEntry()->lock();
+    http->storeEntry()->lock("clientReplyContext::purgeFoundObject");
     http->storeEntry()->createMemObject(storeId(), http->log_uri,
                                         http->request->method);
 
@@ -1182,7 +1182,7 @@ clientReplyContext::replyStatus()
     }
 
     if ((done = checkTransferDone()) != 0 || flags.complete) {
-        debugs(88, 5, "clientReplyStatus: transfer is DONE");
+        debugs(88, 5, "clientReplyStatus: transfer is DONE: " << done << flags.complete);
         /* Ok we're finished, but how? */
 
         const int64_t expectedBodySize =
@@ -1552,9 +1552,9 @@ clientReplyContext::forgetHit()
     // now so that we can unlock two lines later (and trigger cleanup).
     // Ideally, ClientHttpRequest::storeEntry() should lock/unlock, but it is
     // used so inconsistently that simply adding locking there leads to bugs.
-    e->lock();
+    e->lock("clientReplyContext::forgetHit");
     http->storeEntry(NULL);
-    e->unlock(); // may delete e (and release resources associated with it)
+    e->unlock("clientReplyContext::forgetHit"); // may delete e
 }
 
 void
@@ -1736,7 +1736,7 @@ clientReplyContext::doGetMoreData()
         /* someone found the object in the cache for us */
         StoreIOBuffer localTempBuffer;
 
-        http->storeEntry()->lock();
+        http->storeEntry()->lock("clientReplyContext::doGetMoreData");
 
         MemObject *mem_obj = http->storeEntry()->makeMemObject();
         if (!mem_obj->hasUris()) {
