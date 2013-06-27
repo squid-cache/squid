@@ -53,7 +53,7 @@ CollapsedForwarding::Broadcast(const StoreEntry &e)
 
     if (!e.mem_obj || e.mem_obj->xitTable.index < 0 ||
         !Store::Root().transientReaders(e)) {
-        debugs(17, 7, "not broadcasting " << e << " changes to nobody");
+        debugs(17, 7, "nobody reads " << e);
         return;
     }
 
