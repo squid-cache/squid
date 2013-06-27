@@ -1655,12 +1655,12 @@ void
 ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
 {
     if (loggingEntry_)
-        loggingEntry_->unlock();
+        loggingEntry_->unlock("ClientHttpRequest::loggingEntry");
 
     loggingEntry_ = newEntry;
 
     if (loggingEntry_)
-        loggingEntry_->lock();
+        loggingEntry_->lock("ClientHttpRequest::loggingEntry");
 }
 
 /*
@@ -1828,7 +1828,7 @@ ClientHttpRequest::doCallouts()
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
             getConn()->setServerBump(srvBump);
-            e->unlock();
+            e->unlock("ClientHttpRequest::doCallouts+sslBumpNeeded");
         } else
 #endif
         {
@@ -1843,7 +1843,7 @@ ClientHttpRequest::doCallouts()
                 getConn()->flags.readMore = true; // resume any pipeline reads.
             node = (clientStreamNode *)client_stream.tail->data;
             clientStreamRead(node, this, node->readBuffer);
-            e->unlock();
+            e->unlock("ClientHttpRequest::doCallouts-sslBumpNeeded");
             return;
         }
     }

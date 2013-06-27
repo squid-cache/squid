@@ -413,8 +413,8 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuild
 
             // For some stores, get() creates/unpacks a store entry. Signal
             // such stores that we will no longer use the get() result:
-            e->lock();
-            e->unlock();
+            e->lock("storeRebuildKeepEntry");
+            e->unlock("storeRebuildKeepEntry");
 
             return false;
         } else {

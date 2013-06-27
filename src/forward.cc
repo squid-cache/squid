@@ -129,7 +129,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     pconnRace = raceImpossible;
     start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
-    e->lock();
+    e->lock("FwdState");
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
 }
 
@@ -262,7 +262,7 @@ FwdState::~FwdState()
 
     entry->unregisterAbort();
 
-    entry->unlock();
+    entry->unlock("FwdState");
 
     entry = NULL;
 
@@ -1232,7 +1232,7 @@ FwdState::dispatch()
     /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
     assert(entry->ping_status != PING_WAITING);
 
-    assert(entry->lock_count);
+    assert(entry->locked());
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 

@@ -389,11 +389,11 @@ StoreEntry::StoreEntry() :
         flags(0),
         swap_filen(-1),
         swap_dirn(-1),
-        lock_count(0),
         mem_status(NOT_IN_MEMORY),
         ping_status(PING_NONE),
         store_status(STORE_PENDING),
-        swap_status(SWAPOUT_NONE)
+        swap_status(SWAPOUT_NONE),
+        lock_count(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
 }
@@ -513,6 +513,8 @@ StoreEntry::setReleaseFlag()
     debugs(20, 3, "StoreEntry::setReleaseFlag: '" << getMD5Text() << "'");
 
     EBIT_SET(flags, RELEASE_REQUEST);
+
+    Store::Root().markForUnlink(*this);
 }
 
 void
@@ -756,7 +758,7 @@ StoreEntry::setPublicKey()
 
             pe->complete();
 
-            pe->unlock();
+            pe->unlock("StoreEntry::setPublicKey+Vary");
         }
 
         newkey = storeKeyPublicByRequest(mem_obj->request);
@@ -786,20 +788,14 @@ StoreEntry::setPublicKey()
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
+storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
 
     e = new StoreEntry();
-    e->lock_count = 1;          /* Note lock here w/o calling storeLock() */
     e->makeMemObject();
     e->mem_obj->setUris(url, log_url, method);
-
-    if (neighbors_do_private_keys || !flags.hierarchical)
-        e->setPrivateKey();
-    else
-        e->setPublicKey();
 
     if (flags.cachable) {
         EBIT_SET(e->flags, ENTRY_CACHABLE);
@@ -810,12 +806,25 @@ storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags
     }
 
     e->store_status = STORE_PENDING;
-    e->setMemStatus(NOT_IN_MEMORY);
     e->refcount = 0;
     e->lastref = squid_curtime;
     e->timestamp = -1;          /* set in StoreEntry::timestampsSet() */
     e->ping_status = PING_NONE;
     EBIT_SET(e->flags, ENTRY_VALIDATED);
+    return e;
+}
+
+StoreEntry *
+storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags, const HttpRequestMethod& method)
+{
+    StoreEntry *e = storeCreatePureEntry(url, logUrl, flags, method);
+    e->lock("storeCreateEntry");
+
+    if (neighbors_do_private_keys || !flags.hierarchical)
+        e->setPrivateKey();
+    else
+        e->setPublicKey();
+
     return e;
 }
 
@@ -1077,7 +1086,7 @@ StoreEntry::abort()
     assert(mem_obj != NULL);
     debugs(20, 6, "storeAbort: " << getMD5Text());
 
-    lock();         /* lock while aborting */
+    lock("StoreEntry::abort");         /* lock while aborting */
     negativeCache();
 
     releaseRequest();
@@ -1114,7 +1123,7 @@ StoreEntry::abort()
     // abort swap out, invalidating what was created so far (release follows)
     swapOutFileClose(StoreIOState::writerGone);
 
-    unlock();       /* unlock */
+    unlock("StoreEntry::abort");       /* unlock */
 }
 
 /**
@@ -1217,7 +1226,7 @@ void
 StoreEntry::release()
 {
     PROF_start(storeRelease);
-    debugs(20, 3, "storeRelease: Releasing: '" << getMD5Text() << "'");
+    debugs(20, 3, "releasing " << *this << ' ' << getMD5Text());
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
 
@@ -1239,7 +1248,7 @@ StoreEntry::release()
              * Fake a call to StoreEntry->lock()  When rebuilding is done,
              * we'll just call StoreEntry->unlock() on these.
              */
-            ++lock_count;
+            lock("StoreEntry::release+rebuilding");
             setReleaseFlag();
             LateReleaseStack.push_back(this);
         } else {
@@ -1286,7 +1295,7 @@ storeLateRelease(void *unused)
             return;
         }
 
-        e->unlock();
+        e->unlock("storeLateRelease");
         ++n;
     }
 
@@ -1300,14 +1309,9 @@ StoreEntry::locked() const
     if (lock_count)
         return 1;
 
-    if (swap_status == SWAPOUT_WRITING)
-        return 1;
-
-    if (store_status == STORE_PENDING)
-        return 1;
-
     /*
-     * SPECIAL, PUBLIC entries should be "locked"
+     * SPECIAL, PUBLIC entries should be "locked";
+     * XXX: Their owner should lock them then instead of relying on this hack.
      */
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
         if (!EBIT_TEST(flags, KEY_PRIVATE))
@@ -2019,7 +2023,7 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     if (e.mem_obj && e.mem_obj->smpCollapsed)
         os << 'O';
 
-    return os << '/' << &e << '*' << e.lock_count;
+    return os << '/' << &e << '*' << e.locks();
 }
 
 /* NullStoreEntry */

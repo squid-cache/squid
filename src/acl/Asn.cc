@@ -252,8 +252,7 @@ asnCacheStart(int as)
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request);
     } else {
-
-        e->lock();
+        e->lock("Asn");
         asState->sc = storeClientListAdd(e, asState);
     }
 
@@ -383,7 +382,7 @@ asStateFree(void *data)
     ASState *asState = (ASState *)data;
     debugs(53, 3, "asnStateFree: " << asState->entry->url()  );
     storeUnregister(asState->sc, asState->entry, asState);
-    asState->entry->unlock();
+    asState->entry->unlock("Asn");
     HTTPMSGUNLOCK(asState->request);
     cbdataFree(asState);
 }

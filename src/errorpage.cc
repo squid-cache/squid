@@ -634,14 +634,14 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
         }
     }
 
-    entry->lock();
+    entry->lock("errorAppendEntry");
     entry->buffer();
     entry->replaceHttpReply( err->BuildHttpReply() );
     entry->flush();
     entry->complete();
     entry->negativeCache();
     entry->releaseRequest();
-    entry->unlock();
+    entry->unlock("errorAppendEntry");
     delete err;
 }
 

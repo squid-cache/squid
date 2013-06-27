@@ -61,6 +61,7 @@ public:
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
     /* Store parent API */
+    virtual void markForUnlink(StoreEntry &e);
     virtual void handleIdleEntry(StoreEntry &e);
     virtual void transientsCompleteWriting(StoreEntry &e);
     virtual void transientsAbandon(StoreEntry &e);
@@ -102,6 +103,7 @@ public:
 
 private:
     void createOneStore(Store &aStore);
+    StoreEntry *find(const cache_key *key);
     bool keepForLocalMemoryCache(const StoreEntry &e) const;
     bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
     bool anchorCollapsedOnDisk(StoreEntry &collapsed, bool &inSync);

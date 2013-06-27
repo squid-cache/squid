@@ -96,7 +96,7 @@ whoisStart(FwdState * fwd)
     p->fwd = fwd;
     p->dataWritten = false;
 
-    p->entry->lock();
+    p->entry->lock("whoisStart");
     comm_add_close_handler(fwd->serverConnection()->fd, whoisClose, p);
 
     l = p->request->urlpath.size() + 3;
@@ -205,6 +205,6 @@ whoisClose(const CommCloseCbParams &params)
 {
     WhoisState *p = (WhoisState *)params.data;
     debugs(75, 3, "whoisClose: FD " << params.fd);
-    p->entry->unlock();
+    p->entry->unlock("whoisClose");
     cbdataFree(p);
 }

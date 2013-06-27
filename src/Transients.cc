@@ -4,6 +4,7 @@
  */
 
 #include "squid.h"
+#include "CollapsedForwarding.h" /* XXX: who should broadcast and when? */
 #include "base/RunnersRegistry.h"
 #include "HttpReply.h"
 #include "ipc/mem/Page.h"
@@ -152,13 +153,19 @@ Transients::get(const cache_key *key)
         return NULL;
 
     sfileno index;
-    if (!map->openForReading(key, index))
+    const Ipc::StoreMapAnchor *anchor = map->openForReading(key, index);
+    if (!anchor)
         return NULL;
 
-    if (StoreEntry *e = copyFromShm(index))
+    // Without a writer, either the response has been cached already or we will
+    // get stuck waiting for it to be cached (because nobody will cache it).
+    if (!anchor->writing()) {
+        debugs(20, 5, "ignoring writer-less entry " << index);
+	} else if (StoreEntry *e = copyFromShm(index)) {
         return e; // keep read lock to receive updates from others
+    }
 
-    // loading failure
+    // missing writer or loading failure
     map->closeForReading(index);
     return NULL;
 }
@@ -169,20 +176,14 @@ Transients::copyFromShm(const sfileno index)
     const TransientsMap::Extras &extras = map->extras(index);
 
     // create a brand new store entry and initialize it with stored info
-    StoreEntry *e = storeCreateEntry(extras.url, extras.url,
+    StoreEntry *e = storeCreatePureEntry(extras.url, extras.url,
                                      extras.reqFlags, extras.reqMethod);
-    // XXX: overwriting storeCreateEntry() because we are expected to return an unlocked entry
-    // TODO: move locking from storeCreateEntry to callers as a mid-term solution
-    e->lock_count = 0;
 
     assert(e->mem_obj);
     e->mem_obj->method = extras.reqMethod;
     e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
 
-    // XXX: overwriting storeCreateEntry() which calls setPrivateKey() if
-    // neighbors_do_private_keys (which is true in most cases and by default).
-    // This is nothing but waste of CPU cycles. Need a better API to avoid it.
     e->setPublicKey();
     assert(e->key);
 
@@ -275,6 +276,7 @@ Transients::abandon(const StoreEntry &e)
 {
     assert(e.mem_obj && map);
     map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
+    CollapsedForwarding::Broadcast(e);
     // We do not unlock the entry now because the problem is most likely with
     // the server resource rather than a specific cache writer, so we want to
     // prevent other readers from collapsing requests for that resource.
@@ -314,6 +316,13 @@ Transients::readers(const StoreEntry &e) const
         return map->peekAtEntry(e.mem_obj->xitTable.index).lock.readers;
     }
     return 0;
+}
+
+void
+Transients::markForUnlink(StoreEntry &e)
+{
+    if (e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioWriting)
+        abandon(e);
 }
 
 void
