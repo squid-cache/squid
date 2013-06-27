@@ -48,8 +48,6 @@ class DiskdFile : public DiskFile
 {
 
 public:
-    void * operator new(size_t);
-    void operator delete(void *);
     DiskdFile(char const *path, DiskdIOStrategy *);
     ~DiskdFile();
     virtual void open(int flags, mode_t aMode, RefCount<IORequestor> callback);
@@ -84,7 +82,7 @@ private:
     void ioCompleted();
     size_t inProgressIOs;
 
-    CBDATA_CLASS(DiskdFile);
+    CBDATA_CLASS2(DiskdFile);
 };
 
 #endif
