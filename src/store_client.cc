@@ -68,21 +68,6 @@ static void CheckQuickAbort(StoreEntry * entry);
 
 CBDATA_CLASS_INIT(store_client);
 
-void *
-store_client::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(store_client);
-    store_client *result = cbdataAlloc(store_client);
-    return result;
-}
-
-void
-store_client::operator delete (void *address)
-{
-    store_client *t = static_cast<store_client *>(address);
-    cbdataFree(t);
-}
-
 bool
 store_client::memReaderHasLowerOffset(int64_t anOffset) const
 {

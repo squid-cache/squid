@@ -83,8 +83,6 @@ class ClientSocketContext : public RefCountable
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
-    void *operator new(size_t);
-    void operator delete(void *);
     ClientSocketContext();
     ~ClientSocketContext();
     bool startOfOutput() const;
@@ -159,7 +157,7 @@ private:
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 
-    CBDATA_CLASS(ClientSocketContext);
+    CBDATA_CLASS2(ClientSocketContext);
 };
 
 class ConnectionDetail;

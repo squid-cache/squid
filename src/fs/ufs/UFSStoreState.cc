@@ -45,19 +45,6 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,UFSStoreState);
 
-void *
-Fs::Ufs::UFSStoreState::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(UFSStoreState);
-    return cbdataAlloc(UFSStoreState);
-}
-
-void
-Fs::Ufs::UFSStoreState::operator delete (void *address)
-{
-    cbdataFree(address);
-}
-
 void
 Fs::Ufs::UFSStoreState::ioCompletedNotification()
 {

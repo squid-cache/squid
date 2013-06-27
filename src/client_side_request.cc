@@ -107,22 +107,6 @@ ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Ad
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
-void *
-ClientRequestContext::operator new (size_t size)
-{
-    assert (size == sizeof(ClientRequestContext));
-    CBDATA_INIT_TYPE(ClientRequestContext);
-    ClientRequestContext *result = cbdataAlloc(ClientRequestContext);
-    return result;
-}
-
-void
-ClientRequestContext::operator delete (void *address)
-{
-    ClientRequestContext *t = static_cast<ClientRequestContext *>(address);
-    cbdataFree(t);
-}
-
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(allow_t, void *);
@@ -169,22 +153,6 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
-
-void *
-ClientHttpRequest::operator new (size_t size)
-{
-    assert (size == sizeof (ClientHttpRequest));
-    CBDATA_INIT_TYPE(ClientHttpRequest);
-    ClientHttpRequest *result = cbdataAlloc(ClientHttpRequest);
-    return result;
-}
-
-void
-ClientHttpRequest::operator delete (void *address)
-{
-    ClientHttpRequest *t = static_cast<ClientHttpRequest *>(address);
-    cbdataFree(t);
-}
 
 ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
