@@ -754,6 +754,19 @@ StoreController::dereference(StoreEntry &e, bool wantsLocalMemory)
 StoreEntry *
 StoreController::get(const cache_key *key)
 {
+    if (StoreEntry *e = find(key)) {
+        // this is not very precise: some get()s are not initiated by clients
+        e->touch(); 
+        return e;
+    }
+    return NULL;
+}
+
+/// Internal method to implements the guts of the Store::get() API:
+/// returns an in-transit or cached object with a given key, if any.
+StoreEntry *
+StoreController::find(const cache_key *key)
+{
     if (StoreEntry *e = swapDir->get(key)) {
         // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
         // because their backing store slot may be gone already.
@@ -844,6 +857,16 @@ StoreController::anchorCollapsedOnDisk(StoreEntry &collapsed, bool &inSync)
     return false;
 }
 
+void StoreController::markForUnlink(StoreEntry &e)
+{
+    if (transients && e.mem_obj && e.mem_obj->xitTable.index >= 0)
+        transients->markForUnlink(e);
+    if (memStore && e.mem_obj && e.mem_obj->memCache.index >= 0)
+        memStore->markForUnlink(e);
+    if (e.swap_filen >= 0)
+        e.store()->markForUnlink(e);
+}
+
 // move this into [non-shared] memory cache class when we have one
 /// whether e should be kept in local RAM for possible future caching
 bool
@@ -881,9 +904,6 @@ StoreController::memoryOut(StoreEntry &e, const bool preserveSwappable)
 void
 StoreController::memoryUnlink(StoreEntry &e)
 {
-    if (e.mem_status != IN_MEMORY)
-        return;
-
     if (memStore)
         memStore->unlink(e);
     else // TODO: move into [non-shared] memory cache class when we have one
@@ -1000,6 +1020,15 @@ StoreController::syncCollapsed(const cache_key *key)
         return;
     }
 
+    // this must be done before the abandoned() check because we may be looking
+    // at an entry we are writing while abandoned() requires a reading lock.
+    if (!collapsed->mem_obj->smpCollapsed) {
+        // this happens, e.g., when we tried collapsing but rejected the hit
+        // or a stale notification was received (and we are now the writer)
+        debugs(20, 7, "not SMP-syncing not-SMP-collapsed " << *collapsed);
+        return;
+    }
+
     assert(transients);
     if (transients->abandoned(*collapsed)) {
         debugs(20, 3, "aborting abandoned " << *collapsed);
@@ -1007,17 +1036,15 @@ StoreController::syncCollapsed(const cache_key *key)
         return;
     }
 
-    if (!collapsed->mem_obj->smpCollapsed) {
-        // this happens, e.g., when we tried collapsing but rejected the hit
-        debugs(20, 7, "not SMP-syncing not-SMP-collapsed " << *collapsed);
-        return;
-    }
-
     debugs(20, 7, "syncing " << *collapsed);
 
     bool found = false;
     bool inSync = false;
-    if (memStore && collapsed->mem_status == IN_MEMORY) {
+    if (memStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
+        found = true;
+        inSync = true;
+        debugs(20, 7, "fully mem-loaded " << *collapsed);
+    } else if (memStore && collapsed->mem_obj->memCache.index >= 0) {
         found = true;
         inSync = memStore->updateCollapsed(*collapsed);
     } else if (collapsed->swap_filen >= 0) {

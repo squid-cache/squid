@@ -48,6 +48,7 @@ public:
     virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat(StoreEntry &) const;
     virtual StoreSearch *search(String const url, HttpRequest *);
+    virtual void markForUnlink(StoreEntry &e);
     virtual void reference(StoreEntry &);
     virtual bool dereference(StoreEntry &, bool);
     virtual void maintain();

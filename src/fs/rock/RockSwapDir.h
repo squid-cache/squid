@@ -32,6 +32,7 @@ public:
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual StoreEntry *get(const cache_key *key);
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
+    virtual void markForUnlink(StoreEntry &e);
     virtual void disconnect(StoreEntry &e);
     virtual uint64_t currentSize() const;
     virtual uint64_t currentCount() const;
