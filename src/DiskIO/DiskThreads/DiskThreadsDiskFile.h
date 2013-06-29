@@ -94,15 +94,13 @@ class IoResult
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
     IoResult(RefCount<DiskThreadsDiskFile> aFile, RefCount<RT> aRequest) : file(aFile), request(aRequest) {}
 
     RefCount<DiskThreadsDiskFile> file;
     RefCount<RT> request;
 
 private:
-    CBDATA_CLASS(IoResult);
+    CBDATA_CLASS2(IoResult);
 };
 
 template <class RT>
