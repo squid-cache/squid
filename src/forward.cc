@@ -935,7 +935,7 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
-    if (n_tries == 0) // first attempt
+    if (!request->hier.first_conn_start.tv_sec) // first attempt
         request->hier.first_conn_start = current_time;
 
     /* connection timeout */
