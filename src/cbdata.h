@@ -375,9 +375,6 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 #define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
 
 /// \ingroup CBDATAAPI
-#define CBDATA_CLASS(type)	static cbdata_type CBDATA_##type
-
-/// \ingroup CBDATAAPI
 #define CBDATA_CLASS_INIT(type) cbdata_type type::CBDATA_##type = CBDATA_UNKNOWN
 #define CBDATA_NAMESPACED_CLASS_INIT(namespace, type) cbdata_type namespace::type::CBDATA_##type = CBDATA_UNKNOWN
 
