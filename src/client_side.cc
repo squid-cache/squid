@@ -872,7 +872,6 @@ ConnStateData::swanSong()
 
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
-    clientConnection = NULL;
 
 #if USE_AUTH
     // NP: do this bit after closing the connections to avoid side effects from unwanted TCP RST
