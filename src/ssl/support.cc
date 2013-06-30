@@ -971,12 +971,8 @@ SSL_CTX *
 sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile)
 {
     int ssl_error;
-#if OPENSSL_VERSION_NUMBER < 0x00909000L
-    SSL_METHOD *method;
-#else
-    const SSL_METHOD *method;
-#endif
-    SSL_CTX *sslContext;
+    Ssl::ContextMethod method;
+    SSL_CTX * sslContext;
     long fl = Ssl::parse_flags(flags);
 
     ssl_initialize();
