@@ -674,12 +674,6 @@ configDoConfigure(void)
         Config.Store.maxObjectSize = 0x7FFF0000;
     }
 #endif
-    if (0 == Store::Root().maxSize())
-        /* people might want a zero-sized cache on purpose */
-        (void) 0;
-    else if (Store::Root().maxSize() < Config.memMaxSize)
-        /* This is bogus. folk with NULL caches will want this */
-        debugs(3, DBG_CRITICAL, "WARNING cache_mem is larger than total disk cache space!");
 
     if (Config.Announce.period > 0) {
         Config.onoff.announce = 1;
