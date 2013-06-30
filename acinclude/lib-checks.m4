@@ -159,6 +159,37 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
 SQUID_STATE_ROLLBACK(check_SSL_get_certificate)
 ])
 
+dnl Checks whether the  SSL_CTX_new and similar functions require 
+dnl a const 'SSL_METHOD *' argument
+AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_METHOD],[
+  AH_TEMPLATE(SQUID_USE_CONST_SSL_METHOD, "Define to 1 if the SSL_CTX_new and similar openSSL API functions require 'const SSL_METHOD *'")
+  SQUID_STATE_SAVE(check_const_SSL_METHOD)
+  AC_MSG_CHECKING(whether SSL_CTX_new and similar openSSL API functions require 'const SSL_METHOD *'")
+
+  AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM(
+    [
+     #include <openssl/ssl.h>
+     #include <openssl/err.h>
+    ],
+    [
+       const SSL_METHOD *method = NULL;
+       SSL_CTX *sslContext = SSL_CTX_new(method);
+       return (sslContext != NULL);
+    ])
+  ],
+  [
+   AC_DEFINE(SQUID_USE_CONST_SSL_METHOD, 1)
+   AC_MSG_RESULT([yes])
+  ],
+  [
+   AC_MSG_RESULT([no])
+  ],
+  [])
+
+SQUID_STATE_ROLLBACK(check_const_SSL_METHOD)
+]
+)
 
 dnl Try to handle TXT_DB related  problems:
 dnl 1) The type of TXT_DB::data member changed in openSSL-1.0.1 version
@@ -167,11 +198,13 @@ dnl    implemented correctly and causes type conversion errors while compiling s
 
 AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
   AH_TEMPLATE(SQUID_SSLTXTDB_PSTRINGDATA, "Define to 1 if the TXT_DB uses OPENSSL_PSTRING data member")
+  AH_TEMPLATE(SQUID_STACKOF_PSTRINGDATA_HACK, "Define to 1 to use squid workaround for buggy versions of sk_OPENSSL_PSTRING_value")
   AH_TEMPLATE(SQUID_USE_SSLLHASH_HACK, "Define to 1 to use squid workaround for openssl IMPLEMENT_LHASH_* type conversion errors")
 
   SQUID_STATE_SAVE(check_TXTDB)
 
   LIBS="$LIBS $SSLLIB"
+  squid_cv_check_openssl_pstring="no"
   AC_MSG_CHECKING(whether the TXT_DB use OPENSSL_PSTRING data member)
   AC_COMPILE_IFELSE([
   AC_LANG_PROGRAM(
@@ -187,11 +220,35 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
   [
    AC_DEFINE(SQUID_SSLTXTDB_PSTRINGDATA, 1)
    AC_MSG_RESULT([yes])
+   squid_cv_check_openssl_pstring="yes"
   ],
   [
    AC_MSG_RESULT([no])
   ],
   [])
+
+  if test x"$squid_cv_check_openssl_pstring" = "xyes"; then
+     AC_MSG_CHECKING(whether the squid workaround for buggy versions of sk_OPENSSL_PSTRING_value should used)
+     AC_COMPILE_IFELSE([
+     AC_LANG_PROGRAM(
+       [
+        #include <openssl/txt_db.h>
+       ],
+       [
+       TXT_DB *db = NULL;
+       const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, 0));
+       return (current_row != NULL);
+       ])
+     ],
+     [
+      AC_MSG_RESULT([no])
+     ],
+     [
+      AC_DEFINE(SQUID_STACKOF_PSTRINGDATA_HACK, 1)
+      AC_MSG_RESULT([yes])
+     ],
+     [])
+  fi
 
   AC_MSG_CHECKING(whether the workaround for OpenSSL IMPLEMENT_LHASH_  macros should used)
   AC_COMPILE_IFELSE([
