@@ -105,7 +105,6 @@ addedEntry(StorePointer hashStore,
     e->expires = squid_curtime;
     e->lastmod = squid_curtime;
     e->refcount = 1;
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;

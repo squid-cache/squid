@@ -1001,43 +1001,21 @@ StoreController::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 void
-StoreController::syncCollapsed(const cache_key *key)
+StoreController::syncCollapsed(const sfileno xitIndex)
 {
-    StoreEntry *collapsed = swapDir->get(key);
-    if (!collapsed) { // the entry is no longer locally active, ignore update
-        debugs(20, 7, "not SMP-syncing not-local " << storeKeyText(key));
-        return;
-    }
-
-    if (!collapsed->mem_obj) {
-        // without mem_obj, the entry cannot be transient so we ignore it
-        debugs(20, 7, "not SMP-syncing not-shared " << *collapsed);
-        return;
-    }
-
-    if (collapsed->mem_obj->xitTable.index < 0) {
-        debugs(20, 7, "not SMP-syncing not-transient " << *collapsed);
-        return;
-    }
-
-    // this must be done before the abandoned() check because we may be looking
-    // at an entry we are writing while abandoned() requires a reading lock.
-    if (!collapsed->mem_obj->smpCollapsed) {
-        // this happens, e.g., when we tried collapsing but rejected the hit
-        // or a stale notification was received (and we are now the writer)
-        debugs(20, 7, "not SMP-syncing not-SMP-collapsed " << *collapsed);
-        return;
-    }
-
     assert(transients);
-    if (transients->abandoned(*collapsed)) {
-        debugs(20, 3, "aborting abandoned " << *collapsed);
-        collapsed->abort();
+
+    StoreEntry *collapsed = transients->findCollapsed(xitIndex);
+    if (!collapsed) { // the entry is no longer locally active, ignore update
+        debugs(20, 7, "not SMP-syncing not-transient " << xitIndex);
         return;
     }
+    assert(collapsed->mem_obj);
+    assert(collapsed->mem_obj->smpCollapsed);
 
     debugs(20, 7, "syncing " << *collapsed);
 
+    bool abandoned = transients->abandoned(*collapsed);
     bool found = false;
     bool inSync = false;
     if (memStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
@@ -1052,6 +1030,12 @@ StoreController::syncCollapsed(const cache_key *key)
         inSync = collapsed->store()->updateCollapsed(*collapsed);
     } else {
         found = anchorCollapsed(*collapsed, inSync);
+    }
+
+    if (abandoned && collapsed->store_status == STORE_PENDING) {
+        debugs(20, 3, "aborting abandoned but STORE_PENDING " << *collapsed);
+        collapsed->abort();
+        return;
     }
 
     if (inSync) {

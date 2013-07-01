@@ -192,8 +192,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     entry->timestampsSet();
     entry->flush();
 
-    if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
-        entry->setPublicKey();
+    entry->makePublic();
 
     fwd->complete();
     debugs(75, 3, "whoisReadReply: Done: " << entry->url());

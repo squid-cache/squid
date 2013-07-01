@@ -526,7 +526,6 @@ CossSwapDir::addDiskRestore(const cache_key *const key,
     e->lastmod = lastmod;
     e->refcount = refcount;
     e->flags = flags;
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
