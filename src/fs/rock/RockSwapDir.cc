@@ -138,7 +138,6 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     e.swap_status = SWAPOUT_DONE;
     e.ping_status = PING_NONE;
 
-    EBIT_SET(e.flags, ENTRY_CACHABLE);
     EBIT_CLR(e.flags, RELEASE_REQUEST);
     EBIT_CLR(e.flags, KEY_PRIVATE);
     EBIT_SET(e.flags, ENTRY_VALIDATED);

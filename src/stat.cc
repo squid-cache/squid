@@ -320,9 +320,6 @@ storeEntryFlags(const StoreEntry * entry)
     if (EBIT_TEST(flags, REFRESH_REQUEST))
         strcat(buf, "REFRESH_REQUEST,");
 
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        strcat(buf, "CACHABLE,");
-
     if (EBIT_TEST(flags, ENTRY_DISPATCHED))
         strcat(buf, "DISPATCHED,");
 

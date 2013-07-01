@@ -288,7 +288,6 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     assert(e.swap_status == SWAPOUT_NONE); // set in StoreEntry constructor
     e.ping_status = PING_NONE;
 
-    EBIT_SET(e.flags, ENTRY_CACHABLE);
     EBIT_CLR(e.flags, RELEASE_REQUEST);
     EBIT_CLR(e.flags, KEY_PRIVATE);
     EBIT_SET(e.flags, ENTRY_VALIDATED);

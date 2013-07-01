@@ -191,7 +191,7 @@ StoreEntry::makePublic()
 {
     /* This object can be cached for a long time */
 
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
+    if (!EBIT_TEST(flags, RELEASE_REQUEST))
         setPublicKey();
 }
 
@@ -201,7 +201,6 @@ StoreEntry::makePrivate()
     /* This object should never be cached at all */
     expireNow();
     releaseRequest(); /* delete object when not used */
-    /* releaseRequest clears ENTRY_CACHABLE flag */
 }
 
 void
@@ -209,9 +208,7 @@ StoreEntry::cacheNegatively()
 {
     /* This object may be negatively cached */
     negativeCache();
-
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        setPublicKey();
+    makePublic();
 }
 
 size_t
@@ -523,14 +520,7 @@ StoreEntry::releaseRequest()
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    setReleaseFlag();
-
-    /*
-     * Clear cachable flag here because we might get called before
-     * anyone else even looks at the cachability flag.  Also, this
-     * prevents httpMakePublic from really setting a public key.
-     */
-    EBIT_CLR(flags, ENTRY_CACHABLE);
+    setReleaseFlag(); // makes validToSend() false, preventing future hits
 
     setPrivateKey();
 }
@@ -651,6 +641,9 @@ StoreEntry::setPrivateKey()
         return;                 /* is already private */
 
     if (key) {
+        setReleaseFlag(); // will markForUnlink(); all caches/workers will know
+
+        // TODO: move into SwapDir::markForUnlink() already called by Root()
         if (swap_filen > -1)
             storeDirSwapLog(this, SWAP_LOG_DEL);
 
@@ -686,8 +679,7 @@ StoreEntry::setPublicKey()
      * store clients won't be able to access object data which has
      * been freed from memory.
      *
-     * If RELEASE_REQUEST is set, then ENTRY_CACHABLE should not
-     * be set, and StoreEntry::setPublicKey() should not be called.
+     * If RELEASE_REQUEST is set, setPublicKey() should not be called.
      */
 #if MORE_DEBUG_OUTPUT
 
@@ -798,10 +790,8 @@ storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &f
     e->mem_obj->setUris(url, log_url, method);
 
     if (flags.cachable) {
-        EBIT_SET(e->flags, ENTRY_CACHABLE);
         EBIT_CLR(e->flags, RELEASE_REQUEST);
     } else {
-        /* StoreEntry::releaseRequest() clears ENTRY_CACHABLE */
         e->releaseRequest();
     }
 
@@ -958,9 +948,9 @@ StoreEntry::checkCachable()
         if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (!EBIT_TEST(flags, ENTRY_CACHABLE)) {
+        } else if (EBIT_TEST(flags, RELEASE_REQUEST)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
-            ++store_check_cachable_hist.no.not_entry_cachable;
+            ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
         } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
@@ -995,7 +985,6 @@ StoreEntry::checkCachable()
         }
 
     releaseRequest();
-    /* StoreEntry::releaseRequest() cleared ENTRY_CACHABLE */
     return 0;
 }
 
@@ -2010,7 +1999,6 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         if (EBIT_TEST(e.flags, DELAY_SENDING)) os << 'P';
         if (EBIT_TEST(e.flags, RELEASE_REQUEST)) os << 'X';
         if (EBIT_TEST(e.flags, REFRESH_REQUEST)) os << 'F';
-        if (EBIT_TEST(e.flags, ENTRY_CACHABLE)) os << 'C';
         if (EBIT_TEST(e.flags, ENTRY_DISPATCHED)) os << 'D';
         if (EBIT_TEST(e.flags, KEY_PRIVATE)) os << 'I';
         if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) os << 'W';

@@ -26,13 +26,14 @@
 static const char *MapLabel = "transients_map";
 
 
-Transients::Transients(): map(NULL)
+Transients::Transients(): map(NULL), locals(NULL)
 {
 }
 
 Transients::~Transients()
 {
     delete map;
+    delete locals;
 }
 
 void
@@ -45,6 +46,8 @@ Transients::init()
     Must(!map);
     map = new TransientsMap(MapLabel);
     map->cleaner = this;
+
+    locals = new Locals(entryLimit, NULL);
 }
 
 void
@@ -157,15 +160,18 @@ Transients::get(const cache_key *key)
     if (!anchor)
         return NULL;
 
-    // Without a writer, either the response has been cached already or we will
-    // get stuck waiting for it to be cached (because nobody will cache it).
-    if (!anchor->writing()) {
-        debugs(20, 5, "ignoring writer-less entry " << index);
-	} else if (StoreEntry *e = copyFromShm(index)) {
-        return e; // keep read lock to receive updates from others
+    // If we already have a local entry, the store_table should have found it.
+    // Since it did not, the local entry key must have changed from public to
+    // private. We still need to keep the private entry around for syncing as
+    // its clients depend on it, but we should not allow new clients to join.
+    if (StoreEntry *oldE = locals->at(index)) {
+        debugs(20, 3, "not joining private " << *oldE);
+        assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
+    } else if (StoreEntry *newE = copyFromShm(index)) {
+        return newE; // keep read lock to receive updates from others
     }
 
-    // missing writer or loading failure
+    // private entry or loading failure
     map->closeForReading(index);
     return NULL;
 }
@@ -192,6 +198,10 @@ Transients::copyFromShm(const sfileno index)
     // TODO: Can we remove smpCollapsed by not syncing non-transient entries?
     e->mem_obj->smpCollapsed = true;
 
+    assert(!locals->at(index));
+    // We do not lock e because we do not want to prevent its destruction;
+    // e is tied to us via mem_obj so we will know when it is destructed.
+    locals->at(index) = e;
     return e;
 }
 
@@ -200,6 +210,22 @@ Transients::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     // XXX: not needed but Store parent forces us to implement this
     fatal("Transients::get(key,callback,data) should not be called");
+}
+
+StoreEntry *
+Transients::findCollapsed(const sfileno index)
+{
+    if (!map)
+        return NULL;
+
+    if (StoreEntry *oldE = locals->at(index)) {
+        debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel);
+        assert(oldE->mem_obj && oldE->mem_obj->xitTable.index == index);
+        return oldE;
+    }
+
+    debugs(20, 3, "no entry at " << index << " in " << MapLabel);
+    return NULL;
 }
 
 void
@@ -302,6 +328,9 @@ Transients::completeWriting(const StoreEntry &e)
 {
     if (e.mem_obj && e.mem_obj->xitTable.index >= 0) {
         assert(e.mem_obj->xitTable.io == MemObject::ioWriting);
+        // there will be no more updates from us after this, so we must prevent
+        // future readers from joining
+        map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
         map->closeForWriting(e.mem_obj->xitTable.index);
         e.mem_obj->xitTable.index = -1;
         e.mem_obj->xitTable.io = MemObject::ioDone;
@@ -336,6 +365,7 @@ Transients::disconnect(MemObject &mem_obj)
             assert(mem_obj.xitTable.io == MemObject::ioReading);
             map->closeForReading(mem_obj.xitTable.index);
         }
+        locals->at(mem_obj.xitTable.index) = NULL;
         mem_obj.xitTable.index = -1;
         mem_obj.xitTable.io = MemObject::ioDone;
     }
