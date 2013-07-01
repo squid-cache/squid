@@ -1475,6 +1475,25 @@ StoreEntry::validToSend() const
     if (EBIT_TEST(flags, ENTRY_ABORTED))
         return 0;
 
+    // now check that the entry has a cache backing or is collapsed
+    if (swap_filen > -1) // backed by a disk cache
+        return 1;
+
+    if (swappingOut()) // will be backed by a disk cache
+        return 1;
+
+    if (!mem_obj) // not backed by a memory cache and not collapsed
+        return 0;
+
+    if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
+        return 0;
+
+    // StoreEntry::storeClientType() assumes DISK_CLIENT here, but there is no
+    // disk cache backing so we should not rely on the store cache at all. This
+    // is wrong for range requests that could feed off nibbled memory (XXX).
+    if (mem_obj->inmem_lo) // in local memory cache, but got nibbled at
+        return 0;
+
     return 1;
 }
 
