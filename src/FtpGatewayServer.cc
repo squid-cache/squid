@@ -60,7 +60,7 @@ protected:
     };
     typedef void (ServerStateData::*SM_FUNC)();
     static const SM_FUNC SM_FUNCS[];
-    void readWelcome();
+    void readGreeting();
     void sendCommand();
     void readReply();
     void readPasvReply();
@@ -76,7 +76,7 @@ protected:
 CBDATA_CLASS_INIT(ServerStateData);
 
 const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
-    &ServerStateData::readWelcome, // BEGIN
+    &ServerStateData::readGreeting, // BEGIN
     &ServerStateData::readReply, // SENT_COMMAND
     &ServerStateData::readPasvReply, // SENT_PASV
     &ServerStateData::readDataReply, // SENT_DATA_REQUEST
@@ -101,7 +101,7 @@ ServerStateData::~ServerStateData()
 void
 ServerStateData::start()
 {
-    if (clientState() == ConnStateData::FTP_BEGIN)
+    if (!fwd->request->clientConnectionManager->ftp.readGreeting)
         Ftp::ServerStateData::start();
     else
     if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ||
@@ -331,15 +331,17 @@ ServerStateData::startDataUpload()
 }
 
 void
-ServerStateData::readWelcome()
+ServerStateData::readGreeting()
 {
-    assert(clientState() == ConnStateData::FTP_BEGIN);
+    assert(!fwd->request->clientConnectionManager->ftp.readGreeting);
 
     switch (ctrl.replycode) {
     case 220:
-        clientState(ConnStateData::FTP_CONNECTED);
+        fwd->request->clientConnectionManager->ftp.readGreeting = true;
+        if (clientState() == ConnStateData::FTP_BEGIN)
+            clientState(ConnStateData::FTP_CONNECTED);
         ctrl.replycode = 120; // change status for forwarded server greeting
-        forwardPreliminaryReply(&ServerStateData::sendCommand);
+        forwardPreliminaryReply(&ServerStateData::start);
         break;
     case 120:
         if (NULL != ctrl.message)

@@ -346,6 +346,7 @@ public:
     struct {
         String uri;
         FtpState state;
+        bool readGreeting;
         Comm::ConnectionPointer dataListenConn;
         Comm::ConnectionPointer dataConn;
         Ip::Address serverDataAddr;

@@ -3920,6 +3920,15 @@ ftpAccept(const CommAcceptCbParams &params)
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = connStateCreate(params.conn, s);
 
+    if (connState->transparent()) {
+        char buf[MAX_IPSTRLEN];
+        connState->clientConnection->local.ToURL(buf,MAX_IPSTRLEN);
+        connState->ftp.uri = "ftp://";
+        connState->ftp.uri.append(buf);
+        connState->ftp.uri.append("/");
+        debugs(33, 5, HERE << "FTP transparent URL: " << connState->ftp.uri);
+    }
+
     FtpWriteGreeting(connState);
 }
 
@@ -5371,6 +5380,8 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
 
     const String::size_type eou = params.find('@');
     if (eou == String::npos || eou + 1 >= params.size()) {
+        if (connState->ftp.uri.size() > 0)
+            return true;
         FtpWriteEarlyReply(connState, 501, "Missing host");
         return false;
     }
