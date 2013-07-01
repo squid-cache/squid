@@ -6,6 +6,7 @@
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
 #include "Store.h"
+#include <vector>
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
 struct TransientsMapExtras {
@@ -23,6 +24,9 @@ class Transients: public Store, public Ipc::StoreMapCleaner
 public:
     Transients();
     virtual ~Transients();
+
+    /// return a local, previously collapsed entry
+    StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// add an in-transit entry suitable for collapsing future requests
     void startWriting(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
@@ -72,7 +76,12 @@ protected:
     virtual void noteFreeMapSlice(const sfileno sliceId);
 
 private:
-    TransientsMap *map; ///< index of mem-cached entries
+    /// shared packed info indexed by Store keys, for creating new StoreEntries
+    TransientsMap *map;
+
+    typedef std::vector<StoreEntry*> Locals;
+    /// local collapsed entries indexed by transient ID, for syncing old StoreEntries
+    Locals *locals;
 };
 
 // TODO: Why use Store as a base? We are not really a cache.

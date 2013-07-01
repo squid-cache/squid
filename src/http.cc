@@ -345,6 +345,11 @@ HttpStateData::cacheableReply()
 #define REFRESH_OVERRIDE(flag) 0
 #endif
 
+    if (EBIT_TEST(entry->flags, RELEASE_REQUEST)) {
+        debugs(22, 3, "NO because " << *entry << " has been released.");
+        return 0;
+    }
+
     // Check for Surrogate/1.0 protocol conditions
     // NP: reverse-proxy traffic our parent server has instructed us never to cache
     if (surrogateNoStore) {

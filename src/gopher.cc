@@ -945,8 +945,7 @@ gopherSendRequest(int fd, void *data)
                                          CommIoCbPtrFun(gopherSendComplete, gopherState));
     Comm::Write(gopherState->serverConn, buf, strlen(buf), call, NULL);
 
-    if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
-        gopherState->entry->setPublicKey();	/* Make it public */
+    gopherState->entry->makePublic();
 }
 
 /// \ingroup ServerProtocolGopherInternal

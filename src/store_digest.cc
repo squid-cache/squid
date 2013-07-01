@@ -224,11 +224,6 @@ storeDigestAddable(const StoreEntry * e)
 
     /* check various entry flags (mimics StoreEntry::checkCachable XXX) */
 
-    if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
-        debugs(71, 6, "storeDigestAddable: NO: not cachable");
-        return 0;
-    }
-
     if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
         debugs(71, 6, "storeDigestAddable: NO: private key");
         return 0;

@@ -28,11 +28,13 @@ std::auto_ptr<CollapsedForwarding::Queue> CollapsedForwarding::queue;
 class CollapsedForwardingMsg
 {
 public:
-    CollapsedForwardingMsg(): sender(-1) { key[0] = key[1] = 0; }
+    CollapsedForwardingMsg(): sender(-1), xitIndex(-1) {}
 
 public:
-    int sender; /// kid ID of sending process
-    uint64_t key[2]; ///< StoreEntry key
+    int sender; ///< kid ID of sending process
+
+    /// transients index, so that workers can find [private] entries to sync
+    sfileno xitIndex; 
 };
 
 // CollapsedForwarding
@@ -59,10 +61,9 @@ CollapsedForwarding::Broadcast(const StoreEntry &e)
 
     CollapsedForwardingMsg msg;
     msg.sender = KidIdentifier;
-    memcpy(msg.key, e.key, sizeof(msg.key));
+    msg.xitIndex = e.mem_obj->xitTable.index;
 
-    debugs(17, 5, storeKeyText(static_cast<cache_key*>(e.key)) << " to " <<
-           Config.workers << "-1 workers");
+    debugs(17, 5, e << " to " << Config.workers << "-1 workers");
 
     // TODO: send only to workers who are waiting for data
     for (int workerId = 1; workerId <= Config.workers; ++workerId) {
@@ -105,10 +106,9 @@ CollapsedForwarding::HandleNewData(const char *const when)
                    " != " << msg.sender);
         }
 
-        const cache_key *key = reinterpret_cast<const cache_key*>(msg.key);
-        debugs(17, 7, "hadling " << storeKeyText(key));
-        Store::Root().syncCollapsed(key);
-        debugs(17, 7, "handled " << storeKeyText(key));
+        debugs(17, 7, "handling entry " << msg.xitIndex << " in transients_map");
+        Store::Root().syncCollapsed(msg.xitIndex);
+        debugs(17, 7, "handled entry " << msg.xitIndex << " in transients_map");
 
         // XXX: stop and schedule an async call to continue
         assert(++poppedCount < SQUID_MAXFD);
