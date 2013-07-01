@@ -1,4 +1,18 @@
 
+Changes to squid-3.3.6 (01 Jul 2013):
+
+	- Bug 3854: pt1: compile errors on AIX
+	- Bug 3802: Fix wrong check inside Format::Format::assemble
+	- Bug 3762: remove bogus WARNING in cache.log
+	- Bug 3717: assertion failed with dstdom_regex with IP based URL
+	- Bug 1991: kqueue causes SSL to hang
+	- Ask for SSL key password when started with -N but without sslpassword_program
+	- Make sure %<tt includes all [failed] connection attempts
+	- Support HTTP reply ACLs in icap_log and log_icap
+	- Fix incorrect external_acl_type codes
+	- Fix ICAP logging request headers and segmentation faults
+	- ... and some documentation polish
+
 Changes to squid-3.3.5 (20 May 2013):
 
 	- Bug 3851: Delay Pool class 5 tag:levels displayed incorrectly in cache manager
