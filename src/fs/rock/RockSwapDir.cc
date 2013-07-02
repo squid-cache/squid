@@ -114,7 +114,7 @@ Rock::SwapDir::updateCollapsed(StoreEntry &collapsed)
 bool
 Rock::SwapDir::updateCollapsedWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor)
 {
-    collapsed.swap_file_sz = anchor.basics.swap_file_sz; // XXX: make atomic
+    collapsed.swap_file_sz = anchor.basics.swap_file_sz;
     return true;
 }
 
@@ -995,14 +995,14 @@ void Rock::SwapDirRr::create(const RunnerRegistry &)
                 SwapDir::DirMap::Init(sd->inodeMapPath(), capacity);
             mapOwners.push_back(mapOwner);
 
-            // XXX: remove pool id and counters from PageStack
+            // TODO: somehow remove pool id and counters from PageStack?
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
                 shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
                                              i+1, capacity,
                                              sizeof(DbCellHeader));
             freeSlotsOwners.push_back(freeSlotsOwner);
 
-            // XXX: add method to initialize PageStack with no free pages
+            // TODO: add method to initialize PageStack with no free pages
             while (true) {
                 Ipc::Mem::PageId pageId;
                 if (!freeSlotsOwner->object()->pop(pageId))

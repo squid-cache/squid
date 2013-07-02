@@ -275,7 +275,7 @@ Rock::Rebuild::importEntry(Ipc::StoreMapAnchor &anchor, const sfileno fileno, co
         return false;
 
     const uint64_t knownSize = header.entrySize > 0 ?
-        header.entrySize : anchor.basics.swap_file_sz;
+        header.entrySize : anchor.basics.swap_file_sz.get();
     if (!loadedE.swap_file_sz && knownSize)
         loadedE.swap_file_sz = knownSize;
     // the entry size may still be unknown at this time

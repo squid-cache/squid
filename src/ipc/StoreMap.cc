@@ -392,12 +392,6 @@ Ipc::StoreMap::entryCount() const
     return shared->count;
 }
 
-bool
-Ipc::StoreMap::full() const
-{
-    return entryCount() >= entryLimit();
-}
-
 void
 Ipc::StoreMap::updateStats(ReadWriteLockStats &stats) const
 {
