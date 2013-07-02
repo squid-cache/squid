@@ -69,7 +69,7 @@ public:
     virtual void transientsDisconnect(MemObject &mem_obj);
     virtual void memoryOut(StoreEntry &e, const bool preserveSwappable);
     virtual void memoryUnlink(StoreEntry &e);
-    virtual void memoryDisconnect(MemObject &mem_obj);
+    virtual void memoryDisconnect(StoreEntry &e);
     virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
     virtual void syncCollapsed(const sfileno xitIndex);
 
