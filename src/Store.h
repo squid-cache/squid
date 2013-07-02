@@ -410,7 +410,7 @@ public:
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// disassociates the entry from the memory cache, preserving cached data
-    virtual void memoryDisconnect(MemObject &mem_obj) {}
+    virtual void memoryDisconnect(StoreEntry &e) {}
 
     /// If the entry is not found, return false. Otherwise, return true after
     /// tying the entry to this cache and setting inSync to updateCollapsed().

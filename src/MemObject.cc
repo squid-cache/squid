@@ -135,12 +135,6 @@ MemObject::~MemObject()
 #endif
 
     if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
-        // TODO: Consider moving these to destroyMemoryObject
-        if (xitTable.index >= 0)
-            Store::Root().transientsDisconnect(*this);
-        if (memCache.index >= 0)
-            Store::Root().memoryDisconnect(*this);
-
         assert(xitTable.index < 0);
         assert(memCache.index < 0);
         assert(swapout.sio == NULL);

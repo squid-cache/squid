@@ -911,10 +911,10 @@ StoreController::memoryUnlink(StoreEntry &e)
 }
 
 void
-StoreController::memoryDisconnect(MemObject &mem_obj)
+StoreController::memoryDisconnect(StoreEntry &e)
 {
     if (memStore)
-        memStore->disconnect(mem_obj);
+        memStore->disconnect(e);
     // else nothing to do for non-shared memory cache
 }
 
