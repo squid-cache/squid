@@ -251,14 +251,13 @@ MemStore::updateCollapsed(StoreEntry &collapsed)
     return updateCollapsedWith(collapsed, index, anchor);
 }
 
+/// updates collapsed entry after its anchor has been located
 bool
 MemStore::updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
-    collapsed.swap_file_sz = anchor.basics.swap_file_sz; // XXX: make atomic
-
+    collapsed.swap_file_sz = anchor.basics.swap_file_sz;
     const bool copied = copyFromShm(collapsed, index, anchor);
-
-    return copied; // XXX: when do we unlock the map slot?
+    return copied;
 }
 
 /// anchors StoreEntry to an already locked map entry

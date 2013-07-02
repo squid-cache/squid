@@ -4,7 +4,7 @@
  */
 
 #include "squid.h"
-#include "CollapsedForwarding.h" /* XXX: who should broadcast and when? */
+#include "CollapsedForwarding.h"
 #include "base/RunnersRegistry.h"
 #include "HttpReply.h"
 #include "ipc/mem/Page.h"
@@ -379,7 +379,7 @@ Transients::EntryLimit()
     if (!UsingSmp() || !Config.onoff.collapsed_forwarding)
         return 0; // no SMP collapsed forwarding possible or needed
 
-    return 16*1024; // XXX: make configurable
+    return 16*1024; // TODO: make configurable?
 }
 
 /// initializes shared memory segment used by Transients

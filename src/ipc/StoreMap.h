@@ -64,13 +64,13 @@ public:
         time_t lastref;
         time_t expires;
         time_t lastmod;
-        uint64_t swap_file_sz; // [app]; XXX: make atomic
+        Atomic::WordT<uint64_t> swap_file_sz; // [app]
         uint16_t refcount;
         uint16_t flags;
     } basics;
 
-    /// where the chain of StoreEntry slices begins [app]; XXX: make atomic
-    StoreMapSliceId start; 
+    /// where the chain of StoreEntry slices begins [app]
+    Atomic::WordT<StoreMapSliceId> start; 
 
 #if 0
     /// possible persistent states
@@ -186,7 +186,6 @@ public:
     /// copies slice to its designated position
     void importSlice(const SliceId sliceId, const Slice &slice);
 
-    bool full() const; ///< there are no empty slices left; XXX: remove as unused?
     bool valid(const int n) const; ///< whether n is a valid slice coordinate
     int entryCount() const; ///< number of writeable and readable entries
     int entryLimit() const; ///< maximum entryCount() possible

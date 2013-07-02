@@ -14,6 +14,7 @@
 #include "MemObject.h"
 #include "Mem.h"
 #include "Parsing.h"
+#include "Transients.h"
 
 Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreEntry *anEntry,
@@ -101,7 +102,7 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
     while (coreOff >= objOffset + currentReadableSlice().size) {
         objOffset += currentReadableSlice().size;
         sidCurrent = currentReadableSlice().next;
-        assert(sidCurrent >= 0); // XXX: handle "read offset too big" error
+        assert(sidCurrent >= 0); // TODO: handle "read offset too big" error
     }
 
     offset_ = coreOff;
@@ -175,10 +176,8 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
             const SlotId sidNext = reserveSlotForWriting(); // throws
             assert(sidNext >= 0);
             writeToDisk(sidNext);
-        } else if (Config.onoff.collapsed_forwarding) {
-            // write partial buffer for all collapsed hit readers to see
-            // XXX: can we check that this is needed w/o stalling readers
-            // that appear right after our check?
+        } else if (Store::Root().transientReaders(*e)) {
+            // write partial buffer for all remote hit readers to see
             writeBufToDisk(-1);
         }
     }
@@ -239,7 +238,7 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
     sidCurrent = sidNext;
 }
 
-/// Write header-less (XXX) or complete buffer to disk.
+/// Write header-less (ugh) or complete buffer to disk.
 void
 Rock::IoState::writeBufToDisk(const SlotId sidNext)
 {
