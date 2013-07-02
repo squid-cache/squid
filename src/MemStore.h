@@ -33,7 +33,7 @@ public:
     void unlink(StoreEntry &e);
 
     /// called when the entry is about to forget its association with mem cache
-    void disconnect(MemObject &mem_obj);
+    void disconnect(StoreEntry &e);
 
     /* Store API */
     virtual int callback();

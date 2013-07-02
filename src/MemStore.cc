@@ -369,7 +369,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     // would be nice to call validLength() here, but it needs e.key
 
     // we read the entire response into the local memory; no more need to lock
-    disconnect(*e.mem_obj);
+    disconnect(e);
     return true;
 }
 
@@ -642,7 +642,6 @@ MemStore::write(StoreEntry &e)
         if (!shouldCache(e) || !startCaching(e)) {
             e.mem_obj->memCache.io = MemObject::ioDone;
             Store::Root().transientsAbandon(e);
-            CollapsedForwarding::Broadcast(e);
             return;
         }
         break;
@@ -668,9 +667,7 @@ MemStore::write(StoreEntry &e)
         // fall through to the error handling code
     }
 
-    Store::Root().transientsAbandon(e);
-    disconnect(*e.mem_obj);
-    CollapsedForwarding::Broadcast(e);
+    disconnect(e);
 }
 
 void
@@ -705,9 +702,9 @@ MemStore::unlink(StoreEntry &e)
     assert(e.mem_obj);
     if (e.mem_obj->memCache.index >= 0) {
         map->freeEntry(e.mem_obj->memCache.index);
-        disconnect(*e.mem_obj);
+        disconnect(e);
     } else {
-        // the entry may bave been loaded and then disconnected from the cache
+        // the entry may have been loaded and then disconnected from the cache
         map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
     }
         
@@ -715,17 +712,22 @@ MemStore::unlink(StoreEntry &e)
 }
 
 void
-MemStore::disconnect(MemObject &mem_obj)
+MemStore::disconnect(StoreEntry &e)
 {
+    assert(e.mem_obj);
+    MemObject &mem_obj = *e.mem_obj;
     if (mem_obj.memCache.index >= 0) {
         if (mem_obj.memCache.io == MemObject::ioWriting) {
             map->abortWriting(mem_obj.memCache.index);
+            mem_obj.memCache.index = -1;
+            mem_obj.memCache.io = MemObject::ioDone;
+            Store::Root().transientsAbandon(e); // broadcasts after the change
         } else {
             assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);
+            mem_obj.memCache.index = -1;
+            mem_obj.memCache.io = MemObject::ioDone;
         }
-        mem_obj.memCache.index = -1;
-        mem_obj.memCache.io = MemObject::ioDone;
     }
 }
 
