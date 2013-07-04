@@ -224,6 +224,7 @@ private: /* internal methods */
     void calcImplicitAnswer();
 
     bool asyncCaller_; ///< whether the caller supports async/slow ACLs
+    bool occupied_; ///< whether a check (fast or non-blocking) is in progress
     bool finished_;
     allow_t allow_;
 

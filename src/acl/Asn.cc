@@ -39,7 +39,7 @@
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
 #include "cache_cf.h"
-#include "src/forward.h"
+#include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
@@ -149,10 +149,10 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
     if (AS_tree_head == NULL)
         return 0;
 
-    if (addr.IsNoAddr())
+    if (addr.isNoAddr())
         return 0;
 
-    if (addr.IsAnyAddr())
+    if (addr.isAnyAddr())
         return 0;
 
     m_addr.addr = addr;
@@ -422,8 +422,8 @@ asnAddNet(char *as_string, int as_number)
     t = strchr(as_string, '.');
 
     // generate Netbits Format Mask
-    mask.SetNoAddr();
-    mask.ApplyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
+    mask.setNoAddr();
+    mask.applyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
@@ -522,8 +522,8 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     addr = e->e_addr.addr;
     mask = e->e_mask.addr;
     storeAppendPrintf(sentry, "%s/%d\t",
-                      addr.NtoA(buf, MAX_IPSTRLEN),
-                      mask.GetCIDR() );
+                      addr.toStr(buf, MAX_IPSTRLEN),
+                      mask.cidr() );
     asinfo = e->e_info;
     assert(asinfo->as_number);
 
@@ -642,7 +642,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
         // else fall through to noaddr match, hiding the lookup failure (XXX)
     }
     Ip::Address noaddr;
-    noaddr.SetNoAddr();
+    noaddr.setNoAddr();
     return data->match(noaddr);
 }
 

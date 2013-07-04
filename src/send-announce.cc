@@ -113,7 +113,7 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
     }
 
     Ip::Address S = ia->in_addrs[0];
-    S.SetPort(port);
+    S.port(port);
     assert(Comm::IsConnOpen(icpOutgoingConn));
 
     if (comm_udp_sendto(icpOutgoingConn->fd, S, sndbuf, strlen(sndbuf) + 1) < 0)

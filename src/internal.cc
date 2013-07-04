@@ -108,8 +108,8 @@ internalRemoteUri(const char *host, unsigned short port, const char *dir, const 
 
     /* check for an IP address and format appropriately if found */
     Ip::Address test = lc_host;
-    if ( !test.IsAnyAddr() ) {
-        test.ToHostname(lc_host,SQUIDHOSTNAMELEN);
+    if ( !test.isAnyAddr() ) {
+        test.toHostStr(lc_host,SQUIDHOSTNAMELEN);
     }
 
     /*

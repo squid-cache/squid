@@ -32,7 +32,7 @@
 
 #include "squid.h"
 #include "errorpage.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

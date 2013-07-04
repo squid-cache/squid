@@ -44,7 +44,7 @@
 #include "disk.h"
 #include "event.h"
 #include "fde.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
@@ -126,7 +126,7 @@ static wordlist *peer_names = NULL;
 static void
 netdbHashInsert(netdbEntry * n, Ip::Address &addr)
 {
-    networkFromInaddr(addr).NtoA(n->network, MAX_IPSTRLEN);
+    networkFromInaddr(addr).toStr(n->network, MAX_IPSTRLEN);
     n->hash.key = n->network;
     assert(hash_lookup(addr_table, n->network) == NULL);
     hash_join(addr_table, &n->hash);
@@ -264,7 +264,7 @@ netdbLookupAddr(const Ip::Address &addr)
 {
     netdbEntry *n;
     char *key = new char[MAX_IPSTRLEN];
-    networkFromInaddr(addr).NtoA(key,MAX_IPSTRLEN);
+    networkFromInaddr(addr).toStr(key,MAX_IPSTRLEN);
     n = (netdbEntry *) hash_lookup(addr_table, key);
     delete[] key;
     return n;
@@ -362,8 +362,8 @@ networkFromInaddr(const Ip::Address &in)
     out = in;
 
     /* in IPv6 the 'network' should be the routing section. */
-    if ( in.IsIPv6() ) {
-        out.ApplyMask(64, AF_INET6);
+    if ( in.isIPv6() ) {
+        out.applyMask(64, AF_INET6);
         debugs(14, 5, "networkFromInaddr : Masked IPv6 Address to " << in << "/64 routing part.");
         return out;
     }
@@ -371,7 +371,7 @@ networkFromInaddr(const Ip::Address &in)
 #if USE_CLASSFUL
     struct in_addr b;
 
-    in.GetInAddr(b);
+    in.getInAddr(b);
 
     if (IN_CLASSC(b.s_addr))
         b.s_addr &= IN_CLASSC_NET;
@@ -387,7 +387,7 @@ networkFromInaddr(const Ip::Address &in)
     debugs(14, 5, "networkFromInaddr : Masked IPv4 Address to " << out << "/24.");
 
     /* use /24 for everything under IPv4 */
-    out.ApplyMask(24, AF_INET);
+    out.applyMask(24, AF_INET);
     debugs(14, 5, "networkFromInaddr : Masked IPv4 Address to " << in << "/24.");
 
     return out;
@@ -782,7 +782,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     while (size >= rec_sz) {
         debugs(38, 5, "netdbExchangeHandleReply: in parsing loop, size = " << size);
-        addr.SetAnyAddr();
+        addr.setAnyAddr();
         hops = rtt = 0.0;
 
         for (o = 0; o < rec_sz;) {
@@ -817,7 +817,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
             }
         }
 
-        if (!addr.IsAnyAddr() && rtt > 0)
+        if (!addr.isAnyAddr() && rtt > 0)
             netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
 
         assert(o == rec_sz);
@@ -1152,7 +1152,7 @@ netdbExchangeUpdatePeer(Ip::Address &addr, CachePeer * e, double rtt, double hop
            std::setfill('0')<< std::setprecision(2) << hops << " hops, " <<
            rtt << " rtt");
 
-    if ( !addr.IsIPv4() ) {
+    if ( !addr.isIPv4() ) {
         debugs(38, 5, "netdbExchangeUpdatePeer: Aborting peer update for '" << addr << "', NetDB cannot handle IPv6.");
         return;
     }
@@ -1236,13 +1236,13 @@ netdbBinaryExchange(StoreEntry * s)
             continue;
 
         /* FIXME INET6 : NetDB cannot yet handle IPv6 addresses. Ensure only IPv4 get sent. */
-        if ( !addr.IsIPv4() )
+        if ( !addr.isIPv4() )
             continue;
 
         buf[i] = (char) NETDB_EX_NETWORK;
         ++i;
 
-        addr.GetInAddr(line_addr);
+        addr.getInAddr(line_addr);
         memcpy(&buf[i], &line_addr, sizeof(struct in_addr));
 
         i += sizeof(struct in_addr);

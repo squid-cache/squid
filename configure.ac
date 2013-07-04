@@ -2202,7 +2202,6 @@ AC_CHECK_HEADERS( \
   shadow.h \
   regex.h \
   sched.h \
-  security/pam_appl.h \
   siginfo.h \
   signal.h \
   sstream \
@@ -2253,8 +2252,6 @@ AC_CHECK_HEADERS( \
   db_185.h \
   wchar.h
 )
-
-CHECK_STRUCT_PAM_CONV
 
 AC_CHECK_HEADERS(
   linux/netfilter_ipv4.h

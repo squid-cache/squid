@@ -408,15 +408,15 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* Internally created requests cannot have bodies today */
     request->content_length = 0;
 
-    request->client_addr.SetNoAddr();
+    request->client_addr.setNoAddr();
 
 #if FOLLOW_X_FORWARDED_FOR
-    request->indirect_client_addr.SetNoAddr();
+    request->indirect_client_addr.setNoAddr();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-    request->my_addr.SetNoAddr();	/* undefined for internal requests */
+    request->my_addr.setNoAddr();	/* undefined for internal requests */
 
-    request->my_addr.SetPort(0);
+    request->my_addr.port(0);
 
     /* Our version is HTTP/1.1 */
     request->http_ver = Http::ProtocolVersion(1,1);
@@ -672,8 +672,8 @@ ClientRequestContext::hostHeaderVerify()
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
     if (http->request->flags.intercepted || http->request->flags.interceptTproxy) {
         // verify the Host: port (if any) matches the apparent destination
-        if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
+        if (portStr && port != http->getConn()->clientConnection->local.port()) {
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.port() <<
                    " matches Host: port " << port << " (" << portStr << ")");
             hostHeaderVerifyFailed("intercepted port", portStr);
         } else {
@@ -722,7 +722,7 @@ ClientRequestContext::clientAccessCheck()
 
         /* we always trust the direct client address for actual use */
         http->request->indirect_client_addr = http->request->client_addr;
-        http->request->indirect_client_addr.SetPort(0);
+        http->request->indirect_client_addr.port(0);
 
         /* setup the XFF iterator for processing */
         http->request->x_forwarded_for_iterator = http->request->header.getList(HDR_X_FORWARDED_FOR);
@@ -839,7 +839,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         }
 
         Ip::Address tmpnoaddr;
-        tmpnoaddr.SetNoAddr();
+        tmpnoaddr.setNoAddr();
         error = clientBuildError(page_id, status,
                                  NULL,
                                  http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
@@ -906,6 +906,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
         HelperReply nilReply;
+        nilReply.result = HelperReply::Error;
         context->clientRedirectDone(nilReply);
     }
 }
@@ -2079,7 +2080,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
     // true cause of the error at this point, so I did not pass it.
     if (calloutContext) {
         Ip::Address noAddr;
-        noAddr.SetNoAddr();
+        noAddr.setNoAddr();
         ConnStateData * c = getConn();
         calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, Http::scInternalServerError,
                                 NULL,

@@ -90,7 +90,7 @@ public:
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponse const &);
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Ssl::Errors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+    Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 #endif
 private:
     // hidden for safer management of self; use static fwdStart

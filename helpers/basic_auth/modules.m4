@@ -49,6 +49,9 @@ if test "x$enable_auth_basic" != "xno" ; then
       elif test "x$helper" = "xNIS" ; then
         m4_include([helpers/basic_auth/NIS/required.m4])
 
+      elif test "x$helper" = "xPAM" ; then
+        m4_include([helpers/basic_auth/PAM/required.m4])
+
       elif test "x$helper" = "xPOP3" ; then
         m4_include([helpers/basic_auth/POP3/required.m4])
 

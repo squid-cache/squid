@@ -690,8 +690,8 @@ parse_objectid(FILE *fp, char *name) {
          */
         if (count == (length - 2)) {
             if (op->label) {
-                strncpy(np->parent, op->label, sizeof(np->parent));
-                strncpy(np->label, name, sizeof(np->label));
+                strncpy(np->parent, op->label, sizeof(np->parent)-1);
+                strncpy(np->label, name, sizeof(np->label)-1);
                 if (nop->subid != -1)
                     np->subid = nop->subid;
                 else
