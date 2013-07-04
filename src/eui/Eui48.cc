@@ -161,7 +161,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 #endif /* !_SQUID_WINDOWS_ */
 
     Ip::Address ipAddr = c;
-    ipAddr.SetPort(0);
+    ipAddr.port(0);
 
 #if _SQUID_LINUX_
 
@@ -198,7 +198,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     memset(&arpReq, '\0', sizeof(arpReq));
 
     struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
-    ipAddr.GetSockAddr(*sa);
+    ipAddr.getSockAddr(*sa);
 
     /* Query ARP table */
     if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
@@ -263,7 +263,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         memset(&arpReq, '\0', sizeof(arpReq));
 
         sa = (sockaddr_in*)&arpReq.arp_pa;
-        ipAddr.GetSockAddr(*sa);
+        ipAddr.getSockAddr(*sa);
 
         strncpy(arpReq.arp_dev, ifr->ifr_name, sizeof(arpReq.arp_dev) - 1);
 
@@ -328,7 +328,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     memset(&arpReq, '\0', sizeof(arpReq));
 
     struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
-    ipAddr.GetSockAddr(*sa);
+    ipAddr.getSockAddr(*sa);
 
     /* Query ARP table */
     if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
@@ -380,7 +380,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     memset(&arpReq, '\0', sizeof(arpReq));
 
     struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
-    ipAddr.GetSockAddr(*sa);
+    ipAddr.getSockAddr(*sa);
 
     /* Query ARP table */
     mib[0] = CTL_NET;

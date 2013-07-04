@@ -7,7 +7,7 @@
 #include "ssl/ErrorDetail.h"
 #include <vector>
 
-class ACLSslErrorData : public ACLData<const Ssl::Errors *>
+class ACLSslErrorData : public ACLData<const Ssl::CertErrors *>
 {
 
 public:
@@ -17,7 +17,7 @@ public:
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData();
-    bool match(const Ssl::Errors *);
+    bool match(const Ssl::CertErrors *);
     wordlist *dump();
     void parse();
     bool empty() const;

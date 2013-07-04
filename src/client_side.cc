@@ -100,8 +100,8 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
-#include "forward.h"
 #include "fqdncache.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "http.h"
 #include "HttpHdrContRange.h"
@@ -650,7 +650,7 @@ ClientHttpRequest::logRequest()
     if (loggingEntry() && loggingEntry()->mem_obj)
         al->cache.objectSize = loggingEntry()->contentLen();
 
-    al->cache.caddr.SetNoAddr();
+    al->cache.caddr.setNoAddr();
 
     if (getConn() != NULL) {
         al->cache.caddr = getConn()->log_addr;
@@ -2135,7 +2135,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     }
 
     if (vport < 0)
-        vport = http->getConn()->clientConnection->local.GetPort();
+        vport = http->getConn()->clientConnection->local.port();
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
@@ -2179,7 +2179,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN);
+        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
                  ipbuf, vport, url);
@@ -2208,10 +2208,10 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN);
+        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 ipbuf, http->getConn()->clientConnection->local.GetPort(), url);
+                 ipbuf, http->getConn()->clientConnection->local.port(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
@@ -2304,7 +2304,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
     /* deny CONNECT via accelerated ports */
     if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.port() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = Http::scMethodNotAllowed;
@@ -2606,16 +2606,16 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
     // In bump-server-first mode, we have not necessarily seen the intended
     // server name at certificate-peeking time. Check for domain mismatch now,
     // when we can extract the intended name from the bumped HTTP request.
-    if (sslServerBump->serverCert.get()) {
+    if (X509 *srvCert = sslServerBump->serverCert.get()) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(sslServerBump->serverCert.get(), request->GetHost())) {
+        if (!Ssl::checkX509ServerValidity(srvCert, request->GetHost())) {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
                    "does not match domainname " << request->GetHost());
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
-                check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
+                check.sslErrors = new Ssl::CertErrors(Ssl::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
                 allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
                 delete check.sslErrors;
                 check.sslErrors = NULL;
@@ -2637,7 +2637,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 err->src_addr = clientConnection->remote;
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-                    sslServerBump->serverCert.get(), NULL);
+                    srvCert, NULL);
                 err->detail = errDetail;
                 // Save the original request for logging purposes.
                 if (!context->http->al->request) {
@@ -3307,71 +3307,16 @@ ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
 void
 ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
 {
-#if THIS_CONFUSES_PERSISTENT_CONNECTION_AWARE_BROWSERS_AND_USERS
-    debugs(33, 3, "requestTimeout: FD " << io.fd << ": lifetime is expired.");
-
-    if (COMMIO_FD_WRITECB(io.fd)->active) {
-        /* FIXME: If this code is reinstated, check the conn counters,
-         * not the fd table state
-         */
-        /*
-         * Some data has been sent to the client, just close the FD
-         */
-        clientConnection->close();
-    } else if (nrequests) {
-        /*
-         * assume its a persistent connection; just close it
-         */
-        clientConnection->close();
-    } else {
-        /*
-         * Generate an error
-         */
-        ClientHttpRequest **H;
-        clientStreamNode *node;
-        ClientHttpRequest *http = parseHttpRequestAbort(this, "error:Connection%20lifetime%20expired");
-        node = http->client_stream.tail->prev->data;
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    Http::scRequestTimeout, Http::METHOD_NONE, "N/A", &CachePeer.sin_addr,
-                                    NULL, NULL, NULL);
-        /* No requests can be outstanded */
-        assert(chr == NULL);
-        /* add to the client request queue */
-
-        for (H = &chr; *H; H = &(*H)->next);
-        *H = http;
-
-        clientStreamRead(http->client_stream.tail->data, http, 0,
-                         HTTP_REQBUF_SZ, context->reqbuf);
-
-        /*
-         * if we don't close() here, we still need a timeout handler!
-         */
-        typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                          TimeoutDialer, this, ConnStateData::requestTimeout);
-        commSetConnTimeout(io.conn, 30, timeoutCall);
-
-        /*
-         * Aha, but we don't want a read handler!
-         */
-        Comm::SetSelect(io.fd, COMM_SELECT_READ, NULL, NULL, 0);
-    }
-
-#else
     /*
     * Just close the connection to not confuse browsers
-    * using persistent connections. Some browsers opens
-    * an connection and then does not use it until much
+    * using persistent connections. Some browsers open
+    * a connection and then do not use it until much
     * later (presumeably because the request triggering
     * the open has already been completed on another
     * connection)
     */
     debugs(33, 3, "requestTimeout: FD " << io.fd << ": lifetime is expired.");
     io.conn->close();
-#endif
 }
 
 static void
@@ -3392,7 +3337,7 @@ connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
 
     result->clientConnection = client;
     result->log_addr = client->remote;
-    result->log_addr.ApplyMask(Config.Addrs.client_netmask);
+    result->log_addr.applyMask(Config.Addrs.client_netmask);
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
@@ -3680,8 +3625,8 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
         char buf[MAX_IPSTRLEN];
         assert(bumpMode != Ssl::bumpNone && bumpMode != Ssl::bumpEnd);
         HttpRequest::Pointer fakeRequest(new HttpRequest);
-        fakeRequest->SetHost(details->local.NtoA(buf, sizeof(buf)));
-        fakeRequest->port = details->local.GetPort();
+        fakeRequest->SetHost(details->local.toStr(buf, sizeof(buf)));
+        fakeRequest->port = details->local.port();
         fakeRequest->clientConnectionManager = connState;
         fakeRequest->client_addr = connState->clientConnection->remote;
 #if FOLLOW_X_FORWARDED_FOR
@@ -3731,7 +3676,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         static char reqStr[MAX_IPSTRLEN + 80];
-        connState->clientConnection->local.ToURL(ip, sizeof(ip));
+        connState->clientConnection->local.toUrl(ip, sizeof(ip));
         snprintf(reqStr, sizeof(reqStr), "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", ip, ip);
         bool ret = connState->handleReadData(reqStr, strlen(reqStr));
         if (ret)
@@ -3781,8 +3726,8 @@ httpsAccept(const CommAcceptCbParams &params)
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
         assert(params.conn->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
-        request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
-        request->port = params.conn->local.GetPort();
+        request->SetHost(params.conn->local.toStr(ip, sizeof(ip)));
+        request->port = params.conn->local.port();
         request->myportname = s->name;
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
@@ -4070,7 +4015,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         // Squid serves its own error page and closes, so we want
         // a CN that causes no additional browser errors. Possible
         // only when bumping CONNECT with a user-typed address.
-        if (intendedDest.IsAnyAddr() || isConnectRequest)
+        if (intendedDest.isAnyAddr() || isConnectRequest)
             sslCommonName = sslConnectHostOrIp;
         else if (sslServerBump->serverCert.get())
             sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());
@@ -4569,7 +4514,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
         pinning.port = request->port;
         pinnedHost = pinning.host;
     } else {
-        pinning.port = pinServer->remote.GetPort();
+        pinning.port = pinServer->remote.port();
     }
     pinning.pinned = true;
     if (aPeer)
@@ -4578,7 +4523,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     char stmp[MAX_IPSTRLEN];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
              (auth || !aPeer) ? pinnedHost : aPeer->name,
-             clientConnection->remote.ToURL(stmp,MAX_IPSTRLEN),
+             clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
 

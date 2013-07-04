@@ -20,7 +20,7 @@ class CertValidationRequest
 {
 public:
     SSL *ssl;
-    Errors *errors; ///< The list of errors detected
+    CertErrors *errors; ///< The list of errors detected
     std::string domainName; ///< The server name
     CertValidationRequest() : ssl(NULL), errors(NULL) {}
 };
@@ -99,8 +99,6 @@ public:
     static const std::string code_cert_validate;
     /// Parameter name for passing intended domain name
     static const std::string param_domain;
-    /// Parameter name for passing SSL errors
-    static const std::string param_error;
     /// Parameter name for passing SSL certificates
     static const std::string param_cert;
     /// Parameter name for passing the major SSL error

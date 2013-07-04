@@ -74,6 +74,23 @@ typedef int ssl_error_t;
 
 typedef CbDataList<Ssl::ssl_error_t> Errors;
 
+/// An SSL certificate-related error.
+/// Pairs an error code with the certificate experiencing the error.
+class CertError
+{
+public:
+    ssl_error_t code; ///< certificate error code
+    X509_Pointer cert; ///< certificate with the above error code
+    CertError(ssl_error_t anErr, X509 *aCert);
+    CertError(CertError const &err);
+    CertError & operator = (const CertError &old);
+    bool operator == (const CertError &ce) const;
+    bool operator != (const CertError &ce) const;
+};
+
+/// Holds a list of certificate SSL errors
+typedef CbDataList<Ssl::CertError> CertErrors;
+
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI

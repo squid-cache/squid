@@ -47,8 +47,8 @@
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
-#include "forward.h"
 #include "ftp.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "gopher.h"
 #include "hier_code.h"
@@ -296,7 +296,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
      * be allowed.  yuck, I know.
      */
 
-    if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
+    if ( Config.accessList.miss && !request->client_addr.isNoAddr() &&
             request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHE_OBJECT) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access).
@@ -710,7 +710,7 @@ FwdState::negotiateSSL(int fd)
                     serverBump->serverCert.resetAndLock(errDetails->peerCert());
 
                     // remember validation errors, if any
-                    if (Ssl::Errors *errs = static_cast<Ssl::Errors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+                    if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                         serverBump->sslErrors = cbdataReference(errs);
                 }
             }
@@ -748,7 +748,7 @@ FwdState::negotiateSSL(int fd)
             serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
 
             // remember validation errors, if any
-            if (Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+            if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                 serverBump->sslErrors = cbdataReference(errs);
         }
     }
@@ -768,7 +768,7 @@ FwdState::negotiateSSL(int fd)
         // Ssl::CertValidationHelper::submit method.
         validationRequest.ssl = ssl;
         validationRequest.domainName = request->GetHost();
-        if (Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+        if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
         else
@@ -807,7 +807,7 @@ FwdState::sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse con
 void
 FwdState::sslCrtvdHandleReply(Ssl::CertValidationResponse const &validationResponse)
 {
-    Ssl::Errors *errs = NULL;
+    Ssl::CertErrors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
     if (!Comm::IsConnOpen(serverConnection())) {
@@ -860,11 +860,11 @@ FwdState::sslCrtvdHandleReply(Ssl::CertValidationResponse const &validationRespo
 
 /// Checks errors in the cert. validator response against sslproxy_cert_error.
 /// The first honored error, if any, is returned via errDetails parameter.
-/// The method returns all seen errors except SSL_ERROR_NONE as Ssl::Errors.
-Ssl::Errors *
+/// The method returns all seen errors except SSL_ERROR_NONE as Ssl::CertErrors.
+Ssl::CertErrors *
 FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
-    Ssl::Errors *errs = NULL;
+    Ssl::CertErrors *errs = NULL;
 
     ACLFilledChecklist *check = NULL;
     if (acl_access *acl = Config.ssl_client.cert_error)
@@ -880,7 +880,7 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::E
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                check->sslErrors = new Ssl::Errors(i->error_no);
+                check->sslErrors = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get()));
                 if (check->fastCheck() == ACCESS_ALLOWED)
                     allowed = true;
             }
@@ -903,9 +903,9 @@ FwdState::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::E
         }
 
         if (!errs)
-            errs = new Ssl::Errors(i->error_no);
+            errs = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get()));
         else
-            errs->push_back_unique(i->error_no);
+            errs->push_back_unique(Ssl::CertError(i->error_no, i->cert.get()));
     }
     if (check)
         delete check;
@@ -1181,7 +1181,7 @@ FwdState::connectStart()
     // We will try to open a new connection, possibly to the same destination.
     // We reset serverDestinations[0] in case we are using it again because
     // ConnOpener modifies its destination argument.
-    serverDestinations[0]->local.SetPort(0);
+    serverDestinations[0]->local.port(0);
     serverConn = NULL;
 
 #if URL_CHECKSUM_DEBUG
@@ -1520,11 +1520,11 @@ void
 getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
 {
     // skip if an outgoing address is already set.
-    if (!conn->local.IsAnyAddr()) return;
+    if (!conn->local.isAnyAddr()) return;
 
     // ensure that at minimum the wildcard local matches remote protocol
-    if (conn->remote.IsIPv4())
-        conn->local.SetIPv4();
+    if (conn->remote.isIPv4())
+        conn->local.setIPv4();
 
     // maybe use TPROXY client address
     if (request && request->flags.spoofClientIp) {
@@ -1558,7 +1558,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     for (l = Config.accessList.outgoing_address; l; l = l->next) {
 
         /* check if the outgoing address is usable to the destination */
-        if (conn->remote.IsIPv4() != l->addr.IsIPv4()) continue;
+        if (conn->remote.isIPv4() != l->addr.isIPv4()) continue;
 
         /* check ACLs for this outgoing address */
         if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {

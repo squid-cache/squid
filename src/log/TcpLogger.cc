@@ -241,9 +241,9 @@ Log::TcpLogger::connect()
 
     Comm::ConnectionPointer futureConn = new Comm::Connection;
     futureConn->remote = remote;
-    futureConn->local.SetAnyAddr();
-    if (futureConn->remote.IsIPv4())
-        futureConn->local.SetIPv4();
+    futureConn->local.setAnyAddr();
+    if (futureConn->remote.isIPv4())
+        futureConn->local.setIPv4();
 
     typedef CommCbMemFunT<TcpLogger, CommConnectCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::connectDone);

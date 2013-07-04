@@ -280,11 +280,11 @@ idnsAddMDNSNameservers()
 
     // mDNS resolver addresses are explicit multicast group IPs
     idnsAddNameserver("FF02::FB");
-    nameservers[nns-1].S.SetPort(5353);
+    nameservers[nns-1].S.port(5353);
     nameservers[nns-1].mDNSResolver = true;
 
     idnsAddNameserver("224.0.0.251");
-    nameservers[nns-1].S.SetPort(5353);
+    nameservers[nns-1].S.port(5353);
     nameservers[nns-1].mDNSResolver = true;
 }
 
@@ -298,13 +298,13 @@ idnsAddNameserver(const char *buf)
         return;
     }
 
-    if (A.IsAnyAddr()) {
+    if (A.isAnyAddr()) {
         debugs(78, DBG_CRITICAL, "WARNING: Squid does not accept " << A << " in DNS server specifications.");
-        A.SetLocalhost();
+        A.setLocalhost();
         debugs(78, DBG_CRITICAL, "Will be using " << A << " instead, assuming you meant that DNS is running on the same machine");
     }
 
-    if (!Ip::EnableIpv6 && !A.SetIPv4()) {
+    if (!Ip::EnableIpv6 && !A.setIPv4()) {
         debugs(78, DBG_IMPORTANT, "WARNING: IPv6 is disabled. Discarding " << A << " in DNS server specifications.");
         return;
     }
@@ -328,7 +328,7 @@ idnsAddNameserver(const char *buf)
     }
 
     assert(nns < nns_alloc);
-    A.SetPort(NS_DEFAULTPORT);
+    A.port(NS_DEFAULTPORT);
     nameservers[nns].S = A;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
     nameservers[nns].last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
@@ -733,7 +733,7 @@ idnsStats(StoreEntry * sentry)
 
     for (i = 0; i < nns; ++i) {
         storeAppendPrintf(sentry, "%-45s %9d %9d %s\n",  /* Let's take the maximum: (15 IPv4/45 IPv6) */
-                          nameservers[i].S.NtoA(buf,MAX_IPSTRLEN),
+                          nameservers[i].S.toStr(buf,MAX_IPSTRLEN),
                           nameservers[i].nqueries,
                           nameservers[i].nreplies,
                           nameservers[i].mDNSResolver?"multicast":"recurse");
@@ -847,7 +847,7 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int 
     if (status != COMM_OK || !conn) {
         char buf[MAX_IPSTRLEN] = "";
         if (vc->ns < nns)
-            nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN);
+            nameservers[vc->ns].S.toStr(buf,MAX_IPSTRLEN);
         debugs(78, DBG_IMPORTANT, HERE << "Failed to connect to nameserver " << buf << " using TCP.");
         return;
     }
@@ -888,15 +888,15 @@ idnsInitVC(int nsv)
 
     Comm::ConnectionPointer conn = new Comm::Connection();
 
-    if (!Config.Addrs.udp_outgoing.IsNoAddr())
+    if (!Config.Addrs.udp_outgoing.isNoAddr())
         conn->local = Config.Addrs.udp_outgoing;
     else
         conn->local = Config.Addrs.udp_incoming;
 
     conn->remote = nameservers[nsv].S;
 
-    if (conn->remote.IsIPv4()) {
-        conn->local.SetIPv4();
+    if (conn->remote.isIPv4()) {
+        conn->local.setIPv4();
     }
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
@@ -917,7 +917,7 @@ idnsSendQueryVC(idns_query * q, int nsn)
 
     if (!vc) {
         char buf[MAX_IPSTRLEN];
-        debugs(78, DBG_IMPORTANT, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << nameservers[nsn].S.NtoA(buf,MAX_IPSTRLEN) << "!");
+        debugs(78, DBG_IMPORTANT, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << nameservers[nsn].S.toStr(buf,MAX_IPSTRLEN) << "!");
 
         return;
     }
@@ -964,7 +964,7 @@ idnsSendQuery(idns_query * q)
             idnsSendQueryVC(q, nsn);
             x = y = 0;
         } else {
-            if (DnsSocketB >= 0 && nameservers[nsn].S.IsIPv6())
+            if (DnsSocketB >= 0 && nameservers[nsn].S.isIPv6())
                 y = comm_udp_sendto(DnsSocketB, nameservers[nsn].S, q->buf, q->sz);
             else if (DnsSocketA >= 0)
                 x = comm_udp_sendto(DnsSocketA, nameservers[nsn].S, q->buf, q->sz);
@@ -974,9 +974,9 @@ idnsSendQuery(idns_query * q)
 
         q->sent_t = current_time;
 
-        if (y < 0 && nameservers[nsn].S.IsIPv6())
+        if (y < 0 && nameservers[nsn].S.isIPv6())
             debugs(50, DBG_IMPORTANT, "idnsSendQuery: FD " << DnsSocketB << ": sendto: " << xstrerror());
-        if (x < 0 && nameservers[nsn].S.IsIPv4())
+        if (x < 0 && nameservers[nsn].S.isIPv4())
             debugs(50, DBG_IMPORTANT, "idnsSendQuery: FD " << DnsSocketA << ": sendto: " << xstrerror());
 
     } while ( (x<0 && y<0) && q->nsends % nns != 0);
@@ -1004,7 +1004,7 @@ idnsFromKnownNameserver(Ip::Address const &from)
         if (nameservers[i].S != from)
             continue;
 
-        if (nameservers[i].S.GetPort() != from.GetPort())
+        if (nameservers[i].S.port() != from.port())
             continue;
 
         return i;
@@ -1530,15 +1530,15 @@ dnsInit(void)
     if (DnsSocketA < 0 && DnsSocketB < 0) {
         Ip::Address addrV6; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
 
-        if (!Config.Addrs.udp_outgoing.IsNoAddr())
+        if (!Config.Addrs.udp_outgoing.isNoAddr())
             addrV6 = Config.Addrs.udp_outgoing;
         else
             addrV6 = Config.Addrs.udp_incoming;
 
         Ip::Address addrV4 = addrV6;
-        addrV4.SetIPv4();
+        addrV4.setIPv4();
 
-        if (Ip::EnableIpv6 && addrV6.IsIPv6()) {
+        if (Ip::EnableIpv6 && addrV6.isIPv6()) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrV6);
             DnsSocketB = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
@@ -1547,7 +1547,7 @@ dnsInit(void)
                                             "DNS Socket IPv6");
         }
 
-        if (addrV4.IsIPv4()) {
+        if (addrV4.isIPv4()) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrV4);
             DnsSocketA = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
@@ -1770,7 +1770,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 
     char ip[MAX_IPSTRLEN];
 
-    addr.NtoA(ip,MAX_IPSTRLEN);
+    addr.toStr(ip,MAX_IPSTRLEN);
 
     q = cbdataAlloc(idns_query);
 
@@ -1778,13 +1778,13 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     q->xact_id.change();
     q->query_id = idnsQueryID();
 
-    if (addr.IsIPv6()) {
+    if (addr.isIPv6()) {
         struct in6_addr addr6;
-        addr.GetInAddr(addr6);
+        addr.getInAddr(addr6);
         q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
     } else {
         struct in_addr addr4;
-        addr.GetInAddr(addr4);
+        addr.getInAddr(addr4);
         // see EDNS notes at top of file why this sends 0
         q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->query_id, &q->query, 0);
     }
