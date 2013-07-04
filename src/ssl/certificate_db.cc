@@ -167,7 +167,11 @@ void Ssl::CertificateDb::sq_TXT_DB_delete(TXT_DB *db, const char **row)
 
 #if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db->data), i));
+#else
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, i));
+#endif
 #else
     for (int i = 0; i < sk_num(db->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db->data, i));
@@ -517,7 +521,11 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
     bool removed_one = false;
 #if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), i));
+#else
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#endif
 #else
     for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
@@ -548,7 +556,11 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
         return false;
 
 #if SQUID_SSLTXTDB_PSTRINGDATA
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+    const char **row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), 0));
+#else
     const char **row = (const char **)sk_OPENSSL_PSTRING_value(db.get()->data, 0);
+#endif
 #else
     const char **row = (const char **)sk_value(db.get()->data, 0);
 #endif
@@ -565,7 +577,11 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
 
 #if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), i));
+#else
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#endif
 #else
     for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
