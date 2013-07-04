@@ -119,7 +119,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 // BACKWARD COMPATIBILITY 2012-06-15:
                 // We got HelperReply::Unknown reply result but new
                 // redirectStateData handlers require HelperReply::Okay,
-                // else will drop the helper reply 
+                // else will drop the helper reply
                 newReply.result = HelperReply::Okay;
                 newReply.notes.append(&reply.notes);
 

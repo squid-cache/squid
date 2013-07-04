@@ -122,7 +122,7 @@ public:
         MEMPROXY_CLASS(Entry);
     };
 
-    NotePairs(){}
+    NotePairs() {}
     ~NotePairs();
 
     /**
