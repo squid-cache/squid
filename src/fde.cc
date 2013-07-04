@@ -116,7 +116,7 @@ fde::remoteAddr() const
     if ( *ipaddr )
         snprintf( buf, MAX_IPSTRLEN, "%s:%d", ipaddr, (int)remote_port);
     else
-        local_addr.ToURL(buf,MAX_IPSTRLEN); // ToHostname does not include port.
+        local_addr.toUrl(buf,MAX_IPSTRLEN); // toHostStr does not include port.
 
     return buf;
 }

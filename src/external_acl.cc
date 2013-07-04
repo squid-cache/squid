@@ -185,7 +185,7 @@ struct _external_acl_format {
 
 #if USE_SSL
         EXT_ACL_USER_CERT,
-        EXT_ACL_CA_CERT,
+        EXT_ACL_USER_CA_CERT,
         EXT_ACL_USER_CERT_RAW,
         EXT_ACL_USER_CERTCHAIN_RAW,
 #endif
@@ -327,7 +327,7 @@ parse_externalAclHelper(external_acl ** list)
     a->children.n_max = DEFAULT_EXTERNAL_ACL_CHILDREN;
     a->children.n_startup = a->children.n_max;
     a->children.n_idle = 1;
-    a->local_addr.SetLocalhost();
+    a->local_addr.setLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
     token = strtok(NULL, w_space);
@@ -375,7 +375,7 @@ parse_externalAclHelper(external_acl ** list)
             /* INET6: allow admin to configure some helpers explicitly to
                       bind to IPv4/v6 localhost port. */
         } else if (strcmp(token, "ipv4") == 0) {
-            if ( !a->local_addr.SetIPv4() ) {
+            if ( !a->local_addr.setIPv4() ) {
                 debugs(3, DBG_CRITICAL, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
             }
         } else if (strcmp(token, "ipv6") == 0) {
@@ -417,28 +417,31 @@ parse_externalAclHelper(external_acl ** list)
 
         if (strncmp(token, "%{", 2) == 0) {
             // deprecated. but assume the old configs all referred to request headers.
-            debugs(82, DBG_IMPORTANT, "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %{...} is being replaced by %>ha{...} for : " << token);
             parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
         } else if (strncmp(token, "%>{", 3) == 0) {
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %>{...} is being replaced by %>ha{...} for : " << token);
+            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+        } else if (strncmp(token, "%>ha{", 5) == 0) {
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
         } else if (strncmp(token, "%<{", 3) == 0) {
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %<{...} is being replaced by %<h{...} for : " << token);
+            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
+        } else if (strncmp(token, "%<h{", 4) == 0) {
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
 #if USE_AUTH
-        } else if (strcmp(token, "%LOGIN") == 0) {
+        } else if (strcmp(token, "%LOGIN") == 0 || strcmp(token, "%ul") == 0) {
             format->type = _external_acl_format::EXT_ACL_LOGIN;
             a->require_auth = true;
 #endif
         }
-
 #if USE_IDENT
-        else if (strcmp(token, "%IDENT") == 0)
+        else if (strcmp(token, "%IDENT") == 0 || strcmp(token, "%ui") == 0)
             format->type = _external_acl_format::EXT_ACL_IDENT;
-
 #endif
-
-        else if (strcmp(token, "%SRC") == 0)
+        else if (strcmp(token, "%SRC") == 0 || strcmp(token, "%>a") == 0)
             format->type = _external_acl_format::EXT_ACL_SRC;
-        else if (strcmp(token, "%SRCPORT") == 0)
+        else if (strcmp(token, "%SRCPORT") == 0 || strcmp(token, "%>p") == 0)
             format->type = _external_acl_format::EXT_ACL_SRCPORT;
 #if USE_SQUID_EUI
         else if (strcmp(token, "%SRCEUI48") == 0)
@@ -446,11 +449,11 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%SRCEUI64") == 0)
             format->type = _external_acl_format::EXT_ACL_SRCEUI64;
 #endif
-        else if (strcmp(token, "%MYADDR") == 0)
+        else if (strcmp(token, "%MYADDR") == 0 || strcmp(token, "%la") == 0)
             format->type = _external_acl_format::EXT_ACL_MYADDR;
-        else if (strcmp(token, "%MYPORT") == 0)
+        else if (strcmp(token, "%MYPORT") == 0 || strcmp(token, "%lp") == 0)
             format->type = _external_acl_format::EXT_ACL_MYPORT;
-        else if (strcmp(token, "%URI") == 0)
+        else if (strcmp(token, "%URI") == 0 || strcmp(token, "%>ru") == 0)
             format->type = _external_acl_format::EXT_ACL_URI;
         else if (strcmp(token, "%DST") == 0)
             format->type = _external_acl_format::EXT_ACL_DST;
@@ -458,11 +461,10 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_PROTO;
         else if (strcmp(token, "%PORT") == 0)
             format->type = _external_acl_format::EXT_ACL_PORT;
-        else if (strcmp(token, "%PATH") == 0)
+        else if (strcmp(token, "%PATH") == 0 || strcmp(token, "%>rp") == 0)
             format->type = _external_acl_format::EXT_ACL_PATH;
-        else if (strcmp(token, "%METHOD") == 0)
+        else if (strcmp(token, "%METHOD") == 0 || strcmp(token, "%>rm") == 0)
             format->type = _external_acl_format::EXT_ACL_METHOD;
-
 #if USE_SSL
         else if (strcmp(token, "%USER_CERT") == 0)
             format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
@@ -471,8 +473,12 @@ parse_externalAclHelper(external_acl ** list)
         else if (strncmp(token, "%USER_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
+        } else if (strncmp(token, "%USER_CA_CERT_", 11) == 0) {
+            format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
+            format->header = xstrdup(token + 11);
         } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
-            format->type = _external_acl_format::EXT_ACL_USER_CERT;
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type %CA_CERT_* code is obsolete. Use %USER_CA_CERT_* instead");
+            format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
             format->header = xstrdup(token + 11);
         }
 #endif
@@ -529,7 +535,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
     for (node = list; node; node = node->next) {
         storeAppendPrintf(sentry, "%s %s", name, node->name);
 
-        if (!node->local_addr.IsIPv6())
+        if (!node->local_addr.isIPv6())
             storeAppendPrintf(sentry, " ipv4");
         else
             storeAppendPrintf(sentry, " ipv6");
@@ -618,7 +624,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT_RAW, " %%USER_CERT_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT, " %%USER_CERT_%s", format->header);
-                DUMP_EXT_ACL_TYPE_FMT(CA_CERT, " %%CA_CERT_%s", format->header);
+                DUMP_EXT_ACL_TYPE_FMT(USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
 #endif
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE(EXT_USER);
@@ -999,11 +1005,11 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_SRC:
-            str = ch->src_addr.NtoA(buf,sizeof(buf));
+            str = ch->src_addr.toStr(buf,sizeof(buf));
             break;
 
         case _external_acl_format::EXT_ACL_SRCPORT:
-            snprintf(buf, sizeof(buf), "%d", request->client_addr.GetPort());
+            snprintf(buf, sizeof(buf), "%d", request->client_addr.port());
             str = buf;
             break;
 
@@ -1022,11 +1028,11 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_MYADDR:
-            str = request->my_addr.NtoA(buf, sizeof(buf));
+            str = request->my_addr.toStr(buf, sizeof(buf));
             break;
 
         case _external_acl_format::EXT_ACL_MYPORT:
-            snprintf(buf, sizeof(buf), "%d", request->my_addr.GetPort());
+            snprintf(buf, sizeof(buf), "%d", request->my_addr.port());
             str = buf;
             break;
 
@@ -1137,7 +1143,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
             break;
 
-        case _external_acl_format::EXT_ACL_CA_CERT:
+        case _external_acl_format::EXT_ACL_USER_CA_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
                 SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;

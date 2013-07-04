@@ -142,11 +142,11 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
         cbd->conn->flags = p.flags;
         // XXX: leave the comm AI stuff to comm_import_opened()?
         struct addrinfo *AI = NULL;
-        p.addr.GetAddrInfo(AI);
+        p.addr.getAddrInfo(AI);
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
         comm_import_opened(cbd->conn, FdNote(p.fdNote), AI);
-        p.addr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
     }
 
     cbd->errNo = response.errNo;

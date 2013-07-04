@@ -124,9 +124,9 @@ Adaptation::Ecap::XactionRep::clientIpValue() const
         } else
 #endif
             client_addr = request->client_addr;
-        if (!client_addr.IsAnyAddr() && !client_addr.IsNoAddr()) {
+        if (!client_addr.isAnyAddr() && !client_addr.isNoAddr()) {
             char ntoabuf[MAX_IPSTRLEN] = "";
-            client_addr.NtoA(ntoabuf,MAX_IPSTRLEN);
+            client_addr.toStr(ntoabuf,MAX_IPSTRLEN);
             return libecap::Area::FromTempBuffer(ntoabuf, strlen(ntoabuf));
         }
     }
