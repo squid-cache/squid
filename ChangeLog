@@ -1,9 +1,48 @@
+Changes to squid-3.4.0.1 (-- --- 2013):
+
+	- Port from 2.7: StoreURL (renamed Store-ID) support
+	- Bug 3795: fix several mistakes in the MIB file
+	- Bug 3793: configure: improved helper detection
+	- Bug 3722: Invalid markup in Armenian hy ERR_ONLY_IF_CACHED_MISS
+	- Bug 3676: Support GCC 4.7 with -Wshadow option
+	- Bug 3643: NTLM helpers stuck in reserved state by Safari
+	- Bug 3389: Auto-reconnect for tcp access_log
+	- Bug 2066: squid does not do chdir() after chroot()
+	- Fix uninitialized fields in IcapLogEntry
+	- Fix a number of minor issues detected by Coverity Scan
+	- Fix some potential memory leaks detected by Coverity Scan
+	- Fix 64-bit support for Intel compiler suite (ICC) and other similar compilers
+	- Fix ACL matching algorithm to avoid repeating tests
+	- basic_pam_auth: Add -r option to strip NTLM/Negotiate domain from username
+	- squidpurge: fix META TLV parsing issues
+	- squid.conf: enforce all the directive and option names are lower-case
+	- Support EUI on HTTPS and FTP data connections
+	- Support OK/ERR/BH response codes from any helper
+	- Support No-lookup flag (-n) on DNS ACLs
+	- Support -march=native compiler optimization by default
+	- Support forwarding intercepted but not bumped connections to cache_peers
+	- Deprecate log_icap and log_access configuration directives
+	- HTTP/1.1: improved method invalidation and cacheability detection
+	- HTTP/1.1: support length configuration for pipeline_prefetch queue
+	- Improved TPROXY support for OpenBSD and FreeBSD
+	- Add all-of and any-of ACL types for grouping sets of ACL tests
+	- Add note directive for transaction annotations
+	- Add %note log format for transaction annotation logging
+	- Add note ACL type for matching annotated transactions with by annotation name or value
+	- Add kv-pair support to URL-rewrite/redirector interface
+	- Add SSL server certificate validator interface, helper and result cache
+	- Add SSL server certificate fingerprint ACL type
+	- Add spoof_client_ip access control
+	- Add pt-bz (Belize Portuguese) dialect to translations
+	- ... and many Windows portability changes (still incomplete)
+	- ... and many documentation changes
+	- ... and much code cleanup and polishing
 
 Changes to squid-3.3.6 (01 Jul 2013):
 
 	- Bug 3854: pt1: compile errors on AIX
 	- Bug 3802: Fix wrong check inside Format::Format::assemble
-	- Bug #3762: remove bogus WARNING in cache.log
+	- Bug 3762: remove bogus WARNING in cache.log
 	- Bug 3717: assertion failed with dstdom_regex with IP based URL
 	- Bug 1991: kqueue causes SSL to hang
 	- Ask for SSL key password when started with -N but without sslpassword_program
