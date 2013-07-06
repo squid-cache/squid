@@ -37,9 +37,6 @@
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 
 static void
 fatal_common(const char *message)
