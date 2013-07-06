@@ -114,9 +114,6 @@
 #if HAVE_LIST
 #include <list>
 #endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
