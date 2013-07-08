@@ -47,7 +47,7 @@ Transients::init()
     map = new TransientsMap(MapLabel);
     map->cleaner = this;
 
-    locals = new Locals(entryLimit, NULL);
+    locals = new Locals(entryLimit, 0);
 }
 
 void
