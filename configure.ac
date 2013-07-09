@@ -2258,8 +2258,9 @@ AC_CHECK_HEADERS( \
   wchar.h
 )
 
-AC_CHECK_HEADERS(
-  linux/netfilter_ipv4.h
+AC_CHECK_HEADERS( \
+  linux/netfilter_ipv4.h \
+  linux/netfilter_ipv6/ip6_tables.h \
 ,,,
 SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
