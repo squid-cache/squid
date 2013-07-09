@@ -196,6 +196,7 @@ static ns *nameservers = NULL;
 static sp *searchpath = NULL;
 static int nns = 0;
 static int nns_alloc = 0;
+static int nns_mdns_count = 0;
 static int npc = 0;
 static int npc_alloc = 0;
 static int ndots = 1;
@@ -276,16 +277,21 @@ idnsCheckMDNS(idns_query *q)
 static void
 idnsAddMDNSNameservers()
 {
-#define MDNS_RESOLVER_COUNT 2
+    nns_mdns_count=0;
 
     // mDNS resolver addresses are explicit multicast group IPs
-    idnsAddNameserver("FF02::FB");
-    nameservers[nns-1].S.port(5353);
-    nameservers[nns-1].mDNSResolver = true;
+    if (Ip::EnableIpv6) {
+        idnsAddNameserver("FF02::FB");
+        nameservers[nns-1].S.port(5353);
+        nameservers[nns-1].mDNSResolver = true;
+        ++nns_mdns_count;
+    }
 
     idnsAddNameserver("224.0.0.251");
     nameservers[nns-1].S.port(5353);
     nameservers[nns-1].mDNSResolver = true;
+
+    ++nns_mdns_count;
 }
 
 static void
@@ -956,7 +962,7 @@ idnsSendQuery(idns_query * q)
     do {
         // only use mDNS resolvers for mDNS compatible queries
         if (!q->permit_mdns)
-            nsn = MDNS_RESOLVER_COUNT + q->nsends % (nns-MDNS_RESOLVER_COUNT);
+            nsn = nns_mdns_count + q->nsends % (nns-nns_mdns_count);
         else
             nsn = q->nsends % nns;
 
