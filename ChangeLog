@@ -21,10 +21,12 @@ Changes to squid-3.4.0.1 (-- --- 2013):
 	- Support No-lookup flag (-n) on DNS ACLs
 	- Support -march=native compiler optimization by default
 	- Support forwarding intercepted but not bumped connections to cache_peers
+	- Support IPv6 NAT interception on Linux and some BSD
 	- Deprecate log_icap and log_access configuration directives
 	- HTTP/1.1: improved method invalidation and cacheability detection
 	- HTTP/1.1: support length configuration for pipeline_prefetch queue
 	- Improved TPROXY support for OpenBSD and FreeBSD
+	- Add storeid_file_rewrite helper to perform Store-ID rewrites from a rules file
 	- Add all-of and any-of ACL types for grouping sets of ACL tests
 	- Add note directive for transaction annotations
 	- Add %note log format for transaction annotation logging
