@@ -120,6 +120,10 @@ Most user-facing changes are reflected in squid.conf (see below).
    ID key and not the transaction URL. So using the Store-ID feature to alter the value
    affects which <em>refresh_pattern</em> directive will be matched.
 
+<p>Store-ID helpers bundled with Squid can be built with the --enable-storeid-rewrite-helpers
+   options which is added in this version. Currently there is a <em>file</em> helper
+   provided.
+
 
 <sect1>TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+
 <p>Details at <url url="http://wiki.squid-cache.org/ConfigExamples/Intercept/OpenBsdPf">.
@@ -290,6 +294,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-storeid-rewrite-helpers</tag>
+	<p>New option to control which Store-ID helpers are built. As with other
+	   helper options use --disable-* to prevent any helpers building and
+	   omit to get all helper auto-detected.
+	<p>Currenly only a helper using <em>file</em> for backend is provided.
+
 	<tag>--with-nat-pf</tag>
 	<p>New option to alter the behaviour of <em>http_port ... intercept</em> option
 	   in squid.conf.
