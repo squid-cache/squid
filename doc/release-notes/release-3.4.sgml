@@ -244,6 +244,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
 
 	<tag>http_port</tag>
+	<p>Support IPv6 for <em>intercept</em> mode. Requires ip6tables support on Linux,
+	   PF support on OpenBSD and IPFW support on FreeBSD. Squid will no longer complain
+	   about misconfiguration if IPv6 support is missing, we now rely on the firewall
+	   tools reporting misconfiguration when the NAT rules are created.
 	<p>Support <em>tproxy</em> mode traffic on BSD systems with BINDANY support
 	   (OpenBSD 5+, FreeBSD 9+ so far).
 	<p>Changed build options behind <em>intercept</em> traffic mode handling on BSD.
