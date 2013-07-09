@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "CollapsedForwarding.h"
 #include "base/TextException.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -283,6 +284,7 @@ Rock::IoState::finishedWriting(const int errFlag)
 {
     // we incremented offset_ while accumulating data in write()
     writeableAnchor_ = NULL;
+    CollapsedForwarding::Broadcast(*e);
     callBack(errFlag);
 }
 

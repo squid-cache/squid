@@ -94,7 +94,7 @@ Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 
     anchorEntry(collapsed, filen, *slot);
     inSync = updateCollapsedWith(collapsed, *slot);
-    return false;
+    return true; // even if inSync is false
 }
 
 bool
@@ -124,8 +124,6 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
 
     e.swap_file_sz = basics.swap_file_sz;
-    e.swap_dirn = index;
-    e.swap_filen = filen;
     e.lastref = basics.lastref;
     e.timestamp = basics.timestamp;
     e.expires = basics.expires;
@@ -133,14 +131,22 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     e.refcount = basics.refcount;
     e.flags = basics.flags;
 
-    e.store_status = STORE_OK;
-    e.setMemStatus(NOT_IN_MEMORY);
-    e.swap_status = SWAPOUT_DONE;
+    if (anchor.complete()) {
+        e.store_status = STORE_OK;
+        e.swap_status = SWAPOUT_DONE;
+    } else {
+        e.store_status = STORE_PENDING;
+        e.swap_status = SWAPOUT_WRITING; // even though another worker writes?
+    }
+
     e.ping_status = PING_NONE;
 
     EBIT_CLR(e.flags, RELEASE_REQUEST);
     EBIT_CLR(e.flags, KEY_PRIVATE);
     EBIT_SET(e.flags, ENTRY_VALIDATED);
+
+    e.swap_dirn = index;
+    e.swap_filen = filen;
 }
 
 
@@ -157,13 +163,18 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
     // since e has swap_filen, its slot is locked for reading and/or writing
     // but it is difficult to know whether THIS worker is reading or writing e
     if (e.swap_status == SWAPOUT_WRITING ||
-        (e.mem_obj && e.mem_obj->swapout.sio != NULL))
+        (e.mem_obj && e.mem_obj->swapout.sio != NULL)) {
         map->abortWriting(e.swap_filen);
-    else
+        e.swap_dirn = -1;
+        e.swap_filen = -1;
+        e.swap_status = SWAPOUT_NONE;
+        Store::Root().transientsAbandon(e); // broadcasts after the change
+    } else {
         map->closeForReading(e.swap_filen);
-    e.swap_dirn = -1;
-    e.swap_filen = -1;
-    e.swap_status = SWAPOUT_NONE;
+        e.swap_dirn = -1;
+        e.swap_filen = -1;
+        e.swap_status = SWAPOUT_NONE;
+    }
 }
 
 uint64_t
