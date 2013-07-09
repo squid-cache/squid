@@ -1968,6 +1968,18 @@ AC_ARG_ENABLE(url-rewrite-helpers,
 ])
 m4_include([helpers/url_rewrite/modules.m4])
 
+dnl Select storeid_rewrite helpers to build
+AC_ARG_ENABLE(storeid-rewrite-helpers,
+  AS_HELP_STRING([--enable-storeid-rewrite-helpers="list of helpers"],
+                 [This option selects which Store-ID rewrite helpers to
+                  build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-storeid-rewrite-helpers to build none.
+                  For a list of available helpers see the
+                  helpers/storeid_rewrite directory.]),[
+])
+m4_include([helpers/storeid_rewrite/modules.m4])
+
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
                  [Include debug instrumentation for use with valgrind]),
@@ -3465,6 +3477,8 @@ AC_CONFIG_FILES([\
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \
 	helpers/ssl/Makefile \
+	helpers/storeid_rewrite/Makefile \
+	helpers/storeid_rewrite/file/Makefile \
 	tools/Makefile
 	tools/purge/Makefile
 ])
