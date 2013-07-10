@@ -83,7 +83,7 @@ Rock::SwapDir::get(const cache_key *key)
 bool
 Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 {
-    if (!map || !theFile || !theFile->canRead())
+    if (true || !map || !theFile || !theFile->canRead())
         return false;
 
     sfileno filen;
@@ -161,13 +161,16 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
     // before it switches from SWAPOUT_WRITING to SWAPOUT_DONE.
 
     // since e has swap_filen, its slot is locked for reading and/or writing
-    // but it is difficult to know whether THIS worker is reading or writing e
-    if (e.swap_status == SWAPOUT_WRITING ||
-        (e.mem_obj && e.mem_obj->swapout.sio != NULL)) {
+    // but it is difficult to know whether THIS worker is reading or writing e,
+    // especially since we may switch from writing to reading. This code relies
+    // on Rock::IoState::writeableAnchor_ being set when we locked for writing.
+    if (e.mem_obj && e.mem_obj->swapout.sio != NULL &&
+        dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_) {
         map->abortWriting(e.swap_filen);
         e.swap_dirn = -1;
         e.swap_filen = -1;
         e.swap_status = SWAPOUT_NONE;
+        dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_ = NULL;
         Store::Root().transientsAbandon(e); // broadcasts after the change
     } else {
         map->closeForReading(e.swap_filen);
@@ -750,6 +753,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 
     assert(slot->sameKey(static_cast<const cache_key*>(e.key)));
     assert(slot->basics.swap_file_sz > 0);
+    // XXX: basics.swap_file_sz may grow for collapsed disk hits
     assert(slot->basics.swap_file_sz == e.swap_file_sz);
 
     return sio;
@@ -822,6 +826,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         if (request->sidNext < 0) {
             // close, the entry gets the read lock
             map->closeForWriting(sio.swap_filen, true);
+            sio.writeableAnchor_ = NULL;
             sio.finishedWriting(errflag);
         }
     } else {

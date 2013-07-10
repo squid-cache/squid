@@ -177,7 +177,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
             const SlotId sidNext = reserveSlotForWriting(); // throws
             assert(sidNext >= 0);
             writeToDisk(sidNext);
-        } else if (Store::Root().transientReaders(*e)) {
+        } else if (false && Store::Root().transientReaders(*e)) {
             // write partial buffer for all remote hit readers to see
             writeBufToDisk(-1);
         }
@@ -283,7 +283,7 @@ void
 Rock::IoState::finishedWriting(const int errFlag)
 {
     // we incremented offset_ while accumulating data in write()
-    writeableAnchor_ = NULL;
+    // we do not reset writeableAnchor_ here because we still keep the lock
     CollapsedForwarding::Broadcast(*e);
     callBack(errFlag);
 }
@@ -297,7 +297,7 @@ Rock::IoState::close(int how)
     if (!theFile) {
         debugs(79, 3, "I/O already canceled");
         assert(!callback);
-        assert(!writeableAnchor_);
+        // We keep writeableAnchor_ after callBack() on I/O errors.
         assert(!readableAnchor_);
         return;
     }
