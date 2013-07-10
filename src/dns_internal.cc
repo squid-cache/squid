@@ -1667,23 +1667,29 @@ idnsSendSlaveAAAAQuery(idns_query *master)
 void
 idnsALookup(const char *name, IDNSCB * callback, void *data)
 {
-    unsigned int i;
-    int nd = 0;
-    idns_query *q;
+    size_t nameLength = strlen(name);
+
+    // Prevent buffer overflow on q->name
+    if (nameLength > NS_MAXDNAME) {
+        debugs(23, DBG_IMPORTANT, "SECURITY ALERT: DNS name too long to perform lookup: '" << name << "'. see access.log for details.");
+        callback(data, NULL, 0, "Internal error");
+        return;
+    }
 
     if (idnsCachedLookup(name, callback, data))
         return;
 
-    q = cbdataAlloc(idns_query);
+    idns_query *q = cbdataAlloc(idns_query);
     // idns_query is POD so no constructors are called after allocation
     q->xact_id.change();
     q->query_id = idnsQueryID();
 
-    for (i = 0; i < strlen(name); ++i)
+    int nd = 0;
+    for (unsigned int i = 0; i < nameLength; ++i)
         if (name[i] == '.')
             ++nd;
 
-    if (Config.onoff.res_defnames && npc > 0 && name[strlen(name)-1] != '.') {
+    if (Config.onoff.res_defnames && npc > 0 && name[nameLength-1] != '.') {
         q->do_searchpath = 1;
     } else {
         q->do_searchpath = 0;
