@@ -1,4 +1,10 @@
 
+Changes to squid-3.3.7 (11 Jul 2013):
+
+	- Bug 3297: Fix openSSL related build failures
+	- Fix build on FreeBSD 9.x platform with clang
+	- Protect against buffer overrun in DNS query generation
+
 Changes to squid-3.3.6 (01 Jul 2013):
 
 	- Bug 3854: pt1: compile errors on AIX
@@ -103,6 +109,13 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.12 (11 Jul 2013):
+
+	- Protect against buffer overrun in DNS query generation
+	- Avoid !closing assertions when helpers call comm_read during reconfigure.
+	- Fix several minor memory leaks during reconfigure
+	- Remove origin_tries limiter on forwarding and permit large max_forward_tries values
 
 Changes to squid-3.2.11 (30 Apr 2013):
 
