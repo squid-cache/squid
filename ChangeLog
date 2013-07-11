@@ -1,4 +1,11 @@
 
+Changes to squid-3.2.12 (11 Jul 2013):
+
+	- Protect against buffer overrun in DNS query generation
+	- Avoid !closing assertions when helpers call comm_read during reconfigure.
+	- Fix several minor memory leaks during reconfigure
+	- Remove origin_tries limiter on forwarding and permit large max_forward_tries values
+
 Changes to squid-3.2.11 (30 Apr 2013):
 
 	- Regression Bug 3839: build error: src/tools.h: No such file or directory
