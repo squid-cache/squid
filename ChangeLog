@@ -1,4 +1,9 @@
 
+Changes to squid-3.2.13 (13 Jul 2013):
+
+	- Bug 3869: assertion failed: MemBuf.cc:272: size < capacity
+	- Improved handling of port values in Host: header validation
+
 Changes to squid-3.2.12 (11 Jul 2013):
 
 	- Protect against buffer overrun in DNS query generation
