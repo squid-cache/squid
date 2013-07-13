@@ -40,6 +40,11 @@ Changes to squid-3.4.0.1 (-- --- 2013):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 
+Changes to squid-3.3.8 (13 Jul 2013):
+
+	- Bug 3869: assertion failed: MemBuf.cc:272: size < capacity
+	- Improved handling of port values in Host: header validation
+
 Changes to squid-3.3.7 (11 Jul 2013):
 
 	- Bug 3297: Fix openSSL related build failures
@@ -150,6 +155,11 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.13 (13 Jul 2013):
+
+	- Bug 3869: assertion failed: MemBuf.cc:272: size < capacity
+	- Improved handling of port values in Host: header validation
 
 Changes to squid-3.2.12 (11 Jul 2013):
 
