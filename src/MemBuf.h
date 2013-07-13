@@ -64,7 +64,7 @@ public:
 
     /// these space-related methods assume no growth and allow 0-termination
     char *space() { return buf + size; } // space to add data
-    char *space(mb_size_t required) { if (size + required > capacity) grow(size + required); return buf + size; } // space to add data
+    char *space(mb_size_t required) { if (size + required >= capacity) grow(size + required +1); return buf + size; } // space to add data
 
     mb_size_t spaceSize() const;
 
