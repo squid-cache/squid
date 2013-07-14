@@ -266,8 +266,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     errDetail = aReq->errDetail;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
-    copy->extacl_user = extacl_user;
-    copy->extacl_passwd = extacl_passwd;
+    extacl_user = aReq->extacl_user;
+    extacl_passwd = aReq->extacl_passwd;
 #endif
 
     // main property is which connection the request was received on (if any)
