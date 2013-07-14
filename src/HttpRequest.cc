@@ -234,7 +234,8 @@ HttpRequest::clone() const
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
-    assert(copy->inheritProperties(this));
+    const bool inheritWorked = copy->inheritProperties(this);
+    assert(inheritWorked);
 
     return copy;
 }
