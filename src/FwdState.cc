@@ -1164,13 +1164,13 @@ FwdState::connectStart()
 
         /* Update server side TOS and Netfilter mark on the connection. */
         if (Ip::Qos::TheConfig.isAclTosActive()) {
-            temp->tos = GetTosToServer(request);
-            Ip::Qos::setSockTos(temp, temp->tos);
+            const tos_t tos = GetTosToServer(request);
+            Ip::Qos::setSockTos(temp, tos);
         }
 #if SO_MARK
         if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-            temp->nfmark = GetNfmarkToServer(request);
-            Ip::Qos::setSockNfmark(temp, temp->nfmark);
+            const nfmark_t nfmark = GetNfmarkToServer(request);
+            Ip::Qos::setSockNfmark(temp, nfmark);
         }
 #endif
 
