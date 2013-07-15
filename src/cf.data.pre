@@ -4861,10 +4861,12 @@ DOC_START
 		override-lastmod enforces min age even on objects
 		that were modified recently.
 
-		reload-into-ims changes client no-cache or ``reload''
-		to If-Modified-Since requests. Doing this VIOLATES the
-		HTTP standard. Enabling this feature could make you
-		liable for problems which it causes.
+		reload-into-ims changes a client no-cache or ``reload''
+		request for a cached entry into a conditional request using
+		If-Modified-Since and/or If-None-Match headers, provided the
+		cached entry has a Last-Modified and/or a strong ETag header.
+		Doing this VIOLATES the HTTP standard. Enabling this feature
+		could make you liable for problems which it causes.
 
 		ignore-reload ignores a client no-cache or ``reload''
 		header. Doing this VIOLATES the HTTP standard. Enabling

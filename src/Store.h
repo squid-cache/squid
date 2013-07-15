@@ -140,6 +140,8 @@ public:
     bool hasIfMatchEtag(const HttpRequest &request) const;
     /// has ETag matching at least one of the If-None-Match etags
     bool hasIfNoneMatchEtag(const HttpRequest &request) const;
+    /// whether this entry has an ETag; if yes, puts ETag value into parameter
+    bool hasEtag(ETag &etag) const;
 
     /** What store does this entry belong too ? */
     virtual RefCount<SwapDir> store() const;
