@@ -1711,7 +1711,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
     if (request->etag.defined()) {
         hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
-                          request->etag.termedBuf()));
+                                              request->etag.termedBuf()));
     }
 
     bool we_do_ranges = decideIfWeDoRanges (request);
