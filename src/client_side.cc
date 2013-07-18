@@ -4543,18 +4543,14 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
-    if (pinning.auth && request && strcasecmp(pinning.host, request->GetHost()) != 0) {
+    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->GetHost()) != 0)
         valid = false;
-    }
-    if (request && pinning.port != request->port) {
+    else if (request && pinning.port != request->port)
         valid = false;
-    }
-    if (pinning.peer && !cbdataReferenceValid(pinning.peer)) {
+    else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         valid = false;
-    }
-    if (aPeer != pinning.peer) {
+    else if (aPeer != pinning.peer)
         valid = false;
-    }
 
     if (!valid) {
         /* The pinning info is not safe, remove any pinning info */
