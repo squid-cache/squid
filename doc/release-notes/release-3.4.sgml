@@ -179,6 +179,14 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>
 There have been changes to Squid's configuration file since Squid-3.3.
 
+<p>Squid supports reading configuration option parameters from external
+   files using the syntax <em>parameters(\"/path/filename\")</em>. For example:
+<verb>
+    acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+</verb>
+
+<p>There hasve also been changes to individual directives in the config file.
+
 This section gives a thorough account of those changes in three categories:
 
 <itemize>
@@ -191,6 +199,10 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>configuration_includes_quoted_values</tag>
+	<p>Whether Squid supports directive parameters with spaces, quotes, and other
+	   special characters. Surround such parameters with "double quotes".
+
 	<tag>note</tag>
 	<p>Use ACLs to annotate a transaction with customized annotations
 	   which can be logged in access.log
