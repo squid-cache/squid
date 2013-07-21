@@ -1023,7 +1023,7 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
     if ((u = parseTimeUnits(units, allowMsec)) == 0)
         self_destruct();
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
     d = xatof(token);
@@ -1032,7 +1032,7 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
 
     if (0 == d)
         (void) 0;
-    else if ((token = strtok(NULL, w_space)) == NULL)
+    else if ((token = ConfigParser::NextToken()) == NULL)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
@@ -1099,7 +1099,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
         return;
     }
 
-    if ((token = strtok(NULL, w_space)) == NULL) {
+    if ((token = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -1115,7 +1115,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
 
     if (0.0 == d)
         (void) 0;
-    else if ((token = strtok(NULL, w_space)) == NULL)
+    else if ((token = ConfigParser::NextToken()) == NULL)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
@@ -1146,7 +1146,7 @@ parseBytesLine(size_t * bptr, const char *units)
         return;
     }
 
-    if ((token = strtok(NULL, w_space)) == NULL) {
+    if ((token = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -1162,7 +1162,7 @@ parseBytesLine(size_t * bptr, const char *units)
 
     if (0.0 == d)
         (void) 0;
-    else if ((token = strtok(NULL, w_space)) == NULL)
+    else if ((token = ConfigParser::NextToken()) == NULL)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
@@ -1194,7 +1194,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
         return;
     }
 
-    if ((token = strtok(NULL, w_space)) == NULL) {
+    if ((token = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -1210,7 +1210,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
 
     if (0.0 == d)
         (void) 0;
-    else if ((token = strtok(NULL, w_space)) == NULL)
+    else if ((token = ConfigParser::NextToken()) == NULL)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
@@ -1367,7 +1367,7 @@ dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
 static void
 parse_address(Ip::Address *addr)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (!token) {
         self_destruct();
@@ -1475,7 +1475,7 @@ parse_acl_tos(acl_tos ** head)
     acl_tos *l;
     acl_tos **tail = head;	/* sane name below */
     unsigned int tos;           /* Initially uint for strtoui. Casted to tos_t before return */
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (!token) {
         self_destruct();
@@ -1546,7 +1546,7 @@ parse_acl_nfmark(acl_nfmark ** head)
     acl_nfmark *l;
     acl_nfmark **tail = head;	/* sane name below */
     nfmark_t mark;
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (!token) {
         self_destruct();
@@ -1748,7 +1748,7 @@ parse_http_header_access(HeaderManglers **pm)
 {
     char *t = NULL;
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(3, DBG_CRITICAL, "parse_http_header_access: missing header name.");
         return;
@@ -1787,7 +1787,7 @@ parse_http_header_replace(HeaderManglers **pm)
 {
     char *t = NULL;
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(3, DBG_CRITICAL, "parse_http_header_replace: missing header name.");
         return;
@@ -1832,10 +1832,10 @@ parse_authparam(Auth::ConfigVector * config)
     char *type_str;
     char *param_str;
 
-    if ((type_str = strtok(NULL, w_space)) == NULL)
+    if ((type_str = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
-    if ((param_str = strtok(NULL, w_space)) == NULL)
+    if ((param_str = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
     /* find a configuration for the scheme in the currently parsed configs... */
@@ -1906,10 +1906,10 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     int i;
     int fs;
 
-    if ((type_str = strtok(NULL, w_space)) == NULL)
+    if ((type_str = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
-    if ((path_str = strtok(NULL, w_space)) == NULL)
+    if ((path_str = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
     fs = find_fstype(type_str);
@@ -2064,7 +2064,7 @@ GetService(const char *proto)
 {
     struct servent *port = NULL;
     /** Parses a port number or service name from the squid.conf */
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
     if (token == NULL) {
         self_destruct();
         return 0; /* NEVER REACHED */
@@ -2112,14 +2112,14 @@ parse_peer(CachePeer ** head)
     p->basetime = 0;
     p->stats.logged_state = PEER_ALIVE;
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
     p->host = xstrdup(token);
 
     p->name = xstrdup(token);
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
     p->type = parseNeighborType(token);
@@ -2137,7 +2137,7 @@ parse_peer(CachePeer ** head)
     p->icp.port = GetUdpService();
     p->connection_auth = 2;    /* auto */
 
-    while ((token = strtok(NULL, w_space))) {
+    while ((token = ConfigParser::NextToken())) {
         if (!strcmp(token, "proxy-only")) {
             p->options.proxy_only = true;
         } else if (!strcmp(token, "no-query")) {
@@ -2521,7 +2521,7 @@ parse_peer_access(void)
     char *host = NULL;
     CachePeer *p;
 
-    if (!(host = strtok(NULL, w_space)))
+    if (!(host = ConfigParser::NextToken()))
         self_destruct();
 
     if ((p = peerFindByName(host)) == NULL) {
@@ -2540,10 +2540,10 @@ parse_hostdomain(void)
     char *host = NULL;
     char *domain = NULL;
 
-    if (!(host = strtok(NULL, w_space)))
+    if (!(host = ConfigParser::NextToken()))
         self_destruct();
 
-    while ((domain = strtok(NULL, list_sep))) {
+    while ((domain = ConfigParser::NextToken())) {
         CachePeerDomainList *l = NULL;
         CachePeerDomainList **L = NULL;
         CachePeer *p;
@@ -2575,13 +2575,13 @@ parse_hostdomaintype(void)
     char *type = NULL;
     char *domain = NULL;
 
-    if (!(host = strtok(NULL, w_space)))
+    if (!(host = ConfigParser::NextToken()))
         self_destruct();
 
-    if (!(type = strtok(NULL, w_space)))
+    if (!(type = ConfigParser::NextToken()))
         self_destruct();
 
-    while ((domain = strtok(NULL, list_sep))) {
+    while ((domain = ConfigParser::NextToken())) {
         NeighborTypeDomainList *l = NULL;
         NeighborTypeDomainList **L = NULL;
         CachePeer *p;
@@ -2629,7 +2629,7 @@ dump_onoff(StoreEntry * entry, const char *name, int var)
 void
 parse_onoff(int *var)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
@@ -2670,7 +2670,7 @@ dump_tristate(StoreEntry * entry, const char *name, int var)
 static void
 parse_tristate(int *var)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
@@ -2710,7 +2710,7 @@ parse_pipelinePrefetch(int *var)
         debugs(0, DBG_PARSE_NOTE(2), "WARNING: 'pipeline_prefetch off' is deprecated. Please update to use '0'.");
         *var = 0;
     } else {
-        ConfigParser::strtokFileUndo();
+        ConfigParser::TokenUndo();
         parse_int(var);
     }
 }
@@ -2803,17 +2803,17 @@ parse_refreshpattern(RefreshPattern ** head)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = strtok(NULL, w_space)) == NULL) {
+    if ((token = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
 
     if (strcmp(token, "-i") == 0) {
         flags |= REG_ICASE;
-        token = strtok(NULL, w_space);
+        token = ConfigParser::NextToken();
     } else if (strcmp(token, "+i") == 0) {
         flags &= ~REG_ICASE;
-        token = strtok(NULL, w_space);
+        token = ConfigParser::NextToken();
     }
 
     if (token == NULL) {
@@ -2856,7 +2856,7 @@ parse_refreshpattern(RefreshPattern ** head)
     max = (time_t) (i * 60);	/* convert minutes to seconds */
 
     /* Options */
-    while ((token = strtok(NULL, w_space)) != NULL) {
+    while ((token = ConfigParser::NextToken()) != NULL) {
         if (!strcmp(token, "refresh-ims")) {
             refresh_ims = 1;
         } else if (!strcmp(token, "store-stale")) {
@@ -2987,30 +2987,13 @@ dump_string(StoreEntry * entry, const char *name, char *var)
 static void
 parse_string(char **var)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
     safe_free(*var);
 
     if (token == NULL)
         self_destruct();
 
     *var = xstrdup(token);
-}
-
-void
-ConfigParser::ParseString(char **var)
-{
-    parse_string(var);
-}
-
-void
-ConfigParser::ParseString(String *var)
-{
-    char *token = strtok(NULL, w_space);
-
-    if (token == NULL)
-        self_destruct();
-
-    var->reset(token);
 }
 
 static void
@@ -3027,7 +3010,7 @@ parse_eol(char *volatile *var)
         return;
     }
 
-    unsigned char *token = (unsigned char *) strtok(NULL, null_string);
+    unsigned char *token = (unsigned char *) ConfigParser::NextQuotedOrToEol();
     safe_free(*var);
 
     if (!token) {
@@ -3261,9 +3244,7 @@ void
 parse_wordlist(wordlist ** list)
 {
     char *token;
-    char *t = strtok(NULL, "");
-
-    while ((token = strwordtok(NULL, &t)))
+    while ((token = ConfigParser::NextToken()))
         wordlistAdd(list, token);
 }
 
@@ -3288,7 +3269,7 @@ check_null_acl_access(acl_access * a)
 static void
 parse_uri_whitespace(int *var)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
@@ -3401,7 +3382,7 @@ free_memcachemode(SquidConfig * config)
 static void
 parse_memcachemode(SquidConfig * config)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
     if (!token)
         self_destruct();
 
@@ -3471,7 +3452,7 @@ parse_IpAddress_list(Ip::Address_list ** head)
     Ip::Address_list *s;
     Ip::Address ipa;
 
-    while ((token = strtok(NULL, w_space))) {
+    while ((token = ConfigParser::NextToken())) {
         if (GetHostWithPort(token, &ipa)) {
 
             while (*head)
@@ -3812,7 +3793,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         return;
     }
 
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (!token) {
         self_destruct();
@@ -3823,7 +3804,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     parsePortSpecification(s, token);
 
     /* parse options ... */
-    while ((token = strtok(NULL, w_space))) {
+    while ((token = ConfigParser::NextToken())) {
         parse_port_option(s, token);
     }
 
@@ -4071,7 +4052,7 @@ parse_access_log(CustomLog ** logs)
 
     /* determine configuration style */
 
-    const char *filename = strtok(NULL, w_space);
+    const char *filename = ConfigParser::NextToken();
     if (!filename) {
         self_destruct();
         return;
@@ -4096,7 +4077,7 @@ parse_access_log(CustomLog ** logs)
         // if logformat name is not recognized,
         // put back the token; it must be an ACL name
         if (!setLogformat(cl, token, false))
-            ConfigParser::strtokFileUndo();
+            ConfigParser::TokenUndo();
     } else { // style #4
         do {
             if (strncasecmp(token, "on-error=", 9) == 0) {
@@ -4115,7 +4096,7 @@ parse_access_log(CustomLog ** logs)
                 setLogformat(cl, token+10, true);
             } else if (!strchr(token, '=')) {
                 // put back the token; it must be an ACL name
-                ConfigParser::strtokFileUndo();
+                ConfigParser::TokenUndo();
                 break; // done with name=value options, now to ACLs
             } else {
                 debugs(3, DBG_CRITICAL, "Unknown access_log option " << token);
@@ -4308,8 +4289,8 @@ parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
     if (!*cpuAffinityMap)
         *cpuAffinityMap = new CpuAffinityMap;
 
-    const char *const pToken = strtok(NULL, w_space);
-    const char *const cToken = strtok(NULL, w_space);
+    const char *const pToken = ConfigParser::NextToken();
+    const char *const cToken = ConfigParser::NextToken();
     Vector<int> processes, cores;
     if (!parseNamedIntList(pToken, "process_numbers", processes)) {
         debugs(3, DBG_CRITICAL, "FATAL: bad 'process_numbers' parameter " <<
@@ -4441,7 +4422,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     time_t m;
     cfg->service_failure_limit = GetInteger();
 
-    if ((token = strtok(NULL, w_space)) == NULL)
+    if ((token = ConfigParser::NextToken()) == NULL)
         return;
 
     if (strcmp(token,"in") != 0) {
@@ -4449,7 +4430,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
         self_destruct();
     }
 
-    if ((token = strtok(NULL, w_space)) == NULL) {
+    if ((token = ConfigParser::NextToken()) == NULL) {
         self_destruct();
     }
 
@@ -4459,7 +4440,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 
     if (0 == d)
         (void) 0;
-    else if ((token = strtok(NULL, w_space)) == NULL) {
+    else if ((token = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "No time-units on '" << config_input_line << "'");
         self_destruct();
     } else if ((m = parseTimeUnits(token, false)) == 0)
@@ -4489,7 +4470,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
     char *al;
     sslproxy_cert_adapt *ca = (sslproxy_cert_adapt *) xcalloc(1, sizeof(sslproxy_cert_adapt));
-    if ((al = strtok(NULL, w_space)) == NULL) {
+    if ((al = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -4567,7 +4548,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
     char *al;
     sslproxy_cert_sign *cs = (sslproxy_cert_sign *) xcalloc(1, sizeof(sslproxy_cert_sign));
-    if ((al = strtok(NULL, w_space)) == NULL) {
+    if ((al = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -4659,7 +4640,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
     static BumpCfgStyle bumpCfgStyleLast = bcsNone;
     BumpCfgStyle bumpCfgStyleNow = bcsNone;
     char *bm;
-    if ((bm = strtok(NULL, w_space)) == NULL) {
+    if ((bm = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -4761,7 +4742,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     if (!*headers) {
         *headers = new HeaderWithAclList;
     }
-    if ((fn = strtok(NULL, w_space)) == NULL) {
+    if ((fn = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
     }
@@ -4771,20 +4752,20 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     if (hwa.fieldId == HDR_BAD_HDR)
         hwa.fieldId = HDR_OTHER;
 
-    String buf;
-    bool wasQuoted;
-    ConfigParser::ParseQuotedString(&buf, &wasQuoted);
+    Format::Format *nlf =  new ::Format::Format("hdrWithAcl");
+    ConfigParser::EnableMacros();
+    String buf = ConfigParser::NextToken();
+    ConfigParser::DisableMacros();
     hwa.fieldValue = buf.termedBuf();
-    hwa.quoted = wasQuoted;
+    hwa.quoted = ConfigParser::LastTokenWasQuoted();
     if (hwa.quoted) {
-        Format::Format *nlf =  new ::Format::Format("hdrWithAcl");
         if (!nlf->parse(hwa.fieldValue.c_str())) {
             self_destruct();
             return;
         }
         hwa.valueFormat = nlf;
-    }
-
+    } else
+        delete nlf;
     aclParseAclList(LegacyParser, &hwa.aclList, (hwa.fieldName + ':' + hwa.fieldValue).c_str());
     (*headers)->push_back(hwa);
 }
