@@ -241,6 +241,15 @@ and the external ACL interface does not yet send annotations to the helper.</P>
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.3</A></H2>
 
 <P>There have been changes to Squid's configuration file since Squid-3.3.</P>
+
+<P>Squid supports reading configuration option parameters from external
+files using the syntax <EM>parameters(\"/path/filename\")</EM>. For example:
+<PRE>
+    acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+</PRE>
+</P>
+
+<P>There hasve also been changes to individual directives in the config file.</P>
 <P>This section gives a thorough account of those changes in three categories:</P>
 <P>
 <UL>
@@ -259,6 +268,10 @@ and the external ACL interface does not yet send annotations to the helper.</P>
 
 <P>
 <DL>
+<DT><B>configuration_includes_quoted_values</B><DD>
+<P>Whether Squid supports directive parameters with spaces, quotes, and other
+special characters. Surround such parameters with "double quotes".</P>
+
 <DT><B>note</B><DD>
 <P>Use ACLs to annotate a transaction with customized annotations
 which can be logged in access.log</P>
