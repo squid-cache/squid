@@ -110,10 +110,10 @@ Most user-facing changes are reflected in squid.conf (see below).
    helpers to provide Squid with an alternative key name for any URL.
 
 <p>When any client request is received which requires a cache lookup the URL is passed to
-   a helper specified with the <em>store_id_rewrite_program</em> directive to check for
-   an alternative Store ID. This allows the helper to identify URLs which refer to duplicate
-   resources and de-duplicate the cache content. <em>store_id_access</em> is provided to
-   allow ACL-based tuning of which traffic gets sent to the helper and reduce overheads.
+   a helper specified with the <em>store_id_program</em> directive to check for an alternative
+   Store ID. This allows the helper to identify URLs which refer to duplicate resources and
+   de-duplicate the cache content. <em>store_id_access</em> is provided to allow ACL-based
+   tuning of which traffic gets sent to the helper and reduce overheads.
 
 <p>One subtle and noteworthy difference between Squid-2 and Squid-3 which is highlighted by
    this feature is that <em>refresh_pattern</em> applies its regex argument against the Store
@@ -144,6 +144,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    break on the version of PF firewall shipped with BSD systems such as NetBSD and FreeBSD
    which do not yet support the getsockname() API.
    These systems require <em>--with-nat-devpf</em> to enable /dev/pf support when using PF firewall.
+
 
 <sect1>Transaction Annotations
 <p>Previously the only annotation methods available were ICAP/eCAP HTTP header insertions
@@ -204,6 +205,27 @@ This section gives a thorough account of those changes in three categories:
 	<tag>sslcrtvalidator_program</tag>
 	<p>Specifies the location of a SSL server certificate validator helper.
 
+	<tag>store_id_access</tag>
+	<p>Whether the URL for a given request is passed to the Store-ID helper process.
+	   Used to improve StoreID performance by quickly eliminating helper delays using ACL tests.
+	<p>Ported equivalent to <em>storeurl_access</em> from 2.7
+
+	<tag>store_id_bypass</tag>
+	<p>Whether the StoreID helper may be bypassed when overloaded.
+
+	<tag>store_id_children</tag>
+	<p>Controls the number of StoreID helper processes.
+        <p>Options <em>startup=N</em>, <em>idle=N</em>, <em>concurrency=N</em>
+        <itemize>
+                <item>startup=N allow finer tuning of how many helpers are started initially.
+                <item>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.
+                <item>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
+        </itemize>
+
+	<tag>storeurl_rewrite_program</tag>
+	<p>A helper program to provide cache storage internal key ID value for a request.
+	<p>Ported equivalent to <em>storeurl_rewrite_program</em> from 2.7
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
@@ -260,6 +282,11 @@ This section gives a thorough account of those changes in three categories:
 	<tag>pipeline_prefetch</tag>
 	<p>Updated to take a numeric count of prefetched pipeline requests instead of ON/OFF.
 
+	<tag>refresh_pattern</tag>
+	<p><em>NOTE:</em> the regular expression pattern operates on the cache Store-ID value.
+	   Which by default is identical to the requested URL, but may differ for some
+	   objects if the Store-ID feature is in use.
+
 	<tag>unlinkd_program</tag>
 	<p>New helper response format utilizing result codes <em>OK</em> and <em>BH</em>,
 	   to signal helper lookup results. Also, key-value response values to return
@@ -277,8 +304,18 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
-	<p><em>There are no removed squid.conf tags in Squid-3.4.</em>
+	<tag>storeurl_access</tag>
+	<p>Replaced by <em>store_id_access</em>.
 
+	<tag>storeurl_rewrite_children</tag>
+	<p>Replaced by <em>store_id_children</em>.
+
+	<tag>storeurl_rewrite_concurrency</tag>
+	<p>Replaced by <em>store_id_children</em> with <em>concurrency=N</em> option.
+
+	<tag>storeurl_rewrite_program</tag>
+	<p>Replaced by <em>store_id_program</em>.
+	
 </descrip>
 
 
@@ -340,7 +377,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Regressions since Squid-2.7
 
-<p>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.3
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-3.4
 
 <p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
 
@@ -399,18 +436,6 @@ This section gives an account of those changes in three categories:
 	<tag>refresh_stale_hit</tag>
 	<p>Not yet ported from 2.7
 
-	<tag>storeurl_access</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>storeurl_rewrite_children</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>storeurl_rewrite_concurrency</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>storeurl_rewrite_program</tag>
-	<p>Not yet ported from 2.7
-	
 	<tag>update_headers</tag>
 	<p>Not yet ported from 2.7
 
