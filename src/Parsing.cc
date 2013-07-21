@@ -147,7 +147,7 @@ xatos(const char *token)
 int64_t
 GetInteger64(void)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
@@ -162,7 +162,7 @@ GetInteger64(void)
 int
 GetInteger(void)
 {
-    char *token = ConfigParser::strtokFile();
+    char *token = ConfigParser::NextToken();
     int i;
 
     if (token == NULL)
@@ -216,7 +216,7 @@ GetPercentage(void)
 unsigned short
 GetShort(void)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
