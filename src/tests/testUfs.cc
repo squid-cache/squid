@@ -104,11 +104,11 @@ testUfs::testUfsSearch()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("foo 100 1 1");
+    char *config_line=xstrdup("100 1 1");
 
     visible_appname_string = xstrdup(PACKAGE "/" VERSION);
 
-    strtok(config_line, w_space);
+    ConfigParser::SetCfgLine(config_line);
 
     aStore->parse(0, path);
     store_maxobjsize = 1024*1024*2;
@@ -244,8 +244,8 @@ testUfs::testUfsDefaultEngine()
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
     char *path=xstrdup(TESTDIR);
-    char *config_line=xstrdup("foo 100 1 1");
-    strtok(config_line, w_space);
+    char *config_line=xstrdup("100 1 1");
+    ConfigParser::SetCfgLine(config_line);
     aStore->parse(0, path);
     safe_free(path);
     safe_free(config_line);

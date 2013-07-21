@@ -73,10 +73,10 @@ ACLFlags::parseFlags()
 
     /*Regex code needs to parse -i file*/
     if ( isSet(ACL_F_REGEX_CASE))
-        ConfigParser::strtokFilePutBack("-i");
+        ConfigParser::TokenPutBack("-i");
 
     if (nextToken != NULL && strcmp(nextToken, "--") != 0 )
-        ConfigParser::strtokFileUndo();
+        ConfigParser::TokenUndo();
 }
 
 const char *
@@ -200,7 +200,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     /* snarf the ACL name */
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
@@ -217,7 +217,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL type */
     const char *theType;
 
-    if ((theType = strtok(NULL, w_space)) == NULL) {
+    if ((theType = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
