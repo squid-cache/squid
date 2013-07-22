@@ -29,6 +29,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Store-ID</A>
 <LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+</A>
 <LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Transaction Annotations</A>
+<LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Multicast DNS</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.3</A></H2>
@@ -89,6 +90,7 @@ for how to submit a report with a stack trace.</P>
 <LI>Store-ID</LI>
 <LI>TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+</LI>
 <LI>Transaction Annotations</LI>
+<LI>Multicast DNS</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -236,6 +238,22 @@ of for any notes with a given name.</P>
 
 <P>NOTE: not all helper interfaces are yet enabled to convert key=value into annotations
 and the external ACL interface does not yet send annotations to the helper.</P>
+
+
+<H2><A NAME="ss2.6">2.6</A> <A HREF="#toc2.6">Multicast DNS</A>
+</H2>
+
+<P>The internal DNS component fof Squid now supports multicast DNS (mDNS) resolution in
+accordance with RFC 6762.</P>
+
+<P>There is no additional or special configuration required. The multicast DNS group IP
+addresses for IPv4 and IPv6 resolving are added to the set of available DNS resolvers
+and used automatically for domain names ending in <EM>.local</EM> before attempting a
+secondary resolution on the configured resolvers. Domains without <EM>.local</EM> are
+resolved using only the configured DNS resolvers.</P>
+
+<P>Statistics for multicast DNS resolution can be found on the <EM>idns</EM> cache manager
+report.</P>
 
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.3</A></H2>
