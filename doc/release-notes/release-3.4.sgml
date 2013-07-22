@@ -290,6 +290,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>logformat</tag>
 	<p>New format code <em>%note</em> to log a transaction annotation linked to the
 	   transaction by ICAP, eCAP, a helper, or the <em>note</em> squid.conf directive.
+	<p>New format code <em>%&gt;qos</em> to log client connection TOS/DSCP value set by Squid.
+	<p>New format code <em>%&lt;qos</em> to log server connection TOS/DSCP value set by Squid.
+	<p>New format code <em>%&gt;nfmark</em> to log client connection netfilter mark set by Squid.
+	<p>New format code <em>%&lt;nfmark</em> to log server connection netfilter mark set by Squid.
 
 	<tag>pipeline_prefetch</tag>
 	<p>Updated to take a numeric count of prefetched pipeline requests instead of ON/OFF.
