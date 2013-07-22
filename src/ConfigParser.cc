@@ -129,7 +129,7 @@ ConfigParser::strtokFile()
 
                 if ((wordFile = fopen(t, "r")) == NULL) {
                     debugs(3, DBG_CRITICAL, "Can not open file " << t << " for reading");
-                    return false;
+                    return NULL;
                 }
 
 #if _SQUID_WINDOWS_
