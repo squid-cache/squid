@@ -115,7 +115,7 @@ public:
         const int limit; ///< maximum number of store entries
         const size_t extrasSize; ///< size of slice extra data
         Atomic::Word count; ///< current number of entries
-        Atomic::WordT<sfileno> victim; ///< starting point for purge search
+        Atomic::WordT<uint32_t> victim; ///< starting point for purge search
         Ipc::Mem::FlexibleArray<StoreMapSlot> slots; ///< storage
     };
 
