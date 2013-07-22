@@ -69,6 +69,7 @@ storeSwapOutStart(StoreEntry * e)
            e->swap_dirn << ", fileno " << std::hex << std::setw(8) << std::setfill('0') <<
            std::uppercase << e->swap_filen);
     e->swap_status = SWAPOUT_WRITING;
+    mem->swapout.decision = MemObject::SwapOut::swStarted;
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
@@ -372,16 +373,10 @@ StoreEntry::mayStartSwapOut()
     assert(mem_obj);
     MemObject::SwapOut::Decision &decision = mem_obj->swapout.decision;
 
-    // if we decided that swapout is not possible, do not repeat same checks
+    // if we decided that starting is not possible, do not repeat same checks
     if (decision == MemObject::SwapOut::swImpossible) {
         debugs(20, 3, HERE << " already rejected");
         return false;
-    }
-
-    // if we decided that swapout is possible, do not repeat same checks
-    if (decision == MemObject::SwapOut::swPossible) {
-        debugs(20, 3,  HERE << "already allowed");
-        return true;
     }
 
     // if we swapped out already, do not start over
@@ -389,6 +384,19 @@ StoreEntry::mayStartSwapOut()
         debugs(20, 3,  HERE << "already did");
         decision = MemObject::SwapOut::swImpossible;
         return false;
+    }
+
+    // if we stared swapping out already, do not start over
+    if (decision == MemObject::SwapOut::swStarted) {
+        debugs(20, 3, "already started");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
+    // if we decided that swapout is possible, do not repeat same checks
+    if (decision == MemObject::SwapOut::swPossible) {
+        debugs(20, 3, "already allowed");
+        return true;
     }
 
     if (!checkCachable()) {
