@@ -128,7 +128,7 @@ MemObject::MemObject(): smpCollapsed(false)
 MemObject::~MemObject()
 {
     debugs(20, 3, HERE << "del MemObject " << this);
-    const Ctx ctx = ctx_enter(urlXXX());
+    const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG
     checkUrlChecksum();
