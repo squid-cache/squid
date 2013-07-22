@@ -365,6 +365,10 @@ see <EM>--enable-pf-transparent</EM> for more details.</P>
 <DT><B>logformat</B><DD>
 <P>New format code <EM>%note</EM> to log a transaction annotation linked to the
 transaction by ICAP, eCAP, a helper, or the <EM>note</EM> squid.conf directive.</P>
+<P>New format code <EM>%&gt;qos</EM> to log client connection TOS/DSCP value set by Squid.</P>
+<P>New format code <EM>%&lt;qos</EM> to log server connection TOS/DSCP value set by Squid.</P>
+<P>New format code <EM>%&gt;nfmark</EM> to log client connection netfilter mark set by Squid.</P>
+<P>New format code <EM>%&lt;nfmark</EM> to log server connection netfilter mark set by Squid.</P>
 
 <DT><B>pipeline_prefetch</B><DD>
 <P>Updated to take a numeric count of prefetched pipeline requests instead of ON/OFF.</P>
