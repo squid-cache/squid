@@ -133,7 +133,7 @@ public:
         StoreIOState::Pointer sio;
 
         /// Decision states for StoreEntry::swapoutPossible() and related code.
-        typedef enum { swNeedsCheck = 0, swImpossible = -1, swPossible = +1 } Decision;
+        typedef enum { swNeedsCheck = 0, swImpossible = -1, swPossible = +1, swStarted } Decision;
         Decision decision; ///< current decision state
     };
 
