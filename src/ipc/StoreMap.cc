@@ -352,7 +352,7 @@ Ipc::StoreMap::purgeOne()
     const int searchLimit = min(10000, entryLimit());
     int tries = 0;
     for (; tries < searchLimit; ++tries) {
-        const sfileno fileno = shared->victim++ % shared->limit;
+        const sfileno fileno = static_cast<sfileno>(++shared->victim % shared->limit);
         assert(valid(fileno));
         Anchor &s = shared->slots[fileno].anchor;
         if (s.lock.lockExclusive()) {
