@@ -195,7 +195,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 There have been changes to Squid's configuration file since Squid-3.3.
 
 <p>Squid supports reading configuration option parameters from external
-   files using the syntax <em>parameters(\"/path/filename\")</em>. For example:
+   files using the syntax <em>parameters("/path/filename")</em>. For example:
 <verb>
     acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
 </verb>
