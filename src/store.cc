@@ -397,10 +397,6 @@ StoreEntry::StoreEntry() :
 
 StoreEntry::~StoreEntry()
 {
-    if (swap_filen >= 0) {
-        SwapDir &sd = dynamic_cast<SwapDir&>(*store());
-        sd.disconnect(*this);
-    }
 }
 
 #if USE_ADAPTATION
@@ -451,6 +447,12 @@ destroyStoreEntry(void *data)
 
     if (e == NullStoreEntry::getInstance())
         return;
+
+    // Store::Root() is FATALly missing during shutdown
+    if (e->swap_filen >= 0 && !shutting_down) {
+        SwapDir &sd = dynamic_cast<SwapDir&>(*e->store());
+        sd.disconnect(*e);
+    }
 
     e->destroyMemObject();
 
