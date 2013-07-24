@@ -196,6 +196,7 @@ static ns *nameservers = NULL;
 static sp *searchpath = NULL;
 static int nns = 0;
 static int nns_alloc = 0;
+static int nns_mdns_count = 0;
 static int npc = 0;
 static int npc_alloc = 0;
 static int ndots = 1;
@@ -276,16 +277,21 @@ idnsCheckMDNS(idns_query *q)
 static void
 idnsAddMDNSNameservers()
 {
-#define MDNS_RESOLVER_COUNT 2
+    nns_mdns_count=0;
 
     // mDNS resolver addresses are explicit multicast group IPs
-    idnsAddNameserver("FF02::FB");
-    nameservers[nns-1].S.port(5353);
-    nameservers[nns-1].mDNSResolver = true;
+    if (Ip::EnableIpv6) {
+        idnsAddNameserver("FF02::FB");
+        nameservers[nns-1].S.port(5353);
+        nameservers[nns-1].mDNSResolver = true;
+        ++nns_mdns_count;
+    }
 
     idnsAddNameserver("224.0.0.251");
     nameservers[nns-1].S.port(5353);
     nameservers[nns-1].mDNSResolver = true;
+
+    ++nns_mdns_count;
 }
 
 static void
@@ -956,7 +962,7 @@ idnsSendQuery(idns_query * q)
     do {
         // only use mDNS resolvers for mDNS compatible queries
         if (!q->permit_mdns)
-            nsn = MDNS_RESOLVER_COUNT + q->nsends % (nns-MDNS_RESOLVER_COUNT);
+            nsn = nns_mdns_count + q->nsends % (nns-nns_mdns_count);
         else
             nsn = q->nsends % nns;
 
@@ -1710,23 +1716,29 @@ idnsSendSlaveAAAAQuery(idns_query *master)
 void
 idnsALookup(const char *name, IDNSCB * callback, void *data)
 {
-    unsigned int i;
-    int nd = 0;
-    idns_query *q;
+    size_t nameLength = strlen(name);
+
+    // Prevent buffer overflow on q->name
+    if (nameLength > NS_MAXDNAME) {
+        debugs(23, DBG_IMPORTANT, "SECURITY ALERT: DNS name too long to perform lookup: '" << name << "'. see access.log for details.");
+        callback(data, NULL, 0, "Internal error");
+        return;
+    }
 
     if (idnsCachedLookup(name, callback, data))
         return;
 
-    q = cbdataAlloc(idns_query);
+    idns_query *q = cbdataAlloc(idns_query);
     // idns_query is POD so no constructors are called after allocation
     q->xact_id.change();
     q->query_id = idnsQueryID();
 
-    for (i = 0; i < strlen(name); ++i)
+    int nd = 0;
+    for (unsigned int i = 0; i < nameLength; ++i)
         if (name[i] == '.')
             ++nd;
 
-    if (Config.onoff.res_defnames && npc > 0 && name[strlen(name)-1] != '.') {
+    if (Config.onoff.res_defnames && npc > 0 && name[nameLength-1] != '.') {
         q->do_searchpath = 1;
     } else {
         q->do_searchpath = 0;

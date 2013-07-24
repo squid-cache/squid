@@ -49,23 +49,6 @@ private:
     void *buf; ///< buffer returned by mmap, needed for munmap
 };
 
-void *
-MmappedFile::operator new(size_t sz)
-{
-    CBDATA_INIT_TYPE(MmappedFile);
-    MmappedFile *result = cbdataAlloc(MmappedFile);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return result;
-}
-
-void
-MmappedFile::operator delete(void *address)
-{
-    MmappedFile *t = static_cast<MmappedFile *>(address);
-    cbdataFree(t);
-}
-
 MmappedFile::MmappedFile(char const *aPath): fd(-1),
         minOffset(0), maxOffset(-1), error_(false)
 {

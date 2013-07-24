@@ -65,6 +65,19 @@ COMMENT_START
   configuration files.
 
 
+  Values with spaces, quotes, and other special characters
+
+	Squid supports directive parameters with spaces, quotes, and other
+	special characters. Surround such parameters with "double quotes". Use
+	the configuration_includes_quoted_values directive to enable or
+	disable that support.
+
+	Squid supports reading configuration option parameters from external
+	files using the syntax:
+		parameters("/path/filename")
+	For example:
+		acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+
   Conditional configuration
 
 	If-statements can be used to make configuration directives
@@ -3678,6 +3691,8 @@ DOC_START
 		>eui	Client source EUI (MAC address, EUI-48 or EUI-64 identifier)
 		>la	Local IP address the client connected to
 		>lp	Local port number the client connected to
+		>qos    Client connection TOS/DSCP value set by Squid
+		>nfmark Client connection netfilter mark set by Squid
 
 		la	Local listening IP address the client connection was connected to.
 		lp	Local listening port number the client connection was connected to.
@@ -3687,6 +3702,8 @@ DOC_START
 		<p	Server port number of the last server or peer connection
 		<la	Local IP address of the last server or peer connection
 		<lp     Local port number of the last server or peer connection
+		<qos	Server connection TOS/DSCP value set by Squid
+		<nfmark Server connection netfilter mark set by Squid
 
 	Time related format codes:
 
@@ -4046,29 +4063,29 @@ DOC_START
 DOC_END
 
 NAME: log_access
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with access_log directives to control access logging
+DOC_END
+
+NAME: log_icap
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with icap_log directives to control icap logging
+DOC_END
+
+NAME: stats_collection
 TYPE: acl_access
-LOC: Config.accessList.log
+LOC: Config.accessList.stats_collection
 DEFAULT: none
 DEFAULT_DOC: Allow logging for all transactions.
 COMMENT: allow|deny acl acl...
 DOC_START
-	This options allows you to control which requests gets logged
-	to access.log (see access_log directive). Requests denied for
-	logging will also not be accounted for in performance counters.
+	This options allows you to control which requests gets accounted
+	in performance counters.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-DOC_END
-
-NAME: log_icap
-TYPE: acl_access
-IFDEF: ICAP_CLIENT
-LOC: Config.accessList.icap
-DEFAULT: none
-DEFAULT_DOC: Allow logging for all ICAP transactions.
-DOC_START
-	This options allows you to control which requests get logged
-	to icap.log. See the icap_log directive for ICAP log details.
 DOC_END
 
 NAME: cache_store_log
@@ -4861,10 +4878,12 @@ DOC_START
 		override-lastmod enforces min age even on objects
 		that were modified recently.
 
-		reload-into-ims changes client no-cache or ``reload''
-		to If-Modified-Since requests. Doing this VIOLATES the
-		HTTP standard. Enabling this feature could make you
-		liable for problems which it causes.
+		reload-into-ims changes a client no-cache or ``reload''
+		request for a cached entry into a conditional request using
+		If-Modified-Since and/or If-None-Match headers, provided the
+		cached entry has a Last-Modified and/or a strong ETag header.
+		Doing this VIOLATES the HTTP standard. Enabling this feature
+		could make you liable for problems which it causes.
 
 		ignore-reload ignores a client no-cache or ``reload''
 		header. Doing this VIOLATES the HTTP standard. Enabling
@@ -8441,6 +8460,19 @@ COMMENT_START
  MISCELLANEOUS
  -----------------------------------------------------------------------------
 COMMENT_END
+
+NAME: configuration_includes_quoted_values
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: ConfigParser::RecognizeQuotedValues
+DOC_START
+	If set, Squid will recognize each "quoted string" after a configuration
+	directive as a single parameter. The quotes are stripped before the
+	parameter value is interpreted or used.
+	See "Values with spaces, quotes, and other special characters"
+	section for more details.
+DOC_END
 
 NAME: memory_pools
 COMMENT: on|off

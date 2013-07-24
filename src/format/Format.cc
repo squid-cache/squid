@@ -401,6 +401,20 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
+        case LFT_CLIENT_LOCAL_TOS:
+            if (al->tcpClient != NULL) {
+                snprintf(tmp, sizeof(tmp), "0x%x", (uint32_t)al->tcpClient->tos);
+                out = tmp;
+            }
+            break;
+
+        case LFT_CLIENT_LOCAL_NFMARK:
+            if (al->tcpClient != NULL) {
+                snprintf(tmp, sizeof(tmp), "0x%x", al->tcpClient->nfmark);
+                out = tmp;
+            }
+            break;
+
         case LFT_LOCAL_LISTENING_PORT:
             if (al->cache.port) {
                 outint = al->cache.port->s.port();
@@ -428,6 +442,20 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 doint = 1;
             }
 
+            break;
+
+        case LFT_SERVER_LOCAL_TOS:
+            if (al->hier.tcpServer != NULL) {
+                snprintf(tmp, sizeof(tmp), "0x%x", (uint32_t)al->hier.tcpServer->tos);
+                out = tmp;
+            }
+            break;
+
+        case LFT_SERVER_LOCAL_NFMARK:
+            if (al->hier.tcpServer != NULL) {
+                snprintf(tmp, sizeof(tmp), "0x%x", al->hier.tcpServer->nfmark);
+                out = tmp;
+            }
             break;
 
         case LFT_TIME_SECONDS_SINCE_EPOCH:
@@ -1046,6 +1074,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 #endif
+
         case LFT_NOTE:
             if (fmt->data.string) {
 #if USE_ADAPTATION

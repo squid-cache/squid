@@ -50,26 +50,6 @@
 /* === PUBLIC =========================================================== */
 
 CBDATA_CLASS_INIT(DiskThreadsDiskFile);
-void *
-DiskThreadsDiskFile::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(DiskThreadsDiskFile);
-    DiskThreadsDiskFile *result = cbdataAlloc(DiskThreadsDiskFile);
-    /*
-     * We used to call squidaio_init() here, but if the first transaction
-     * is to unlink a file (e.g., if Squid starts up over the disk space
-     * limit) then "squidaio" won't be initialized yet.
-     */
-
-    return result;
-}
-
-void
-DiskThreadsDiskFile::operator delete(void *address)
-{
-    DiskThreadsDiskFile *t = static_cast<DiskThreadsDiskFile *>(address);
-    cbdataFree(t);
-}
 
 DiskThreadsDiskFile::DiskThreadsDiskFile(char const *aPath, DiskThreadsIOStrategy *anIO):fd(-1), errorOccured (false), IO(anIO),
         inProgressIOs (0)
@@ -374,19 +354,3 @@ DiskThreadsDiskFile::writeDone(int rvfd, int errflag, size_t len, RefCount<Write
 template <class RT>
 cbdata_type IoResult<RT>::CBDATA_IoResult = CBDATA_UNKNOWN;
 /** \endcond */
-
-template<class RT>
-void *
-IoResult<RT>::operator new(size_t unused)
-{
-    CBDATA_INIT_TYPE(IoResult);
-    IoResult<RT> *result = cbdataAlloc(IoResult);
-    return result;
-}
-
-template <class RT>
-void
-IoResult<RT>::operator delete(void *address)
-{
-    cbdataFree(address);
-}

@@ -20,9 +20,6 @@ class ClientRequestContext : public RefCountable
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-
     ClientRequestContext(ClientHttpRequest *);
     ~ClientRequestContext();
 
@@ -87,7 +84,7 @@ public:
     bool readNextRequest; ///< whether Squid should read after error handling
 
 private:
-    CBDATA_CLASS(ClientRequestContext);
+    CBDATA_CLASS2(ClientRequestContext);
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */

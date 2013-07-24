@@ -35,6 +35,7 @@
 #include "anyp/PortCfg.h"
 #include "client_side_reply.h"
 #include "errorpage.h"
+#include "ETag.h"
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
@@ -171,22 +172,6 @@ clientReplyContext::removeClientStoreReference(store_client **scp, ClientHttpReq
     aHttpRequest->storeEntry(reference);
 }
 
-void *
-clientReplyContext::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (clientReplyContext));
-    CBDATA_INIT_TYPE(clientReplyContext);
-    return cbdataAlloc(clientReplyContext);
-}
-
-void
-clientReplyContext::operator delete (void *address)
-{
-    clientReplyContext * tmp = (clientReplyContext *)address;
-    cbdataFree (tmp);
-}
-
 void
 clientReplyContext::saveState()
 {
@@ -287,6 +272,13 @@ clientReplyContext::processExpired()
 #endif
 
     http->request->lastmod = old_entry->lastmod;
+
+    if (!http->request->header.has(HDR_IF_NONE_MATCH)) {
+        ETag etag = {NULL, -1}; // TODO: make that a default ETag constructor
+        if (old_entry->hasEtag(etag) && !etag.weak)
+            http->request->etag = etag.str;
+    }
+
     debugs(88, 5, "clientReplyContext::processExpired : lastmod " << entry->lastmod );
     http->storeEntry(entry);
     assert(http->out.offset == 0);

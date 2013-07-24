@@ -43,24 +43,8 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+
 CBDATA_CLASS_INIT(BlockingFile);
-
-void *
-BlockingFile::operator new(size_t sz)
-{
-    CBDATA_INIT_TYPE(BlockingFile);
-    BlockingFile *result = cbdataAlloc(BlockingFile);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return result;
-}
-
-void
-BlockingFile::operator delete(void *address)
-{
-    BlockingFile *t = static_cast<BlockingFile *>(address);
-    cbdataFree(t);
-}
 
 BlockingFile::BlockingFile(char const *aPath) : fd (-1), closed (true), error_(false)
 {

@@ -107,22 +107,6 @@ ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Ad
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
-void *
-ClientRequestContext::operator new (size_t size)
-{
-    assert (size == sizeof(ClientRequestContext));
-    CBDATA_INIT_TYPE(ClientRequestContext);
-    ClientRequestContext *result = cbdataAlloc(ClientRequestContext);
-    return result;
-}
-
-void
-ClientRequestContext::operator delete (void *address)
-{
-    ClientRequestContext *t = static_cast<ClientRequestContext *>(address);
-    cbdataFree(t);
-}
-
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(allow_t, void *);
@@ -169,22 +153,6 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
-
-void *
-ClientHttpRequest::operator new (size_t size)
-{
-    assert (size == sizeof (ClientHttpRequest));
-    CBDATA_INIT_TYPE(ClientHttpRequest);
-    ClientHttpRequest *result = cbdataAlloc(ClientHttpRequest);
-    return result;
-}
-
-void
-ClientHttpRequest::operator delete (void *address)
-{
-    ClientHttpRequest *t = static_cast<ClientHttpRequest *>(address);
-    cbdataFree(t);
-}
 
 ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
@@ -665,8 +633,16 @@ ClientRequestContext::hostHeaderVerify()
     uint16_t port = 0;
     if (portStr) {
         *portStr = '\0'; // strip the ':'
-        if (*(++portStr) != '\0')
-            port = xatoi(portStr);
+        if (*(++portStr) != '\0') {
+            char *end = NULL;
+            int64_t ret = strtoll(portStr, &end, 10);
+            if (end == portStr || *end != '\0' || ret < 1 || ret > 0xFFFF) {
+                // invalid port details. Replace the ':'
+                *(--portStr) = ':';
+                portStr = NULL;
+            } else
+                port = (ret & 0xFFFF);
+        }
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));

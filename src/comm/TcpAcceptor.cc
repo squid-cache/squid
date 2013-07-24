@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "base/TextException.h"
 #include "client_db.h"
 #include "comm/AcceptLimiter.h"
@@ -46,6 +47,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Intercept.h"
+#include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -286,8 +288,10 @@ Comm::TcpAcceptor::notify(const comm_err_t flag, const Comm::ConnectionPointer &
     if (theCallSub != NULL) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
+        params.xaction = new MasterXaction;
+        params.xaction->squidPort = static_cast<AnyP::PortCfg*>(params.data);
         params.fd = conn->fd;
-        params.conn = newConnDetails;
+        params.conn = params.xaction->tcpClient = newConnDetails;
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(call);
