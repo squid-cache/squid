@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "cbdata.h"
 #include "errorpage.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -54,8 +55,6 @@ class UrnState : public StoreClient
 
 public:
     void created (StoreEntry *newEntry);
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
     void start (HttpRequest *, StoreEntry *);
     char *getHost (String &urlpath);
     void setUriResFromRequest(HttpRequest *);
@@ -79,6 +78,8 @@ public:
 
 private:
     char *urlres;
+
+    CBDATA_CLASS2(UrnState);
 };
 
 typedef struct {
@@ -96,25 +97,9 @@ static url_entry *urnParseReply(const char *inbuf, const HttpRequestMethod&);
 static const char *const crlf = "\r\n";
 static QS url_entry_sort;
 
-CBDATA_TYPE(UrnState);
-void *
-UrnState::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (UrnState));
-    CBDATA_INIT_TYPE(UrnState);
-    return cbdataAlloc(UrnState);
+CBDATA_CLASS_INIT(UrnState);
 
-}
-
-void
-UrnState::operator delete (void *address)
-{
-    UrnState * tmp = (UrnState *)address;
-    cbdataFree (tmp);
-}
-
-UrnState::~UrnState ()
+UrnState::~UrnState()
 {
     safe_free(urlres);
 }

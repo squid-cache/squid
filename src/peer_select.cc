@@ -71,7 +71,6 @@ static const char *DirectStr[] = {
 static void peerSelectFoo(ps_state *);
 static void peerPingTimeout(void *data);
 static IRCB peerHandlePingReply;
-static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(CachePeer *, icp_common_t *, ps_state *);
 #if USE_HTCP
 static void peerHtcpParentMiss(CachePeer *, HtcpReplyData *, ps_state *);
@@ -89,34 +88,31 @@ static void peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails
 
 CBDATA_CLASS_INIT(ps_state);
 
-static void
-peerSelectStateFree(ps_state * psstate)
+ps_state::~ps_state()
 {
-    if (psstate->entry) {
-        debugs(44, 3, HERE << psstate->entry->url());
+    if (entry) {
+        debugs(44, 3, entry->url());
 
-        if (psstate->entry->ping_status == PING_WAITING)
-            eventDelete(peerPingTimeout, psstate);
+        if (entry->ping_status == PING_WAITING)
+            eventDelete(peerPingTimeout, this);
 
-        psstate->entry->ping_status = PING_DONE;
+        entry->ping_status = PING_DONE;
     }
 
-    if (psstate->acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "calling aclChecklistFree() from peerSelectStateFree");
-        delete (psstate->acl_checklist);
+    if (acl_checklist) {
+        debugs(44, DBG_IMPORTANT, "calling aclChecklistFree() from ps_state destructor");
+        delete acl_checklist;
     }
 
-    HTTPMSGUNLOCK(psstate->request);
+    HTTPMSGUNLOCK(request);
 
-    if (psstate->entry) {
-        assert(psstate->entry->ping_status != PING_WAITING);
-        psstate->entry->unlock();
-        psstate->entry = NULL;
+    if (entry) {
+        assert(entry->ping_status != PING_WAITING);
+        entry->unlock();
+        entry = NULL;
     }
 
-    delete psstate->lastError;
-
-    cbdataFree(psstate);
+    delete lastError;
 }
 
 static int
@@ -313,7 +309,7 @@ peerSelectDnsPaths(ps_state *psstate)
         psstate->lastError = NULL; // FwdState has taken control over the ErrorState object.
     }
 
-    peerSelectStateFree(psstate);
+    delete psstate;
 }
 
 static void
@@ -753,7 +749,7 @@ peerPingTimeout(void *data)
         /* request aborted */
         entry->ping_status = PING_DONE;
         cbdataReferenceDone(psstate->callback_data);
-        peerSelectStateFree(psstate);
+        delete psstate;
         return;
     }
 
@@ -941,13 +937,6 @@ peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
         FSVR = &(*FSVR)->next;
 
     *FSVR = fs;
-}
-
-void *
-ps_state::operator new(size_t)
-{
-    CBDATA_INIT_TYPE(ps_state);
-    return cbdataAlloc(ps_state);
 }
 
 ps_state::ps_state() : request (NULL),

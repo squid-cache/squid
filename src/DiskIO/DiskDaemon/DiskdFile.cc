@@ -53,25 +53,6 @@
 
 CBDATA_CLASS_INIT(DiskdFile);
 
-void *
-DiskdFile::operator new(size_t unused)
-{
-    CBDATA_INIT_TYPE(DiskdFile);
-    DiskdFile *result = cbdataAlloc(DiskdFile);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    debugs(79, 3, "diskdFile with base " << result << " allocating");
-    return result;
-}
-
-void
-DiskdFile::operator delete(void *address)
-{
-    DiskdFile *t = static_cast<DiskdFile *>(address);
-    debugs(79, 3, "diskdFile with base " << t << " deleting");
-    cbdataFree(t);
-}
-
 DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) :
         errorOccured(false),
         IO(anIO),

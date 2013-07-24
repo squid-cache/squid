@@ -47,6 +47,7 @@ Comm::Connection::copyDetails() const
     c->remote = remote;
     c->peerType = peerType;
     c->tos = tos;
+    c->nfmark = nfmark;
     c->flags = flags;
 
     // ensure FD is not open in the new copy.

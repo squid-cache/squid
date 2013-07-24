@@ -96,7 +96,21 @@
 /* must be before including netfilter_ipv4.h */
 #include <limits.h>
 #endif
+#include <linux/if.h>
 #include <linux/netfilter_ipv4.h>
+#if HAVE_LINUX_NETFILTER_IPV6_IP6_TABLES_H
+/* 2013-07-01: Pablo the Netfilter maintainer is rejecting patches
+ * which will enable C++ compilers to build the Netfilter public headers.
+ * We can auto-detect its presence and attempt to use in case he ever
+ * changes his mind or things get cleaned up some other way.
+ * But until then are usually forced to hard-code the getsockopt() code
+ * for IPv6 NAT lookups.
+ */
+#include <linux/netfilter_ipv6/ip6_tables.h>
+#endif
+#if !defined(IP6T_SO_ORIGINAL_DST)
+#define IP6T_SO_ORIGINAL_DST	80	// stolen with prejudice from the above file.
+#endif
 #endif /* LINUX_NETFILTER required headers */
 
 // single global instance for access by other components.
@@ -124,22 +138,26 @@ bool
 Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if LINUX_NETFILTER
-    struct sockaddr_in lookup;
-    socklen_t len = sizeof(struct sockaddr_in);
-    newConn->local.getSockAddr(lookup);
+    struct sockaddr_storage lookup;
+    socklen_t len = newConn->local.isIPv6() ? sizeof(sockaddr_in6) : sizeof(sockaddr_in);
+    newConn->local.getSockAddr(lookup, AF_UNSPEC);
 
     /** \par
      * Try NAT lookup for REDIRECT or DNAT targets. */
-    if ( getsockopt(newConn->fd, IPPROTO_IP, SO_ORIGINAL_DST, &lookup, &len) != 0) {
+    if ( getsockopt(newConn->fd,
+                    newConn->local.isIPv6() ? IPPROTO_IPV6 : IPPROTO_IP,
+                    newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
+                    &lookup,
+                    &len) != 0) {
         if (!silent) {
-            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(SO_ORIGINAL_DST) failed on " << newConn << ": " << xstrerror());
+            debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerror());
             lastReported_ = squid_curtime;
         }
-        debugs(89, 9, HERE << "address: " << newConn);
+        debugs(89, 9, "address: " << newConn);
         return false;
     } else {
         newConn->local = lookup;
-        debugs(89, 5, HERE << "address NAT: " << newConn);
+        debugs(89, 5, "address NAT: " << newConn);
         return true;
     }
 #endif
@@ -358,10 +376,6 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
         if (TproxyTransparent(newConn, silent)) return true;
     }
-
-    /* NAT is only available in IPv4 */
-    if ( !newConn->local.isIPv4()  ) return false;
-    if ( !newConn->remote.isIPv4() ) return false;
 
     if (interceptActive_ && listenConn->flags&COMM_INTERCEPTION) {
         /* NAT methods that use sock-opts to return client address */

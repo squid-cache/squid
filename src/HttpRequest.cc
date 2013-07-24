@@ -177,6 +177,8 @@ HttpRequest::clean()
 
     extacl_message.clean();
 
+    etag.clean();
+
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
 #endif
@@ -222,19 +224,17 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_login?
 
     copy->lastmod = lastmod;
+    copy->etag = etag;
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
     copy->myportname = myportname;
     copy->tag = tag;
-#if USE_AUTH
-    copy->extacl_user = extacl_user;
-    copy->extacl_passwd = extacl_passwd;
-#endif
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
-    assert(copy->inheritProperties(this));
+    const bool inheritWorked = copy->inheritProperties(this);
+    assert(inheritWorked);
 
     return copy;
 }
@@ -269,6 +269,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     errDetail = aReq->errDetail;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
+    extacl_user = aReq->extacl_user;
+    extacl_passwd = aReq->extacl_passwd;
 #endif
 
     // main property is which connection the request was received on (if any)

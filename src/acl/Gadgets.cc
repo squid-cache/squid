@@ -120,7 +120,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 
     /* first expect a page name */
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: missing 'error page' parameter.");
         return;
@@ -133,7 +133,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
 
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = ConfigParser::NextToken())) {
         L = (AclNameList *)memAllocate(MEM_ACL_NAME_LIST);
         xstrncpy(L->name, t, ACL_NAME_SZ-1);
         *Tail = L;
@@ -157,7 +157,7 @@ void
 aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 {
     /* first expect either 'allow' or 'deny' */
-    const char *t = ConfigParser::strtokFile();
+    const char *t = ConfigParser::NextToken();
 
     if (!t) {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);

@@ -182,12 +182,7 @@ private:
 /// \ingroup ServerProtocolFTPInternal
 class FtpStateData : public ServerStateData
 {
-
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
-    void *toCbdata() { return this; }
-
     FtpStateData(FwdState *, const Comm::ConnectionPointer &conn);
     ~FtpStateData();
     char user[MAX_URL];
@@ -237,9 +232,6 @@ public:
     } data;
 
     struct _ftp_flags flags;
-
-private:
-    CBDATA_CLASS(FtpStateData);
 
 public:
     // these should all be private
@@ -309,24 +301,11 @@ public:
 private:
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
+
+    CBDATA_CLASS2(FtpStateData);
 };
 
 CBDATA_CLASS_INIT(FtpStateData);
-
-void *
-FtpStateData::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(FtpStateData);
-    FtpStateData *result = cbdataAlloc(FtpStateData);
-    return result;
-}
-
-void
-FtpStateData::operator delete (void *address)
-{
-    FtpStateData *t = static_cast<FtpStateData *>(address);
-    cbdataFree(t);
-}
 
 /// \ingroup ServerProtocolFTPInternal
 typedef struct {

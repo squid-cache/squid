@@ -276,22 +276,6 @@ ESIStreamContext::ESIStreamContext() : finished(false), include (NULL), localbuf
 /* ESIContext */
 static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, ClientHttpRequest *);
 
-void *
-ESIContext::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (ESIContext));
-    CBDATA_INIT_TYPE(ESIContext);
-    ESIContext *result = cbdataAlloc(ESIContext);
-    return result;
-}
-
-void
-ESIContext::operator delete (void *address)
-{
-    ESIContext *t = static_cast<ESIContext *>(address);
-    cbdataFree(t);
-}
-
 void
 ESIContext::setError()
 {
