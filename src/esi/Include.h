@@ -46,8 +46,6 @@ class ESIStreamContext : public RefCountable
 
 public:
     typedef RefCount<ESIStreamContext> Pointer;
-    void *operator new(size_t);
-    void operator delete(void *);
     ESIStreamContext();
     ~ESIStreamContext();
     void freeResources();
@@ -57,7 +55,7 @@ public:
     ESISegment::Pointer buffer;
 
 private:
-    CBDATA_CLASS(ESIStreamContext);
+    CBDATA_CLASS2(ESIStreamContext);
 };
 
 /* ESIInclude */

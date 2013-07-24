@@ -44,8 +44,6 @@ class clientReplyContext : public RefCountable, public StoreClient
 {
 
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
     static STCB CacheHit;
     static STCB HandleIMSReply;
     static STCB SendMoreData;
@@ -152,7 +150,7 @@ private:
     store_client *old_sc;	/* ... for entry to be validated */
     bool deleting;
 
-    CBDATA_CLASS(clientReplyContext);
+    CBDATA_CLASS2(clientReplyContext);
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */

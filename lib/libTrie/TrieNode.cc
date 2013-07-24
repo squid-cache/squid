@@ -17,7 +17,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "TrieNode.h"
 #include "TrieCharTransform.h"
 #if HAVE_UNISTD_H

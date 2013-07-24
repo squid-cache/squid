@@ -39,8 +39,6 @@ class CbDataList
 {
 
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
     CbDataList (C const &);
     ~CbDataList();
 
@@ -57,7 +55,7 @@ public:
     bool empty() const { return this == NULL; }
 
 private:
-    CBDATA_CLASS(CbDataList);
+    CBDATA_CLASS2(CbDataList);
 };
 
 /// \ingroup POD
@@ -101,24 +99,6 @@ private:
 template <class C>
 cbdata_type CbDataList<C>::CBDATA_CbDataList = CBDATA_UNKNOWN;
 /** \endcond */
-
-template <class C>
-void *
-CbDataList<C>::operator new (size_t byteCount)
-{
-    CBDATA_INIT_TYPE(CbDataList);
-
-    CbDataList<C> *result = cbdataAlloc(CbDataList);
-
-    return result;
-}
-
-template <class C>
-void
-CbDataList<C>::operator delete (void *address)
-{
-    cbdataFree(address);
-}
 
 template <class C>
 CbDataList<C>::CbDataList(C const &value) : next(NULL), element (value)

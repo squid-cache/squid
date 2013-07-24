@@ -116,8 +116,12 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
 
                 HelperReply newReply;
-                newReply.result = reply.result;
-                newReply.notes = reply.notes;
+                // BACKWARD COMPATIBILITY 2012-06-15:
+                // We got HelperReply::Unknown reply result but new
+                // redirectStateData handlers require HelperReply::Okay,
+                // else will drop the helper reply
+                newReply.result = HelperReply::Okay;
+                newReply.notes.append(&reply.notes);
 
                 if (status == Http::scMovedPermanently
                         || status == Http::scMovedTemporarily

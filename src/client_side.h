@@ -83,8 +83,6 @@ class ClientSocketContext : public RefCountable
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
-    void *operator new(size_t);
-    void operator delete(void *);
     ClientSocketContext();
     ~ClientSocketContext();
     bool startOfOutput() const;
@@ -159,7 +157,7 @@ private:
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 
-    CBDATA_CLASS(ClientSocketContext);
+    CBDATA_CLASS2(ClientSocketContext);
 };
 
 class ConnectionDetail;
@@ -187,8 +185,7 @@ class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 
 public:
-
-    ConnStateData();
+    explicit ConnStateData(const MasterXaction::Pointer &xact);
     ~ConnStateData();
 
     void readSomeData();
@@ -273,6 +270,7 @@ public:
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
+    /// Squid listening port details where this connection arrived.
     AnyP::PortCfg *port;
 
     bool transparent() const;

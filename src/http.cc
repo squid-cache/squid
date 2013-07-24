@@ -1703,9 +1703,16 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
 
-    /* append our IMS header */
+    /* use our IMS header if the cached entry has Last-Modified time */
     if (request->lastmod > -1)
         hdr_out->putTime(HDR_IF_MODIFIED_SINCE, request->lastmod);
+
+    // Add our own If-None-Match field if the cached entry has a strong ETag.
+    // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
+    if (request->etag.defined()) {
+        hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
+                                              request->etag.termedBuf()));
+    }
 
     bool we_do_ranges = decideIfWeDoRanges (request);
 

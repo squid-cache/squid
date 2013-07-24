@@ -195,7 +195,8 @@ AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
                [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
 AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
 
-if test "x$squid_host_os" = "xmingw"; then
+case "$squid_host_os" in
+mingw)
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
   CFLAGS="$CFLAGS -mthreads"
   CXXFLAGS="$CXXFLAGS -mthreads"
@@ -208,7 +209,16 @@ if test "x$squid_host_os" = "xmingw"; then
   fi
   MINGW_LIBS="-lmingwex"
   AC_SUBST(MINGW_LIBS)
-fi
+  ;;
+freebsd)
+    # FreeBSD places local libraries and packages in /usr/local
+    CFLAGS="$CFLAGS -I/usr/local/include"
+    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
+    ;;
+*)
+    ;;
+esac
 
 dnl Substitutions
 AC_DEFINE_UNQUOTED(CONFIG_HOST_TYPE, "$host",[Host type from configure])
@@ -328,12 +338,6 @@ dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
 dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
-    ;;
-  freebsd)
-    # FreeBSD places local libraries and packages in /usr/local
-    CFLAGS="$CFLAGS -I/usr/local/include"
-    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
-    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
     ;;
   *)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
@@ -1277,6 +1281,7 @@ AC_SUBST(SSLLIB)
 
 if test "x$with_openssl" = "xyes"; then
 SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
 SQUID_CHECK_OPENSSL_TXTDB
 fi
 
@@ -1963,6 +1968,18 @@ AC_ARG_ENABLE(url-rewrite-helpers,
 ])
 m4_include([helpers/url_rewrite/modules.m4])
 
+dnl Select storeid_rewrite helpers to build
+AC_ARG_ENABLE(storeid-rewrite-helpers,
+  AS_HELP_STRING([--enable-storeid-rewrite-helpers="list of helpers"],
+                 [This option selects which Store-ID rewrite helpers to
+                  build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-storeid-rewrite-helpers to build none.
+                  For a list of available helpers see the
+                  helpers/storeid_rewrite directory.]),[
+])
+m4_include([helpers/storeid_rewrite/modules.m4])
+
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
                  [Include debug instrumentation for use with valgrind]),
@@ -2253,8 +2270,9 @@ AC_CHECK_HEADERS( \
   wchar.h
 )
 
-AC_CHECK_HEADERS(
-  linux/netfilter_ipv4.h
+AC_CHECK_HEADERS( \
+  linux/netfilter_ipv4.h \
+  linux/netfilter_ipv6/ip6_tables.h \
 ,,,
 SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
@@ -3373,6 +3391,8 @@ AC_CONFIG_FILES([\
 	compat/Makefile \
 	lib/Makefile \
 	lib/ntlmauth/Makefile \
+	lib/libTrie/Makefile \
+	lib/libTrie/test/Makefile \
 	lib/profiler/Makefile \
 	lib/rfcnb/Makefile \
 	lib/smblib/Makefile \
@@ -3457,11 +3477,11 @@ AC_CONFIG_FILES([\
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \
 	helpers/ssl/Makefile \
+	helpers/storeid_rewrite/Makefile \
+	helpers/storeid_rewrite/file/Makefile \
 	tools/Makefile
 	tools/purge/Makefile
 ])
-
-AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 #AC_CONFIG_SUBDIRS(libltdl)

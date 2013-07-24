@@ -39,6 +39,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "compat/strsep.h"
+#include "ConfigParser.h"
 #include "event.h"
 #include "ip/Address.h"
 #include "md5.h"
@@ -2013,7 +2014,7 @@ parse_wccp2_method(int *method)
     char *t;
 
     /* Snarf the method */
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(80, DBG_CRITICAL, "wccp2_*_method: missing setting.");
         self_destruct();
     }
@@ -2060,7 +2061,7 @@ parse_wccp2_amethod(int *method)
     char *t;
 
     /* Snarf the method */
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(80, DBG_CRITICAL, "wccp2_assignment_method: missing setting.");
         self_destruct();
     }
@@ -2116,7 +2117,7 @@ parse_wccp2_service(void *v)
     }
 
     /* Snarf the type */
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
         self_destruct();
     }
@@ -2141,7 +2142,7 @@ parse_wccp2_service(void *v)
     memset(wccp_password, 0, sizeof(wccp_password));
     /* Handle password, if any */
 
-    if ((t = strtok(NULL, w_space)) != NULL) {
+    if ((t = ConfigParser::NextToken()) != NULL) {
         if (strncmp(t, "password=", 9) == 0) {
             security_type = WCCP2_MD5_SECURITY;
             strncpy(wccp_password, t + 9, WCCP2_PASSWORD_LEN);
@@ -2317,7 +2318,7 @@ parse_wccp2_service_info(void *v)
     }
 
     /* Next: loop until we don't have any more tokens */
-    while ((t = strtok(NULL, w_space)) != NULL) {
+    while ((t = ConfigParser::NextToken()) != NULL) {
         if (strncmp(t, "flags=", 6) == 0) {
             /* XXX eww, string pointer math */
             flags = parse_wccp2_service_flags(t + 6);

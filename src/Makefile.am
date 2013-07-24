@@ -85,7 +85,7 @@ if USE_ESI
 SUBDIRS += esi
 ESI_LOCAL_LIBS = \
 	esi/libesi.la \
-	$(top_builddir)/lib/libTrie/src/libTrie.a
+	$(top_builddir)/lib/libTrie/libTrie.a
 ESI_LIBS = $(ESI_LOCAL_LIBS) \
 	$(XMLLIB) \
 	$(EXPATLIB)
@@ -427,6 +427,8 @@ squid_SOURCES = \
 	LogTags.h \
 	lookup_t.h \
 	main.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
@@ -1257,6 +1259,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpRequestMethod.cc \
 	int.h \
 	int.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	SquidList.h \
 	SquidList.cc \
 	mem_node.cc \
@@ -1494,6 +1498,8 @@ tests_testCacheManager_SOURCES = \
 	internal.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
@@ -1674,6 +1680,8 @@ tests_testDiskIO_SOURCES = \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
@@ -1910,6 +1918,8 @@ tests_testEvent_SOURCES = \
 	internal.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
@@ -2158,6 +2168,8 @@ tests_testEventLoop_SOURCES = \
 	internal.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -2403,6 +2415,8 @@ tests_test_http_range_SOURCES = \
 	ipcache.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -2693,6 +2707,8 @@ tests_testHttpRequest_SOURCES = \
 	internal.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
@@ -2866,6 +2882,8 @@ tests_testStore_SOURCES= \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
@@ -3091,6 +3109,8 @@ tests_testUfs_SOURCES = \
 	RequestFlags.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	MemObject.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
@@ -3277,6 +3297,8 @@ tests_testRock_SOURCES = \
 	int.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	Mem.h \
 	mem.cc \
 	MemBuf.cc \
@@ -3661,6 +3683,8 @@ tests_testURL_SOURCES = \
 	internal.cc \
 	SquidList.h \
 	SquidList.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
 	multicast.h \
 	multicast.cc \
 	Mem.h \
