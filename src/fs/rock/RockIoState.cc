@@ -47,7 +47,7 @@ Rock::IoState::~IoState()
     // The dir map entry may still be open for reading at the point because
     // the map entry lock is associated with StoreEntry, not IoState.
     // assert(!readableAnchor_);
-    assert(!writeableAnchor_);
+    assert(shutting_down || !writeableAnchor_);
 
     if (callback_data)
         cbdataReferenceDone(callback_data);
