@@ -969,7 +969,7 @@ Ip::Address::map6to4(const struct in6_addr &in, struct in_addr &out) const
 }
 
 void
-Ip::Address::getInAddr(in6_addr &buf) const
+Ip::Address::getInAddr(struct in6_addr &buf) const
 {
     memcpy(&buf, &mSocketAddr_.sin6_addr, sizeof(struct in6_addr));
 }
@@ -978,7 +978,7 @@ bool
 Ip::Address::getInAddr(struct in_addr &buf) const
 {
     if ( isIPv4() ) {
-        map6to4((const in6_addr)mSocketAddr_.sin6_addr, buf);
+        map6to4(mSocketAddr_.sin6_addr, buf);
         return true;
     }
 
