@@ -372,7 +372,7 @@ This section gives an account of those changes in three categories:
 	   omit to get all helper auto-detected.
 	<p>Currenly only a helper using <em>file</em> for backend is provided.
 
-	<tag>--with-nat-pf</tag>
+	<tag>--with-nat-devpf</tag>
 	<p>New option to alter the behaviour of <em>http_port ... intercept</em> option
 	   in squid.conf.
 	<p>When this option is used Squid performs the /dev/pf lookups required to
