@@ -417,7 +417,8 @@ public:
      *
      * After this method is called, the SBuf is guaranteed to have at least
      * minCapacity bytes of total buffer size, including the currently-used
-     * portion
+     * portion; it is also guaranteed that after this call this SBuf
+     * has unique ownership of the underlying memory store.
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     void reserveCapacity(size_type minCapacity);
