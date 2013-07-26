@@ -48,49 +48,42 @@ testSBuf::testSBufConstructDestruct()
     //  test accessors on empty SBuf.
     {
         SBuf s1;
-        CPPUNIT_ASSERT_EQUAL(s1.length(),0);
-        CPPUNIT_ASSERT_EQUAL(s1,SBuf(""));
-        CPPUNIT_ASSERT_EQUAL(s1,empty_sbuf);
-        CPPUNIT_ASSERT(0==strcmp("",s1.c_str()));
+        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
+        CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
+        CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
     }
 
     // TEST: copy-construct NULL string (implicit destructor non-crash test)
     {
         SBuf s1(NULL);
-        CPPUNIT_ASSERT_EQUAL(s1.length(),0);
-        CPPUNIT_ASSERT_EQUAL(s1,SBuf(""));
-        CPPUNIT_ASSERT_EQUAL(s1,empty_sbuf);
-        CPPUNIT_ASSERT(0==strcmp("",s1.c_str()));
+        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
+        CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
+        CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
     }
 
     // TEST: copy-construct empty string (implicit destructor non-crash test)
     {
         SBuf s1("");
-        CPPUNIT_ASSERT_EQUAL(s1.length(),0);
-        CPPUNIT_ASSERT_EQUAL(s1,SBuf(""));
-        CPPUNIT_ASSERT_EQUAL(s1,empty_sbuf);
-        CPPUNIT_ASSERT(0==strcmp("",s1.c_str()));
-    }
-
-    // TEST: copy-construct from a char*
-    {
-        SBuf s1(fox);
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(s1.length()),strlen(fox));
-        CPPUNIT_ASSERT(0==strcmp(fox,s1.c_str()));
+        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
+        CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
+        CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
     }
 
     // TEST: copy-construct from a SBuf
     {
         SBuf s1(empty_sbuf);
-        CPPUNIT_ASSERT_EQUAL(s1.length(),0);
-        CPPUNIT_ASSERT_EQUAL(s1,SBuf(""));
-        CPPUNIT_ASSERT_EQUAL(s1,empty_sbuf);
-        CPPUNIT_ASSERT(0==strcmp("",s1.c_str()));
+        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
+        CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
+        CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
 
         SBuf s5(literal);
-        CPPUNIT_ASSERT_EQUAL(s5,literal);
+        CPPUNIT_ASSERT_EQUAL(literal,s5);
         SBuf s6(fox);
-        CPPUNIT_ASSERT_EQUAL(s6,literal);
+        CPPUNIT_ASSERT_EQUAL(literal,s6);
         // XXX: other state checks. expected result of calling any state accessor on s4 ?
     }
 
@@ -104,10 +97,10 @@ testSBuf::testSBufConstructDestruct()
 
     // TEST: sub-string copy
     {
-        SBuf s1=SBuf(fox,4), s2(fox);
+        SBuf s1=SBuf(fox+4), s2(fox);
         SBuf s3=s2.substr(4,s2.length()); //n is out-of-bounds
         CPPUNIT_ASSERT_EQUAL(s1,s3);
-        SBuf s4=SBuf(fox,0,4);
+        SBuf s4=SBuf(fox,4);
         s3=s2.substr(0,4);
         CPPUNIT_ASSERT_EQUAL(s4,s3);
     }
@@ -116,16 +109,15 @@ testSBuf::testSBufConstructDestruct()
     {
         String str(fox);
         SBuf s1(str);
-        CPPUNIT_ASSERT_EQUAL(s1,literal);
+        CPPUNIT_ASSERT_EQUAL(literal,s1);
     }
 
     // TEST: go via std::string adapter.
     {
         std::string str(fox);
         SBuf s1(str);
-        CPPUNIT_ASSERT_EQUAL(s1,literal);
+        CPPUNIT_ASSERT_EQUAL(literal,s1);
     }
-
 }
 
 void
@@ -133,7 +125,6 @@ testSBuf::testSBufConstructDestructAfterMemInit()
 {
     Mem::Init();
     testSBufConstructDestruct();
-
 }
 
 void
@@ -182,10 +173,26 @@ testSBuf::testAppendCString()
 void
 testSBuf::testAppendStdString()
 {
-    SBuf s1(fox1);
-    std::string str(fox2);
-    s1.append(str);
-    CPPUNIT_ASSERT_EQUAL(s1,literal);
+    const char *alphabet="abcdefghijklmnopqrstuvwxyz";
+    {
+        SBuf alpha(alphabet), s;
+        s.append(alphabet,5).append(alphabet+5);
+        CPPUNIT_ASSERT_EQUAL(alpha,s);
+    }
+    {
+        SBuf s;
+        std::string control;
+        s.append(alphabet,5).append("\0",1).append(alphabet+6,SBuf::npos);
+        control.append(alphabet,5).append(1,'\0').append(alphabet,6,std::string::npos);
+        SBuf scontrol(control); // we need this to test the equality. sigh.
+        CPPUNIT_ASSERT_EQUAL(scontrol,s);
+    }
+    {
+        const char *alphazero="abcdefghijk\0mnopqrstuvwxyz";
+        SBuf s(alphazero,26);
+        std::string str(alphazero,26);
+        CPPUNIT_ASSERT_EQUAL(0,memcmp(str.data(),s.rawContent(),26));
+    }
 }
 
 void
@@ -241,17 +248,35 @@ testSBuf::testComparisons()
 {
     //same length
     SBuf s1("foo"),s2("foe");
-    CPPUNIT_ASSERT(s1.compare(s2)>0);
-    CPPUNIT_ASSERT(s1.compare(s2,caseInsensitive,2)==0);
+    CPPUNIT_ASSERT(s1.cmp(s2)>0);
+    CPPUNIT_ASSERT(s1.caseCmp(s2)>0);
+    CPPUNIT_ASSERT(s2.cmp(s1)<0);
+    CPPUNIT_ASSERT_EQUAL(0,s1.cmp(s2,2));
+    CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,2));
     CPPUNIT_ASSERT(s1 > s2);
     CPPUNIT_ASSERT(s2 < s1);
-    CPPUNIT_ASSERT_EQUAL(sign(s1.compare(s2)),sign(strcmp(s1.c_str(),s2.c_str())));
+    CPPUNIT_ASSERT_EQUAL(sign(s1.cmp(s2)),sign(strcmp(s1.c_str(),s2.c_str())));
     //different lengths
     s1.assign("foo");
     s2.assign("foof");
-    CPPUNIT_ASSERT(s1.compare(s2)<0);
-    CPPUNIT_ASSERT_EQUAL(sign(s1.compare(s2)),sign(strcmp(s1.c_str(),s2.c_str())));
+    CPPUNIT_ASSERT(s1.cmp(s2)<0);
+    CPPUNIT_ASSERT_EQUAL(sign(s1.cmp(s2)),sign(strcmp(s1.c_str(),s2.c_str())));
     CPPUNIT_ASSERT(s1 < s2);
+    // specifying the max-length and overhanging size
+    CPPUNIT_ASSERT_EQUAL(1,SBuf("foolong").caseCmp(SBuf("foo"), 5));
+    // case-insensive comaprison
+    s1 = "foo";
+    s2 = "fOo";
+    CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2));
+    CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,2));
+    // \0-clenliness test
+    s1.assign("f\0oo",4);
+    s2.assign("f\0Oo",4);
+    CPPUNIT_ASSERT_EQUAL(1,s1.cmp(s2));
+    CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2));
+    CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,3));
+    CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,2));
+    CPPUNIT_ASSERT_EQUAL(0,s1.cmp(s2,2));
 }
 
 void
@@ -275,7 +300,7 @@ testSBuf::testRawContent()
     s2.append("foo");
     const char *foo;
     foo = s1.rawContent();
-    CPPUNIT_ASSERT(strncmp(fox,foo,s1.length())==0);
+    CPPUNIT_ASSERT_EQUAL(0,strncmp(fox,foo,s1.length()));
     foo = s1.c_str();
     CPPUNIT_ASSERT(!strcmp(fox,foo));
 }
@@ -416,8 +441,8 @@ testSBuf::testFindChar()
     // FORWARD SEARCH
     // needle in haystack
     idx=s1.find('d');
-    CPPUNIT_ASSERT(idx == 3);
-    CPPUNIT_ASSERT(s1[idx]=='d');
+    CPPUNIT_ASSERT_EQUAL(3,idx);
+    CPPUNIT_ASSERT_EQUAL('d',s1[idx]);
 
     // needle not present in haystack
     idx=s1.find(' '); //fails
@@ -610,18 +635,18 @@ testSBuf::testRFindSBuf()
 
     // corner case: search for a needle longer than the haystack
     idx=afox.rfind(SBuf("     "));
-    CPPUNIT_ASSERT(idx==SBuf::npos);
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     idx=haystack.rfind(SBuf("fox"));
     CPPUNIT_ASSERT_EQUAL(16,idx);
 
     // needle not found, no match for first char
     idx=goobar.rfind(SBuf("foo"));
-    CPPUNIT_ASSERT(idx==SBuf::npos);
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     // needle not found, match for first char but no match for SBuf
     idx=haystack.rfind(SBuf("foe"));
-    CPPUNIT_ASSERT(idx==SBuf::npos);
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     SBuf g("g"); //match at the last char
     idx=haystack.rfind(g);
@@ -639,14 +664,14 @@ testSBuf::testRFindSBuf()
     haystack="The quick brown fox";
     SBuf needle("foxy lady");
     idx=haystack.rfind(needle);
-    CPPUNIT_ASSERT(idx==SBuf::npos);
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 }
 
 void
 testSBuf::testSBufLength()
 {
     SBuf s(fox);
-    CPPUNIT_ASSERT((size_t)s.length()==strlen(fox));
+    CPPUNIT_ASSERT_EQUAL(strlen(fox),(size_t)s.length());
 }
 
 void
@@ -659,33 +684,36 @@ testSBuf::testScanf()
     int rv;
     s1.assign("string , 123 , 123.50");
     rv=s1.scanf("%s , %d , %f",s,&i,&f);
-    CPPUNIT_ASSERT(3 == rv);
-    CPPUNIT_ASSERT(0 == strcmp(s,"string"));
-    CPPUNIT_ASSERT(i == 123);
-    CPPUNIT_ASSERT(f == 123.5);
+    CPPUNIT_ASSERT_EQUAL(3,rv);
+    CPPUNIT_ASSERT_EQUAL(0,strcmp(s,"string"));
+    CPPUNIT_ASSERT_EQUAL(123,i);
+    CPPUNIT_ASSERT_EQUAL(static_cast<float>(123.5),f);
 }
 
 void testSBuf::testCopy()
 {
     char buf[40]; //shorter than literal()
     SBuf s(fox1),s2;
-    CPPUNIT_ASSERT(s.copy(buf,40)==s.length());
-    CPPUNIT_ASSERT(strncmp(s.rawContent(),buf,s.length())==0);
+    CPPUNIT_ASSERT_EQUAL(s.length(),s.copy(buf,40));
+    CPPUNIT_ASSERT_EQUAL(0,strncmp(s.rawContent(),buf,s.length()));
     s=literal;
-    CPPUNIT_ASSERT(s.copy(buf,40)==40);
-    s2.assign(buf,0,40);
+    CPPUNIT_ASSERT_EQUAL(40,s.copy(buf,40));
+    s2.assign(buf,40);
     s.chop(0,40);
-    CPPUNIT_ASSERT(s==s2);
+    CPPUNIT_ASSERT_EQUAL(s2,s);
 }
 
 void testSBuf::testStringOps()
 {
-    SBuf sng(literal),
+    SBuf sng(literal.toLower()),
     ref("the quick brown fox jumped over the lazy dog");
-    sng=sng.toLower();
     CPPUNIT_ASSERT_EQUAL(ref,sng);
     sng=literal;
-    CPPUNIT_ASSERT(0==sng.compare(ref,caseInsensitive));
+    CPPUNIT_ASSERT_EQUAL(0,sng.compare(ref,caseInsensitive));
+    // max-size comparison
+    CPPUNIT_ASSERT_EQUAL(0,ref.compare(SBuf("THE"),caseInsensitive,3));
+    CPPUNIT_ASSERT_EQUAL(1,ref.compare(SBuf("THE"),caseInsensitive,6));
+    CPPUNIT_ASSERT_EQUAL(0,SBuf("the").compare(SBuf("THE"),caseInsensitive,6));
 }
 
 void testSBuf::testGrow()
@@ -699,7 +727,7 @@ void testSBuf::testGrow()
     ref=match;
     t.append(literal).append(literal).append(literal).append(literal).append(literal);
     t.append(t).append(t).append(t).append(t).append(t);
-    CPPUNIT_ASSERT(match==ref);
+    CPPUNIT_ASSERT_EQUAL(ref,match);
 }
 
 void testSBuf::testStartsWith()
@@ -707,14 +735,15 @@ void testSBuf::testStartsWith()
     static SBuf casebuf("THE QUICK");
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1)));
     CPPUNIT_ASSERT(!SBuf("The quick brown").startsWith(SBuf(fox1))); //too short
-    CPPUNIT_ASSERT(!literal.startsWith(SBuf(fox2))); //wrong contents
+    CPPUNIT_ASSERT(!literal.startsWith(SBuf(fox2))); //different contents
 
+    // case-insensitive checks
     CPPUNIT_ASSERT(literal.startsWith(casebuf,caseInsensitive));
     casebuf=SBuf(fox1).toUpper();
     CPPUNIT_ASSERT(literal.startsWith(casebuf,caseInsensitive));
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1),caseInsensitive));
     casebuf = "tha quick";
-    CPPUNIT_ASSERT(!literal.startsWith(casebuf,caseInsensitive));
+    CPPUNIT_ASSERT_EQUAL(false,literal.startsWith(casebuf,caseInsensitive));
 }
 
 void testSBuf::testSBufStream()
@@ -741,7 +770,7 @@ void testSBuf::testFindFirstOf()
 
     // not found
     idx=haystack.find_first_of(SBuf("ADHRWYP"));
-    CPPUNIT_ASSERT(idx==SBuf::npos);
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     // found at beginning
     idx=haystack.find_first_of(SBuf("THANDF"));
@@ -760,4 +789,12 @@ void testSBuf::testAutoFind()
 {
     SBufFindTest test;
     test.run();
+}
+
+void testSBuf::testStdStringOps()
+{
+    const char *alphabet="abcdefghijklmnopqrstuvwxyz";
+    std::string astr(alphabet);
+    SBuf sb(alphabet);
+    CPPUNIT_ASSERT_EQUAL(astr,sb.toStdString());
 }

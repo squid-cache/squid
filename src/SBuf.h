@@ -32,8 +32,6 @@
 #define SQUID_SBUF_H
 
 #include "base/InstanceId.h"
-// Debug.h only needed for for SBuf::cow() debug statements.
-#include "Debug.h"
 #include "MemBlob.h"
 #include "SBufExceptions.h"
 #include "SquidString.h"
@@ -74,28 +72,28 @@ typedef enum {
 class SBufStats
 {
 public:
-    u_int64_t alloc; ///<number of calls to SBuf constructors
-    u_int64_t allocCopy; ///<number of calls to SBuf copy-constructor
-    u_int64_t allocFromString; ///<number of copy-allocations from Strings
-    u_int64_t allocFromCString; ///<number of copy-allocations from c-strings
-    u_int64_t assignFast; ///<number of no-copy assignment operations
-    u_int64_t clear; ///<number of clear operations
-    u_int64_t append; ///<number of append operations
-    u_int64_t toStream;  ///<number of write operations to ostreams
-    u_int64_t setChar; ///<number of calls to setAt
-    u_int64_t getChar; ///<number of calls to at() and operator[]
-    u_int64_t compareSlow; ///<number of comparison operations requiring data scan
-    u_int64_t compareFast; ///<number of comparison operations not requiring data scan
-    u_int64_t copyOut; ///<number of data-copies to other forms of buffers
-    u_int64_t rawAccess; ///<number of accesses to raw contents
-    u_int64_t chop;  ///<number of chop operations
-    u_int64_t trim;  ///<number of trim operations
-    u_int64_t find;  ///<number of find operations
-    u_int64_t scanf;  ///<number of scanf operations
-    u_int64_t caseChange; ///<number of toUpper and toLower operations
-    u_int64_t cowFast; ///<number of cow operations not actually requiring a copy
-    u_int64_t cowSlow; ///<number of cow operations requiring a copy
-    u_int64_t live;  ///<number of currently-allocated SBuf
+    uint64_t alloc; ///<number of calls to SBuf constructors
+    uint64_t allocCopy; ///<number of calls to SBuf copy-constructor
+    uint64_t allocFromString; ///<number of copy-allocations from Strings
+    uint64_t allocFromCString; ///<number of copy-allocations from c-strings
+    uint64_t assignFast; ///<number of no-copy assignment operations
+    uint64_t clear; ///<number of clear operations
+    uint64_t append; ///<number of append operations
+    uint64_t toStream;  ///<number of write operations to ostreams
+    uint64_t setChar; ///<number of calls to setAt
+    uint64_t getChar; ///<number of calls to at() and operator[]
+    uint64_t compareSlow; ///<number of comparison operations requiring data scan
+    uint64_t compareFast; ///<number of comparison operations not requiring data scan
+    uint64_t copyOut; ///<number of data-copies to other forms of buffers
+    uint64_t rawAccess; ///<number of accesses to raw contents
+    uint64_t chop;  ///<number of chop operations
+    uint64_t trim;  ///<number of trim operations
+    uint64_t find;  ///<number of find operations
+    uint64_t scanf;  ///<number of scanf operations
+    uint64_t caseChange; ///<number of toUpper and toLower operations
+    uint64_t cowFast; ///<number of cow operations not actually requiring a copy
+    uint64_t cowSlow; ///<number of cow operations requiring a copy
+    uint64_t live;  ///<number of currently-allocated SBuf
 
     ///Dump statistics to an ostream.
     std::ostream& dump(std::ostream &os) const;
@@ -113,7 +111,7 @@ public:
 class SBuf
 {
 public:
-    typedef int32_t size_type;
+    typedef MemBlob::size_type size_type;
     static const size_type npos = -1;
 
     /// Maximum size of a SBuf. By design it MUST be < MAX(size_type)/2. Currently 256Mb.
@@ -128,13 +126,12 @@ public:
      * Create a new SBuf containing a COPY of the contents of the
      * c-string
      * \param S the c string to be copied
-     * \param pos how many bytes to skip at the beginning of the c-string
-     * \param n how many bytes to import into the SBuf. If it is SBuf::npos
+     * \param n how many bytes to import into the SBuf. If it is npos
      *              or unspecified, imports to end-of-cstring
      * \note it is the caller's responsibility not to go out of bounds
      * \note bounds is 0 <= pos < length()
      */
-    explicit SBuf(const char *S, size_type pos = 0, size_type n = npos);
+    explicit SBuf(const char *S, size_type n = npos);
 
     /** Constructor: import SquidString, copying contents.
      *
@@ -163,28 +160,21 @@ public:
      *
      * It is the caller's duty to free the imported string, if needed.
      * \param S the c string to be copied
-     * \param pos how many bytes to skip at the beginning of the c-string.
-     * \param n how many bytes to import into the SBuf. If it is SBuf::npos
+     * \param n how many bytes to import into the SBuf. If it is npos
      *              or unspecified, imports to end-of-cstring
      * \note it is the caller's responsibility not to go out of bounds
-     * \note bounds is 0 <= pos < length()
+     * \note to assign a std::string use the pattern:
+     *    assign(stdstr.data(), stdstd.length())
      */
-    SBuf& assign(const char *S, size_type pos = 0, size_type n = npos);
+    SBuf& assign(const char *S, size_type n = npos);
 
     /** Assignment operator. Copy a NULL-terminated c-style string into a SBuf.
      *
      * Copy a c-style string into a SBuf. Shortcut for SBuf.assign(S)
      * It is the caller's duty to free the imported string, if needed.
+     * \note not \0-clean
      */
     SBuf& operator =(const char *S) {return assign(S);}
-
-    /** Import a std::string into a SBuf. Contents are copied.
-     *
-     * \param pos skip this many bytes at the beginning of string.
-     *          0 is beginning-of-string
-     * \param n how many bytes to copy. Default is SBuf::npos, end-of-string.
-     */
-    SBuf& assign(const std::string &s, size_type pos = 0, size_type n = npos);
 
     /** reset the SBuf as if it was just created.
      *
@@ -205,21 +195,12 @@ public:
      *
      * \param S the c string to be copied. Can be NULL.
      * \param pos how many bytes to skip at the beginning of the c-string
-     * \param n how many bytes to import into the SBuf. If it is SBuf::npos
+     * \param n how many bytes to import into the SBuf. If it is npos
      *              or unspecified, imports to end-of-cstring
+     * \note to append a std::string use the pattern
+     *     cstr_append(stdstr.data(), stdstd.length())
      */
-    SBuf& append(const char * S, size_type pos = 0, size_type n = npos);
-
-    /** Append operation for std::string
-     *
-     * Append the supplied std::string to the SBuf; extend storage as needed.
-     *
-     * \param string the std::string to be copied.
-     * \param pos how many bytes to skip at the beginning of the c-string
-     * \param n how many bytes to import into the SBuf. If it is SBuf::npos
-     *              or unspecified, imports to end-of-cstring
-     */
-    SBuf& append(const std::string &str, size_type pos = 0, size_type n = npos);
+    SBuf& append(const char * S, size_type Ssize = npos);
 
     /** Assignment operation with printf(3)-style definition
      * \note arguments may be evaluated more than once, be careful
@@ -275,12 +256,22 @@ public:
     /** compare to other SBuf, str(case)cmp-style
      *
      * \param isCaseSensitive one of caseSensitive or caseInsensitive
-     * \param n compare up to this many bytes. if npos (default), to end-of-string
+     * \param n compare up to this many bytes. if npos (default), compare whole SBufs
      * \retval >0 argument of the call is greater than called SBuf
      * \retval <0 argument of the call is smaller than called SBuf
      * \retval 0  argument of the call has the same contents of called SBuf
      */
-    int compare(const SBuf &S, SBufCaseSensitive isCaseSensitive = caseSensitive, size_type n = npos) const;
+    int compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n = npos) const;
+
+    /// shorthand version for compare
+    inline int cmp(const SBuf &S, size_type n = npos) const {
+        return compare(S,caseSensitive,n);
+    }
+
+    /// shorthand version for case-insensitive comparison
+    inline int caseCmp(const SBuf &S, size_type n = npos) const {
+        return compare(S,caseInsensitive,n);
+    }
 
     /** check whether the entire supplied argument is a prefix of the SBuf.
      *  \param S the prefix to match against
@@ -291,10 +282,10 @@ public:
 
     bool operator ==(const SBuf & S) const;
     bool operator !=(const SBuf & S) const;
-    bool operator <(const SBuf &S) const {return (compare(S) < 0);}
-    bool operator >(const SBuf &S) const {return (compare(S) > 0);}
-    bool operator <=(const SBuf &S) const {return (compare(S) <= 0);}
-    bool operator >=(const SBuf &S) const {return (compare(S) >= 0);}
+    bool operator <(const SBuf &S) const {return (cmp(S) < 0);}
+    bool operator >(const SBuf &S) const {return (cmp(S) > 0);}
+    bool operator <=(const SBuf &S) const {return (cmp(S) <= 0);}
+    bool operator >=(const SBuf &S) const {return (cmp(S) >= 0);}
 
     /** Consume bytes at the head of the SBuf
      *
@@ -302,7 +293,7 @@ public:
      * whichever is shorter. If more bytes are consumed than available,
      * the SBuf is emptied
      * \param n how many bytes to remove; could be zero.
-     *     SBuf::npos (or no argument) means 'to the end of SBuf'
+     *     npos (or no argument) means 'to the end of SBuf'
      * \return a new SBuf containing the consumed bytes.
      */
     SBuf consume(size_type n = npos);
@@ -368,7 +359,8 @@ public:
      *
      * Adapt the SBuf internal state after external interference
      * such as writing into it via rawSpace.
-     * \throw TextException if we
+     * \throw TextException if SBuf doesn't have exclusive ownership of store
+     * \throw SBufTooBigException if new size is bigger than available store space
      */
     void forceSize(size_type newSize);
 
@@ -414,8 +406,9 @@ public:
     /** Request to extend the SBuf's free store space.
      *
      * After the reserveSpace request, the SBuf is guaranteed to have at
-     * least minSpace bytes of unused backing store
-     * following the currently used portion
+     * least minSpace bytes of unused backing store following the currently
+     * used portion until the next append operation to any of the SBufs
+     * sharing the backing MemBlob
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     void reserveSpace(size_type minSpace);
@@ -423,7 +416,8 @@ public:
     /** Request to resize the SBuf's store
      *
      * After this method is called, the SBuf is guaranteed to have at least
-     * minCapacity bytes of total space, including the currently-used portion
+     * minCapacity bytes of total buffer size, including the currently-used
+     * portion
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     void reserveCapacity(size_type minCapacity);
@@ -437,7 +431,7 @@ public:
      *      npos or it is greater than the SBuf length, the SBuf is cleared and
      *      an empty SBuf is returned. If it is <0, it is ignored
      * \param n maximum number of bytes of the resulting SBuf.
-     *     SBuf::npos means "to end of SBuf".
+     *     npos means "to end of SBuf".
      *     if it is 0, the SBuf is cleared and an empty SBuf is returned.
      *     if it is < 0, it is ignored (same as supplying npos)
      *     if it overflows the end of the SBuf, it is capped to the end of SBuf
@@ -465,10 +459,10 @@ public:
     /** Find first occurrence of character in SBuf
      *
      * Returns the index in the SBuf of the first occurrence of char c.
-     * \return SBuf::npos if the char was not found
+     * \return npos if the char was not found
      * \param startPos if specified, ignore any occurrences before that position
      *     if startPos is npos or greater than length() npos is always returned
-     *     if startPos is < 0, it is ignored
+     *     if startPos is less than zero, it is ignored
      */
     size_type find(char c, size_type startPos = 0) const;
 
@@ -479,14 +473,14 @@ public:
      * \param startPos if specified, ignore any occurrences before that position
      *     if startPos is npos or greater than length() npos is always returned
      *     if startPos is < 0, it is ignored
-     * \return SBuf::npos if the SBuf was not found
+     * \return npos if the SBuf was not found
      */
     size_type find(const SBuf & str, size_type startPos = 0) const;
 
     /** Find last occurrence of character in SBuf
      *
      * Returns the index in the SBuf of the last occurrence of char c.
-     * \return SBuf::npos if the char was not found
+     * \return npos if the char was not found
      * \param endPos if specified, ignore any occurrences after that position.
      *   if npos or greater than length(), the whole SBuf is considered
      *   if < 0, npos is always returned
@@ -497,7 +491,7 @@ public:
      *
      * Returns the index in the SBuf of the last occurrence of the
      * sequence contained in the str argument.
-     * \return SBuf::npos if the sequence  was not found
+     * \return npos if the sequence  was not found
      * \param endPos if specified, ignore any occurrences after that position
      *   if npos or greater than length(), the whole SBuf is considered
      *   if < 0, npos is always returned
@@ -508,9 +502,9 @@ public:
      *
      * Finds the first occurrence of ANY of the characters in the supplied set in
      * the SBuf.
-     * \return SBuf::npos if no character in the set could be found
+     * \return npos if no character in the set could be found
      * \param startPos if specified, ignore any occurrences before that position
-     *   if SBuf::npos, then npos is always returned
+     *   if npos, then npos is always returned
      *   if <0, it is ignored.
      */
     size_type find_first_of(const SBuf &set, size_type startPos = 0) const;
@@ -543,6 +537,9 @@ public:
      */
     String toString() const;
 
+    /// std::string export function
+    std::string toStdString() const { return std::string(buf(),length()); }
+
     // TODO: possibly implement erase() similar to std::string's erase
     // TODO: possibly implement a replace() call
 private:
@@ -552,7 +549,9 @@ private:
     size_type len_; ///< number of our content bytes in shared store_
     static SBufStats stats; ///< class-wide statistics
 
-    const InstanceId<SBuf> id; ///< blob identifier
+    /// SBuf object identifier; does not change when contents do,
+    ///   including during assignment
+    const InstanceId<SBuf> id;
 
     /** obtain prototype store
      *
@@ -582,44 +581,18 @@ private:
 
     void reAlloc(size_type newsize);
 
-    /**
-     * copy-on-write: make sure that we are the only holder of the backing store.
-     * If not, reallocate. If a new size is specified, and it is greater than the
-     * current length, the backing store will be extended as needed
-     * \retval false no grow was needed
-     * \retval true had to copy
-     */
-    bool cow(size_type minsize = npos) {
-        debugs(24, DBG_DATA, "new size (minimum):" << minsize);
-        if (minsize == npos || minsize < length())
-            minsize = length();
-
-        if (store_->LockCount() == 1 && minsize == length()) {
-            debugs(24, DBG_DATA, "no cow needed");
-            ++stats.cowFast;
-            return false;
-        }
-        reAlloc(minsize);
-        return true;
-    }
+    bool cow(size_type minsize = npos);
 
     void checkAccessBounds(size_type pos) const;
 
-    /**
-     * To be called after having determined that the buffers are equal up to the
-     * length of the shortest one.
-     * If the buffers' length is the same, then they're equal. Otherwise, the
-     * longest one is deemed to be greater than the other.
-     * This matches the behavior of strcmp(1) and strcasecmp(1)
+    /** Low-level append operation
+     *
+     * Takes as input a contiguous area of memory and appends its contents
+     * to the SBuf, taking care of memory management. Does no bounds checking
+     * on the supplied memory buffer, it is the duty of the caller to ensure
+     * that the supplied area is valid.
      */
-    int commonCompareChecksPost(const SBuf &S) const {
-        if (length() == S.length())
-            return 0;
-        if (length() > S.length())
-            return 1;
-        return -1;
-    }
-
+    SBuf& lowAppend(const char * memArea, size_type areaSize);
 };
 
 /// ostream output operator
