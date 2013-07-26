@@ -79,6 +79,7 @@
 #include "wordlist.h"
 #include "neighbors.h"
 #include "tools.h"
+#include "URLScheme.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"
 #if USE_ADAPTATION
@@ -3512,22 +3513,24 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
+    const char *portType = URLScheme(s->transport.protocol).const_str();
+
     if (*token == '[') {
         /* [ipv6]:port */
         host = token + 1;
         t = strchr(host, ']');
         if (!t) {
-            debugs(3, DBG_CRITICAL, s->protocol << "_port: missing ']' on IPv6 address: " << token);
+            debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: missing ']' on IPv6 address: " << token);
             self_destruct();
         }
         *t = '\0';
         ++t;
         if (*t != ':') {
-            debugs(3, DBG_CRITICAL, s->protocol << "_port: missing Port in: " << token);
+            debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: missing Port in: " << token);
             self_destruct();
         }
         if (!Ip::EnableIpv6) {
-            debugs(3, DBG_CRITICAL, "FATAL: " << s->protocol << "_port: IPv6 is not available.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: IPv6 is not available.");
             self_destruct();
         }
         port = xatos(t + 1);
@@ -3540,14 +3543,14 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
 
     } else if (strtol(token, &junk, 10) && !*junk) {
         port = xatos(token);
-        debugs(3, 3, s->protocol << "_port: found Listen on Port: " << port);
+        debugs(3, 3, portType << "_port: found Listen on Port: " << port);
     } else {
-        debugs(3, DBG_CRITICAL, s->protocol << "_port: missing Port: " << token);
+        debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: missing Port: " << token);
         self_destruct();
     }
 
     if (port == 0 && host != NULL) {
-        debugs(3, DBG_CRITICAL, s->protocol << "_port: Port cannot be 0: " << token);
+        debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: Port cannot be 0: " << token);
         self_destruct();
     }
 
@@ -3556,21 +3559,21 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
         s->s.port(port);
         if (!Ip::EnableIpv6)
             s->s.setIPv4();
-        debugs(3, 3, s->protocol << "_port: found Listen on wildcard address: *:" << s->s.port() );
+        debugs(3, 3, portType << "_port: found Listen on wildcard address: *:" << s->s.port());
     } else if ( (s->s = host) ) { /* check/parse numeric IPA */
         s->s.port(port);
         if (!Ip::EnableIpv6)
             s->s.setIPv4();
-        debugs(3, 3, s->protocol << "_port: Listen on Host/IP: " << host << " --> " << s->s);
+        debugs(3, 3, portType << "_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.port(port);
         if (!Ip::EnableIpv6)
             s->s.setIPv4();
-        debugs(3, 3, s->protocol << "_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
+        debugs(3, 3, portType << "_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
     } else {
-        debugs(3, DBG_CRITICAL, s->protocol << "_port: failed to resolve Host/IP: " << host);
+        debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: failed to resolve Host/IP: " << host);
         self_destruct();
     }
 }
@@ -3647,7 +3650,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
             self_destruct();
         }
-        s->protocol = xstrdup(token + 9);
+        s->setTransport(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
@@ -3770,7 +3773,8 @@ parse_port_option(AnyP::PortCfg * s, char *token)
 void
 add_http_port(char *portspec)
 {
-    AnyP::PortCfg *s = new AnyP::PortCfg("http_port");
+    AnyP::PortCfg *s = new AnyP::PortCfg();
+    s->setTransport("HTTP");
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
@@ -3800,7 +3804,8 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         return;
     }
 
-    AnyP::PortCfg *s = new AnyP::PortCfg(protocol);
+    AnyP::PortCfg *s = new AnyP::PortCfg();
+    s->setTransport(protocol);
     parsePortSpecification(s, token);
 
     /* parse options ... */
@@ -3809,7 +3814,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     }
 
 #if USE_SSL
-    if (strcmp(protocol, "https") == 0) {
+    if (transport.protocol == AnyP::PROTO_HTTPS) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {
@@ -3827,7 +3832,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         // clone the port options from *s to *(s->next)
         s->next = cbdataReference(s->clone());
         s->next->s.setIPv4();
-        debugs(3, 3, protocol << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        debugs(3, 3, URLScheme(s->transport.protocol) << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
     while (*head)
@@ -3866,8 +3871,9 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
         if (s->defaultsite)
             storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
 
-        if (s->protocol && strcmp(s->protocol,"http") != 0)
-            storeAppendPrintf(e, " protocol=%s", s->protocol);
+        // TODO: compare against prefix of 'n' instead of assuming http_port
+        if (s->transport.protocol != AnyP::PROTO_HTTP)
+            storeAppendPrintf(e, " protocol=%s", URLScheme(s->transport.protocol).const_str());
 
         if (s->allow_direct)
             storeAppendPrintf(e, " allow-direct");
