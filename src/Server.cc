@@ -696,7 +696,8 @@ ServerStateData::handleAdaptedHeader(HttpMsg *msg)
         // subscribe to receive adapted body
         adaptedBodySource = rep->body_pipe;
         // assume that ICAP does not auto-consume on failures
-        assert(adaptedBodySource->setConsumerIfNotLate(this));
+        const bool result = adaptedBodySource->setConsumerIfNotLate(this);
+        assert(result);
     } else {
         // no body
         if (doneWithAdaptation()) // we may still be sending virgin response
