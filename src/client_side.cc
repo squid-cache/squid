@@ -2609,10 +2609,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
-    /* RFC 2616 section 10.5.6 : handle unsupported HTTP versions cleanly. */
-    /* We currently only accept 0.9, 1.0, 1.1 */
+    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+    /* We currently only support 0.9, 1.0, 1.1 properly */
     if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-            (http_ver.major == 1 && http_ver.minor > 1 ) ||
             (http_ver.major > 1) ) {
 
         clientStreamNode *node = context->getClientReplyContext();
