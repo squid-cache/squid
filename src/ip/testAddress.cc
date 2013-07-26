@@ -108,7 +108,7 @@ testIpAddress::testSockAddrConstructor()
     insock.sin_len = sizeof(struct sockaddr_in);
 #endif
 
-    Ip::Address anIPA((const struct sockaddr_in)insock);
+    Ip::Address anIPA(insock);
 
     /* test stored values */
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
