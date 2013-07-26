@@ -3814,7 +3814,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     }
 
 #if USE_SSL
-    if (transport.protocol == AnyP::PROTO_HTTPS) {
+    if (s->transport.protocol == AnyP::PROTO_HTTPS) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {
