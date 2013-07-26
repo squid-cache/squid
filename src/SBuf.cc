@@ -183,14 +183,14 @@ SBuf::assign(const char *S, size_type n)
 void
 SBuf::reserveCapacity(size_type minCapacity)
 {
-    Must(0 <= minCapacity && minCapacity <= maxSize);
-    reserveSpace(minCapacity-length());
+    Must(0 <= minCapacity); //upper bound checked in cow -> reAlloc
+    cow(minCapacity);
 }
 
 void
 SBuf::reserveSpace(size_type minSpace)
 {
-    Must(0 <= minSpace && minSpace <= maxSize);
+    Must(0 <= minSpace); //upper bound checked in cow -> reAlloc
     debugs(24, 7, "reserving " << minSpace << " for " << id);
     // we're not concerned about RefCounts here,
     // the store knows the last-used portion. If
