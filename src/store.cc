@@ -1952,6 +1952,17 @@ StoreEntry::modifiedSince(HttpRequest * request) const
 }
 
 bool
+StoreEntry::hasEtag(ETag &etag) const
+{
+    if (const HttpReply *reply = getReply()) {
+        etag = reply->header.getETag(HDR_ETAG);
+        if (etag.str)
+            return true;
+    }
+    return false;
+}
+
+bool
 StoreEntry::hasIfMatchEtag(const HttpRequest &request) const
 {
     const String reqETags = request.header.getList(HDR_IF_MATCH);

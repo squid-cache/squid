@@ -172,6 +172,8 @@ HttpRequest::clean()
 
     extacl_message.clean();
 
+    etag.clean();
+
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
 #endif
@@ -217,6 +219,7 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_login?
 
     copy->lastmod = lastmod;
+    copy->etag = etag;
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 

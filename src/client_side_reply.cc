@@ -38,6 +38,7 @@
 #include "clientStream.h"
 #include "dlink.h"
 #include "errorpage.h"
+#include "ETag.h"
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
@@ -291,6 +292,13 @@ clientReplyContext::processExpired()
 #endif
 
     http->request->lastmod = old_entry->lastmod;
+
+    if (!http->request->header.has(HDR_IF_NONE_MATCH)) {
+        ETag etag = {NULL, -1}; // TODO: make that a default ETag constructor
+        if (old_entry->hasEtag(etag) && !etag.weak)
+            http->request->etag = etag.str;
+    }
+
     debugs(88, 5, "clientReplyContext::processExpired : lastmod " << entry->lastmod );
     http->storeEntry(entry);
     assert(http->out.offset == 0);

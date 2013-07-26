@@ -211,6 +211,9 @@ public:
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
+    /// A strong etag of the cached entry. Used for refreshing that entry.
+    String etag;
+
 public:
     bool multipartRangeRequest() const;
 
