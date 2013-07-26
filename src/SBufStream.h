@@ -68,7 +68,7 @@ protected:
             char chars[1] = {static_cast<char>(aChar)};
 
             if (aChar != traits_type::eof())
-                theBuf.append(chars, 0, 1);
+                theBuf.append(chars, 1);
         }
 
         pbump(-pending);  // Reset pptr().
@@ -80,7 +80,7 @@ protected:
         std::streamsize pending(pptr() - pbase());
 
         if (pending)
-            theBuf.append(pbase(), 0, pending);
+            theBuf.append(pbase(), pending);
 
         return 0;
     }
@@ -90,7 +90,7 @@ protected:
      */
     virtual std::streamsize xsputn(const char * chars, std::streamsize number) {
         if (number)
-            theBuf.append(chars, 0, number);
+            theBuf.append(chars, number);
 
         return number;
     }

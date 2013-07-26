@@ -380,7 +380,7 @@ SBufFindTest::RandomSBuf(const int length)
         buf[i] = characters[random() % charCount];
     }
 
-    return SBuf(buf, 0, length);
+    return SBuf(buf, length);
 }
 
 /// increments len to quickly cover [0, max] range, slowing down in risky areas
