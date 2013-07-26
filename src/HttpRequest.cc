@@ -222,10 +222,6 @@ HttpRequest::clone() const
 
     copy->myportname = myportname;
     copy->tag = tag;
-#if USE_AUTH
-    copy->extacl_user = extacl_user;
-    copy->extacl_passwd = extacl_passwd;
-#endif
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
@@ -265,6 +261,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     errDetail = aReq->errDetail;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
+    extacl_user = aReq->extacl_user;
+    extacl_passwd = aReq->extacl_passwd;
 #endif
 
     // main property is which connection the request was received on (if any)
