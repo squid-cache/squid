@@ -1627,9 +1627,12 @@ DOC_START
 
 	   no-vhost	Disable using HTTP/1.1 Host header for virtual domain support.
 
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to http for http_port and https for
-			https_port
+	   protocol=	Protocol to reconstruct accelerated and intercepted
+			requests with. Defaults to HTTP/1.1 for http_port and
+			HTTPS/1.1 for https_port.
+			When an unsupported value is configured Squid will
+			produce a FATAL error.
+			Values: HTTP or HTTP/1.1, HTTPS or HTTPS/1.1
 
 	   vport	Virtual host port support. Using the http_port number
 			instead of the port passed on Host: headers.
