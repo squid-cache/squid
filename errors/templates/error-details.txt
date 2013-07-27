@@ -1,3 +1,7 @@
+name: SQUID_X509_V_ERR_INFINITE_VALIDATION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "Cert validation infinite loop detected"
+
 name: SQUID_ERR_SSL_HANDSHAKE
 detail: "%ssl_error_descr: %ssl_lib_error"
 descr: "Handshake with SSL server failed"
