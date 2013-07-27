@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -770,8 +771,7 @@ StoreEntry::invokeHandlers()
     PROF_stop(InvokeHandlers);
 }
 
-// XXX: Does not account for remote readers of local writers, causing
-// premature StoreEntry aborts.
+// Does not account for remote readers/clients.
 int
 storePendingNClients(const StoreEntry * e)
 {
@@ -849,12 +849,17 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     return true;
 }
 
+/// Aborts a swapping-out entry if nobody needs it any more _and_
+/// continuing swap out is not reasonable per CheckQuickAbortIsReasonable().
 static void
 CheckQuickAbort(StoreEntry * entry)
 {
     assert (entry);
 
     if (storePendingNClients(entry) > 0)
+        return;
+
+    if (!shutting_down && Store::Root().transientReaders(*entry))
         return;
 
     if (entry->store_status != STORE_PENDING)
