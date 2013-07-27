@@ -534,7 +534,6 @@ MemStore::copyToShm(StoreEntry &e)
          copyToShmSlice(e, anchor);
     }
 
-    anchor.basics.swap_file_sz = e.mem_obj->memCache.offset;
     debugs(20, 7, "mem-cached available " << eSize << " bytes of " << e);
 }
 
@@ -569,6 +568,7 @@ MemStore::copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor)
 
     slice.size += copied;
     e.mem_obj->memCache.offset += copied;
+    anchor.basics.swap_file_sz = e.mem_obj->memCache.offset;
 }
 
 /// finds a slot and a free page to fill or throws
