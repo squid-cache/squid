@@ -254,7 +254,7 @@ Rock::Rebuild::loadOneSlot()
         freeSlotIfIdle(slotId, false);
         return;
     }
-    if (!header.sane()) {
+    if (!header.sane(dbEntrySize, dbEntryLimit)) {
         debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << sd->index << "]: " <<
                "Ignoring malformed cache entry meta data at " << dbOffset);
         freeSlotIfIdle(slotId, true);
