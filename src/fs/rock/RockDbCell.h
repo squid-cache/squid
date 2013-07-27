@@ -22,8 +22,11 @@ public:
     /* members below are not meaningful if empty() */
 
     /// whether this slot is not corrupted
-    bool sane() const { return firstSlot >= 0 && nextSlot >= -1 &&
-       version > 0 && payloadSize > 0; }
+    bool sane(const size_t slotSize, int slotLimit) const { return
+       0 <= firstSlot && firstSlot < slotLimit &&
+       -1 <= nextSlot && nextSlot < slotLimit &&
+       version > 0 &&
+       0 < payloadSize && payloadSize < slotSize - sizeof(DbCellHeader); }
 
     uint64_t key[2]; ///< StoreEntry key
     uint64_t entrySize; ///< total entry content size or zero if still unknown
