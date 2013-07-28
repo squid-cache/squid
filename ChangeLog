@@ -1,4 +1,4 @@
-Changes to squid-3.4.0.1 (-- --- 2013):
+Changes to squid-3.4.0.1 (29 Jul 2013):
 
 	- Port from 2.7: StoreURL (renamed Store-ID) support
 	- Bug 3795: fix several mistakes in the MIB file
