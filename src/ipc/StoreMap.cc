@@ -356,7 +356,8 @@ Ipc::StoreMap::purgeOne()
         assert(valid(fileno));
         Anchor &s = shared->slots[fileno].anchor;
         if (s.lock.lockExclusive()) {
-            if (!s.empty()) {
+            // the caller wants a free slice; empty anchor is not enough
+            if (!s.empty() && s.start >= 0) {
                 // this entry may be marked for deletion, and that is OK
                 freeChain(fileno, s, false);
                 debugs(54, 5, "purged entry " << fileno << " from " << path);

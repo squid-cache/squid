@@ -180,7 +180,7 @@ public:
     /// stop writing the entry, freeing its slot for others to use if possible
     void abortWriting(const sfileno fileno);
 
-    /// finds an unlocked entry and frees it or returns false
+    /// either finds and frees an entry with at least 1 slice or returns false
     bool purgeOne();
 
     /// copies slice to its designated position
