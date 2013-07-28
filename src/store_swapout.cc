@@ -205,7 +205,7 @@ StoreEntry::swapOut()
 
     Store::Root().memoryOut(*this, weAreOrMayBeSwappingOut);
 
-    if (mem_obj->swapout.decision != MemObject::SwapOut::swPossible)
+    if (mem_obj->swapout.decision < MemObject::SwapOut::swPossible)
         return; // nothing else to do
 
     // Aborted entries have STORE_OK, but swapoutPossible rejects them. Thus,
