@@ -675,7 +675,7 @@ ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
 // "free" function for SSL_get_ex_new_index("ssl_ex_index_ssl_validation_counter")
 static void
 ssl_free_int(void *, void *ptr, CRYPTO_EX_DATA *,
-                 int, long, void *)
+             int, long, void *)
 {
     uint32_t *counter = static_cast <uint32_t *>(ptr);
     delete counter;
