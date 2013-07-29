@@ -318,11 +318,6 @@ StoreEntry::storeClientType() const
      * offset 0 in the memory object is the HTTP headers.
      */
 
-    if (mem_status == IN_MEMORY && Config.memShared && IamWorkerProcess()) {
-        // clients of an object cached in shared memory are memory clients
-        return STORE_MEM_CLIENT;
-    }
-
     assert(mem_obj);
 
     if (mem_obj->inmem_lo)
