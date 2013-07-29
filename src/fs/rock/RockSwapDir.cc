@@ -83,7 +83,7 @@ Rock::SwapDir::get(const cache_key *key)
 bool
 Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 {
-    if (true || !map || !theFile || !theFile->canRead())
+    if (!map || !theFile || !theFile->canRead())
         return false;
 
     sfileno filen;
@@ -734,7 +734,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 
     // The are two ways an entry can get swap_filen: our get() locked it for
     // reading or our storeSwapOutStart() locked it for writing. Peeking at our
-    // locked entry is safe, but no support for reading a filling entry.
+    // locked entry is safe, but no support for reading the entry we swap out.
     const Ipc::StoreMapAnchor *slot = map->peekAtReader(e.swap_filen);
     if (!slot)
         return NULL; // we were writing afterall
@@ -752,9 +752,9 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
            sio->swap_filen);
 
     assert(slot->sameKey(static_cast<const cache_key*>(e.key)));
-    assert(slot->basics.swap_file_sz > 0);
-    // XXX: basics.swap_file_sz may grow for collapsed disk hits
-    assert(slot->basics.swap_file_sz == e.swap_file_sz);
+    // For collapsed disk hits: e.swap_file_sz and slot->basics.swap_file_sz
+    // may still be zero and basics.swap_file_sz may grow.
+    assert(slot->basics.swap_file_sz >= e.swap_file_sz);
 
     return sio;
 }
@@ -792,12 +792,7 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
     if (errflag == DISK_OK && rlen > 0)
         sio->offset_ += rlen;
 
-    StoreIOState::STRCB *callb = sio->read.callback;
-    assert(callb);
-    sio->read.callback = NULL;
-    void *cbdata;
-    if (cbdataReferenceValidDone(sio->read.callback_data, &cbdata))
-        callb(cbdata, r->buf, rlen, sio.getRaw());
+    sio->callReaderBack(r->buf, rlen);
 }
 
 void
@@ -811,8 +806,11 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
     // quit if somebody called IoState::close() while we were waiting
     if (!sio.stillWaiting()) {
         debugs(79, 3, "ignoring closed entry " << sio.swap_filen);
+        noteFreeMapSlice(request->sidNext);
         return;
     }
+
+    // TODO: Fail if disk dropped one of the previous write requests.
 
     if (errflag == DISK_OK) {
         // do not increment sio.offset_ because we do it in sio->write()
@@ -823,13 +821,20 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         slice.size = request->len - sizeof(DbCellHeader);
         slice.next = request->sidNext;
         
-        if (request->sidNext < 0) {
+        if (request->eof) {
+            assert(sio.e);
+            assert(sio.writeableAnchor_);
+            sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
+                sio.offset_;
+
             // close, the entry gets the read lock
             map->closeForWriting(sio.swap_filen, true);
             sio.writeableAnchor_ = NULL;
             sio.finishedWriting(errflag);
         }
     } else {
+        noteFreeMapSlice(request->sidNext);
+
         writeError(*sio.e);
         sio.finishedWriting(errflag);
         // and hope that Core will call disconnect() to close the map entry
