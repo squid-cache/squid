@@ -31,6 +31,9 @@ public:
     /// whether we are still waiting for the I/O results (i.e., not closed)
     bool stillWaiting() const { return theFile != NULL; }
 
+    /// forwards read data to the reader that initiated this I/O
+    void callReaderBack(const char *buf, int rlen);
+
     /// called by SwapDir::writeCompleted() after the last write and on error
     void finishedWriting(const int errFlag);
 
@@ -50,7 +53,7 @@ private:
     void tryWrite(char const *buf, size_t size, off_t offset);
     size_t writeToBuffer(char const *buf, size_t size);
     void writeToDisk(const SlotId nextSlot);
-    void writeBufToDisk(const SlotId nextSlot);
+    void writeBufToDisk(const SlotId nextSlot, const bool eof);
     SlotId reserveSlotForWriting();
     
     void callBack(int errflag);

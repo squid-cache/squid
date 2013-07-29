@@ -20,6 +20,7 @@ Rock::WriteRequest::WriteRequest(const ::WriteRequest &base,
         ::WriteRequest(base),
         sio(anSio),
         sidCurrent(-1),
-        sidNext(-1)
+        sidNext(-1),
+        eof(false)
 {
 }
