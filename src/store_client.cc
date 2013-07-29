@@ -597,10 +597,11 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     storeSwapTLVFree(tlv_list);
 
     assert(swap_hdr_sz >= 0);
-    assert(entry->swap_file_sz > 0);
-    assert(entry->swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
     entry->mem_obj->swap_hdr_sz = swap_hdr_sz;
-    entry->mem_obj->object_sz = entry->swap_file_sz - swap_hdr_sz;
+    if (entry->swap_file_sz > 0) { // collapsed hits may not know swap_file_sz
+        assert(entry->swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
+        entry->mem_obj->object_sz = entry->swap_file_sz - swap_hdr_sz;
+    }
     debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
            entry->swap_file_sz << "( " << swap_hdr_sz << " + " <<
            entry->mem_obj->object_sz << ")");
