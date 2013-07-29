@@ -34,6 +34,9 @@ public:
     /// allocated next slot (negative if we are writing the last slot)
     SlotId sidNext;
 
+    /// whether this is the last request for the entry
+    bool eof;
+
 private:
     CBDATA_CLASS2(WriteRequest);
 };
