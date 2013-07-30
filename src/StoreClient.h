@@ -98,6 +98,8 @@ public:
     StoreIOBuffer copyInto;
 
 private:
+    bool moreToSend() const;
+
     void fileRead();
     void scheduleDiskRead();
     void scheduleMemRead();
