@@ -187,23 +187,25 @@ SBuf::reserveCapacity(size_type minCapacity)
     cow(minCapacity);
 }
 
-void
-SBuf::reserveSpace(size_type minSpace)
+char *
+SBuf::rawSpace(size_type minSpace)
 {
     Must(0 <= minSpace); //upper bound checked in cow -> reAlloc
     debugs(24, 7, "reserving " << minSpace << " for " << id);
+    ++stats.rawAccess;
     // we're not concerned about RefCounts here,
     // the store knows the last-used portion. If
     // it's available, we're effectively claiming ownership
     // of it. If it's not, we need to go away (realloc)
     if (store_->canAppend(off_+len_, minSpace)) {
         debugs(24, 7, "not growing");
-        return;
+        return bufEnd();
     }
     // TODO: we may try to memmove before realloc'ing in order to avoid
     //   one allocation operation, if we're the sole owners of a MemBlob.
     //   Maybe some heuristic on off_ and length()?
-    reAlloc(estimateCapacity(minSpace+length()));
+    cow(minSpace+length());
+    return bufEnd();
 }
 
 void
@@ -274,7 +276,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     Must(fmt != NULL);
 
     //reserve twice the format-string size, it's a likely heuristic
-    reserveSpace(strlen(fmt)*2);
+    rawSpace(strlen(fmt)*2);
 
     while (length() <= maxSize) {
 #ifdef VA_COPY
@@ -293,7 +295,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         /* snprintf on FreeBSD returns at least free_space on overflows */
 
         if (sz >= static_cast<int>(store_->spaceSize()))
-            reserveSpace(sz*2); // TODO: tune heuristics
+            rawSpace(sz*2); // TODO: tune heuristics
         else if (sz < 0) // output error in vsnprintf
             throw TextException("output error in vsnprintf",__FILE__, __LINE__);
         else
@@ -463,14 +465,6 @@ SBuf::rawContent() const
 {
     ++stats.rawAccess;
     return buf();
-}
-
-char *
-SBuf::rawSpace(size_type minSize)
-{
-    cow(minSize+length());
-    ++stats.rawAccess;
-    return bufEnd();
 }
 
 void
@@ -857,7 +851,7 @@ SBuf::reAlloc(size_type newsize)
 SBuf&
 SBuf::lowAppend(const char * memArea, size_type areaSize)
 {
-    reserveSpace(areaSize); //called method also checks n <= maxSize()
+    rawSpace(areaSize); //called method also checks n <= maxSize()
     store_->append(memArea, areaSize);
     len_ += areaSize;
     ++stats.append;
