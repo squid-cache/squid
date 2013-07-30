@@ -309,6 +309,11 @@ StoreEntry::setNoDelay (bool const newValue)
         mem_obj->setNoDelay(newValue);
 }
 
+// XXX: Type names mislead. STORE_DISK_CLIENT actually means that we should
+//      open swapin file, aggressively trim memory, and ignore read-ahead gap.
+//      It does not mean we will read from disk exclusively (or at all!).
+// XXX: May create STORE_DISK_CLIENT with no disk caching configured.
+// XXX: Collapsed clients cannot predict their type.
 store_client_t
 StoreEntry::storeClientType() const
 {
@@ -336,7 +341,7 @@ StoreEntry::storeClientType() const
             if (swap_status == SWAPOUT_DONE) {
                 debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
-                    /* hot object fully swapped in */
+                    /* hot object fully swapped in (XXX: or swapped out?) */
                     return STORE_MEM_CLIENT;
                 }
             } else {
