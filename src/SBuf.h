@@ -340,19 +340,19 @@ public:
      * \warning Use with EXTREME caution, this is a dangerous operation.
      *
      * Returns a pointer to the first unused byte in the SBuf's storage,
-     * to be used for writing. If minsize is specified, it is guaranteed
-     * that at least minsize bytes will be available for writing. Otherwise
-     * it is guaranteed that at least as much storage as is currently
-     * available will be available for the call. A COW will be performed
-     * if necessary so that the returned pointer can be written to without
-     * unwanted side-effects.
-     * The returned pointer must not be stored, and will
+     * which can be be used for appending. At least minSize bytes will
+     * be available for writing.
+     * The returned pointer must not be stored by the caller, as it will
      * be invalidated by the first call to a non-const method call
      * on the SBuf.
-     * This call guarantees to never return NULL
+     * This call guarantees to never return NULL.
+     * This method can also be used to prepare the SBuf by preallocating a
+     * predefined amount of free space; this may help to optimize subsequent
+     * calls to SBuf::append or similar methods. In this case the returned
+     * pointer should be ignored.
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
-    char *rawSpace(size_type minSize = npos);
+    char *rawSpace(size_type minSize);
 
     /** Force a SBuf's size
      * \warning use with EXTREME caution, this is a dangerous operation
@@ -407,13 +407,12 @@ public:
      *
      * After the reserveSpace request, the SBuf is guaranteed to have at
      * least minSpace bytes of unused backing store following the currently
-     * used portion until the next append operation to any of the SBufs
-     * sharing the backing MemBlob
+     * used portion and single ownership of the backing store.
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
-    void reserveSpace(size_type minSpace);
+    void reserveSpace(size_type minSpace) {reserveCapacity(length()+minSpace);}
 
-    /** Request to resize the SBuf's store
+    /** Request to resize the SBuf's store capacity
      *
      * After this method is called, the SBuf is guaranteed to have at least
      * minCapacity bytes of total buffer size, including the currently-used
