@@ -2804,20 +2804,20 @@ parse_refreshpattern(RefreshPattern ** head)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = ConfigParser::NextToken()) == NULL) {
-        self_destruct();
-        return;
-    }
+    if ((token = ConfigParser::NextToken()) != NULL) {
 
-    if (strcmp(token, "-i") == 0) {
-        flags |= REG_ICASE;
-        token = ConfigParser::NextToken();
-    } else if (strcmp(token, "+i") == 0) {
-        flags &= ~REG_ICASE;
-        token = ConfigParser::NextToken();
+        if (strcmp(token, "-i") == 0) {
+            flags |= REG_ICASE;
+            token = ConfigParser::NextToken();
+        } else if (strcmp(token, "+i") == 0) {
+            flags &= ~REG_ICASE;
+            token = ConfigParser::NextToken();
+        }
+
     }
 
     if (token == NULL) {
+        debugs(3, DBG_CRITICAL, "FATAL: refresh_pattern missing the regex pattern parameter");
         self_destruct();
         return;
     }
