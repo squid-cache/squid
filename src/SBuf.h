@@ -346,13 +346,19 @@ public:
      * be invalidated by the first call to a non-const method call
      * on the SBuf.
      * This call guarantees to never return NULL.
-     * This method can also be used to prepare the SBuf by preallocating a
-     * predefined amount of free space; this may help to optimize subsequent
-     * calls to SBuf::append or similar methods. In this case the returned
-     * pointer should be ignored.
+     * \see reserveSpace
+     * \note Unlike reserveSpace(), this method does not guarantee exclusive
+     *       buffer ownership. It is instead optimized for a one writer
+     *       (appender), many readers scenario by avoiding unnecessary
+     *       copying and allocations.
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
     char *rawSpace(size_type minSize);
+
+    /**
+     *
+     */
+    size_type spaceSize() const { return store_->spaceSize(); }
 
     /** Force a SBuf's size
      * \warning use with EXTREME caution, this is a dangerous operation
@@ -403,7 +409,7 @@ public:
      */
     bool isEmpty() const {return (len_==0);}
 
-    /** Request to extend the SBuf's free store space.
+    /** Request to guarantee the SBuf's free store space.
      *
      * After the reserveSpace request, the SBuf is guaranteed to have at
      * least minSpace bytes of unused backing store following the currently
@@ -412,7 +418,7 @@ public:
      */
     void reserveSpace(size_type minSpace) {reserveCapacity(length()+minSpace);}
 
-    /** Request to resize the SBuf's store capacity
+    /** Request to guarantee the SBuf's store capacity
      *
      * After this method is called, the SBuf is guaranteed to have at least
      * minCapacity bytes of total buffer size, including the currently-used
