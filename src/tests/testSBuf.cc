@@ -201,7 +201,7 @@ testSBuf::testAppendf()
     SBuf s1,s2;
     s1.appendf("%s:%d:%03.2f",fox,1234,1234.56);
     s2.assign("The quick brown fox jumped over the lazy dog:1234:1234.56");
-    CPPUNIT_ASSERT_EQUAL(s1,s2);
+    CPPUNIT_ASSERT_EQUAL(s2,s1);
 }
 
 void

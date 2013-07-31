@@ -268,47 +268,45 @@ SBuf::appendf(const char *fmt, ...)
 SBuf&
 SBuf::vappendf(const char *fmt, va_list vargs)
 {
+    Must(fmt != NULL);
+    int sz = 0;
+    //reserve twice the format-string size, it's a likely heuristic
+    size_type requiredSpaceEstimate = strlen(fmt)*2;
+
+    char *space = rawSpace(requiredSpaceEstimate);
 #ifdef VA_COPY
     va_list ap;
+    VA_COPY(ap, vargs);
+    sz = vsnprintf(space, spaceSize(), fmt, ap);
+    va_end(ap);
+#else
+    sz = vsnprintf(space, spaceSize(), fmt, vargs);
 #endif
-    int sz = 0;
 
-    Must(fmt != NULL);
+    /* check for possible overflow */
+    /* snprintf on Linux returns -1 on output errors, or the size
+     * that would have been written if enough space had been available */
+    /* vsnprintf is standard in C99 */
 
-    //reserve twice the format-string size, it's a likely heuristic
-    rawSpace(strlen(fmt)*2);
-
-    while (length() <= maxSize) {
-#ifdef VA_COPY
-        /* Fix of bug 753r. The value of vargs is undefined
-         * after vsnprintf() returns. Make a copy of vargs
-         * in case we loop around and call vsnprintf() again.
-         */
-        VA_COPY(ap, vargs);
-        sz = vsnprintf(bufEnd(), store_->spaceSize(), fmt, ap);
-        va_end(ap);
-#else /* VA_COPY */
-        sz = vsnprintf(bufEnd(), store_->spaceSize(), fmt, vargs);
-#endif /* VA_COPY*/
-        /* check for possible overflow */
-        /* snprintf on Linux returns -1 on overflows */
-        /* snprintf on FreeBSD returns at least free_space on overflows */
-
-        if (sz >= static_cast<int>(store_->spaceSize()))
-            rawSpace(sz*2); // TODO: tune heuristics
-        else if (sz < 0) // output error in vsnprintf
-            throw TextException("output error in vsnprintf",__FILE__, __LINE__);
-        else
-            break;
+    if (sz >= static_cast<int>(spaceSize())) {
+        // not enough space on the first go, we now know how much we need
+        requiredSpaceEstimate = sz*2; // TODO: tune heuristics
+        space = rawSpace(requiredSpaceEstimate);
+        sz = vsnprintf(space, spaceSize(), fmt, vargs);
     }
 
-    len_ += sz;
-    // TODO: this does NOT belong here, but to class-init or autoconf
-    /* on Linux and FreeBSD, '\0' is not counted in return value */
-    /* on XXX it might be counted */
-    /* check that '\0' is appended and not counted */
+    if (sz < 0) // output error in either vsnprintf
+        throw TextException("output error in vsnprintf",__FILE__, __LINE__);
 
-    if (operator[](len_-1) == '\0') {
+    // data was appended, update internal state
+    len_ += sz;
+
+    // TODO: this does NOT belong here, but to class-init or autoconf
+    /* C99 specifies that the final '\0' is not counted in vsnprintf's
+     * return value. Older compilers/libraries might instead count it */
+    /* check whether '\0' was appended and counted */
+
+    if (at(len_-1) == '\0') {
         --sz;
         --len_;
     }
