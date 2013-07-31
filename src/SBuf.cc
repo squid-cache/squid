@@ -183,14 +183,16 @@ SBuf::assign(const char *S, size_type n)
 void
 SBuf::reserveCapacity(size_type minCapacity)
 {
-    Must(0 <= minCapacity); //upper bound checked in cow -> reAlloc
+    Must(0 <= minCapacity);
+    Must(minCapacity <= maxSize);
     cow(minCapacity);
 }
 
 char *
 SBuf::rawSpace(size_type minSpace)
 {
-    Must(0 <= minSpace); //upper bound checked in cow -> reAlloc
+    Must(0 <= minSpace);
+    Must(minSpace <= maxSize);
     debugs(24, 7, "reserving " << minSpace << " for " << id);
     ++stats.rawAccess;
     // we're not concerned about RefCounts here,

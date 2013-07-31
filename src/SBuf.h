@@ -416,7 +416,11 @@ public:
      * used portion and single ownership of the backing store.
      * \throw SBufTooBigException if the user tries to allocate too big a SBuf
      */
-    void reserveSpace(size_type minSpace) {reserveCapacity(length()+minSpace);}
+    void reserveSpace(size_type minSpace) {
+        Must(0 <= minSpace);
+        Must(minSpace <= maxSize);
+        reserveCapacity(length()+minSpace);
+    }
 
     /** Request to guarantee the SBuf's store capacity
      *
