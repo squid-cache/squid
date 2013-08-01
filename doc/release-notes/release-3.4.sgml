@@ -180,11 +180,13 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The internal DNS component fof Squid now supports multicast DNS (mDNS) resolution in
     accordance with RFC 6762.
 
-<p>There is no additional or special configuration required. The multicast DNS group IP
-   addresses for IPv4 and IPv6 resolving are added to the set of available DNS resolvers
-   and used automatically for domain names ending in <em>.local</em> before attempting a
-   secondary resolution on the configured resolvers. Domains without <em>.local</em> are
-   resolved using only the configured DNS resolvers.
+<p>The <em>dns_multicast_local</em> directive must be set to <em>on</em> to enable this
+   feature. 
+
+<p>The multicast DNS group IP addresses for IPv4 and IPv6 resolving are added to the set
+   of available DNS resolvers and used automatically for domain names ending in <em>.local</em>
+   and reverse-DNS lookups before attempting a secondary resolution on the configured
+   resolvers. Domains without <em>.local</em> are resolved using only the configured resolvers.
 
 <p>Statistics for multicast DNS resolution can be found on the <em>idns</em> cache manager
    report.
@@ -217,6 +219,9 @@ This section gives a thorough account of those changes in three categories:
 	<tag>configuration_includes_quoted_values</tag>
 	<p>Whether Squid supports directive parameters with spaces, quotes, and other
 	   special characters. Surround such parameters with "double quotes".
+
+	<tag>dns_multicast_local</tag>
+	<p>Use multicast DNS for <em>.local</em> domains and reverse-DNS resolution.
 
 	<tag>note</tag>
 	<p>Use ACLs to annotate a transaction with customized annotations
