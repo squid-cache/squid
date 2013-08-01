@@ -192,7 +192,7 @@ char *
 SBuf::rawSpace(size_type minSpace)
 {
     Must(0 <= minSpace);
-    Must(minSpace <= maxSize);
+    Must(length() <= maxSize - minSpace);
     debugs(24, 7, "reserving " << minSpace << " for " << id);
     ++stats.rawAccess;
     // we're not concerned about RefCounts here,
@@ -303,12 +303,18 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     // data was appended, update internal state
     len_ += sz;
 
-    // TODO: this does NOT belong here, but to class-init or autoconf
+
     /* C99 specifies that the final '\0' is not counted in vsnprintf's
      * return value. Older compilers/libraries might instead count it */
     /* check whether '\0' was appended and counted */
-
-    if (at(len_-1) == '\0') {
+    static bool snPrintfTerminatorChecked = false,
+                snPrintfTerminatorCounted = false;
+    if (!snPrintfTerminatorChecked) {
+        char testbuf[16];
+        snPrintfTerminatorCounted = snprintf(testbuf, sizeof(testbuf),
+            "%s", "1") == 2;
+    }
+    if (snPrintfTerminatorCounted) {
         --sz;
         --len_;
     }
