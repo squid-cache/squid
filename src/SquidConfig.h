@@ -355,6 +355,7 @@ public:
         int memory_cache_disk;
         int hostStrictVerify;
         int client_dst_passthru;
+        int dns_mdns;
     } onoff;
 
     int pipeline_max_prefetch;

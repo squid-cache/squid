@@ -8332,6 +8332,19 @@ DOC_START
 	Squid to handle single-component names, enable this option.
 DOC_END
 
+NAME: dns_multicast_local
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+DEFAULT_DOC: Search for .local and .arpa names is disabled.
+LOC: Config.onoff.dns_mdns
+DOC_START
+	When set to on, Squid sends multicast DNS lookups on the local
+	network for domains ending in .local and .arpa.
+	This enables local servers and devices to be contacted in an
+	ad-hoc or zero-configuration network environment.
+DOC_END
+
 NAME: dns_nameservers
 TYPE: wordlist
 DEFAULT: none
