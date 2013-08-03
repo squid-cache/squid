@@ -25,7 +25,7 @@ AnyP::PortCfg::PortCfg() :
         flags(),
         allow_direct(false),
         vhost(false),
-        actAsorigin(false),
+        actAsOrigin(false),
         ignore_cc(false),
         connection_auth_disabled(false),
         vport(0),
