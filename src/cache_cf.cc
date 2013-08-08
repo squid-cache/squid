@@ -2898,6 +2898,7 @@ parse_refreshpattern(RefreshPattern ** head)
         regerror(errcode, &comp, errbuf, sizeof errbuf);
         debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
+        xfree(pattern);
         return;
     }
 
