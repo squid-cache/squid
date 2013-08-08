@@ -1380,8 +1380,12 @@ parse_address(Ip::Address *addr)
         addr->setNoAddr();
     else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
-    else
-        addr->GetHostByName(token); // dont use ipcache
+    else if (addr->GetHostByName(token)) // dont use ipcache
+        (void) 0;
+    else { // not an IP and not a hostname
+        debugs(3, DBG_CRITICAL, "FATAL: invalid IP address or domain name '" << token << "'");
+        self_destruct();
+    }
 }
 
 static void
