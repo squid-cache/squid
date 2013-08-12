@@ -163,10 +163,6 @@ void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
 #endif
 
-#if !defined(SQUID_BUILD_INFO)
-#define SQUID_BUILD_INFO ""
-#endif
-
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
