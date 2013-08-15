@@ -816,7 +816,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
             vlen = 0;
         }
 
-        StringArea keyName(item, nlen-1);
+        StringArea keyName(item, nlen);
         String value;
 
         if (vlen > 0) {
