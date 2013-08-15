@@ -30,8 +30,7 @@
 #ifndef SQUID_CONFIGOPTION_H
 #define SQUID_CONFIGOPTION_H
 
-/* for Vector<> */
-#include "Array.h"
+#include "base/Vector.h"
 
 class StoreEntry;
 

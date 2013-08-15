@@ -47,8 +47,3 @@ libesi_la_SOURCES = \
 	Var.h \
 	VarState.cc \
 	VarState.h
-
-INCLUDES += \
-	-I$(top_srcdir)/lib/libTrie/include \
-	-I$(top_builddir)/lib/libTrie/include
-

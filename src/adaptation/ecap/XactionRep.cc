@@ -124,9 +124,9 @@ Adaptation::Ecap::XactionRep::clientIpValue() const
         } else
 #endif
             client_addr = request->client_addr;
-        if (!client_addr.IsAnyAddr() && !client_addr.IsNoAddr()) {
+        if (!client_addr.isAnyAddr() && !client_addr.isNoAddr()) {
             char ntoabuf[MAX_IPSTRLEN] = "";
-            client_addr.NtoA(ntoabuf,MAX_IPSTRLEN);
+            client_addr.toStr(ntoabuf,MAX_IPSTRLEN);
             return libecap::Area::FromTempBuffer(ntoabuf, strlen(ntoabuf));
         }
     }
@@ -231,8 +231,11 @@ Adaptation::Ecap::XactionRep::start()
         typedef Notes::iterator ACAMLI;
         for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
             const char *v = (*i)->match(request, reply);
-            if (v && !ah->metaHeaders.hasByNameListMember((*i)->key.termedBuf(), v, ',')) {
-                ah->metaHeaders.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), v));
+            if (v) {
+                if (ah->metaHeaders == NULL)
+                    ah->metaHeaders = new NotePairs();
+                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), v))
+                    ah->metaHeaders->add((*i)->key.termedBuf(), v);
             }
         }
     }

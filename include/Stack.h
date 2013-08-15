@@ -32,7 +32,7 @@
 #ifndef SQUID_STACK_H
 #define SQUID_STACK_H
 
-#include "Array.h"
+#include "base/Vector.h"
 
 /* RBC: 20030714 Composition might be better long-term, but for now,
  * there's no reason to do so.

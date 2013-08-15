@@ -34,14 +34,12 @@
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "client_side_reply.h"
-#include "client_side.h"
-#include "clientStream.h"
-#include "dlink.h"
 #include "errorpage.h"
+#include "ETag.h"
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
@@ -58,7 +56,6 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "StoreClient.h"
 #include "StrList.h"
 #include "tools.h"
 #include "URL.h"
@@ -175,22 +172,6 @@ clientReplyContext::removeClientStoreReference(store_client **scp, ClientHttpReq
     aHttpRequest->storeEntry(reference);
 }
 
-void *
-clientReplyContext::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (clientReplyContext));
-    CBDATA_INIT_TYPE(clientReplyContext);
-    return cbdataAlloc(clientReplyContext);
-}
-
-void
-clientReplyContext::operator delete (void *address)
-{
-    clientReplyContext * tmp = (clientReplyContext *)address;
-    cbdataFree (tmp);
-}
-
 void
 clientReplyContext::saveState()
 {
@@ -291,6 +272,13 @@ clientReplyContext::processExpired()
 #endif
 
     http->request->lastmod = old_entry->lastmod;
+
+    if (!http->request->header.has(HDR_IF_NONE_MATCH)) {
+        ETag etag = {NULL, -1}; // TODO: make that a default ETag constructor
+        if (old_entry->hasEtag(etag) && !etag.weak)
+            http->request->etag = etag.str;
+    }
+
     debugs(88, 5, "clientReplyContext::processExpired : lastmod " << entry->lastmod );
     http->storeEntry(entry);
     assert(http->out.offset == 0);
@@ -1869,7 +1857,7 @@ void
 clientReplyContext::sendBodyTooLargeError()
 {
     Ip::Address tmp_noaddr;
-    tmp_noaddr.SetNoAddr(); // TODO: make a global const
+    tmp_noaddr.setNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, Http::scForbidden, NULL,
                                        http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
@@ -1992,7 +1980,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
             page_id = ERR_ACCESS_DENIED;
 
         Ip::Address tmp_noaddr;
-        tmp_noaddr.SetNoAddr();
+        tmp_noaddr.setNoAddr();
         err = clientBuildError(page_id, Http::scForbidden, NULL,
                                http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                http->request);

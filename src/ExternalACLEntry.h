@@ -81,9 +81,6 @@ class ExternalACLEntry: public hash_link
 {
 
 public:
-    void *operator new (size_t bytesToAllocate);
-    void operator delete (void *address);
-
     ExternalACLEntry();
     ~ExternalACLEntry();
 
@@ -101,7 +98,7 @@ public:
     external_acl *def;
 
 private:
-    CBDATA_CLASS(ExternalACLEntry);
+    CBDATA_CLASS2(ExternalACLEntry);
 };
 
 typedef class ExternalACLEntry external_acl_entry;

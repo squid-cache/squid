@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "CacheManager.h"
+#include "dlink.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -429,7 +430,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
 
         i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(ipcount, sizeof(Ip::Address)));
         for (int l = 0; l < ipcount; ++l)
-            i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
+            i->addrs.in_addrs[l].setEmpty(); // perform same init actions as constructor would.
         i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
         memset(i->addrs.bad_mask, 0, sizeof(unsigned char) * ipcount);
 
@@ -539,7 +540,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
 
     i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(na, sizeof(Ip::Address)));
     for (int l = 0; l < na; ++l)
-        i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
+        i->addrs.in_addrs[l].setEmpty(); // perform same init actions as constructor would.
     i->addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
 
     for (j = 0, k = 0; k < nr; ++k) {
@@ -732,7 +733,7 @@ ipcache_init(void)
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
 
     static_addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(1, sizeof(Ip::Address)));
-    static_addrs.in_addrs->SetEmpty(); // properly setup the Ip::Address!
+    static_addrs.in_addrs->setEmpty(); // properly setup the Ip::Address!
     static_addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     ipcache_high = (long) (((float) Config.ipcache.size *
                             (float) Config.ipcache.high) / (float) 100);
@@ -843,12 +844,12 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
         /* Display tidy-up: IPv6 are so big make the list vertical */
         if (k == 0)
             storeAppendPrintf(sentry, " %45.45s-%3s\n",
-                              i->addrs.in_addrs[k].NtoA(buf,MAX_IPSTRLEN),
+                              i->addrs.in_addrs[k].toStr(buf,MAX_IPSTRLEN),
                               i->addrs.bad_mask[k] ? "BAD" : "OK ");
         else
             storeAppendPrintf(sentry, "%s %45.45s-%3s\n",
                               "                                                         ", /* blank-space indenting IP list */
-                              i->addrs.in_addrs[k].NtoA(buf,MAX_IPSTRLEN),
+                              i->addrs.in_addrs[k].toStr(buf,MAX_IPSTRLEN),
                               i->addrs.bad_mask[k] ? "BAD" : "OK ");
     }
 }

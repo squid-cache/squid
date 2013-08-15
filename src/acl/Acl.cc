@@ -1,6 +1,5 @@
 /*
  * DEBUG: section 28    Access Control
- * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -38,6 +37,7 @@
 #include "Debug.h"
 #include "dlink.h"
 #include "globals.h"
+#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
@@ -52,8 +52,9 @@ bool ACLFlags::supported(const ACLFlag f) const
 }
 
 void
-ACLFlags::parseFlags(char * &nextToken)
+ACLFlags::parseFlags()
 {
+    char *nextToken;
     while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
 
         //if token is the "--" break flag
@@ -137,7 +138,8 @@ ACL::Factory (char const *type)
 
 ACL::ACL() :
         cfgline(NULL),
-        next(NULL)
+        next(NULL),
+        registered(false)
 {
     *name = 0;
 }
@@ -145,6 +147,46 @@ ACL::ACL() :
 bool ACL::valid () const
 {
     return true;
+}
+
+bool
+ACL::matches(ACLChecklist *checklist) const
+{
+    PROF_start(ACL_matches);
+    debugs(28, 5, "checking " << name);
+
+    // XXX: AclMatchedName does not contain a matched ACL name when the acl
+    // does not match. It contains the last (usually leaf) ACL name checked
+    // (or is NULL if no ACLs were checked).
+    AclMatchedName = name;
+
+    int result = 0;
+    if (!checklist->hasRequest() && requiresRequest()) {
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in " <<
+               "context without an HTTP request. Assuming mismatch.");
+    } else if (!checklist->hasReply() && requiresReply()) {
+        debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in " <<
+               "context without an HTTP response. Assuming mismatch.");
+    } else {
+        // have to cast because old match() API is missing const
+        result = const_cast<ACL*>(this)->match(checklist);
+    }
+
+    const char *extra = checklist->asyncInProgress() ? " async" : "";
+    debugs(28, 3, "checked: " << name << " = " << result << extra);
+    PROF_stop(ACL_matches);
+    return result == 1; // true for match; false for everything else
+}
+
+void
+ACL::context(const char *aName, const char *aCfgLine)
+{
+    name[0] = '\0';
+    if (aName)
+        xstrncpy(name, aName, ACL_NAME_SZ-1);
+    safe_free(cfgline);
+    if (aCfgLine)
+        cfgline = xstrdup(aCfgLine);
 }
 
 void
@@ -215,8 +257,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     if ((A = FindByName(aclname)) == NULL) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = ACL::Factory(theType);
-        xstrncpy(A->name, aclname, ACL_NAME_SZ);
-        A->cfgline = xstrdup(config_input_line);
+        A->context(aclname, config_input_line);
         new_acl = 1;
     } else {
         if (strcmp (A->typeString(),theType) ) {
@@ -235,8 +276,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      */
     AclMatchedName = A->name;	/* ugly */
 
-    char *aTok;
-    A->flags.parseFlags(aTok);
+    A->flags.parseFlags();
 
     /*split the function here */
     A->parse();
@@ -259,6 +299,9 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     }
 
     /* append */
+    assert(head && *head == Config.aclList);
+    A->registered = true;
+
     while (*head)
         head = &(*head)->next;
 
@@ -269,18 +312,6 @@ bool
 ACL::isProxyAuth() const
 {
     return false;
-}
-
-ACLList::ACLList() : op (1), _acl (NULL), next (NULL)
-{}
-
-void
-ACLList::negated(bool isNegated)
-{
-    if (isNegated)
-        op = 0;
-    else
-        op = 1;
 }
 
 /* ACL result caching routines */
@@ -359,49 +390,6 @@ ACL::requiresRequest() const
     return false;
 }
 
-int
-ACL::checklistMatches(ACLChecklist *checklist)
-{
-    int rv;
-
-    if (!checklist->hasRequest() && requiresRequest()) {
-        debugs(28, DBG_IMPORTANT, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
-        return 0;
-    }
-
-    if (!checklist->hasReply() && requiresReply()) {
-        debugs(28, DBG_IMPORTANT, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
-        return 0;
-    }
-
-    debugs(28, 3, "ACL::checklistMatches: checking '" << name << "'");
-    rv= match(checklist);
-    debugs(28, 3, "ACL::ChecklistMatches: result for '" << name << "' is " << rv);
-    return rv;
-}
-
-bool
-ACLList::matches (ACLChecklist *checklist) const
-{
-    assert (_acl);
-    // XXX: AclMatchedName does not contain a matched ACL name when the acl
-    // does not match (or contains stale name if no ACLs are checked). In
-    // either case, we get misleading debugging and possibly incorrect error
-    // messages. Unfortunately, deny_info's "when none http_access
-    // lines match" exception essentially requires this mess.
-    // TODO: Rework by using an acl-free deny_info for the no-match cases?
-    AclMatchedName = _acl->name;
-    debugs(28, 3, "ACLList::matches: checking " << (op ? null_string : "!") << _acl->name);
-
-    if (_acl->checklistMatches(checklist) != op) {
-        debugs(28, 4, "ACLList::matches: result is false");
-        return false;
-    }
-
-    debugs(28, 4, "ACLList::matches: result is true");
-    return true;
-}
-
 /*********************/
 /* Destroy functions */
 /*********************/
@@ -410,25 +398,7 @@ ACL::~ACL()
 {
     debugs(28, 3, "ACL::~ACL: '" << cfgline << "'");
     safe_free(cfgline);
-}
-
-/* to be split into separate files in the future */
-
-CBDATA_CLASS_INIT(acl_access);
-
-void *
-acl_access::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(acl_access);
-    acl_access *result = cbdataAlloc(acl_access);
-    return result;
-}
-
-void
-acl_access::operator delete (void *address)
-{
-    acl_access *t = static_cast<acl_access *>(address);
-    cbdataFree(t);
+    AclMatchedName = NULL; // in case it was pointing to our name
 }
 
 ACL::Prototype::Prototype() : prototype (NULL), typeString (NULL) {}

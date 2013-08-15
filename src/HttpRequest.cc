@@ -58,15 +58,13 @@
 #endif
 
 HttpRequest::HttpRequest() :
-        HttpMsg(hoRequest),
-        helperNotes(NULL)
+        HttpMsg(hoRequest)
 {
     init();
 }
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
-        HttpMsg(hoRequest),
-        helperNotes(NULL)
+        HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -107,8 +105,8 @@ HttpRequest::init()
     ims = -1;
     imslen = 0;
     lastmod = -1;
-    client_addr.SetEmpty();
-    my_addr.SetEmpty();
+    client_addr.setEmpty();
+    my_addr.setEmpty();
     body_pipe = NULL;
     // hier
     dnsWait = -1;
@@ -128,7 +126,7 @@ HttpRequest::init()
     extacl_message = null_string;
     pstate = psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
-    indirect_client_addr.SetEmpty();
+    indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -168,10 +166,7 @@ HttpRequest::clean()
 
     myportname.clean();
 
-    if (helperNotes) {
-        delete helperNotes;
-        helperNotes = NULL;
-    }
+    notes = NULL;
 
     tag.clean();
 #if USE_AUTH
@@ -181,6 +176,8 @@ HttpRequest::clean()
     extacl_log.clean();
 
     extacl_message.clean();
+
+    etag.clean();
 
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -227,23 +224,17 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_login?
 
     copy->lastmod = lastmod;
+    copy->etag = etag;
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
     copy->myportname = myportname;
-    if (helperNotes) {
-        copy->helperNotes = new Notes;
-        copy->helperNotes->notes = helperNotes->notes;
-    }
     copy->tag = tag;
-#if USE_AUTH
-    copy->extacl_user = extacl_user;
-    copy->extacl_passwd = extacl_passwd;
-#endif
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
-    assert(copy->inheritProperties(this));
+    const bool inheritWorked = copy->inheritProperties(this);
+    assert(inheritWorked);
 
     return copy;
 }
@@ -278,11 +269,14 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     errDetail = aReq->errDetail;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
+    extacl_user = aReq->extacl_user;
+    extacl_passwd = aReq->extacl_passwd;
 #endif
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
 
+    notes = aReq->notes;
     return true;
 }
 
@@ -596,7 +590,7 @@ HttpRequest::maybeCacheable()
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the reponse for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
+    if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
     switch (protocol) {

@@ -6,7 +6,7 @@
 #include "squid.h"
 
 #include "client_side.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "ssl/ServerBump.h"
 #include "Store.h"
 #include "StoreClient.h"

@@ -40,7 +40,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "html_quote.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
@@ -182,12 +182,7 @@ private:
 /// \ingroup ServerProtocolFTPInternal
 class FtpStateData : public ServerStateData
 {
-
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
-    void *toCbdata() { return this; }
-
     FtpStateData(FwdState *, const Comm::ConnectionPointer &conn);
     ~FtpStateData();
     char user[MAX_URL];
@@ -237,9 +232,6 @@ public:
     } data;
 
     struct _ftp_flags flags;
-
-private:
-    CBDATA_CLASS(FtpStateData);
 
 public:
     // these should all be private
@@ -309,24 +301,11 @@ public:
 private:
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
+
+    CBDATA_CLASS2(FtpStateData);
 };
 
 CBDATA_CLASS_INIT(FtpStateData);
-
-void *
-FtpStateData::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(FtpStateData);
-    FtpStateData *result = cbdataAlloc(FtpStateData);
-    return result;
-}
-
-void
-FtpStateData::operator delete (void *address)
-{
-    FtpStateData *t = static_cast<FtpStateData *>(address);
-    cbdataFree(t);
-}
 
 /// \ingroup ServerProtocolFTPInternal
 typedef struct {
@@ -2488,9 +2467,9 @@ ftpReadEPSV(FtpStateData* ftpState)
     // Generate a new data channel descriptor to be opened.
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = ftpState->ctrl.conn->local;
-    conn->local.SetPort(0);
+    conn->local.port(0);
     conn->remote = ftpState->ctrl.conn->remote;
-    conn->remote.SetPort(port);
+    conn->remote.port(port);
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
@@ -2555,7 +2534,7 @@ ftpSendPassive(FtpStateData * ftpState)
     switch (ftpState->state) {
     case SENT_EPSV_ALL: /* EPSV ALL resulted in a bad response. Try ther EPSV methods. */
         ftpState->flags.epsv_all_sent = true;
-        if (ftpState->ctrl.conn->local.IsIPv6()) {
+        if (ftpState->ctrl.conn->local.isIPv6()) {
             debugs(9, 5, HERE << "FTP Channel is IPv6 (" << ftpState->ctrl.conn->remote << ") attempting EPSV 2 after EPSV ALL has failed.");
             snprintf(cbuf, CTRL_BUFLEN, "EPSV 2\r\n");
             ftpState->state = SENT_EPSV_2;
@@ -2564,7 +2543,7 @@ ftpSendPassive(FtpStateData * ftpState)
         // else fall through to skip EPSV 2
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
-        if (ftpState->ctrl.conn->local.IsIPv4()) {
+        if (ftpState->ctrl.conn->local.isIPv4()) {
             debugs(9, 5, HERE << "FTP Channel is IPv4 (" << ftpState->ctrl.conn->remote << ") attempting EPSV 1 after EPSV ALL has failed.");
             snprintf(cbuf, CTRL_BUFLEN, "EPSV 1\r\n");
             ftpState->state = SENT_EPSV_1;
@@ -2594,12 +2573,12 @@ ftpSendPassive(FtpStateData * ftpState)
             /* block other non-EPSV connections being attempted */
             ftpState->flags.epsv_all_sent = true;
         } else {
-            if (ftpState->ctrl.conn->local.IsIPv6()) {
+            if (ftpState->ctrl.conn->local.isIPv6()) {
                 debugs(9, 5, HERE << "FTP Channel (" << ftpState->ctrl.conn->remote << "). Sending default EPSV 2");
                 snprintf(cbuf, CTRL_BUFLEN, "EPSV 2\r\n");
                 ftpState->state = SENT_EPSV_2;
             }
-            if (ftpState->ctrl.conn->local.IsIPv4()) {
+            if (ftpState->ctrl.conn->local.isIPv4()) {
                 debugs(9, 5, HERE << "Channel (" << ftpState->ctrl.conn->remote <<"). Sending default EPSV 1");
                 snprintf(cbuf, CTRL_BUFLEN, "EPSV 1\r\n");
                 ftpState->state = SENT_EPSV_1;
@@ -2689,7 +2668,7 @@ ftpReadPasv(FtpStateData * ftpState)
 
     ipa_remote = ipaddr;
 
-    if ( ipa_remote.IsAnyAddr() ) {
+    if ( ipa_remote.isAnyAddr() ) {
         debugs(9, DBG_IMPORTANT, "Unsafe PASV reply from " <<
                ftpState->ctrl.conn->remote << ": " <<
                ftpState->ctrl.last_reply);
@@ -2736,9 +2715,9 @@ ftpReadPasv(FtpStateData * ftpState)
 
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = ftpState->ctrl.conn->local;
-    conn->local.SetPort(0);
+    conn->local.port(0);
     conn->remote = ipaddr;
-    conn->remote.SetPort(port);
+    conn->remote.port(port);
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
@@ -2803,7 +2782,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         temp->flags |= COMM_REUSEADDR;
     } else {
         /* if not running in fallback mode a new port needs to be retrieved */
-        temp->local.SetPort(0);
+        temp->local.port(0);
     }
 
     ftpState->listenForDataChannel(temp, ftpState->entry->url());
@@ -2827,7 +2806,7 @@ ftpSendPORT(FtpStateData * ftpState)
     ftpOpenListenSocket(ftpState, 0);
 
     if (!Comm::IsConnOpen(ftpState->data.listenConn)) {
-        if ( ftpState->data.listenConn != NULL && !ftpState->data.listenConn->local.IsIPv4() ) {
+        if ( ftpState->data.listenConn != NULL && !ftpState->data.listenConn->local.isIPv4() ) {
             /* non-IPv4 CANNOT send PORT command.                       */
             /* we got here by attempting and failing an EPRT            */
             /* using the same reply code should simulate a PORT failure */
@@ -2844,7 +2823,7 @@ ftpSendPORT(FtpStateData * ftpState)
     // source them from the listen_conn->local
 
     struct addrinfo *AI = NULL;
-    ftpState->data.listenConn->local.GetAddrInfo(AI, AF_INET);
+    ftpState->data.listenConn->local.getAddrInfo(AI, AF_INET);
     unsigned char *addrptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_addr;
     unsigned char *portptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_port;
     snprintf(cbuf, CTRL_BUFLEN, "PORT %d,%d,%d,%d,%d,%d\r\n",
@@ -2853,7 +2832,7 @@ ftpSendPORT(FtpStateData * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PORT;
 
-    ftpState->data.listenConn->local.FreeAddrInfo(AI);
+    Ip::Address::FreeAddrInfo(AI);
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2904,9 +2883,9 @@ ftpSendEPRT(FtpStateData * ftpState)
     /* RFC 2428 defines EPRT as IPv6 equivalent to IPv4 PORT command. */
     /* Which can be used by EITHER protocol. */
     snprintf(cbuf, CTRL_BUFLEN, "EPRT |%d|%s|%d|\r\n",
-             ( ftpState->data.listenConn->local.IsIPv6() ? 2 : 1 ),
-             ftpState->data.listenConn->local.NtoA(buf,MAX_IPSTRLEN),
-             ftpState->data.listenConn->local.GetPort() );
+             ( ftpState->data.listenConn->local.isIPv6() ? 2 : 1 ),
+             ftpState->data.listenConn->local.toStr(buf,MAX_IPSTRLEN),
+             ftpState->data.listenConn->local.port() );
 
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_EPRT;
@@ -2994,7 +2973,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     data.close();
     data.opened(io.conn, dataCloser());
     static char ntoapeer[MAX_IPSTRLEN];
-    io.conn->remote.NtoA(ntoapeer,sizeof(ntoapeer));
+    io.conn->remote.toStr(ntoapeer,sizeof(ntoapeer));
     data.host = xstrdup(ntoapeer);
 
     debugs(9, 3, HERE << "Connected data socket on " <<

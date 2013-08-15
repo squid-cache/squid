@@ -45,13 +45,15 @@ void
 Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     const char *user_ident = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
-
-    const char *user_auth = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
-
+    const char *user_auth = NULL;
     const char *referer = NULL;
     const char *agent = NULL;
 
     if (al->request) {
+#if USE_AUTH
+        if (al->request->auth_user_request != NULL)
+            user_auth = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
+#endif
         referer = al->request->header.getStr(HDR_REFERER);
         agent = al->request->header.getStr(HDR_USER_AGENT);
     }

@@ -1,5 +1,0 @@
-#!/bin/sh
-if [ -f /usr/include/rpcsvc/yp_prot.h ]; then
-	exit 0
-fi
-exit 1

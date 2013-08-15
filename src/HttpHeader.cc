@@ -112,6 +112,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
     {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
     {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
+    {"Key", HDR_KEY, ftStr},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
     {"Link", HDR_LINK, ftStr},
     {"Location", HDR_LOCATION, ftStr},
@@ -187,6 +188,7 @@ static http_hdr_type ListHeadersArr[] = {
     HDR_CONNECTION,
     HDR_EXPECT,
     HDR_IF_MATCH, HDR_IF_NONE_MATCH,
+    HDR_KEY,
     HDR_LINK, HDR_PRAGMA,
     HDR_PROXY_CONNECTION,
     HDR_PROXY_SUPPORT,
@@ -231,6 +233,7 @@ static HttpHeaderMask ReplyHeadersMask;		/* set run-time using ReplyHeaders */
 static http_hdr_type ReplyHeadersArr[] = {
     HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
     HDR_ACCEPT_RANGES, HDR_AGE,
+    HDR_KEY,
     HDR_LOCATION, HDR_MAX_FORWARDS,
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE, HDR_SET_COOKIE2,
     HDR_ORIGIN,
@@ -438,37 +441,37 @@ HttpHeader::clean()
 
     PROF_start(HttpHeaderClean);
 
-    /*
-     * An unfortunate bug.  The entries array is initialized
-     * such that count is set to zero.  httpHeaderClean() seems to
-     * be called both when 'hdr' is created, and destroyed.  Thus,
-     * we accumulate a large number of zero counts for 'hdr' before
-     * it is ever used.  Can't think of a good way to fix it, except
-     * adding a state variable that indicates whether or not 'hdr'
-     * has been used.  As a hack, just never count zero-sized header
-     * arrays.
-     */
-
     if (owner <= hoReply) {
+        /*
+         * An unfortunate bug.  The entries array is initialized
+         * such that count is set to zero.  httpHeaderClean() seems to
+         * be called both when 'hdr' is created, and destroyed.  Thus,
+         * we accumulate a large number of zero counts for 'hdr' before
+         * it is ever used.  Can't think of a good way to fix it, except
+         * adding a state variable that indicates whether or not 'hdr'
+         * has been used.  As a hack, just never count zero-sized header
+         * arrays.
+         */
         if (0 != entries.count)
             HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
 
         ++ HttpHeaderStats[owner].destroyedCount;
 
         HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
-
-        while ((e = getEntry(&pos))) {
-            /* tmp hack to try to avoid coredumps */
-
-            if (e->id < 0 || e->id >= HDR_ENUM_END) {
-                debugs(55, DBG_CRITICAL, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
-            } else {
-                HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
-                /* yes, this deletion leaves us in an inconsistent state */
-                delete e;
-            }
-        }
     } // if (owner <= hoReply)
+
+    while ((e = getEntry(&pos))) {
+        /* tmp hack to try to avoid coredumps */
+
+        if (e->id < 0 || e->id >= HDR_ENUM_END) {
+            debugs(55, DBG_CRITICAL, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
+        } else {
+            if (owner <= hoReply)
+                HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
+            /* yes, this deletion leaves us in an inconsistent state */
+            delete e;
+        }
+    }
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
     len = 0;
@@ -1738,6 +1741,7 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");
     hs->hdrUCountDistr.dump(e, httpHeaderFldsPerHdrDumper);
+    storeAppendPrintf(e, "\n");
     dump_stat = NULL;
 }
 
@@ -1759,7 +1763,6 @@ httpHeaderStoreReport(StoreEntry * e)
 
     for (i = 1; i < HttpHeaderStatCount; ++i) {
         httpHeaderStatDump(HttpHeaderStats + i, e);
-        storeAppendPrintf(e, "%s\n", "<br>");
     }
 
     /* field stats for all messages */

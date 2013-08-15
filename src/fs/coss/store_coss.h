@@ -108,14 +108,12 @@ class CossRead : public ReadRequest
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
     CossRead(ReadRequest const &base, StoreIOState::Pointer anSio) : ReadRequest(base) , sio(anSio) {}
 
     StoreIOState::Pointer sio;
 
 private:
-    CBDATA_CLASS(CossRead);
+    CBDATA_CLASS2(CossRead);
 };
 
 #include "DiskIO/WriteRequest.h"
@@ -125,14 +123,12 @@ class CossWrite : public WriteRequest
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
     CossWrite(WriteRequest const &base, CossMemBuf *aBuf) : WriteRequest(base) , membuf(aBuf) {}
 
     CossMemBuf *membuf;
 
 private:
-    CBDATA_CLASS(CossWrite);
+    CBDATA_CLASS2(CossWrite);
 };
 
 #endif

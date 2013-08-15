@@ -46,8 +46,6 @@ class AIODiskFile : public DiskFile
 public:
 
     friend class AIODiskIOStrategy;
-    void * operator new (size_t);
-    void operator delete (void *);
     AIODiskFile (char const *path, AIODiskIOStrategy *);
     ~AIODiskFile();
 
@@ -77,7 +75,7 @@ private:
     RefCount<IORequestor> ioRequestor;
     bool closed;
     bool error_;
-    CBDATA_CLASS(AIODiskFile);
+    CBDATA_CLASS2(AIODiskFile);
 };
 
 #endif /* USE_DISKIO_AIO */

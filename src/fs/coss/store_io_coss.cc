@@ -397,34 +397,7 @@ CossSwapDir::storeCossFilenoToMembuf(sfileno f)
 /*  === STATIC =========================================================== */
 
 CBDATA_CLASS_INIT(CossRead);
-void *
-CossRead::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(CossRead);
-    CossRead *result = cbdataAlloc(CossRead);
-    return result;
-}
-
-void
-CossRead::operator delete (void *address)
-{
-    cbdataFree(address);
-}
-
 CBDATA_CLASS_INIT(CossWrite);
-void *
-CossWrite::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(CossWrite);
-    CossWrite *result = cbdataAlloc(CossWrite);
-    return result;
-}
-
-void
-CossWrite::operator delete (void *address)
-{
-    cbdataFree(address);
-}
 
 void
 CossState::doCallback(int errflag)

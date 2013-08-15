@@ -7,29 +7,33 @@
 
 Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
 
-Comm::AcceptLimiter &Comm::AcceptLimiter::Instance()
+Comm::AcceptLimiter &
+Comm::AcceptLimiter::Instance()
 {
     return Instance_;
 }
 
 void
-Comm::AcceptLimiter::defer(Comm::TcpAcceptor *afd)
+Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
-    ++ afd->isLimited;
-    debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
-    deferred.push_back(afd);
+    ++ (afd->isLimited);
+    debugs(5, 5, afd->conn << " x" << afd->isLimited);
+    deferred_.push_back(afd);
 }
 
 void
-Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor *afd)
+Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-    for (unsigned int i = 0; i < deferred.size() && afd->isLimited > 0; ++i) {
-        if (deferred[i] == afd) {
-            -- deferred[i]->isLimited;
-            deferred[i] = NULL; // fast. kick() will skip empty entries later.
-            debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
+    uint64_t abandonedClients = 0;
+    for (unsigned int i = 0; i < deferred_.size() && afd->isLimited > 0; ++i) {
+        if (deferred_[i] == afd) {
+            -- deferred_[i]->isLimited;
+            deferred_[i] = NULL; // fast. kick() will skip empty entries later.
+            debugs(5, 5, afd->conn << " x" << afd->isLimited);
+            ++abandonedClients;
         }
     }
+    debugs(5,4, "Abandoned " << abandonedClients << " client TCP SYN by closing socket: " << afd->conn);
 }
 
 void
@@ -38,13 +42,14 @@ Comm::AcceptLimiter::kick()
     // TODO: this could be optimized further with an iterator to search
     //       looking for first non-NULL, followed by dumping the first N
     //       with only one shift()/pop_front operation
+    //  OR, by reimplementing as a list instead of Vector.
 
-    debugs(5, 5, HERE << " size=" << deferred.size());
-    while (deferred.size() > 0 && fdNFree() >= RESERVED_FD) {
+    debugs(5, 5, "size=" << deferred_.size());
+    while (deferred_.size() > 0 && fdNFree() >= RESERVED_FD) {
         /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
-        TcpAcceptor *temp = deferred.shift();
-        if (temp != NULL) {
-            debugs(5, 5, HERE << " doing one.");
+        TcpAcceptor::Pointer temp = deferred_.shift();
+        if (temp.valid()) {
+            debugs(5, 5, "doing one.");
             -- temp->isLimited;
             temp->acceptNext();
             break;

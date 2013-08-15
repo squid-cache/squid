@@ -18,4 +18,4 @@ LDADD = \
 	$(SSLLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = digest_file_auth.8 config.test
+EXTRA_DIST = digest_file_auth.8 required.m4

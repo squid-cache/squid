@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "helpers/defines.h"
-#include "ssl/gadgets.h"
 #include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
 
@@ -251,7 +250,7 @@ int main(int argc, char *argv[])
     try {
         size_t max_db_size = 0;
         size_t fs_block_size = 2048;
-        char c;
+        int8_t c;
         bool create_new_db = false;
         std::string db_path;
         // proccess options.

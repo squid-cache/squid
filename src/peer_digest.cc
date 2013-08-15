@@ -36,7 +36,7 @@
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "event.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -120,21 +120,6 @@ peerDigestClean(PeerDigest * pd)
 }
 
 CBDATA_CLASS_INIT(PeerDigest);
-
-void *
-PeerDigest::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(PeerDigest);
-    PeerDigest *result = cbdataAlloc(PeerDigest);
-    return result;
-}
-
-void
-PeerDigest::operator delete (void *address)
-{
-    PeerDigest *t = static_cast<PeerDigest *>(address);
-    cbdataFree(t);
-}
 
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *

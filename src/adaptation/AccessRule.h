@@ -1,10 +1,10 @@
 #ifndef SQUID_ADAPTATION__ACCESS_RULE_H
 #define SQUID_ADAPTATION__ACCESS_RULE_H
 
-#include "SquidString.h"
+#include "acl/forward.h"
 #include "adaptation/forward.h"
+#include "SquidString.h"
 
-class acl_access;
 class ConfigParser;
 
 namespace Adaptation
