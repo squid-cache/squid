@@ -254,7 +254,7 @@ Rock::IoState::writeBufToDisk(const SlotId sidNext, bool eof)
     header.firstSlot = writeAnchor().start;
     header.nextSlot = sidNext;
     header.payloadSize = theBuf.size - sizeof(DbCellHeader);
-    header.entrySize = e->swap_file_sz; // zero except for the very last write
+    header.entrySize = eof ? offset_ : 0; // storeSwapOutFileClosed sets swap_file_sz after write
     header.version = writeAnchor().basics.timestamp;
 
     // copy finalized db cell header into buffer
