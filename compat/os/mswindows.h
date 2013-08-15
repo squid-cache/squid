@@ -212,6 +212,7 @@ struct group {
     char    **gr_mem;      /* group members */
 };
 
+#if !_SQUID_MINGW_
 struct statfs {
     long    f_type;     /* type of filesystem (see below) */
     long    f_bsize;    /* optimal transfer block size */
@@ -224,6 +225,7 @@ struct statfs {
     long    f_namelen;  /* maximum length of filenames */
     long    f_spare[6]; /* spare for later */
 };
+#endif
 
 #if !HAVE_GETTIMEOFDAY
 struct timezone {
@@ -458,6 +460,9 @@ index(const char *s, int c)
 {
     return (char *)strchr(s,c);
 }
+
+// stdlib <functional> definitions are required before std API redefinitions.
+#include <functional>
 
 /** \cond AUTODOCS-IGNORE */
 namespace Squid
@@ -807,7 +812,9 @@ struct rusage {
 
 SQUIDCEXTERN int chroot(const char *dirname);
 SQUIDCEXTERN int kill(pid_t, int);
+#if !_SQUID_MINGW_
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
+#endif
 SQUIDCEXTERN struct passwd * getpwnam(char *unused);
 SQUIDCEXTERN struct group * getgrnam(char *unused);
 

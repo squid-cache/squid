@@ -31,7 +31,7 @@
 #ifndef SQUID_STOREFILESYSTEM_H
 #define SQUID_STOREFILESYSTEM_H
 
-#include "Array.h"
+#include "base/Vector.h"
 
 /* ****** DOCUMENTATION ***** */
 

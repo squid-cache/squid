@@ -123,8 +123,7 @@ echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
 echo "libtool path : $ltpath"
 
 for dir in \
-	"" \
-	lib/libTrie
+	"" 
 do
     if [ -z "$dir" ] || [ -d $dir ]; then
 	if (

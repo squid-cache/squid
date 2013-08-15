@@ -14,6 +14,8 @@ Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
     int x = setsockopt(conn->fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
     if (x < 0)
         debugs(50, 2, "Ip::Qos::setSockTos: setsockopt(IP_TOS) on " << conn << ": " << xstrerror());
+    else
+        conn->tos = tos;
     return x;
 #else
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IP_TOS) not supported on this platform");
@@ -28,6 +30,8 @@ Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark)
     int x = setsockopt(conn->fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0)
         debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on " << conn << ": " << xstrerror());
+    else
+        conn->nfmark = mark;
     return x;
 #elif USE_LIBCAP
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");

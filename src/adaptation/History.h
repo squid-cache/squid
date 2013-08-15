@@ -2,7 +2,7 @@
 #define SQUID_ADAPT_HISTORY_H
 
 #include "adaptation/DynamicGroupCfg.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "HttpHeader.h"
 #include "Notes.h"
@@ -53,7 +53,7 @@ public:
     HttpHeader allMeta;
     /// key:value pairs set by adaptation_meta, to be added to
     /// AccessLogEntry::notes when ALE becomes available
-    NotePairs metaHeaders;
+    NotePairs::Pointer metaHeaders;
 
     /// sets future services for the Adaptation::AccessCheck to notice
     void setFutureServices(const DynamicGroupCfg &services);

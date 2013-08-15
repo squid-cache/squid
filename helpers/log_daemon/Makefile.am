@@ -4,3 +4,4 @@ DIST_SUBDIRS = \
 	file
 
 SUBDIRS	= $(LOG_DAEMON_HELPERS)
+EXTRA_DIST = modules.m4

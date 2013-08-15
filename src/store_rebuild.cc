@@ -344,7 +344,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
 
     // TODO: consume parsed metadata?
 
-    debugs(47,7, HERE << "successful swap meta unpacking");
+    debugs(47,7, HERE << "successful swap meta unpacking; swap_file_sz=" << tmpe.swap_file_sz);
     memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
 
     InitStoreEntry visitor(&tmpe, key);

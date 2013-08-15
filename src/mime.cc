@@ -146,17 +146,17 @@ MimeIcon::MimeIcon(const char *aName) :
 
 MimeIcon::~MimeIcon()
 {
-    safe_free (icon_);
-    safe_free (url_);
+    xfree(icon_);
+    xfree(url_);
 }
 
 void
 MimeIcon::setName(char const *aString)
 {
-    safe_free (icon_);
-    safe_free (url_);
-    icon_ = xstrdup (aString);
-    url_ = xstrdup (internalLocalUri("/squid-internal-static/icons/", icon_));
+    xfree(icon_);
+    xfree(url_);
+    icon_ = xstrdup(aString);
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
 
 char const *
@@ -447,9 +447,9 @@ MimeIcon::created (StoreEntry *newEntry)
 
 MimeEntry::~MimeEntry()
 {
-    safe_free(pattern);
-    safe_free(content_type);
-    safe_free(content_encoding);
+    xfree(pattern);
+    xfree(content_type);
+    xfree(content_encoding);
     regfree(&compiled_pattern);
 }
 

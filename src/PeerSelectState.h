@@ -34,7 +34,7 @@
 #define   SQUID_PEERSELECTSTATE_H
 
 #include "acl/Checklist.h"
-#include "Array.h"
+#include "base/Vector.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "hier_code.h"
@@ -71,8 +71,8 @@ class ps_state
 {
 
 public:
-    void *operator new(size_t);
     ps_state();
+    ~ps_state();
 
     // Produce a URL for display identifying the transaction we are
     // trying to locate a peer for.
@@ -110,7 +110,7 @@ public:
     ping_data ping;
     ACLChecklist *acl_checklist;
 private:
-    CBDATA_CLASS(ps_state);
+    CBDATA_CLASS2(ps_state);
 };
 
 #endif /* SQUID_PEERSELECTSTATE_H */

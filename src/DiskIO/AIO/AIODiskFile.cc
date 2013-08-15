@@ -58,18 +58,6 @@
 #endif
 
 CBDATA_CLASS_INIT(AIODiskFile);
-void *
-AIODiskFile::operator new(size_t unused)
-{
-    CBDATA_INIT_TYPE(AIODiskFile);
-    return cbdataAlloc(AIODiskFile);
-}
-
-void
-AIODiskFile::operator delete(void *address)
-{
-    cbdataFree(address);
-}
 
 AIODiskFile::AIODiskFile(char const *aPath, AIODiskIOStrategy *aStrategy) : fd(-1), closed(true), error_(false)
 {
