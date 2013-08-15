@@ -26,7 +26,7 @@ public:
        0 <= firstSlot && firstSlot < slotLimit &&
        -1 <= nextSlot && nextSlot < slotLimit &&
        version > 0 &&
-       0 < payloadSize && payloadSize < slotSize - sizeof(DbCellHeader); }
+       0 < payloadSize && payloadSize <= slotSize - sizeof(DbCellHeader); }
 
     uint64_t key[2]; ///< StoreEntry key
     uint64_t entrySize; ///< total entry content size or zero if still unknown
