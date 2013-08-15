@@ -65,7 +65,7 @@ public:
     } result;
 
     // list of key=value pairs the helper produced
-    Notes notes;
+    NotePairs notes;
 
     /// for stateful replies the responding helper 'server' needs to be preserved across callbacks
     CbcPointer<helper_stateful_server> whichServer;

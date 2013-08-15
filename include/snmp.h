@@ -37,15 +37,7 @@
 #endif
 
 /* These come first */
-#if 0
-#include "asn1.h"
-#endif
 #include "snmp_error.h"
-#if 0
-#include "mibii.h"
-#include "snmp_extra.h"
-#include "snmp_dump.h"
-#endif
 
 /* I didn't touch this */
 #include "snmp_session.h"
@@ -63,10 +55,6 @@
 /* Other stuff I didn't touch */
 #include "snmp_impl.h"
 #include "snmp_api.h"
-#if 0
-#include "snmp_client.h"
-#include "mib.h"
-#endif
 #include "snmp-internal.h"
 #include "parse.h"
 #include "snmp_debug.h"

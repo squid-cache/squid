@@ -30,12 +30,10 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "HttpHeader.h"
+#include "acl/forward.h"
+#include "AccessLogEntry.h"
 #include "clientStream.h"
 #include "client_side.h"
-#include "AccessLogEntry.h"
-#include "dlink.h"
-#include "base/AsyncJob.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
 
@@ -45,8 +43,6 @@
 class HttpMsg;
 #endif
 
-class acl_access;
-class ACLFilledChecklist;
 class ClientRequestContext;
 class ConnStateData;
 class MemObject;
@@ -62,11 +58,6 @@ class ClientHttpRequest
 {
 
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
-#if USE_ADAPTATION
-    void *toCbdata() { return this; }
-#endif
     ClientHttpRequest(ConnStateData *csd);
     ~ClientHttpRequest();
     /* Not implemented - present to prevent synthetic operations */
@@ -200,7 +191,7 @@ private:
 #endif
 
 private:
-    CBDATA_CLASS(ClientHttpRequest);
+    CBDATA_CLASS2(ClientHttpRequest);
 };
 
 /* client http based routines */

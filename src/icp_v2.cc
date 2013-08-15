@@ -431,13 +431,13 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    /* absent an explicit allow, we deny all */
+    /* absent any explicit rules, we deny all */
     if (!Config.accessList.icp)
-        return true;
+        return false;
 
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
     checklist.src_addr = from;
-    checklist.my_addr.SetNoAddr();
+    checklist.my_addr.setNoAddr();
     return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
@@ -684,15 +684,15 @@ icpOpenPorts(void)
 
     icpIncomingConn = new Comm::Connection;
     icpIncomingConn->local = Config.Addrs.udp_incoming;
-    icpIncomingConn->local.SetPort(port);
+    icpIncomingConn->local.port(port);
 
-    if (!Ip::EnableIpv6 && !icpIncomingConn->local.SetIPv4()) {
+    if (!Ip::EnableIpv6 && !icpIncomingConn->local.setIPv4()) {
         debugs(12, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << icpIncomingConn->local << " is not an IPv4 address.");
         fatal("ICP port cannot be opened.");
     }
     /* split-stack for now requires default IPv4-only ICP */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpIncomingConn->local.IsAnyAddr()) {
-        icpIncomingConn->local.SetIPv4();
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpIncomingConn->local.isAnyAddr()) {
+        icpIncomingConn->local.setIPv4();
     }
 
     AsyncCall::Pointer call = asyncCall(12, 2,
@@ -704,18 +704,18 @@ icpOpenPorts(void)
                         icpIncomingConn,
                         Ipc::fdnInIcpSocket, call);
 
-    if ( !Config.Addrs.udp_outgoing.IsNoAddr() ) {
+    if ( !Config.Addrs.udp_outgoing.isNoAddr() ) {
         icpOutgoingConn = new Comm::Connection;
         icpOutgoingConn->local = Config.Addrs.udp_outgoing;
-        icpOutgoingConn->local.SetPort(port);
+        icpOutgoingConn->local.port(port);
 
-        if (!Ip::EnableIpv6 && !icpOutgoingConn->local.SetIPv4()) {
+        if (!Ip::EnableIpv6 && !icpOutgoingConn->local.setIPv4()) {
             debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << icpOutgoingConn->local << " is not an IPv4 address.");
             fatal("ICP port cannot be opened.");
         }
         /* split-stack for now requires default IPv4-only ICP */
-        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpOutgoingConn->local.IsAnyAddr()) {
-            icpOutgoingConn->local.SetIPv4();
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpOutgoingConn->local.isAnyAddr()) {
+            icpOutgoingConn->local.setIPv4();
         }
 
         enter_suid();
@@ -747,7 +747,7 @@ icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo)
 
     fd_note(conn->fd, "Incoming ICP port");
 
-    if (Config.Addrs.udp_outgoing.IsNoAddr()) {
+    if (Config.Addrs.udp_outgoing.isNoAddr()) {
         icpOutgoingConn = conn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
     }

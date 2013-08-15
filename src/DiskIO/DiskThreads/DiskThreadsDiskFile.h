@@ -41,8 +41,6 @@ class DiskThreadsDiskFile : public DiskFile
 {
 
 public:
-    void * operator new(size_t);
-    void operator delete(void *);
     DiskThreadsDiskFile(char const *path, DiskThreadsIOStrategy *);
     ~DiskThreadsDiskFile();
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
@@ -86,7 +84,7 @@ private:
     void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
     void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
 
-    CBDATA_CLASS(DiskThreadsDiskFile);
+    CBDATA_CLASS2(DiskThreadsDiskFile);
 };
 
 #include "DiskIO/ReadRequest.h"
@@ -96,15 +94,13 @@ class IoResult
 {
 
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
     IoResult(RefCount<DiskThreadsDiskFile> aFile, RefCount<RT> aRequest) : file(aFile), request(aRequest) {}
 
     RefCount<DiskThreadsDiskFile> file;
     RefCount<RT> request;
 
 private:
-    CBDATA_CLASS(IoResult);
+    CBDATA_CLASS2(IoResult);
 };
 
 template <class RT>

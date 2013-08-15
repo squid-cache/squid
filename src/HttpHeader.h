@@ -90,6 +90,7 @@ typedef enum {
     HDR_IF_RANGE,                       /**< RFC 2608, 2616 */
     /*HDR_IF_UNMODIFIED_SINCE,*/        /**< RFC 2608, 2616 */
     HDR_KEEP_ALIVE,                     /**< obsolete HTTP/1.0 header we may need to erase */
+    HDR_KEY,                            /**< experimental RFC Draft draft-fielding-http-key-02 */
     HDR_LAST_MODIFIED,                  /**< RFC 2608, 2616 */
     HDR_LINK,                           /**< RFC 2068 */
     HDR_LOCATION,                       /**< RFC 2608, 2616 */
@@ -175,7 +176,6 @@ typedef enum {
 #if USE_SSL
     hoErrorDetail,
 #endif
-    hoNote,
     hoEnd
 } http_hdr_owner_type;
 

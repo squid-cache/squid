@@ -838,7 +838,7 @@ process_request(cachemgr_request * req)
 
     S = *gethostbyname(req->hostname);
 
-    if ( !S.IsAnyAddr() ) {
+    if ( !S.isAnyAddr() ) {
         (void) 0;
     } else if ((S = req->hostname))
         (void) 0;
@@ -848,9 +848,9 @@ process_request(cachemgr_request * req)
         return 1;
     }
 
-    S.SetPort(req->port);
+    S.port(req->port);
 
-    S.GetAddrInfo(AI);
+    S.getAddrInfo(AI);
 
 #if USE_IPV6
     if ((s = socket( AI->ai_family, SOCK_STREAM, 0)) < 0) {
@@ -859,21 +859,21 @@ process_request(cachemgr_request * req)
 #endif
         snprintf(buf, sizeof(buf), "socket: %s\n", xstrerror());
         error_html(buf);
-        S.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         return 1;
     }
 
     if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
         snprintf(buf, sizeof(buf), "connect %s: %s\n",
-                 S.ToURL(ipbuf,MAX_IPSTRLEN),
+                 S.toUrl(ipbuf,MAX_IPSTRLEN),
                  xstrerror());
         error_html(buf);
-        S.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         close(s);
         return 1;
     }
 
-    S.FreeAddrInfo(AI);
+    Ip::Address::FreeAddrInfo(AI);
 
     l = snprintf(buf, sizeof(buf),
                  "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"

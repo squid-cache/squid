@@ -1,8 +1,12 @@
 #ifndef SQUID_NOTES_H
 #define SQUID_NOTES_H
 
-#include "HttpHeader.h"
-#include "HttpHeaderTools.h"
+#include "acl/forward.h"
+#include "base/Vector.h"
+#include "base/RefCount.h"
+#include "CbDataList.h"
+#include "MemPool.h"
+#include "SquidString.h"
 #include "typedefs.h"
 
 #if HAVE_STRING
@@ -13,10 +17,10 @@ class HttpRequest;
 class HttpReply;
 
 /**
- * Used to store notes. The notes are custom key:value pairs
- * ICAP request headers or ECAP options used to pass
+ * Used to store a note configuration. The notes are custom key:value
+ * pairs ICAP request headers or ECAP options used to pass
  * custom transaction-state related meta information to squid
- * internal subsystems or to addaptation services.
+ * internal subsystems or to adaptation services.
  */
 class Note: public RefCountable
 {
@@ -49,18 +53,13 @@ public:
      */
     const char *match(HttpRequest *request, HttpReply *reply);
 
-    /**
-     * Returns the first value for this key or an empty string.
-     */
-    const char *firstValue() const { return (values.size()>0&&values[0]->value.defined()?values[0]->value.termedBuf():""); }
-
     String key; ///< The note key
     Values values; ///< The possible values list for the note
 };
 
 class ConfigParser;
 /**
- * Used to store a notes list.
+ * Used to store a notes configuration list.
  */
 class Notes
 {
@@ -90,29 +89,6 @@ public:
     /// return true if the notes list is empty
     bool empty() { return notes.empty(); }
 
-    /**
-     * Adds a note key and value to the notes list.
-     * If the key name already exists in list, add the given value to its set of values.
-     */
-    void add(const String &noteKey, const String &noteValue);
-
-    /**
-     * Adds a set of notes from another notes list to this set.
-     * Creating entries for any new keys needed.
-     * If the key name already exists in list, add the given value to its set of values.
-     *
-     * WARNING:
-     * The list entries are all of shared Pointer type. Altering the src object(s) after
-     * using this function will update both Notes lists. Likewise, altering this
-     * destination NotesList will affect any relevant copies of src still in use.
-     */
-    void add(const Notes &src);
-
-    /**
-     * Returns a pointer to an existing Note with given key name or nil.
-     */
-    Note::Pointer find(const String &noteKey) const;
-
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr; ///< A short description for notes list
     const char **blacklisted; ///< Null terminated list of blacklisted note keys
@@ -126,22 +102,88 @@ private:
     Note::Pointer add(const String &noteKey);
 };
 
-class NotePairs : public HttpHeader
+/**
+ * Used to store list of notes
+ */
+class NotePairs: public RefCountable
 {
 public:
-    NotePairs() : HttpHeader(hoNote) {}
+    typedef RefCount<NotePairs> Pointer;
 
-    /// convert a NotesList into a NotesPairs
-    /// appending to any existing entries already present
-    void append(const Notes::NotesList &src) {
-        for (Notes::NotesList::const_iterator m = src.begin(); m != src.end(); ++m)
-            for (Note::Values::iterator v =(*m)->values.begin(); v != (*m)->values.end(); ++v)
-                putExt((*m)->key.termedBuf(), (*v)->value.termedBuf());
-    }
+    /**
+     * Used to store a note key/value pair.
+     */
+    class Entry
+    {
+    public:
+        Entry(const char *aKey, const char *aValue): name(aKey), value(aValue) {}
+        String name;
+        String value;
+        MEMPROXY_CLASS(Entry);
+    };
 
-    void append(const NotePairs *src) {
-        HttpHeader::append(dynamic_cast<const HttpHeader*>(src));
-    }
+    NotePairs() {}
+    ~NotePairs();
+
+    /**
+     * Append the entries of the src NotePairs list to our list.
+     */
+    void append(const NotePairs *src);
+
+    /**
+     * Returns a comma separated list of notes with key 'noteKey'.
+     * Use findFirst instead when a unique kv-pair is needed.
+     */
+    const char *find(const char *noteKey) const;
+
+    /**
+     * Returns the first note value for this key or an empty string.
+     */
+    const char *findFirst(const char *noteKey) const;
+
+    /**
+     * Adds a note key and value to the notes list.
+     * If the key name already exists in list, add the given value to its set
+     * of values.
+     */
+    void add(const char *key, const char *value);
+
+    /**
+     * Adds a note key and values strList to the notes list.
+     * If the key name already exists in list, add the new values to its set
+     * of values.
+     */
+    void addStrList(const char *key, const char *values);
+
+    /**
+     * Return true if the key/value pair is already stored
+     */
+    bool hasPair(const char *key, const char *value) const;
+
+    /**
+     * Convert NotePairs list to a string consist of "Key: Value"
+     * entries separated by sep string.
+     */
+    const char *toString(const char *sep = "\r\n") const;
+
+    /**
+     * True if there are not entries in the list
+     */
+    bool empty() const {return entries.empty();}
+
+    Vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+
+private:
+    NotePairs &operator = (NotePairs const &); // Not implemented
+    NotePairs(NotePairs const &); // Not implemented
 };
+
+MEMPROXY_CLASS_INLINE(NotePairs::Entry);
+
+class AccessLogEntry;
+/**
+ * Keep in sync HttpRequest and the corresponding AccessLogEntry objects
+ */
+NotePairs &SyncNotes(AccessLogEntry &ale, HttpRequest &request);
 
 #endif

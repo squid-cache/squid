@@ -4,7 +4,7 @@
 #include "acl/Strategised.h"
 #include "ssl/support.h"
 
-class ACLSslErrorStrategy : public ACLStrategy<const Ssl::Errors *>
+class ACLSslErrorStrategy : public ACLStrategy<const Ssl::CertErrors *>
 {
 
 public:
@@ -27,7 +27,7 @@ class ACLSslError
 
 private:
     static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<const Ssl::Errors *> RegistryEntry_;
+    static ACLStrategised<const Ssl::CertErrors *> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLSSL_ERROR_H */

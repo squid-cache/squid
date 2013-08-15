@@ -29,7 +29,8 @@
  *
  */
 
-class ACLList;
+#include "acl/forward.h"
+
 /// representation of a class of Size-limit ACLs
 // a POD. TODO: convert to new ACL framework
 class AclSizeLimit

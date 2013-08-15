@@ -107,22 +107,6 @@ ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Ad
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
-void *
-ClientRequestContext::operator new (size_t size)
-{
-    assert (size == sizeof(ClientRequestContext));
-    CBDATA_INIT_TYPE(ClientRequestContext);
-    ClientRequestContext *result = cbdataAlloc(ClientRequestContext);
-    return result;
-}
-
-void
-ClientRequestContext::operator delete (void *address)
-{
-    ClientRequestContext *t = static_cast<ClientRequestContext *>(address);
-    cbdataFree(t);
-}
-
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(allow_t, void *);
@@ -169,22 +153,6 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
-
-void *
-ClientHttpRequest::operator new (size_t size)
-{
-    assert (size == sizeof (ClientHttpRequest));
-    CBDATA_INIT_TYPE(ClientHttpRequest);
-    ClientHttpRequest *result = cbdataAlloc(ClientHttpRequest);
-    return result;
-}
-
-void
-ClientHttpRequest::operator delete (void *address)
-{
-    ClientHttpRequest *t = static_cast<ClientHttpRequest *>(address);
-    cbdataFree(t);
-}
 
 ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
@@ -408,15 +376,15 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* Internally created requests cannot have bodies today */
     request->content_length = 0;
 
-    request->client_addr.SetNoAddr();
+    request->client_addr.setNoAddr();
 
 #if FOLLOW_X_FORWARDED_FOR
-    request->indirect_client_addr.SetNoAddr();
+    request->indirect_client_addr.setNoAddr();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-    request->my_addr.SetNoAddr();	/* undefined for internal requests */
+    request->my_addr.setNoAddr();	/* undefined for internal requests */
 
-    request->my_addr.SetPort(0);
+    request->my_addr.port(0);
 
     /* Our version is HTTP/1.1 */
     request->http_ver = Http::ProtocolVersion(1,1);
@@ -616,8 +584,8 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
                                 http->request,
                                 NULL,
 #if USE_AUTH
-                                http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                http->getConn()->auth_user_request : http->request->auth_user_request);
+                                http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                http->getConn()->getAuth() : http->request->auth_user_request);
 #else
                                 NULL);
 #endif
@@ -665,15 +633,23 @@ ClientRequestContext::hostHeaderVerify()
     uint16_t port = 0;
     if (portStr) {
         *portStr = '\0'; // strip the ':'
-        if (*(++portStr) != '\0')
-            port = xatoi(portStr);
+        if (*(++portStr) != '\0') {
+            char *end = NULL;
+            int64_t ret = strtoll(portStr, &end, 10);
+            if (end == portStr || *end != '\0' || ret < 1 || ret > 0xFFFF) {
+                // invalid port details. Replace the ':'
+                *(--portStr) = ':';
+                portStr = NULL;
+            } else
+                port = (ret & 0xFFFF);
+        }
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
-    if (http->request->flags.intercepted || http->request->flags.spoofClientIp) {
+    if (http->request->flags.intercepted || http->request->flags.interceptTproxy) {
         // verify the Host: port (if any) matches the apparent destination
-        if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
+        if (portStr && port != http->getConn()->clientConnection->local.port()) {
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.port() <<
                    " matches Host: port " << port << " (" << portStr << ")");
             hostHeaderVerifyFailed("intercepted port", portStr);
         } else {
@@ -722,7 +698,7 @@ ClientRequestContext::clientAccessCheck()
 
         /* we always trust the direct client address for actual use */
         http->request->indirect_client_addr = http->request->client_addr;
-        http->request->indirect_client_addr.SetPort(0);
+        http->request->indirect_client_addr.port(0);
 
         /* setup the XFF iterator for processing */
         http->request->x_forwarded_for_iterator = http->request->header.getList(HDR_X_FORWARDED_FOR);
@@ -780,13 +756,12 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
     debugs(85, 2, "The request " <<
            RequestMethodStr(http->request->method) << " " <<
            http->uri << " is " << answer <<
-           ", because it matched '" <<
-           (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
+           "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";
-    if (http->getConn() != NULL && http->getConn()->auth_user_request != NULL)
-        proxy_auth_msg = http->getConn()->auth_user_request->denyMessage("<null>");
+    if (http->getConn() != NULL && http->getConn()->getAuth() != NULL)
+        proxy_auth_msg = http->getConn()->getAuth()->denyMessage("<null>");
     else if (http->request->auth_user_request != NULL)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
@@ -840,7 +815,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         }
 
         Ip::Address tmpnoaddr;
-        tmpnoaddr.SetNoAddr();
+        tmpnoaddr.setNoAddr();
         error = clientBuildError(page_id, status,
                                  NULL,
                                  http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
@@ -849,8 +824,8 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
 #if USE_AUTH
         error->auth_user_request =
-            http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-            http->getConn()->auth_user_request : http->request->auth_user_request;
+            http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+            http->getConn()->getAuth() : http->request->auth_user_request;
 #endif
 
         readNextRequest = true;
@@ -907,6 +882,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
         HelperReply nilReply;
+        nilReply.result = HelperReply::Error;
         context->clientRedirectDone(nilReply);
     }
 }
@@ -970,7 +946,7 @@ clientHierarchical(ClientHttpRequest * http)
     const wordlist *p = NULL;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
-    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.spoofClientIp))
+    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.interceptTproxy))
         return 0;
 
     /*
@@ -1093,7 +1069,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (!request->flags.ignoreCc) {
         if (request->cache_control) {
-            if (request->cache_control->noCache())
+            if (request->cache_control->hasNoCache())
                 no_cache=true;
 
             // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing
@@ -1256,12 +1232,12 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
     assert(redirect_state == REDIRECT_PENDING);
     redirect_state = REDIRECT_DONE;
 
-    // copy the URL rewriter response Notes to the HTTP request for logging
+    // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    // TODO put them straight into the transaction state record (ALE?) eventually
-    if (!old_request->helperNotes)
-        old_request->helperNotes = new Notes;
-    old_request->helperNotes->add(reply.notes);
+    if (http->al != NULL) {
+        NotePairs &notes = SyncNotes(*http->al, *old_request);
+        notes.append(&reply.notes);
+    }
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1289,8 +1265,8 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
         // #2: redirect with a default status code     OK url="..."
         // #3: re-write the URL                        OK rewrite-url="..."
 
-        Note::Pointer statusNote = reply.notes.find("status");
-        Note::Pointer urlNote = reply.notes.find("url");
+        const char *statusNote = reply.notes.findFirst("status");
+        const char *urlNote = reply.notes.findFirst("url");
 
         if (urlNote != NULL) {
             // HTTP protocol redirect to be done.
@@ -1302,7 +1278,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
             // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
             Http::StatusCode status = Http::scMovedTemporarily;
             if (statusNote != NULL) {
-                const char * result = statusNote->firstValue();
+                const char * result = statusNote;
                 status = static_cast<Http::StatusCode>(atoi(result));
             }
 
@@ -1312,21 +1288,21 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     || status == Http::scPermanentRedirect
                     || status == Http::scTemporaryRedirect) {
                 http->redirect.status = status;
-                http->redirect.location = xstrdup(urlNote->firstValue());
+                http->redirect.location = xstrdup(urlNote);
                 // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
             } else {
-                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << urlNote->firstValue());
+                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << urlNote);
             }
         } else {
             // URL-rewrite wanted. Ew.
-            urlNote = reply.notes.find("rewrite-url");
+            urlNote = reply.notes.findFirst("rewrite-url");
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
-            if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri)) {
+            if (urlNote != NULL && strcmp(urlNote, http->uri)) {
                 // XXX: validate the URL properly *without* generating a whole new request object right here.
                 // XXX: the clone() should be done only AFTER we know the new URL is valid.
                 HttpRequest *new_request = old_request->clone();
-                if (urlParse(old_request->method, const_cast<char*>(urlNote->firstValue()), new_request)) {
+                if (urlParse(old_request->method, const_cast<char*>(urlNote), new_request)) {
                     debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
 
                     // update the new request to flag the re-writing was done on it
@@ -1347,7 +1323,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
                     HTTPMSGLOCK(http->request);
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
-                           old_request->method << " " << urlNote->firstValue() << " " << old_request->http_ver);
+                           old_request->method << " " << urlNote << " " << old_request->http_ver);
                     delete new_request;
                 }
             }
@@ -1377,12 +1353,12 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
     assert(store_id_state == REDIRECT_PENDING);
     store_id_state = REDIRECT_DONE;
 
-    // copy the helper response Notes to the HTTP request for logging
+    // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    // TODO put them straight into the transaction state record (ALE?) eventually
-    if (!old_request->helperNotes)
-        old_request->helperNotes = new Notes;
-    old_request->helperNotes->add(reply.notes);
+    if (http->al != NULL) {
+        NotePairs &notes = SyncNotes(*http->al, *old_request);
+        notes.append(&reply.notes);
+    }
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1406,14 +1382,14 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
         break;
 
     case HelperReply::Okay: {
-        Note::Pointer urlNote = reply.notes.find("store-id");
+        const char *urlNote = reply.notes.findFirst("store-id");
 
         // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
-        if (urlNote != NULL && strcmp(urlNote->firstValue(), http->uri) ) {
+        if (urlNote != NULL && strcmp(urlNote, http->uri) ) {
             // Debug section required for some very specific cases.
-            debugs(85, 9, "Setting storeID with: " << urlNote->firstValue() );
-            http->request->store_id = urlNote->firstValue();
-            http->store_id = urlNote->firstValue();
+            debugs(85, 9, "Setting storeID with: " << urlNote );
+            http->request->store_id = urlNote;
+            http->store_id = urlNote;
         }
     }
     break;
@@ -1607,7 +1583,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 #if USE_AUTH
     // Preserve authentication info for the ssl-bumped request
     if (request->auth_user_request != NULL)
-        getConn()->auth_user_request = request->auth_user_request;
+        getConn()->setAuth(request->auth_user_request, "SSL-bumped CONNECT");
 #endif
 
     assert(sslBumpNeeded());
@@ -2080,7 +2056,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
     // true cause of the error at this point, so I did not pass it.
     if (calloutContext) {
         Ip::Address noAddr;
-        noAddr.SetNoAddr();
+        noAddr.setNoAddr();
         ConnStateData * c = getConn();
         calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, Http::scInternalServerError,
                                 NULL,
@@ -2089,7 +2065,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
                                                 );
 #if USE_AUTH
         calloutContext->error->auth_user_request =
-            c != NULL && c->auth_user_request != NULL ? c->auth_user_request : request->auth_user_request;
+            c != NULL && c->getAuth() != NULL ? c->getAuth() : request->auth_user_request;
 #endif
         calloutContext->error->detailError(errDetail);
         calloutContext->readNextRequest = true;

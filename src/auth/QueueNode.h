@@ -23,7 +23,11 @@ private:
     QueueNode &operator =(const QueueNode &);
 
 public:
-    QueueNode(Auth::UserRequest *aRequest, AUTHCB *aHandler, void *aData) : auth_user_request(aRequest), handler(aHandler), data(cbdataReference(aData)) {}
+    QueueNode(Auth::UserRequest *aRequest, AUTHCB *aHandler, void *aData) :
+            next(NULL),
+            auth_user_request(aRequest),
+            handler(aHandler),
+            data(cbdataReference(aData)) {}
     ~QueueNode() {
         cbdataReferenceDone(data);
         while (next) {

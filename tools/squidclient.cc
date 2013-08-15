@@ -145,6 +145,13 @@ static struct stat sb;
 int total_bytes = 0;
 int io_timeout = 120;
 
+#if _SQUID_AIX_
+/* Bug 3854: AIX 6.1 tries to link in this fde.h global symbol
+ * despite squidclient not using any of the fd_* code.
+ */
+fde *fde::Table = NULL;
+#endif
+
 #if _SQUID_WINDOWS_
 void
 Win32SockCleanup(void)
@@ -584,35 +591,35 @@ main(int argc, char *argv[])
             }
         }
 
-        iaddr.GetAddrInfo(AI);
+        iaddr.getAddrInfo(AI);
         if ((conn = socket(AI->ai_family, AI->ai_socktype, 0)) < 0) {
             perror("client: socket");
-            iaddr.FreeAddrInfo(AI);
+            Ip::Address::FreeAddrInfo(AI);
             exit(1);
         }
-        iaddr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
 
         if (localhost && client_comm_bind(conn, iaddr) < 0) {
             perror("client: bind");
             exit(1);
         }
 
-        iaddr.SetEmpty();
+        iaddr.setEmpty();
         if ( !iaddr.GetHostByName(hostname) ) {
             fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", hostname);
             exit(1);
         }
 
-        iaddr.SetPort(port);
+        iaddr.port(port);
 
         if (opt_verbose) {
             char ipbuf[MAX_IPSTRLEN];
-            fprintf(stderr, "Connecting... %s(%s)\n", hostname, iaddr.NtoA(ipbuf, MAX_IPSTRLEN));
+            fprintf(stderr, "Connecting... %s(%s)\n", hostname, iaddr.toStr(ipbuf, MAX_IPSTRLEN));
         }
 
         if (client_comm_connect(conn, iaddr, ping ? &tv1 : NULL) < 0) {
             char hostnameBuf[MAX_IPSTRLEN];
-            iaddr.ToURL(hostnameBuf, MAX_IPSTRLEN);
+            iaddr.toUrl(hostnameBuf, MAX_IPSTRLEN);
             if (errno == 0) {
                 fprintf(stderr, "client: ERROR: Cannot connect to %s: Host unknown.\n", hostnameBuf);
             } else {
@@ -624,10 +631,11 @@ main(int argc, char *argv[])
         }
         if (opt_verbose) {
             char ipbuf[MAX_IPSTRLEN];
-            fprintf(stderr, "Connected to: %s (%s)\n", hostname, iaddr.NtoA(ipbuf, MAX_IPSTRLEN));
+            fprintf(stderr, "Connected to: %s (%s)\n", hostname, iaddr.toStr(ipbuf, MAX_IPSTRLEN));
         }
 
         /* Send the HTTP request */
+        fprintf(stderr, "Sending HTTP request ... ");
         bytesWritten = mywrite(conn, msg, strlen(msg));
 
         if (bytesWritten < 0) {
@@ -637,8 +645,10 @@ main(int argc, char *argv[])
             fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
             exit(1);
         }
+        fprintf(stderr, "done.\n");
 
         if (put_file) {
+            fprintf(stderr, "Sending HTTP request payload ... ");
             int x;
             lseek(put_fd, 0, SEEK_SET);
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
@@ -653,6 +663,8 @@ main(int argc, char *argv[])
 
             if (x != 0)
                 fprintf(stderr, "client: ERROR: Cannot send file.\n");
+            else
+                fprintf(stderr, "done.\n");
         }
         /* Read the data */
 
@@ -728,39 +740,24 @@ main(int argc, char *argv[])
 static int
 client_comm_bind(int sock, const Ip::Address &addr)
 {
-
-    int res;
-
-    static struct addrinfo *AI = NULL;
-
     /* Set up the source socket address from which to send. */
-
-    addr.GetAddrInfo(AI);
-
-    res = bind(sock, AI->ai_addr, AI->ai_addrlen);
-
-    addr.FreeAddrInfo(AI);
-
+    static struct addrinfo *AI = NULL;
+    addr.getAddrInfo(AI);
+    int res = bind(sock, AI->ai_addr, AI->ai_addrlen);
+    Ip::Address::FreeAddrInfo(AI);
     return res;
 }
 
 static int
 client_comm_connect(int sock, const Ip::Address &addr, struct timeval *tvp)
 {
-    int res;
-    static struct addrinfo *AI = NULL;
-
     /* Set up the destination socket address for message to send to. */
-
-    addr.GetAddrInfo(AI);
-
-    res = connect(sock, AI->ai_addr, AI->ai_addrlen);
-
-    addr.FreeAddrInfo(AI);
-
+    static struct addrinfo *AI = NULL;
+    addr.getAddrInfo(AI);
+    int res = connect(sock, AI->ai_addr, AI->ai_addrlen);
+    Ip::Address::FreeAddrInfo(AI);
     if (tvp)
         (void) Now(tvp);
-
     return res;
 }
 
@@ -770,10 +767,9 @@ Now(struct timeval *tp)
 #if GETTIMEOFDAY_NO_TZP
     return gettimeofday(tp);
 #else
-
     return gettimeofday(tp, NULL);
 #endif
-}				/* ARGSUSED */
+}
 
 void
 catchSignal(int sig)

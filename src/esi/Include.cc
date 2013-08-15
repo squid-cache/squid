@@ -235,22 +235,6 @@ ESIStreamContext::freeResources()
     include = NULL;
 }
 
-void *
-ESIStreamContext::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (ESIStreamContext));
-    CBDATA_INIT_TYPE(ESIStreamContext);
-    ESIStreamContext *result = cbdataAlloc(ESIStreamContext);
-    return result;
-}
-
-void
-ESIStreamContext::operator delete (void *address)
-{
-    ESIStreamContext *t = static_cast<ESIStreamContext *>(address);
-    cbdataFree(t);
-}
-
 ESIStreamContext *
 ESIStreamContextNew (ESIIncludePtr include)
 {

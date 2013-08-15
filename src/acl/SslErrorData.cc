@@ -52,10 +52,10 @@ ACLSslErrorData::~ACLSslErrorData()
 }
 
 bool
-ACLSslErrorData::match(const Ssl::Errors *toFind)
+ACLSslErrorData::match(const Ssl::CertErrors *toFind)
 {
-    for (const Ssl::Errors *err = toFind; err; err = err->next ) {
-        if (values->findAndTune(err->element))
+    for (const Ssl::CertErrors *err = toFind; err; err = err->next ) {
+        if (values->findAndTune(err->element.code))
             return true;
     }
     return false;

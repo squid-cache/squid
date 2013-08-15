@@ -4,7 +4,7 @@
 #ifndef SQUID_CPU_AFFINITY_MAP_H
 #define SQUID_CPU_AFFINITY_MAP_H
 
-#include "Array.h"
+#include "base/Vector.h"
 
 class CpuAffinitySet;
 

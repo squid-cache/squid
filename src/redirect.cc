@@ -116,8 +116,12 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
 
                 HelperReply newReply;
-                newReply.result = reply.result;
-                newReply.notes = reply.notes;
+                // BACKWARD COMPATIBILITY 2012-06-15:
+                // We got HelperReply::Unknown reply result but new
+                // redirectStateData handlers require HelperReply::Okay,
+                // else will drop the helper reply
+                newReply.result = HelperReply::Okay;
+                newReply.notes.append(&reply.notes);
 
                 if (status == Http::scMovedPermanently
                         || status == Http::scMovedTemporarily
@@ -231,7 +235,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
     if (conn != NULL)
         r->client_addr = conn->log_addr;
     else
-        r->client_addr.SetNoAddr();
+        r->client_addr.setNoAddr();
     r->client_ident = NULL;
 #if USE_AUTH
     if (http->request->auth_user_request != NULL) {
@@ -273,12 +277,12 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
 
     sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s %s/%s %s %s myip=%s myport=%d\n",
                   r->orig_url,
-                  r->client_addr.NtoA(claddr,MAX_IPSTRLEN),
+                  r->client_addr.toStr(claddr,MAX_IPSTRLEN),
                   fqdn,
                   r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
                   r->method_s,
-                  http->request->my_addr.NtoA(myaddr,MAX_IPSTRLEN),
-                  http->request->my_addr.GetPort());
+                  http->request->my_addr.toStr(myaddr,MAX_IPSTRLEN),
+                  http->request->my_addr.port());
 
     if ((sz<=0) || (sz>=MAX_REDIRECTOR_REQUEST_STRLEN)) {
         if (sz<=0) {
@@ -293,7 +297,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         Ip::Address tmpnoaddr;
-        tmpnoaddr.SetNoAddr();
+        tmpnoaddr.setNoAddr();
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
                                     http->request->method, NULL,
                                     http->getConn() != NULL && http->getConn()->clientConnection != NULL ?
@@ -301,8 +305,8 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
                                     http->request,
                                     NULL,
 #if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                    http->getConn()->auth_user_request : http->request->auth_user_request);
+                                    http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                    http->getConn()->getAuth() : http->request->auth_user_request);
 #else
                                     NULL);
 #endif

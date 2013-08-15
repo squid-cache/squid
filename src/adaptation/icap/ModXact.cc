@@ -1253,9 +1253,11 @@ void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
     HttpRequest * request_ = NULL;
+    HttpRequest * adapted_request_ = NULL;
     HttpReply * reply_ = NULL;
-    if (!(request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
-        request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
+    request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
+    if (!(adapted_request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
+        adapted_request_ = request_;
         reply_ = dynamic_cast<HttpReply*>(adapted.header);
     }
 
@@ -1270,6 +1272,9 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 
     al.request = request_;
     HTTPMSGLOCK(al.request);
+    al.adapted_request = adapted_request_;
+    HTTPMSGLOCK(al.adapted_request);
+
     if (reply_) {
         al.reply = reply_;
         HTTPMSGLOCK(al.reply);
@@ -1314,7 +1319,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         packerClean(&p);
         mb.clean();
     }
-    prepareLogWithRequestDetails(request_, alep);
+    prepareLogWithRequestDetails(adapted_request_, alep);
     Xaction::finalizeLogInfo();
 }
 
@@ -1413,8 +1418,8 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         } else
 #endif
             client_addr = request->client_addr;
-        if (!client_addr.IsAnyAddr() && !client_addr.IsNoAddr())
-            buf.Printf("X-Client-IP: %s\r\n", client_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
+        if (!client_addr.isAnyAddr() && !client_addr.isNoAddr())
+            buf.Printf("X-Client-IP: %s\r\n", client_addr.toStr(ntoabuf,MAX_IPSTRLEN));
     }
 
     if (TheConfig.send_username && request)
@@ -1432,8 +1437,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         if (const char *value = (*i)->match(r, reply)) {
             buf.Printf("%s: %s\r\n", (*i)->key.termedBuf(), value);
             Adaptation::History::Pointer ah = request->adaptHistory(false);
-            if (ah != NULL && !ah->metaHeaders.hasByNameListMember((*i)->key.termedBuf(), value, ','))
-                ah->metaHeaders.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), value));
+            if (ah != NULL) {
+                if (ah->metaHeaders == NULL)
+                    ah->metaHeaders = new NotePairs;
+                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), value))
+                    ah->metaHeaders->add((*i)->key.termedBuf(), value);
+            }
         }
     }
 

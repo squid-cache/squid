@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.3.3 release notes</title>
+<title>Squid 3.3.8 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.3.3.
+The Squid Team are pleased to announce the release of Squid-3.3.8.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.3/"> or the 
 <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
@@ -206,6 +206,12 @@ This section gives a thorough account of those changes in three categories:
 	   <em>ssl::certUntrusted</em>,
 	   <em>ssl::certSelfSigned</em>.
 
+	<tag>external_acl_type</tag>
+	<p><em>%ACL</em> format tag ported from 2.6.
+	   Sends the name of ACL being tested to the external helper.
+	<p><em>%DATA</em> format tag ported from 2.6.
+	   Inserts the ACL arguments into a particular location of the helper input instead of at the end of the line.
+
 	<tag>logformat</tag>
 	<p>New token <em>%ssl::bump_mode</em> to log the SSL-bump mode type performed on a request.
 	  Logs values of: <em>-</em>, <em>none</em>, <em>client-first</em>, or <em>server-first</em>.
@@ -309,15 +315,8 @@ This section gives an account of those changes in three categories:
 	<tag>error_map</tag>
 	<p>Not yet ported from 2.6
 
-	<tag>external_acl_type</tag>
-	<p><em>%ACL</em> format tag not yet ported from 2.6
-	<p><em>%DATA</em> format tag not yet ported from 2.6
-
 	<tag>external_refresh_check</tag>
 	<p>Not yet ported from 2.7
-
-	<tag>http_port</tag>
-	<p><em>act-as-origin</em> not yet ported from 2.7
 
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
