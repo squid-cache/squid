@@ -3265,6 +3265,8 @@ tests_testRock_SOURCES = \
 	cbdata.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
+	CollapsedForwarding.h \
+	CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	disk.h \
@@ -3340,6 +3342,8 @@ tests_testRock_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	SwapDir.cc \
+	Transients.h \
+	Transients.cc \
 	tests/testRock.cc \
 	tests/testMain.cc \
 	tests/testRock.h \
