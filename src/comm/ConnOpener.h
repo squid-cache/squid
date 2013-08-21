@@ -47,7 +47,7 @@ private:
     void connected();
     void lookupLocalAddress();
 
-    void sleep();
+    void retrySleep();
     void restart();
 
     bool createFd();
