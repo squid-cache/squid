@@ -3136,7 +3136,7 @@ DOC_START
 DOC_END
 
 NAME: forward_max_tries
-DEFAULT: 10
+DEFAULT: 25
 TYPE: int
 LOC: Config.forward_max_tries
 DOC_START
