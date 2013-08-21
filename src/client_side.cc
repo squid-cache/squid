@@ -5066,6 +5066,7 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
 static void
 FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data)
 {
+    // XXX: in some cases (e.g., FtpHandlePasvReply), the reply is not what we send to the client
     if (reply != NULL) {
         MemBuf *const mb = reply->pack();
         debugs(11, 2, "FTP Client " << context->clientConnection);
@@ -5101,10 +5102,11 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     FtpCloseDataConnection(context->getConn());
 
     Comm::ConnectionPointer conn = new Comm::Connection;
+    ConnStateData * const connState = context->getConn();
     conn->flags = COMM_NONBLOCKING;
-    conn->local = context->clientConnection->local;
+    conn->local = connState->transparent() ?
+                  connState->port->s : context->clientConnection->local;
     conn->local.SetPort(0);
-    ConnStateData *const connState = context->getConn();
     const char *const note = connState->ftp.uri.termedBuf();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
@@ -5123,21 +5125,28 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     connState->ftp.dataListenConn = conn;
 
     char addr[MAX_IPSTRLEN];
-    conn->local.NtoA(addr, MAX_IPSTRLEN, AF_INET);
+    // remote server in interception setups and local address otherwise
+    const Ip::Address &server = connState->transparent() ?
+                                context->clientConnection->local : conn->local;
+    server.NtoA(addr, MAX_IPSTRLEN, AF_INET);
     addr[MAX_IPSTRLEN - 1] = '\0';
     for (char *c = addr; *c != '\0'; ++c) {
         if (*c == '.')
             *c = ',';
     }
 
+    // conn->fd is the client data connection (and its local port)
     const unsigned short port = comm_local_port(conn->fd);
     conn->local.SetPort(port);
 
+    // In interception setups, we combine remote server address with a
+    // local port number and hope that traffic will be redirected to us.
     MemBuf mb;
     mb.init();
     mb.Printf("227 =%s,%i,%i\r\n", addr, static_cast<int>(port >> 8),
               static_cast<int>(port % 256));
 
+    debugs(11, 3, Raw("writing", mb.buf, mb.size));
     FtpWriteReply(context, mb);
 }
 
@@ -5347,6 +5356,20 @@ FtpWroteReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size
 
 bool
 FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
+    if (HttpRequest *request = context->http->request) {
+        MemBuf *mb = new MemBuf;
+        Packer p;
+        mb->init();
+        packerToMemInit(&p, mb);
+        request->pack(&p);
+        packerClean(&p);
+
+        debugs(11, 2, "FTP Client " << context->clientConnection);
+        debugs(11, 2, "FTP Client REQUEST:\n---------\n" << mb->buf <<
+               "\n----------");
+        delete mb;
+    }
+
     static std::pair<const char *, FtpRequestHandler *> handlers[] = {
         std::make_pair("LIST", FtpHandleDataRequest),
         std::make_pair("NLST", FtpHandleDataRequest),
@@ -5395,6 +5418,8 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
     if (connState->ftp.uri.size() == 0)
         connState->ftp.uri = uri;
     else if (uri.caseCmp(connState->ftp.uri) != 0) {
+        debugs(11, 3, "expected " << connState->ftp.uri);
+        debugs(11, 3, " but got " << uri);
         FtpWriteEarlyReply(connState, 501, "Cannot change host");
         return false;
     }
