@@ -1119,6 +1119,7 @@ FwdState::connectStart()
         else
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
+            pinned_connection->stopPinnedConnectionMonitoring();
             flags.connected_okay = true;
             ++n_tries;
             request->flags.pinned = true;
