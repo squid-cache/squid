@@ -5298,7 +5298,8 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
         const char *reason = reply->sline.reason();
         MemBuf mb;
         mb.init();
-        mb.Printf("%i-%s\r\n", status, errorPageName(request->errType));
+        if (request->errType != ERR_NONE)
+            mb.Printf("%i-%s\r\n", status, errorPageName(request->errType));
         if (request->errDetail > 0) {
             // XXX: > 0 may not always mean that this is an errno
             mb.Printf("%i-Error: (%d) %s\r\n", status,
