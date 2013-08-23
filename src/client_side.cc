@@ -4925,6 +4925,10 @@ FtpWriteEarlyReply(ConnStateData *connState, const int code, const char *msg)
 static void
 FtpWriteReply(ClientSocketContext *context, MemBuf &mb)
 {
+    debugs(11, 2, "FTP Client " << context->clientConnection);
+    debugs(11, 2, "FTP Client REPLY:\n---------\n" << mb.buf <<
+           "\n----------");
+
     AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteReply",
         CommIoCbPtrFun(&FtpWroteReply, context));
     Comm::Write(context->clientConnection, &mb, call);
@@ -5084,15 +5088,6 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
 static void
 FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data)
 {
-    // XXX: in some cases (e.g., FtpHandlePasvReply), the reply is not what we send to the client
-    if (reply != NULL) {
-        MemBuf *const mb = reply->pack();
-        debugs(11, 2, "FTP Client " << context->clientConnection);
-        debugs(11, 2, "FTP Client REPLY:\n---------\n" << mb->buf <<
-               "\n----------");
-        delete mb;
-    }
-
     static FtpReplyHandler *handlers[] = {
         NULL, // FTP_BEGIN
         NULL, // FTP_CONNECTED
@@ -5311,6 +5306,10 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
     mb.init();
     FtpPrintReply(mb, reply);
 
+    debugs(11, 2, "FTP Client " << context->clientConnection);
+    debugs(11, 2, "FTP Client REPLY:\n---------\n" << mb.buf <<
+           "\n----------");
+
     Comm::Write(context->clientConnection, &mb, call);
 }
 
@@ -5373,7 +5372,8 @@ FtpWroteReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size
         static_cast<ClientSocketContext*>(data);
     ConnStateData *const connState = context->getConn();
 
-    if (connState->ftp.state == ConnStateData::FTP_ERROR) {
+    if (connState->ftp.state == ConnStateData::FTP_ERROR ||
+        context->socketState() != STREAM_COMPLETE) {
         conn->close();
         return;
     }
