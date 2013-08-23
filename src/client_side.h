@@ -339,6 +339,7 @@ public:
         FTP_BEGIN,
         FTP_CONNECTED,
         FTP_HANDLE_PASV,
+        FTP_HANDLE_PORT,
         FTP_HANDLE_DATA_REQUEST,
         FTP_HANDLE_UPLOAD_REQUEST,
         FTP_ERROR
@@ -352,6 +353,7 @@ public:
         Ip::Address serverDataAddr;
         char uploadBuf[CLIENT_REQ_BUF_SZ];
         size_t uploadAvailSize;
+        AsyncCall::Pointer connector; ///< set when we are actively connecting
         AsyncCall::Pointer reader; ///< set when we are reading FTP data
     } ftp;
 
@@ -397,6 +399,8 @@ public:
 #endif
 
     void finishDechunkingRequest(bool withSuccess);
+
+    void resumeFtpRequest(ClientSocketContext *const context);
 
 protected:
     void startDechunkingRequest();

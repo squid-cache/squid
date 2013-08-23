@@ -373,13 +373,7 @@ bool
 ServerStateData::handlePasvReply()
 {
     int code = ctrl.replycode;
-    int h1, h2, h3, h4;
-    int p1, p2;
-    int n;
-    unsigned short port;
-    Ip::Address ipa_remote;
     char *buf;
-    LOCAL_ARRAY(char, ipaddr, 1024);
     debugs(9, 3, HERE);
 
     if (code != 227) {
@@ -393,42 +387,13 @@ ServerStateData::handlePasvReply()
 
     buf = ctrl.last_reply + strcspn(ctrl.last_reply, "0123456789");
 
-    n = sscanf(buf, "%d,%d,%d,%d,%d,%d", &h1, &h2, &h3, &h4, &p1, &p2);
-
-    if (n != 6 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255) {
+    const char *forceIp = Config.Ftp.sanitycheck ?
+                          fd_table[ctrl.conn->fd].ipaddr : NULL;
+    if (!Ftp::ParseIpPort(buf, forceIp, data.addr)) {
         debugs(9, DBG_IMPORTANT, "Unsafe PASV reply from " <<
                ctrl.conn->remote << ": " << ctrl.last_reply);
         return false;
     }
-
-    snprintf(ipaddr, 1024, "%d.%d.%d.%d", h1, h2, h3, h4);
-
-    ipa_remote = ipaddr;
-
-    if ( ipa_remote.IsAnyAddr() ) {
-        debugs(9, DBG_IMPORTANT, "Unsafe PASV reply from " <<
-               ctrl.conn->remote << ": " << ctrl.last_reply);
-        return false;
-    }
-
-    port = ((p1 << 8) + p2);
-
-    if (0 == port) {
-        debugs(9, DBG_IMPORTANT, "Unsafe PASV reply from " <<
-               ctrl.conn->remote << ": " << ctrl.last_reply);
-        return false;
-    }
-
-    if (Config.Ftp.sanitycheck) {
-        if (port < 1024) {
-            debugs(9, DBG_IMPORTANT, "Unsafe PASV reply from " <<
-                   ctrl.conn->remote << ": " << ctrl.last_reply);
-            return false;
-        }
-    }
-
-    data.addr = Config.Ftp.sanitycheck ? fd_table[ctrl.conn->fd].ipaddr : ipaddr;
-    data.addr.SetPort(port);
 
     return true;
 }
@@ -853,3 +818,38 @@ ServerStateData::parseControlReply(char *buf, size_t len, int *codep, size_t *us
 }
 
 }; // namespace Ftp
+
+
+bool
+Ftp::ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr)
+{
+    int h1, h2, h3, h4;
+    int p1, p2;
+    const int n = sscanf(buf, "%d,%d,%d,%d,%d,%d",
+                         &h1, &h2, &h3, &h4, &p1, &p2);
+
+    if (n != 6 || p1 < 0 || p2 < 0 || p1 > 255 || p2 > 255)
+        return false;
+
+    if (forceIp) {
+        addr = forceIp; // but the above code still validates the IP we got
+    } else {
+        static char ipBuf[1024];
+        snprintf(ipBuf, sizeof(ipBuf), "%d.%d.%d.%d", h1, h2, h3, h4);
+        addr = ipBuf;
+
+        if (addr.IsAnyAddr())
+            return false;
+    }
+
+    const int port = ((p1 << 8) + p2);
+
+    if (port <= 0)
+        return false;
+
+    if (Config.Ftp.sanitycheck && port < 1024)
+        return false;
+
+    addr.SetPort(port);
+    return true;
+}
