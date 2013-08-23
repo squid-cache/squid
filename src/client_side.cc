@@ -5604,9 +5604,9 @@ FtpCheckDataConnection(ClientSocketContext *context)
         return false;
     }
 
-    if (connState->ftp.dataConn->remote.IsAnyAddr()) {
+    if (!connState->ftp.dataConn || connState->ftp.dataConn->remote.IsAnyAddr()) {
         // XXX: use client address and default port instead.
-        FtpSetReply(context, 425, "Use PORT first");
+        FtpSetReply(context, 425, "Use PORT or PASV first");
         return false;
     }
 
@@ -5633,7 +5633,7 @@ FtpHandleConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
         FtpSetReply(context, 425, "Cannot open data connection.");
         assert(context->http && context->http->storeEntry() != NULL);
     } else {
-        context->getConn()->ftp.dataConn = conn;
+        assert(context->getConn()->ftp.dataConn == conn);
         context->getConn()->ftp.uploadAvailSize = 0;
         assert(Comm::IsConnOpen(context->getConn()->ftp.dataConn));
     }
