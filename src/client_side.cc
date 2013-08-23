@@ -5286,10 +5286,32 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
     const HttpHeader &header = reply->header;
     ConnStateData *const connState = context->getConn();
 
+    // adaptation and forwarding errors lack HDR_FTP_STATUS
     if (!header.has(HDR_FTP_STATUS)) {
-        // Reply without FTP-Status header may come from ICAP or ACL.
         connState->ftp.state = ConnStateData::FTP_ERROR;
-        FtpWriteCustomReply(context, 421, reply->sline.reason());
+
+        assert(context->http);
+        const HttpRequest *request = context->http->request;
+        assert(request);
+
+        const int status = 421;
+        const char *reason = reply->sline.reason();
+        MemBuf mb;
+        mb.init();
+        mb.Printf("%i-%s\r\n", status, errorPageName(request->errType));
+        if (request->errDetail > 0) {
+            // XXX: > 0 may not always mean that this is an errno
+            mb.Printf("%i-Error: (%d) %s\r\n", status,
+                      request->errDetail,
+                      strerror(request->errDetail));
+        }
+        mb.Printf("%i %s\r\n", status, reason); // error terminating line
+
+        // TODO: errorpage.cc should detect FTP client and use
+        // configurable FTP-friendly error templates which we should
+        // write to the client "as is" instead of hiding most of the info
+
+        FtpWriteReply(context, mb);
         return;
     }
 
