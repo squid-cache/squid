@@ -5279,6 +5279,53 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply)
     FtpWriteForwardedReply(context, reply, call);
 }
 
+static void 
+FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
+{
+    ConnStateData *const connState = context->getConn();
+    connState->ftp.state = ConnStateData::FTP_ERROR;
+
+    assert(context->http);
+    const HttpRequest *request = context->http->request;
+    assert(request);
+
+    assert(reply != NULL);
+    const int status = 421;
+    const char *reason = reply->sline.reason();
+    MemBuf mb;
+    mb.init();
+
+    if (request->errType != ERR_NONE)
+        mb.Printf("%i-%s\r\n", status, errorPageName(request->errType));
+
+    if (request->errDetail > 0) {
+        // XXX: > 0 may not always mean that this is an errno
+        mb.Printf("%i-Error: (%d) %s\r\n", status,
+                  request->errDetail,
+                  strerror(request->errDetail));
+    }
+
+    // XXX: Remove hard coded names. Use an error page template instead.
+    const Adaptation::History::Pointer ah = request->adaptHistory();
+    if (ah != NULL) { // XXX: add adapt::<all_h but use lastMeta here
+        const String info = ah->allMeta.getByName("X-Response-Info");
+        const String desc = ah->allMeta.getByName("X-Response-Desc");
+        if (info.size())
+            mb.Printf("%i-Information: %s\r\n", status, info.termedBuf());
+        if (desc.size())
+            mb.Printf("%i-Description: %s\r\n", status, desc.termedBuf());
+    }
+
+    mb.Printf("%i %s\r\n", status, reason); // error terminating line
+
+    // TODO: errorpage.cc should detect FTP client and use
+    // configurable FTP-friendly error templates which we should
+    // write to the client "as is" instead of hiding most of the info
+
+    FtpWriteReply(context, mb);
+    return;
+}
+
 static void
 FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, AsyncCall::Pointer call)
 {
@@ -5288,31 +5335,7 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
 
     // adaptation and forwarding errors lack HDR_FTP_STATUS
     if (!header.has(HDR_FTP_STATUS)) {
-        connState->ftp.state = ConnStateData::FTP_ERROR;
-
-        assert(context->http);
-        const HttpRequest *request = context->http->request;
-        assert(request);
-
-        const int status = 421;
-        const char *reason = reply->sline.reason();
-        MemBuf mb;
-        mb.init();
-        if (request->errType != ERR_NONE)
-            mb.Printf("%i-%s\r\n", status, errorPageName(request->errType));
-        if (request->errDetail > 0) {
-            // XXX: > 0 may not always mean that this is an errno
-            mb.Printf("%i-Error: (%d) %s\r\n", status,
-                      request->errDetail,
-                      strerror(request->errDetail));
-        }
-        mb.Printf("%i %s\r\n", status, reason); // error terminating line
-
-        // TODO: errorpage.cc should detect FTP client and use
-        // configurable FTP-friendly error templates which we should
-        // write to the client "as is" instead of hiding most of the info
-
-        FtpWriteReply(context, mb);
+        FtpWriteForwardedForeign(context, reply);
         return;
     }
 
