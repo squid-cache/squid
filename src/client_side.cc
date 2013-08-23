@@ -5433,7 +5433,7 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
         return false;
     }
 
-    const String::size_type eou = params.find('@');
+    const String::size_type eou = params.rfind('@');
     if (eou == String::npos || eou + 1 >= params.size()) {
         if (connState->ftp.uri.size() > 0)
             return true;
