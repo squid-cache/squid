@@ -53,6 +53,7 @@ protected:
         BEGIN,
         SENT_COMMAND,
         SENT_PASV,
+        SENT_PORT,
         SENT_DATA_REQUEST,
         READING_DATA,
         UPLOADING_DATA,
@@ -64,6 +65,7 @@ protected:
     void sendCommand();
     void readReply();
     void readPasvReply();
+    void readPortReply();
     void readDataReply();
     void readTransferDoneReply();
 
@@ -79,6 +81,7 @@ const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readGreeting, // BEGIN
     &ServerStateData::readReply, // SENT_COMMAND
     &ServerStateData::readPasvReply, // SENT_PASV
+    &ServerStateData::readPortReply, // SENT_PORT
     &ServerStateData::readDataReply, // SENT_DATA_REQUEST
     &ServerStateData::readTransferDoneReply, // READING_DATA
     &ServerStateData::readReply, // UPLOADING_DATA
@@ -388,7 +391,9 @@ ServerStateData::sendCommand()
 
     writeCommand(mb.content());
 
-    state = clientState() == ConnStateData::FTP_HANDLE_PASV ? SENT_PASV :
+    state =
+        clientState() == ConnStateData::FTP_HANDLE_PASV ? SENT_PASV :
+        clientState() == ConnStateData::FTP_HANDLE_PORT ? SENT_PORT :
         clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ? SENT_DATA_REQUEST :
         clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST ? SENT_DATA_REQUEST :
         SENT_COMMAND;
@@ -410,6 +415,22 @@ void
 ServerStateData::readPasvReply()
 {
     assert(clientState() == ConnStateData::FTP_HANDLE_PASV);
+
+    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+        return; // ignore preliminary replies
+
+    if (handlePasvReply()) {
+        fwd->request->clientConnectionManager->ftp.serverDataAddr = data.addr;
+        forwardReply();
+    } else
+        forwardError();
+}
+
+/// In fact, we are handling a PASV reply here (XXX: remove duplication)
+void
+ServerStateData::readPortReply()
+{
+    assert(clientState() == ConnStateData::FTP_HANDLE_PORT);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
