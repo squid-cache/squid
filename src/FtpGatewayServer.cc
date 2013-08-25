@@ -31,14 +31,16 @@ protected:
     virtual void start();
 
     ConnStateData::FtpState clientState() const;
-    void clientState(ConnStateData::FtpState s) const;
+    void clientState(ConnStateData::FtpState newState);
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
-    virtual void failedErrorMessage(err_type error, int xerrno);
     virtual void handleControlReply();
     virtual void handleRequestBodyProducerAborted();
     virtual bool doneWithServer() const;
+    virtual bool mayReadVirginReplyBody() const;
+    virtual void completeForwarding();
     void forwardReply();
     void forwardError(err_type error = ERR_NONE, int xerrno = 0);
+    void failedErrorMessage(err_type error, int xerrno);
     HttpReply *createHttpReply(const Http::StatusCode httpStatus, const int clen = 0);
     void handleDataRequest();
     void startDataDownload();
@@ -72,6 +74,8 @@ protected:
     virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno);
     void scheduleReadControlReply();
 
+    bool forwardingCompleted; ///< completeForwarding() has been called
+
     CBDATA_CLASS2(ServerStateData);
 };
 
@@ -89,7 +93,8 @@ const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
 };
 
 ServerStateData::ServerStateData(FwdState *const fwdState):
-    AsyncJob("Ftp::Gateway::ServerStateData"), Ftp::ServerStateData(fwdState)
+    AsyncJob("Ftp::Gateway::ServerStateData"), Ftp::ServerStateData(fwdState),
+    forwardingCompleted(false)
 {
 }
 
@@ -121,9 +126,30 @@ ServerStateData::clientState() const
 }
 
 void
-ServerStateData::clientState(ConnStateData::FtpState s) const
+ServerStateData::clientState(ConnStateData::FtpState newState)
 {
-    fwd->request->clientConnectionManager->ftp.state = s;
+    ConnStateData::FtpState &cltState =
+        fwd->request->clientConnectionManager->ftp.state;
+    debugs(9, 3, "client state was " << cltState << " now: " << newState);
+    cltState = newState;
+}
+
+/**
+ * Ensure we do not double-complete on the forward entry.
+ * We complete forwarding when the response adaptation is over 
+ * (but we may still be waiting for 226 from the FTP server) and
+ * also when we get that 226 from the server (and adaptation is done).
+ *
+ \todo Rewrite FwdState to ignore double completion?
+ */
+void
+ServerStateData::completeForwarding()
+{
+    debugs(9, 5, forwardingCompleted);
+    if (forwardingCompleted)
+        return;
+    forwardingCompleted = true;
+    Ftp::ServerStateData::completeForwarding();
 }
 
 void
@@ -131,6 +157,10 @@ ServerStateData::failed(err_type error, int xerrno)
 {
     if (!doneWithServer())
         clientState(ConnStateData::FTP_ERROR);
+
+    // TODO: we need to customize ErrorState instead
+    if (entry->isEmpty())
+        failedErrorMessage(error, xerrno); // as a reply
 
     Ftp::ServerStateData::failed(error, xerrno);
 }
@@ -203,6 +233,13 @@ bool
 ServerStateData::doneWithServer() const
 {
     return state == DONE || Ftp::ServerStateData::doneWithServer();
+}
+
+bool
+ServerStateData::mayReadVirginReplyBody() const
+{
+    // TODO: move this method to the regular FTP server?
+    return Comm::IsConnOpen(data.conn);
 }
 
 void

@@ -4956,6 +4956,15 @@ FtpWriteCustomReply(ClientSocketContext *context, const int code, const char *ms
     FtpWriteReply(context, mb);
 }
 
+static void 
+FtpChangeState(ConnStateData *connState, const ConnStateData::FtpState newState, const char *reason)
+{
+    assert(connState);
+    debugs(33, 3, "client state was " << connState->ftp.state << ", now " <<
+           newState << " because " << reason);
+    connState->ftp.state = newState;
+}
+
 /** Parse an FTP request
  *
  *  \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
@@ -4979,7 +4988,7 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     const size_t req_sz = eor + 1 - connState->in.buf;
 
     if (eor == NULL && connState->in.notYetUsed >= Config.maxRequestHeaderSize) {
-        connState->ftp.state = ConnStateData::FTP_ERROR;
+        FtpChangeState(connState, ConnStateData::FTP_ERROR, "huge req");
         FtpWriteEarlyReply(connState, 421, "Too large request");
         return NULL;
     }
@@ -5194,14 +5203,18 @@ FtpHandleErrorReply(ClientSocketContext *context, const HttpReply *reply, StoreI
 static void
 FtpHandleDataReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
+    ConnStateData *const conn = context->getConn();
+
     if (reply != NULL && reply->sline.status() != Http::scOkay) {
         FtpWriteForwardedReply(context, reply);
+        if (conn && Comm::IsConnOpen(conn->ftp.dataConn)) {
+            debugs(33, 3, "closing " << conn->ftp.dataConn << " on KO reply");
+            conn->ftp.dataConn->close();
+        }
         return;
     }
 
     debugs(33, 7, HERE << data.length);
-
-    ConnStateData *const conn = context->getConn();
 
     if (data.length <= 0) {
         FtpWroteReplyData(conn->clientConnection, NULL, 0, COMM_OK, 0, context);
@@ -5244,6 +5257,7 @@ FtpWroteReplyData(const Comm::ConnectionPointer &conn, char *bufnotused, size_t 
 
     switch (context->socketState()) {
     case STREAM_NONE:
+        debugs(33, 3, "Keep going");
         context->pullData();
         return;
     case STREAM_COMPLETE:
@@ -5283,7 +5297,7 @@ static void
 FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
 {
     ConnStateData *const connState = context->getConn();
-    connState->ftp.state = ConnStateData::FTP_ERROR;
+    FtpChangeState(connState, ConnStateData::FTP_CONNECTED, "foreign reply");
 
     assert(context->http);
     const HttpRequest *request = context->http->request;
@@ -5418,18 +5432,29 @@ FtpWroteReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size
         static_cast<ClientSocketContext*>(data);
     ConnStateData *const connState = context->getConn();
 
-    if (connState->ftp.state == ConnStateData::FTP_ERROR ||
-        context->socketState() != STREAM_COMPLETE) {
+    if (connState->ftp.state == ConnStateData::FTP_ERROR) {
+        debugs(33, 5, "closing on FTP server error");
         conn->close();
         return;
     }
 
-    assert(context->socketState() == STREAM_COMPLETE);
-    connState->flags.readMore = true;
-    connState->ftp.state = ConnStateData::FTP_CONNECTED;
-    if (connState->in.bodyParser)
-        connState->finishDechunkingRequest(false);
-    context->keepaliveNextRequest();
+    const clientStream_status_t socketState = context->socketState();
+    debugs(33, 5, "FTP client stream state " << socketState);
+    switch (socketState) {
+    case STREAM_UNPLANNED_COMPLETE:
+    case STREAM_FAILED:
+         conn->close();
+         return;
+
+    case STREAM_NONE:
+    case STREAM_COMPLETE:
+        connState->flags.readMore = true;
+        FtpChangeState(connState, ConnStateData::FTP_CONNECTED, "FtpWroteReply");
+        if (connState->in.bodyParser)
+            connState->finishDechunkingRequest(false);
+        context->keepaliveNextRequest();
+        return;
+    }
 }
 
 bool
@@ -5515,7 +5540,7 @@ FtpHandlePasvRequest(ClientSocketContext *context, String &cmd, String &params)
         return false;
     }
 
-    context->getConn()->ftp.state = ConnStateData::FTP_HANDLE_PASV;
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_PASV, "FtpHandlePasvRequest");
 
     return true;
 }
@@ -5554,7 +5579,7 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
     context->getConn()->ftp.dataConn = conn;
     context->getConn()->ftp.uploadAvailSize = 0; // XXX: FtpCloseDataConnection should do that
 
-    context->getConn()->ftp.state = ConnStateData::FTP_HANDLE_PORT;
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_PORT, "FtpHandlePortRequest");
 
     // convert client PORT command to Squid PASV command because Squid
     // does not support active FTP transfers on the server side (yet?)
@@ -5576,7 +5601,7 @@ FtpHandleDataRequest(ClientSocketContext *context, String &cmd, String &params)
     if (!FtpCheckDataConnection(context))
         return false;
 
-    context->getConn()->ftp.state = ConnStateData::FTP_HANDLE_DATA_REQUEST;
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_DATA_REQUEST, "FtpHandleDataRequest");
 
     return true;
 }
@@ -5587,7 +5612,7 @@ FtpHandleUploadRequest(ClientSocketContext *context, String &cmd, String &params
     if (!FtpCheckDataConnection(context))
         return false;
 
-    context->getConn()->ftp.state = ConnStateData::FTP_HANDLE_UPLOAD_REQUEST;
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_UPLOAD_REQUEST, "FtpHandleDataRequest");
 
     return true;
 }
