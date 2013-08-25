@@ -193,15 +193,7 @@ void
 ServerStateData::failed(err_type error, int xerrno)
 {
     debugs(9,3,HERE << "entry-null=" << (entry?entry->isEmpty():0) << ", entry=" << entry);
-    if (entry->isEmpty())
-        failedErrorMessage(error, xerrno);
 
-    serverComplete();
-}
-
-void
-ServerStateData::failedErrorMessage(err_type error, int xerrno)
-{
     const char *command, *reply;
     const Http::StatusCode httpStatus = failedHttpStatus(error);
     ErrorState *const ftperr = new ErrorState(error, httpStatus, fwd->request);
@@ -229,8 +221,9 @@ ServerStateData::failedErrorMessage(err_type error, int xerrno)
     if (reply)
         ftperr->ftp.reply = xstrdup(reply);
 
-    entry->replaceHttpReply( ftperr->BuildHttpReply() );
-    delete ftperr;
+    fwd->fail(ftperr);
+
+    closeServer(); // we failed, so no serverComplete()
 }
 
 Http::StatusCode
