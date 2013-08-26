@@ -32,10 +32,10 @@ protected:
 
     ConnStateData::FtpState clientState() const;
     void clientState(ConnStateData::FtpState newState);
+    virtual void serverComplete();
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
     virtual void handleControlReply();
     virtual void handleRequestBodyProducerAborted();
-    virtual bool doneWithServer() const;
     virtual bool mayReadVirginReplyBody() const;
     virtual void completeForwarding();
     void forwardReply();
@@ -59,7 +59,7 @@ protected:
         SENT_DATA_REQUEST,
         READING_DATA,
         UPLOADING_DATA,
-        DONE
+        END
     };
     typedef void (ServerStateData::*SM_FUNC)();
     static const SM_FUNC SM_FUNCS[];
@@ -89,7 +89,7 @@ const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readDataReply, // SENT_DATA_REQUEST
     &ServerStateData::readTransferDoneReply, // READING_DATA
     &ServerStateData::readReply, // UPLOADING_DATA
-    NULL // DONE
+    NULL // END
 };
 
 ServerStateData::ServerStateData(FwdState *const fwdState):
@@ -100,10 +100,7 @@ ServerStateData::ServerStateData(FwdState *const fwdState):
 
 ServerStateData::~ServerStateData()
 {
-    if (Comm::IsConnOpen(ctrl.conn)) {
-        fwd->unregister(ctrl.conn);
-        ctrl.forget();
-    }
+    closeServer(); // TODO: move to Server.cc?
 }
 
 void
@@ -117,6 +114,20 @@ ServerStateData::start()
         handleDataRequest();
     else
         sendCommand();
+}
+
+/// Keep control connection for future requests, after we are done with it.
+/// Similar to COMPLETE_PERSISTENT_MSG handling in http.cc.
+void
+ServerStateData::serverComplete()
+{
+    if (Comm::IsConnOpen(ctrl.conn)) {
+        debugs(9, 5, "preserve FTP server FD " << ctrl.conn->fd);
+        fwd->unregister(ctrl.conn);
+        ctrl.forget();
+        // fwd->request->clientConnectionManager has this connection pinned
+    }
+    Ftp::ServerStateData::serverComplete();
 }
 
 ConnStateData::FtpState
@@ -217,7 +228,7 @@ ServerStateData::handleControlReply()
     if (ctrl.message == NULL)
         return; // didn't get complete reply yet
 
-    assert(state < DONE);
+    assert(state < END);
     (this->*SM_FUNCS[state])();
 }
 
@@ -227,12 +238,6 @@ ServerStateData::handleRequestBodyProducerAborted()
     ::ServerStateData::handleRequestBodyProducerAborted();
 
     failed(ERR_READ_ERROR);
-}
-
-bool
-ServerStateData::doneWithServer() const
-{
-    return state == DONE || Ftp::ServerStateData::doneWithServer();
 }
 
 bool
@@ -253,7 +258,6 @@ ServerStateData::forwardReply()
     setVirginReply(reply);
     adaptOrFinalizeReply();
 
-    state = DONE;
     serverComplete();
 }
 
@@ -290,7 +294,6 @@ ServerStateData::proceedAfterPreliminaryReply()
 void
 ServerStateData::forwardError(err_type error, int xerrno)
 {
-    state = DONE;
     failed(error, xerrno);
 }
 
@@ -504,7 +507,6 @@ ServerStateData::readTransferDoneReply()
                " after reading data");
     }
 
-    state = DONE;
     serverComplete();
 }
 
