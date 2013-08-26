@@ -2727,7 +2727,8 @@ static boolean group_match_null_string_p(unsigned char **p, unsigned char *end, 
 /* Test if at very beginning or at very end of the virtual concatenation
  * of `string1' and `string2'.  If only one string, it's `string2'.  */
 #define AT_STRINGS_BEG(d) ((d) == (size1 ? string1 : string2) || !size2)
-static int at_strings_end(const char *d, const char *end2) {
+static int at_strings_end(const char *d, const char *end2)
+{
     return d == end2;
 }
 
@@ -2743,8 +2744,8 @@ static int
 wordchar_p(const char *d, const char *end1, const char *string2)
 {
     return re_syntax_table[(d) == end1 ? *string2
-                    : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
-            == Sword;
+                           : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
+           == Sword;
 }
 
 /* Test if the character before D and the one at D differ with respect
