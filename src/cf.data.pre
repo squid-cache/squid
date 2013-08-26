@@ -5440,6 +5440,17 @@ DOC_START
 	client connection after the previous request completes.
 DOC_END
 
+NAME: ftp_client_idle_timeout
+TYPE: time_t
+LOC: Config.Timeout.ftpClientIdle
+DEFAULT: 30 minutes
+DOC_START
+	How long to wait for an FTP request on a connection to Squid ftp_port.
+	Many FTP clients do not deal with idle connection closures well,
+	necessitating a longer default timeout than client_idle_pconn_timeout
+	used for incoming HTTP requests.
+DOC_END
+
 NAME: client_lifetime
 COMMENT: time-units
 TYPE: time_t

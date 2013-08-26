@@ -1610,7 +1610,9 @@ ConnStateData::readNextRequest()
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.clientIdlePconn, timeoutCall);
+    const int timeout = isFtp ? Config.Timeout.ftpClientIdle :
+                        Config.Timeout.clientIdlePconn;
+    commSetConnTimeout(clientConnection, timeout, timeoutCall);
 
     readSomeData();
     /** Please don't do anything with the FD past here! */
@@ -4960,9 +4962,15 @@ static void
 FtpChangeState(ConnStateData *connState, const ConnStateData::FtpState newState, const char *reason)
 {
     assert(connState);
-    debugs(33, 3, "client state was " << connState->ftp.state << ", now " <<
-           newState << " because " << reason);
-    connState->ftp.state = newState;
+    if (connState->ftp.state == newState) {
+        debugs(33, 3, "client state unchanged at " << connState->ftp.state <<
+               " because " << reason);
+        connState->ftp.state = newState;
+    } else {
+        debugs(33, 3, "client state was " << connState->ftp.state <<
+               ", now " << newState << " because " << reason);
+        connState->ftp.state = newState;
+    }
 }
 
 /** Parse an FTP request
