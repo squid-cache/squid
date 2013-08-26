@@ -725,6 +725,8 @@ HttpHeader::packInto(Packer * p, bool mask_sensitive_info) const
             continue;
         }
         switch (e->id) {
+        // TODO: When FTP gw command wrappers may end up in error pages and
+        // other sensitive places, hide HDR_FTP_ARGUMENTS for FTP PASS command.
         case HDR_AUTHORIZATION:
         case HDR_PROXY_AUTHORIZATION:
             packerAppend(p, e->name.rawBuf(), e->name.size());
