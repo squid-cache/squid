@@ -253,7 +253,6 @@ static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, Any
 
 static IOACB FtpAcceptDataConnection;
 static void FtpCloseDataConnection(ConnStateData *conn);
-static void FtpWriteGreeting(ConnStateData *conn);
 static ClientSocketContext *FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::ProtocolVersion *http_ver);
 static bool FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params);
 static CNCB FtpHandleConnectDone;
@@ -3949,7 +3948,7 @@ ftpAccept(const CommAcceptCbParams &params)
         debugs(33, 5, HERE << "FTP transparent URL: " << connState->ftp.uri);
     }
 
-    FtpWriteGreeting(connState);
+    FtpWriteEarlyReply(connState, 220, "Service ready");
 }
 
 void
@@ -4894,19 +4893,8 @@ FtpCloseDataConnection(ConnStateData *conn)
     conn->ftp.reader = NULL;
 }
 
-static void
-FtpWriteGreeting(ConnStateData *conn)
-{
-    MemBuf mb;
-    const String msg = "220 Service ready\r\n";
-    mb.init(msg.size(), msg.size());
-    mb.append(msg.rawBuf(), msg.size());
-
-    AsyncCall::Pointer call = commCbCall(33, 5, "FtpWroteEarlyReply",
-        CommIoCbPtrFun(&FtpWroteEarlyReply, conn));
-    Comm::Write(conn->clientConnection, &mb, call);
-}
-
+/// Writes FTP [error] response before we fully parsed the FTP request and
+/// created the corresponding HTTP request wrapper for that FTP request.
 static void
 FtpWriteEarlyReply(ConnStateData *connState, const int code, const char *msg)
 {
@@ -4922,6 +4910,8 @@ FtpWriteEarlyReply(ConnStateData *connState, const int code, const char *msg)
     Comm::Write(connState->clientConnection, &mb, call);
 
     connState->flags.readMore = false;
+
+    // TODO: Create master transaction. Log it in FtpWroteEarlyReply.
 }
 
 static void
@@ -5105,6 +5095,12 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
 static void
 FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data)
 {
+    if (context->http && context->http->al != NULL &&
+        !context->http->al->reply && reply) {
+        context->http->al->reply = reply;
+        HTTPMSGLOCK(context->http->al->reply);
+    }
+
     static FtpReplyHandler *handlers[] = {
         NULL, // FTP_BEGIN
         NULL, // FTP_CONNECTED
@@ -5517,6 +5513,8 @@ FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
     return handler != NULL ? (*handler)(context, cmd, params) : true;
 }
 
+/// Called to parse USER command, which is required to create an HTTP request
+/// wrapper. Thus, errors are handled with FtpWriteEarlyReply() here.
 bool
 FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params)
 {
