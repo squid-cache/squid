@@ -5263,6 +5263,9 @@ FtpWroteReplyData(const Comm::ConnectionPointer &conn, char *bufnotused, size_t 
         return;
     }
 
+    assert(context->http);
+    context->http->out.size += size;
+
     switch (context->socketState()) {
     case STREAM_NONE:
         debugs(33, 3, "Keep going");
@@ -5419,6 +5422,12 @@ FtpWroteEarlyReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t
     }
 
     ConnStateData *const connState = static_cast<ConnStateData*>(data);
+    ClientSocketContext::Pointer context = connState->getCurrentContext();
+    if (context != NULL && context->http) {
+        context->http->out.size += size;
+        context->http->out.headers_sz += size;
+    }
+
     connState->flags.readMore = true;
     connState->readSomeData();
 }
@@ -5439,6 +5448,10 @@ FtpWroteReply(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size
     ClientSocketContext *const context =
         static_cast<ClientSocketContext*>(data);
     ConnStateData *const connState = context->getConn();
+
+    assert(context->http);
+    context->http->out.size += size;
+    context->http->out.headers_sz += size;
 
     if (connState->ftp.state == ConnStateData::FTP_ERROR) {
         debugs(33, 5, "closing on FTP server error");
