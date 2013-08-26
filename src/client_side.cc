@@ -727,7 +727,7 @@ ClientHttpRequest::logRequest()
 
     debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
 
-    if (loggingEntry() && loggingEntry()->mem_obj)
+    if (loggingEntry() && loggingEntry()->mem_obj && loggingEntry()->objectLen() >= 0)
         al->cache.objectSize = loggingEntry()->contentLen();
 
     al->cache.caddr.SetNoAddr();
