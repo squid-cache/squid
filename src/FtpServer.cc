@@ -85,7 +85,7 @@ ServerChannel::forget()
 {
     if (Comm::IsConnOpen(conn))
         comm_remove_close_handler(conn->fd, closer);
-    closer = NULL;
+    clear();
 }
 
 void
