@@ -252,6 +252,8 @@ static void FtpWriteReply(ClientSocketContext *context, MemBuf &mb);
 static void FtpWriteCustomReply(ClientSocketContext *context, const int code, const char *msg, const HttpReply *reply = NULL);
 static void FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply);
 static void FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, AsyncCall::Pointer call);
+static void FtpWriteErrorReply(ClientSocketContext *context, const HttpReply *reply, const int status);
+
 static void FtpPrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix = "");
 static IOCB FtpWroteEarlyReply;
 static IOCB FtpWroteReply;
@@ -5229,15 +5231,11 @@ FtpHandlePortReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
 static void
 FtpHandleErrorReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
-    int code;
     ConnStateData *const connState = context->getConn();
-    if (!connState->pinning.pinned) { // we failed to connect to server
+    if (!connState->pinning.pinned) // we failed to connect to server
         connState->ftp.uri.clean();
-        code = 530;
-    } else
-        code = 421;
-    const char *const msg = err_type_str[context->http->request->errType];
-    FtpWriteCustomReply(context, code, msg, reply);
+    // 421: we will close due to FTP_ERROR
+    FtpWriteErrorReply(context, reply, 421);
 }
 
 static void
@@ -5336,22 +5334,16 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply)
     FtpWriteForwardedReply(context, reply, call);
 }
 
-static void 
-FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
+/// writes FTP error response with given status and reply-derived error details
+static void
+FtpWriteErrorReply(ClientSocketContext *context, const HttpReply *reply, const int status)
 {
-    ConnStateData *const connState = context->getConn();
-    FtpChangeState(connState, ConnStateData::FTP_CONNECTED, "foreign reply");
+    MemBuf mb;
+    mb.init();
 
     assert(context->http);
     const HttpRequest *request = context->http->request;
     assert(request);
-
-    assert(reply != NULL);
-    const int status = 421;
-    const char *reason = reply->sline.reason();
-    MemBuf mb;
-    mb.init();
-
     if (request->errType != ERR_NONE)
         mb.Printf("%i-%s\r\n", status, errorPageName(request->errType));
 
@@ -5373,6 +5365,11 @@ FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
             mb.Printf("%i-Description: %s\r\n", status, desc.termedBuf());
     }
 
+    assert(reply != NULL);
+    const char *reason = reply->header.has(HDR_FTP_REASON) ?
+                         reply->header.getStr(HDR_FTP_REASON):
+                         reply->sline.reason();
+
     mb.Printf("%i %s\r\n", status, reason); // error terminating line
 
     // TODO: errorpage.cc should detect FTP client and use
@@ -5380,7 +5377,16 @@ FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
     // write to the client "as is" instead of hiding most of the info
 
     FtpWriteReply(context, mb);
-    return;
+}
+
+/// writes FTP response based on HTTP reply that is not an FTP-response wrapper
+static void 
+FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
+{
+    ConnStateData *const connState = context->getConn();
+    FtpChangeState(connState, ConnStateData::FTP_CONNECTED, "foreign reply");
+    // 451: We intend to keep the control connection open.
+    FtpWriteErrorReply(context, reply, 451);
 }
 
 static void
