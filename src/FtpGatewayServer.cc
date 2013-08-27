@@ -96,6 +96,9 @@ ServerStateData::ServerStateData(FwdState *const fwdState):
     AsyncJob("Ftp::Gateway::ServerStateData"), Ftp::ServerStateData(fwdState),
     forwardingCompleted(false)
 {
+    // Nothing we can do at request creation time can mark the response as
+    // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
+    entry->releaseRequest();
 }
 
 ServerStateData::~ServerStateData()
