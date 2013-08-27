@@ -99,11 +99,10 @@
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "errorpage.h"
-#include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
-#include "forward.h"
 #include "fqdncache.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "http.h"
 #include "HttpHdrCc.h"
@@ -196,21 +195,6 @@ static void clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId
 
 CBDATA_CLASS_INIT(ClientSocketContext);
 
-void *
-ClientSocketContext::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ClientSocketContext));
-    CBDATA_INIT_TYPE(ClientSocketContext);
-    return cbdataAlloc(ClientSocketContext);
-}
-
-void
-ClientSocketContext::operator delete (void *address)
-{
-    cbdataFree (address);
-}
-
 /* Local functions */
 /* ClientSocketContext */
 static ClientSocketContext *ClientSocketContextNew(const Comm::ConnectionPointer &clientConn, ClientHttpRequest *);
@@ -248,8 +232,6 @@ static void clientUpdateSocketStats(LogTags logType, size_t size);
 
 char *skipLeadingSpace(char *aString);
 static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
-
-static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port);
 
 static IOACB FtpAcceptDataConnection;
 static void FtpCloseDataConnection(ConnStateData *conn);
@@ -666,7 +648,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
             packerToMemInit(&p, &mb);
             ah->lastMeta.packInto(&p);
             aLogEntry->adapt.last_meta = xstrdup(mb.buf);
-            aLogEntry->notes.append(&ah->metaHeaders);
         }
 #endif
 
@@ -683,18 +664,9 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
-    if (request->helperNotes)
-        aLogEntry->notes.append(request->helperNotes->notes);
     if (request->content_length > 0) // negative when no body or unknown length
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
-
-#if USE_AUTH
-    if (request->auth_user_request != NULL) {
-        if (request->auth_user_request->username())
-            aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
-    }
-#endif
 
     // Adapted request, if any, inherits and then collects all the stats, but
     // the virgin request gets logged instead; copy the stats to log them.
@@ -729,7 +701,7 @@ ClientHttpRequest::logRequest()
     if (loggingEntry() && loggingEntry()->mem_obj && loggingEntry()->objectLen() >= 0)
         al->cache.objectSize = loggingEntry()->contentLen();
 
-    al->cache.caddr.SetNoAddr();
+    al->cache.caddr.setNoAddr();
 
     if (getConn() != NULL) {
         al->cache.caddr = getConn()->log_addr;
@@ -764,36 +736,48 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-    /*Add meta headers*/
+    /*Add notes*/
+    // The al->notes and request->notes must point to the same object.
+    // Enable the following assertion to check for possible bugs.
+    // assert(request->notes == al->notes);
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
         if (const char *value = (*i)->match(request, al->reply)) {
-            al->notes.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), value));
+            NotePairs &notes = SyncNotes(*al, *request);
+            notes.add((*i)->key.termedBuf(), value);
             debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
         }
     }
 
-    ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
-
+    ACLFilledChecklist checklist(NULL, request, NULL);
     if (al->reply) {
-        checklist->reply = al->reply;
-        HTTPMSGLOCK(checklist->reply);
+        checklist.reply = al->reply;
+        HTTPMSGLOCK(checklist.reply);
     }
 
-    if (!Config.accessList.log || checklist->fastCheck() == ACCESS_ALLOWED) {
-        if (request) {
-            al->adapted_request = request;
-            HTTPMSGLOCK(al->adapted_request);
+    if (request) {
+        al->adapted_request = request;
+        HTTPMSGLOCK(al->adapted_request);
+    }
+    accessLogLog(al, &checklist);
+
+    bool updatePerformanceCounters = true;
+    if (Config.accessList.stats_collection) {
+        ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, NULL);
+        if (al->reply) {
+            statsCheck.reply = al->reply;
+            HTTPMSGLOCK(statsCheck.reply);
         }
-        accessLogLog(al, checklist);
+        updatePerformanceCounters = (statsCheck.fastCheck() == ACCESS_ALLOWED);
+    }
+
+    if (updatePerformanceCounters) {
         if (request)
             updateCounters();
 
         if (getConn() != NULL && getConn()->clientConnection != NULL)
             clientdbUpdate(getConn()->clientConnection->remote, logType, AnyP::PROTO_HTTP, out.size);
     }
-
-    delete checklist;
 }
 
 void
@@ -861,6 +845,87 @@ void ConnStateData::connStateClosed(const CommCloseCbParams &io)
     deleteThis("ConnStateData::connStateClosed");
 }
 
+#if USE_AUTH
+void
+ConnStateData::setAuth(const Auth::UserRequest::Pointer &aur, const char *by)
+{
+    if (auth_ == NULL) {
+        if (aur != NULL) {
+            debugs(33, 2, "Adding connection-auth to " << clientConnection << " from " << by);
+            auth_ = aur;
+        }
+        return;
+    }
+
+    // clobered with self-pointer
+    // NP: something nasty is going on in Squid, but harmless.
+    if (aur == auth_) {
+        debugs(33, 2, "WARNING: Ignoring duplicate connection-auth for " << clientConnection << " from " << by);
+        return;
+    }
+
+    /*
+     * Connection-auth relies on a single set of credentials being preserved
+     * for all requests on a connection once they have been setup.
+     * There are several things which need to happen to preserve security
+     * when connection-auth credentials change unexpectedly or are unset.
+     *
+     * 1) auth helper released from any active state
+     *
+     * They can only be reserved by a handshake process which this
+     * connection can now never complete.
+     * This prevents helpers hanging when their connections close.
+     *
+     * 2) pinning is expected to be removed and server conn closed
+     *
+     * The upstream link is authenticated with the same credentials.
+     * Expecting the same level of consistency we should have received.
+     * This prevents upstream being faced with multiple or missing
+     * credentials after authentication.
+     * NP: un-pin is left to the cleanup in ConnStateData::swanSong()
+     *     we just trigger that cleanup here via comm_reset_close() or
+     *     ConnStateData::stopReceiving()
+     *
+     * 3) the connection needs to close.
+     *
+     * This prevents attackers injecting requests into a connection,
+     * or gateways wrongly multiplexing users into a single connection.
+     *
+     * When credentials are missing closure needs to follow an auth
+     * challenge for best recovery by the client.
+     *
+     * When credentials change there is nothing we can do but abort as
+     * fast as possible. Sending TCP RST instead of an HTTP response
+     * is the best-case action.
+     */
+
+    // clobbered with nul-pointer
+    if (aur == NULL) {
+        debugs(33, 2, "WARNING: Graceful closure on " << clientConnection << " due to connection-auth erase from " << by);
+        auth_->releaseAuthServer();
+        auth_ = NULL;
+        // XXX: need to test whether the connection re-auth challenge is sent. If not, how to trigger it from here.
+        // NP: the current situation seems to fix challenge loops in Safari without visible issues in others.
+        // we stop receiving more traffic but can leave the Job running to terminate after the error or challenge is delivered.
+        stopReceiving("connection-auth removed");
+        return;
+    }
+
+    // clobbered with alternative credentials
+    if (aur != auth_) {
+        debugs(33, 2, "ERROR: Closing " << clientConnection << " due to change of connection-auth from " << by);
+        auth_->releaseAuthServer();
+        auth_ = NULL;
+        // this is a fatal type of problem.
+        // Close the connection immediately with TCP RST to abort all traffic flow
+        comm_reset_close(clientConnection);
+        return;
+    }
+
+    /* NOT REACHABLE */
+}
+#endif
+
 // cleans up before destructor is called
 void
 ConnStateData::swanSong()
@@ -870,20 +935,16 @@ ConnStateData::swanSong()
     clientdbEstablished(clientConnection->remote, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
-#if USE_AUTH
-    if (auth_user_request != NULL) {
-        debugs(33, 4, "ConnStateData::swanSong: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
-        auth_user_request->onConnectionClose(this);
-    }
-#endif
 
-    if (Comm::IsConnOpen(pinning.serverConnection))
-        pinning.serverConnection->close();
-    pinning.serverConnection = NULL;
+    unpinConnection();
 
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
-    clientConnection = NULL;
+
+#if USE_AUTH
+    // NP: do this bit after closing the connections to avoid side effects from unwanted TCP RST
+    setAuth(NULL, "ConnStateData::SwanSong cleanup");
+#endif
 
     BodyProducer::swanSong();
     flags.swanSang = true;
@@ -2144,7 +2205,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     }
 
     if (vport < 0)
-        vport = http->getConn()->clientConnection->local.GetPort();
+        vport = http->getConn()->clientConnection->local.port();
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
@@ -2188,7 +2249,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN);
+        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
                  ipbuf, vport, url);
@@ -2217,10 +2278,10 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN);
+        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 ipbuf, http->getConn()->clientConnection->local.GetPort(), url);
+                 ipbuf, http->getConn()->clientConnection->local.port(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
@@ -2313,7 +2374,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
     /* deny CONNECT via accelerated ports */
     if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.port() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = Http::scMethodNotAllowed;
@@ -2615,18 +2676,20 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
     // In bump-server-first mode, we have not necessarily seen the intended
     // server name at certificate-peeking time. Check for domain mismatch now,
     // when we can extract the intended name from the bumped HTTP request.
-    if (sslServerBump->serverCert.get()) {
+    if (X509 *srvCert = sslServerBump->serverCert.get()) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(sslServerBump->serverCert.get(), request->GetHost())) {
+        if (!Ssl::checkX509ServerValidity(srvCert, request->GetHost())) {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
                    "does not match domainname " << request->GetHost());
 
-            ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
-            check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
-            const bool allowDomainMismatch =
-                check.fastCheck() == ACCESS_ALLOWED;
-            delete check.sslErrors;
-            check.sslErrors = NULL;
+            bool allowDomainMismatch = false;
+            if (Config.ssl_client.cert_error) {
+                ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+                check.sslErrors = new Ssl::CertErrors(Ssl::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
+                delete check.sslErrors;
+                check.sslErrors = NULL;
+            }
 
             if (!allowDomainMismatch) {
                 quitAfterError(request);
@@ -2644,7 +2707,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 err->src_addr = clientConnection->remote;
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-                    sslServerBump->serverCert.get(), NULL);
+                    srvCert, NULL);
                 err->detail = errDetail;
                 // Save the original request for logging purposes.
                 if (!context->http->al->request) {
@@ -2723,10 +2786,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
-    /* RFC 2616 section 10.5.6 : handle unsupported HTTP versions cleanly. */
-    /* We currently only accept 0.9, 1.0, 1.1 */
+    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+    /* We currently only support 0.9, 1.0, 1.1 properly */
     if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-            (http_ver.major == 1 && http_ver.minor > 1 ) ||
             (http_ver.major > 1) ) {
 
         clientStreamNode *node = context->getClientReplyContext();
@@ -2771,8 +2833,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                               !conn->port->allow_direct : 0;
 #if USE_AUTH
     if (request->flags.sslBumped) {
-        if (conn->auth_user_request != NULL)
-            request->auth_user_request = conn->auth_user_request;
+        if (conn->getAuth() != NULL)
+            request->auth_user_request = conn->getAuth();
     }
 #endif
 
@@ -2782,7 +2844,16 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      */
     if (http->clientConnection != NULL) {
         request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
-        request->flags.spoofClientIp = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        request->flags.interceptTproxy = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        if (request->flags.interceptTproxy) {
+            if (Config.accessList.spoof_client_ip) {
+                ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.spoof_client_ip, http);
+                request->flags.spoofClientIp = (checklist->fastCheck() == ACCESS_ALLOWED);
+                delete checklist;
+            } else
+                request->flags.spoofClientIp = true;
+        } else
+            request->flags.spoofClientIp = false;
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -2997,18 +3068,28 @@ connStripBufferWhitespace (ConnStateData * conn)
     }
 }
 
-static int
-connOkToAddRequest(ConnStateData * conn)
+/**
+ * Limit the number of concurrent requests.
+ * \return true  when there are available position(s) in the pipeline queue for another request.
+ * \return false when the pipeline queue is full or disabled.
+ */
+bool
+ConnStateData::concurrentRequestQueueFilled() const
 {
-    const int limit = !conn->isFtp && Config.onoff.pipeline_prefetch ? 2 : 1;
-    const int result = conn->getConcurrentRequestCount() < limit;
+    const int existingRequestCount = getConcurrentRequestCount();
 
-    if (!result) {
-        debugs(33, 3, HERE << conn->clientConnection << " max concurrent requests reached");
-        debugs(33, 5, HERE << conn->clientConnection << " defering new request until one is done");
+    // default to the configured pipeline size.
+    // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
+    const int concurrentRequestLimit = (isFtp ? 0 : Config.pipeline_max_prefetch) + 1;
+
+    // when queue filled already we cant add more.
+    if (existingRequestCount >= concurrentRequestLimit) {
+        debugs(33, 3, clientConnection << " max concurrent requests reached (" << concurrentRequestLimit << ")");
+        debugs(33, 5, clientConnection << " deferring new request until one is done");
+        return true;
     }
 
-    return result;
+    return false;
 }
 
 /**
@@ -3033,10 +3114,9 @@ ConnStateData::clientParseRequests()
         if (in.notYetUsed == 0)
             break;
 
-        /* Limit the number of concurrent requests to 2 */
-        if (!connOkToAddRequest(this)) {
+        /* Limit the number of concurrent requests */
+        if (concurrentRequestQueueFilled())
             break;
-        }
 
         /* Should not be needed anymore */
         /* Terminate the string */
@@ -3423,71 +3503,16 @@ ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
 void
 ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
 {
-#if THIS_CONFUSES_PERSISTENT_CONNECTION_AWARE_BROWSERS_AND_USERS
-    debugs(33, 3, "requestTimeout: FD " << io.fd << ": lifetime is expired.");
-
-    if (COMMIO_FD_WRITECB(io.fd)->active) {
-        /* FIXME: If this code is reinstated, check the conn counters,
-         * not the fd table state
-         */
-        /*
-         * Some data has been sent to the client, just close the FD
-         */
-        clientConnection->close();
-    } else if (nrequests) {
-        /*
-         * assume its a persistent connection; just close it
-         */
-        clientConnection->close();
-    } else {
-        /*
-         * Generate an error
-         */
-        ClientHttpRequest **H;
-        clientStreamNode *node;
-        ClientHttpRequest *http = parseHttpRequestAbort(this, "error:Connection%20lifetime%20expired");
-        node = http->client_stream.tail->prev->data;
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_LIFETIME_EXP,
-                                    Http::scRequestTimeout, Http::METHOD_NONE, "N/A", &CachePeer.sin_addr,
-                                    NULL, NULL, NULL);
-        /* No requests can be outstanded */
-        assert(chr == NULL);
-        /* add to the client request queue */
-
-        for (H = &chr; *H; H = &(*H)->next);
-        *H = http;
-
-        clientStreamRead(http->client_stream.tail->data, http, 0,
-                         HTTP_REQBUF_SZ, context->reqbuf);
-
-        /*
-         * if we don't close() here, we still need a timeout handler!
-         */
-        typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                          TimeoutDialer, this, ConnStateData::requestTimeout);
-        commSetConnTimeout(io.conn, 30, timeoutCall);
-
-        /*
-         * Aha, but we don't want a read handler!
-         */
-        Comm::SetSelect(io.fd, COMM_SELECT_READ, NULL, NULL, 0);
-    }
-
-#else
     /*
     * Just close the connection to not confuse browsers
-    * using persistent connections. Some browsers opens
-    * an connection and then does not use it until much
+    * using persistent connections. Some browsers open
+    * a connection and then do not use it until much
     * later (presumeably because the request triggering
     * the open has already been completed on another
     * connection)
     */
     debugs(33, 3, "requestTimeout: FD " << io.fd << ": lifetime is expired.");
     io.conn->close();
-#endif
 }
 
 static void
@@ -3501,23 +3526,38 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
         io.conn->close();
 }
 
-ConnStateData *
-connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
+ConnStateData::ConnStateData(const MasterXaction::Pointer &xact):
+        AsyncJob("ConnStateData"),
+        isFtp(strcmp(xact->squidPort->protocol, "ftp") == 0), // TODO: convert into a method?
+#if USE_SSL
+        sslBumpMode(Ssl::bumpEnd),
+        switchedToHttps_(false),
+        sslServerBump(NULL),
+#endif
+        stoppedSending_(NULL),
+        stoppedReceiving_(NULL)
 {
-    ConnStateData *result = new ConnStateData(port->protocol);
+    pinning.host = NULL;
+    pinning.port = -1;
+    pinning.pinned = false;
+    pinning.auth = false;
+    pinning.zeroReply = false;
+    pinning.peer = NULL;
 
-    result->clientConnection = client;
-    result->log_addr = client->remote;
-    result->log_addr.ApplyMask(Config.Addrs.client_netmask);
-    result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
-    result->port = cbdataReference(port);
+    // store the details required for creating more MasterXaction objects as new requests come in
+    clientConnection = xact->tcpClient;
+    port = cbdataReference(xact->squidPort.get());
+    log_addr = xact->tcpClient->remote;
+    log_addr.applyMask(Config.Addrs.client_netmask);
+
+    in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &in.allocatedSize);
 
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
-            (result->transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
+            (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(client->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0)
-            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << client << " : " << xstrerror());
+        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0)
+            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerror());
 #else
         static bool reported = false;
 
@@ -3529,45 +3569,39 @@ connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
     }
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, result, ConnStateData::connStateClosed);
-    comm_add_close_handler(client->fd, call);
+    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, ConnStateData::connStateClosed);
+    comm_add_close_handler(clientConnection->fd, call);
 
     if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(client->remote, FQDN_LOOKUP_IF_MISS);
+        fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = client->remote;
-        identChecklist.my_addr = client->local;
+        identChecklist.src_addr = xact->tcpClient->remote;
+        identChecklist.my_addr = xact->tcpClient->local;
         if (identChecklist.fastCheck() == ACCESS_ALLOWED)
-            Ident::Start(client, clientIdentDone, result);
+            Ident::Start(xact->tcpClient, clientIdentDone, this);
     }
 #endif
 
-#if USE_SQUID_EUI
-    if (Eui::TheConfig.euiLookup) {
-        if (client->remote.IsIPv4()) {
-            result->clientConnection->remoteEui48.lookup(client->remote);
-        } else if (client->remote.IsIPv6()) {
-            result->clientConnection->remoteEui64.lookup(client->remote);
-        }
-    }
-#endif
+    clientdbEstablished(clientConnection->remote, 1);
 
-    clientdbEstablished(client->remote, 1);
-
-    if (!result->isFtp)
-        result->flags.readMore = true;
-
-    return result;
+    flags.readMore = !isFtp;
 }
 
 /** Handle a new connection on HTTP socket. */
 void
 httpAccept(const CommAcceptCbParams &params)
 {
-    AnyP::PortCfg *s = static_cast<AnyP::PortCfg *>(params.data);
+    MasterXaction::Pointer xact = params.xaction;
+    AnyP::PortCfgPointer s = xact->squidPort;
+
+    if (!s.valid()) {
+        // it is possible the call or accept() was still queued when the port was reconfigured
+        debugs(33, 2, "HTTP accept failure: port reconfigured.");
+        return;
+    }
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3585,7 +3619,7 @@ httpAccept(const CommAcceptCbParams &params)
     ++ incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(params.conn, s);
+    ConnStateData *connState = new ConnStateData(xact);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
@@ -3807,25 +3841,34 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
     else {
         char buf[MAX_IPSTRLEN];
         assert(bumpMode != Ssl::bumpNone && bumpMode != Ssl::bumpEnd);
-        HttpRequest *fakeRequest = new HttpRequest;
-        fakeRequest->SetHost(details->local.NtoA(buf, sizeof(buf)));
-        fakeRequest->port = details->local.GetPort();
+        HttpRequest::Pointer fakeRequest(new HttpRequest);
+        fakeRequest->SetHost(details->local.toStr(buf, sizeof(buf)));
+        fakeRequest->port = details->local.port();
         fakeRequest->clientConnectionManager = connState;
         fakeRequest->client_addr = connState->clientConnection->remote;
 #if FOLLOW_X_FORWARDED_FOR
         fakeRequest->indirect_client_addr = connState->clientConnection->remote;
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
-        fakeRequest->flags.spoofClientIp = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        fakeRequest->flags.interceptTproxy = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
         fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        fakeRequest->myportname = connState->port->name;
+        if (fakeRequest->flags.interceptTproxy) {
+            if (Config.accessList.spoof_client_ip) {
+                ACLFilledChecklist checklist(Config.accessList.spoof_client_ip, fakeRequest.getRaw(), NULL);
+                fakeRequest->flags.spoofClientIp = (checklist.fastCheck() == ACCESS_ALLOWED);
+            } else
+                fakeRequest->flags.spoofClientIp = true;
+        } else
+            fakeRequest->flags.spoofClientIp = false;
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
-        connState->switchToHttps(fakeRequest, bumpMode);
+        connState->switchToHttps(fakeRequest.getRaw(), bumpMode);
     }
 }
 
 /**
  * A callback function to use with the ACLFilledChecklist callback.
- * In the case of ACCES_ALLOWED answer initializes a bumped SSL connection,
+ * In the case of ACCESS_ALLOWED answer initializes a bumped SSL connection,
  * else reverts the connection to tunnel mode.
  */
 static void
@@ -3850,7 +3893,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         static char reqStr[MAX_IPSTRLEN + 80];
-        connState->clientConnection->local.ToURL(ip, sizeof(ip));
+        connState->clientConnection->local.toUrl(ip, sizeof(ip));
         snprintf(reqStr, sizeof(reqStr), "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", ip, ip);
         bool ret = connState->handleReadData(reqStr, strlen(reqStr));
         if (ret)
@@ -3867,7 +3910,14 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    AnyP::PortCfg *s = static_cast<AnyP::PortCfg *>(params.data);
+    MasterXaction::Pointer xact = params.xaction;
+    const AnyP::PortCfgPointer s = xact->squidPort;
+
+    if (!s.valid()) {
+        // it is possible the call or accept() was still queued when the port was reconfigured
+        debugs(33, 2, "HTTPS accept failure: port reconfigured.");
+        return;
+    }
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3885,7 +3935,7 @@ httpsAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(params.conn, s);
+    ConnStateData *connState = new ConnStateData(xact);
 
     if (s->flags.tunnelSslBumping) {
         debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
@@ -3900,8 +3950,8 @@ httpsAccept(const CommAcceptCbParams &params)
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
         assert(params.conn->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
-        request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
-        request->port = params.conn->local.GetPort();
+        request->SetHost(params.conn->local.toStr(ip, sizeof(ip)));
+        request->port = params.conn->local.port();
         request->myportname = s->name;
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
@@ -3919,7 +3969,14 @@ httpsAccept(const CommAcceptCbParams &params)
 static void
 ftpAccept(const CommAcceptCbParams &params)
 {
-    AnyP::PortCfg *s = static_cast<AnyP::PortCfg *>(params.data);
+    MasterXaction::Pointer xact = params.xaction;
+    AnyP::PortCfgPointer s = xact->squidPort;
+
+    if (!s.valid()) {
+        // it is possible the call or accept() was still queued when the port was reconfigured
+        debugs(33, 2, "FTP accept failure: port reconfigured.");
+        return;
+	}
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3937,11 +3994,11 @@ ftpAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(params.conn, s);
+    ConnStateData *connState = new ConnStateData(xact);
 
     if (connState->transparent()) {
         char buf[MAX_IPSTRLEN];
-        connState->clientConnection->local.ToURL(buf,MAX_IPSTRLEN);
+        connState->clientConnection->local.toUrl(buf, MAX_IPSTRLEN);
         connState->ftp.uri = "ftp://";
         connState->ftp.uri.append(buf);
         connState->ftp.uri.append("/");
@@ -3949,6 +4006,8 @@ ftpAccept(const CommAcceptCbParams &params)
     }
 
     FtpWriteEarlyReply(connState, 220, "Service ready");
+
+    // TODO: Merge common httpAccept() parts, applying USE_DELAY_POOLS to FTP.
 }
 
 void
@@ -4225,7 +4284,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         // Squid serves its own error page and closes, so we want
         // a CN that causes no additional browser errors. Possible
         // only when bumping CONNECT with a user-typed address.
-        if (intendedDest.IsAnyAddr() || isConnectRequest)
+        if (intendedDest.isAnyAddr() || isConnectRequest)
             sslCommonName = sslConnectHostOrIp;
         else if (sslServerBump->serverCert.get())
             sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());
@@ -4422,7 +4481,7 @@ clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNot
 
     debugs(1, DBG_IMPORTANT, "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
-           (s->flags.tproxyIntercept ? "TPROXY spoofing " : "") <<
+           (s->flags.tproxyIntercept ? "TPROXY intercepted " : "") <<
            (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
            (s->flags.accelSurrogate ? "reverse-proxy " : "")
            << FdNote(portTypeNote) << " connections at "
@@ -4560,25 +4619,6 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 }
 
 CBDATA_CLASS_INIT(ConnStateData);
-
-ConnStateData::ConnStateData(const char *protocol) :
-        AsyncJob("ConnStateData"),
-        isFtp(strcmp(protocol, "ftp") == 0),
-#if USE_SSL
-        sslBumpMode(Ssl::bumpEnd),
-        switchedToHttps_(false),
-        sslServerBump(NULL),
-#endif
-        stoppedSending_(NULL),
-        stoppedReceiving_(NULL)
-{
-    pinning.host = NULL;
-    pinning.port = -1;
-    pinning.pinned = false;
-    pinning.auth = false;
-    pinning.zeroReply = false;
-    pinning.peer = NULL;
-}
 
 bool
 ConnStateData::transparent() const
@@ -4774,7 +4814,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
         pinning.port = request->port;
         pinnedHost = pinning.host;
     } else {
-        pinning.port = pinServer->remote.GetPort();
+        pinning.port = pinServer->remote.port();
     }
     pinning.pinned = true;
     if (aPeer)
@@ -4783,7 +4823,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     char stmp[MAX_IPSTRLEN];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
              (auth || !aPeer) ? pinnedHost : aPeer->name,
-             clientConnection->remote.ToURL(stmp,MAX_IPSTRLEN),
+             clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
 
@@ -4805,18 +4845,14 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
-    if (pinning.auth && request && strcasecmp(pinning.host, request->GetHost()) != 0) {
+    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->GetHost()) != 0)
         valid = false;
-    }
-    if (request && pinning.port != request->port) {
+    else if (request && pinning.port != request->port)
         valid = false;
-    }
-    if (pinning.peer && !cbdataReferenceValid(pinning.peer)) {
+    else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         valid = false;
-    }
-    if (aPeer != pinning.peer) {
+    else if (aPeer != pinning.peer)
         valid = false;
-    }
 
     if (!valid) {
         /* The pinning info is not safe, remove any pinning info */
@@ -5133,7 +5169,7 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     conn->flags = COMM_NONBLOCKING;
     conn->local = connState->transparent() ?
                   connState->port->s : context->clientConnection->local;
-    conn->local.SetPort(0);
+    conn->local.port(0);
     const char *const note = connState->ftp.uri.termedBuf();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
@@ -5155,7 +5191,7 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     // remote server in interception setups and local address otherwise
     const Ip::Address &server = connState->transparent() ?
                                 context->clientConnection->local : conn->local;
-    server.NtoA(addr, MAX_IPSTRLEN, AF_INET);
+    server.toStr(addr, MAX_IPSTRLEN, AF_INET);
     addr[MAX_IPSTRLEN - 1] = '\0';
     for (char *c = addr; *c != '\0'; ++c) {
         if (*c == '.')
@@ -5164,7 +5200,7 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
 
     // conn->fd is the client data connection (and its local port)
     const unsigned short port = comm_local_port(conn->fd);
-    conn->local.SetPort(port);
+    conn->local.port(port);
 
     // In interception setups, we combine remote server address with a
     // local port number and hope that traffic will be redirected to us.
@@ -5587,13 +5623,13 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
     conn->remote = cltAddr;
 
     // TODO: should we use getOutgoingAddress() here instead?
-    if (conn->remote.IsIPv4())
-        conn->local.SetIPv4();
+    if (conn->remote.isIPv4())
+        conn->local.setIPv4();
 
     // RFC 959 requires active FTP connections to originate from port 20
     // but that would preclude us from supporting concurrent transfers! (XXX?)
     // conn->flags |= COMM_DOBIND;
-    // conn->local.SetPort(20);
+    // conn->local.port(20);
 
     context->getConn()->ftp.dataConn = conn;
     context->getConn()->ftp.uploadAvailSize = 0; // XXX: FtpCloseDataConnection should do that
@@ -5648,7 +5684,7 @@ FtpCheckDataConnection(ClientSocketContext *context)
         return false;
     }
 
-    if (!connState->ftp.dataConn || connState->ftp.dataConn->remote.IsAnyAddr()) {
+    if (!connState->ftp.dataConn || connState->ftp.dataConn->remote.isAnyAddr()) {
         // XXX: use client address and default port instead.
         FtpSetReply(context, 425, "Use PORT or PASV first");
         return false;

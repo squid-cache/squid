@@ -6,7 +6,7 @@
 #ifndef SQUID_IPC_COORDINATOR_H
 #define SQUID_IPC_COORDINATOR_H
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
 #include "ipc/SharedListen.h"

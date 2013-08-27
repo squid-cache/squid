@@ -746,7 +746,7 @@ ErrorState::Dump(MemBuf * mb)
     str.Printf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
 
     /* - IP stuff */
-    str.Printf("ClientIP: %s\r\n", src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
+    str.Printf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
 
     if (request && request->hier.host[0] != '\0') {
         str.Printf("ServerIP: %s\r\n", request->hier.host);
@@ -906,12 +906,12 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'i':
-        mb.Printf("%s", src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
+        mb.Printf("%s", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
         break;
 
     case 'I':
         if (request && request->hier.tcpServer != NULL)
-            p = request->hier.tcpServer->remote.NtoA(ntoabuf,MAX_IPSTRLEN);
+            p = request->hier.tcpServer->remote.toStr(ntoabuf,MAX_IPSTRLEN);
         else if (!building_deny_info_url)
             p = "[unknown]";
         break;

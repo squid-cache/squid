@@ -27,7 +27,7 @@ public:
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages
     Ssl::X509_Pointer serverCert; ///< HTTPS server certificate
-    Ssl::Errors *sslErrors; ///< SSL [certificate validation] errors
+    Ssl::CertErrors *sslErrors; ///< SSL [certificate validation] errors
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming

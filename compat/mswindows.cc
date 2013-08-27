@@ -148,6 +148,7 @@ gettimeofday(struct timeval *pcur_time, void *tzp)
 }
 #endif /* !HAVE_GETTIMEOFDAY */
 
+#if !_SQUID_MINGW_
 int
 statfs(const char *path, struct statfs *sfs)
 {
@@ -181,6 +182,7 @@ statfs(const char *path, struct statfs *sfs)
     sfs->f_namelen = maxlen;
     return 0;
 }
+#endif
 
 #if !_SQUID_MINGW_
 int

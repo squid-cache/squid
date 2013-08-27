@@ -1703,9 +1703,16 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
 
-    /* append our IMS header */
+    /* use our IMS header if the cached entry has Last-Modified time */
     if (request->lastmod > -1)
         hdr_out->putTime(HDR_IF_MODIFIED_SINCE, request->lastmod);
+
+    // Add our own If-None-Match field if the cached entry has a strong ETag.
+    // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
+    if (request->etag.defined()) {
+        hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
+                                              request->etag.termedBuf()));
+    }
 
     bool we_do_ranges = decideIfWeDoRanges (request);
 
@@ -1770,10 +1777,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         if (strcmp(opt_forwarded_for, "on") == 0) {
             /** If set to ON - append client IP or 'unknown'. */
-            if ( request->client_addr.IsNoAddr() )
+            if ( request->client_addr.isNoAddr() )
                 strListAdd(&strFwd, "unknown", ',');
             else
-                strListAdd(&strFwd, request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN), ',');
+                strListAdd(&strFwd, request->client_addr.toStr(ntoabuf, MAX_IPSTRLEN), ',');
         } else if (strcmp(opt_forwarded_for, "off") == 0) {
             /** If set to OFF - append 'unknown'. */
             strListAdd(&strFwd, "unknown", ',');
@@ -1781,10 +1788,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             /** If set to TRANSPARENT - pass through unchanged. */
         } else if (strcmp(opt_forwarded_for, "truncate") == 0) {
             /** If set to TRUNCATE - drop existing list and replace with client IP or 'unknown'. */
-            if ( request->client_addr.IsNoAddr() )
+            if ( request->client_addr.isNoAddr() )
                 strFwd = "unknown";
             else
-                strFwd = request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN);
+                strFwd = request->client_addr.toStr(ntoabuf, MAX_IPSTRLEN);
         }
         if (strFwd.size() > 0)
             hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());

@@ -320,7 +320,7 @@ accessLogInit(void)
         if (log->type == Log::Format::CLF_NONE)
             continue;
 
-        log->logfile = logfileOpen(log->filename, MAX_URL << 2, 1);
+        log->logfile = logfileOpen(log->filename, log->bufferSize, log->fatal);
 
         LogfileStatus = LOG_ENABLE;
 

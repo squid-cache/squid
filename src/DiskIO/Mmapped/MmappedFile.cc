@@ -21,6 +21,11 @@
 #include <errno.h>
 #endif
 
+// Some systems such as Hurd provide mmap() API but do not support MAP_NORESERVE
+#ifndef MAP_NORESERVE
+#define MAP_NORESERVE 0
+#endif
+
 CBDATA_CLASS_INIT(MmappedFile);
 
 // helper class to deal with mmap(2) offset alignment and other low-level specs
@@ -43,23 +48,6 @@ private:
     off_t delta; ///< mapped buffer increment to hit user offset
     void *buf; ///< buffer returned by mmap, needed for munmap
 };
-
-void *
-MmappedFile::operator new(size_t sz)
-{
-    CBDATA_INIT_TYPE(MmappedFile);
-    MmappedFile *result = cbdataAlloc(MmappedFile);
-    /* Mark result as being owned - we want the refcounter to do the delete
-     * call */
-    return result;
-}
-
-void
-MmappedFile::operator delete(void *address)
-{
-    MmappedFile *t = static_cast<MmappedFile *>(address);
-    cbdataFree(t);
-}
 
 MmappedFile::MmappedFile(char const *aPath): fd(-1),
         minOffset(0), maxOffset(-1), error_(false)

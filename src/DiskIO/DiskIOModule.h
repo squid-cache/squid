@@ -32,7 +32,7 @@
 #ifndef SQUID_DISKIOMODULE_H
 #define SQUID_DISKIOMODULE_H
 
-#include "Array.h"
+#include "base/Vector.h"
 
 /* forward decls */
 

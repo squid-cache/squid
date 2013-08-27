@@ -14,7 +14,7 @@ extern const char *const crlf;
 
 /// common code for FTP server control and data channels
 /// does not own the channel descriptor, which is managed by FtpStateData
-class ServerChannel
+class FtpChannel
 {
 public:
     /// called after the socket is opened, sets up close handler
@@ -55,14 +55,17 @@ public:
     virtual const Comm::ConnectionPointer & dataConnection() const;
     virtual void abortTransaction(const char *reason);
     void writeCommand(const char *buf);
-    bool handlePasvReply();
+
+    /// extracts remoteAddr from PASV response, validates it,
+    /// sets data address details, and returns true on success
+    bool handlePasvReply(Ip::Address &remoteAddr);
     void connectDataChannel();
     virtual void maybeReadVirginBody();
     void switchTimeoutToDataChannel();
 
     // \todo: optimize ctrl and data structs member order, to minimize size
     /// FTP control channel info; the channel is opened once per transaction
-    struct CtrlChannel: public ServerChannel {
+    struct CtrlChannel: public FtpChannel {
         char *buf;
         size_t size;
         size_t offset;
@@ -73,10 +76,13 @@ public:
     } ctrl;
 
     /// FTP data channel info; the channel may be opened/closed a few times
-    struct DataChannel: public ServerChannel {
+    struct DataChannel: public FtpChannel {
         MemBuf *readBuf;
-        Ip::Address addr;
+        char *host;
+        unsigned short port;
         bool read_pending;
+
+        void addr(const Ip::Address &addr); ///< import host and port
     } data;
 
     int state;

@@ -51,6 +51,7 @@ obsolete
 onoff
 peer
 peer_access		cache_peer acl
+pipelinePrefetch
 PortCfg
 QosConfig
 refreshpattern

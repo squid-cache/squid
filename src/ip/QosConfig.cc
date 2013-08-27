@@ -66,27 +66,27 @@ void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const f
          * port numbers.
          */
 
-        if (Ip::EnableIpv6 && server->local.IsIPv6()) {
+        if (Ip::EnableIpv6 && server->local.isIPv6()) {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET6);
             struct in6_addr serv_fde_remote_ip6;
-            server->remote.GetInAddr(serv_fde_remote_ip6);
+            server->remote.getInAddr(serv_fde_remote_ip6);
             nfct_set_attr(ct, ATTR_IPV6_DST, serv_fde_remote_ip6.s6_addr);
             struct in6_addr serv_fde_local_ip6;
-            server->local.GetInAddr(serv_fde_local_ip6);
+            server->local.getInAddr(serv_fde_local_ip6);
             nfct_set_attr(ct, ATTR_IPV6_SRC, serv_fde_local_ip6.s6_addr);
         } else {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
             struct in_addr serv_fde_remote_ip;
-            server->remote.GetInAddr(serv_fde_remote_ip);
+            server->remote.getInAddr(serv_fde_remote_ip);
             nfct_set_attr_u32(ct, ATTR_IPV4_DST, serv_fde_remote_ip.s_addr);
             struct in_addr serv_fde_local_ip;
-            server->local.GetInAddr(serv_fde_local_ip);
+            server->local.getInAddr(serv_fde_local_ip);
             nfct_set_attr_u32(ct, ATTR_IPV4_SRC, serv_fde_local_ip.s_addr);
         }
 
         nfct_set_attr_u8(ct, ATTR_L4PROTO, IPPROTO_TCP);
-        nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(server->remote.GetPort()));
-        nfct_set_attr_u16(ct, ATTR_PORT_SRC, htons(server->local.GetPort()));
+        nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(server->remote.port()));
+        nfct_set_attr_u16(ct, ATTR_PORT_SRC, htons(server->local.port()));
 
         /* Open a handle to the conntrack */
         if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {

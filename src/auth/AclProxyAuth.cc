@@ -92,8 +92,8 @@ ACLProxyAuth::match(ACLChecklist *checklist)
     case ACCESS_AUTH_REQUIRED:
     default:
         // If the answer is not allowed or denied (matches/not matches) and
-        // async authentication is not needed (asyncNeeded), then we are done.
-        if (!checklist->asyncNeeded())
+        // async authentication is not in progress, then we are done.
+        if (checklist->keepMatching())
             checklist->markFinished(answer, "AuthenticateAcl exception");
         return -1; // other
     }
@@ -136,11 +136,10 @@ ProxyAuthLookup::Instance()
 }
 
 void
-ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
+ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
 {
     ACLFilledChecklist *checklist = Filled(cl);
 
-    checklist->asyncInProgress(true);
     debugs(28, 3, HERE << "checking password via authenticator");
 
     /* make sure someone created auth_user_request for us */
@@ -154,8 +153,6 @@ ProxyAuthLookup::LookupDone(void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
 
-    assert (checklist->asyncState() == ProxyAuthLookup::Instance());
-
     if (checklist->auth_user_request == NULL || !checklist->auth_user_request->valid() || checklist->conn() == NULL) {
         /* credentials could not be checked either way
          * restart the whole process */
@@ -163,13 +160,11 @@ ProxyAuthLookup::LookupDone(void *data)
         checklist->auth_user_request = NULL;
 
         if (checklist->conn() != NULL) {
-            checklist->conn()->auth_user_request = NULL;
+            checklist->conn()->setAuth(NULL, "proxy_auth ACL failure");
         }
     }
 
-    checklist->asyncInProgress(false);
-    checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->matchNonBlocking();
+    checklist->resumeNonBlockingCheck(ProxyAuthLookup::Instance());
 }
 
 ACL *

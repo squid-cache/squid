@@ -183,7 +183,7 @@ peerSourceHashSelectParent(HttpRequest * request)
     if (n_sourcehash_peers == 0)
         return NULL;
 
-    key = request->client_addr.NtoA(ntoabuf, sizeof(ntoabuf));
+    key = request->client_addr.toStr(ntoabuf, sizeof(ntoabuf));
 
     /* calculate hash key */
     debugs(39, 2, "peerSourceHashSelectParent: Calculating hash for " << key);

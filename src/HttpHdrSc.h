@@ -32,7 +32,6 @@
 #ifndef SQUID_HTTPHDRSURROGATECONTROL_H
 #define SQUID_HTTPHDRSURROGATECONTROL_H
 
-#include "dlink.h"
 #include "HttpHdrScTarget.h"
 
 class StatHist;

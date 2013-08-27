@@ -153,7 +153,6 @@ public:
                 code (LOG_TAG_NONE),
                 msec(0),
                 rfc931 (NULL),
-                authuser (NULL),
                 extuser(NULL),
 #if USE_SSL
                 ssluser(NULL),
@@ -172,7 +171,6 @@ public:
         LogTags code;
         int msec;
         const char *rfc931;
-        const char *authuser;
         const char *extuser;
 #if USE_SSL
 
@@ -232,9 +230,9 @@ public:
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
 
-    /// key:value pairs set by note and adaptation_meta directives
-    /// plus key=value pairs returned from URL rewrite/redirect helper
-    NotePairs notes;
+    /// key:value pairs set by squid.conf note directive and
+    /// key=value pairs returned from URL rewrite/redirect helper
+    NotePairs::Pointer notes;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request

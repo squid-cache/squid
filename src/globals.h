@@ -47,6 +47,8 @@ extern char tmp_error_buf[ERROR_BUF_SZ];
 extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
 extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];
+/// During parsing, the name of the current squid.conf directive being parsed.
+extern const char *cfg_directive; /* NULL */
 extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
 extern const char *cfg_filename;	/* NULL */
 extern const char *dash_str;	/* "-" */
@@ -134,6 +136,7 @@ extern int ssl_ex_index_cert_error_check;	/* -1 */
 extern int ssl_ex_index_ssl_error_detail;      /* -1 */
 extern int ssl_ex_index_ssl_peeked_cert;      /* -1 */
 extern int ssl_ex_index_ssl_errors;   /* -1 */
+extern int ssl_ex_index_ssl_cert_chain;  /* -1 */
 
 extern const char *external_acl_message;      /* NULL */
 extern int opt_send_signal;	/* -1 */

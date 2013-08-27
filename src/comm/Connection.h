@@ -37,7 +37,6 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "defines.h"
 #include "hier_code.h"
