@@ -130,7 +130,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
                 static int seen_broken_client = 0;
 
                 if (!seen_broken_client) {
-                    last_broken_addr.SetNoAddr();
+                    last_broken_addr.setNoAddr();
                     seen_broken_client = 1;
                 }
 
@@ -306,9 +306,9 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         assert(digest_user != NULL);
 
-        Note::Pointer ha1Note = reply.notes.find("ha1");
+        const char *ha1Note = reply.notes.findFirst("ha1");
         if (ha1Note != NULL) {
-            CvtBin(ha1Note->firstValue(), digest_user->HA1);
+            CvtBin(ha1Note, digest_user->HA1);
             digest_user->HA1created = 1;
         } else {
             debugs(29, DBG_IMPORTANT, "ERROR: Digest auth helper did not produce a HA1. Using the wrong helper program? received: " << reply);
@@ -332,9 +332,9 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
         digest_request->user()->credentials(Auth::Failed);
         digest_request->flags.invalid_password = true;
 
-        Note::Pointer msgNote = reply.notes.find("message");
+        const char *msgNote = reply.notes.find("message");
         if (msgNote != NULL) {
-            digest_request->setDenyMessage(msgNote->firstValue());
+            digest_request->setDenyMessage(msgNote);
         } else if (reply.other().hasContent()) {
             // old helpers did send ERR result but a bare message string instead of message= key name.
             digest_request->setDenyMessage(reply.other().content());

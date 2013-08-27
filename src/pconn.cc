@@ -254,8 +254,8 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
     assert(size_);
 
     // small optimization: do the constant bool tests only once.
-    const bool keyCheckAddr = !key->local.IsAnyAddr();
-    const bool keyCheckPort = key->local.GetPort() > 0;
+    const bool keyCheckAddr = !key->local.isAnyAddr();
+    const bool keyCheckPort = key->local.port() > 0;
 
     for (int i=size_-1; i>=0; --i) {
 
@@ -263,7 +263,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
             continue;
 
         // local end port is required, but dont match.
-        if (keyCheckPort && key->local.GetPort() != theList_[i]->local.GetPort())
+        if (keyCheckPort && key->local.port() != theList_[i]->local.port())
             continue;
 
         // local address is required, but does not match.
@@ -331,7 +331,7 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 3 + 10);
 
-    destLink->remote.ToURL(buf, SQUIDHOSTNAMELEN * 3 + 10);
+    destLink->remote.toUrl(buf, SQUIDHOSTNAMELEN * 3 + 10);
     if (domain) {
         const int used = strlen(buf);
         snprintf(buf+used, SQUIDHOSTNAMELEN * 3 + 10-used, "/%s", domain);

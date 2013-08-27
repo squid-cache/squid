@@ -36,6 +36,7 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "fd.h"
+#include "fde.h"
 #include "format/Quoting.h"
 #include "helper.h"
 #include "Mem.h"
@@ -526,7 +527,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
         double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->readPipe->fd,
                           srv->pid,
@@ -771,7 +772,7 @@ helperServerFree(helper_server *srv)
     safe_free(srv->requests);
 
     cbdataReferenceDone(srv->parent);
-    cbdataFree(srv);
+    delete srv;
 }
 
 static void
@@ -840,7 +841,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
 
     cbdataReferenceDone(srv->parent);
 
-    cbdataFree(srv);
+    delete srv;
 }
 
 /// Calls back with a pointer to the buffer with the helper output
@@ -957,7 +958,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         srv->rbuf[srv->roffset] = '\0';
     }
 
-    if (Comm::IsConnOpen(srv->readPipe)) {
+    if (Comm::IsConnOpen(srv->readPipe) && !fd_table[srv->readPipe->fd].closing()) {
         int spaceSize = srv->rbuf_sz - srv->roffset - 1;
         assert(spaceSize >= 0);
 
@@ -1078,7 +1079,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
             helperStatefulReleaseServer(srv);
     }
 
-    if (Comm::IsConnOpen(srv->readPipe)) {
+    if (Comm::IsConnOpen(srv->readPipe) && !fd_table[srv->readPipe->fd].closing()) {
         int spaceSize = srv->rbuf_sz - srv->roffset - 1;
         assert(spaceSize >= 0);
 

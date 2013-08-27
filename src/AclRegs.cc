@@ -5,7 +5,8 @@
     does not get linked in, because nobody is using these classes by name.
 */
 
-#include "acl/Acl.h"
+#include "acl/AllOf.h"
+#include "acl/AnyOf.h"
 #if USE_SQUID_EUI
 #include "acl/Arp.h"
 #include "acl/Eui64.h"
@@ -37,6 +38,8 @@
 #include "acl/MethodData.h"
 #include "acl/Method.h"
 #include "acl/MyPortName.h"
+#include "acl/Note.h"
+#include "acl/NoteData.h"
 #include "acl/PeerName.h"
 #include "acl/ProtocolData.h"
 #include "acl/Protocol.h"
@@ -146,7 +149,7 @@ ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrate
 
 #if USE_SSL
 ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
-ACLStrategised<const Ssl::Errors *> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
+ACLStrategised<const Ssl::CertErrors *> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
 ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
 ACLStrategised<X509 *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (Ssl::GetX509UserAttribute, "*"), ACLCertificateStrategy::Instance(), "user_cert");
 ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEntry_, "ca_cert");
@@ -181,3 +184,12 @@ ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
 
 ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
 ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
+
+ACL::Prototype Acl::AnyOf::RegistryProtoype(&Acl::AnyOf::RegistryEntry_, "any-of");
+Acl::AnyOf Acl::AnyOf::RegistryEntry_;
+
+ACL::Prototype Acl::AllOf::RegistryProtoype(&Acl::AllOf::RegistryEntry_, "all-of");
+Acl::AllOf Acl::AllOf::RegistryEntry_;
+
+ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
+ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");

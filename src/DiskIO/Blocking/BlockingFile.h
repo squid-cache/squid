@@ -42,8 +42,6 @@ class BlockingFile : public DiskFile
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
     BlockingFile(char const *path);
     ~BlockingFile();
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
@@ -72,7 +70,7 @@ private:
     void readDone(int fd, const char *buf, int len, int errflag);
     void writeDone(int fd, int errflag, size_t len);
 
-    CBDATA_CLASS(BlockingFile);
+    CBDATA_CLASS2(BlockingFile);
 };
 
 #endif /* SQUID_BLOCKINGFILE_H */

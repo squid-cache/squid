@@ -54,7 +54,7 @@ escapeIAC(const char *buf)
 
 /// configures the channel with a descriptor and registers a close handler
 void
-ServerChannel::opened(const Comm::ConnectionPointer &newConn,
+FtpChannel::opened(const Comm::ConnectionPointer &newConn,
                       const AsyncCall::Pointer &aCloser)
 {
     assert(!Comm::IsConnOpen(conn));
@@ -70,7 +70,7 @@ ServerChannel::opened(const Comm::ConnectionPointer &newConn,
 
 /// planned close: removes the close handler and calls comm_close
 void
-ServerChannel::close()
+FtpChannel::close()
 {
     // channels with active listeners will be closed when the listener handler dies.
     if (Comm::IsConnOpen(conn)) {
@@ -81,7 +81,7 @@ ServerChannel::close()
 }
 
 void
-ServerChannel::forget()
+FtpChannel::forget()
 {
     if (Comm::IsConnOpen(conn))
         comm_remove_close_handler(conn->fd, closer);
@@ -89,7 +89,7 @@ ServerChannel::forget()
 }
 
 void
-ServerChannel::clear()
+FtpChannel::clear()
 {
     conn = NULL;
     closer = NULL;
@@ -109,6 +109,16 @@ ServerStateData::ServerStateData(FwdState *fwdState):
     const AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this,
                                                   ServerStateData::ctrlClosed);
     ctrl.opened(fwdState->serverConnection(), closer);
+}
+
+void
+ServerStateData::DataChannel::addr(const Ip::Address &import)
+{
+     static char addrBuf[MAX_IPSTRLEN];
+     import.toStr(addrBuf, sizeof(addrBuf));
+     xfree(host);
+     host = xstrdup(addrBuf);
+     port = import.port();
 }
 
 ServerStateData::~ServerStateData()
@@ -363,7 +373,7 @@ ServerStateData::handleControlReply()
 }
 
 bool
-ServerStateData::handlePasvReply()
+ServerStateData::handlePasvReply(Ip::Address &srvAddr)
 {
     int code = ctrl.replycode;
     char *buf;
@@ -382,11 +392,13 @@ ServerStateData::handlePasvReply()
 
     const char *forceIp = Config.Ftp.sanitycheck ?
                           fd_table[ctrl.conn->fd].ipaddr : NULL;
-    if (!Ftp::ParseIpPort(buf, forceIp, data.addr)) {
+    if (!Ftp::ParseIpPort(buf, forceIp, srvAddr)) {
         debugs(9, DBG_IMPORTANT, "Unsafe PASV reply from " <<
                ctrl.conn->remote << ": " << ctrl.last_reply);
         return false;
     }
+
+    data.addr(srvAddr);
 
     return true;
 }
@@ -400,19 +412,19 @@ ServerStateData::connectDataChannel()
 
     ctrl.last_command = xstrdup("Connect to server data port");
 
+    // Generate a new data channel descriptor to be opened.
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = ctrl.conn->local;
-    conn->local.SetPort(0);
-    conn->remote = data.addr;
+    conn->local.port(0);
+    conn->remote = data.host;
+    conn->remote.port(data.port);
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
     data.opener = commCbCall(9,3, "Ftp::ServerStateData::dataChannelConnected",
                              CommConnectCbPtrFun(ServerStateData::dataChannelConnected, this));
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, data.opener, Config.Timeout.connect);
-    char buf[MAX_IPSTRLEN];
-    data.addr.ToHostname(buf, MAX_IPSTRLEN);
-    cs->setHost(buf);
+    cs->setHost(data.host);
     AsyncJob::Start(cs);
 }
 
@@ -831,7 +843,7 @@ Ftp::ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr)
         snprintf(ipBuf, sizeof(ipBuf), "%d.%d.%d.%d", h1, h2, h3, h4);
         addr = ipBuf;
 
-        if (addr.IsAnyAddr())
+        if (addr.isAnyAddr())
             return false;
     }
 
@@ -843,6 +855,6 @@ Ftp::ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr)
     if (Config.Ftp.sanitycheck && port < 1024)
         return false;
 
-    addr.SetPort(port);
+    addr.port(port);
     return true;
 }

@@ -4,6 +4,7 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libanyp.la
 
 libanyp_la_SOURCES = \
+	forward.h \
 	PortCfg.cc \
 	PortCfg.h \
 	ProtocolType.cc \

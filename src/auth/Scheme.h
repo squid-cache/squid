@@ -33,7 +33,7 @@
 
 #if USE_AUTH
 
-#include "Array.h"
+#include "base/Vector.h"
 #include "base/RefCount.h"
 
 /**

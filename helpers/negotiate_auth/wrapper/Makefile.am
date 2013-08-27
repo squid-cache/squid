@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_DIST = config.test
+EXTRA_DIST = required.m4
 
 libexec_PROGRAMS = negotiate_wrapper_auth
 

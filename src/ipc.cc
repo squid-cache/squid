@@ -36,6 +36,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
+#include "ipc/Kid.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "tools.h"
@@ -204,10 +205,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     debugs(54, 3, "ipcCreate: cwfd FD " << cwfd);
 
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-        PaS.InitAddrInfo(AI);
+        Ip::Address::InitAddrInfo(AI);
 
         if (getsockname(pwfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
-            PaS.FreeAddrInfo(AI);
+            Ip::Address::FreeAddrInfo(AI);
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
@@ -216,19 +217,19 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << PaS);
 
-        PaS.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
 
-        ChS.InitAddrInfo(AI);
+        Ip::Address::InitAddrInfo(AI);
 
         if (getsockname(crfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
-            ChS.FreeAddrInfo(AI);
+            Ip::Address::FreeAddrInfo(AI);
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
         ChS = *AI;
 
-        ChS.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
 
         debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << ChS );
 
@@ -310,6 +311,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     /* child */
+    TheProcessKind = pkHelper;
     no_suid();			/* give up extra priviliges */
 
     /* close shared socket with parent */

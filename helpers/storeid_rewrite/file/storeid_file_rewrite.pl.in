@@ -1,0 +1,92 @@
+#!@PERL@
+use strict;
+use warnings;
+$|=1;
+
+=pod
+
+=head1 NAME
+
+storeid_file_rewrite - File based Store-ID helper for Squid
+
+=head1 SYNOPSIS
+
+storeid_file_rewrite filepath
+
+=head1 DESCRIPTOIN
+
+This program acts as a store_id helper program, rewriting URLs passed
+by Squid into storage-ids that can be used to achieve better caching
+for websites that use different URLs for the same content.
+
+It takes a text file with two tab separated columns.
+Column 1: Regular expression to match against the URL
+Column 2: Rewrite rule to generate a Store-ID
+Eg:
+^http:\/\/[^\.]+\.dl\.sourceforge\.net\/(.*)	http://dl.sourceforge.net.squid.internal/$1
+
+Rewrite rules are matched in the same order as they appear in the rules file.
+So for best performance, sort it in order of frequency of occurrence.
+
+For more information please see http://wiki.squid-cache.org/Features/StoreID
+
+=cut
+
+my @rules; # array of [regex, replacement string]
+
+die "Usage: $0 <rewrite-file>\n" unless $#ARGV == 0;
+
+# read config file
+open RULES, $ARGV[0] or die "Error opening $ARGV[0]: $!";
+while (<RULES>) {
+	chomp;
+	next if /^\s*#?$/;
+	if (/^\s*([^\t]+?)\s*\t+\s*([^\t]+?)\s*$/) {
+		push(@rules, [qr/$1/, $2]);
+	} else {
+		print STDERR "$0: Parse error in $ARGV[0] (line $.)\n";
+	}
+}
+close RULES;
+
+# read urls from squid and do the replacement
+URL: while (<STDIN>) {
+	chomp;
+	last if $_ eq 'quit';
+	
+	foreach my $rule (@rules) {
+		if (my @match = /$rule->[0]/) {
+			$_ = $rule->[1];
+			
+			for (my $i=1; $i<=scalar(@match); $i++) {
+				s/\$$i/$match[$i-1]/g;
+			}
+			print "OK store-id=$_\n";
+			next URL;
+		}
+	}
+	print "ERR\n";
+}
+
+=pod
+
+=head1 COPYRIGHT
+
+Copyright (C) 2013 Alan Mizrahi <alan@mizrahi.com.ve>
+Based on code from Eliezer Croitoru <eliezer@ngtech.co.il>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+
+=cut

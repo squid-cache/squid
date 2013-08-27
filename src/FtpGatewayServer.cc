@@ -327,15 +327,7 @@ ServerStateData::createHttpReply(const Http::StatusCode httpStatus, const int cl
 void
 ServerStateData::handleDataRequest()
 {
-    data.addr = fwd->request->clientConnectionManager->ftp.serverDataAddr;
-
-    if (!data.addr.IsSockAddr()) { // should never happen
-        debugs(9, DBG_IMPORTANT, HERE << "Inconsistent FTP server state: "
-               "data.addr=" << data.addr);
-        failed();
-        return;
-    }
-
+    data.addr(fwd->request->clientConnectionManager->ftp.serverDataAddr);
     connectDataChannel();
 }
 
@@ -459,10 +451,9 @@ ServerStateData::readPasvReply()
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
 
-    if (handlePasvReply()) {
-        fwd->request->clientConnectionManager->ftp.serverDataAddr = data.addr;
+    if (handlePasvReply(fwd->request->clientConnectionManager->ftp.serverDataAddr))
         forwardReply();
-    } else
+    else
         forwardError();
 }
 
@@ -475,10 +466,9 @@ ServerStateData::readPortReply()
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
 
-    if (handlePasvReply()) {
-        fwd->request->clientConnectionManager->ftp.serverDataAddr = data.addr;
+    if (handlePasvReply(fwd->request->clientConnectionManager->ftp.serverDataAddr))
         forwardReply();
-    } else
+    else
         forwardError();
 }
 

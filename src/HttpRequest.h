@@ -93,13 +93,13 @@ public:
     /*      caused by HttpRequest being used in places it really shouldn't.        */
     /*      ideally they would be methods of URL instead. */
     inline void SetHost(const char *src) {
-        host_addr.SetEmpty();
+        host_addr.setEmpty();
         host_addr = src;
-        if ( host_addr.IsAnyAddr() ) {
+        if (host_addr.isAnyAddr()) {
             xstrncpy(host, src, SQUIDHOSTNAMELEN);
             host_is_numeric = 0;
         } else {
-            host_addr.ToHostname(host, SQUIDHOSTNAMELEN);
+            host_addr.toHostStr(host, SQUIDHOSTNAMELEN);
             debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
             host_is_numeric = 1;
         }
@@ -203,7 +203,7 @@ public:
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
-    Notes *helperNotes;         ///< collection of meta notes associated with this request by helper lookups.
+    NotePairs::Pointer notes; ///< annotations added by the note directive and helpers
 
     String tag;			/* Internal tag for this request */
 
@@ -218,6 +218,9 @@ public:
 #if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
 #endif /* FOLLOW_X_FORWARDED_FOR */
+
+    /// A strong etag of the cached entry. Used for refreshing that entry.
+    String etag;
 
 public:
     bool multipartRangeRequest() const;

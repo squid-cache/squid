@@ -2,10 +2,8 @@
 #define _SQUID_SSL_ERROR_DETAIL_H
 
 #include "err_detail_type.h"
-#include "HttpRequest.h"
 #include "ErrorDetailManager.h"
-#include "ssl/support.h"
-#include "ssl/gadgets.h"
+#include "HttpRequest.h"
 
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
