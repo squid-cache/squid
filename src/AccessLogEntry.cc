@@ -17,15 +17,15 @@ AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
 {
 #if FOLLOW_X_FORWARDED_FOR
     if (Config.onoff.log_uses_indirect_client && request)
-        request->indirect_client_addr.NtoA(buf, bufsz);
+        request->indirect_client_addr.toStr(buf, bufsz);
     else
 #endif
         if (tcpClient != NULL)
-            tcpClient->remote.NtoA(buf, bufsz);
-        else if (cache.caddr.IsNoAddr()) // e.g., ICAP OPTIONS lack client
+            tcpClient->remote.toStr(buf, bufsz);
+        else if (cache.caddr.isNoAddr()) // e.g., ICAP OPTIONS lack client
             strncpy(buf, "-", bufsz);
         else
-            cache.caddr.NtoA(buf, bufsz);
+            cache.caddr.toStr(buf, bufsz);
 }
 
 AccessLogEntry::~AccessLogEntry()
@@ -37,7 +37,6 @@ AccessLogEntry::~AccessLogEntry()
 #endif
 
     safe_free(headers.reply);
-    safe_free(cache.authuser);
 
     safe_free(headers.adapted_request);
     HTTPMSGUNLOCK(adapted_request);

@@ -2,6 +2,7 @@
 #define SQUID_ACLFILLED_CHECKLIST_H
 
 #include "acl/Checklist.h"
+#include "acl/forward.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -22,9 +23,6 @@ class HttpReply;
 class ACLFilledChecklist: public ACLChecklist
 {
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
-
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident);
     ~ACLFilledChecklist();
@@ -72,7 +70,7 @@ public:
 
 #if USE_SSL
     /// SSL [certificate validation] errors, in undefined order
-    Ssl::Errors *sslErrors;
+    Ssl::CertErrors *sslErrors;
     /// The peer certificate
     Ssl::X509_Pointer serverCert;
 #endif
@@ -89,7 +87,7 @@ private:
     /// not implemented; will cause link failures if used
     ACLFilledChecklist &operator=(const ACLFilledChecklist &);
 
-    CBDATA_CLASS(ACLFilledChecklist);
+    CBDATA_CLASS2(ACLFilledChecklist);
 };
 
 /// convenience and safety wrapper for dynamic_cast<ACLFilledChecklist*>

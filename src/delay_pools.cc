@@ -42,7 +42,7 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "Array.h"
+#include "base/Vector.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "CommonPool.h"
@@ -810,7 +810,7 @@ VectorPool::id(CompositeSelectionDetails &details)
         return new NullDelayId;
 
     /* non-IPv4 are not able to provide IPv4-bitmask for this pool type key. */
-    if ( !details.src_addr.IsIPv4() )
+    if ( !details.src_addr.isIPv4() )
         return new NullDelayId;
 
     unsigned int key = makeKey(details.src_addr);
@@ -858,11 +858,11 @@ unsigned int
 IndividualPool::makeKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
-    if ( !src_addr.IsIPv4() )
+    if ( !src_addr.isIPv4() )
         return 1;
 
     struct in_addr host;
-    src_addr.GetInAddr(host);
+    src_addr.getInAddr(host);
     return (ntohl(host.s_addr) & 0xff);
 }
 
@@ -884,11 +884,11 @@ unsigned int
 ClassCNetPool::makeKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
-    if ( !src_addr.IsIPv4() )
+    if ( !src_addr.isIPv4() )
         return 1;
 
     struct in_addr net;
-    src_addr.GetInAddr(net);
+    src_addr.getInAddr(net);
     return ( (ntohl(net.s_addr) >> 8) & 0xff);
 }
 
@@ -956,12 +956,12 @@ unsigned char
 ClassCHostPool::makeHostKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
-    if ( !src_addr.IsIPv4() )
+    if ( !src_addr.isIPv4() )
         return 1;
 
     /* Temporary bypass for IPv4-only */
     struct in_addr host;
-    src_addr.GetInAddr(host);
+    src_addr.getInAddr(host);
     return (ntohl(host.s_addr) & 0xff);
 }
 
@@ -969,11 +969,11 @@ unsigned int
 ClassCHostPool::makeKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
-    if ( !src_addr.IsIPv4() )
+    if ( !src_addr.isIPv4() )
         return 1;
 
     struct in_addr net;
-    src_addr.GetInAddr(net);
+    src_addr.getInAddr(net);
     return ( (ntohl(net.s_addr) >> 8) & 0xff);
 }
 
@@ -984,7 +984,7 @@ ClassCHostPool::id(CompositeSelectionDetails &details)
         return new NullDelayId;
 
     /* non-IPv4 are not able to provide IPv4-bitmask for this pool type key. */
-    if ( !details.src_addr.IsIPv4() )
+    if ( !details.src_addr.isIPv4() )
         return new NullDelayId;
 
     unsigned int key = makeKey (details.src_addr);

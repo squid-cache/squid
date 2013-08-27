@@ -1,8 +1,8 @@
 #ifndef SQUID_ANYP_PORTCFG_H
 #define SQUID_ANYP_PORTCFG_H
 
+#include "anyp/forward.h"
 #include "anyp/TrafficMode.h"
-#include "cbdata.h"
 #include "comm/Connection.h"
 
 #if USE_SSL

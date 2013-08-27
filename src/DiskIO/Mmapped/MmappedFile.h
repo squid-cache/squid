@@ -9,8 +9,6 @@ class MmappedFile : public DiskFile
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
     MmappedFile(char const *path);
     ~MmappedFile();
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
@@ -40,7 +38,7 @@ private:
 
     void doClose();
 
-    CBDATA_CLASS(MmappedFile);
+    CBDATA_CLASS2(MmappedFile);
 };
 
 #endif /* SQUID_MMAPPEDFILE_H */

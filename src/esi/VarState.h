@@ -33,8 +33,8 @@
 #define SQUID_ESIVARSTATE_H
 
 #include "esi/Segment.h"
-#include "Trie.h"
-#include "Array.h"
+#include "libTrie/Trie.h"
+#include "base/Vector.h"
 #include "HttpHeader.h"
 
 class HttpReply;

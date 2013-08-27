@@ -79,9 +79,10 @@ static ClientInfo *
 clientdbAdd(const Ip::Address &addr)
 {
     ClientInfo *c;
-    char *buf = new char[MAX_IPSTRLEN];
+    char *buf = static_cast<char*>(xmalloc(MAX_IPSTRLEN)); // becomes hash.key
     c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
-    c->hash.key = addr.NtoA(buf,MAX_IPSTRLEN);
+    debugs(77, 9, "ClientInfo constructed, this=" << c);
+    c->hash.key = addr.toStr(buf,MAX_IPSTRLEN);
     c->addr = addr;
 #if USE_DELAY_POOLS
     /* setup default values for client write limiter */
@@ -140,7 +141,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
     if (!Config.onoff.client_db)
         return NULL;
 
-    addr.NtoA(key,MAX_IPSTRLEN);
+    addr.toStr(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
     if (c==NULL) {
@@ -159,7 +160,7 @@ clientdbUpdate(const Ip::Address &addr, LogTags ltype, AnyP::ProtocolType p, siz
     if (!Config.onoff.client_db)
         return;
 
-    addr.NtoA(key,MAX_IPSTRLEN);
+    addr.toStr(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
@@ -203,7 +204,7 @@ clientdbEstablished(const Ip::Address &addr, int delta)
     if (!Config.onoff.client_db)
         return 0;
 
-    addr.NtoA(key,MAX_IPSTRLEN);
+    addr.toStr(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
@@ -233,7 +234,7 @@ clientdbCutoffDenied(const Ip::Address &addr)
     if (!Config.onoff.client_db)
         return 0;
 
-    addr.NtoA(key,MAX_IPSTRLEN);
+    addr.toStr(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
@@ -354,6 +355,7 @@ clientdbFreeItem(void *data)
     }
 #endif
 
+    debugs(77, 9, "ClientInfo destructed, this=" << c);
     memFree(c, MEM_CLIENT_INFO);
 }
 
@@ -443,7 +445,7 @@ client_entry(Ip::Address *current)
     char key[MAX_IPSTRLEN];
 
     if (current) {
-        current->NtoA(key,MAX_IPSTRLEN);
+        current->toStr(key,MAX_IPSTRLEN);
         hash_first(client_table);
         while ((c = (ClientInfo *) hash_next(client_table))) {
             if (!strcmp(key, hashKeyStr(&c->hash)))
@@ -484,7 +486,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
         return NULL;
     }
 
-    keyIp.NtoA(key, sizeof(key));
+    keyIp.toStr(key, sizeof(key));
     debugs(49, 5, HERE << "[" << key << "] requested!");
     c = (ClientInfo *) hash_lookup(client_table, key);
 
@@ -501,7 +503,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 
     case MESH_CTBL_ADDR_TYPE: {
         int ival;
-        ival = c->addr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
+        ival = c->addr.isIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       ival, SMI_INTEGER);
     }
@@ -514,7 +516,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
         // See: rfc4001.txt
         Answer->type = ASN_OCTET_STR;
         char client[MAX_IPSTRLEN];
-        c->addr.NtoA(client,MAX_IPSTRLEN);
+        c->addr.toStr(client,MAX_IPSTRLEN);
         Answer->val_len = strlen(client);
         Answer->val.string =  (u_char *) xstrdup(client);
     }

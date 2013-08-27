@@ -1,6 +1,0 @@
-#!/bin/sh
-# Don't build without gssapi.h
-if test -f /usr/include/gssapi/gssapi.h || test -f  /usr/include/gssapi.h || test -f /usr/include/kerberosV/gssapi.h ; then
-       exit 0
-fi
-exit 1

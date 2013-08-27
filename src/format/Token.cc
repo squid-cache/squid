@@ -46,7 +46,6 @@ static TokenTableEntry TokenTable2C[] = {
     {"<la", LFT_SERVER_LOCAL_IP},
     {"oa", LFT_SERVER_LOCAL_IP_OLD_27},
     {"<lp", LFT_SERVER_LOCAL_PORT},
-    /* {"ot", LFT_PEER_OUTGOING_TOS}, */
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
@@ -122,6 +121,10 @@ static TokenTableEntry TokenTable2C[] = {
 /// Miscellaneous >2 byte tokens
 static TokenTableEntry TokenTableMisc[] = {
     {">eui", LFT_CLIENT_EUI},
+    {">qos", LFT_CLIENT_LOCAL_TOS},
+    {"<qos", LFT_SERVER_LOCAL_TOS},
+    {">nfmark", LFT_CLIENT_LOCAL_NFMARK},
+    {"<nfmark", LFT_SERVER_LOCAL_NFMARK},
     {"err_code", LFT_SQUID_ERROR },
     {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {"note", LFT_NOTE },
@@ -301,7 +304,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
     }
 
     if (*cur == '0') {
-        zero = false;
+        zero = true;
         ++cur;
     }
 

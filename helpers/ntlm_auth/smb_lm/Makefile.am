@@ -14,4 +14,4 @@ ntlm_smb_lm_auth_LDADD = \
 
 INCLUDES += -I$(top_srcdir)/lib
 
-EXTRA_DIST = config.test
+EXTRA_DIST = required.m4

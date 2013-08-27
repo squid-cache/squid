@@ -209,7 +209,7 @@ IcmpPinger::Recv(void)
     }
 
     /* pass request for ICMPv6 handing */
-    if (pecho.to.IsIPv6()) {
+    if (pecho.to.isIPv6()) {
         debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv6 module.");
         icmp6.SendEcho(pecho.to,
                        pecho.opcode,
@@ -218,7 +218,7 @@ IcmpPinger::Recv(void)
     }
 
     /* pass the packet for ICMP handling */
-    else if (pecho.to.IsIPv4()) {
+    else if (pecho.to.isIPv4()) {
         debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv4 module.");
         icmp4.SendEcho(pecho.to,
                        pecho.opcode,

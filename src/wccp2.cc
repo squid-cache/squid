@@ -690,7 +690,7 @@ wccp2Init(void)
 
     /* Calculate the number of routers configured in the config file */
     for (s = Config.Wccp2.router; s; s = s->next) {
-        if (!s->s.IsAnyAddr()) {
+        if (!s->s.isAnyAddr()) {
             /* Increment the counter */
             ++wccp2_numrouters;
         }
@@ -850,7 +850,7 @@ wccp2Init(void)
 
         /* Add each router.  Keep this functionality here to make sure the received_id can be updated in the packet */
         for (s = Config.Wccp2.router; s; s = s->next) {
-            if (!s->s.IsAnyAddr()) {
+            if (!s->s.isAnyAddr()) {
 
                 wccp2_here_i_am_header.length += sizeof(struct wccp2_router_id_element_t);
                 assert(wccp2_here_i_am_header.length <= WCCP_RESPONSE_SIZE);
@@ -858,9 +858,9 @@ wccp2Init(void)
                 /* Add a pointer to the router list for this router */
 
                 router_list_ptr->info = (struct wccp2_router_id_element_t *) ptr;
-                s->s.GetInAddr(router_list_ptr->info->router_address);
+                s->s.getInAddr(router_list_ptr->info->router_address);
                 router_list_ptr->info->received_id = htonl(0);
-                s->s.GetInAddr(router_list_ptr->router_sendto_address);
+                s->s.getInAddr(router_list_ptr->router_sendto_address);
                 router_list_ptr->member_change = htonl(0);
 
                 /* Build the next struct */
@@ -983,12 +983,12 @@ wccp2ConnectionOpen(void)
         return;
     }
 
-    if ( !Config.Wccp2.address.SetIPv4() ) {
+    if ( !Config.Wccp2.address.setIPv4() ) {
         debugs(80, DBG_CRITICAL, "WCCPv2 Disabled. Local address " << Config.Wccp2.address << " is not an IPv4 address.");
         return;
     }
 
-    Config.Wccp2.address.SetPort(WCCP_PORT);
+    Config.Wccp2.address.port(WCCP_PORT);
     theWccp2Connection = comm_open_listener(SOCK_DGRAM,
                                             0,
                                             Config.Wccp2.address,
@@ -1179,7 +1179,7 @@ wccp2HandleUdp(int sock, void *not_used)
                             0,
                             from_tmp);
     /* FIXME INET6 : drop conversion boundary */
-    from_tmp.GetSockAddr(from);
+    from_tmp.getSockAddr(from);
 
     if (len < 0)
         return;
@@ -1555,7 +1555,7 @@ wccp2HereIam(void *voidnotused)
         return;
     }
 
-    router.SetPort(WCCP_PORT);
+    router.port(WCCP_PORT);
 
     /* for each router on each service send a packet */
     service_list_ptr = wccp2_service_list_head;
