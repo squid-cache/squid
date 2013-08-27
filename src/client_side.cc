@@ -5099,6 +5099,11 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     }
 
     request->http_ver = *http_ver;
+
+    // Our fake Request-URIs are not distinctive enough for caching to work
+    request->flags.cachable = false; // XXX: reset later by maybeCacheable()
+    request->flags.noCache = true;
+
     request->header.putStr(HDR_FTP_COMMAND, cmd.termedBuf());
     request->header.putStr(HDR_FTP_ARGUMENTS, params.termedBuf() != NULL ?
                            params.termedBuf() : "");
@@ -5758,6 +5763,10 @@ FtpSetReply(ClientSocketContext *context, const int code, const char *msg)
     clientReplyContext *const repContext =
         dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert(repContext != NULL);
-    repContext->createStoreEntry(http->request->method, RequestFlags());
+
+    RequestFlags flags;
+    flags.cachable = false; // force releaseRequest() in storeCreateEntry()
+    flags.noCache = true;
+    repContext->createStoreEntry(http->request->method, flags);
     http->storeEntry()->replaceHttpReply(reply);
 }
