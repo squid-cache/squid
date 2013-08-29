@@ -5107,8 +5107,10 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     request->header.putStr(HDR_FTP_COMMAND, cmd.termedBuf());
     request->header.putStr(HDR_FTP_ARGUMENTS, params.termedBuf() != NULL ?
                            params.termedBuf() : "");
-    if (*method_p == Http::METHOD_PUT)
+    if (*method_p == Http::METHOD_PUT) {
+        request->header.putStr(HDR_EXPECT, "100-continue");
         request->header.putStr(HDR_TRANSFER_ENCODING, "chunked");
+    }
 
     ClientHttpRequest *const http = new ClientHttpRequest(connState);
     http->request = request;
