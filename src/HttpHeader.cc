@@ -163,6 +163,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
     {"FTP-Command", HDR_FTP_COMMAND, ftStr},
     {"FTP-Arguments", HDR_FTP_ARGUMENTS, ftStr},
+    {"FTP-Pre", HDR_FTP_PRE, ftStr},
     {"FTP-Status", HDR_FTP_STATUS, ftInt},
     {"FTP-Reason", HDR_FTP_REASON, ftStr},
     {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
