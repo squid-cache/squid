@@ -340,6 +340,7 @@ public:
     enum FtpState {
         FTP_BEGIN,
         FTP_CONNECTED,
+        FTP_HANDLE_FEAT,
         FTP_HANDLE_PASV,
         FTP_HANDLE_PORT,
         FTP_HANDLE_DATA_REQUEST,
