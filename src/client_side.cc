@@ -241,6 +241,7 @@ static CNCB FtpHandleConnectDone;
 
 static void FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer data);
 typedef void FtpReplyHandler(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data);
+static FtpReplyHandler FtpHandleFeatReply;
 static FtpReplyHandler FtpHandlePasvReply;
 static FtpReplyHandler FtpHandlePortReply;
 static FtpReplyHandler FtpHandleErrorReply;
@@ -261,6 +262,7 @@ static IOCB FtpWroteReplyData;
 
 typedef bool FtpRequestHandler(ClientSocketContext *context, String &cmd, String &params);
 static FtpRequestHandler FtpHandleRequest;
+static FtpRequestHandler FtpHandleFeatRequest;
 static FtpRequestHandler FtpHandlePasvRequest;
 static FtpRequestHandler FtpHandlePortRequest;
 static FtpRequestHandler FtpHandleDataRequest;
@@ -268,6 +270,8 @@ static FtpRequestHandler FtpHandleUploadRequest;
 
 static bool FtpCheckDataConnection(ClientSocketContext *context);
 static void FtpSetReply(ClientSocketContext *context, const int code, const char *msg);
+static bool FtpSupportedCommand(const String &name);
+
 
 clientStreamNode *
 ClientSocketContext::getTail() const
@@ -5065,9 +5069,6 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     const String cmd = boc;
     String params = bop;
 
-    *method_p = !cmd.caseCmp("APPE") || !cmd.caseCmp("STOR") ||
-        !cmd.caseCmp("STOU") ? Http::METHOD_PUT : Http::METHOD_GET;
-
     if (connState->ftp.uri.size() == 0) {
         // the first command must be USER
         if (cmd.caseCmp("USER") != 0) {
@@ -5085,6 +5086,14 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     if (cmd.caseCmp("USER") == 0 &&
         !FtpHandleUserRequest(connState, cmd, params))
         return NULL;
+
+    if (!FtpSupportedCommand(cmd)) {
+        FtpWriteEarlyReply(connState, 502, "Unknown or unsupported command");
+        return NULL;
+    }
+
+    *method_p = !cmd.caseCmp("APPE") || !cmd.caseCmp("STOR") ||
+        !cmd.caseCmp("STOU") ? Http::METHOD_PUT : Http::METHOD_GET;
 
     assert(connState->ftp.uri.size() > 0);
     char *uri = xstrdup(connState->ftp.uri.termedBuf());
@@ -5149,6 +5158,7 @@ FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer dat
     static FtpReplyHandler *handlers[] = {
         NULL, // FTP_BEGIN
         NULL, // FTP_CONNECTED
+        FtpHandleFeatReply, // FTP_HANDLE_FEAT
         FtpHandlePasvReply, // FTP_HANDLE_PASV
         FtpHandlePortReply, // FTP_HANDLE_PORT
         FtpHandleDataReply, // FTP_HANDLE_DATA_REQUEST
@@ -5161,6 +5171,47 @@ FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer dat
         (*handler)(context, reply, data);
     else
         FtpWriteForwardedReply(context, reply);
+}
+
+static void
+FtpHandleFeatReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
+{
+    if (context->http->request->errType != ERR_NONE) {
+        FtpWriteCustomReply(context, 502, "Server does not support FEAT", reply);
+        return;
+    }
+
+    HttpReply *filteredReply = reply->clone();
+    HttpHeader &filteredHeader = filteredReply->header;
+
+    // Remove all unsupported commands from the response wrapper.
+    int deletedCount = 0;
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    while (const HttpHeaderEntry *e = filteredHeader.getEntry(&pos)) {
+        if (e->id == HDR_FTP_PRE) {
+            // assume RFC 2389 FEAT response format, quoted by Squid:
+            // <"> SP NAME [SP PARAMS] <">
+            if (e->value.size() < 4)
+                continue;
+            const char *raw = e->value.termedBuf();
+            if (raw[0] != '"' && raw[1] != ' ')
+                continue;
+            const char *beg = raw + 2; // after quote and space
+            // command name ends with (SP parameter) or quote
+            const char *end = beg + strcspn(beg, " \"");
+            const String cmd = e->value.substr(beg-raw, end-raw);
+
+            if (!FtpSupportedCommand(cmd))
+                filteredHeader.delAt(pos, deletedCount);
+        }
+    }
+
+    if (deletedCount) {
+        filteredHeader.refreshMask();
+        debugs(33, 5, "deleted " << deletedCount);
+    }
+
+    FtpWriteForwardedReply(context, filteredReply);
 }
 
 static void
@@ -5543,6 +5594,7 @@ FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
     static std::pair<const char *, FtpRequestHandler *> handlers[] = {
         std::make_pair("LIST", FtpHandleDataRequest),
         std::make_pair("NLST", FtpHandleDataRequest),
+        std::make_pair("FEAT", FtpHandleFeatRequest),
         std::make_pair("PASV", FtpHandlePasvRequest),
         std::make_pair("PORT", FtpHandlePortRequest),
         std::make_pair("RETR", FtpHandleDataRequest)
@@ -5597,6 +5649,14 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
     }
 
     params.cut(eou);
+
+    return true;
+}
+
+bool
+FtpHandleFeatRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_FEAT, "FtpHandleFeatRequest");
 
     return true;
 }
@@ -5767,4 +5827,18 @@ FtpSetReply(ClientSocketContext *context, const int code, const char *msg)
     flags.noCache = true;
     repContext->createStoreEntry(http->request->method, flags);
     http->storeEntry()->replaceHttpReply(reply);
+}
+
+static bool
+FtpSupportedCommand(const String &name)
+{
+    static std::set<std::string> BlackList;
+    if (BlackList.empty()) {
+        // FTP commands that Squid cannot gateway correctly:
+        BlackList.insert("EPRT");
+        BlackList.insert("EPSV");
+    }
+
+    // we claim support for all commands that we do not know about
+    return BlackList.find(name.termedBuf()) == BlackList.end();
 }
