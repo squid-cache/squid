@@ -8482,8 +8482,8 @@ COMMENT_END
 
 NAME: configuration_includes_quoted_values
 COMMENT: on|off
-TYPE: onoff
-DEFAULT: on
+TYPE: configuration_includes_quoted_values
+DEFAULT: off
 LOC: ConfigParser::RecognizeQuotedValues
 DOC_START
 	If set, Squid will recognize each "quoted string" after a configuration
