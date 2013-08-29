@@ -268,7 +268,8 @@ static FtpRequestHandler FtpHandlePortRequest;
 static FtpRequestHandler FtpHandleDataRequest;
 static FtpRequestHandler FtpHandleUploadRequest;
 
-static bool FtpCheckDataConnection(ClientSocketContext *context);
+static bool FtpCheckDataConnPre(ClientSocketContext *context);
+static bool FtpCheckDataConnPost(ClientSocketContext *context);
 static void FtpSetReply(ClientSocketContext *context, const int code, const char *msg);
 static bool FtpSupportedCommand(const String &name);
 
@@ -5162,7 +5163,7 @@ FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer dat
         FtpHandlePasvReply, // FTP_HANDLE_PASV
         FtpHandlePortReply, // FTP_HANDLE_PORT
         FtpHandleDataReply, // FTP_HANDLE_DATA_REQUEST
-        FtpHandleUploadReply, // FTP_HANDLE_DATA_REQUEST
+        FtpHandleUploadReply, // FTP_HANDLE_UPLOAD_REQUEST
         FtpHandleErrorReply // FTP_ERROR
     };
     const ConnStateData::FtpState state = context->getConn()->ftp.state;
@@ -5315,16 +5316,19 @@ FtpHandleDataReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
         return;
     }
 
+    if (!conn->ftp.dataConn) {
+        // We got STREAM_COMPLETE (or error) and closed the client data conn.
+        debugs(33, 3, "ignoring FTP srv data response after clt data closure");
+        return;
+    }
+
+    if (!FtpCheckDataConnPost(context))
+        return;
+
     debugs(33, 7, HERE << data.length);
 
     if (data.length <= 0) {
         FtpWroteReplyData(conn->clientConnection, NULL, 0, COMM_OK, 0, context);
-        return;
-    }
-
-    if (!Comm::IsConnOpen(conn->ftp.dataConn)) {
-        debugs(33, 3, HERE << "got FTP reply data when client data connection "
-               "is closed, ignoring");
         return;
     }
 
@@ -5386,6 +5390,9 @@ FtpWroteReplyData(const Comm::ConnectionPointer &conn, char *bufnotused, size_t 
 static void
 FtpHandleUploadReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
+    if (!FtpCheckDataConnPost(context))
+        return;
+  
     FtpWriteForwardedReply(context, reply);
 }
 
@@ -5727,7 +5734,7 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
 bool
 FtpHandleDataRequest(ClientSocketContext *context, String &cmd, String &params)
 {
-    if (!FtpCheckDataConnection(context))
+    if (!FtpCheckDataConnPre(context))
         return false;
 
     FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_DATA_REQUEST, "FtpHandleDataRequest");
@@ -5738,7 +5745,7 @@ FtpHandleDataRequest(ClientSocketContext *context, String &cmd, String &params)
 bool
 FtpHandleUploadRequest(ClientSocketContext *context, String &cmd, String &params)
 {
-    if (!FtpCheckDataConnection(context))
+    if (!FtpCheckDataConnPre(context))
         return false;
 
     FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_UPLOAD_REQUEST, "FtpHandleDataRequest");
@@ -5746,20 +5753,26 @@ FtpHandleUploadRequest(ClientSocketContext *context, String &cmd, String &params
     return true;
 }
 
+/// check that client data connection is ready for future I/O or at least
+/// has a chance of becoming ready soon.
 bool
-FtpCheckDataConnection(ClientSocketContext *context)
+FtpCheckDataConnPre(ClientSocketContext *context)
 {
     ConnStateData *const connState = context->getConn();
     if (Comm::IsConnOpen(connState->ftp.dataConn))
         return true;
 
     if (Comm::IsConnOpen(connState->ftp.dataListenConn)) {
-        FtpSetReply(context, 425, "Data connection is not established");
-        return false;
+        // We are still waiting for a client to connect to us after PASV.
+        // Perhaps client's data conn handshake has not reached us yet.
+        // After we talk to the server, FtpCheckDataConnPost() will recheck.
+        debugs(33, 3, "expecting clt data conn " << connState->ftp.dataListenConn);
+        return true;
     }
 
     if (!connState->ftp.dataConn || connState->ftp.dataConn->remote.isAnyAddr()) {
-        // XXX: use client address and default port instead.
+        debugs(33, 5, "missing " << connState->ftp.dataConn);
+        // TODO: use client address and default port instead.
         FtpSetReply(context, 425, "Use PORT or PASV first");
         return false;
     }
@@ -5774,6 +5787,23 @@ FtpCheckDataConnection(ClientSocketContext *context)
                                                 Config.Timeout.connect);
     AsyncJob::Start(cs);
     return false; // ConnStateData::processFtpRequest waits FtpHandleConnectDone
+}
+
+/// Check that client data connection is ready for immediate I/O.
+static bool
+FtpCheckDataConnPost(ClientSocketContext *context)
+{
+    const ConnStateData *connState = context->getConn();
+    assert(connState);
+    const Comm::ConnectionPointer &dataConn = connState->ftp.dataConn;
+    if (dataConn != NULL && !Comm::IsConnOpen(dataConn)) {
+        // This check is deliberately missing from FtpCheckDataConnPre()
+        debugs(33, 3, "missing client data conn: " << dataConn);
+        FtpWriteCustomReply(context, 425, "Data connection is not established");
+        dataConn->close();
+        return false;
+    }
+    return true;
 }
 
 void
