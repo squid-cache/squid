@@ -188,7 +188,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
     const char  *s = token + 1;
     char *d = UnQuoted;
     /* scan until the end of the quoted string, handling escape sequences*/
-    while (*s && *s != quoteChar && !errorStr && (d - UnQuoted) < sizeof(UnQuoted)) {
+    while (*s && *s != quoteChar && !errorStr && (size_t)(d - UnQuoted) < sizeof(UnQuoted)) {
         if (*s == '\\') {
             s++;
             switch (*s) {
