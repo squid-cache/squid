@@ -70,7 +70,7 @@ public:
      * Parsed tokens type: simple tokens, quoted tokens or function
      * like parameters.
      */
-    enum TokenType {SimpleToken, QuotedToken, FunctionNameToken};
+    enum TokenType {SimpleToken, QuotedToken, FunctionParameters};
 
     void destruct();
     static void ParseUShort(unsigned short *var);
@@ -93,6 +93,25 @@ public:
      */
     static char *NextToken();
 
+    /**
+     * Backward compatibility wrapper for ConfigParser::RegexPattern method.
+     * If the configuration_includes_quoted_values configuration parameter is
+     * set to 'off' this interprets the quoted tokens as filenames.
+     */
+    static char *RegexStrtokFile();
+
+    /**
+     * Parse the next token as a regex patern. The regex patterns are non quoted
+     * tokens.
+     */
+    static char *RegexPattern();
+
+    /**
+     * Parse the next token with support for quoted values enabled even if
+     * the configuration_includes_quoted_values is set to off
+     */
+    static char *NextQuotedToken();
+
     /// \return true if the last parsed token was quoted
     static bool LastTokenWasQuoted() {return (LastTokenType == ConfigParser::QuotedToken);}
 
@@ -104,12 +123,12 @@ public:
     static char *NextQuotedOrToEol();
 
     /**
-     * Undo last NextToken call. The next call to NextToken() method will return
-     * again the last parsed element.
-     * Can not be called repeatedly to undo multiple NextToken calls. In this case
-     * the behaviour is undefined.
+     * Preview the next token. The next NextToken() and strtokFile() call
+     * will return the same token.
+     * On parse error (eg invalid characters in token) will return an
+     * error message as token.
      */
-    static void TokenUndo();
+    static char *PeekAtToken();
 
     /**
      * The next NextToken call will return the token as next element
@@ -127,7 +146,15 @@ public:
     static void DisableMacros() {AllowMacros_ = false;}
 
     /// configuration_includes_quoted_values in squid.conf
-    static int RecognizeQuotedValues;
+    static bool RecognizeQuotedValues;
+
+    /**
+     * Strict syntax mode. Does not allow not alphanumeric characters in unquoted tokens.
+     * Controled by the  configuration_includes_quoted_values in squid.conf but remains
+     * false when the the legacy ConfigParser::NextQuotedToken() call forces
+     * RecognizeQuotedValues to be temporary true.
+     */
+    static bool StrictMode;
 
 protected:
     /**
@@ -165,24 +192,21 @@ protected:
         char *nextElement(TokenType &type);
         FILE *wordFile; ///< Pointer to the file.
         char parseBuffer[CONFIG_LINE_LIMIT]; ///< Temporary buffer to store data to parse
-        char *parsePos; ///< The next element position in parseBuffer string
+        const char *parsePos; ///< The next element position in parseBuffer string
     public:
         std::string filePath; ///< The file path
         std::string currentLine; ///< The current line to parse
         int lineNo; ///< Current line number
     };
 
-    /**
-     * Return the last TokenUndo() or TokenPutBack() queued element, or NULL
-     * if none exist
-     */
+    /// Return the last TokenPutBack() queued element or NULL if none exist
     static char *Undo();
 
     /**
      * Unquotes the token, which must be quoted.
-     * \param end if it is not NULL, it is set to the end of token.
+     * \param next if it is not NULL, it is set after the end of token.
      */
-    static char *UnQuote(char *token, char **end = NULL);
+    static char *UnQuote(const char *token, const char **next = NULL);
 
     /**
      * Does the real tokens parsing job: Ignore comments, unquote an
@@ -190,19 +214,20 @@ protected:
      * \return the next token, or NULL if there are no available tokens in the nextToken string.
      * \param nextToken updated to point to the pos after parsed token.
      * \param type      The token type
-     * \param legacy    If it is true function-like parameters are not allowed
      */
-    static char *TokenParse(char * &nextToken, TokenType &type, bool legacy = false);
+    static char *TokenParse(const char * &nextToken, TokenType &type);
 
     /// Wrapper method for TokenParse.
-    static char *NextElement(TokenType &type, bool legacy = false);
+    static char *NextElement(TokenType &type);
     static std::stack<CfgFile *> CfgFiles; ///< The stack of open cfg files
     static TokenType LastTokenType; ///< The type of last parsed element
-    static char *LastToken; ///< Points to the last parsed token
-    static char *CfgLine; ///< The current line to parse
-    static char *CfgPos; ///< Pointer to the next element in cfgLine string
-    static std::queue<std::string> Undo_; ///< The list with TokenUndo() or TokenPutBack() queued elements
+    static const char *CfgLine; ///< The current line to parse
+    static const char *CfgPos; ///< Pointer to the next element in cfgLine string
+    static std::queue<char *> CfgLineTokens_; ///< Store the list of tokens for current configuration line
+    static std::queue<std::string> Undo_; ///< The list with TokenPutBack() queued elements
     static bool AllowMacros_;
+    static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
+    static bool PreviewMode_; ///< The next token will not poped from cfg files, will just previewd.
 };
 
 int parseConfigFile(const char *file_name);

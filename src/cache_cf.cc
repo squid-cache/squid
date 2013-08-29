@@ -260,6 +260,10 @@ static void free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 
 static int parseOneConfigFile(const char *file_name, unsigned int depth);
 
+static void parse_configuration_includes_quoted_values(bool *recognizeQuotedValues);
+static void dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues);
+static void free_configuration_includes_quoted_values(bool *recognizeQuotedValues);
+
 /*
  * LegacyParser is a parser for legacy code that uses the global
  * approach.  This is static so that it is only exposed to cache_cf.
@@ -1798,7 +1802,7 @@ parse_http_header_replace(HeaderManglers **pm)
         return;
     }
 
-    const char *value = t + strlen(t) + 1;
+    const char *value = ConfigParser::NextQuotedOrToEol();
 
     if (!*pm)
         *pm = new HeaderManglers;
@@ -2703,7 +2707,7 @@ parse_tristate(int *var)
 void
 parse_pipelinePrefetch(int *var)
 {
-    char *token = ConfigParser::strtokFile();
+    char *token = ConfigParser::PeekAtToken();
 
     if (token == NULL)
         self_destruct();
@@ -2711,13 +2715,15 @@ parse_pipelinePrefetch(int *var)
     if (!strcmp(token, "on")) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: 'pipeline_prefetch on' is deprecated. Please update to use 1 (or a higher number).");
         *var = 1;
+        //pop the token
+        (void)ConfigParser::NextToken();
     } else if (!strcmp(token, "off")) {
         debugs(0, DBG_PARSE_NOTE(2), "WARNING: 'pipeline_prefetch off' is deprecated. Please update to use '0'.");
         *var = 0;
-    } else {
-        ConfigParser::TokenUndo();
+        //pop the token
+        (void)ConfigParser::NextToken();
+    } else
         parse_int(var);
-    }
 }
 
 #define free_pipelinePrefetch free_int
@@ -2808,14 +2814,14 @@ parse_refreshpattern(RefreshPattern ** head)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = ConfigParser::NextToken()) != NULL) {
+    if ((token = ConfigParser::RegexPattern()) != NULL) {
 
         if (strcmp(token, "-i") == 0) {
             flags |= REG_ICASE;
-            token = ConfigParser::NextToken();
+            token = ConfigParser::RegexPattern();
         } else if (strcmp(token, "+i") == 0) {
             flags &= ~REG_ICASE;
-            token = ConfigParser::NextToken();
+            token = ConfigParser::RegexPattern();
         }
 
     }
@@ -3250,7 +3256,7 @@ void
 parse_wordlist(wordlist ** list)
 {
     char *token;
-    while ((token = ConfigParser::NextToken()))
+    while ((token = ConfigParser::NextQuotedToken()))
         wordlistAdd(list, token);
 }
 
@@ -4081,14 +4087,14 @@ parse_access_log(CustomLog ** logs)
     cl->filename = xstrdup(filename);
     cl->type = Log::Format::CLF_UNKNOWN;
 
-    const char *token = ConfigParser::strtokFile();
+    const char *token = ConfigParser::PeekAtToken();
     if (!token) { // style #1
         // no options to deal with
     } else if (!strchr(token, '=')) { // style #3
-        // if logformat name is not recognized,
-        // put back the token; it must be an ACL name
-        if (!setLogformat(cl, token, false))
-            ConfigParser::TokenUndo();
+        // if logformat name is recognized,
+        // pop the previewed token; Else it must be an ACL name
+        if (setLogformat(cl, token, false))
+            (void)ConfigParser::NextToken();
     } else { // style #4
         do {
             if (strncasecmp(token, "on-error=", 9) == 0) {
@@ -4106,14 +4112,16 @@ parse_access_log(CustomLog ** logs)
             } else if (strncasecmp(token, "logformat=", 10) == 0) {
                 setLogformat(cl, token+10, true);
             } else if (!strchr(token, '=')) {
-                // put back the token; it must be an ACL name
-                ConfigParser::TokenUndo();
+                // Do not pop the token; it must be an ACL name
                 break; // done with name=value options, now to ACLs
             } else {
                 debugs(3, DBG_CRITICAL, "Unknown access_log option " << token);
                 self_destruct();
             }
-        } while ((token = ConfigParser::strtokFile()) != NULL);
+            // Pop the token, it was a valid "name=value" option
+            (void)ConfigParser::NextToken();
+            // Get next with preview ConfigParser::NextToken call.
+        } while ((token = ConfigParser::PeekAtToken()) != NULL);
     }
 
     // set format if it has not been specified explicitly
@@ -4765,7 +4773,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
 
     Format::Format *nlf =  new ::Format::Format("hdrWithAcl");
     ConfigParser::EnableMacros();
-    String buf = ConfigParser::NextToken();
+    String buf = ConfigParser::NextQuotedToken();
     ConfigParser::DisableMacros();
     hwa.fieldValue = buf.termedBuf();
     hwa.quoted = ConfigParser::LastTokenWasQuoted();
@@ -4813,4 +4821,34 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static void
+parse_configuration_includes_quoted_values(bool *recognizeQuotedValues)
+{
+    int val = 0;
+    parse_onoff(&val);
+
+    // If quoted values is set to on then enable new strict mode parsing
+    if (val) {
+        ConfigParser::RecognizeQuotedValues = true;
+        ConfigParser::StrictMode = true;
+    } else {
+        ConfigParser::RecognizeQuotedValues = false;
+        ConfigParser::StrictMode = false;
+    }
+}
+
+static void
+dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues)
+{
+    int val = ConfigParser::RecognizeQuotedValues ? 1 : 0;
+    dump_onoff(entry, name, val);
+}
+
+static void
+free_configuration_includes_quoted_values(bool *recognizeQuotedValues)
+{
+    ConfigParser::RecognizeQuotedValues = false;
+    ConfigParser::StrictMode = false;
 }

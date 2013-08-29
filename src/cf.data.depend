@@ -14,6 +14,7 @@ b_ssize_t
 cachedir		cache_replacement_policy
 cachemgrpasswd
 ConfigAclTos
+configuration_includes_quoted_values
 CpuAffinityMap
 debug
 delay_pool_access	acl	delay_class
