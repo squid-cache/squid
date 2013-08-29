@@ -54,6 +54,7 @@ protected:
     enum {
         BEGIN,
         SENT_COMMAND,
+        SENT_FEAT,
         SENT_PASV,
         SENT_PORT,
         SENT_DATA_REQUEST,
@@ -66,6 +67,7 @@ protected:
     void readGreeting();
     void sendCommand();
     void readReply();
+    void readFeatReply();
     void readPasvReply();
     void readPortReply();
     void readDataReply();
@@ -84,6 +86,7 @@ CBDATA_CLASS_INIT(ServerStateData);
 const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readGreeting, // BEGIN
     &ServerStateData::readReply, // SENT_COMMAND
+    &ServerStateData::readFeatReply, // SENT_FEAT
     &ServerStateData::readPasvReply, // SENT_PASV
     &ServerStateData::readPortReply, // SENT_PORT
     &ServerStateData::readDataReply, // SENT_DATA_REQUEST
@@ -429,6 +432,7 @@ ServerStateData::sendCommand()
     writeCommand(mb.content());
 
     state =
+        clientState() == ConnStateData::FTP_HANDLE_FEAT ? SENT_FEAT :
         clientState() == ConnStateData::FTP_HANDLE_PASV ? SENT_PASV :
         clientState() == ConnStateData::FTP_HANDLE_PORT ? SENT_PORT :
         clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ? SENT_DATA_REQUEST :
@@ -446,6 +450,17 @@ ServerStateData::readReply()
         forwardPreliminaryReply(&ServerStateData::scheduleReadControlReply);
     else
         forwardReply();
+}
+
+void
+ServerStateData::readFeatReply()
+{
+    assert(clientState() == ConnStateData::FTP_HANDLE_FEAT);
+
+    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+        return; // ignore preliminary replies
+
+    forwardReply();
 }
 
 void
