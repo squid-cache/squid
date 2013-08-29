@@ -113,7 +113,7 @@ protected:
     virtual void doneSendingRequestBody();
 
 private:
-    static wordlist *parseControlReply(char *buf, size_t len, int *codep, size_t *used);
+    bool parseControlReply(size_t &bytesUsed);
 
     CBDATA_CLASS2(ServerStateData);
 };

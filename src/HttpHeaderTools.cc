@@ -299,6 +299,36 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     return 1;
 }
 
+// TODO: Optimize using SBuf
+String
+httpHeaderQuoteString(const char *raw)
+{
+    assert(raw);
+
+    // HTTPbis says Senders SHOULD NOT escape octets in quoted-strings that
+    // do not require escaping (i.e., except DQUOTE and the backslash octet).
+    bool needInnerQuote = false;
+    for (const char *s = raw; !needInnerQuote &&  *s; ++s)
+        needInnerQuote = *s == '"' || *s == '\\';
+
+    static String quotedStr;
+    quotedStr.clean();
+    quotedStr.append('"');
+
+    if (needInnerQuote) {
+        for (const char *s = raw; *s; ++s) {
+            if (*s == '"' || *s == '\\')
+                quotedStr.append('\\');
+            quotedStr.append(*s);
+        }
+    } else {
+        quotedStr.append(raw);
+    }
+    
+    quotedStr.append('"');
+    return quotedStr;
+}
+
 /**
  * Checks the anonymizer (header_access) configuration.
  *

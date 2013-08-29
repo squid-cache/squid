@@ -339,10 +339,8 @@ ServerStateData::handleControlReply()
 
     size_t bytes_used = 0;
     wordlistDestroy(&ctrl.message);
-    ctrl.message = parseControlReply(ctrl.buf, ctrl.offset, &ctrl.replycode,
-                                     &bytes_used);
 
-    if (ctrl.message == NULL) {
+    if (!parseControlReply(bytes_used)) {
         /* didn't get complete reply yet */
 
         if (ctrl.offset == ctrl.size) {
@@ -351,7 +349,13 @@ ServerStateData::handleControlReply()
 
         scheduleReadControlReply(0);
         return;
-    } else if (ctrl.offset == bytes_used) {
+    } 
+
+    assert(ctrl.message); // the entire FTP server response, line by line
+    assert(ctrl.replycode >= 0); // FTP status code (from the last line)
+    assert(ctrl.last_reply); // FTP reason (from the last line)
+
+    if (ctrl.offset == bytes_used) {
         /* used it all up */
         ctrl.offset = 0;
     } else {
@@ -359,14 +363,6 @@ ServerStateData::handleControlReply()
         assert(bytes_used < ctrl.offset);
         ctrl.offset -= bytes_used;
         memmove(ctrl.buf, ctrl.buf + bytes_used, ctrl.offset);
-    }
-
-    /* Move the last line of the reply message to ctrl.last_reply */
-    const wordlist *W;
-    for (W = ctrl.message; W && W->next; W = W->next);
-    if (W) {
-        safe_free(ctrl.last_reply);
-        ctrl.last_reply = xstrdup(W->key);
     }
 
     debugs(9, 3, HERE << "state=" << state << ", code=" << ctrl.replycode);
@@ -733,8 +729,10 @@ ServerStateData::doneSendingRequestBody()
      */
 }
 
-wordlist *
-ServerStateData::parseControlReply(char *buf, size_t len, int *codep, size_t *used)
+/// Parses FTP server control response into ctrl structure fields,
+/// setting bytesUsed and returning true on success.
+bool
+ServerStateData::parseControlReply(size_t &bytesUsed)
 {
     char *s;
     char *sbuf;
@@ -744,15 +742,14 @@ ServerStateData::parseControlReply(char *buf, size_t len, int *codep, size_t *us
     wordlist *head = NULL;
     wordlist *list;
     wordlist **tail = &head;
-    size_t offset;
     size_t linelen;
-    int code = -1;
     debugs(9, 3, HERE);
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
+    const size_t len = ctrl.offset;
     sbuf = (char *)xmalloc(len + 1);
-    xstrncpy(sbuf, buf, len + 1);
+    xstrncpy(sbuf, ctrl.buf, len + 1);
     end = sbuf + len - 1;
 
     while (*end != '\r' && *end != '\n' && end > sbuf)
@@ -765,7 +762,7 @@ ServerStateData::parseControlReply(char *buf, size_t len, int *codep, size_t *us
     if (usable == 0) {
         debugs(9, 3, HERE << "didn't find end of line");
         safe_free(sbuf);
-        return NULL;
+        return false;
     }
 
     debugs(9, 3, HERE << len << " bytes to play with");
@@ -787,39 +784,39 @@ ServerStateData::parseControlReply(char *buf, size_t len, int *codep, size_t *us
         if (linelen > 3)
             complete = (*s >= '0' && *s <= '9' && *(s + 3) == ' ');
 
-        if (complete)
-            code = atoi(s);
-
-        offset = 0;
-
-        if (linelen > 3)
-            if (*s >= '0' && *s <= '9' && (*(s + 3) == '-' || *(s + 3) == ' '))
-                offset = 4;
-
         list = new wordlist();
 
-        list->key = (char *)xmalloc(linelen - offset);
+        list->key = (char *)xmalloc(linelen);
 
-        xstrncpy(list->key, s + offset, linelen - offset);
+        xstrncpy(list->key, s, linelen);
 
         /* trace the FTP communication chat at level 2 */
-        debugs(9, 2, "ftp>> " << code << " " << list->key);
+        debugs(9, 2, "ftp>> " << list->key);
+
+        if (complete) {
+            // use list->key for last_reply because s contains the new line
+            ctrl.last_reply = xstrdup(list->key + 4);
+            ctrl.replycode = atoi(list->key);
+        }
 
         *tail = list;
 
         tail = &list->next;
     }
 
-    *used = (size_t) (s - sbuf);
+    bytesUsed = static_cast<size_t>(s - sbuf);
     safe_free(sbuf);
 
-    if (!complete)
+    if (!complete) {
         wordlistDestroy(&head);
+        return false;
+    }
 
-    if (codep)
-        *codep = code;
-
-    return head;
+    ctrl.message = head;
+    assert(ctrl.replycode >= 0);
+    assert(ctrl.last_reply);
+    assert(ctrl.message);
+    return true;
 }
 
 }; // namespace Ftp
