@@ -314,13 +314,15 @@ ServerStateData::createHttpReply(const Http::StatusCode httpStatus, const int cl
     }
     if (clen >= 0)
         header.putInt64(HDR_CONTENT_LENGTH, clen);
+
+    if (ctrl.message) {
+        for (wordlist *W = ctrl.message; W && W->next; W = W->next)
+            header.putStr(HDR_FTP_PRE, httpHeaderQuoteString(W->key).termedBuf());
+    }
     if (ctrl.replycode > 0)
         header.putInt(HDR_FTP_STATUS, ctrl.replycode);
-    if (ctrl.message) {
-        for (wordlist *W = ctrl.message; W; W = W->next)
-            header.putStr(HDR_FTP_REASON, W->key);
-    } else if (ctrl.last_command)
-        header.putStr(HDR_FTP_REASON, ctrl.last_command);
+    if (ctrl.last_reply)
+        header.putStr(HDR_FTP_REASON, ctrl.last_reply);
 
     reply->hdrCacheInit();
 

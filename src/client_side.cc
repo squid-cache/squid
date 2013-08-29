@@ -5437,23 +5437,19 @@ FtpPrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix)
 {
     const HttpHeader &header = reply->header;
 
-    char status[4];
-    if (header.has(HDR_FTP_STATUS))
-        snprintf(status, sizeof(status), "%i", header.getInt(HDR_FTP_STATUS));
-    else
-        status[0] = '\0';
-
     HttpHeaderPos pos = HttpHeaderInitPos;
-    const HttpHeaderEntry *e = header.getEntry(&pos);
-    while (e) {
-        const HttpHeaderEntry *const next = header.getEntry(&pos);
-        if (e->id == HDR_FTP_REASON) {
-            const bool isLastLine = next == NULL || next->id != HDR_FTP_REASON;
-            const int separator = status[0] == '\0' || isLastLine ? ' ' : '-';
-            mb.Printf("%s%s%c%s\r\n", prefix, status, separator,
-                      e->value.termedBuf());
+    while (const HttpHeaderEntry *e = header.getEntry(&pos)) {
+        if (e->id == HDR_FTP_PRE) {
+            String raw;
+            if (httpHeaderParseQuotedString(e->value.rawBuf(), e->value.size(), &raw))
+                mb.Printf("%s\r\n", raw.termedBuf());
         }
-        e = next;
+    }
+
+    if (header.has(HDR_FTP_STATUS)) {
+        const char *reason = header.getStr(HDR_FTP_REASON);
+        mb.Printf("%i %s\r\n", header.getInt(HDR_FTP_STATUS),
+                  (reason ? reason : 0));
     }
 }
 
