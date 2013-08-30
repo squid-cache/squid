@@ -356,6 +356,7 @@ public:
         Ip::Address serverDataAddr;
         char uploadBuf[CLIENT_REQ_BUF_SZ];
         size_t uploadAvailSize;
+        AsyncCall::Pointer listener; ///< set when we are passively listening
         AsyncCall::Pointer connector; ///< set when we are actively connecting
         AsyncCall::Pointer reader; ///< set when we are reading FTP data
     } ftp;
