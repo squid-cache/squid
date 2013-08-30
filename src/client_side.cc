@@ -4921,6 +4921,11 @@ FtpAcceptDataConnection(const CommAcceptCbParams &params)
 static void
 FtpCloseDataConnection(ConnStateData *conn)
 {
+    if (conn->ftp.listener != NULL) {
+        conn->ftp.listener->cancel("no longer needed");
+        conn->ftp.listener = NULL;
+    }
+
     if (Comm::IsConnOpen(conn->ftp.dataListenConn)) {
         debugs(33, 5, HERE << "FTP closing client data listen socket: " <<
                *conn->ftp.dataListenConn);
@@ -4928,13 +4933,18 @@ FtpCloseDataConnection(ConnStateData *conn)
     }
     conn->ftp.dataListenConn = NULL;
 
+    if (conn->ftp.reader != NULL) {
+        // comm_read_cancel can deal with negative FDs
+        comm_read_cancel(conn->ftp.dataConn->fd, conn->ftp.reader);
+        conn->ftp.reader = NULL;
+    }
+
     if (Comm::IsConnOpen(conn->ftp.dataConn)) {
         debugs(33, 5, HERE << "FTP closing client data connection: " <<
                *conn->ftp.dataConn);
         conn->ftp.dataConn->close();
     }
     conn->ftp.dataConn = NULL;
-    conn->ftp.reader = NULL;
 }
 
 /// Writes FTP [error] response before we fully parsed the FTP request and
@@ -5075,11 +5085,6 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
         // the first command must be USER
         if (cmd.caseCmp("USER") != 0) {
             FtpWriteEarlyReply(connState, 530, "Must login first");
-            return NULL;
-        }
-
-        if (params.size() == 0) {
-            FtpWriteEarlyReply(connState, 501, "Missing username");
             return NULL;
         }
     }
@@ -5245,9 +5250,9 @@ FtpHandlePasvReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     RefCount<AcceptCall> subCall = commCbCall(5, 5, "FtpAcceptDataConnection",
         CommAcceptCbPtrFun(FtpAcceptDataConnection, connState));
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
-    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
-
+    connState->ftp.listener = subCall.getRaw();
     connState->ftp.dataListenConn = conn;
+    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
 
     char addr[MAX_IPSTRLEN];
     // remote server in interception setups and local address otherwise
@@ -5635,25 +5640,29 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
 
     const String::size_type eou = params.rfind('@');
     if (eou == String::npos || eou + 1 >= params.size()) {
-        if (connState->ftp.uri.size() > 0)
-            return true;
         FtpWriteEarlyReply(connState, 501, "Missing host");
         return false;
     }
 
     static const String scheme = "ftp://";
+    const String login = params.substr(0, eou);
     const String host = params.substr(eou + 1, params.size());
+
     String uri = scheme;
     uri.append(host);
     uri.append("/");
 
-    if (connState->ftp.uri.size() == 0)
+    if (!connState->ftp.uri.size()) {
         connState->ftp.uri = uri;
-    else if (uri.caseCmp(connState->ftp.uri) != 0) {
-        debugs(11, 3, "expected " << connState->ftp.uri);
-        debugs(11, 3, " but got " << uri);
-        FtpWriteEarlyReply(connState, 501, "Cannot change host");
-        return false;
+        debugs(11, 3, "set URI to " << connState->ftp.uri);
+    } else if (uri.caseCmp(connState->ftp.uri) == 0) {
+        debugs(11, 5, "keep URI as " << uri);
+    } else {
+        debugs(11, 3, "reset URI from " << connState->ftp.uri << " to " << uri);
+        FtpCloseDataConnection(connState);
+        connState->ftp.readGreeting = false;
+        connState->unpinConnection(); // close control connection to the server
+        FtpChangeState(connState, ConnStateData::FTP_BEGIN, "URI reset");
     }
 
     params.cut(eou);
@@ -5714,7 +5723,7 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
     // conn->local.port(20);
 
     context->getConn()->ftp.dataConn = conn;
-    context->getConn()->ftp.uploadAvailSize = 0; // XXX: FtpCloseDataConnection should do that
+    context->getConn()->ftp.uploadAvailSize = 0;
 
     FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_PORT, "FtpHandlePortRequest");
 
@@ -5819,7 +5828,6 @@ FtpHandleConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
         assert(context->http && context->http->storeEntry() != NULL);
     } else {
         assert(context->getConn()->ftp.dataConn == conn);
-        context->getConn()->ftp.uploadAvailSize = 0;
         assert(Comm::IsConnOpen(context->getConn()->ftp.dataConn));
     }
     context->getConn()->resumeFtpRequest(context);
