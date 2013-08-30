@@ -1222,6 +1222,14 @@ getMyPort(void)
     }
 #endif
 
+    if ((p = Config.Sockaddr.ftp)) {
+        // skip any special interception ports
+        while (p && p->flags.isIntercepted())
+            p = p->next;
+        if (p)
+            return p->s.port();
+    }
+
     debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");
     return 0; // Invalid port. This will result in invalid URLs on bad configurations.
 }
