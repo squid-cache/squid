@@ -5860,14 +5860,21 @@ FtpSetReply(ClientSocketContext *context, const int code, const char *msg)
     http->storeEntry()->replaceHttpReply(reply);
 }
 
+/// Whether Squid FTP gateway supports a given feature (e.g., a command).
 static bool
 FtpSupportedCommand(const String &name)
 {
     static std::set<std::string> BlackList;
     if (BlackList.empty()) {
-        // FTP commands that Squid cannot gateway correctly:
+        /* Add FTP commands that Squid cannot gateway correctly */
+
+        // IPv6 connection addresses from RFC 2428
         BlackList.insert("EPRT");
         BlackList.insert("EPSV");
+
+        // we probably do not support AUTH TLS.* and AUTH SSL,
+        // but let's disclaim all AUTH support to KISS, for now
+        BlackList.insert("AUTH");
     }
 
     // we claim support for all commands that we do not know about
