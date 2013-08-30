@@ -159,6 +159,7 @@
 #if HAVE_LIMITS
 #include <limits>
 #endif
+#include <set>
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
