@@ -384,11 +384,9 @@ ServerStateData::readGreeting()
         if (clientState() == ConnStateData::FTP_BEGIN)
             clientState(ConnStateData::FTP_CONNECTED);
 
-        // Do not forward server greeting to client as a preliminary
-        // reply because it may confuse web browsers.  Should we
-        // forward greeting as part of the final reply?
-        //ctrl.replycode = 120; // change status for forwarded server greeting
-        //forwardPreliminaryReply(&ServerStateData::start);
+        // Do not forward server greeting to the client because our client
+        // side code has greeted the client already. Also, a greeting may
+        // confuse a client that has changed the gateway destination mid-air.
 
         start();
         break;
