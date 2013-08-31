@@ -1129,6 +1129,7 @@ FwdState::connectStart()
         if (Comm::IsConnOpen(serverConn)) {
             flags.connected_okay = true;
             ++n_tries;
+            request->hier.note(serverConn, request->GetHost());
             request->flags.pinned = true;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
