@@ -4909,13 +4909,26 @@ FtpAcceptDataConnection(const CommAcceptCbParams &params)
         return;
     }
 
-    debugs(33, 4, HERE << params.conn << ": accepted");
-    fd_note(params.conn->fd, "client ftp data connect");
+    debugs(33, 4, "accepted " << params.conn);
+    fd_note(params.conn->fd, "passive client ftp data");
     ++incoming_sockets_accepted;
 
-    FtpCloseDataConnection(connState);
-    connState->ftp.dataConn = params.conn;
-    connState->ftp.uploadAvailSize = 0;
+    if (!connState->clientConnection) {
+        debugs(33, 5, "late data connection?");
+        FtpCloseDataConnection(connState); // in case we are still listening
+        params.conn->close();
+    } else
+    if (params.conn->remote != connState->clientConnection->remote) {
+        debugs(33, 2, "rogue data conn? ctrl: " << connState->clientConnection->remote);
+        params.conn->close();
+        // Some FTP servers close control connection here, but it may make
+        // things worse from DoS p.o.v. and no better from data stealing p.o.v.
+    } else {
+        FtpCloseDataConnection(connState);
+        connState->ftp.dataConn = params.conn;
+        connState->ftp.uploadAvailSize = 0;
+        debugs(33, 7, "ready for data");
+    }
 }
 
 static void
@@ -5317,7 +5330,7 @@ FtpHandleDataReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
         FtpWriteForwardedReply(context, reply);
         if (conn && Comm::IsConnOpen(conn->ftp.dataConn)) {
             debugs(33, 3, "closing " << conn->ftp.dataConn << " on KO reply");
-            conn->ftp.dataConn->close();
+            FtpCloseDataConnection(conn);
         }
         return;
     }
@@ -5803,14 +5816,14 @@ FtpCheckDataConnPre(ClientSocketContext *context)
 static bool
 FtpCheckDataConnPost(ClientSocketContext *context)
 {
-    const ConnStateData *connState = context->getConn();
+    ConnStateData *connState = context->getConn();
     assert(connState);
     const Comm::ConnectionPointer &dataConn = connState->ftp.dataConn;
     if (dataConn != NULL && !Comm::IsConnOpen(dataConn)) {
         // This check is deliberately missing from FtpCheckDataConnPre()
         debugs(33, 3, "missing client data conn: " << dataConn);
         FtpWriteCustomReply(context, 425, "Data connection is not established");
-        dataConn->close();
+        FtpCloseDataConnection(connState);
         return false;
     }
     return true;
@@ -5828,7 +5841,8 @@ FtpHandleConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
         assert(context->http && context->http->storeEntry() != NULL);
     } else {
         assert(context->getConn()->ftp.dataConn == conn);
-        assert(Comm::IsConnOpen(context->getConn()->ftp.dataConn));
+        assert(Comm::IsConnOpen(conn));
+        fd_note(conn->fd, "active client ftp data");
     }
     context->getConn()->resumeFtpRequest(context);
 }
