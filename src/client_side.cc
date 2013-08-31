@@ -5709,6 +5709,8 @@ FtpHandlePasvRequest(ClientSocketContext *context, String &cmd, String &params)
 bool
 FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
 {
+    // TODO: Should PORT errors trigger FtpCloseDataConnection() cleanup?
+
     if (!params.size()) {
         FtpSetReply(context, 501, "Missing parameter");
         return false;
@@ -5717,6 +5719,20 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
     Ip::Address cltAddr;
     if (!Ftp::ParseIpPort(params.termedBuf(), NULL, cltAddr)) {
         FtpSetReply(context, 501, "Invalid parameter");
+        return false;
+    }
+
+    ConnStateData *const connState = context->getConn();
+    assert(connState);
+    assert(connState->clientConnection != NULL);
+    assert(!connState->clientConnection->remote.isAnyAddr());
+
+    if (cltAddr != connState->clientConnection->remote) {
+        debugs(33, 2, "rogue PORT " << cltAddr << " request? ctrl: " << connState->clientConnection->remote);
+        // Closing the control connection would not help with attacks because
+        // the client is evidently able to connect to us. Besides, closing
+        // makes retrials easier for the client and more damaging to us.
+        FtpSetReply(context, 501, "Prohibited parameter value");
         return false;
     }
 
