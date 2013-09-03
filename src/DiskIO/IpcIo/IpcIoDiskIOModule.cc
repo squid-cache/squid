@@ -18,7 +18,7 @@ IpcIoDiskIOModule::init()
 {}
 
 void
-IpcIoDiskIOModule::shutdown()
+IpcIoDiskIOModule::gracefulShutdown()
 {}
 
 DiskIOStrategy*
