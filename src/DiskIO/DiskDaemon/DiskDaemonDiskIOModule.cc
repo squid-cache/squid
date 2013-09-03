@@ -79,7 +79,7 @@ DiskDaemonDiskIOModule::registerWithCacheManager(void)
 }
 
 void
-DiskDaemonDiskIOModule::shutdown()
+DiskDaemonDiskIOModule::gracefulShutdown()
 {
     initialised = false;
 }
