@@ -71,6 +71,11 @@
 #define NOMINMAX
 #endif
 
+/// some builds of MinGW do not define IPV6_V6ONLY socket option
+#if !defined(IPV6_V6ONLY)
+#define IPV6_V6ONLY 27
+#endif
+
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 # define __USE_FILE_OFFSET64	1
 #endif
