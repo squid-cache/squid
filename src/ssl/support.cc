@@ -1584,11 +1584,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
         if (X509_check_issued(certificate, certificate) == X509_V_OK)
             debugs(83, 5, "Certificate is self-signed, will not be chained");
         else {
-            if (sk_X509_push(chain, certificate))
-                CRYPTO_add(&(certificate->references), 1, CRYPTO_LOCK_X509);
-            else
-                debugs(83, DBG_IMPORTANT, "WARNING: unable to add signing certificate to cert chain");
-            // and add to the chain any certificate loaded from the file
+            // and add to the chain any other certificate exist in the file
             while (X509 *ca = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
                 if (!sk_X509_push(chain, ca))
                     debugs(83, DBG_IMPORTANT, "WARNING: unable to add CA certificate to cert chain");
