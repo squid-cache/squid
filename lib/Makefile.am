@@ -1,12 +1,9 @@
 include $(top_srcdir)/src/Common.am
 
 DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie
+SUBDIRS=
 EXTRA_DIST=
 
-SUBDIRS = rfcnb smblib
-if ENABLE_AUTH_NTLM
-SUBDIRS += ntlmauth
-endif
 if USE_ESI
 SUBDIRS += libTrie
 endif
@@ -14,23 +11,28 @@ if ENABLE_XPROF_STATS
 SUBDIRS += profiler
 endif
 
-
 install: all
 install-strip: all
-
-if ENABLE_WIN32SPECIFIC
-LIBSSPWIN32=libsspwin32.la
-else
-LIBSSPWIN32=
-EXTRA_LTLIBRARIES = \
-	libsspwin32.la
-endif
 
 noinst_LTLIBRARIES = \
 	libmiscencoding.la \
 	libmisccontainers.la \
-	libmiscutil.la \
-	$(LIBSSPWIN32)
+	libmiscutil.la
+
+#
+# Some libraries are only available on Windows
+# and others are unable to be built.
+#
+if ENABLE_WIN32SPECIFIC
+noinst_LTLIBRARIES += libsspwin32.la
+libsspwin32_la_SOURCES = sspwin32.c
+else
+SUBDIRS += rfcnb smblib
+EXTRA_DIST += sspwin32.c
+endif
+if ENABLE_AUTH_NTLM
+SUBDIRS += ntlmauth
+endif
 
 #
 # dirent.c, encrypt.c and getopt.c are needed for native Windows support.
@@ -70,10 +72,6 @@ libmiscutil_la_SOURCES = \
 	stub_memaccount.c \
 	util.c \
 	xusleep.c
-
-# $(top_srcdir)/include/version.h should be a dependency
-libsspwin32_la_SOURCES = \
-	sspwin32.c
 
 TESTS += tests/testAll
 
