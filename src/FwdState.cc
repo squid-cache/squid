@@ -1100,7 +1100,7 @@ FwdState::connectStart()
         ctimeout = ftimeout;
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
-        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
+        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
         self = NULL; // refcounted
