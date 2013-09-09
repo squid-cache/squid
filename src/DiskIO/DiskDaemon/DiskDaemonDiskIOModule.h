@@ -41,7 +41,7 @@ public:
     static DiskDaemonDiskIOModule &GetInstance();
     DiskDaemonDiskIOModule();
     virtual void init();
-    virtual void shutdown();
+    virtual void gracefulShutdown();
     virtual char const *type () const;
     virtual DiskIOStrategy* createStrategy();
 
