@@ -103,6 +103,9 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define mkdir(p,F) _mkdir((p))
 #define mktemp _mktemp
 #endif
+#if _SQUID_MINGW_
+#define mkdir(p,F) mkdir((p))
+#endif
 #define pclose _pclose
 #define pipe WIN32_pipe
 #define popen _popen
