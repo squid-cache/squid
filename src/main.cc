@@ -203,7 +203,7 @@ static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 static const char *squid_start_script = "squid_start";
 #endif
 
@@ -619,7 +619,7 @@ rotate_logs(int sig)
 {
     do_rotate = 1;
     RotateSignal = sig;
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if !HAVE_SIGACTION
 
     signal(sig, rotate_logs);
@@ -633,7 +633,7 @@ reconfigure(int sig)
 {
     do_reconfigure = 1;
     ReconfigureSignal = sig;
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if !HAVE_SIGACTION
 
     signal(sig, reconfigure);
@@ -662,7 +662,7 @@ shut_down(int sig)
                    " pid " << ppid << ": " << xstrerror());
     }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 #if KILL_PARENT_OPT
 
     if (!IamMasterProcess() && ppid > 1) {
@@ -1020,7 +1020,7 @@ mainInitialize(void)
     setSystemLimits();
     debugs(1, DBG_IMPORTANT, "With " << Squid_MaxFD << " file descriptors available");
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     debugs(1, DBG_IMPORTANT, "With " << _getmaxstdio() << " CRT stdio descriptors available");
 
@@ -1577,7 +1577,7 @@ sendSignal(void)
     exit(0);
 }
 
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 /*
  * This function is run when Squid is in daemon mode, just
  * before the parent forks and starts up the child process.
@@ -1620,7 +1620,7 @@ mainStartScript(const char *prog)
     }
 }
 
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 
 static int
 checkRunningPid(void)
@@ -1650,7 +1650,7 @@ checkRunningPid(void)
 static void
 watch_child(char *argv[])
 {
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
     char *prog;
 #if _SQUID_NEXT_
 
@@ -1819,7 +1819,7 @@ watch_child(char *argv[])
     }
 
     /* NOTREACHED */
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 
 }
 

@@ -97,7 +97,7 @@ HelperServerBase::initStats()
 void
 HelperServerBase::closePipesSafely()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int no = index + 1;
 
     shutdown(writePipe->fd, SD_BOTH);
@@ -110,7 +110,7 @@ HelperServerBase::closePipesSafely()
         readPipe->close();
     writePipe->close();
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
@@ -126,7 +126,7 @@ HelperServerBase::closePipesSafely()
 void
 HelperServerBase::closeWritePipeSafely()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int no = index + 1;
 
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
@@ -137,7 +137,7 @@ HelperServerBase::closeWritePipeSafely()
         readPipe->fd = -1;
     writePipe->close();
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();

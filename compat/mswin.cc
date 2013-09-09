@@ -37,7 +37,7 @@
 
 /* The following code section is part of an EXPERIMENTAL native */
 /* Windows NT/2000 Squid port - Compiles only on MS Visual C++ or MinGW */
-#if _SQUID_MSWIN_ || _SQUID_MINGW_
+#if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
 #undef strerror
 #define sys_nerr _sys_nerr
@@ -296,7 +296,7 @@ getgrnam(char *unused) {
     return &grp;
 }
 
-#if defined(__MINGW32__)	/* MinGW environment */
+#if _SQUID_MINGW_
 int
 _free_osfhnd(int filehandle)
 {

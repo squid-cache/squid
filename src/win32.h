@@ -33,7 +33,7 @@
  *
  */
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>

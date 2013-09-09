@@ -32,7 +32,7 @@ BEGIN {
 	define["USE_WCCP"]="--enable-wccp"
 	define["USE_WCCPv2"]="--enable-wccpv2"
 	define["USE_QOS_TOS"]="--enable-zph-qos"
-	define["_SQUID_MSWIN_"]="MS Windows"
+	define["_SQUID_WINDOWS_"]="MS Windows"
 	define["SO_MARK&&USE_LIBCAP"]="Packet MARK (Linux)"
 }
 /^IFDEF:/ {

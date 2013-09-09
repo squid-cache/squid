@@ -112,7 +112,7 @@
 #include <inttypes.h>
 #endif
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #undef IN_ADDR
 #include <ws2tcpip.h>
 #endif

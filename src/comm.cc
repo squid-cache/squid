@@ -670,7 +670,7 @@ comm_apply_flags(int new_socket,
         commSetReuseAddr(new_socket);
 
     if (addr.GetPort() > (unsigned short) 0) {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
             commSetNoLinger(new_socket);
@@ -729,7 +729,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
         fd_table[conn->fd].flags.close_on_exec = 1;
 
     if (conn->local.GetPort() > (unsigned short) 0) {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
             fd_table[conn->fd].flags.nolinger = 1;
@@ -1330,7 +1330,7 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
     int flags;
     int dummy = 0;
 #endif
@@ -1350,7 +1350,7 @@ commSetNonBlocking(int fd)
     } else {
 #endif
 #endif
-#if !_SQUID_MSWIN_
+#if !_SQUID_WINDOWS_
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
@@ -1374,7 +1374,7 @@ commSetNonBlocking(int fd)
 int
 commUnsetNonBlocking(int fd)
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int nonblocking = FALSE;
 
     if (ioctlsocket(fd, FIONBIO, (unsigned long *) &nonblocking) < 0) {

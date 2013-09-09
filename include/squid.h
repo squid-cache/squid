@@ -115,7 +115,7 @@
 #define SQUID_MAXPATHLEN 256
 
 // TODO: determine if this is required. OR if compat/os/mswin.h works
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 /** \cond AUTODOCS-IGNORE */
 using namespace Squid;
 /** \endcond */

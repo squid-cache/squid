@@ -55,7 +55,7 @@ fde::dumpStats (StoreEntry &dumpEntry, int fdNumber)
     if (!flags.open)
         return;
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
                       fdNumber,
@@ -79,7 +79,7 @@ fde::DumpStats (StoreEntry *dumpEntry)
 {
     int i;
     storeAppendPrintf(dumpEntry, "Active file descriptors:\n");
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     storeAppendPrintf(dumpEntry, "%-4s %-10s %-6s %-4s %-7s* %-7s* %-21s %s\n",
                       "File",
@@ -94,7 +94,7 @@ fde::DumpStats (StoreEntry *dumpEntry)
                       "Nwrite",
                       "Remote Address",
                       "Description");
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     storeAppendPrintf(dumpEntry, "---- ---------- ------ ---- -------- -------- --------------------- ------------------------------\n");
 #else
     storeAppendPrintf(dumpEntry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
