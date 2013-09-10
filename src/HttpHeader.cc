@@ -107,6 +107,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Expires", HDR_EXPIRES, ftDate_1123},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
+    {"HTTP2-Settings", HDR_HTTP2_SETTINGS, ftStr}, /* for now */
     {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
     {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
     {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
@@ -251,6 +252,7 @@ static http_hdr_type ReplyHeadersArr[] = {
 static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
 static http_hdr_type RequestHeadersArr[] = {
     HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
+    HDR_HTTP2_SETTINGS,
     HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
     HDR_IF_RANGE, HDR_MAX_FORWARDS,
     HDR_ORIGIN,
@@ -261,7 +263,7 @@ static http_hdr_type RequestHeadersArr[] = {
 
 static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] = {
-    HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
+    HDR_CONNECTION, HDR_HTTP2_SETTINGS, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
     HDR_TE, HDR_TRAILER, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
 };
 

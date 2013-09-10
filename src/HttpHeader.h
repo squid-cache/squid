@@ -83,6 +83,7 @@ typedef enum {
     HDR_EXPIRES,                        /**< RFC 2608, 2616 */
     HDR_FROM,                           /**< RFC 2608, 2616 */
     HDR_HOST,                           /**< RFC 2608, 2616 */
+    HDR_HTTP2_SETTINGS,                 /**< HTTP/2.0 upgrade header. see draft-ietf-httpbis-http2-04 */
     /*HDR_IF,*/                         /* RFC 2518 */
     HDR_IF_MATCH,                       /**< RFC 2608, 2616 */
     HDR_IF_MODIFIED_SINCE,              /**< RFC 2608, 2616 */
