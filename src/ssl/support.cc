@@ -238,6 +238,23 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
                       sizeof(buffer));
 
+    // detect infinite loops
+    uint32_t *validationCounter = static_cast<uint32_t *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_validation_counter));
+    if (!validationCounter) {
+        validationCounter = new uint32_t(1);
+        SSL_set_ex_data(ssl, ssl_ex_index_ssl_validation_counter, validationCounter);
+    } else {
+        // overflows allowed if SQUID_CERT_VALIDATION_ITERATION_MAX >= UINT32_MAX
+        (*validationCounter)++;
+    }
+
+    if ((*validationCounter) >= SQUID_CERT_VALIDATION_ITERATION_MAX) {
+        ok = 0; // or the validation loop will never stop
+        error_no = SQUID_X509_V_ERR_INFINITE_VALIDATION;
+        debugs(83, 2, "SQUID_X509_V_ERR_INFINITE_VALIDATION: " <<
+               *validationCounter << " iterations while checking " << buffer);
+    }
+
     if (ok) {
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
@@ -276,18 +293,34 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         else
             debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
 
-        if (check) {
-            ACLFilledChecklist *filledCheck = Filled(check);
-            assert(!filledCheck->sslErrors);
-            filledCheck->sslErrors = new Ssl::Errors(error_no);
-            if (check->fastCheck() == ACCESS_ALLOWED) {
-                debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
-                ok = 1;
-            } else {
-                debugs(83, 5, "confirming SSL error " << error_no);
+        // Check if the certificate error can be bypassed.
+        // Infinity validation loop errors can not bypassed.
+        if (error_no != SQUID_X509_V_ERR_INFINITE_VALIDATION) {
+            if (check) {
+                ACLFilledChecklist *filledCheck = Filled(check);
+                assert(!filledCheck->sslErrors);
+                filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
+                filledCheck->serverCert.resetAndLock(peer_cert);
+                if (check->fastCheck() == ACCESS_ALLOWED) {
+                    debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
+                    ok = 1;
+                } else {
+                    debugs(83, 5, "confirming SSL error " << error_no);
+                }
+                delete filledCheck->sslErrors;
+                filledCheck->sslErrors = NULL;
+                filledCheck->serverCert.reset(NULL);
             }
-            delete filledCheck->sslErrors;
-            filledCheck->sslErrors = NULL;
+            // If the certificate validator is used then we need to allow all errors and
+            // pass them to certficate validator for more processing
+            else if (Ssl::TheConfig.ssl_crt_validator) {
+                ok = 1;
+                // Check if we have stored certificates chain. Store if not.
+                if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
+                    STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
+                    if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
+                        sk_X509_pop_free(certStack, X509_free);
+                }
         }
     }
 
@@ -632,6 +665,15 @@ ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
     delete errs;
 }
 
+// "free" function for SSL_get_ex_new_index("ssl_ex_index_ssl_validation_counter")
+static void
+ssl_free_int(void *, void *ptr, CRYPTO_EX_DATA *,
+             int, long, void *)
+{
+    uint32_t *counter = static_cast <uint32_t *>(ptr);
+    delete counter;
+}
+
 // "free" function for X509 certificates
 static void
 ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
@@ -682,6 +724,7 @@ ssl_initialize(void)
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
     ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
+    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
 }
 
 /// \ingroup ServerProtocolSSLInternal

@@ -19,8 +19,10 @@ typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {SQUID_X509_V_ERR_INFINITE_VALIDATION,
+        "SQUID_X509_V_ERR_INFINITE_VALIDATION"},
     {SQUID_X509_V_ERR_CERT_CHANGE,
-        "SQUID_X509_V_ERR_CERT_CHANGE"},
+     "SQUID_X509_V_ERR_CERT_CHANGE"},
     {SQUID_ERR_SSL_HANDSHAKE,
      "SQUID_ERR_SSL_HANDSHAKE"},
     {SQUID_X509_V_ERR_DOMAIN_MISMATCH,
