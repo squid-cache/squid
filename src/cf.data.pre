@@ -2295,9 +2295,6 @@ DOC_START
 	Without this option, all server certificate validation errors
 	terminate the transaction to protect Squid and the client.
 
-	SQUID_X509_V_ERR_INFINITE_VALIDATION error cannot be bypassed
-	but should not happen unless your OpenSSL library is buggy.
-
 	SECURITY WARNING:
 		Bypassing validation errors is dangerous because an
 		error usually implies that the server cannot be trusted

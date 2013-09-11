@@ -12,7 +12,6 @@ Changes to squid-3.3.9 (11 Sep 2013):
 	- Fix myportname ACL on ICAP/eCAP transactions
 	- Fix external ACL user:pass detail logging after adaptation
 	- Fix SMP mgr:info report 'Largest file desc currently in use'
-	- Handle infinite certificate validation loops caused by OpenSSL Bug 3090.
 	- Improved compatibility with gcc 4.8, clang and icc
 	- Show number of available filedescriptors when reserved FD changes
 	- Sync with newest OpenSSL error codes
