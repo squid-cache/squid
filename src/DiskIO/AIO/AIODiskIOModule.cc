@@ -50,7 +50,7 @@ AIODiskIOModule::init()
 {}
 
 void
-AIODiskIOModule::shutdown()
+AIODiskIOModule::gracefulShutdown()
 {}
 
 DiskIOStrategy *
