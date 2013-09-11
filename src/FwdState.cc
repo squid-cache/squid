@@ -1123,6 +1123,7 @@ FwdState::connectStart()
             flags.connected_okay = true;
             ++n_tries;
             request->flags.pinned = true;
+            request->hier.note(serverConn, pinned_connection->pinned.host);
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
