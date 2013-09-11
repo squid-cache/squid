@@ -40,9 +40,6 @@
 // Initial revision
 //
 //
-#if (defined(__GNUC__) || defined(__GNUG__)) && !defined(__clang__)
-#pragma implementation
-#endif
 
 #include "convert.hh"
 #include <string.h>

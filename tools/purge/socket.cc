@@ -42,10 +42,6 @@
 // Initial revision
 //
 //
-#if (defined(__GNUC__) || defined(__GNUG__)) && !defined(__clang__)
-#pragma implementation
-#endif
-
 #include "socket.hh"
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
