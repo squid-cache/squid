@@ -436,6 +436,18 @@ namespace Squid
 {
 /** \endcond */
 
+/*
+ * Each of these functions is defined in the Squid namespace so as not to
+ * clash with the winsock.h and winsock2.h definitions.
+ * It is then paired with a #define to cause these wrappers to be used by
+ * the main code instead of those system definitions.
+ *
+ * We do this wrapper in order to:
+ * - cast the parameter types in only one place, and
+ * - record errors in POSIX errno variable, and
+ * - map the FD value used by Squid to the socket handes used by Windows.
+ */
+
 inline
 int accept(int s, struct sockaddr * a, size_t * l)
 {
@@ -666,6 +678,7 @@ int WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
     } else
         return 0;
 }
+#define WSAAsyncSelect(s,h,w,e) Squid::WSAAsyncSelect(s,h,w,e)
 
 #undef WSADuplicateSocket
 inline
@@ -681,6 +694,7 @@ int WSADuplicateSocket(int s, DWORD n, LPWSAPROTOCOL_INFO l)
     } else
         return 0;
 }
+#define WSADuplicateSocket(s,n,l) Squid::WSADuplicateSocket(s,n,l)
 
 #undef WSASocket
 inline
@@ -698,6 +712,7 @@ int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
     } else
         return _open_osfhandle(result, 0);
 }
+#define WSASocket(a,t,p,i,g,f) Squid::WSASocket(a,t,p,i,g,f)
 
 } /* namespace Squid */
 
