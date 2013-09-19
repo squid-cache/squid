@@ -34,16 +34,6 @@
 #include "base/TextException.h"
 
 /**
- * Exception raised when the user is trying to operate on a Null SBuf
- * \todo move to an Exceptions.h?
- */
-class NullSBufException : public TextException
-{
-public:
-    explicit NullSBufException(const char *aFilename = 0, int aLineNo = -1);
-};
-
-/**
  * Exception raised when call parameters are not valid
  * \todo move to an Exceptions.h?
  */

@@ -194,9 +194,9 @@ public:
      * as needed.
      *
      * \param S the c string to be copied. Can be NULL.
-     * \param pos how many bytes to skip at the beginning of the c-string
-     * \param n how many bytes to import into the SBuf. If it is npos
-     *              or unspecified, imports to end-of-cstring
+     * \param Ssize how many bytes to import into the SBuf. If it is npos
+     *              or unspecified, imports to end-of-cstring. If S is NULL,
+     *              Ssize is ignored.
      * \note to append a std::string use the pattern
      *     cstr_append(stdstr.data(), stdstd.length())
      */
@@ -591,7 +591,7 @@ private:
 
     void reAlloc(size_type newsize);
 
-    bool cow(size_type minsize = npos);
+    void cow(size_type minsize = npos);
 
     void checkAccessBounds(size_type pos) const;
 

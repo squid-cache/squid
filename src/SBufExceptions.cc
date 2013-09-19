@@ -55,10 +55,6 @@ OutOfBoundsException::OutOfBoundsException(const SBuf &throwingBuf,
 OutOfBoundsException::~OutOfBoundsException() throw()
 { }
 
-NullSBufException::NullSBufException(const char *aFilename, int aLineNo)
-        : TextException("Trying to access a null SBuf", aFilename, aLineNo)
-{ }
-
 InvalidParamException::InvalidParamException(const char *aFilename, int aLineNo)
         : TextException("Invalid parameter", aFilename, aLineNo)
 { }
@@ -66,5 +62,3 @@ InvalidParamException::InvalidParamException(const char *aFilename, int aLineNo)
 SBufTooBigException::SBufTooBigException(const char *aFilename, int aLineNo)
         : TextException("Trying to create an oversize SBuf", aFilename, aLineNo)
 { }
-
-/* */

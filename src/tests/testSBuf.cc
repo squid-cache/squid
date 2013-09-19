@@ -397,7 +397,7 @@ testSBuf::testChomp()
     CPPUNIT_ASSERT_EQUAL(s1,s2);
 }
 
-// inspired to SBufFindTest; to be expanded.
+// inspired by SBufFindTest; to be expanded.
 class SBufSubstrAutoTest
 {
     SBuf fullString, sb;
