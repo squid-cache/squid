@@ -126,11 +126,13 @@ public:
 
     /// Retrieve a copy of the current stream status
     SBuf buf() {
+        flush();
         return theBuffer.getBuf();
     }
 
     /// Clear the stream's backing store
     SBufStream& clearBuf() {
+        flush();
         theBuffer.clearBuf();
         return *this;
     }

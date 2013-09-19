@@ -295,6 +295,9 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         requiredSpaceEstimate = sz*2; // TODO: tune heuristics
         space = rawSpace(requiredSpaceEstimate);
         sz = vsnprintf(space, spaceSize(), fmt, vargs);
+        if (sz < 0) // output error in vsnprintf
+            throw TextException("output error in second-go vsnprintf",__FILE__,
+                __LINE__);
     }
 
     if (sz < 0) // output error in either vsnprintf
@@ -303,16 +306,16 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     // data was appended, update internal state
     len_ += sz;
 
-
     /* C99 specifies that the final '\0' is not counted in vsnprintf's
      * return value. Older compilers/libraries might instead count it */
     /* check whether '\0' was appended and counted */
-    static bool snPrintfTerminatorChecked = false,
-                snPrintfTerminatorCounted = false;
+    static bool snPrintfTerminatorChecked = false;
+    static bool snPrintfTerminatorCounted = false;
     if (!snPrintfTerminatorChecked) {
         char testbuf[16];
         snPrintfTerminatorCounted = snprintf(testbuf, sizeof(testbuf),
             "%s", "1") == 2;
+        snPrintfTerminatorChecked = true;
     }
     if (snPrintfTerminatorCounted) {
         --sz;
@@ -339,12 +342,23 @@ SBuf::dump(std::ostream &os) const
     os << id
     << ": ";
     store_->dump(os);
-    os << ",offset:" << off_
-    << ",len:" << len_
+    os << ", offset:" << off_
+    << ", len:" << len_
     << ") : '";
     print(os);
     os << '\'' << std::endl;
     return os;
+# if 0
+    // alternate implementation, based on Raw() API.
+    os << Raw("SBuf", buf(), length()) <<
+    ". id: " << id <<
+    ", offset:" << off_ <<
+    ", len:" << len_ <<
+    ", store: ";
+    store_->dump(os);
+    os << std::endl;
+    return os;
+#endif
 }
 
 void
@@ -375,11 +389,9 @@ int
 SBuf::compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n) const
 {
     Must(n == npos || n >= 0);
-    if (n != npos) {
-        if (n > length())
-            return compare(S.substr(0,n),isCaseSensitive);
+    if (n != npos)
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
-    }
+
     size_type byteCompareLen = min(S.length(), length());
     ++stats.compareSlow;
     int rv = 0;
@@ -553,13 +565,11 @@ SBuf::find(char c, size_type startPos) const
 {
     ++stats.find;
 
-    // for npos with char sd::string returns npos
-    // this differs from how std::string handles 1-length string
-    if (startPos == npos)
+    if (startPos == npos) // can't find anything if we look past end of SBuf
         return npos;
 
     // std::string returns npos if needle is outside hay
-    if (startPos >= length())
+    if (startPos > length())
         return npos;
 
     // ignore invalid startPos
@@ -577,8 +587,16 @@ SBuf::find(char c, size_type startPos) const
 SBuf::size_type
 SBuf::find(const SBuf &needle, size_type startPos) const
 {
+    if (startPos == npos) { // can't find anything if we look past end of SBuf
+        ++stats.find;
+        return npos;
+    }
+
+    if (startPos < 0)
+        startPos = 0;
+
     // std::string allows needle to overhang hay but not start outside
-    if (startPos != npos && startPos > length()) {
+    if (startPos > length()) {
         ++stats.find;
         return npos;
     }
@@ -588,11 +606,6 @@ SBuf::find(const SBuf &needle, size_type startPos) const
         ++stats.find;
         return startPos;
     }
-
-    // for npos with char* std::string scans entire hay
-    // this differs from how std::string handles single char from npos
-    if (startPos == npos)
-        return npos;
 
     // if needle length is 1 use the char search
     if (needle.length() == 1)
@@ -637,20 +650,15 @@ SBuf::rfind(const SBuf &needle, SBuf::size_type endPos) const
 
     // on npos input std::string scans from the end of hay
     if (endPos == npos || endPos > length())
-        endPos=length();
+        endPos = length();
 
     // on empty hay std::string returns npos
     if (length() < needle.length())
         return npos;
 
-    // on empty needle std::string returns the position the search starts
+    // consistent with std::string: on empty needle return min(endpos,length())
     if (needle.length() == 0)
         return endPos;
-
-/* std::string permits needle to overhang endPos
-    if (endPos <= needle.length())
-        return npos;
-*/
 
     char *bufBegin = buf();
     char *cur = bufBegin+endPos;
@@ -672,7 +680,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
 {
     ++stats.find;
 
-    // on empty hay std::string returns size of hay
+    // shortcut: haystack is empty, can't find anything by definition
     if (length() == 0)
         return npos;
 
@@ -688,6 +696,9 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
         // memrhr() requires a 1-based count of space to scan.
         ++endPos;
     }
+
+    if (length() == 0)
+        return endPos;
 
     const void *i = memrchr(buf(), (int)c, (size_type)endPos);
 
@@ -709,7 +720,7 @@ SBuf::find_first_of(const SBuf &set, size_type startPos) const
     if (startPos == npos)
         return npos;
 
-    if (startPos > length())
+    if (startPos >= length())
         return npos;
 
     if (startPos < 0)
@@ -789,7 +800,7 @@ SBuf::toLower() const
         if (isupper(c))
             rv.setAt(j, tolower(c)); //will cow() if needed
     }
-    debugs(24, 8, "result: \"" << *this << "\"");
+    debugs(24, 8, "result: \"" << rv << "\"");
     ++stats.caseChange;
     return rv;
 }
@@ -804,7 +815,7 @@ SBuf::toUpper() const
         if (islower(c))
             rv.setAt(j, toupper(c)); //will cow() if needed
     }
-    debugs(24, 8, "result: \"" << *this << "\"");
+    debugs(24, 8, "result: \"" << rv << "\"");
     ++stats.caseChange;
     return rv;
 }
@@ -842,7 +853,7 @@ SBuf::toString() const
 void
 SBuf::reAlloc(size_type newsize)
 {
-    debugs(24, DBG_DATA, "new size: " << newsize);
+    debugs(24, 8, "new size: " << newsize);
     if (newsize > maxSize)
         throw SBufTooBigException(__FILE__, __LINE__);
     MemBlob::Pointer newbuf = new MemBlob(newsize);
@@ -868,21 +879,18 @@ SBuf::lowAppend(const char * memArea, size_type areaSize)
  * copy-on-write: make sure that we are the only holder of the backing store.
  * If not, reallocate. If a new size is specified, and it is greater than the
  * current length, the backing store will be extended as needed
- * \retval false no grow was needed
- * \retval true had to copy
  */
-bool
+void
 SBuf::cow(SBuf::size_type newsize)
 {
-    debugs(24, DBG_DATA, "new size:" << newsize);
+    debugs(24, 8, "new size:" << newsize);
     if (newsize == npos || newsize < length())
         newsize = length();
 
     if (store_->LockCount() == 1 && newsize == length()) {
-        debugs(24, DBG_DATA, "no cow needed");
+        debugs(24, 8, "no cow needed");
         ++stats.cowFast;
-        return false;
+        return;
     }
     reAlloc(newsize);
-    return true;
 }
