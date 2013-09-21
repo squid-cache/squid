@@ -100,6 +100,7 @@ public:
     bool noConnections() const;
     char *url;
     HttpRequest::Pointer request;
+    AccessLogEntryPointer al;
     Comm::ConnectionList serverDestinations;
 
     const char * getHost() const {
@@ -845,7 +846,7 @@ tos_t GetTosToServer(HttpRequest * request);
 nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 void
-tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
+tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const AccessLogEntryPointer &al)
 {
     debugs(26, 3, HERE);
     /* Create state structure. */
@@ -890,6 +891,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = http->getConn()->clientConnection;
+    tunnelState->al = al;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
@@ -921,7 +923,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
     HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(),
                                           NULL,			/* StoreEntry */
-                                          NULL,			/* AccessLogEntry */
+                                          tunnelState->al,			/* AccessLogEntry */
                                           &hdr_out,
                                           flags);			/* flags */
     packerToMemInit(&p, &mb);
