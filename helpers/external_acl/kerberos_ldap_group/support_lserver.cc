@@ -29,6 +29,7 @@
 
 #include "support.h"
 struct lsstruct *init_ls(void);
+void free_ls(struct lsstruct *lssp);
 
 struct lsstruct *
 init_ls(void) {

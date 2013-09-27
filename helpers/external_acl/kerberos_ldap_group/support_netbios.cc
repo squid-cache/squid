@@ -30,6 +30,7 @@
 #include "support.h"
 
 struct ndstruct *init_nd(void);
+void free_nd(struct ndstruct *ndsp);
 
 struct ndstruct *
 init_nd(void) {

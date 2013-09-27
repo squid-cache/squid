@@ -1907,6 +1907,10 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
       [Define to 1 if you have krb5_get_error_message]),)
   AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
+  AC_CHECK_TYPE(krb5_pac,
+    AC_DEFINE(HAVE_KRB5_PAC,1,
+      [Define to 1 if you have krb5_pac]),,
+      [#include <krb5.h>])
   AC_CHECK_LIB(krb5,krb5_kt_free_entry,
     AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
       [Define to 1 if you have krb5_kt_free_entry]),)
@@ -1925,6 +1929,33 @@ if test "x$ac_krb5_config" = "xyes" ; then
   AC_CHECK_LIB(krb5,profile_release,
     AC_DEFINE(HAVE_PROFILE_RELEASE,1,
       [Define to 1 if you have profile_release]),)
+  AC_CHECK_LIB(krb5,krb5_get_renewed_creds,
+    AC_DEFINE(HAVE_KRB5_GET_RENEWED_CREDS,1,
+      [Define to 1 if you have krb5_get_renewed_creds]),)
+  AC_CHECK_LIB(krb5,krb5_principal_get_realm,
+    AC_DEFINE(HAVE_KRB5_PRINCIPAL_GET_REALM,1,
+      [Define to 1 if you have krb5_principal_get_realm]),)
+  AC_CHECK_LIB(krb5, krb5_get_init_creds_opt_alloc,
+    AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
+      [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
+  AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	#include <krb5.h>
+    ]],[[krb5_context context;
+	 krb5_get_init_creds_opt *options;
+	 krb5_get_init_creds_opt_free(context, options)]])],[
+	AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,
+		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
+	AC_MSG_RESULT(yes)
+    ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
+
+
+  AC_CHECK_FUNCS(gss_map_name_to_any,
+    AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
+      [Define to 1 if you have gss_map_name_to_any]),)
+  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context,
+    AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
+      [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
