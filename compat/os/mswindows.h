@@ -805,6 +805,7 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 /* provide missing definitions from resoruce.h */
 /* NP: sys/resource.h and sys/time.h are apparently order-dependant. */
 #if HAVE_SYS_TIME_H
+#include <sys/time.h>
 #endif
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
