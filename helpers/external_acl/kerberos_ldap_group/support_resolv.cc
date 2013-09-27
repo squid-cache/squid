@@ -95,10 +95,10 @@ static void
 sort(struct hstruct *array, int nitems, int (*cmp) (struct hstruct *, struct hstruct *), int begin, int end)
 {
     if (end > begin) {
-        int pivot = begin;
         int l = begin + 1;
         int r = end;
         while (l < r) {
+            int pivot = begin;
             if (cmp(&array[l], &array[pivot]) <= 0) {
                 l += 1;
             } else {
@@ -116,7 +116,7 @@ sort(struct hstruct *array, int nitems, int (*cmp) (struct hstruct *, struct hst
 static void
 msort(struct hstruct *array, size_t nitems, int (*cmp) (struct hstruct *, struct hstruct *))
 {
-    sort(array, nitems, cmp, 0, nitems - 1);
+    sort(array, (int)nitems, cmp, 0, (int)(nitems - 1));
 }
 
 static int
@@ -145,33 +145,25 @@ compare_hosts(struct hstruct *host1, struct hstruct *host2)
     return 0;
 }
 
-int
-free_hostname_list(struct hstruct **hlist, int nhosts)
+size_t
+free_hostname_list(struct hstruct **hlist, size_t nhosts)
 {
     struct hstruct *hp = NULL;
-    int i;
+    size_t i;
 
     hp = *hlist;
     for (i = 0; i < nhosts; ++i) {
-        if (hp[i].host)
-            xfree(hp[i].host);
-        hp[i].host = NULL;
+        xfree(hp[i].host);
     }
 
-    if (hp)
-        xfree(hp);
-    hp = NULL;
+    safe_free(hp);
     *hlist = hp;
     return 0;
 }
 
-int
-get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, char *name)
+size_t
+get_hostname_list(struct hstruct **hlist, size_t nhosts, char *name)
 {
-    /*
-     * char host[sysconf(_SC_HOST_NAME_MAX)];
-     */
-    char host[1024];
     struct addrinfo *hres = NULL, *hres_list;
     int rc, count;
     struct hstruct *hp = NULL;
@@ -194,6 +186,10 @@ get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, c
     hres_list = hres;
     count = 0;
     while (hres_list) {
+        /*
+         * char host[sysconf(_SC_HOST_NAME_MAX)];
+         */
+        char host[1024];
         rc = getnameinfo(hres_list->ai_addr, hres_list->ai_addrlen, host, sizeof(host), NULL, 0, 0);
         if (rc != 0) {
             error((char *) "%s| %s: ERROR: Error while resolving ip address with getnameinfo: %s\n", LogTime(), PROGRAM, gai_strerror(rc));
@@ -219,24 +215,21 @@ get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, c
     return (nhosts);
 }
 
-int
-get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, char *domain)
+size_t
+get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t nh, char *domain)
 {
 
     /*
      * char name[sysconf(_SC_HOST_NAME_MAX)];
      */
     char name[1024];
-    char host[NS_MAXDNAME];
     char *service = NULL;
     struct hstruct *hp = NULL;
     struct lsstruct *ls = NULL;
-    int nhosts = 0;
+    size_t nhosts = 0;
     int size;
-    int type, rdlength;
-    int priority, weight, port;
     int len, olen;
-    int i, j, k;
+    size_t i, j, k;
     u_char *buffer = NULL;
     u_char *p;
 
@@ -305,7 +298,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
     }
     if (len > PACKETSZ_MULT * NS_PACKETSZ) {
         olen = len;
-        buffer = (u_char *) xrealloc(buffer, len);
+        buffer = (u_char *) xrealloc(buffer, (size_t)len);
         if ((len = res_search(service, ns_c_in, ns_t_srv, (u_char *) buffer, len)) < 0) {
             error((char *) "%s| %s: ERROR: Error while resolving service record %s with res_search\n", LogTime(), PROGRAM, service);
             nsError(h_errno, service);
@@ -322,7 +315,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
         error((char *) "%s| %s: ERROR: Message to small: %d < header size\n", LogTime(), PROGRAM, len);
         goto finalise;
     }
-    if ((size = dn_expand(buffer, buffer + len, p, name, sysconf(_SC_HOST_NAME_MAX))) < 0) {
+    if ((size = dn_expand(buffer, buffer + len, p, name, sizeof(name))) < 0) {
         error((char *) "%s| %s: ERROR: Error while expanding query name with dn_expand:  %s\n", LogTime(), PROGRAM, strerror(errno));
         goto finalise;
     }
@@ -333,7 +326,8 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
         goto finalise;
     }
     while (p < buffer + len) {
-        if ((size = dn_expand(buffer, buffer + len, p, name, sysconf(_SC_HOST_NAME_MAX))) < 0) {
+        int type, rdlength;
+        if ((size = dn_expand(buffer, buffer + len, p, name, sizeof(name))) < 0) {
             error((char *) "%s| %s: ERROR: Error while expanding answer name with dn_expand:  %s\n", LogTime(), PROGRAM, strerror(errno));
             goto finalise;
         }
@@ -351,6 +345,8 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
         NS_GET16(rdlength, p);	/* RR data length (16bit) */
 
         if (type == ns_t_srv) {	/* SRV record */
+            int priority, weight, port;
+            char host[NS_MAXDNAME];
             if (p > buffer + len) {
                 error((char *) "%s| %s: ERROR: Message to small: %d < header + query name,type,class + answer name + RR type,class,ttl + RR data length\n", LogTime(), PROGRAM, len);
                 goto finalise;
@@ -400,7 +396,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
     }
 
 finalise:
-    nhosts = get_hostname_list(margs, &hp, nh, domain);
+    nhosts = get_hostname_list(&hp, nh, domain);
 
     debug("%s| %s: DEBUG: Adding %s to list\n", LogTime(), PROGRAM, domain);
 
@@ -435,7 +431,7 @@ cleanup:
     }
 
     /* Sort by Priority / Weight */
-    msort(hp, nhosts, compare_hosts);
+    msort(hp, (size_t)nhosts, compare_hosts);
 
     if (debug_enabled) {
         debug((char *) "%s| %s: DEBUG: Sorted ldap server names for domain %s:\n", LogTime(), PROGRAM, domain);
@@ -443,10 +439,8 @@ cleanup:
             debug((char *) "%s| %s: DEBUG: Host: %s Port: %d Priority: %d Weight: %d\n", LogTime(), PROGRAM, hp[i].host, hp[i].port, hp[i].priority, hp[i].weight);
         }
     }
-    if (buffer)
-        xfree(buffer);
-    if (service)
-        xfree(service);
+    xfree(buffer);
+    xfree(service);
     *hlist = hp;
     return (nhosts);
 }

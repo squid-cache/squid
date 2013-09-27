@@ -65,7 +65,7 @@ init_args(struct main_args *margs)
 
 void clean_gd(struct gdstruct *gdsp);
 void clean_nd(struct ndstruct *ndsp);
-void clean_ls(struct ndstruct *lssp);
+void clean_ls(struct lsstruct *lssp);
 
 void
 clean_gd(struct gdstruct *gdsp)
@@ -78,22 +78,12 @@ clean_gd(struct gdstruct *gdsp)
             pp = p;
             p = p->next;
         }
-        if (p->group) {
-            xfree(p->group);
-            p->group = NULL;
-        }
-        if (p->domain) {
-            xfree(p->domain);
-            p->domain = NULL;
-        }
-        if (pp && pp->next) {
-            xfree(pp->next);
-            pp->next = NULL;
-        }
-        if (p == gdsp) {
-            xfree(gdsp);
-            gdsp = NULL;
-        }
+        safe_free(p->group);
+        safe_free(p->domain);
+        if (pp)
+            safe_free(pp->next);
+        if (p == gdsp)
+            safe_free(gdsp);
         p = gdsp;
     }
 }
@@ -109,22 +99,12 @@ clean_nd(struct ndstruct *ndsp)
             pp = p;
             p = p->next;
         }
-        if (p->netbios) {
-            xfree(p->netbios);
-            p->netbios = NULL;
-        }
-        if (p->domain) {
-            xfree(p->domain);
-            p->domain = NULL;
-        }
-        if (pp && pp->next) {
-            xfree(pp->next);
-            pp->next = NULL;
-        }
-        if (p == ndsp) {
-            xfree(ndsp);
-            ndsp = NULL;
-        }
+        safe_free(p->netbios);
+        safe_free(p->domain);
+        if (pp)
+            safe_free(pp->next);
+        if (p == ndsp)
+            safe_free(ndsp);
         p = ndsp;
     }
 }
@@ -140,22 +120,12 @@ clean_ls(struct lsstruct *lssp)
             pp = p;
             p = p->next;
         }
-        if (p->lserver) {
-            xfree(p->lserver);
-            p->lserver = NULL;
-        }
-        if (p->domain) {
-            xfree(p->domain);
-            p->domain = NULL;
-        }
-        if (pp && pp->next) {
-            xfree(pp->next);
-            pp->next = NULL;
-        }
-        if (p == lssp) {
-            xfree(lssp);
-            lssp = NULL;
-        }
+        safe_free(p->lserver);
+        safe_free(p->domain);
+        if (pp)
+            safe_free(pp->next);
+        if (p == lssp)
+            safe_free(lssp);
         p = lssp;
     }
 }
@@ -163,50 +133,17 @@ clean_ls(struct lsstruct *lssp)
 void
 clean_args(struct main_args *margs)
 {
-    if (margs->glist) {
-        xfree(margs->glist);
-        margs->glist = NULL;
-    }
-    if (margs->ulist) {
-        xfree(margs->ulist);
-        margs->ulist = NULL;
-    }
-    if (margs->tlist) {
-        xfree(margs->tlist);
-        margs->tlist = NULL;
-    }
-    if (margs->nlist) {
-        xfree(margs->nlist);
-        margs->nlist = NULL;
-    }
-    if (margs->llist) {
-        xfree(margs->llist);
-        margs->llist = NULL;
-    }
-    if (margs->luser) {
-        xfree(margs->luser);
-        margs->luser = NULL;
-    }
-    if (margs->lpass) {
-        xfree(margs->lpass);
-        margs->lpass = NULL;
-    }
-    if (margs->lbind) {
-        xfree(margs->lbind);
-        margs->lbind = NULL;
-    }
-    if (margs->lurl) {
-        xfree(margs->lurl);
-        margs->lurl = NULL;
-    }
-    if (margs->ssl) {
-        xfree(margs->ssl);
-        margs->ssl = NULL;
-    }
-    if (margs->ddomain) {
-        xfree(margs->ddomain);
-        margs->ddomain = NULL;
-    }
+    safe_free(margs->glist);
+    safe_free(margs->ulist);
+    safe_free(margs->tlist);
+    safe_free(margs->nlist);
+    safe_free(margs->llist);
+    safe_free(margs->luser);
+    safe_free(margs->lpass);
+    safe_free(margs->lbind);
+    safe_free(margs->lurl);
+    safe_free(margs->ssl);
+    safe_free(margs->ddomain);
     if (margs->groups) {
         clean_gd(margs->groups);
         margs->groups = NULL;
@@ -413,8 +350,8 @@ main(int argc, char *const argv[])
                 log((char *) "%s| %s: INFO: Got User: %s Netbios Name: %s\n", LogTime(), PROGRAM, up, np);
             domain = get_netbios_name(&margs, netbios);
             user = nuser;
-            xfree(up);
-            xfree(np);
+            safe_free(up);
+            safe_free(np);
         } else if (domain) {
             strup(domain);
             *domain = '\0';
@@ -436,8 +373,8 @@ main(int argc, char *const argv[])
         else
             log((char *) "%s| %s: INFO: Got User: %s Domain: %s\n", LogTime(), PROGRAM, up, domain ? dp : "NULL");
 
-        xfree(up);
-        xfree(dp);
+        safe_free(up);
+        safe_free(dp);
         if (!strcmp(user, "QQ") && domain && !strcmp(domain, "QQ")) {
             clean_args(&margs);
             exit(-1);
@@ -477,7 +414,7 @@ void
 strup(char *s)
 {
     while (*s) {
-        *s = toupper((unsigned char) *s);
+        *s = (char)toupper((unsigned char) *s);
         ++s;
     }
 }
