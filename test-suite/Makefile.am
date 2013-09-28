@@ -113,8 +113,19 @@ VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 ##$(TARGLIB): $(LIBOBJS)
 ##	$(AR_R) $(TARGLIB) $(LIBOBJS)
 
-squid-conf-tests:
-	../src/squid -k parse -f ../src/squid.conf.default || exit 1
-	for t in `ls -1 $(srcdir)/squidconf/*`; do
-		../src/squid -k parse -f $t || exit 1
-	done
+squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
+	for cfg in $$cfglist ; do \
+		$(top_builddir)/src/squid -k parse -f $$cfg || \
+			{ echo "FAIL: squid.conf test: $$cfg" | \
+				sed s%$(top_builddir)/src/%% | \
+				sed s%$(srcdir)/squidconf/%% ; \
+				failed=1; break; \
+			}; \
+		if test "$$failed" -eq 0; then \
+			echo "PASS: squid.conf test: $$cfg" | \
+				sed s%$(top_builddir)/src/%% | \
+				sed s%$(srcdir)/squidconf/%% ; \
+		else break; fi; \
+	done; \
+	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
