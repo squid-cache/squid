@@ -65,6 +65,20 @@ COMMENT_START
   configuration files.
 
 
+  Values with spaces, quotes, and other special characters
+
+	Squid supports directive parameters with spaces, quotes, and other
+	special characters. Surround such parameters with "double quotes". Use
+	the configuration_includes_quoted_values directive to enable or
+	disable that support.
+
+	For example;
+
+		configuration_includes_quoted_values on
+		acl group external groupCheck Administrators "Internet Users" Guest
+		configuration_includes_quoted_values off
+
+
   Conditional configuration
 
 	If-statements can be used to make configuration directives
@@ -8463,6 +8477,35 @@ COMMENT_START
  MISCELLANEOUS
  -----------------------------------------------------------------------------
 COMMENT_END
+
+NAME: configuration_includes_quoted_values
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: ConfigParser::RecognizeQuotedValues
+DOC_START
+	Previous Squid versions have defined "quoted/string" as syntax for
+	ACL to signifiy the value is an included file containing values and
+	has treated the " characters in other places of the configuration file
+	as part of the parameter value it was used for.
+
+	For compatibility with existing installations that behaviour
+	remains the default.
+
+	If this directive is set to 'on', Squid will start parsing each
+	"quoted string" as a single configuration directive parameter. The
+	quotes are stripped before the parameter value is interpreted or use.
+
+	That will continue for all lines until this directive is set to 'off',
+	where Squid will return to the default configuration parsing.
+
+	For example;
+
+		configuration_includes_quoted_values on
+		acl group external groupCheck Administrators "Internet Users" Guest
+		configuration_includes_quoted_values off
+
+DOC_END
 
 NAME: memory_pools
 COMMENT: on|off

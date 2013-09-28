@@ -171,6 +171,9 @@ private:
     virtual bool requiresRequest() const;
     /// whether our (i.e. shallow) match() requires checklist to have a reply
     virtual bool requiresReply() const;
+
+protected:
+    static char *strtok(char *str, const char *delimiters);
 };
 
 /// \ingroup ACLAPI
