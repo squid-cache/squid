@@ -22,7 +22,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#define KERBEROS_LDAP_GROUP_VERSION "1.3.0sq"
+#define KERBEROS_LDAP_GROUP_VERSION "1.3.1sq"
 
 #if HAVE_STRING_H
 #include <string.h>
