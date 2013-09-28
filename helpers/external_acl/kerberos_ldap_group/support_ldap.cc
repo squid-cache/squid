@@ -335,7 +335,6 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
     size_t max_attr = 0;
     char *filter = NULL;
     char *search_exp = NULL;
-    size_t j;
     int rc = 0, retval = 0;
     int ldepth;
     char *ldap_filter_esc = NULL;
@@ -387,7 +386,7 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
      */
     retval = 0;
     ldepth = depth + 1;
-    for (j = 0; j < max_attr; ++j) {
+    for (size_t j = 0; j < max_attr; ++j) {
         char *av = NULL;
 
         /* Compare first CN= value assuming it is the same as the group name itself */
@@ -401,17 +400,17 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
         }
         if (debug_enabled) {
             int n;
-            debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" in hex UTF-8 is ", LogTime(), PROGRAM, j + 1, av);
+            debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" in hex UTF-8 is ", LogTime(), PROGRAM, j + 1, av);
             for (n = 0; av[n] != '\0'; ++n)
                 fprintf(stderr, "%02x", (unsigned char) av[n]);
             fprintf(stderr, "\n");
         }
         if (!strcasecmp(group, av)) {
             retval = 1;
-            debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" matches group name \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
+            debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" matches group name \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
             break;
         } else
-            debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" does not match group name \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
+            debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" does not match group name \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
         /*
          * Do recursive group search
          */
@@ -427,7 +426,7 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
                 }
             }
             if (debug_enabled)
-                debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" is member of group named \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
+                debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" is member of group named \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
             else
                 break;
 
@@ -438,7 +437,7 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
      * Cleanup
      */
     if (attr_value) {
-        for (j = 0; j < max_attr; ++j) {
+        for (size_t j = 0; j < max_attr; ++j) {
             xfree(attr_value[j]);
         }
         safe_free(attr_value);
@@ -613,7 +612,7 @@ get_attributes(LDAP * ld, LDAPMessage * res, const char *attribute, char ***ret_
         }
     }
 
-    debug((char *) "%s| %s: DEBUG: %ld ldap entr%s found with attribute : %s\n", LogTime(), PROGRAM, max_attr, max_attr > 1 || max_attr == 0 ? "ies" : "y", attribute);
+    debug((char *) "%s| %s: DEBUG: %" PRIuSIZE " ldap entr%s found with attribute : %s\n", LogTime(), PROGRAM, max_attr, max_attr > 1 || max_attr == 0 ? "ies" : "y", attribute);
 
     *ret_value = attr_value;
     return max_attr;
@@ -831,7 +830,6 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     debug((char *) "%s| %s: DEBUG: Initialise ldap connection\n", LogTime(), PROGRAM);
 
     if (domain && !kc) {
-        size_t i;
         if (margs->ssl) {
             debug((char *) "%s| %s: DEBUG: Enable SSL to ldap servers\n", LogTime(), PROGRAM);
         }
@@ -840,7 +838,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Loop over list of ldap servers of users domain
          */
         nhosts = get_ldap_hostname_list(margs, &hlist, 0, domain);
-        for (i = 0; i < nhosts; ++i) {
+        for (size_t i = 0; i < nhosts; ++i) {
             int port = 389;
             if (hlist[i].port != -1)
                 port = hlist[i].port;
@@ -891,7 +889,6 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         int port;
         char *ssl = NULL;
         char *p;
-        size_t i;
         /*
          * If username does not contain a domain and a url was given then try it
          */
@@ -913,7 +910,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         }
         nhosts = get_hostname_list(&hlist, 0, host);
         xfree(host);
-        for (i = 0; i < nhosts; ++i) {
+        for (size_t i = 0; i < nhosts; ++i) {
 
             ld = tool_ldap_open(margs, hlist[i].host, port, ssl);
             if (!ld)
@@ -994,7 +991,6 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     debug((char *) "%s| %s: DEBUG: Found %d ldap entr%s\n", LogTime(), PROGRAM, ldap_count_entries(ld, res), ldap_count_entries(ld, res) > 1 || ldap_count_entries(ld, res) == 0 ? "ies" : "y");
 
     if (ldap_count_entries(ld, res) != 0) {
-        size_t k;
 
         if (margs->AD)
             max_attr = get_attributes(ld, res, ATTRIBUTE_AD, &attr_value);
@@ -1006,7 +1002,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Compare group names
          */
         retval = 0;
-        for (k = 0; k < max_attr; ++k) {
+        for (size_t k = 0; k < max_attr; ++k) {
             char *av = NULL;
 
             /* Compare first CN= value assuming it is the same as the group name itself */
@@ -1019,30 +1015,28 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                 }
             }
             if (debug_enabled) {
-                int n;
-                debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" in hex UTF-8 is ", LogTime(), PROGRAM, k + 1, av);
-                for (n = 0; av[n] != '\0'; ++n)
+                debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" in hex UTF-8 is ", LogTime(), PROGRAM, k + 1, av);
+                for (unsigned int n = 0; av[n] != '\0'; ++n)
                     fprintf(stderr, "%02x", (unsigned char) av[n]);
                 fprintf(stderr, "\n");
             }
             if (!strcasecmp(group, av)) {
                 retval = 1;
                 if (debug_enabled)
-                    debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" matches group name \"%s\"\n", LogTime(), PROGRAM, k + 1, av, group);
+                    debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" matches group name \"%s\"\n", LogTime(), PROGRAM, k + 1, av, group);
                 else
                     break;
             } else
-                debug((char *) "%s| %s: DEBUG: Entry %ld \"%s\" does not match group name \"%s\"\n", LogTime(), PROGRAM, k + 1, av, group);
+                debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " \"%s\" does not match group name \"%s\"\n", LogTime(), PROGRAM, k + 1, av, group);
         }
         /*
          * Do recursive group search for AD only since posixgroups can not contain other groups
          */
         if (!retval && margs->AD) {
-            size_t j;
             if (debug_enabled && max_attr > 0) {
                 debug((char *) "%s| %s: DEBUG: Perform recursive group search\n", LogTime(), PROGRAM);
             }
-            for (j = 0; j < max_attr; ++j) {
+            for (size_t j = 0; j < max_attr; ++j) {
                 char *av = NULL;
 
                 av = attr_value[j];
@@ -1056,7 +1050,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                         }
                     }
                     if (debug_enabled)
-                        debug((char *) "%s| %s: DEBUG: Entry %ld group \"%s\" is (in)direct member of group \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
+                        debug((char *) "%s| %s: DEBUG: Entry %" PRIuSIZE " group \"%s\" is (in)direct member of group \"%s\"\n", LogTime(), PROGRAM, j + 1, av, group);
                     else
                         break;
                 }
@@ -1066,8 +1060,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Cleanup
          */
         if (attr_value) {
-            size_t j;
-            for (j = 0; j < max_attr; ++j) {
+            for (size_t j = 0; j < max_attr; ++j) {
                 xfree(attr_value[j]);
             }
             safe_free(attr_value);
@@ -1165,8 +1158,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Cleanup
          */
         if (attr_value) {
-            size_t j;
-            for (j = 0; j < max_attr; ++j) {
+            for (size_t j = 0; j < max_attr; ++j) {
                 xfree(attr_value[j]);
             }
             safe_free(attr_value);
