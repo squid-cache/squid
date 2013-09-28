@@ -34,7 +34,8 @@ TESTS += debug \
 	MemPoolTest\
 	mem_node_test\
 	mem_hdr_test\
-	$(ESI_TESTS)
+	$(ESI_TESTS) \
+	squid-conf-tests
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += debug \
@@ -111,3 +112,9 @@ VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 ##
 ##$(TARGLIB): $(LIBOBJS)
 ##	$(AR_R) $(TARGLIB) $(LIBOBJS)
+
+squid-conf-tests:
+	../src/squid -k parse -f ../src/squid.conf.default || exit 1
+	for t in `ls -1 $(srcdir)/squidconf/*`; do
+		../src/squid -k parse -f $t || exit 1
+	done
