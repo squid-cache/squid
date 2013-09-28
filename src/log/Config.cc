@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "cache_cf.h"
-#include "ConfigParser.h"
 #include "Debug.h"
 #include "log/Config.h"
 
@@ -11,19 +10,17 @@ Log::LogConfig::parseFormats()
 {
     char *name, *def;
 
-    if ((name = ConfigParser::NextToken()) == NULL)
+    if ((name = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
-    ::Format::Format *nlf = new ::Format::Format(name);
-
-    ConfigParser::EnableMacros();
-    if ((def = ConfigParser::NextQuotedOrToEol()) == NULL) {
+    if ((def = strtok(NULL, "\r\n")) == NULL) {
         self_destruct();
         return;
     }
-    ConfigParser::DisableMacros();
 
     debugs(3, 2, "Log Format for '" << name << "' is '" << def << "'");
+
+    ::Format::Format *nlf = new ::Format::Format(name);
 
     if (!nlf->parse(def)) {
         self_destruct();

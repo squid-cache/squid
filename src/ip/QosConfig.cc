@@ -209,7 +209,7 @@ Ip::Qos::Config::parseConfigLine()
     self_destruct();
 #endif
 
-    while ( (token = ConfigParser::NextToken()) ) {
+    while ( (token = strtok(NULL, w_space)) ) {
 
         // Work out TOS or mark. Default to TOS for backwards compatibility
         if (!(mark || tos)) {

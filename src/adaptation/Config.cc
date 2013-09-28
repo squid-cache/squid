@@ -264,7 +264,8 @@ Adaptation::Config::DumpServiceGroups(StoreEntry *entry, const char *name)
 void
 Adaptation::Config::ParseAccess(ConfigParser &parser)
 {
-    String groupId = ConfigParser::NextToken();
+    String groupId;
+    ConfigParser::ParseString(&groupId);
     AccessRule *r;
     if (!(r=FindRuleByGroupId(groupId))) {
         r = new AccessRule(groupId);

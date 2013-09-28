@@ -2,7 +2,6 @@
 #define _SQUID_FORMAT_FORMAT_H
 
 #include "base/RefCount.h"
-#include "ConfigParser.h"
 /*
  * Squid configuration allows users to define custom formats in
  * several components.
@@ -30,7 +29,7 @@ class Format
 {
 public:
     Format(const char *name);
-    virtual ~Format();
+    ~Format();
 
     /* very inefficent parser, but who cares, this needs to be simple */
     /* First off, let's tokenize, we'll optimize in a second pass.

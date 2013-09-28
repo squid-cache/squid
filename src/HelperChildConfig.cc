@@ -1,6 +1,5 @@
 #include "squid.h"
 #include "cache_cf.h"
-#include "ConfigParser.h"
 #include "Debug.h"
 #include "HelperChildConfig.h"
 #include "globals.h"
@@ -45,7 +44,7 @@ HelperChildConfig::needNew() const
 void
 HelperChildConfig::parseConfig()
 {
-    char const *token = ConfigParser::NextToken();
+    char const *token = strtok(NULL, w_space);
 
     if (!token)
         self_destruct();
@@ -59,7 +58,7 @@ HelperChildConfig::parseConfig()
     }
 
     /* Parse extension options */
-    for (; (token = ConfigParser::NextToken()) ;) {
+    for (; (token = strtok(NULL, w_space)) ;) {
         if (strncmp(token, "startup=", 8) == 0) {
             n_startup = xatoui(token + 8);
         } else if (strncmp(token, "idle=", 5) == 0) {

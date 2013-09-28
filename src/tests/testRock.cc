@@ -1,7 +1,6 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
 
-#include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
@@ -67,9 +66,9 @@ testRock::setUp()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("10 max-size=16384");
+    char *config_line=xstrdup("foo 10 max-size=16384");
 
-    ConfigParser::SetCfgLine(config_line);
+    strtok(config_line, w_space);
 
     store->parse(0, path);
     store_maxobjsize = 1024*1024*2;

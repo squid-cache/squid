@@ -147,7 +147,7 @@ xatos(const char *token)
 int64_t
 GetInteger64(void)
 {
-    char *token = ConfigParser::NextToken();
+    char *token = strtok(NULL, w_space);
 
     if (token == NULL)
         self_destruct();
@@ -162,7 +162,7 @@ GetInteger64(void)
 int
 GetInteger(void)
 {
-    char *token = ConfigParser::NextToken();
+    char *token = ConfigParser::strtokFile();
     int i;
 
     if (token == NULL)
@@ -189,7 +189,8 @@ GetInteger(void)
 int
 GetPercentage(void)
 {
-    char *token = ConfigParser::NextToken();
+    int p;
+    char *token = strtok(NULL, w_space);
 
     if (!token) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: A percentage value is missing.");
@@ -202,7 +203,7 @@ GetPercentage(void)
         *end = '\0';
     }
 
-    int p = xatoi(token);
+    p = xatoi(token);
 
     if (p < 0 || p > 100) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
@@ -215,7 +216,7 @@ GetPercentage(void)
 unsigned short
 GetShort(void)
 {
-    char *token = ConfigParser::NextToken();
+    char *token = strtok(NULL, w_space);
 
     if (token == NULL)
         self_destruct();

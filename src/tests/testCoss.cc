@@ -1,6 +1,5 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
-#include "ConfigParser.h"
 #include "testCoss.h"
 #include "Store.h"
 #include "SwapDir.h"
@@ -92,9 +91,9 @@ testCoss::testCossCreate()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("100 max-size=102400 block-size=512 IOEngine=Blocking");
+    char *config_line=xstrdup("foo 100 max-size=102400 block-size=512 IOEngine=Blocking");
 
-    ConfigParser::SetCfgLine(config_line);
+    strtok(config_line, w_space);
 
     aStore->parse(0, path);
 
@@ -156,9 +155,9 @@ testCoss::testCossSearch()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("100 max-size=102400 block-size=512 IOEngine=Blocking");
+    char *config_line=xstrdup("foo 100 max-size=102400 block-size=512 IOEngine=Blocking");
 
-    ConfigParser::SetCfgLine(config_line);
+    strtok(config_line, w_space);
 
     aStore->parse(0, path);
 
@@ -284,8 +283,8 @@ testCoss::testDefaultEngine()
     commonInit();
 
     char *path=xstrdup(TESTDIR);
-    char *config_line=xstrdup("100 max-size=102400 block-size=512");
-    ConfigParser::SetCfgLine(config_line);
+    char *config_line=xstrdup("foo 100 max-size=102400 block-size=512");
+    strtok(config_line, w_space);
     aStore->parse(0, path);
     safe_free(path);
     safe_free(config_line);

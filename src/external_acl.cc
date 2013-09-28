@@ -44,7 +44,6 @@
 #include "cache_cf.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "ConfigParser.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "fde.h"
@@ -331,16 +330,14 @@ parse_externalAclHelper(external_acl ** list)
     a->local_addr.setLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
-    token = ConfigParser::NextToken();
+    token = strtok(NULL, w_space);
 
     if (!token)
         self_destruct();
 
     a->name = xstrdup(token);
 
-    // Allow supported %macros inside quoted tokens
-    ConfigParser::EnableMacros();
-    token = ConfigParser::NextToken();
+    token = strtok(NULL, w_space);
 
     /* Parse options */
     while (token) {
@@ -389,9 +386,8 @@ parse_externalAclHelper(external_acl ** list)
             break;
         }
 
-        token = ConfigParser::NextToken();
+        token = strtok(NULL, w_space);
     }
-    ConfigParser::DisableMacros();
 
     /* check that child startup value is sane. */
     if (a->children.n_startup > a->children.n_max)
@@ -507,7 +503,7 @@ parse_externalAclHelper(external_acl ** list)
 
         *p = format;
         p = &format->next;
-        token = ConfigParser::NextToken();
+        token = strtok(NULL, w_space);
     }
 
     /* There must be at least one format token */

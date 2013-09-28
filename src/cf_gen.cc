@@ -681,8 +681,7 @@ gen_parse(const EntryList &head, std::ostream &fout)
     "{\n"
     "\tchar\t*token;\n"
     "\tif ((token = strtok(buff, w_space)) == NULL) \n"
-    "\t\treturn 1;\t/* ignore empty lines */\n"
-    "\tConfigParser::SetCfgLine(strtok(NULL, \"\"));\n";
+    "\t\treturn 1;\t/* ignore empty lines */\n";
 
     for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e)
         e->genParse(fout);

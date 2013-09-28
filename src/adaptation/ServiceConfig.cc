@@ -61,8 +61,10 @@ Adaptation::ServiceConfig::parseVectPoint(const char *service_configConfig) cons
 bool
 Adaptation::ServiceConfig::parse()
 {
-    key = ConfigParser::NextToken();
-    String method_point = ConfigParser::NextToken();
+    String method_point;
+
+    ConfigParser::ParseString(&key);
+    ConfigParser::ParseString(&method_point);
     method = parseMethod(method_point.termedBuf());
     point = parseVectPoint(method_point.termedBuf());
 
@@ -74,7 +76,7 @@ Adaptation::ServiceConfig::parse()
     bool onOverloadSet = false;
     std::set<std::string> options;
 
-    while (char *option = ConfigParser::NextToken()) {
+    while (char *option = strtok(NULL, w_space)) {
         const char *name = option;
         const char *value = "";
         if (strcmp(option, "0") == 0) { // backward compatibility

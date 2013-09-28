@@ -1,5 +1,4 @@
 #include "squid.h"
-#include "ConfigParser.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "format/Config.h"
@@ -12,10 +11,10 @@ Format::FmtConfig::parseFormats()
 {
     char *name, *def;
 
-    if ((name = ConfigParser::NextToken()) == NULL)
+    if ((name = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
-    if ((def = ConfigParser::NextQuotedOrToEol()) == NULL) {
+    if ((def = strtok(NULL, "\r\n")) == NULL) {
         self_destruct();
         return;
     }

@@ -92,8 +92,9 @@ Notes::add(const String &noteKey)
 Note::Pointer
 Notes::parse(ConfigParser &parser)
 {
-    String key = ConfigParser::NextToken();
-    String value = ConfigParser::NextToken();
+    String key, value;
+    ConfigParser::ParseString(&key);
+    ConfigParser::ParseQuotedString(&value);
     Note::Pointer note = add(key);
     Note::Value::Pointer noteValue = note->addValue(value);
 

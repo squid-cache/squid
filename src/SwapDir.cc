@@ -34,7 +34,6 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "ConfigOption.h"
-#include "ConfigParser.h"
 #include "globals.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
@@ -277,7 +276,7 @@ SwapDir::parseOptions(int isaReconfig)
 
     ConfigOption *newOption = getOptionTree();
 
-    while ((name = ConfigParser::NextToken()) != NULL) {
+    while ((name = strtok(NULL, w_space)) != NULL) {
         value = strchr(name, '=');
 
         if (value) {
