@@ -35,7 +35,6 @@
 class wordlist;
 extern char *xstrtok(char *str, const char *delimiters);
 
-
 /// \ingroup ACLAPI
 template <class M>
 class ACLData
@@ -52,7 +51,6 @@ public:
     virtual void prepareForUse() {}
 
     virtual bool empty() const =0;
-
 
     /// XXX: Temporary hack to allow old ACL code to handle quoted values without
     /// replacing every strtok() call.

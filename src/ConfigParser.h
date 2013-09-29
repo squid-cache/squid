@@ -109,5 +109,4 @@ int parseConfigFile(const char *file_name);
 /// without replacing every strtok() call.
 extern char *xstrtok(char *str, const char *delimiters);
 
-
 #endif /* SQUID_CONFIGPARSER_H */

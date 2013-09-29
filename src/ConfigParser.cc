@@ -41,7 +41,6 @@
 char *ConfigParser::lastToken = NULL;
 std::queue<std::string> ConfigParser::undo;
 
-
 int ConfigParser::RecognizeQuotedValues = true;
 
 void
@@ -68,15 +67,14 @@ ConfigParser::strtokFilePutBack(const char *tok)
 
 char *
 xstrtok(char *str, const char *delimiters)
-{   
+{
     assert(!str); // we are parsing the configuration file
     // no support unless enabled in the configuration and
     // no support for other delimiters (they may need to be eradicated!)
     return (ConfigParser::RecognizeQuotedValues &&
             strcmp(delimiters, " \t\n\r") == 0) ?
-        ConfigParser::NextToken() : ::strtok(str, delimiters);
+           ConfigParser::NextToken() : ::strtok(str, delimiters);
 }
-
 
 char *
 ConfigParser::strtokFile(void)
@@ -243,7 +241,6 @@ ConfigParser::NextToken()
 {
     return NextElement(NULL);
 }
-
 
 const char *
 ConfigParser::QuoteString(const String &var)
