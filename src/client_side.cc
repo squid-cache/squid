@@ -4425,7 +4425,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
     pinning.closeHandler = NULL; // Comm unregisters handlers before calling
     const bool sawZeroReply = pinning.zeroReply; // reset when unpinning
     unpinConnection();
-    if (sawZeroReply) {
+    if (sawZeroReply && clientConnection != NULL) {
         debugs(33, 3, "Closing client connection on pinned zero reply.");
         clientConnection->close();
     }
@@ -4437,8 +4437,10 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     char desc[FD_DESC_SZ];
 
     if (Comm::IsConnOpen(pinning.serverConnection)) {
-        if (pinning.serverConnection->fd == pinServer->fd)
+        if (pinning.serverConnection->fd == pinServer->fd) {
+            startPinnedConnectionMonitoring();
             return;
+        }
     }
 
     unpinConnection(); // closes pinned connection, if any, and resets fields
@@ -4475,6 +4477,57 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     Params &params = GetCommParams<Params>(pinning.closeHandler);
     params.conn = pinning.serverConnection;
     comm_add_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
+
+    startPinnedConnectionMonitoring();
+}
+
+/// Assign a read handler to an idle pinned connection so that we can detect connection closures.
+void
+ConnStateData::startPinnedConnectionMonitoring()
+{
+    if (pinning.readHandler != NULL)
+        return; // already monitoring
+
+    typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
+    pinning.readHandler = JobCallback(33, 3,
+                                      Dialer, this, ConnStateData::clientPinnedConnectionRead);
+    static char unusedBuf[8];
+    comm_read(pinning.serverConnection, unusedBuf, sizeof(unusedBuf), pinning.readHandler);
+}
+
+void
+ConnStateData::stopPinnedConnectionMonitoring()
+{
+    if (pinning.readHandler != NULL) {
+        comm_read_cancel(pinning.serverConnection->fd, pinning.readHandler);
+        pinning.readHandler = NULL;
+    }
+}
+
+/// Our read handler called by Comm when the server either closes an idle pinned connection or
+/// perhaps unexpectedly sends something on that idle (from Squid p.o.v.) connection.
+void
+ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
+{
+    pinning.readHandler = NULL; // Comm unregisters handlers before calling
+
+    if (io.flag == COMM_ERR_CLOSING)
+        return; // close handler will clean up
+
+    // We could use getConcurrentRequestCount(), but this may be faster.
+    const bool clientIsIdle = !getCurrentContext();
+
+    debugs(33, 3, "idle pinned " << pinning.serverConnection << " read " <<
+           io.size << (clientIsIdle ? " with idle client" : ""));
+
+    assert(pinning.serverConnection == io.conn);
+    pinning.serverConnection->close();
+
+    // If we are still sending data to the client, do not close now. When we are done sending,
+    // ClientSocketContext::keepaliveNextRequest() checks pinning.serverConnection and will close.
+    // However, if we are idle, then we must close to inform the idle client and minimize races.
+    if (clientIsIdle && clientConnection != NULL)
+        clientConnection->close();
 }
 
 const Comm::ConnectionPointer
