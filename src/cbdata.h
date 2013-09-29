@@ -224,14 +224,12 @@
 
 /**
  *\ingroup CBDATAAPI
- * cbdata types. similar to the MEM_* types above, but managed
- * in cbdata.c. A big difference is that these types are dynamically
- * allocated. This list is only a list of predefined types. Other types
- * are added runtime
+ * cbdata types. Similar to the MEM_* types, but managed in cbdata.cc
+ * A big difference is that cbdata types are dynamically allocated.
+ * Initially only UNKNOWN type is predefined. Other types are added runtime.
  */
-typedef enum {
-    CBDATA_UNKNOWN = 0
-} cbdata_type;
+typedef int cbdata_type;
+static const cbdata_type CBDATA_UNKNOWN = 0;
 
 /// \ingroup CBDATAAPI
 void cbdataRegisterWithCacheManager(void);
