@@ -207,7 +207,7 @@ void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
 void redirectStart(ClientHttpRequest *, RH *, void *);
-void tunnelStart(ClientHttpRequest *, int64_t *, int *);
+void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntry::Pointer &al);
 
 #if _USE_INLINE_
 #include "Store.h"
