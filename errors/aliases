@@ -35,5 +35,5 @@ th	th-th
 tr	tr-tr
 uk	uk-ua
 vi	vi-vn
-zh-tw	zh-hk zh-mo
-zh-cn	zh-sg
+zh-hant	zh-hant-tw zh-hant-hk zh-hant-mo zh-tw zh-hk zh-mo
+zh-hans	zh-hans-cn zh-cn zh-hans-sg zh-sg
