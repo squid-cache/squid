@@ -823,7 +823,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     }
 
     if (curlen > expectlen) {
-        debugs(90, 3, "quick-abort? YES bad content length");
+        debugs(90, 3, "quick-abort? YES bad content length (" << curlen << " of " << expectlen << " bytes received)");
         return true;
     }
 
