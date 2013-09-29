@@ -194,7 +194,7 @@ testHttpReply::testSanityCheckFirstLine()
     error = HTTP_STATUS_NONE;
 
     // status line with nul-byte
-    input.append("HTTP/1.1\0200 Okay\n\n", 19); /* real case seen */
+    input.append("HTTP/1.1" "\0" "200 Okay\n\n", 19); /* real case seen */
     hdr_len = headersEnd(input.content(),input.contentSize());
     CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
