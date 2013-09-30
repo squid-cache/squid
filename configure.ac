@@ -794,8 +794,6 @@ if test "x$squid_opt_enable_storeio" = "xauto"; then
   squid_opt_enable_storeio=yes
   AC_MSG_CHECKING([for available StoreIO modules])
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-  # disable coss
-  squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/coss//'`
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
@@ -817,15 +815,6 @@ for fs in $squid_storeio_module_candidates none; do
         AC_MSG_ERROR([Storage module aufs requires DiskIO module: Blocking or DiskThreads])
       fi
       ;;
-    coss)
-      AC_MSG_WARN([COSS Support is not stable yet in Squid-3. Please do not use.])
-      if ! test "x$squid_disk_module_candidates_AIO" = "xyes"; then
-        AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
-      fi
-      # Automake on MinGW needs explicit exe extension
-      # for STORE_TESTS substition
-      STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
-      ;;
     rock)
 	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
 	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
@@ -843,7 +832,6 @@ dnl make sure that global FS objects are linked to the squid binary.
 AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
-AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
 AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
 
 
@@ -1305,20 +1293,6 @@ SQUID_DEFINE_BOOL(USE_CACHE_DIGESTS,${enable_cache_digests:=no},
   [Use Cache Digests for locating objects in neighbor caches.])
 AC_MSG_NOTICE([Cache Digests enabled: $enable_cache_digests])
 
-
-dnl Size of COSS memory buffer
-squid_opt_coss_membuf_size=1048576
-AC_ARG_WITH(coss-membuf-size,
-  AS_HELP_STRING([--with-coss-membuf-size=size],
-             [COSS membuf size (default $squid_opt_coss_membuf_size bytes)]), [
-case $withval in
-  [[0-9]]*) squid_opt_coss_membuf_size=$withval ;;
-  *) AC_MSG_ERROR([--with-coss-membuf-size expects a numeric argument]) ;;
-esac
-])
-AC_MSG_NOTICE([Setting COSS membuf size to $squid_opt_coss_membuf_size bytes])
-AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $squid_opt_coss_membuf_size,
-   [Default COSS membuf size])
 
 ################################
 # check for netio plugin stuff #

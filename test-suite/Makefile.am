@@ -129,3 +129,5 @@ squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 		else break; fi; \
 	done; \
 	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
+
+CLEANFILES += squid-conf-tests
