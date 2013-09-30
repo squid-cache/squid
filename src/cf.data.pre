@@ -3451,25 +3451,6 @@ DOC_START
 	enforcement. Currently supported by IpcIo module only.
 
 
-	====  The coss store type  ====
-
-	NP: COSS filesystem in Squid-3 has been deemed too unstable for
-	    production use and has thus been removed from this release.
-	    We hope that it can be made usable again soon.
-
-	block-size=n defines the "block size" for COSS cache_dir's.
-	Squid uses file numbers as block numbers.  Since file numbers
-	are limited to 24 bits, the block size determines the maximum
-	size of the COSS partition.  The default is 512 bytes, which
-	leads to a maximum cache_dir size of 512<<24, or 8 GB.  Note
-	you should not change the coss block size after Squid
-	has written some objects to the cache_dir.
-
-	The coss file store has changed from 2.5. Now it uses a file
-	called 'stripe' in the directory names in the config - and
-	this will be created by squid -z.
-
-
 	==== COMMON OPTIONS ====
 
 	no-store	no new objects should be stored to this cache_dir.
@@ -3478,7 +3459,7 @@ DOC_START
 			will accept.  It's used to restrict a cache_dir
 			to only store large objects (e.g. AUFS) while
 			other stores are optimized for smaller objects
-			(e.g. COSS).
+			(e.g. Rock).
 			Defaults to 0.
 
 	max-size=n	the maximum object size in bytes this cache_dir
@@ -3489,10 +3470,6 @@ DOC_START
 
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
-
-	Note for coss, max-size must be less than COSS_MEMBUF_SZ,
-	which can be changed with the --with-coss-membuf-size=N configure
-	option.
 
 NOCOMMENT_START
 
