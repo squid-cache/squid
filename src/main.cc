@@ -804,7 +804,7 @@ mainReconfigureFinish(void *)
     if (oldWorkers != Config.workers) {
         debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
                oldWorkers << " to " << Config.workers <<
-               ") is not supported and ignored");
+               ") requires a full restart. It has been ignored by reconfigure.");
         Config.workers = oldWorkers;
     }
 
