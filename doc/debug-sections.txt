@@ -89,7 +89,6 @@ section 46    Access Log - Squid ICAP Logging
 section 46    Access Log - Squid format
 section 46    Access Log - Squid referer format
 section 46    Access Log - Squid useragent format
-section 47    Store COSS Directory Routines
 section 47    Store Directory Routines
 section 48    Persistent Connections
 section 49    SNMP Interface
@@ -128,7 +127,6 @@ section 78    DNS lookups; interacts with lib/rfc1035.c
 section 79    Disk IO Routines
 section 79    Squid-side DISKD I/O functions.
 section 79    Squid-side Disk I/O functions.
-section 79    Storage Manager COSS Interface
 section 79    Storage Manager UFS Interface
 section 79   Disk IO Routines
 section 80    WCCP Support

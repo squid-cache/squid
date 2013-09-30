@@ -70,7 +70,7 @@
  * configure will take a list of storage types through the
  * --enable-store-io parameter. This parameter takes a list of
  * space seperated storage types. For example,
- * --enable-store-io="ufs coss" .
+ * --enable-store-io="ufs aufs" .
  *
  \par
  * Each storage type must create an archive file
