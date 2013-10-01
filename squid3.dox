@@ -1266,7 +1266,6 @@ PREDEFINED             = __cplusplus \
                          USE_CLASSFUL \
                          USE_DELAY_POOLS \
                          USE_DLMALLOC \
-                         USE_DNSHELPER \
                          USE_EPOLL \
                          USE_GNUREGEX \
                          USE_HEXDUMP \

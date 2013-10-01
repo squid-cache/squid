@@ -901,9 +901,6 @@ static void
 mainRotate(void)
 {
     icmpEngine.Close();
-#if USE_DNSHELPER
-    dnsShutdown();
-#endif
     redirectShutdown();
 #if USE_AUTH
     authenticateRotate();
@@ -918,9 +915,6 @@ mainRotate(void)
     icapLogRotate();               /*icap.log*/
 #endif
     icmpEngine.Open();
-#if USE_DNSHELPER
-    dnsInit();
-#endif
     redirectInit();
 #if USE_AUTH
     authenticateInit(&Auth::TheConfig);

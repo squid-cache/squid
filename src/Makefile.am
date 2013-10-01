@@ -8,15 +8,8 @@ include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-if ENABLE_DNSHELPER
-DNSSOURCE = dns.cc
-DNSHELPER = dnsserver
-else
-DNSSOURCE = dns_internal.cc
-DNSHELPER =
-endif
-
-DNSSOURCE += \
+DNSSOURCE = \
+	dns_internal.cc \
 	SquidDns.h \
 	DnsLookupDetails.h \
 	DnsLookupDetails.cc
@@ -192,7 +185,6 @@ noinst_LTLIBRARIES = libsquid.la
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
 	unlinkd \
-	dnsserver \
 	recv-announce \
 	tests/testUfs \
 	tests/testRock \
@@ -211,7 +203,6 @@ bin_PROGRAMS =
 
 
 libexec_PROGRAMS = \
-	$(DNSHELPER) \
 	$(DISK_PROGRAMS) \
 	$(UNLINKD)
 
@@ -566,11 +557,6 @@ EXTRA_squid_SOURCES = \
 	$(all_AUTHMODULES) \
 	ConfigOption.h \
 	$(DELAY_POOL_ALL_SOURCE) \
-	dns.cc \
-	dnsserver.cc \
-	dns_internal.cc \
-	DnsLookupDetails.cc \
-	DnsLookupDetails.h \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \
@@ -691,12 +677,6 @@ INCLUDES += $(KRB5INCS)
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
-## dnsserver is a standalone helper. Do not link to any internal libraries
-dnsserver_SOURCES = dnsserver.cc
-dnsserver_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
@@ -921,7 +901,6 @@ DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
 DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
-DEFAULT_DNSSERVER	= $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_SSL_CRTD	= $(libexecdir)/`echo ssl_crtd  | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
 DEFAULT_CACHE_LOG	= $(DEFAULT_LOG_PREFIX)/cache.log
@@ -1003,7 +982,6 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
-	-e "s%[@]DEFAULT_DNSSERVER[@]%$(DEFAULT_DNSSERVER)%g" \
 	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
 	-e "s%[@]DEFAULT_UNLINKD[@]%$(DEFAULT_UNLINKD)%g" \
 	-e "s%[@]DEFAULT_PINGER[@]%$(DEFAULT_PINGER)%g" \
