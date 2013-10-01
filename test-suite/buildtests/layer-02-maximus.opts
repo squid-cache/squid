@@ -77,7 +77,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-leakfinder \
 	--enable-follow-x-forwarded-for \
 	--enable-ident-lookups \
-	--enable-internal-dns \
 	--enable-default-hostsfile \
 	--enable-auth \
 	--enable-basic-auth-helpers \

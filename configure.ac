@@ -1653,21 +1653,6 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-squid_opt_use_dnshelper="no"
-AC_ARG_ENABLE(internal-dns,
-  AS_HELP_STRING([--disable-internal-dns],
-           [Prevents Squid from directly sending and receiving DNS messages, 
-            and instead enables the old external 'dnsserver' processes.]), [
-  if test "x$enableval" = "xno" ; then
-    AC_MSG_WARN([Disabling Internal DNS queries])
-    squid_opt_use_dnshelper="yes"
-  fi
-])
-SQUID_DEFINE_BOOL(USE_DNSHELPER,$squid_opt_use_dnshelper,
-  [Use dnsserver processes instead of the internal DNS protocol support])
-AM_CONDITIONAL([ENABLE_DNSHELPER],[test "x$squid_opt_use_dnshelper" = "xyes" ])
-
-
 AM_CONDITIONAL(USE_SSL_CRTD, false)
 AC_ARG_ENABLE(ssl-crtd,
   AC_HELP_STRING([--enable-ssl-crtd],
@@ -2474,8 +2459,6 @@ AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
-AC_SEARCH_LIBS([res_init],[resolv])
-AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
@@ -3047,8 +3030,6 @@ AC_CHECK_FUNCS(\
 	regcomp \
 	regexec \
 	regfree \
-	res_init \
-	__res_init \
 	rint \
 	sbrk \
 	sched_getaffinity \
@@ -3314,11 +3295,6 @@ SQUID_DETECT_TCP_RECV_BUFSIZE
 SQUID_CHECK_RECV_ARG_TYPE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
-
-if test "x$squid_opt_use_dnshelper" = "xyes"; then
-  SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
-  SQUID_CHECK_RESOLVER_FIELDS
-fi
 
 if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
   SQUID_CHECK_WORKING_STATVFS
