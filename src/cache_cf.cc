@@ -197,9 +197,7 @@ static void parseBytesLine(size_t * bptr, const char *units);
 #if USE_SSL
 static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
 #endif
-#if !USE_DNSHELPER
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
-#endif
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
@@ -691,11 +689,6 @@ configDoConfigure(void)
     else
         visible_appname_string = (char const *)APP_FULLNAME;
 
-#if USE_DNSHELPER
-    if (Config.dnsChildren.n_max < 1)
-        fatal("No DNS helpers allocated");
-#endif
-
     if (Config.Program.redirect) {
         if (Config.redirectChildren.n_max < 1) {
             Config.redirectChildren.n_max = 0;
@@ -761,9 +754,6 @@ configDoConfigure(void)
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
-#if USE_DNSHELPER
-    requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
-#endif
 #if USE_UNLINKD
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
@@ -1185,7 +1175,6 @@ parseBytesLine(size_t * bptr, const char *units)
     }
 }
 
-#if !USE_DNSHELPER
 static void
 parseBytesLineSigned(ssize_t * bptr, const char *units)
 {
@@ -1232,7 +1221,6 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
         self_destruct();
     }
 }
-#endif
 
 /**
  * Parse bytes from a string.
@@ -3064,7 +3052,6 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
-#if !USE_DNSHELPER
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
@@ -3085,7 +3072,6 @@ free_time_msec(time_msec_t * var)
 {
     *var = 0;
 }
-#endif
 
 #if UNUSED_CODE
 static void
@@ -3101,13 +3087,11 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
-#if !USE_DNSHELPER
 static void
 dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
-#endif
 
 #if UNUSED_CODE
 static void
@@ -3145,13 +3129,11 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
-#if !USE_DNSHELPER
 static void
 parse_b_ssize_t(ssize_t * var)
 {
     parseBytesLineSigned(var, B_BYTES_STR);
 }
-#endif
 
 #if UNUSED_CODE
 static void
@@ -3179,13 +3161,11 @@ free_size_t(size_t * var)
     *var = 0;
 }
 
-#if !USE_DNSHELPER
 static void
 free_ssize_t(ssize_t * var)
 {
     *var = 0;
 }
-#endif
 
 static void
 free_b_int64_t(int64_t * var)

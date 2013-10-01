@@ -14,14 +14,6 @@
 #endif
 
 /*
- * res_init() is just a macro re-definition of __res_init on Linux (Debian/Ubuntu)
- */
-#if !defined(HAVE_RES_INIT) && defined(HAVE___RES_INIT) && !defined(res_init)
-#define res_init  __res_init
-#define HAVE_RES_INIT  HAVE___RES_INIT
-#endif
-
-/*
  * sys/capability.h is only needed in Linux apparently.
  *
  * HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc

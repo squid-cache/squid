@@ -8205,52 +8205,10 @@ DOC_START
 	This check is performed only when check_hostnames is set to on.
 DOC_END
 
-NAME: cache_dns_program
-TYPE: string
-IFDEF: USE_DNSHELPER
-DEFAULT: @DEFAULT_DNSSERVER@
-LOC: Config.Program.dnsserver
-DOC_START
-	Specify the location of the executable for dnslookup process.
-DOC_END
-
-NAME: dns_children
-TYPE: HelperChildConfig
-IFDEF: USE_DNSHELPER
-DEFAULT: 32 startup=1 idle=1
-LOC: Config.dnsChildren
-DOC_START
-	The maximum number of processes spawn to service DNS name lookups.
-	If you limit it too few Squid will have to wait for them to process
-	a backlog of requests, slowing it down. If you allow too many they
-	will use RAM and other system resources noticably.
-	The maximum this may be safely set to is 32.
-	
-	The startup= and idle= options allow some measure of skew in your
-	tuning.
-	
-		startup=
-	
-	Sets a minimum of how many processes are to be spawned when Squid
-	starts or reconfigures. When set to zero the first request will
-	cause spawning of the first child process to handle it.
-	
-	Starting too few will cause an initial slowdown in traffic as Squid
-	attempts to simultaneously spawn enough processes to cope.
-	
-		idle=
-	
-	Sets a minimum of how many processes Squid is to try and keep available
-	at all times. When traffic begins to rise above what the existing
-	processes can handle this many more will be spawned up to the maximum
-	configured. A minimum setting of 1 is required.
-DOC_END
-
 NAME: dns_retransmit_interval
 TYPE: time_msec
 DEFAULT: 5 seconds
 LOC: Config.Timeout.idns_retransmit
-IFDEF: !USE_DNSHELPER
 DOC_START
 	Initial retransmit interval for DNS queries. The interval is
 	doubled each time all configured DNS servers have been tried.
@@ -8260,7 +8218,6 @@ NAME: dns_timeout
 TYPE: time_msec
 DEFAULT: 30 seconds
 LOC: Config.Timeout.idns_query
-IFDEF: !USE_DNSHELPER
 DOC_START
 	DNS Query timeout. If no response is received to a DNS query
 	within this time all DNS servers for the queried domain
@@ -8272,7 +8229,6 @@ TYPE: b_ssize_t
 DEFAULT_DOC: EDNS disabled
 DEFAULT: none
 LOC: Config.dns.packet_max
-IFDEF: !USE_DNSHELPER
 DOC_START
 	Maximum number of bytes packet size to advertise via EDNS.
 	Set to "none" to disable EDNS large packet support.
@@ -8390,7 +8346,6 @@ NAME: ignore_unknown_nameservers
 TYPE: onoff
 LOC: Config.onoff.ignore_unknown_nameservers
 DEFAULT: on
-IFDEF: !USE_DNSHELPER
 DOC_START
 	By default Squid checks that DNS responses are received
 	from the same IP addresses they are sent to.  If they
@@ -8403,7 +8358,6 @@ NAME: dns_v4_first
 TYPE: onoff
 DEFAULT: off
 LOC: Config.dns.v4_first
-IFDEF: !USE_DNSHELPER
 DOC_START
 	With the IPv6 Internet being as fast or faster than IPv4 Internet
 	for most networks Squid prefers to contact websites over IPv6.
