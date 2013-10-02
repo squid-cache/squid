@@ -7,7 +7,7 @@
 # by the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# The ldap_manager library is distributed in the hope that it will be useful,
+# Distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Library General Public License for more details.
@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-# See LICENSE or http://www.gnu.org/licenses/gpl.html for details .
+# See COPYING or http://www.gnu.org/licenses/gpl.html for details.
 #
 
 
