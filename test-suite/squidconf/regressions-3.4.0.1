@@ -12,7 +12,8 @@
 #	false-positive quoted-string token
 #
 
-external_acl_type LdapGroup children-max=30 children-startup=10 concurrency=0 ttl=600 negative_ttl=10 grace=0 protocol=2.5 %LOGIN \
+external_acl_type LdapGroup children-max=30 children-startup=10 
+concurrency=0 ttl=600 negative_ttl=10 grace=0 protocol=2.5 %SRC \
   /bin/true -v 3 -h 127.0.0.1 -b "o=A,c=INVALID" -B "org=borken?,ou=People,o=A,c=INVALID" -f "(&(cn=%g)(memberUid=%u))" \
   -F "(&(objectClass=account)(uid=%s))" -s sub 
 
