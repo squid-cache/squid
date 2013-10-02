@@ -14,7 +14,9 @@ LDADD = \
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
 
-EXTRA_DIST = testheaders.sh
+EXTRA_DIST = \
+	$(srcdir)/squidconf/* \
+	testheaders.sh
 
 ESI_ALL_TESTS = \
 	ESIExpressions
