@@ -102,11 +102,9 @@ extern "C" {
 
 char *gethost_name(void);
 
-static const char *LogTime(void);
-
 static const unsigned char ntlmProtocol[] = {'N', 'T', 'L', 'M', 'S', 'S', 'P', 0};
 
-static const char *
+inline const char *
 LogTime()
 {
     struct tm *tm;
