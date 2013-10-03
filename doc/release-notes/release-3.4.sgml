@@ -177,7 +177,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Multicast DNS
-<p>The internal DNS component fof Squid now supports multicast DNS (mDNS) resolution in
+<p>The internal DNS component of Squid now supports multicast DNS (mDNS) resolution in
     accordance with RFC 6762.
 
 <p>The <em>dns_multicast_local</em> directive must be set to <em>on</em> to enable this
@@ -218,7 +218,9 @@ This section gives a thorough account of those changes in three categories:
 <descrip>
 	<tag>configuration_includes_quoted_values</tag>
 	<p>Whether Squid supports directive parameters with spaces, quotes, and other
-	   special characters. Surround such parameters with "double quotes".
+	   special characters. Surround such parameters with "double quotes" and
+	   also set this directive on/off around the relevant squid.conf line(s)
+	   making use of such quoting.
 
 	<tag>dns_multicast_local</tag>
 	<p>Use multicast DNS for <em>.local</em> domains and reverse-DNS resolution.
@@ -376,6 +378,13 @@ This section gives an account of those changes in three categories:
 	   helper options use --disable-* to prevent any helpers building and
 	   omit to get all helper auto-detected.
 	<p>Currenly only a helper using <em>file</em> for backend is provided.
+
+	<tag>--disable-arch-native</tag>
+	<p>New option to disable use of -march=native compiler flag.
+	<p>The new flag auto-enables CPU-specific optimizations in GCC and is
+	  required by Clang++ v3.2 for correct 64-bit environment detection.
+	  It does not always work well however, so this build option is provided
+	  to remove it when necessary.
 
 	<tag>--with-nat-devpf</tag>
 	<p>New option to alter the behaviour of <em>http_port ... intercept</em> option
