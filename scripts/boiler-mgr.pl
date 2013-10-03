@@ -198,7 +198,7 @@ sub readFile() {
 	return $code;
 }
 
-sub writeFile {
+sub writeFile() {
 	my ($fname, $code) = @_;
 	open(OF, ">$fname") or die("cannot open $fname for writing: $!, stopped");
 
@@ -244,20 +244,20 @@ sub digestable() {
 }
 
 # removes all opening whitespace
-sub trimL {
+sub trimL() {
 	my ($code) = @_;
 	$code =~ s/^\n[\n\s]*//s;
 	return $code;
 }
 
 # removes all trailing whitespace
-sub trimR {
+sub trimR() {
 	my ($code) = @_;
 	$code =~ s/\n[\n\s]*$//s;
 	return $code;
 }
 
-sub Warn {
+sub Warn() {
 	my ($msg, $context) = @_;
 
 	if (defined $context) {
