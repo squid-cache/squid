@@ -35,9 +35,22 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
-# Clang 3.2 on some CPUs requires -march-native to detect correctly
-# GCC 4.3+ can also produce faster executables when its used
-SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+# Clang 3.2 on some CPUs requires -march-native to detect correctly.
+# GCC 4.3+ can also produce faster executables when its used.
+# But building inside a virtual machine environment has been found to
+# cause random Illegal Instruction errors due to mis-detection of CPU.
+AC_ARG_ENABLE(arch-native,
+  AS_HELP_STRING([--disable-arch-native],[Some compilers offer CPU-specific
+                 optimizations with the -march=native parameter.
+                 This flag disables the optimization. The default is to
+                 auto-detect compiler support and use where available.]), [
+  SQUID_YESNO([$enableval],
+    [Unrecognized argument to --disable-arch-native: $enableval])
+])
+AC_MSG_NOTICE([CPU -march=native optimization enabled: ${enable_arch_native:=auto}])
+if test "x${enable_arch_native}" != "xno"; then
+  SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+fi
 
 # might be cross-compiling.
 if test "x$HOSTCXX" = "x"; then
