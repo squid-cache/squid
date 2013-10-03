@@ -30,17 +30,48 @@ my $reDebug = qr{
 # Copyright-related claims inside a boilerplate comment
 my $reClaims = qr{
 	(
-		(?:AUTHOR\b|				# either author 
-		 COPYRIGHT\b(?!\sfile))		# or copyright (except "COPYRIGHT file")
+		(?:
+		 AUTHOR\b(?:.|\n)*?\*[/\s]*$|	# all authors until an "empty" line
+		 ORIGINAL\s+AUTHOR\b|	# or not the latest author
+		 COPYRIGHT\b(?!\sfile)|	# or copyright (except "COPYRIGHT file")
+		 Portions\scopyright|	# or partial copyright
+		 (?<!Squid.is.Copyrighted.)\(C\)\s|	# or (C) (except "Squid is ...")
+		 Based.upon.original.+code.by\s*\n|	# or this common pearl
+		 Modified\sby\s|		# or this
+		 BASED\sON:\s			# or this
+		)		
 		.*?							# and the claim content itself
-	 )$
+	)$
 }xmi;
 
-# The most common GPL text
+# removes common claim prefixes to minimize claim noise
+my $reClaimPrefix = qr{
+	(?:ORIGINAL\s)?AUTHOR:?|
+	based\son\s|
+	based\supon\s
+}xi;
+
+# inspirations are not copyright claims but should be preserved
+my $reInspiration = qr/^[\s*]*(inspired by previous work.*?)$/mi;
+
+# The most common GPL text, with some address variations.
 my $strGpl = 
-	"This program is free software; you can redistribute it and/or modify.*?".
-	"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.";
+	"This program is free software; you can redistribute it and/or modify".
+	"([^*]|[*][^/])+". # not a /* comment */ closure
+	"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA\\s+02111(-\\d+)?, USA\.";
 my $reGpl = qr{$strGpl}s;
+
+# Two most common Squid (C) statements.
+my $strSqCopyStart1 =
+	"SQUID Web Proxy Cache\\s+http://www.squid-cache.org/";
+my $strSqCopyStart2 =
+	"SQUID Internet Object Cache\\s+http://squid.nlanr.net/Squid/";
+my $strSqCopyEnd =
+	"([^*]|[*][^/])+".
+	"numerous individuals".
+	"([^*]|[*][^/])+".
+	"file for full details.";
+my $reSquidCopy = qr{($strSqCopyStart1|$strSqCopyStart2)$strSqCopyEnd}s;
 
 
 my $FileName; # for Warn()ings
@@ -67,48 +98,55 @@ foreach my $fname (@FileNames) {
 			# A single line comment is not a boilerplate.
 		} elsif ($beforeComment =~ m/\#include/) {
 			# A comment after include is not a boilerplate.
-		} elsif ($comment =~ m/numerous individuals/) {
-			$boiler = $comment;
 		} elsif ($comment =~ m@^/\*\*\s@){
 			# A Doxygen comment is not a boilerplate.
 		} elsif ($comment =~ m/internal declarations|stub file|unit test/i) {
 			# These relatively common comments are not boilerplates.
+		} elsif (&digestable($comment)) {
+			# Something we can safely replace.
+			$boiler = $comment;
 		} else {
-			my $tmp = $comment;
-			# Remove common text to detect an otherwise empty boilerplate.
-			$tmp =~ s/$reDebug//;
-			$tmp =~ s/$reGpl//;
-			$tmp =~ s/$reClaims//g;
-			$tmp =~ s/^[\s*]*(Created on.*?)$//mig;
-			if ($tmp =~ m@[^\s*/]@) { # not empty
-				&Warn("Unrecognized boilerplate, skipping:", $comment);
-				next;
-			} else {
-				# This is an empty boiler.
-				$boiler = $comment;
-			}
+			&Warn("Unrecognized boilerplate, skipping:", $comment);
+			next;
 		}
 	}
 
 	if (defined $boiler) {
-		my $debugStr = '';
+
+		my $extras = ''; # DEBUG section, inspired by ..., etc.
+
 		if ($boiler =~ m/$reDebug/) {
-			my $debug = $1;
-			$debugStr = "/* $debug */\n\n";
+			$extras .= "/* $1 */\n\n";
 		}
 
-		my @claims = ($boiler =~ m/$reClaims/g);
-		if (my @newClaims = grep { !exists $ReportedClaims{$_} } @claims) {
-			&Warn("New claim(s) found.");
-			foreach my $claim (@newClaims) {
-				warn("Claim: $claim\n");
+		if ($boiler =~ m/$reInspiration/) {
+			$extras .= "/* $1 */\n\n";
+		}
+
+		if (my @rawClaims = ($boiler =~ m/$reClaims/g)) {
+			my @claims = map { &claimList($_) } @rawClaims;
+			my $count = 0;
+			foreach my $claim (@claims) {
+				$claim =~ s/\n+/ /gs;		# streamline multiline claims
+				$claim =~ s@\*/?@ @g;		# clean comment leftovers
+				$claim =~ s/$reClaimPrefix/ /g; # remove common prefixes
+				$claim =~ s/\s\s+/ /gs;		# clean excessive whitespace
+				$claim =~ s/^\s+|\s+$//gs;	# remove excessive whitespace
+				next unless length $claim;
+				next if exists $ReportedClaims{$claim};
+				&Warn("Found new claim(s).") unless $count++;
+				print(STDERR "Claim: $claim\n");
 				$ReportedClaims{$claim} = $fname;
 			}
 		}
 
-		$code =~ s/$reComment//;
+		$code =~ s/$reComment// or
+			die("internal error: failed to remove expected comment, stopped");
+		&digestable($&) or
+			die("internal error: unsafe comment removal, stopped");
+
 		$code = &trimL($code);
-		$code = $CorrectBoiler . $debugStr . $code;
+		$code = $CorrectBoiler . $extras . $code;
 	} else {
 		# Some files have license declarations way down in the code.
 		my $license = 
@@ -157,6 +195,42 @@ sub writeFile {
 	close(OF) or die("cannot finish updating $fname: $!, stopped");
 }
 
+# split multiclaim claims into an array of single claims
+sub claimList() {
+	my $multiClaim = shift;
+
+	$multiClaim =~ s/$reDebug//g; # may pretend to continue AUTHORs list
+	$multiClaim =~ s/$reInspiration//g; # does not affect (C) claims
+
+	# remove \n that is not used to separate two claims
+	$multiClaim =~ s/(Based.upon.original.+code.by\s*)\n/$1 /g;
+
+	return split(/\n/, $multiClaim);
+	# return grep { /\S/ } split($reClaimSplitter, $multiClaim);
+}
+
+# checks whether a comment contains nothing but the stuff we can either
+# safely remove, replace, or move (e.g., DEBUG sections and copyright claims)
+sub digestable() {
+	my $comment = shift;
+
+	# Remove common text to detect an otherwise empty boilerplate.
+	$comment =~ s/$reDebug//;
+	$comment =~ s/$reClaims//g;
+	$comment =~ s/^[\s*]*(Created on.*?)$//mig;
+	$comment =~ s/^[\s*]*(Windows support\s*)$//mig;
+	$comment =~ s/^[\s*]*(History added by .*)$//mig;
+	$comment =~ s/$reGpl//;
+	$comment =~ s/$reSquidCopy//;
+	$comment =~ s/$reInspiration//g;
+	$comment =~ s/\* Stubs for.*?$//m; # e.g., Stubs for calls to stuff defined in...
+	$comment =~ s/\$Id(:.*)?\$//g; # CVS tags
+	$comment =~ s/-{60,}//g; # decorations such as -----------...---------
+	$comment =~ s/\b\w+\.(h|c|cc|cci)\b//; # Next to last step: a file name.
+	$comment =~ s@[\s*/]@@sg; # Last step: whitespace and comment characters.
+	return !length($comment);
+}
+
 # removes all opening whitespace
 sub trimL {
 	my ($code) = @_;
@@ -173,9 +247,17 @@ sub trimR {
 
 sub Warn {
 	my ($msg, $context) = @_;
-	$context = substr($context, 0, 1000) if defined $context;
-	$context .= "\n\n" if defined $context;
-	$context = '' unless defined $context;
+
+	if (defined $context) {
+		my $MaxLen = 1000;
+		$context =~ s/$reGpl/... [GPL] .../;
+		$context =~ s/$reSquidCopy/... [Standard Squid "numerous individuals" text] .../;
+		$context = substr($context, 0, $MaxLen);
+		$context = &trimR($context);
+		$context .= "\n\n";
+	} else {
+		$context = '';
+	}
 	$msg = sprintf("%s: WARNING: %s\n%s", $FileName, $msg, $context) if defined $FileName;
 	warn($msg);
 }
