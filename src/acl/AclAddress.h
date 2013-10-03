@@ -1,6 +1,3 @@
-#ifndef ACLADDRESS_H_
-#define ACLADDRESS_H_
-#include "Acl.h"
 /*
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,6 +26,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
+#ifndef ACLADDRESS_H_
+#define ACLADDRESS_H_
+#include "Acl.h"
 #include "ip/Address.h"
 #include "acl/Acl.h"
 

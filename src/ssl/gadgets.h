@@ -1,7 +1,3 @@
-/*
- * 2009/01/17
- */
-
 #ifndef SQUID_SSL_GADGETS_H
 #define SQUID_SSL_GADGETS_H
 

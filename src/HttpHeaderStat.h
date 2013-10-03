@@ -1,6 +1,4 @@
 /*
- * HttpHeaderStat.h
- *
  *  Created on: Dec 9, 2011
  *      Author: kinkie
  */
