@@ -58,7 +58,7 @@ my $reInspiration = qr/^[\s*]*(inspired by previous work.*?)$/mi;
 my $strGpl = 
 	"This program is free software; you can redistribute it and/or modify".
 	"([^*]|[*][^/])+". # not a /* comment */ closure
-	"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA\\s+02111(-\\d+)?, USA\.";
+	"Foundation, Inc., [^\\n]+MA\\s+[-\\d]+, USA\\.";
 my $reGpl = qr{$strGpl}s;
 
 # Two most common Squid (C) statements.
@@ -76,6 +76,7 @@ my $reSquidCopy = qr{($strSqCopyStart1|$strSqCopyStart2)$strSqCopyEnd}s;
 
 my $FileName; # for Warn()ings
 my %ReportedClaims; # to minimize noise in claims reporting
+$| = 1; # report claims ASAP (but on STDOUT)
 
 # process each file in-place; do not touch files on known failures
 foreach my $fname (@FileNames) {
@@ -96,8 +97,9 @@ foreach my $fname (@FileNames) {
 		# Is the matched comment a boilerplate?
 		if ($comment !~ m/\n/) {
 			# A single line comment is not a boilerplate.
-		} elsif ($beforeComment =~ m/\#include/) {
-			# A comment after include is not a boilerplate.
+		} elsif ($beforeComment =~ m/^\s*\#\s*include\s+(?!"squid.h")/m) {
+			# A comment after include is not a boilerplate,
+			# but we make an exception for #include "squid.h" common in lib/
 		} elsif ($comment =~ m@^/\*\*\s@){
 			# A Doxygen comment is not a boilerplate.
 		} elsif ($comment =~ m/internal declarations|stub file|unit test/i) {
@@ -111,10 +113,9 @@ foreach my $fname (@FileNames) {
 		}
 	}
 
+	my $extras = ''; # DEBUG section, inspired by ..., etc.
+
 	if (defined $boiler) {
-
-		my $extras = ''; # DEBUG section, inspired by ..., etc.
-
 		if ($boiler =~ m/$reDebug/) {
 			$extras .= "/* $1 */\n\n";
 		}
@@ -134,33 +135,33 @@ foreach my $fname (@FileNames) {
 				$claim =~ s/^\s+|\s+$//gs;	# remove excessive whitespace
 				next unless length $claim;
 				next if exists $ReportedClaims{$claim};
-				&Warn("Found new claim(s).") unless $count++;
-				print(STDERR "Claim: $claim\n");
+				print("$fname: INFO: Found new claim(s):\n") unless $count++;
+				print("Claim: $claim\n");
 				$ReportedClaims{$claim} = $fname;
 			}
 		}
 
-		$code =~ s/$reComment// or
+		$code =~ s/\s*$reComment\s*/\n\n/ or
 			die("internal error: failed to remove expected comment, stopped");
 		&digestable($&) or
 			die("internal error: unsafe comment removal, stopped");
 
-		$code = &trimL($code);
-		$code = $CorrectBoiler . $extras . $code;
-	} else {
+	} else { # no boilerplate found
+
 		# Some files have license declarations way down in the code.
-		my $license = 
+		my $license =
+			"Copyright|".
 			"This program is free software|".
-			"Permission to use, copy, modify|".
-			"Redistribution and use in source and binary forms";
-		if ($code =~ m@($license).*?\*/@s) {
-			&Warn("Suspected boilerplate in unusual location, skipping.", $`.$&);
+			"Permission to use|".
+			"Redistribution and use";
+		if ($code =~ m@/\*.*?($license).*?\*/@is) {
+			&Warn("Suspected boilerplate in an unusual location, skipping.", $`.$&);
 			next;
 		}
-		&Warn("Cannot find old boilerplate, adding new boilerplate.", $code);
-		$code = $CorrectBoiler . $code;
+		#&Warn("Cannot find old boilerplate, adding new boilerplate.", $code);
 	}
 
+	$code = $CorrectBoiler . $extras . &trimL($code);
 	&writeFile($fname, $code) unless $code eq $virginCode;
 	undef $FileName;
 }
@@ -234,14 +235,14 @@ sub digestable() {
 # removes all opening whitespace
 sub trimL {
 	my ($code) = @_;
-	$code =~ s/^\n[\n\s]*//m;
+	$code =~ s/^\n[\n\s]*//s;
 	return $code;
 }
 
 # removes all trailing whitespace
 sub trimR {
 	my ($code) = @_;
-	$code =~ s/\n[\n\s]*$//m;
+	$code =~ s/\n[\n\s]*$//s;
 	return $code;
 }
 
