@@ -2453,6 +2453,9 @@ DOC_START
 	Without this option, all server certificate validation errors
 	terminate the transaction to protect Squid and the client.
 
+	SQUID_X509_V_ERR_INFINITE_VALIDATION error cannot be bypassed
+	but should not happen unless your OpenSSL library is buggy.
+
 	SECURITY WARNING:
 		Bypassing validation errors is dangerous because an
 		error usually implies that the server cannot be trusted
@@ -3133,7 +3136,7 @@ DOC_START
 DOC_END
 
 NAME: forward_max_tries
-DEFAULT: 10
+DEFAULT: 25
 TYPE: int
 LOC: Config.forward_max_tries
 DOC_START
@@ -8329,6 +8332,19 @@ DOC_START
 	Squid to handle single-component names, enable this option.
 DOC_END
 
+NAME: dns_multicast_local
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+DEFAULT_DOC: Search for .local and .arpa names is disabled.
+LOC: Config.onoff.dns_mdns
+DOC_START
+	When set to on, Squid sends multicast DNS lookups on the local
+	network for domains ending in .local and .arpa.
+	This enables local servers and devices to be contacted in an
+	ad-hoc or zero-configuration network environment.
+DOC_END
+
 NAME: dns_nameservers
 TYPE: wordlist
 DEFAULT: none
@@ -8466,8 +8482,8 @@ COMMENT_END
 
 NAME: configuration_includes_quoted_values
 COMMENT: on|off
-TYPE: onoff
-DEFAULT: on
+TYPE: configuration_includes_quoted_values
+DEFAULT: off
 LOC: ConfigParser::RecognizeQuotedValues
 DOC_START
 	If set, Squid will recognize each "quoted string" after a configuration

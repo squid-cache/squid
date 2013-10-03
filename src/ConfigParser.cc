@@ -38,14 +38,19 @@
 #include "fatal.h"
 #include "globals.h"
 
-int ConfigParser::RecognizeQuotedValues = true;
+bool ConfigParser::RecognizeQuotedValues = true;
+bool ConfigParser::StrictMode = true;
 std::stack<ConfigParser::CfgFile *> ConfigParser::CfgFiles;
 ConfigParser::TokenType ConfigParser::LastTokenType = ConfigParser::SimpleToken;
-char *ConfigParser::LastToken = NULL;
-char *ConfigParser::CfgLine = NULL;
-char *ConfigParser::CfgPos = NULL;
+const char *ConfigParser::CfgLine = NULL;
+const char *ConfigParser::CfgPos = NULL;
+std::queue<char *> ConfigParser::CfgLineTokens_;
 std::queue<std::string> ConfigParser::Undo_;
 bool ConfigParser::AllowMacros_ = false;
+bool ConfigParser::ParseQuotedOrToEol_ = false;
+bool ConfigParser::PreviewMode_ = false;
+
+static const char *SQUID_ERROR_TOKEN = "[invalid token]";
 
 void
 ConfigParser::destruct()
@@ -75,13 +80,6 @@ ConfigParser::destruct()
 }
 
 void
-ConfigParser::TokenUndo()
-{
-    assert(LastToken);
-    Undo_.push(LastToken);
-}
-
-void
 ConfigParser::TokenPutBack(const char *tok)
 {
     assert(tok);
@@ -95,7 +93,8 @@ ConfigParser::Undo()
     if (!Undo_.empty()) {
         strncpy(undoToken, Undo_.front().c_str(), sizeof(undoToken));
         undoToken[sizeof(undoToken) - 1] = '\0';
-        Undo_.pop();
+        if (!PreviewMode_)
+            Undo_.pop();
         return undoToken;
     }
     return NULL;
@@ -113,21 +112,27 @@ ConfigParser::strtokFile()
     char *t;
     LOCAL_ARRAY(char, buf, CONFIG_LINE_LIMIT);
 
-    if ((LastToken = ConfigParser::Undo()))
-        return LastToken;
+    if ((t = ConfigParser::Undo()))
+        return t;
 
     do {
 
         if (!fromFile) {
             ConfigParser::TokenType tokenType;
-            t = ConfigParser::NextElement(tokenType, true);
+            t = ConfigParser::NextElement(tokenType);
             if (!t) {
                 return NULL;
-            } else if (tokenType == ConfigParser::QuotedToken) {
+            } else if (*t == '\"' || *t == '\'') {
                 /* quote found, start reading from file */
                 debugs(3, 8,"Quoted token found : " << t);
+                char *fn = ++t;
 
-                if ((wordFile = fopen(t, "r")) == NULL) {
+                while (*t && *t != '\"' && *t != '\'')
+                    ++t;
+
+                *t = '\0';
+
+                if ((wordFile = fopen(fn, "r")) == NULL) {
                     debugs(3, DBG_CRITICAL, "Can not open file " << t << " for reading");
                     return NULL;
                 }
@@ -138,7 +143,7 @@ ConfigParser::strtokFile()
 
                 fromFile = 1;
             } else {
-                return LastToken = t;
+                return t;
             }
         }
 
@@ -169,39 +174,80 @@ ConfigParser::strtokFile()
         /* skip blank lines */
     } while ( *t == '#' || !*t );
 
-    return LastToken = t;
+    return t;
 }
 
 char *
-ConfigParser::UnQuote(char *token, char **end)
+ConfigParser::UnQuote(const char *token, const char **next)
 {
+    const char *errorStr = NULL;
+    const char *errorPos = NULL;
     char quoteChar = *token;
     assert(quoteChar == '"' || quoteChar == '\'');
-    char  *s = token + 1;
-    /* scan until the end of the quoted string, unescaping " and \  */
-    while (*s && *s != quoteChar) {
-        if (*s == '\\' && isalnum(*( s + 1))) {
-            debugs(3, DBG_CRITICAL, "Unsupported escape sequence: " << s);
-            self_destruct();
+    LOCAL_ARRAY(char, UnQuoted, CONFIG_LINE_LIMIT);
+    const char  *s = token + 1;
+    char *d = UnQuoted;
+    /* scan until the end of the quoted string, handling escape sequences*/
+    while (*s && *s != quoteChar && !errorStr && (size_t)(d - UnQuoted) < sizeof(UnQuoted)) {
+        if (*s == '\\') {
+            s++;
+            switch (*s) {
+            case 'r':
+                *d = '\r';
+                break;
+            case 'n':
+                *d = '\n';
+                break;
+            case 't':
+                *d = '\t';
+                break;
+            default:
+                if (isalnum(*s)) {
+                    errorStr = "Unsupported escape sequence";
+                    errorPos = s;
+                }
+                *d = *s;
+                break;
+            }
+#if 0
         } else if (*s == '$' && quoteChar == '"') {
-            debugs(3, DBG_CRITICAL, "Unsupported cfg macro: " << s);
-            self_destruct();
+            errorStr = "Unsupported cfg macro";
+            errorPos = s;
+#endif
         } else if (*s == '%' && quoteChar == '"' && (!AllowMacros_ )) {
-            debugs(3, DBG_CRITICAL, "Macros are not supported here: " << s);
-            self_destruct();
-        } else if (*s == '\\') {
-            const char * next = s+1; // may point to 0
-            memmove(s, next, strlen(next) + 1);
-        }
+            errorStr = "Macros are not supported here";
+            errorPos = s;
+        } else
+            *d = *s;
         ++s;
+        ++d;
     }
 
-    if (*s != quoteChar) {
-        debugs(3, DBG_CRITICAL, "missing '" << quoteChar << "' at the end of quoted string: " << (s-1));
-        self_destruct();
+    if (*s != quoteChar && !errorStr) {
+        errorStr = "missing quote char at the end of quoted string";
+        errorPos = s - 1;
     }
-    *end = s;
-    return (token+1);
+    // The end of token
+    *d = '\0';
+
+    // We are expecting a separator after quoted string, space or one of "()#"
+    if (*(s + 1) != '\0' && !strchr(w_space "()#", *(s + 1)) && !errorStr) {
+        errorStr = "Expecting space after the end of quoted token";
+        errorPos = token;
+    }
+
+    if (errorStr) {
+        if (PreviewMode_)
+            strncpy(UnQuoted, SQUID_ERROR_TOKEN, sizeof(UnQuoted));
+        else {
+            debugs(3, DBG_CRITICAL, errorStr << ": " << errorPos);
+            self_destruct();
+        }
+    }
+
+    if (next)
+        *next = s + 1;
+    return UnQuoted;
 }
 
 void
@@ -209,63 +255,115 @@ ConfigParser::SetCfgLine(char *line)
 {
     CfgLine = line;
     CfgPos = line;
+    while (!CfgLineTokens_.empty()) {
+        char *token = CfgLineTokens_.front();
+        CfgLineTokens_.pop();
+        free(token);
+    }
 }
 
 char *
-ConfigParser::TokenParse(char * &nextToken, ConfigParser::TokenType &type, bool legacy)
+ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
 {
     if (!nextToken || *nextToken == '\0')
         return NULL;
     type = ConfigParser::SimpleToken;
     nextToken += strspn(nextToken, w_space);
-    if (*nextToken == '"' || *nextToken == '\'') {
+
+    if (*nextToken == '#')
+        return NULL;
+
+    if (ConfigParser::RecognizeQuotedValues && (*nextToken == '"' || *nextToken == '\'')) {
         type = ConfigParser::QuotedToken;
-        char *token = UnQuote(nextToken, &nextToken);
-        *nextToken = '\0';
-        ++nextToken;
+        char *token = xstrdup(UnQuote(nextToken, &nextToken));
+        CfgLineTokens_.push(token);
         return token;
     }
 
-    char *token = nextToken;
-    if (char *t = strchr(nextToken, '#'))
-        *t = '\0';
+    const char *tokenStart = nextToken;
     const char *sep;
-    if (legacy)
+    if (ConfigParser::ParseQuotedOrToEol_)
+        sep = "\n";
+    else if (!ConfigParser::RecognizeQuotedValues || *nextToken == '(')
         sep = w_space;
     else
         sep = w_space "(";
     nextToken += strcspn(nextToken, sep);
 
-    if (!legacy && *nextToken == '(')
-        type = ConfigParser::FunctionNameToken;
-    else
+    if (ConfigParser::RecognizeQuotedValues && *nextToken == '(') {
+        if (strncmp(tokenStart, "parameters", nextToken - tokenStart) == 0)
+            type = ConfigParser::FunctionParameters;
+        else {
+            if (PreviewMode_) {
+                char *err = xstrdup(SQUID_ERROR_TOKEN);
+                CfgLineTokens_.push(err);
+                return err;
+            } else {
+                debugs(3, DBG_CRITICAL, "Unknown cfg function: " << tokenStart);
+                self_destruct();
+            }
+        }
+    } else
         type = ConfigParser::SimpleToken;
 
-    if (*nextToken != '\0') {
-        *nextToken = '\0';
-        ++nextToken;
+    char *token = NULL;
+    if (nextToken - tokenStart) {
+        if (ConfigParser::StrictMode && type == ConfigParser::SimpleToken) {
+            bool tokenIsNumber = true;
+            for (const char *s = tokenStart; s != nextToken; ++s) {
+                const bool isValidChar = isalnum(*s) || strchr(".,()-=_/:", *s) ||
+                                         (tokenIsNumber && *s == '%' && (s + 1 == nextToken));
+
+                if (!isdigit(*s))
+                    tokenIsNumber = false;
+
+                if (!isValidChar) {
+                    if (PreviewMode_) {
+                        char *err = xstrdup(SQUID_ERROR_TOKEN);
+                        CfgLineTokens_.push(err);
+                        return err;
+                    } else {
+                        debugs(3, DBG_CRITICAL, "Not alphanumeric character '"<< *s << "' in unquoted token " << tokenStart);
+                        self_destruct();
+                    }
+                }
+            }
+        }
+        token = xstrndup(tokenStart, nextToken - tokenStart + 1);
+        CfgLineTokens_.push(token);
     }
 
-    if (*token == '\0')
-        return NULL;
+    if (*nextToken != '\0' && *nextToken != '#') {
+        ++nextToken;
+    }
 
     return token;
 }
 
 char *
-ConfigParser::NextElement(ConfigParser::TokenType &type, bool legacy)
+ConfigParser::NextElement(ConfigParser::TokenType &type)
 {
-    char *token = TokenParse(CfgPos, type, legacy);
+    const char *pos = CfgPos;
+    char *token = TokenParse(pos, type);
+    // If not in preview mode the next call of this method should start
+    // parsing after the end of current token.
+    // For function "parameters(...)" we need always to update current parsing
+    // position to allow parser read the arguments of "parameters(..)"
+    if (!PreviewMode_ || type == FunctionParameters)
+        CfgPos = pos;
+    // else next call will read the same token
     return token;
 }
 
 char *
 ConfigParser::NextToken()
 {
-    if ((LastToken = ConfigParser::Undo()))
-        return LastToken;
-
     char *token = NULL;
+    if ((token = ConfigParser::Undo())) {
+        debugs(3, 6, "TOKEN (undone): " << token);
+        return token;
+    }
+
     do {
         while (token == NULL && !CfgFiles.empty()) {
             ConfigParser::CfgFile *wordfile = CfgFiles.top();
@@ -273,6 +371,7 @@ ConfigParser::NextToken()
             if (!token) {
                 assert(!wordfile->isOpen());
                 CfgFiles.pop();
+                debugs(3, 4, "CfgFiles.pop " << wordfile->filePath);
                 delete wordfile;
             }
         }
@@ -280,7 +379,11 @@ ConfigParser::NextToken()
         if (!token)
             token = NextElement(LastTokenType);
 
-        if (token &&  LastTokenType == ConfigParser::FunctionNameToken && strcmp("parameters", token) == 0) {
+        if (token &&  LastTokenType == ConfigParser::FunctionParameters) {
+            //Disable temporary preview mode, we need to parse function parameters
+            const bool savePreview = ConfigParser::PreviewMode_;
+            ConfigParser::PreviewMode_ = false;
+
             char *path = NextToken();
             if (LastTokenType != ConfigParser::QuotedToken) {
                 debugs(3, DBG_CRITICAL, "Quoted filename missing: " << token);
@@ -290,6 +393,7 @@ ConfigParser::NextToken()
 
             // The next token in current cfg file line must be a ")"
             char *end = NextToken();
+            ConfigParser::PreviewMode_ = savePreview;
             if (LastTokenType != ConfigParser::SimpleToken || strcmp(end, ")") != 0) {
                 debugs(3, DBG_CRITICAL, "missing ')' after " << token << "(\"" << path << "\"");
                 self_destruct();
@@ -311,40 +415,70 @@ ConfigParser::NextToken()
             }
             CfgFiles.push(wordfile);
             token = NULL;
-        } else if (token &&  LastTokenType == ConfigParser::FunctionNameToken) {
-            debugs(3, DBG_CRITICAL, "Unknown cfg function: " << token);
-            self_destruct();
-            return NULL;
         }
     } while (token == NULL && !CfgFiles.empty());
 
-    return (LastToken = token);
+    return token;
+}
+
+char *
+ConfigParser::PeekAtToken()
+{
+    PreviewMode_ = true;
+    char *token = NextToken();
+    PreviewMode_ = false;
+    return token;
 }
 
 char *
 ConfigParser::NextQuotedOrToEol()
 {
-    char *token;
+    ParseQuotedOrToEol_ = true;
+    char *token = NextToken();
+    ParseQuotedOrToEol_ = false;
 
-    if ((token = CfgPos) == NULL) {
-        debugs(3, DBG_CRITICAL, "token is missing");
-        self_destruct();
-        return NULL;
+    // Assume end of current config line
+    // Close all open configuration files for this config line
+    while (!CfgFiles.empty()) {
+        ConfigParser::CfgFile *wordfile = CfgFiles.top();
+        CfgFiles.pop();
+        delete wordfile;
     }
-    token += strspn(token, w_space);
 
-    if (*token == '\"' || *token == '\'') {
-        //TODO: eat the spaces at the end and check if it is untill the end of file.
-        char *end;
-        token = UnQuote(token, &end);
-        *end = '\0';
-        CfgPos = end + 1;
-        LastTokenType = ConfigParser::QuotedToken;
-    } else
-        LastTokenType = ConfigParser::SimpleToken;
+    return token;
+}
 
-    CfgPos = NULL;
-    return (LastToken = token);
+char *
+ConfigParser::RegexStrtokFile()
+{
+    if (ConfigParser::RecognizeQuotedValues) {
+        debugs(3, DBG_CRITICAL, "Can not read regex expresion while configuration_includes_quoted_values is enabled");
+        self_destruct();
+    }
+    char * token = strtokFile();
+    return token;
+}
+
+char *
+ConfigParser::RegexPattern()
+{
+    if (ConfigParser::RecognizeQuotedValues) {
+        debugs(3, DBG_CRITICAL, "Can not read regex expresion while configuration_includes_quoted_values is enabled");
+        self_destruct();
+    }
+
+    char * token = NextToken();
+    return token;
+}
+
+char *
+ConfigParser::NextQuotedToken()
+{
+    const bool saveRecognizeQuotedValues = ConfigParser::RecognizeQuotedValues;
+    ConfigParser::RecognizeQuotedValues = true;
+    char *token = NextToken();
+    ConfigParser::RecognizeQuotedValues = saveRecognizeQuotedValues;
+    return token;
 }
 
 const char *
@@ -375,6 +509,7 @@ bool
 ConfigParser::CfgFile::startParse(char *path)
 {
     assert(wordFile == NULL);
+    debugs(3, 3, "Parsing from " << path);
     if ((wordFile = fopen(path, "r")) == NULL) {
         debugs(3, DBG_CRITICAL, "file :" << path << " not found");
         return false;
@@ -425,7 +560,12 @@ ConfigParser::CfgFile::parse(ConfigParser::TokenType &type)
 char *
 ConfigParser::CfgFile::nextElement(ConfigParser::TokenType &type)
 {
-    return TokenParse(parsePos, type);
+    const char *pos = parsePos;
+    char *token = TokenParse(pos, type);
+    if (!PreviewMode_ || type == FunctionParameters)
+        parsePos = pos;
+    // else next call will read the same token;
+    return token;
 }
 
 ConfigParser::CfgFile::~CfgFile()

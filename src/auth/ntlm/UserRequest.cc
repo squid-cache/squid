@@ -255,6 +255,13 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     case HelperReply::Okay: {
         /* we're finished, release the helper */
         const char *userLabel = reply.notes.findFirst("user");
+        if (!userLabel) {
+            auth_user_request->user()->credentials(Auth::Failed);
+            safe_free(lm_request->server_blob);
+            lm_request->releaseAuthServer();
+            debugs(29, DBG_CRITICAL, "ERROR: NTLM Authentication helper returned no username. Result: " << reply);
+            break;
+        }
         auth_user_request->user()->username(userLabel);
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);

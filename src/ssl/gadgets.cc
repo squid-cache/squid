@@ -410,7 +410,7 @@ static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
     serial = BN_bin2bn(md, n, NULL);
 
     // if the serial is "0" set it to '1'
-    if (BN_is_zero(serial))
+    if (BN_is_zero(serial) == true)
         BN_one(serial);
 
     // serial size does not exceed 20 bytes
