@@ -153,18 +153,23 @@ foreach my $fname (@FileNames) {
 			die("internal error: unsafe comment removal, stopped");
 
 	} else { # no boilerplate found
-
-		# Some files have license declarations way down in the code.
-		my $license =
-			"Copyright|".
-			"This program is free software|".
-			"Permission to use|".
-			"Redistribution and use";
-		if ($code =~ m@/\*.*?($license).*?\*/@is) {
-			&Warn("Suspected boilerplate in an unusual location, skipping.", $`.$&);
-			next;
-		}
 		#&Warn("Cannot find old boilerplate, adding new boilerplate.", $code);
+	}
+
+	# Some files have license declarations way down in the code so we may not
+	# find a boilerplate at all or find an "empty" boilerplate preceeding them.
+	my $license =
+		"Copyright|".
+		"This program is free software|".
+		"Permission to use|".
+		"Redistribution and use";
+	if ($code =~ m@/\*.*?($license).*?\*/@is) {
+		# If we replaced what we thought is an old boiler, do not use $` for
+		# context because it is based on modified $code and will often mislead.
+		my $context = defined $boiler ? $& : ($` . $&);
+		&Warn("Suspected boilerplate in an unusual location, skipping.",
+			  $context);
+		next;
 	}
 
 	$code = $CorrectBoiler . $extras . &trimL($code);
