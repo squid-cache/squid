@@ -1612,6 +1612,8 @@ dnsInit(void)
 #endif
 
         debugs(78, DBG_IMPORTANT, "or use the 'dns_nameservers' option in squid.conf.");
+        if (Ip::EnableIpv6)
+            idnsAddNameserver("::1");
         idnsAddNameserver("127.0.0.1");
     }
 
