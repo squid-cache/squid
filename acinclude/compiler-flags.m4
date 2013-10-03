@@ -170,8 +170,8 @@ AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
    squid_cv_cc_arg_pipe=""
    ;;
   clang) 
-   squid_cv_cxx_option_werror="-Werror -Wno-error=parentheses-equality -Qunused-arguments"
-   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror" 
+   squid_cv_cxx_option_werror="-Werror -Qunused-arguments"
+   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
    squid_cv_cc_option_wall="-Wall"
    squid_cv_cc_option_optimize="-O2"
    squid_cv_cc_arg_pipe=""

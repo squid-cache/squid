@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.4.0.0 release notes</title>
+<title>Squid 3.4.0.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,9 +13,9 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.4.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-3.4.0.1 for testing.
 
-This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.HEAD/"> or the
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.4/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
 While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
@@ -31,7 +31,7 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <sect1>Changes since earlier releases of Squid-3.4
 <p>
-The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.HEAD/changesets/" name="viewed here">.
+The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.4/changesets/" name="viewed here">.
 
 <sect>Major new features since Squid-3.3
 <p>Squid 3.4 represents a new feature release above 3.3.
@@ -180,11 +180,13 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The internal DNS component fof Squid now supports multicast DNS (mDNS) resolution in
     accordance with RFC 6762.
 
-<p>There is no additional or special configuration required. The multicast DNS group IP
-   addresses for IPv4 and IPv6 resolving are added to the set of available DNS resolvers
-   and used automatically for domain names ending in <em>.local</em> before attempting a
-   secondary resolution on the configured resolvers. Domains without <em>.local</em> are
-   resolved using only the configured DNS resolvers.
+<p>The <em>dns_multicast_local</em> directive must be set to <em>on</em> to enable this
+   feature. 
+
+<p>The multicast DNS group IP addresses for IPv4 and IPv6 resolving are added to the set
+   of available DNS resolvers and used automatically for domain names ending in <em>.local</em>
+   and reverse-DNS lookups before attempting a secondary resolution on the configured
+   resolvers. Domains without <em>.local</em> are resolved using only the configured resolvers.
 
 <p>Statistics for multicast DNS resolution can be found on the <em>idns</em> cache manager
    report.
@@ -217,6 +219,9 @@ This section gives a thorough account of those changes in three categories:
 	<tag>configuration_includes_quoted_values</tag>
 	<p>Whether Squid supports directive parameters with spaces, quotes, and other
 	   special characters. Surround such parameters with "double quotes".
+
+	<tag>dns_multicast_local</tag>
+	<p>Use multicast DNS for <em>.local</em> domains and reverse-DNS resolution.
 
 	<tag>note</tag>
 	<p>Use ACLs to annotate a transaction with customized annotations

@@ -55,8 +55,8 @@ void
 ACLFlags::parseFlags()
 {
     char *nextToken;
-    while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
-
+    while ((nextToken = ConfigParser::PeekAtToken()) != NULL && nextToken[0] == '-') {
+        (void)ConfigParser::NextToken(); //Get token from cfg line
         //if token is the "--" break flag
         if (strcmp(nextToken, "--") == 0)
             break;
@@ -74,9 +74,6 @@ ACLFlags::parseFlags()
     /*Regex code needs to parse -i file*/
     if ( isSet(ACL_F_REGEX_CASE))
         ConfigParser::TokenPutBack("-i");
-
-    if (nextToken != NULL && strcmp(nextToken, "--") != 0 )
-        ConfigParser::TokenUndo();
 }
 
 const char *

@@ -267,6 +267,7 @@ public:
         bool auth;               /* pinned for www authentication */
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
         CachePeer *peer;             /* CachePeer the connection goes via */
+        AsyncCall::Pointer readHandler; ///< detects serverConnection closure
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
@@ -333,6 +334,9 @@ public:
     /// the client-side-detected error response instead of getting stuck.
     void quitAfterError(HttpRequest *request); // meant to be private
 
+    /// The caller assumes responsibility for connection closure detection.
+    void stopPinnedConnectionMonitoring();
+
 #if USE_SSL
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
@@ -379,6 +383,9 @@ protected:
     void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody(size_t &putSize);
+
+    void startPinnedConnectionMonitoring();
+    void clientPinnedConnectionRead(const CommIoCbParams &io);
 
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);

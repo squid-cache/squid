@@ -339,7 +339,7 @@ Comm::ConnOpener::connect()
 
         if (failRetries_ < Config.connect_retries) {
             debugs(5, 5, HERE << conn_ << ": * - try again");
-            sleep();
+            retrySleep();
             return;
         } else {
             // send ERROR back to the upper layer.
@@ -352,7 +352,7 @@ Comm::ConnOpener::connect()
 
 /// Close and wait a little before trying to open and connect again.
 void
-Comm::ConnOpener::sleep()
+Comm::ConnOpener::retrySleep()
 {
     Must(!calls_.sleep_);
     closeFd();

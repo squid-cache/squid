@@ -65,7 +65,7 @@ public:
 
     virtual void init() = 0;
     //virtual void registerWithCacheManager(void);
-    virtual void shutdown() = 0;
+    virtual void gracefulShutdown() = 0;
     virtual DiskIOStrategy *createStrategy() = 0;
 
     virtual char const *type () const = 0;
