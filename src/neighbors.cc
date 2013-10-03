@@ -204,8 +204,6 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
         return do_ping;
 
     ACLFilledChecklist checklist(p->access, request, NULL);
-    checklist.src_addr = request->client_addr;
-    checklist.my_addr = request->my_addr;
 
     return (checklist.fastCheck() == ACCESS_ALLOWED);
 }

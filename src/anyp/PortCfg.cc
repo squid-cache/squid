@@ -18,13 +18,50 @@ int HttpSockets[MAXTCPLISTENPORTS];
 
 AnyP::PortCfg::PortCfg() :
         next(NULL),
+        s(),
         transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
         name(NULL),
-        defaultsite(NULL)
+        defaultsite(NULL),
+        flags(),
+        allow_direct(false),
+        vhost(false),
+        actAsOrigin(false),
+        ignore_cc(false),
+        connection_auth_disabled(false),
+        vport(0),
+        disable_pmtu_discovery(0),
+        listenConn()
 #if USE_SSL
-        ,dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
+        ,cert(NULL),
+        key(NULL),
+        version(0),
+        cipher(NULL),
+        options(NULL),
+        clientca(NULL),
+        cafile(NULL),
+        capath(NULL),
+        crlfile(NULL),
+        dhfile(NULL),
+        sslflags(NULL),
+        sslContextSessionId(NULL),
+        generateHostCertificates(false),
+        dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
+        staticSslContext(),
+        signingCert(),
+        signPkey(),
+        certsToChain(),
+        untrustedSigningCert(),
+        untrustedSignPkey(),
+        clientVerifyCrls(),
+        clientCA(),
+        dhParams(),
+        contextMethod(),
+        sslContextFlags(0),
+        sslOptions(0)
 #endif
-{}
+{
+    memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
+}
 
 AnyP::PortCfg::~PortCfg()
 {

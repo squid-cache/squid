@@ -189,8 +189,7 @@ GetInteger(void)
 int
 GetPercentage(void)
 {
-    int p;
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (!token) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: A percentage value is missing.");
@@ -203,7 +202,7 @@ GetPercentage(void)
         *end = '\0';
     }
 
-    p = xatoi(token);
+    int p = xatoi(token);
 
     if (p < 0 || p > 100) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
