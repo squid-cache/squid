@@ -1,11 +1,17 @@
 #!/usr/bin/perl -w
 
-# Adds or adjust the source file boilerplate, such as a Copyright statement.
-# The boilerplate does not change from one source file to another and is
-# assumed to be the first /* comment */ in a source file, before
-# the first #include statement.
+# Adds or adjusts the source file boilerplate, such as a Copyright statement.
+# The boilerplate is meant to remain constant from one source file to another.
 #
-# TODO: Adjust ifndef/define/endif guards for source header files as well.
+# The old boilerplate is assumed to be the first /* comment */ in a source 
+# file, before the first #include statement other than #include "squid.h".
+# Common old boilerplates are removed, with Copyright claims contained in
+# them logged on stdout for recording in CONTRIBUTORS or some such.
+#
+# The new boilerplate comment is placed at the very beginning of the file.
+#
+# The script tries hard to detect files with unusual old boilerplates. When
+# detected, the script warns about the problem and leaves the file "as is".
 
 use strict;
 use warnings;
