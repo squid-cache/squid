@@ -1,6 +1,4 @@
 /*
- * MemBlob.cc (C) 2009 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *

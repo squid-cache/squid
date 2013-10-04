@@ -1,6 +1,4 @@
 /*
- * SBuf.cc (C) 2008 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -183,7 +181,6 @@ SBuf::assign(const char *S, size_type n)
 void
 SBuf::reserveCapacity(size_type minCapacity)
 {
-    Must(0 <= minCapacity);
     Must(minCapacity <= maxSize);
     cow(minCapacity);
 }
@@ -191,7 +188,6 @@ SBuf::reserveCapacity(size_type minCapacity)
 char *
 SBuf::rawSpace(size_type minSpace)
 {
-    Must(0 <= minSpace);
     Must(length() <= maxSize - minSpace);
     debugs(24, 7, "reserving " << minSpace << " for " << id);
     ++stats.rawAccess;
@@ -236,8 +232,6 @@ SBuf::append(const SBuf &S)
 SBuf &
 SBuf::append(const char * S, size_type Ssize)
 {
-    Must (Ssize == npos || Ssize >= 0);
-
     if (S == NULL)
         return *this;
     if (Ssize == npos)
@@ -388,7 +382,6 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 int
 SBuf::compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n) const
 {
-    Must(n == npos || n >= 0);
     if (n != npos)
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
 
@@ -451,7 +444,6 @@ SBuf::operator !=(const SBuf & S) const
 SBuf
 SBuf::consume(size_type n)
 {
-    Must (n == npos || n >= 0);
     if (n == npos)
         n = length();
     else
@@ -470,8 +462,6 @@ SBufStats& SBuf::GetStats()
 SBuf::size_type
 SBuf::copy(char *dest, size_type n) const
 {
-    Must(n >= 0);
-
     size_type toexport = min(n,length());
     memcpy(dest, buf(), toexport);
     ++stats.copyOut;
@@ -511,10 +501,6 @@ SBuf::c_str()
 SBuf&
 SBuf::chop(size_type pos, size_type n)
 {
-    if (pos != npos && pos < 0)
-        pos = 0;
-    if (n != npos && n < 0)
-        n = npos;
     if (pos == npos || pos > length() || n == 0) {
         clear();
         return *this;

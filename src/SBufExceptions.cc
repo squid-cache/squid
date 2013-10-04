@@ -1,6 +1,4 @@
 /*
- * SBufExceptions.cc (C) 2008 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
