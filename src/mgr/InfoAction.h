@@ -8,7 +8,6 @@
 
 #include "mgr/Action.h"
 #include "StoreStats.h"
-#include <sys/time.h>
 
 namespace Mgr
 {

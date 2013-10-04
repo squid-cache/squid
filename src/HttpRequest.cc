@@ -228,7 +228,6 @@ HttpRequest::clone() const
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
-    copy->myportname = myportname;
     copy->tag = tag;
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
@@ -272,6 +271,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     extacl_user = aReq->extacl_user;
     extacl_passwd = aReq->extacl_passwd;
 #endif
+
+    myportname = aReq->myportname;
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
