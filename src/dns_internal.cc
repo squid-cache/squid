@@ -37,6 +37,7 @@
 #include "comm.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
+#include "dlink.h"
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
@@ -66,11 +67,6 @@
 #include <errno.h>
 #endif
 
-/* MS Visual Studio Projects are monolithic, so we need the following
-   #ifndef to exclude the internal DNS code from compile process when
-   using external DNS process.
- */
-#if !USE_DNSHELPER
 #if _SQUID_WINDOWS_
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
@@ -1612,6 +1608,8 @@ dnsInit(void)
 #endif
 
         debugs(78, DBG_IMPORTANT, "or use the 'dns_nameservers' option in squid.conf.");
+        if (Ip::EnableIpv6)
+            idnsAddNameserver("::1");
         idnsAddNameserver("127.0.0.1");
     }
 
@@ -1882,4 +1880,3 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
-#endif /* USE_DNSHELPER */

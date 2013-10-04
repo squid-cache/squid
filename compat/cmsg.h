@@ -9,6 +9,12 @@
 #include <sys/socket.h>
 #endif
 
+// WinSock2.h defines these for Windows
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#define CMSG_H_ // prevent re-definition
+#endif
+
 #ifndef CMSG_H_
 #define CMSG_H_
 

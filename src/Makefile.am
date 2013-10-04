@@ -8,15 +8,8 @@ include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-if ENABLE_DNSHELPER
-DNSSOURCE = dns.cc
-DNSHELPER = dnsserver
-else
-DNSSOURCE = dns_internal.cc
-DNSHELPER =
-endif
-
-DNSSOURCE += \
+DNSSOURCE = \
+	dns_internal.cc \
 	SquidDns.h \
 	DnsLookupDetails.h \
 	DnsLookupDetails.cc
@@ -197,10 +190,8 @@ noinst_LTLIBRARIES = libsquid.la
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
 	unlinkd \
-	dnsserver \
 	recv-announce \
 	tests/testUfs \
-	tests/testCoss \
 	tests/testRock \
 	ufsdump
 
@@ -217,7 +208,6 @@ bin_PROGRAMS =
 
 
 libexec_PROGRAMS = \
-	$(DNSHELPER) \
 	$(DISK_PROGRAMS) \
 	$(UNLINKD)
 
@@ -572,11 +562,6 @@ EXTRA_squid_SOURCES = \
 	$(all_AUTHMODULES) \
 	ConfigOption.h \
 	$(DELAY_POOL_ALL_SOURCE) \
-	dns.cc \
-	dnsserver.cc \
-	dns_internal.cc \
-	DnsLookupDetails.cc \
-	DnsLookupDetails.h \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \
@@ -697,12 +682,6 @@ INCLUDES += $(KRB5INCS)
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
-## dnsserver is a standalone helper. Do not link to any internal libraries
-dnsserver_SOURCES = dnsserver.cc
-dnsserver_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
@@ -927,7 +906,6 @@ DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
 DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
-DEFAULT_DNSSERVER	= $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_SSL_CRTD	= $(libexecdir)/`echo ssl_crtd  | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
 DEFAULT_CACHE_LOG	= $(DEFAULT_LOG_PREFIX)/cache.log
@@ -1009,7 +987,6 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
-	-e "s%[@]DEFAULT_DNSSERVER[@]%$(DEFAULT_DNSSERVER)%g" \
 	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
 	-e "s%[@]DEFAULT_UNLINKD[@]%$(DEFAULT_UNLINKD)%g" \
 	-e "s%[@]DEFAULT_PINGER[@]%$(DEFAULT_PINGER)%g" \
@@ -3415,170 +3392,6 @@ tests_testRock_LDADD = \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(INCLUDES) $(LIBADD_DL)
 tests_testRock_DEPENDENCIES = \
-	$(SWAP_TEST_DS)
-
-tests_testCoss_SOURCES = \
-	tests/testCoss.cc \
-	tests/testMain.cc \
-	tests/testCoss.h \
-	tests/stub_cache_manager.cc \
-	client_db.h \
-	tests/stub_client_db.cc \
-	tests/stub_debug.cc \
-	tests/stub_HelperChildConfig.cc \
-	internal.h \
-	tests/stub_internal.cc \
-	tests/stub_ipc.cc \
-	tests/stub_libeui.cc \
-	tests/stub_pconn.cc \
-	store_rebuild.h \
-	tests/stub_store_rebuild.cc \
-	tests/stub_store_stats.cc \
-	fatal.h \
-	tests/stub_fatal.cc \
-	fd.h \
-	fd.cc \
-	fde.h \
-	fde.cc \
-	disk.h \
-	disk.cc \
-	FileMap.h \
-	filemap.cc \
-	HttpBody.h \
-	HttpBody.cc \
-	HttpReply.cc \
-	int.h \
-	int.cc \
-	SquidList.h \
-	SquidList.cc \
-	MemObject.cc \
-	StoreSwapLogData.cc \
-	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
-	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
-	StoreFileSystem.cc \
-	store_io.cc \
-	store_swapout.cc \
-	store_swapmeta.cc \
-	$(UNLINKDSOURCE) \
-	$(WIN32_SOURCE) \
-	event.cc \
-	$(DELAY_POOL_SOURCE) \
-	CacheDigest.h \
-	CacheDigest.cc \
-	ConfigParser.cc \
-	EventLoop.cc \
-	HttpMsg.cc \
-	RemovalPolicy.cc \
-	store_dir.cc \
-	repl_modules.h \
-	store.cc \
-	HttpRequestMethod.cc \
-	store_key_md5.h \
-	store_key_md5.cc \
-	Parsing.cc \
-	ConfigOption.cc \
-	SwapDir.cc \
-	tests/stub_acl.cc \
-	cache_cf.h \
-	YesNoNone.h \
-	tests/stub_cache_cf.cc \
-	tests/stub_helper.cc \
-	cbdata.cc \
-	String.cc \
-	tests/stub_client_side_request.cc \
-	tests/stub_http.cc \
-	mem_node.cc \
-	stmem.cc \
-	mime.h \
-	tests/stub_mime.cc \
-	HttpHeaderFieldInfo.h \
-	HttpHeaderTools.h \
-	HttpHeaderTools.cc \
-	HttpHeader.h \
-	HttpHeader.cc \
-	Mem.h \
-	mem.cc \
-	ClientInfo.h \
-	MemBuf.cc \
-	HttpHdrContRange.cc \
-	Packer.cc \
-	HttpHeaderFieldStat.h \
-	HttpHdrCc.h \
-	HttpHdrCc.cc \
-	HttpHdrCc.cci \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	url.cc \
-	StatCounters.h \
-	StatCounters.cc \
-	StatHist.h \
-	tests/stub_StatHist.cc \
-	tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc \
-	log/access_log.h \
-	tests/stub_access_log.cc \
-	refresh.h \
-	refresh.cc \
-	tests/stub_MemStore.cc \
-	tests/stub_Port.cc \
-	tests/stub_store_client.cc \
-	tests/stub_store_stats.cc \
-	tools.h \
-	tests/stub_tools.cc \
-	tests/stub_UdsOp.cc \
-	tests/testStoreSupport.cc \
-	tests/testStoreSupport.h \
-	time.cc \
-	URLScheme.cc \
-	wordlist.h \
-	wordlist.cc \
-	$(DISKIO_SOURCE)
-
-nodist_tests_testCoss_SOURCES = \
-	swap_log_op.cc \
-	SquidMath.cc \
-	SquidMath.h \
-	$(TESTSOURCES) \
-	$(DISKIO_GEN_SOURCE)
-tests_testCoss_LDADD = \
-	anyp/libanyp.la \
-	libsquid.la \
-	$(REGEXLIB) \
-	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
-	acl/libacls.la \
-	acl/libstate.la \
-	$(AUTH_LIBS) \
-	acl/libapi.la \
-	libsquid.la \
-	comm/libcomm.la \
-	ip/libip.la \
-	fs/libfs.la \
-	mgr/libmgr.la \
-	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
-	$(COMMON_LIBS) \
-	$(SSL_LIBS) \
-	acl/libapi.la \
-	ipc/libipc.la \
-	base/libbase.la \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testCoss_LDFLAGS = $(LIBADD_DL)
-tests_testCoss_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
 ## Tests of the URL module.

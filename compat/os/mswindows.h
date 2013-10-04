@@ -71,6 +71,11 @@
 #define NOMINMAX
 #endif
 
+/// some builds of MinGW do not define IPV6_V6ONLY socket option
+#if !defined(IPV6_V6ONLY)
+#define IPV6_V6ONLY 27
+#endif
+
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 # define __USE_FILE_OFFSET64	1
 #endif
@@ -469,6 +474,18 @@ namespace Squid
 {
 /** \endcond */
 
+/*
+ * Each of these functions is defined in the Squid namespace so as not to
+ * clash with the winsock.h and winsock2.h definitions.
+ * It is then paired with a #define to cause these wrappers to be used by
+ * the main code instead of those system definitions.
+ *
+ * We do this wrapper in order to:
+ * - cast the parameter types in only one place, and
+ * - record errors in POSIX errno variable, and
+ * - map the FD value used by Squid to the socket handes used by Windows.
+ */
+
 inline int
 accept(int s, struct sockaddr * a, socklen_t * l)
 {
@@ -720,6 +737,7 @@ WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
     } else
         return 0;
 }
+#define WSAAsyncSelect(s,h,w,e) Squid::WSAAsyncSelect(s,h,w,e)
 
 #undef WSADuplicateSocket
 inline int
@@ -735,6 +753,7 @@ WSADuplicateSocket(int s, DWORD n, LPWSAPROTOCOL_INFO l)
     } else
         return 0;
 }
+#define WSADuplicateSocket(s,n,l) Squid::WSADuplicateSocket(s,n,l)
 
 #undef WSASocket
 inline int
@@ -752,6 +771,7 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
     } else
         return _open_osfhandle(result, 0);
 }
+#define WSASocket(a,t,p,i,g,f) Squid::WSASocket(a,t,p,i,g,f)
 
 } /* namespace Squid */
 
@@ -782,6 +802,11 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define open       _open /* Needed in win32lib.c */
 #endif /* #ifdef __cplusplus */
 
+/* provide missing definitions from resoruce.h */
+/* NP: sys/resource.h and sys/time.h are apparently order-dependant. */
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #else

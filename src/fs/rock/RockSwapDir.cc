@@ -146,7 +146,7 @@ Rock::SwapDir::entryLimitAllowed() const
     return min(max(eLimitLo, eWanted), entryLimitHigh());
 }
 
-// TODO: encapsulate as a tool; identical to CossSwapDir::create()
+// TODO: encapsulate as a tool
 void
 Rock::SwapDir::create()
 {
