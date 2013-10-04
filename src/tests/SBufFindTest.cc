@@ -31,11 +31,11 @@ SBufFindTest::run()
 {
     srandom(randomSeed);
 
-    for (SBuf::size_type hayLen = 0; hayLen <= maxHayLength; nextLen(hayLen, maxHayLength)) {
+    for (SBuf::size_type hayLen = 0U; hayLen <= maxHayLength; nextLen(hayLen, maxHayLength)) {
         const SBuf cleanHay = RandomSBuf(hayLen);
 
         const SBuf::size_type maxNeedleLen = hayLen + 10;
-        for (SBuf::size_type needleLen = 0; needleLen <= maxNeedleLen; nextLen(needleLen, maxNeedleLen)) {
+        for (SBuf::size_type needleLen = 0U; needleLen <= maxNeedleLen; nextLen(needleLen, maxNeedleLen)) {
             theSBufNeedle = RandomSBuf(needleLen);
 
             for (int i = 0; i < placeEof; i++) {
@@ -386,7 +386,7 @@ SBufFindTest::RandomSBuf(const int length)
 /// increments len to quickly cover [0, max] range, slowing down in risky areas
 /// jumps to max+1 if caseLimit is reached
 void
-SBufFindTest::nextLen(int &len, const int max)
+SBufFindTest::nextLen(SBuf::size_type &len, const SBuf::size_type max)
 {
     assert(len <= max);
 

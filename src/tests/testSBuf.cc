@@ -48,7 +48,7 @@ testSBuf::testSBufConstructDestruct()
     //  test accessors on empty SBuf.
     {
         SBuf s1;
-        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(0U,s1.length());
         CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
         CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
         CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
@@ -57,7 +57,7 @@ testSBuf::testSBufConstructDestruct()
     // TEST: copy-construct NULL string (implicit destructor non-crash test)
     {
         SBuf s1(NULL);
-        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(0U,s1.length());
         CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
         CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
         CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
@@ -66,7 +66,7 @@ testSBuf::testSBufConstructDestruct()
     // TEST: copy-construct empty string (implicit destructor non-crash test)
     {
         SBuf s1("");
-        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(0U,s1.length());
         CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
         CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
         CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
@@ -75,7 +75,7 @@ testSBuf::testSBufConstructDestruct()
     // TEST: copy-construct from a SBuf
     {
         SBuf s1(empty_sbuf);
-        CPPUNIT_ASSERT_EQUAL(0,s1.length());
+        CPPUNIT_ASSERT_EQUAL(0U,s1.length());
         CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
         CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);
         CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
@@ -441,7 +441,7 @@ testSBuf::testFindChar()
     // FORWARD SEARCH
     // needle in haystack
     idx=s1.find('d');
-    CPPUNIT_ASSERT_EQUAL(3,idx);
+    CPPUNIT_ASSERT_EQUAL(3U,idx);
     CPPUNIT_ASSERT_EQUAL('d',s1[idx]);
 
     // needle not present in haystack
@@ -449,20 +449,16 @@ testSBuf::testFindChar()
     CPPUNIT_ASSERT_EQUAL(nposResult,idx);
 
     // search in portion
-    idx=s1.find('e',3);
-    CPPUNIT_ASSERT_EQUAL(4,idx);
+    idx=s1.find('e',3U);
+    CPPUNIT_ASSERT_EQUAL(4U,idx);
 
     // char not in searched portion
-    idx=s1.find('e',5);
+    idx=s1.find('e',5U);
     CPPUNIT_ASSERT_EQUAL(nposResult,idx);
 
     // invalid start position
     idx=s1.find('d',SBuf::npos);
     CPPUNIT_ASSERT_EQUAL(nposResult,idx);
-
-    // invalid start position
-    idx=s1.find('d', -5);
-    CPPUNIT_ASSERT_EQUAL(3, idx);
 
     // search outside of haystack
     idx=s1.find('d',s1.length()+1);
@@ -471,7 +467,7 @@ testSBuf::testFindChar()
     // REVERSE SEARCH
     // needle in haystack
     idx=s1.rfind('d');
-    CPPUNIT_ASSERT_EQUAL(3, idx);
+    CPPUNIT_ASSERT_EQUAL(3U, idx);
     CPPUNIT_ASSERT_EQUAL('d', s1[idx]);
 
     // needle not present in haystack
@@ -480,19 +476,15 @@ testSBuf::testFindChar()
 
     // search in portion
     idx=s1.rfind('e',5);
-    CPPUNIT_ASSERT_EQUAL(4,idx);
+    CPPUNIT_ASSERT_EQUAL(4U,idx);
 
     // char not in searched portion
     idx=s1.rfind('e',3);
     CPPUNIT_ASSERT_EQUAL(nposResult,idx);
 
-    // invalid start position
-    idx=s1.rfind('d', -5);
-    CPPUNIT_ASSERT_EQUAL(nposResult,idx);
-
     // overlong haystack specification
     idx=s1.rfind('d',s1.length()+1);
-    CPPUNIT_ASSERT_EQUAL(3,idx);
+    CPPUNIT_ASSERT_EQUAL(3U,idx);
 }
 
 void
@@ -506,10 +498,10 @@ testSBuf::testFindSBuf()
     // FORWARD search
     // needle in haystack
     idx = haystack.find(SBuf("def"));
-    CPPUNIT_ASSERT_EQUAL(3,idx);
+    CPPUNIT_ASSERT_EQUAL(3U,idx);
 
     idx = haystack.find(SBuf("xyz"));
-    CPPUNIT_ASSERT_EQUAL(23,idx);
+    CPPUNIT_ASSERT_EQUAL(23U,idx);
 
     // needle not in haystack, no initial char match
     idx = haystack.find(SBuf(" eq"));
@@ -535,10 +527,6 @@ testSBuf::testFindSBuf()
     idx = haystack.find(SBuf("def"),SBuf::npos);
     CPPUNIT_ASSERT_EQUAL(nposResult, idx);
 
-    // invalid start position: negative
-    idx = haystack.find(SBuf("def"),-5);
-    CPPUNIT_ASSERT_EQUAL(3, idx);
-
     // needle bigger than haystack
     idx = SBuf("def").find(haystack);
     CPPUNIT_ASSERT_EQUAL(nposResult, idx);
@@ -549,19 +537,19 @@ testSBuf::testFindSBuf()
         h2.append(haystack);
 
         idx = h2.find(SBuf("def"));
-        CPPUNIT_ASSERT_EQUAL(3,idx);
+        CPPUNIT_ASSERT_EQUAL(3U,idx);
 
         idx = h2.find(SBuf("xyzab"));
-        CPPUNIT_ASSERT_EQUAL(23,idx);
+        CPPUNIT_ASSERT_EQUAL(23U,idx);
     }
 
     // REVERSE search
     // needle in haystack
     idx = haystack.rfind(SBuf("def"));
-    CPPUNIT_ASSERT_EQUAL(3,idx);
+    CPPUNIT_ASSERT_EQUAL(3U,idx);
 
     idx = haystack.rfind(SBuf("xyz"));
-    CPPUNIT_ASSERT_EQUAL(23,idx);
+    CPPUNIT_ASSERT_EQUAL(23U,idx);
 
     // needle not in haystack, no initial char match
     idx = haystack.rfind(SBuf(" eq"));
@@ -577,7 +565,7 @@ testSBuf::testFindSBuf()
 
     // search in portion: needle in searched part
     idx = haystack.rfind(SBuf("def"),7);
-    CPPUNIT_ASSERT_EQUAL(3, idx);
+    CPPUNIT_ASSERT_EQUAL(3U, idx);
 
     // search in portion: needle not in searched part
     idx = haystack.rfind(SBuf("mno"),3);
@@ -585,15 +573,11 @@ testSBuf::testFindSBuf()
 
     // search in portion: overhang
     idx = haystack.rfind(SBuf("def"),4);
-    CPPUNIT_ASSERT_EQUAL(3, idx);
+    CPPUNIT_ASSERT_EQUAL(3U, idx);
 
     // npos start position
     idx = haystack.rfind(SBuf("def"),SBuf::npos);
-    CPPUNIT_ASSERT_EQUAL(3, idx);
-
-    // invalid start position: negative
-    idx = haystack.rfind(SBuf("def"),-5);
-    CPPUNIT_ASSERT_EQUAL(nposResult, idx);
+    CPPUNIT_ASSERT_EQUAL(3U, idx);
 
     // needle bigger than haystack
     idx = SBuf("def").rfind(haystack);
@@ -605,10 +589,10 @@ testSBuf::testFindSBuf()
         h2.append(haystack);
 
         idx = h2.rfind(SBuf("def"));
-        CPPUNIT_ASSERT_EQUAL(29,idx);
+        CPPUNIT_ASSERT_EQUAL(29U,idx);
 
         idx = h2.find(SBuf("xyzab"));
-        CPPUNIT_ASSERT_EQUAL(23,idx);
+        CPPUNIT_ASSERT_EQUAL(23U,idx);
     }
 }
 
@@ -618,7 +602,7 @@ testSBuf::testRFindChar()
     SBuf s1(literal);
     SBuf::size_type idx;
     idx=s1.rfind(' ');
-    CPPUNIT_ASSERT_EQUAL(40,idx);
+    CPPUNIT_ASSERT_EQUAL(40U,idx);
     CPPUNIT_ASSERT_EQUAL(' ',s1[idx]);
 }
 
@@ -638,7 +622,7 @@ testSBuf::testRFindSBuf()
     CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     idx=haystack.rfind(SBuf("fox"));
-    CPPUNIT_ASSERT_EQUAL(16,idx);
+    CPPUNIT_ASSERT_EQUAL(16U,idx);
 
     // needle not found, no match for first char
     idx=goobar.rfind(SBuf("foo"));
@@ -650,15 +634,15 @@ testSBuf::testRFindSBuf()
 
     SBuf g("g"); //match at the last char
     idx=haystack.rfind(g);
-    CPPUNIT_ASSERT_EQUAL(43,idx);
+    CPPUNIT_ASSERT_EQUAL(43U,idx);
     CPPUNIT_ASSERT_EQUAL('g',haystack[idx]);
 
     idx=haystack.rfind(SBuf("The"));
-    CPPUNIT_ASSERT_EQUAL(0,idx);
+    CPPUNIT_ASSERT_EQUAL(0U,idx);
 
     haystack.append("The");
     idx=haystack.rfind(SBuf("The"));
-    CPPUNIT_ASSERT_EQUAL(44,idx);
+    CPPUNIT_ASSERT_EQUAL(44U,idx);
 
     //partial match
     haystack="The quick brown fox";
@@ -697,7 +681,7 @@ void testSBuf::testCopy()
     CPPUNIT_ASSERT_EQUAL(s.length(),s.copy(buf,40));
     CPPUNIT_ASSERT_EQUAL(0,strncmp(s.rawContent(),buf,s.length()));
     s=literal;
-    CPPUNIT_ASSERT_EQUAL(40,s.copy(buf,40));
+    CPPUNIT_ASSERT_EQUAL(40U,s.copy(buf,40));
     s2.assign(buf,40);
     s.chop(0,40);
     CPPUNIT_ASSERT_EQUAL(s2,s);
@@ -774,7 +758,7 @@ void testSBuf::testFindFirstOf()
 
     // found at beginning
     idx=haystack.find_first_of(SBuf("THANDF"));
-    CPPUNIT_ASSERT_EQUAL(0,idx);
+    CPPUNIT_ASSERT_EQUAL(0U,idx);
 
     //found at end of haystack
     idx=haystack.find_first_of(SBuf("QWERYVg"));
@@ -782,7 +766,7 @@ void testSBuf::testFindFirstOf()
 
     //found in the middle of haystack
     idx=haystack.find_first_of(SBuf("QWERqYV"));
-    CPPUNIT_ASSERT_EQUAL(4,idx);
+    CPPUNIT_ASSERT_EQUAL(4U,idx);
 }
 
 void testSBuf::testAutoFind()

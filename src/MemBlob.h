@@ -1,6 +1,4 @@
 /*
- * MemBlob.h (C) 2009 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -68,7 +66,7 @@ class MemBlob: public RefCountable
 {
 public:
     typedef RefCount<MemBlob> Pointer;
-    typedef int32_t size_type;
+    typedef uint32_t size_type;
 
     MEMPROXY_CLASS(MemBlob);
 
