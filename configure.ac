@@ -2472,6 +2472,8 @@ AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
+AC_SEARCH_LIBS([res_init],[resolv])
+AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
@@ -3043,6 +3045,8 @@ AC_CHECK_FUNCS(\
 	regcomp \
 	regexec \
 	regfree \
+	res_init \
+	__res_init \
 	rint \
 	sbrk \
 	sched_getaffinity \
@@ -3308,6 +3312,9 @@ SQUID_DETECT_TCP_RECV_BUFSIZE
 SQUID_CHECK_RECV_ARG_TYPE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
+
+SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
+SQUID_CHECK_RESOLVER_FIELDS
 
 if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
   SQUID_CHECK_WORKING_STATVFS
