@@ -132,7 +132,7 @@ foreach my $fname (@FileNames) {
 		}
 
 		if ($boiler =~ m/$reInspiration/) {
-			$extras .= "/* $1 */\n\n";
+			$extras .= sprintf("/* %s */\n\n", ucfirst($1));
 		}
 
 		if (my @rawClaims = ($boiler =~ m/$reClaims/g)) {
