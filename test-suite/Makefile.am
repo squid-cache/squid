@@ -14,7 +14,9 @@ LDADD = \
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
 
-EXTRA_DIST = testheaders.sh
+EXTRA_DIST = \
+	$(srcdir)/squidconf/* \
+	testheaders.sh
 
 ESI_ALL_TESTS = \
 	ESIExpressions
@@ -34,7 +36,8 @@ TESTS += debug \
 	MemPoolTest\
 	mem_node_test\
 	mem_hdr_test\
-	$(ESI_TESTS)
+	$(ESI_TESTS) \
+	squid-conf-tests
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += debug \
@@ -111,3 +114,22 @@ VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 ##
 ##$(TARGLIB): $(LIBOBJS)
 ##	$(AR_R) $(TARGLIB) $(LIBOBJS)
+
+squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
+	for cfg in $$cfglist ; do \
+		$(top_builddir)/src/squid -k parse -f $$cfg || \
+			{ echo "FAIL: squid.conf test: $$cfg" | \
+				sed s%$(top_builddir)/src/%% | \
+				sed s%$(srcdir)/squidconf/%% ; \
+				failed=1; break; \
+			}; \
+		if test "$$failed" -eq 0; then \
+			echo "PASS: squid.conf test: $$cfg" | \
+				sed s%$(top_builddir)/src/%% | \
+				sed s%$(srcdir)/squidconf/%% ; \
+		else break; fi; \
+	done; \
+	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
+
+CLEANFILES += squid-conf-tests

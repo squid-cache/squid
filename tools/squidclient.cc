@@ -211,7 +211,8 @@ int
 main(int argc, char *argv[])
 {
     int conn, c, len, bytesWritten;
-    int port, to_stdout, reload;
+    uint16_t port;
+    bool to_stdout, reload;
     int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
@@ -245,8 +246,8 @@ main(int argc, char *argv[])
     localhost = NULL;
     extra_hdrs[0] = '\0';
     port = CACHE_HTTP_PORT;
-    to_stdout = 1;
-    reload = 0;
+    to_stdout = true;
+    reload = false;
     ping = 0;
     pcount = 0;
     ping_int = 1 * 1000;
@@ -292,7 +293,7 @@ main(int argc, char *argv[])
                 break;
 
             case 's':		/* silent */
-                to_stdout = 0;
+                to_stdout = false;
                 break;
 
             case 'k':		/* backward compat */
@@ -300,11 +301,11 @@ main(int argc, char *argv[])
                 break;
 
             case 'r':		/* reload */
-                reload = 1;
+                reload = true;
                 break;
 
             case 'p':		/* port number */
-                sscanf(optarg, "%d", &port);
+                sscanf(optarg, "%hd", &port);
                 if (port < 1)
                     port = CACHE_HTTP_PORT;	/* default */
                 break;

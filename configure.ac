@@ -35,9 +35,22 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
-# Clang 3.2 on some CPUs requires -march-native to detect correctly
-# GCC 4.3+ can also produce faster executables when its used
-SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+# Clang 3.2 on some CPUs requires -march-native to detect correctly.
+# GCC 4.3+ can also produce faster executables when its used.
+# But building inside a virtual machine environment has been found to
+# cause random Illegal Instruction errors due to mis-detection of CPU.
+AC_ARG_ENABLE(arch-native,
+  AS_HELP_STRING([--disable-arch-native],[Some compilers offer CPU-specific
+                 optimizations with the -march=native parameter.
+                 This flag disables the optimization. The default is to
+                 auto-detect compiler support and use where available.]), [
+  SQUID_YESNO([$enableval],
+    [Unrecognized argument to --disable-arch-native: $enableval])
+])
+AC_MSG_NOTICE([CPU -march=native optimization enabled: ${enable_arch_native:=auto}])
+if test "x${enable_arch_native}" != "xno"; then
+  SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+fi
 
 # might be cross-compiling.
 if test "x$HOSTCXX" = "x"; then
@@ -794,8 +807,6 @@ if test "x$squid_opt_enable_storeio" = "xauto"; then
   squid_opt_enable_storeio=yes
   AC_MSG_CHECKING([for available StoreIO modules])
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-  # disable coss
-  squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/coss//'`
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
@@ -817,15 +828,6 @@ for fs in $squid_storeio_module_candidates none; do
         AC_MSG_ERROR([Storage module aufs requires DiskIO module: Blocking or DiskThreads])
       fi
       ;;
-    coss)
-      AC_MSG_WARN([COSS Support is not stable yet in Squid-3. Please do not use.])
-      if ! test "x$squid_disk_module_candidates_AIO" = "xyes"; then
-        AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
-      fi
-      # Automake on MinGW needs explicit exe extension
-      # for STORE_TESTS substition
-      STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
-      ;;
     rock)
 	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
 	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
@@ -843,7 +845,6 @@ dnl make sure that global FS objects are linked to the squid binary.
 AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
-AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
 AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
 
 
@@ -1306,20 +1307,6 @@ SQUID_DEFINE_BOOL(USE_CACHE_DIGESTS,${enable_cache_digests:=no},
 AC_MSG_NOTICE([Cache Digests enabled: $enable_cache_digests])
 
 
-dnl Size of COSS memory buffer
-squid_opt_coss_membuf_size=1048576
-AC_ARG_WITH(coss-membuf-size,
-  AS_HELP_STRING([--with-coss-membuf-size=size],
-             [COSS membuf size (default $squid_opt_coss_membuf_size bytes)]), [
-case $withval in
-  [[0-9]]*) squid_opt_coss_membuf_size=$withval ;;
-  *) AC_MSG_ERROR([--with-coss-membuf-size expects a numeric argument]) ;;
-esac
-])
-AC_MSG_NOTICE([Setting COSS membuf size to $squid_opt_coss_membuf_size bytes])
-AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $squid_opt_coss_membuf_size,
-   [Default COSS membuf size])
-
 ################################
 # check for netio plugin stuff #
 ################################
@@ -1679,21 +1666,6 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-squid_opt_use_dnshelper="no"
-AC_ARG_ENABLE(internal-dns,
-  AS_HELP_STRING([--disable-internal-dns],
-           [Prevents Squid from directly sending and receiving DNS messages, 
-            and instead enables the old external 'dnsserver' processes.]), [
-  if test "x$enableval" = "xno" ; then
-    AC_MSG_WARN([Disabling Internal DNS queries])
-    squid_opt_use_dnshelper="yes"
-  fi
-])
-SQUID_DEFINE_BOOL(USE_DNSHELPER,$squid_opt_use_dnshelper,
-  [Use dnsserver processes instead of the internal DNS protocol support])
-AM_CONDITIONAL([ENABLE_DNSHELPER],[test "x$squid_opt_use_dnshelper" = "xyes" ])
-
-
 AM_CONDITIONAL(USE_SSL_CRTD, false)
 AC_ARG_ENABLE(ssl-crtd,
   AC_HELP_STRING([--enable-ssl-crtd],
@@ -1907,6 +1879,10 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
       [Define to 1 if you have krb5_get_error_message]),)
   AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
+  AC_CHECK_TYPE(krb5_pac,
+    AC_DEFINE(HAVE_KRB5_PAC,1,
+      [Define to 1 if you have krb5_pac]),,
+      [#include <krb5.h>])
   AC_CHECK_LIB(krb5,krb5_kt_free_entry,
     AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
       [Define to 1 if you have krb5_kt_free_entry]),)
@@ -1925,6 +1901,33 @@ if test "x$ac_krb5_config" = "xyes" ; then
   AC_CHECK_LIB(krb5,profile_release,
     AC_DEFINE(HAVE_PROFILE_RELEASE,1,
       [Define to 1 if you have profile_release]),)
+  AC_CHECK_LIB(krb5,krb5_get_renewed_creds,
+    AC_DEFINE(HAVE_KRB5_GET_RENEWED_CREDS,1,
+      [Define to 1 if you have krb5_get_renewed_creds]),)
+  AC_CHECK_LIB(krb5,krb5_principal_get_realm,
+    AC_DEFINE(HAVE_KRB5_PRINCIPAL_GET_REALM,1,
+      [Define to 1 if you have krb5_principal_get_realm]),)
+  AC_CHECK_LIB(krb5, krb5_get_init_creds_opt_alloc,
+    AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
+      [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
+  AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	#include <krb5.h>
+    ]],[[krb5_context context;
+	 krb5_get_init_creds_opt *options;
+	 krb5_get_init_creds_opt_free(context, options)]])],[
+	AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,
+		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
+	AC_MSG_RESULT(yes)
+    ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
+
+
+  AC_CHECK_FUNCS(gss_map_name_to_any,
+    AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
+      [Define to 1 if you have gss_map_name_to_any]),)
+  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context,
+    AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
+      [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
@@ -3310,10 +3313,8 @@ SQUID_CHECK_RECV_ARG_TYPE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
-if test "x$squid_opt_use_dnshelper" = "xyes"; then
-  SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
-  SQUID_CHECK_RESOLVER_FIELDS
-fi
+SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
+SQUID_CHECK_RESOLVER_FIELDS
 
 if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
   SQUID_CHECK_WORKING_STATVFS
