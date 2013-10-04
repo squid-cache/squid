@@ -660,6 +660,133 @@ statvfs("/tmp", &sfs);
 SQUID_DEFINE_BOOL(HAVE_STATVFS,$ac_cv_func_statvfs,[set to 1 if our system has statvfs(), and if it actually works])
 ])
 
+
+dnl check that we can use the libresolv _dns_ttl_ hack
+dnl sets the ac_cv_libresolv_dns_ttl_hack shell variable and defines LIBRESOLV_DNS_TTL_HACK
+
+AC_DEFUN([SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK],[
+  AC_CACHE_CHECK(for libresolv _dns_ttl_ hack, ac_cv_libresolv_dns_ttl_hack, [
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int _dns_ttl_;]], [[return _dns_ttl_;]])],
+     [ac_cv_libresolv_dns_ttl_hack=yes],[ac_cv_libresolv_dns_ttl_hack=no]) ])
+  SQUID_DEFINE_BOOL(LIBRESOLV_DNS_TTL_HACK,$ac_cv_libresolv_dns_ttl_hack,
+     [libresolv.a has been hacked to export _dns_ttl_])
+])
+
+
+dnl checks for availability of some resolver fields
+dnl sets ac_cv_have_res_ext_nsaddr_list shell variable
+dnl defines _SQUID_RES_NSADDR6_COUNT _SQUID_RES_NSADDR6_LARRAY
+dnl defines _SQUID_RES_NSADDR6_LPTR _SQUID_RES_NSADDR6_COUNT
+dnl defines _SQUID_RES_NSADDR_LIST _SQUID_RES_NSADDR_COUNT
+
+AC_DEFUN([SQUID_CHECK_RESOLVER_FIELDS],[
+  AC_CACHE_CHECK(for _res_ext.nsaddr_list, ac_cv_have_res_ext_nsaddr_list,
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+#if HAVE_RESOLV_H
+#include <resolv.h>
+#endif
+    ]], 
+    [[_res_ext.nsaddr_list[[0]].s_addr;]])],[
+      ac_cv_have_res_ext_nsaddr_list="yes" ],[
+      ac_cv_have_res_ext_nsaddr_list="no"]))
+  if test "$ac_cv_have_res_ext_nsaddr_list" = "yes" ; then
+    AC_DEFINE(_SQUID_RES_NSADDR6_LARRAY,_res_ext.nsaddr_list,[If _res_ext structure has nsaddr_list member])
+    AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,ns6count,[Nameserver Counter for IPv6 _res_ext])
+  fi
+
+if test "$_SQUID_RES_NSADDR6_LIST" = ""; then
+  AC_CACHE_CHECK(for _res._u._ext.nsaddrs, ac_cv_have_res_ext_nsaddrs,
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+#if HAVE_RESOLV_H
+#include <resolv.h>
+#endif
+    ]], i
+    [[_res._u._ext.nsaddrs[[0]]->sin6_addr;]])],
+    [ac_cv_have_res_ext_nsaddrs="yes"],[ac_cv_have_res_ext_nsaddrs="no"]))
+  if test "$ac_cv_have_res_ext_nsaddrs" = "yes" ; then
+    AC_DEFINE(_SQUID_RES_NSADDR6_LPTR,_res._u._ext.nsaddrs,[If _res structure has _ext.nsaddrs member])
+    AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,_res._u._ext.nscount6,[Nameserver Counter for IPv6 _res])
+  fi
+fi
+
+AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+#if HAVE_RESOLV_H
+#include <resolv.h>
+#endif
+  ]], [[_res.nsaddr_list[[0]];]])],
+  [ac_cv_have_res_nsaddr_list="yes"],[ac_cv_have_res_nsaddr_list="no"]))
+  if test $ac_cv_have_res_nsaddr_list = "yes" ; then
+    AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.nsaddr_list,[If _res structure has nsaddr_list member])
+    AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
+  fi
+
+  if test "$_SQUID_RES_NSADDR_LIST" = ""; then
+    AC_CACHE_CHECK(for _res.ns_list, ac_cv_have_res_ns_list,
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+#if HAVE_RESOLV_H
+#include <resolv.h>
+#endif
+  ]], 
+  [[_res.ns_list[[0]].addr;]])],
+  [ac_cv_have_res_ns_list="yes"],[ac_cv_have_res_ns_list="no"]))
+  if test $ac_cv_have_res_ns_list = "yes" ; then
+    AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.ns_list,[If _res structure has ns_list member])
+    AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
+  fi
+fi
+])
+
+
 dnl checks the winsock library to use (ws2_32 or wsock32)
 dnl may set ac_cv_func_select as a side effect
 AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
