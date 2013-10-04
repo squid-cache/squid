@@ -28,9 +28,14 @@ my $reComment = qr{
 	/\*.*?\*/
 }xs;
 
-# Debugging section inside a boilerplate comment
+# Debugging section inside a boilerplate comment.
 my $reDebug = qr{
 	^[\s*]*(DEBUG:.*?)$
+}mx;
+
+# Same as $reDebug, but does not match empty DEBUG: statements.
+my $reDebugFull = qr{
+	^[\s*]*(DEBUG:[^\S\n]*\S.*?)\s*$
 }mx;
 
 # Copyright-related claims inside a boilerplate comment
@@ -122,7 +127,7 @@ foreach my $fname (@FileNames) {
 	my $extras = ''; # DEBUG section, inspired by ..., etc.
 
 	if (defined $boiler) {
-		if ($boiler =~ m/$reDebug/) {
+		if ($boiler =~ m/$reDebugFull/) {
 			$extras .= "/* $1 */\n\n";
 		}
 
