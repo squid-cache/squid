@@ -43,40 +43,6 @@
 #define SQUIDSTRINGPRINT(s) (s).psize(),(s).rawBuf()
 #endif /* SQUIDSTRINGPH */
 
-#define DEBUGSTRINGS 0
-#if DEBUGSTRINGS
-#include "splay.h"
-
-class String;
-
-class StringRegistry
-{
-
-public:
-    static StringRegistry &Instance();
-
-    void add(String const *);
-
-    StringRegistry();
-
-    void remove(String const *);
-
-private:
-    static OBJH Stat;
-
-    static StringRegistry Instance_;
-
-    static SplayNode<String const *>::SPLAYWALKEE Stater;
-
-    Splay<String const *> entries;
-
-    bool registered;
-
-};
-
-class StoreEntry;
-#endif
-
 class String
 {
 
@@ -149,10 +115,6 @@ public:
     String substr(size_type from, size_type to) const;
 
     _SQUID_INLINE_ void cut(size_type newLength);
-
-#if DEBUGSTRINGS
-    void stat(StoreEntry *) const;
-#endif
 
 private:
     void allocAndFill(const char *str, int len);

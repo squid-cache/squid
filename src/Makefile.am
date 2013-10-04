@@ -17,7 +17,12 @@ DNSSOURCE = \
 SBUF_SOURCE= \
 	base/InstanceId.h \
 	MemBlob.h \
-	MemBlob.cc
+	MemBlob.cc \
+	OutOfBoundsException.h \
+	SBuf.h \
+	SBuf.cc \
+	SBufExceptions.h \
+	SBufExceptions.cc
 
 LOADABLE_MODULES_SOURCES = \
 	LoadableModule.h \
@@ -1068,6 +1073,7 @@ check_PROGRAMS+=\
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
+	tests/testSBuf \
 	tests/testConfigParser \
 	tests/testStatHist \
 	tests/testVector \
@@ -3637,6 +3643,42 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
+
+tests_testSBuf_SOURCES= \
+	tests/testSBuf.h \
+	tests/testSBuf.cc \
+	tests/testMain.cc \
+	tests/SBufFindTest.h \
+	tests/SBufFindTest.cc \
+	$(SBUF_SOURCE) \
+	SBufStream.h \
+	time.cc \
+	mem.cc \
+	tests/stub_debug.cc \
+	tests/stub_fatal.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_store.cc \
+	tests/stub_store_stats.cc \
+	tests/stub_tools.cc \
+	SquidString.h \
+	String.cc \
+	wordlist.cc \
+	MemBuf.cc
+nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
+tests_testSBuf_LDFLAGS = $(LIBADD_DL)
+tests_testSBuf_LDADD=\
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
+	$(COMPAT_LIB) \
+	libsquid.la \
+	ip/libip.la \
+	mgr/libmgr.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMMON_LIBS)
+tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
