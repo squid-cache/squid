@@ -1,6 +1,4 @@
 /*
- * SBuf.h (C) 2008 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -112,7 +110,7 @@ class SBuf
 {
 public:
     typedef MemBlob::size_type size_type;
-    static const size_type npos = -1;
+    static const size_type npos = 0xffffffff; // max(uint32_t)
 
     /// Maximum size of a SBuf. By design it MUST be < MAX(size_type)/2. Currently 256Mb.
     static const size_type maxSize = 0xfffffff;
@@ -129,7 +127,7 @@ public:
      * \param n how many bytes to import into the SBuf. If it is npos
      *              or unspecified, imports to end-of-cstring
      * \note it is the caller's responsibility not to go out of bounds
-     * \note bounds is 0 <= pos < length()
+     * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
     explicit SBuf(const char *S, size_type n = npos);
 
@@ -239,7 +237,7 @@ public:
     /** random-access read to any char within the SBuf.
      *
      * \throw OutOfBoundsException when access is out of bounds
-     * \note bounds is 0 <= pos < length()
+     * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
     const char at(size_type pos) const {checkAccessBounds(pos); return operator[](pos);}
 
@@ -248,7 +246,7 @@ public:
      * \param pos the position to be overwritten
      * \param toset the value to be written
      * \throw OutOfBoundsException when pos is of bounds
-     * \note bounds is 0 <= pos < length()
+     * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      * \note performs a copy-on-write if needed.
      */
     void setAt(size_type pos, char toset);
@@ -355,8 +353,10 @@ public:
      */
     char *rawSpace(size_type minSize);
 
-    /**
+    /** Obtain how much free space is available in the backing store.
      *
+     * \note: unless the client just cow()ed, it is not guaranteed that
+     *        the free space can be used.
      */
     size_type spaceSize() const { return store_->spaceSize(); }
 
@@ -439,11 +439,10 @@ public:
      * It is an in-place-modifying version of substr.
      * \param pos start sub-stringing from this byte. If it is
      *      npos or it is greater than the SBuf length, the SBuf is cleared and
-     *      an empty SBuf is returned. If it is <0, it is ignored
+     *      an empty SBuf is returned.
      * \param n maximum number of bytes of the resulting SBuf.
      *     npos means "to end of SBuf".
      *     if it is 0, the SBuf is cleared and an empty SBuf is returned.
-     *     if it is < 0, it is ignored (same as supplying npos)
      *     if it overflows the end of the SBuf, it is capped to the end of SBuf
      * \see substr, trim
      */
@@ -482,7 +481,6 @@ public:
      * sequence contained in the str argument.
      * \param startPos if specified, ignore any occurrences before that position
      *     if startPos is npos or greater than length() npos is always returned
-     *     if startPos is < 0, it is ignored
      * \return npos if the SBuf was not found
      */
     size_type find(const SBuf & str, size_type startPos = 0) const;
@@ -493,7 +491,6 @@ public:
      * \return npos if the char was not found
      * \param endPos if specified, ignore any occurrences after that position.
      *   if npos or greater than length(), the whole SBuf is considered
-     *   if < 0, npos is always returned
      */
     size_type rfind(char c, size_type endPos = npos) const;
 
@@ -504,7 +501,6 @@ public:
      * \return npos if the sequence  was not found
      * \param endPos if specified, ignore any occurrences after that position
      *   if npos or greater than length(), the whole SBuf is considered
-     *   if < 0, npos is always returned
      */
     size_type rfind(const SBuf &str, size_type endPos = npos) const;
 
@@ -515,7 +511,6 @@ public:
      * \return npos if no character in the set could be found
      * \param startPos if specified, ignore any occurrences before that position
      *   if npos, then npos is always returned
-     *   if <0, it is ignored.
      */
     size_type find_first_of(const SBuf &set, size_type startPos = 0) const;
 

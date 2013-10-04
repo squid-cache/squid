@@ -33,7 +33,7 @@ public:
 protected:
 
     static SBuf RandomSBuf(const int length);
-    void nextLen(int &len, const int max);
+    void nextLen(SBuf::size_type &len, const SBuf::size_type max);
     void placeNeedle(const SBuf &cleanHay);
 
     void testAllMethods();
