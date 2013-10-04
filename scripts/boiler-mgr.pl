@@ -172,8 +172,8 @@ foreach my $fname (@FileNames) {
 		# If we replaced what we thought is an old boiler, do not use $` for
 		# context because it is based on modified $code and will often mislead.
 		my $context = defined $boiler ? $& : ($` . $&);
-		&Warn("Suspected boilerplate in an unusual location, skipping.",
-			  $context);
+		&Warn("Suspected boilerplate in an unusual location, skipping:",
+			$context);
 		next;
 	}
 
