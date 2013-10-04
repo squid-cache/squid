@@ -1,6 +1,4 @@
 /*
- * MemBlob.cc (C) 2009 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -45,6 +43,17 @@ InstanceIdDefinitions(MemBlob, "blob");
 
 MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
 {}
+
+MemBlobStats&
+MemBlobStats::operator += (const MemBlobStats& s)
+{
+    alloc+=s.alloc;
+    live+=s.live;
+    append+=s.append;
+    liveBytes+=s.liveBytes;
+
+    return *this;
+}
 
 std::ostream&
 MemBlobStats::dump(std::ostream &os) const
