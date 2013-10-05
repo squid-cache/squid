@@ -291,7 +291,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         sz = vsnprintf(space, spaceSize(), fmt, vargs);
         if (sz < 0) // output error in vsnprintf
             throw TextException("output error in second-go vsnprintf",__FILE__,
-                __LINE__);
+                                __LINE__);
     }
 
     if (sz < 0) // output error in either vsnprintf
@@ -308,7 +308,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     if (!snPrintfTerminatorChecked) {
         char testbuf[16];
         snPrintfTerminatorCounted = snprintf(testbuf, sizeof(testbuf),
-            "%s", "1") == 2;
+                                             "%s", "1") == 2;
         snPrintfTerminatorChecked = true;
     }
     if (snPrintfTerminatorCounted) {
@@ -604,7 +604,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
     char needleBegin = needle[0];
 
     debugs(24, 7, "looking for " << needle << "starting at " << startPos <<
-                    " in id " << id);
+           " in id " << id);
     while (begin < lastPossible) {
         char *tmp;
         debugs(24, 8, " begin=" << (void *) begin <<
