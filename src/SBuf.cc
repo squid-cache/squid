@@ -558,10 +558,6 @@ SBuf::find(char c, size_type startPos) const
     if (startPos > length())
         return npos;
 
-    // ignore invalid startPos
-    if (startPos < 0)
-        startPos = 0;
-
     const void *i = memchr(buf()+startPos, (int)c, (size_type)length()-startPos);
 
     if (i == NULL)
@@ -577,9 +573,6 @@ SBuf::find(const SBuf &needle, size_type startPos) const
         ++stats.find;
         return npos;
     }
-
-    if (startPos < 0)
-        startPos = 0;
 
     // std::string allows needle to overhang hay but not start outside
     if (startPos > length()) {
@@ -673,8 +666,6 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
     // on npos input std::string compares last octet of hay
     if (endPos == npos || endPos >= length()) {
         endPos = length();
-    } else if (endPos < 0) {
-        return npos;
     } else {
         // NP: off-by-one weirdness:
         // endPos is an offset ... 0-based
@@ -708,9 +699,6 @@ SBuf::find_first_of(const SBuf &set, size_type startPos) const
 
     if (startPos >= length())
         return npos;
-
-    if (startPos < 0)
-        startPos = 0;
 
     if (set.length() == 0)
         return npos;
@@ -813,8 +801,6 @@ SBuf::toUpper() const
 void
 SBuf::checkAccessBounds(size_type pos) const
 {
-    if (pos < 0)
-        throw OutOfBoundsException(*this, pos, __FILE__, __LINE__);
     if (pos >= length())
         throw OutOfBoundsException(*this, pos, __FILE__, __LINE__);
 }
