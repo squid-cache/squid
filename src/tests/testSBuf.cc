@@ -272,7 +272,7 @@ testSBuf::testComparisons()
     // \0-clenliness test
     s1.assign("f\0oo",4);
     s2.assign("f\0Oo",4);
-    CPPUNIT_ASSERT_EQUAL(1,s1.cmp(s2));
+    CPPUNIT_ASSERT(s1.cmp(s2) > 0);
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2));
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,3));
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,2));
