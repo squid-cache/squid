@@ -232,14 +232,14 @@ public:
      *
      * does not check access bounds. If you need that, use at()
      */
-    const char operator [](size_type pos) const {++stats.getChar; return store_->mem[off_+pos];}
+    char operator [](size_type pos) const {++stats.getChar; return store_->mem[off_+pos];}
 
     /** random-access read to any char within the SBuf.
      *
      * \throw OutOfBoundsException when access is out of bounds
      * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
-    const char at(size_type pos) const {checkAccessBounds(pos); return operator[](pos);}
+    char at(size_type pos) const {checkAccessBounds(pos); return operator[](pos);}
 
     /** direct-access set a byte at a specified operation.
      *
@@ -582,7 +582,7 @@ private:
      * Try to guesstimate how big a MemBlob to allocate.
      * The result is guarranteed to be to be at least the desired size.
      */
-    const size_type estimateCapacity(size_type desired) const {return (2*desired);}
+    size_type estimateCapacity(size_type desired) const {return (2*desired);}
 
     void reAlloc(size_type newsize);
 
