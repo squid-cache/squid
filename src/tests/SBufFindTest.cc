@@ -166,9 +166,6 @@ SBufFindTest::resultsMatch() const
     if (theFindString == std::string::npos && theFindSBuf == SBuf::npos)
         return true; // both npos
 
-    if (theFindSBuf < 0) // should not happen, treat as error
-        return false;
-
     // now safe to cast a non-negative SBuf result
     return theFindString == static_cast<std::string::size_type>(theFindSBuf);
 }
@@ -267,23 +264,21 @@ SBufFindTest::posKey() const
     if (thePos == SBuf::npos)
         return ",npos";
 
-    if (thePos < 0)
-        return ",posN"; // negative
-
-    // we know Pos is not negative or special; avoid signed/unsigned warnings
-    const std::string::size_type pos =
-        static_cast<std::string::size_type>(thePos);
-
-    if (pos < theBareNeedlePos)
+    if (thePos < theBareNeedlePos)
         return ",posL"; // to the Left of the needle
-    if (pos == theBareNeedlePos)
+
+    if (thePos == theBareNeedlePos)
         return ",posB"; // Beginning of the needle
-    if (pos < theBareNeedlePos + theStringNeedle.length())
+
+    if (thePos < theBareNeedlePos + theStringNeedle.length())
         return ",posM"; // in the Middle of the needle
-    if (pos == theBareNeedlePos + theStringNeedle.length())
+
+    if (thePos == theBareNeedlePos + theStringNeedle.length())
         return ",posE"; // at the End of the needle
-    if (pos < theStringHay.length())
+
+    if (thePos < theStringHay.length())
         return ",posR"; // to the Right of the needle
+
     return ",posP"; // past the hay
 }
 
