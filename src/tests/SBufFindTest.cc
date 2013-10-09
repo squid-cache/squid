@@ -189,12 +189,14 @@ AnyToString(const Type &value)
     return sbuf.str();
 }
 
+#if 0
 /// helper function to convert SBuf position to a human-friendly string
 inline std::string
 PosToString(const SBuf::size_type pos)
 {
     return pos == SBuf::npos ? std::string("npos") : AnyToString(pos);
 }
+#endif
 
 /// helper function to convert std::string position to a human-friendly string
 inline std::string
