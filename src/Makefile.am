@@ -465,6 +465,8 @@ squid_SOURCES = \
 	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
+	SBufStatsAction.h \
+	SBufStatsAction.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
