@@ -55,14 +55,14 @@ fi
 # might be cross-compiling.
 if test "x$HOSTCXX" = "x"; then
   HOSTCXX="$CXX"
-  if test "x$squid_cv_check_marchnative" = "xyes"; then
-    CXXFLAGS="$CXXFLAGS -march=native"
-  fi
+#  if test "x$squid_cv_check_marchnative" = "xyes"; then
+#    CXXFLAGS="$CXXFLAGS -march=native"
+#  fi
 fi
-if test "x$squid_cv_check_marchnative" = "xyes"; then
-  # always valid for the Host compiler.
-  HOSTCXX="$HOSTCXX -march=native"
-fi
+#if test "x$squid_cv_check_marchnative" = "xyes"; then
+#  # always valid for the Host compiler.
+#  HOSTCXX="$HOSTCXX -march=native"
+#fi
 AC_SUBST(HOSTCXX)
 
 AC_MSG_CHECKING([simplified host os])
