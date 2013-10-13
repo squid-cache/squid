@@ -285,7 +285,8 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 	public: \
 		void *operator new(size_t size) { \
 		  assert(size == sizeof(type)); \
-		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
+		  if (!CBDATA_##type) \
+                      CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
 		  return cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__); \
 		} \
   		void operator delete (void *address) { \
@@ -332,7 +333,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 /**
  * \ingroup CBDATAAPI
  *
- * This needs to be defined LAST in teh class definition. It plays with private/public states in C++.
+ * This needs to be defined LAST in the class definition. It plays with private/public states in C++.
  */
 #define CBDATA_CLASS2(type)	\
 	private: \
@@ -340,7 +341,8 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 	public: \
 		void *operator new(size_t size) { \
 		  assert(size == sizeof(type)); \
-		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
+		  if (!CBDATA_##type) \
+                      CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
 		  return (type *)cbdataInternalAlloc(CBDATA_##type); \
 		} \
   		void operator delete (void *address) { \
