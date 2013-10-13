@@ -148,12 +148,6 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
-NAME: ignore_ims_on_miss
-TYPE: obsolete
-DOC_START
-	This option is not yet supported by Squid-3.
-DOC_END
-
 NAME: location_rewrite_program location_rewrite_access location_rewrite_children location_rewrite_concurrency
 TYPE: obsolete
 DOC_START
@@ -166,7 +160,12 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
-# no Options Removed in 3.3
+# Options Removed in 3.3
+NAME: ignore_ims_on_miss
+TYPE: obsolete
+DOC_START
+	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
 
 # Options Removed in 3.2
 NAME: ignore_expect_100
@@ -7285,6 +7284,25 @@ DOC_START
 	Note: If you want Squid to use parents for all requests see
 	the never_direct directive. prefer_direct only modifies how Squid
 	acts on cacheable requests.
+DOC_END
+
+NAME: cache_miss_revalidate
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.cache_miss_revalidate
+DOC_START
+	Whether Squid on cache MISS will pass client revalidation requests
+	to the server or tries to fetch new content for caching.
+	This is useful while the cache is mostly empty to more quickly
+	have the cache populated.
+
+	When set to 'on' (default), Squid will pass all client If-* headers
+	to the server.
+
+	When set to 'off' and if the request is cacheable, Squid will
+	remove the clients If-Modified-Since and If-None-Match headers from
+	the request sent to the server.
 DOC_END
 
 NAME: always_direct
