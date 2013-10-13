@@ -99,8 +99,6 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int32_t type)
     return NTLM_ERR_NONE;
 }
 
-#define lstring_zero(s) s.str=NULL; s.l=-1;
-
 /**
  * Fetches a string from the authentication packet.
  * The lstring data-part may point to inside the packet itself or a temporary static buffer.
@@ -119,7 +117,8 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     lstring rv;
     char *d;
 
-    lstring_zero(rv);
+    rv.str = NULL;
+    rv.l = -1;
 
     l = le16toh(str->len);
     o = le32toh(str->offset);
@@ -130,6 +129,7 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
         return rv;
     }
     rv.str = (char *)packet + o;
+    rv.l = 0;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
         /* UNICODE string */
         unsigned short *s = (unsigned short *)rv.str;
