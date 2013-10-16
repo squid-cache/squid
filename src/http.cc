@@ -1976,7 +1976,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         if (hdr_out->has(HDR_IF_MODIFIED_SINCE))
             break;
         else if (Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
-                hdr_out->addEntry(e->clone());
+            hdr_out->addEntry(e->clone());
         break;
 
     case HDR_IF_NONE_MATCH:
