@@ -256,7 +256,7 @@ This section gives a thorough account of those changes in three categories:
                 <item>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
         </itemize>
 
-	<tag>storeurl_rewrite_program</tag>
+	<tag>store_id_rewrite_program</tag>
 	<p>A helper program to provide cache storage internal key ID value for a request.
 	<p>Ported equivalent to <em>storeurl_rewrite_program</em> from 2.7
 
