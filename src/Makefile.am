@@ -3331,8 +3331,8 @@ tests_testRock_SOURCES = \
 	cache_cf.h \
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
 	client_db.h \
+	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
