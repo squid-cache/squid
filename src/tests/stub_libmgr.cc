@@ -27,8 +27,8 @@ StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(NULL)
 static Mgr::Action::Pointer dummyAction;
 
 #include "mgr/ActionParams.h"
-Mgr::ActionParams::ActionParams() STUB
-Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg) STUB
+Mgr::ActionParams::ActionParams() STUB_NOP
+Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg) STUB_NOP
 void Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const STUB
 std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &params) STUB_RETVAL(os)
 
