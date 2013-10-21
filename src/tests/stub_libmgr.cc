@@ -174,8 +174,8 @@ Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type aType) S
 bool Mgr::QueryParams::ParseParam(const String& paramStr, Param& param) STUB_RETVAL(false)
 
 #include "mgr/Registration.h"
-void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
-void Mgr::RegisterAction(char const * action, char const * desc, ClassActionCreationHandler *handler, int pw_req_flag, int atomic);
+//void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
+//void Mgr::RegisterAction(char const * action, char const * desc, ClassActionCreationHandler *handler, int pw_req_flag, int atomic);
 
 #include "mgr/Request.h"
 //Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, int aFd, const Mgr::ActionParams &aParams) STUB
