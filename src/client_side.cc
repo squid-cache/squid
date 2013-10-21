@@ -5737,19 +5737,20 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
     }
 
     FtpCloseDataConnection(context->getConn());
-    debugs(11, 3, "will actively connect to " << cltAddr);
 
     Comm::ConnectionPointer conn = new Comm::Connection();
     conn->remote = cltAddr;
 
-    // TODO: should we use getOutgoingAddress() here instead?
-    if (conn->remote.isIPv4())
-        conn->local.setIPv4();
-
+    // Use local IP address of the control connection as the source address
+    // of the active data connection, or some clients will refuse to accept.
+    conn->flags |= COMM_DOBIND;
+    conn->local = connState->clientConnection->local;
     // RFC 959 requires active FTP connections to originate from port 20
     // but that would preclude us from supporting concurrent transfers! (XXX?)
-    // conn->flags |= COMM_DOBIND;
-    // conn->local.port(20);
+    conn->local.port(0);
+
+    debugs(11, 3, "will actively connect from " << conn->local << " to " <<
+           conn->remote);
 
     context->getConn()->ftp.dataConn = conn;
     context->getConn()->ftp.uploadAvailSize = 0;
