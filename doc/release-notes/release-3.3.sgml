@@ -180,6 +180,12 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>cache_miss_revalidate</tag>
+	<p>Whether Squid is to pass-through If-Modified-Since and If-None-Match headers on cache MISS.
+	   Revalidation requests can prevent cache gathering objects to HIT on.
+	<p>Based on the Squid-2.7 <em>ignore_ims_on_miss</em> feature.
+	<p><em>IMPORTANT:</em> the meaning for on/off values has changed along with the name since 2.7.
+
 	<tag>request_header_add</tag>
 	<p>New directive to add custom headers on HTTP traffic sent to upstream servers.
 
@@ -231,7 +237,8 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 
-	<p><em>There are no removed squid.conf options in Squid-3.3.</em>
+	<tag>ignore_ims_on_miss</tag>
+	<p>This option has been replaced by the <em>cache_miss_revalidate</em> feature.
 
 </descrip>
 
@@ -316,9 +323,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.6
 
 	<tag>external_refresh_check</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>location_rewrite_access</tag>
