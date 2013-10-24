@@ -1089,6 +1089,10 @@ check_PROGRAMS+=\
 	tests/testStatHist \
 	$(STORE_TESTS)
 
+if HAVE_FS_UFS
+check_PROGRAMS += tests/testUfs
+endif
+
 ## NP: required to run the above list. check_PROGRAMS only builds the binaries...
 TESTS += $(check_PROGRAMS)
 
