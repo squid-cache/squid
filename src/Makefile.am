@@ -1089,6 +1089,9 @@ check_PROGRAMS+=\
 	tests/testStatHist \
 	$(STORE_TESTS)
 
+if HAVE_FS_ROCK
+check_PROGRAMS += tests/testRock
+endif
 if HAVE_FS_UFS
 check_PROGRAMS += tests/testUfs
 endif
