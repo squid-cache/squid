@@ -337,6 +337,7 @@ public:
         int check_hostnames;
         int allow_underscore;
         int via;
+        int cache_miss_revalidate;
         int emailErrData;
         int httpd_suppress_version_string;
         int global_internal_static;
