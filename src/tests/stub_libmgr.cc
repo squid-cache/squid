@@ -27,8 +27,8 @@ StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(NULL)
 static Mgr::Action::Pointer dummyAction;
 
 #include "mgr/ActionParams.h"
-Mgr::ActionParams::ActionParams() STUB
-Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg) STUB
+Mgr::ActionParams::ActionParams() STUB_NOP
+Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg) STUB_NOP
 void Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const STUB
 std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &params) STUB_RETVAL(os)
 
@@ -174,8 +174,8 @@ Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type aType) S
 bool Mgr::QueryParams::ParseParam(const String& paramStr, Param& param) STUB_RETVAL(false)
 
 #include "mgr/Registration.h"
-void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
-void Mgr::RegisterAction(char const * action, char const * desc, ClassActionCreationHandler *handler, int pw_req_flag, int atomic);
+//void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
+//void Mgr::RegisterAction(char const * action, char const * desc, ClassActionCreationHandler *handler, int pw_req_flag, int atomic);
 
 #include "mgr/Request.h"
 //Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, int aFd, const Mgr::ActionParams &aParams) STUB

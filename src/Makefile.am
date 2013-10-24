@@ -3346,8 +3346,8 @@ tests_testRock_SOURCES = \
 	cache_cf.h \
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
 	client_db.h \
+	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
@@ -3361,6 +3361,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_libmgr.cc \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
@@ -3402,7 +3403,6 @@ tests_testRock_LDADD = \
 	acl/libapi.la \
 	acl/libstate.la \
 	ipc/libipc.la \
-	mgr/libmgr.la \
 	base/libbase.la \
 	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
