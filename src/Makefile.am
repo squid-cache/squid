@@ -1093,8 +1093,14 @@ check_PROGRAMS+=\
 	tests/testURL \
 	tests/testConfigParser \
 	tests/testStatHist \
-	tests/testVector \
-	$(STORE_TESTS)
+	tests/testVector
+
+if HAVE_FS_ROCK
+check_PROGRAMS += tests/testRock
+endif
+if HAVE_FS_UFS
+check_PROGRAMS += tests/testUfs
+endif
 
 ## NP: required to run the above list. check_PROGRAMS only builds the binaries...
 TESTS += $(check_PROGRAMS)
