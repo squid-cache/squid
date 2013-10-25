@@ -6,12 +6,12 @@
 #ifndef SQUID_IPC_ASYNCUDSOP_H
 #define SQUID_IPC_ASYNCUDSOP_H
 
-#include "SquidString.h"
 #include "base/AsyncJob.h"
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "ipc/TypedMsgHdr.h"
 #include "ipc/FdNotes.h"
+#include "ipc/TypedMsgHdr.h"
+#include "SquidString.h"
 
 class CommTimeoutCbParams;
 class CommIoCbParams;

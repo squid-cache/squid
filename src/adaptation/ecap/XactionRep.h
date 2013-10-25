@@ -5,11 +5,11 @@
 #ifndef SQUID_ECAP_XACTION_REP_H
 #define SQUID_ECAP_XACTION_REP_H
 
-#include "BodyPipe.h"
-#include "adaptation/Initiate.h"
-#include "adaptation/Message.h"
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/ServiceRep.h"
+#include "adaptation/Initiate.h"
+#include "adaptation/Message.h"
+#include "BodyPipe.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 #include <libecap/host/xaction.h>

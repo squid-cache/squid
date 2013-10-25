@@ -38,8 +38,8 @@
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "hier_code.h"
-#include "PingData.h"
 #include "ip/Address.h"
+#include "PingData.h"
 
 class HttpRequest;
 class StoreEntry;

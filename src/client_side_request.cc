@@ -43,10 +43,10 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
-#include "ClientRequestContext.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
@@ -62,8 +62,8 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "ipcache.h"
 #include "ip/QosConfig.h"
+#include "ipcache.h"
 #include "log/access_log.h"
 #include "MemObject.h"
 #include "Parsing.h"
@@ -89,8 +89,8 @@
 #endif
 #endif
 #if USE_SSL
-#include "ssl/support.h"
 #include "ssl/ServerBump.h"
+#include "ssl/support.h"
 #endif
 
 #if LINGERING_CLOSE

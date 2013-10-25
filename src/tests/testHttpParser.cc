@@ -3,11 +3,11 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "testHttpParser.h"
 #include "HttpParser.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
+#include "testHttpParser.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpParser );
 

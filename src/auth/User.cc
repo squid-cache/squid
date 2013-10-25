@@ -32,12 +32,12 @@
  */
 
 #include "squid.h"
-#include "auth/User.h"
-#include "auth/UserRequest.h"
-#include "auth/Config.h"
-#include "auth/Gadgets.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "auth/Config.h"
+#include "auth/Gadgets.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
 #include "SquidConfig.h"

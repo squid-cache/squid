@@ -2,8 +2,8 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "HelperChildConfig.h"
 #include "globals.h"
+#include "HelperChildConfig.h"
 #include "Parsing.h"
 
 #include <string.h>

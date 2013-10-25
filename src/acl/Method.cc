@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
+#include "acl/Checklist.h"
 #include "acl/Method.h"
 #include "acl/MethodData.h"
-#include "acl/Checklist.h"
 #include "HttpRequest.h"
 
 /* explicit template instantiation required for some systems */

@@ -2,8 +2,8 @@
 #define SQUID_NOTES_H
 
 #include "acl/forward.h"
-#include "base/Vector.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
 #include "CbDataList.h"
 #include "MemPool.h"
 #include "SquidString.h"

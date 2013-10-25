@@ -32,14 +32,14 @@
 #ifndef SQUID_ICAPSERVICEREP_H
 #define SQUID_ICAPSERVICEREP_H
 
-#include "cbdata.h"
-#include "FadingCounter.h"
-#include "adaptation/Service.h"
 #include "adaptation/forward.h"
-#include "adaptation/Initiator.h"
 #include "adaptation/icap/Elements.h"
+#include "adaptation/Initiator.h"
+#include "adaptation/Service.h"
 #include "base/AsyncJobCalls.h"
+#include "cbdata.h"
 #include "comm.h"
+#include "FadingCounter.h"
 #include "pconn.h"
 #include <deque>
 

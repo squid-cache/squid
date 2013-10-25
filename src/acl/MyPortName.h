@@ -33,8 +33,8 @@
 
 #ifndef SQUID_ACLMYPORTNAME_H
 #define SQUID_ACLMYPORTNAME_H
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class ACLMyPortNameStrategy : public ACLStrategy<const char *>
 {

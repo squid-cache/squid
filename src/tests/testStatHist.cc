@@ -1,7 +1,7 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
-#include "testStatHist.h"
 #include "StatHist.h"
+#include "testStatHist.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(testStatHist);
 

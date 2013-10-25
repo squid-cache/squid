@@ -33,9 +33,9 @@
 #ifndef SQUID_ACLDOMAINDATA_H
 #define SQUID_ACLDOMAINDATA_H
 
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "splay.h"
 
 /// \ingroup ACLAPI
 class ACLDomainData : public ACLData<char const *>

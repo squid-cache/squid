@@ -34,11 +34,11 @@
 #include "BlockingFile.h"
 #include "Debug.h"
 #include "defines.h"
-#include "globals.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
+#include "globals.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

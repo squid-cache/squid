@@ -33,8 +33,8 @@
 #ifndef SQUID_ACLHTTPREQHEADER_H
 #define SQUID_ACLHTTPREQHEADER_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "HttpHeader.h"
 
 /// \ingroup ACLAPI

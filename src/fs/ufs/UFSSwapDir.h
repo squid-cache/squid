@@ -33,8 +33,8 @@
 #include "Store.h"
 #include "StoreIOState.h"
 #include "StoreSearch.h"
-#include "SwapDir.h"
 #include "swap_log_op.h"
+#include "SwapDir.h"
 #include "UFSStrategy.h"
 
 class HttpRequest;

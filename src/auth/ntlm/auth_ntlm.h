@@ -5,9 +5,9 @@
 
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
+#include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "auth/Config.h"
 #include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */

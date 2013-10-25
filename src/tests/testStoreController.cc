@@ -1,14 +1,14 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "testStoreController.h"
-#include "Store.h"
-#include "SwapDir.h"
-#include "TestSwapDir.h"
 #include "Mem.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "StoreSearch.h"
+#include "SwapDir.h"
+#include "testStoreController.h"
+#include "TestSwapDir.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStoreController );
 

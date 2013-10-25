@@ -43,14 +43,14 @@
 #include "auth/State.h"
 #include "cache_cf.h"
 #include "charset.h"
-#include "mgr/Registration.h"
-#include "Store.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
+#include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "SquidTime.h"
+#include "Store.h"
 #include "uudecode.h"
 #include "wordlist.h"
-#include "SquidTime.h"
 
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;

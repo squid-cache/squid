@@ -33,8 +33,8 @@
 #ifndef SQUID_STMEM_H
 #define SQUID_STMEM_H
 
-#include "splay.h"
 #include "Range.h"
+#include "splay.h"
 
 class mem_node;
 

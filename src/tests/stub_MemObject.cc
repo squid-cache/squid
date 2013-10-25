@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "comm/Connection.h"
-#include "MemObject.h"
 #include "HttpReply.h"
+#include "MemObject.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif

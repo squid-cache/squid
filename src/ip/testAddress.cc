@@ -1,9 +1,9 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
 //#include "compat/getaddrinfo.h"
-#include "testAddress.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "testAddress.h"
 
 #if HAVE_CSTRING
 #include <cstring>

@@ -42,9 +42,9 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
-#include "StoreClient.h"
 #include "Store.h"
 #include "store_swapin.h"
+#include "StoreClient.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS

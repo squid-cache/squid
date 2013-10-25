@@ -1,8 +1,8 @@
 #ifndef _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 #define _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 
-#include "auth/UserRequest.h"
 #include "auth/ntlm/auth_ntlm.h"
+#include "auth/UserRequest.h"
 #include "MemPool.h"
 
 class ConnStateData;

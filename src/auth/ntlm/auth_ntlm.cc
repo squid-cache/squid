@@ -42,14 +42,14 @@
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cache_cf.h"
-#include "mgr/Registration.h"
-#include "Store.h"
 #include "client_side.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "wordlist.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "wordlist.h"
 
 /* NTLM Scheme */
 static AUTHSSTATS authenticateNTLMStats;

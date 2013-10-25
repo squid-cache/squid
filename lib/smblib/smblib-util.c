@@ -25,9 +25,9 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "smblib/smblib.h"
-#include "smblib/smblib-priv.h"
 #include "rfcnb/rfcnb.h"
+#include "smblib/smblib-priv.h"
+#include "smblib/smblib.h"
 
 #if HAVE_STRING_H
 #include <string.h>

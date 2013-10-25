@@ -4,11 +4,11 @@
  */
 #include "squid.h"
 #include "ConfigParser.h"
-#include "HelperReply.h"
+#include "Debug.h"
 #include "helper.h"
+#include "HelperReply.h"
 #include "rfc1738.h"
 #include "SquidString.h"
-#include "Debug.h"
 
 HelperReply::HelperReply(char *buf, size_t len) :
         result(HelperReply::Unknown),

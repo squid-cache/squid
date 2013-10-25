@@ -42,10 +42,9 @@
 #include "anyp/PortCfg.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
-#include "mgr/ActionPasswordList.h"
+#include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeerDomainList.h"
-#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
@@ -64,7 +63,9 @@
 #include "log/CustomLog.h"
 #include "Mem.h"
 #include "MemBuf.h"
+#include "mgr/ActionPasswordList.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "Parsing.h"
 #include "PeerDigest.h"
@@ -76,10 +77,9 @@
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
-#include "wordlist.h"
-#include "neighbors.h"
 #include "tools.h"
 #include "URLScheme.h"
+#include "wordlist.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"
 #if USE_ADAPTATION
@@ -92,8 +92,8 @@
 #include "adaptation/ecap/Config.h"
 #endif
 #if USE_SSL
-#include "ssl/support.h"
 #include "ssl/Config.h"
+#include "ssl/support.h"
 #endif
 #if USE_AUTH
 #include "auth/Config.h"
@@ -1648,8 +1648,8 @@ free_acl_b_size_t(AclSizeLimit ** head)
 
 #if USE_DELAY_POOLS
 
-#include "DelayPools.h"
 #include "DelayConfig.h"
+#include "DelayPools.h"
 /* do nothing - free_delay_pool_count is the magic free function.
  * this is why delay_pool_count isn't just marked TYPE: u_short
  */

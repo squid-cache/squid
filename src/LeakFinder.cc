@@ -39,8 +39,8 @@
 #if USE_LEAKFINDER
 
 #include "LeakFinder.h"
-#include "Store.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 /* ========================================================================= */
 

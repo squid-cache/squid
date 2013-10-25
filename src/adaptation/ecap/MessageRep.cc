@@ -2,16 +2,16 @@
  * DEBUG: section 93    eCAP Interface
  */
 #include "squid.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
 #include "BodyPipe.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
 #include <libecap/common/named_values.h>
+#include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
-#include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "base/TextException.h"
 #include "URL.h"
 

@@ -33,10 +33,10 @@
 
 #if USE_AUTH
 
-#include "hash.h"
-#include "MemPool.h"
 #include "auth/Config.h"
 #include "auth/User.h"
+#include "hash.h"
+#include "MemPool.h"
 
 /**
  \ingroup AuthAPI
