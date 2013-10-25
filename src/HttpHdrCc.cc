@@ -32,11 +32,11 @@
 
 #include "squid.h"
 #include "base/StringArea.h"
+#include "HttpHdrCc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
-#include "HttpHdrCc.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"

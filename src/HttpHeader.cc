@@ -43,11 +43,11 @@
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
 #include "rfc1123.h"
+#include "SquidConfig.h"
+#include "SquidString.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
-#include "SquidConfig.h"
-#include "SquidString.h"
 #include "TimeOrTag.h"
 
 /*

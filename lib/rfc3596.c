@@ -76,8 +76,8 @@
 #include <strings.h>
 #endif
 
-#include "rfc3596.h"
 #include "rfc2671.h"
+#include "rfc3596.h"
 
 #ifndef SQUID_RFC1035_H
 #error RFC3596 Library depends on RFC1035

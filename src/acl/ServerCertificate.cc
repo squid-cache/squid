@@ -5,9 +5,9 @@
 
 #if USE_SSL
 
-#include "acl/ServerCertificate.h"
-#include "acl/Checklist.h"
 #include "acl/CertificateData.h"
+#include "acl/Checklist.h"
+#include "acl/ServerCertificate.h"
 #include "client_side.h"
 #include "fde.h"
 #include "ssl/ServerBump.h"

@@ -37,10 +37,10 @@
 #include "globals.h"
 #include "ip/Address.h"
 #include "ipc/Kid.h"
+#include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "tools.h"
-#include "rfc1738.h"
 
 static const char *hello_string = "hi there\n";
 #define HELLO_BUF_SZ 32

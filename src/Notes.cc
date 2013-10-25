@@ -28,13 +28,13 @@
  */
 
 #include "squid.h"
-#include "globals.h"
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
-#include "HttpRequest.h"
+#include "globals.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"

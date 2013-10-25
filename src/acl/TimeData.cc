@@ -33,8 +33,8 @@
  */
 
 #include "squid.h"
-#include "acl/TimeData.h"
 #include "acl/Checklist.h"
+#include "acl/TimeData.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "wordlist.h"

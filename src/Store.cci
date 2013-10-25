@@ -30,8 +30,8 @@
  *
  */
 
-#include "MemObject.h"
 #include "HttpReply.h"
+#include "MemObject.h"
 
 /**
  \retval true	Store contains 0 bytes of data.

@@ -34,10 +34,10 @@
 #define SQUID_ACLCERTIFICATE_H
 
 #include "acl/Acl.h"
-#include "acl/Data.h"
 #include "acl/Checklist.h"
-#include "ssl/support.h"
+#include "acl/Data.h"
 #include "acl/Strategised.h"
+#include "ssl/support.h"
 
 /// \ingroup ACLAPI
 class ACLCertificateStrategy : public ACLStrategy<X509 *>

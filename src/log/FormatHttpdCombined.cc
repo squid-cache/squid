@@ -32,8 +32,8 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "format/Token.h"
 #include "format/Quoting.h"
+#include "format/Token.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "log/File.h"

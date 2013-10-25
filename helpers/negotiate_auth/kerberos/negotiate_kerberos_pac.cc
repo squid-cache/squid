@@ -28,9 +28,9 @@
  */
 
 #include "squid.h"
-#include "rfc1738.h"
 #include "compat/getaddrinfo.h"
 #include "compat/getnameinfo.h"
+#include "rfc1738.h"
 
 #include "negotiate_kerberos.h"
 

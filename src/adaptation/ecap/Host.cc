@@ -5,12 +5,12 @@
 #include <libecap/adapter/service.h>
 #include <libecap/common/names.h>
 #include <libecap/common/registry.h>
-#include "base/TextException.h"
-#include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/MessageRep.h"
-#include "HttpRequest.h"
+#include "adaptation/ecap/ServiceRep.h"
+#include "base/TextException.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());

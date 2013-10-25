@@ -36,9 +36,9 @@
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "dlink.h"
-#include "ip/Address.h"
 #include "helper.h"
 #include "HttpHeader.h"
+#include "ip/Address.h"
 
 class ConnStateData;
 class HttpReply;

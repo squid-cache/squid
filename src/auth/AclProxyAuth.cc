@@ -33,16 +33,16 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
+#include "acl/RegexData.h"
+#include "acl/UserData.h"
+#include "auth/Acl.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/Gadgets.h"
-#include "acl/FilledChecklist.h"
-#include "acl/UserData.h"
-#include "acl/RegexData.h"
-#include "client_side.h"
-#include "HttpRequest.h"
-#include "auth/Acl.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
+#include "client_side.h"
+#include "HttpRequest.h"
 
 ACLProxyAuth::~ACLProxyAuth()
 {

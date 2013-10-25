@@ -32,9 +32,9 @@
 
 #include "squid.h"
 #include "client_db.h"
+#include "ClientInfo.h"
 #include "event.h"
 #include "format/Token.h"
-#include "ClientInfo.h"
 #include "fqdncache.h"
 #include "ip/Address.h"
 #include "log/access_log.h"

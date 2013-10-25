@@ -5,8 +5,8 @@
 #include "squid.h"
 
 #define STUB_API "stub_mem.cc"
-#include "STUB.h"
 #include "Mem.h"
+#include "STUB.h"
 
 void
 memFreeString(size_t size, void *buf)

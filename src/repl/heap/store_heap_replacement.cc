@@ -41,10 +41,10 @@
 
 #include "squid.h"
 #include "heap.h"
-#include "store_heap_replacement.h"
-#include "Store.h"
 #include "MemObject.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "store_heap_replacement.h"
 
 #if HAVE_MATH_H
 #include <math.h>

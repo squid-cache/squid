@@ -1,8 +1,8 @@
 #ifndef __COMM_H__
 #define __COMM_H__
 
-#include "CommCalls.h"
 #include "comm/IoCallback.h"
+#include "CommCalls.h"
 #include "StoreIOBuffer.h"
 
 namespace Ip

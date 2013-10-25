@@ -36,10 +36,10 @@
 #include "log/File.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
-#include "Store.h"
-#include "store_log.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "store_log.h"
 
 static const char *storeLogTags[] = {
     "CREATE",

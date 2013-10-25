@@ -33,12 +33,12 @@
  */
 
 #include "squid.h"
-#include "acl/DomainData.h"
 #include "acl/Checklist.h"
+#include "acl/DomainData.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "wordlist.h"
 #include "src/URL.h"
+#include "wordlist.h"
 
 template<class T>
 inline void

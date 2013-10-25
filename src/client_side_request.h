@@ -30,10 +30,10 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "acl/forward.h"
 #include "AccessLogEntry.h"
-#include "clientStream.h"
+#include "acl/forward.h"
 #include "client_side.h"
+#include "clientStream.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
 
@@ -205,8 +205,8 @@ void clientAccessCheck(ClientHttpRequest *);
 void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntry::Pointer &al);
 
 #if _USE_INLINE_
-#include "Store.h"
 #include "client_side_request.cci"
+#include "Store.h"
 #endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */

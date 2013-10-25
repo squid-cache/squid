@@ -45,8 +45,8 @@
 #include "SquidConfig.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
-#include "ssl/support.h"
 #include "ssl/gadgets.h"
+#include "ssl/support.h"
 #include "URL.h"
 
 #if HAVE_ERRNO_H

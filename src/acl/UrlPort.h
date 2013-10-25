@@ -33,8 +33,8 @@
 
 #ifndef SQUID_ACLURLPORT_H
 #define SQUID_ACLURLPORT_H
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class ACLUrlPortStrategy : public ACLStrategy<int>
 {

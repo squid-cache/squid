@@ -43,8 +43,8 @@
 #include <time.h>
 #endif
 
-#include "util.h"
 #include "base64.h"
+#include "util.h"
 
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H

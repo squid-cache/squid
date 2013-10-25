@@ -5,11 +5,11 @@
 #ifndef SQUID__ECAP__MESSAGE_REP_H
 #define SQUID__ECAP__MESSAGE_REP_H
 
-#include "HttpHeader.h"
-#include "BodyPipe.h"
 #include "adaptation/forward.h"
 #include "adaptation/Message.h"
 #include "anyp/ProtocolType.h"
+#include "BodyPipe.h"
+#include "HttpHeader.h"
 #include <libecap/common/message.h>
 #include <libecap/common/header.h>
 #include <libecap/common/body.h>

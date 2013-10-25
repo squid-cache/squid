@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "acl/AllOf.h"
-#include "acl/Checklist.h"
 #include "acl/BoolOps.h"
+#include "acl/Checklist.h"
 #include "globals.h"
 #include "MemBuf.h"
 
