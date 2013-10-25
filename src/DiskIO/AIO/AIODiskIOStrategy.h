@@ -33,8 +33,8 @@
 
 #if USE_DISKIO_AIO
 
-#include "DiskIO/DiskIOStrategy.h"
 #include "async_io.h"
+#include "DiskIO/DiskIOStrategy.h"
 
 class AIODiskIOStrategy : public DiskIOStrategy
 {

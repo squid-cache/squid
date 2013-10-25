@@ -1,6 +1,6 @@
 #include "squid.h"
-#include "HelperChildConfig.h"
 #include "globals.h"
+#include "HelperChildConfig.h"
 
 #define STUB_API "stub_HelperChildconfig.cc"
 #include "tests/STUB.h"

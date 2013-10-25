@@ -1,11 +1,11 @@
 #ifndef SQUID_ADAPTATION__CONFIG_H
 #define SQUID_ADAPTATION__CONFIG_H
 
-#include "event.h"
 #include "acl/forward.h"
-#include "base/AsyncCall.h"
-#include "adaptation/forward.h"
 #include "adaptation/Elements.h"
+#include "adaptation/forward.h"
+#include "base/AsyncCall.h"
+#include "event.h"
 #include "Notes.h"
 #include "SquidString.h"
 

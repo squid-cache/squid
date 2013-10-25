@@ -1,7 +1,7 @@
 #include "squid.h"
-#include "acl/Note.h"
-#include "acl/HttpHeaderData.h"
 #include "acl/Checklist.h"
+#include "acl/HttpHeaderData.h"
+#include "acl/Note.h"
 #include "HttpRequest.h"
 #include "Notes.h"
 

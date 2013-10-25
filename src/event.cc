@@ -34,9 +34,9 @@
 #include "compat/drand48.h"
 #include "event.h"
 #include "mgr/Registration.h"
-#include "Store.h"
-#include "SquidTime.h"
 #include "profiler/Profiler.h"
+#include "SquidTime.h"
+#include "Store.h"
 #include "tools.h"
 
 /* The list of event processes */

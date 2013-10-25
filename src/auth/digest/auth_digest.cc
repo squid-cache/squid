@@ -35,25 +35,25 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
-#include "cache_cf.h"
-#include "rfc2617.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/Scheme.h"
 #include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
-#include "base64.h"
 #include "base/StringArea.h"
+#include "base64.h"
+#include "cache_cf.h"
 #include "event.h"
 #include "HttpHeaderTools.h"
-#include "mgr/Registration.h"
-#include "Store.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
-#include "wordlist.h"
+#include "HttpRequest.h"
+#include "mgr/Registration.h"
+#include "rfc2617.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "StrList.h"
+#include "wordlist.h"
 
 /* Digest Scheme */
 

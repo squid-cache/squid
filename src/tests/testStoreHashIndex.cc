@@ -1,15 +1,15 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "testStoreHashIndex.h"
-#include "Store.h"
-#include "SwapDir.h"
-#include "TestSwapDir.h"
-#include "StoreHashIndex.h"
 #include "Mem.h"
-#include "StoreSearch.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "StoreHashIndex.h"
+#include "StoreSearch.h"
+#include "SwapDir.h"
+#include "testStoreHashIndex.h"
+#include "TestSwapDir.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStoreHashIndex );
 

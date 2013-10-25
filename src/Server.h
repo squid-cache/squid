@@ -32,8 +32,8 @@
 #ifndef SQUID_SERVER_H
 #define SQUID_SERVER_H
 
-#include "BodyPipe.h"
 #include "base/AsyncJob.h"
+#include "BodyPipe.h"
 #include "CommCalls.h"
 #include "FwdState.h"
 #include "StoreIOBuffer.h"

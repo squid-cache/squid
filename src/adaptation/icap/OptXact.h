@@ -31,8 +31,8 @@
 #ifndef SQUID_ICAPOPTXACT_H
 #define SQUID_ICAPOPTXACT_H
 
-#include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/Launcher.h"
+#include "adaptation/icap/Xaction.h"
 
 namespace Adaptation
 {

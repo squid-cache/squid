@@ -32,10 +32,10 @@
 #ifndef SQUID_ICAPMODXACT_H
 #define SQUID_ICAPMODXACT_H
 
-#include "BodyPipe.h"
-#include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/InOut.h"
 #include "adaptation/icap/Launcher.h"
+#include "adaptation/icap/Xaction.h"
+#include "BodyPipe.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using

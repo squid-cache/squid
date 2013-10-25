@@ -32,15 +32,15 @@
  */
 
 #include "squid.h"
-#include "StoreMeta.h"
-#include "Store.h"
 #include "MemObject.h"
+#include "Store.h"
+#include "StoreMeta.h"
 #include "StoreMetaMD5.h"
-#include "StoreMetaURL.h"
+#include "StoreMetaObjSize.h"
 #include "StoreMetaSTD.h"
 #include "StoreMetaSTDLFS.h"
+#include "StoreMetaURL.h"
 #include "StoreMetaVary.h"
-#include "StoreMetaObjSize.h"
 
 bool
 StoreMeta::validType(char type)

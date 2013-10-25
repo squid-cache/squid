@@ -7,14 +7,14 @@
 #include <libecap/common/named_values.h>
 #include <libecap/common/names.h>
 #include <libecap/adapter/xaction.h>
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "SquidTime.h"
 #include "adaptation/Answer.h"
-#include "adaptation/ecap/XactionRep.h"
 #include "adaptation/ecap/Config.h"
+#include "adaptation/ecap/XactionRep.h"
 #include "adaptation/Initiator.h"
 #include "base/TextException.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 

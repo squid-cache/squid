@@ -4,9 +4,9 @@
 
 #if USE_AUTH
 
-#include "testACLMaxUserIP.h"
 #include "auth/AclMaxUserIp.h"
 #include "ConfigParser.h"
+#include "testACLMaxUserIP.h"
 
 #if HAVE_STDEXCEPT
 #include <stdexcept>

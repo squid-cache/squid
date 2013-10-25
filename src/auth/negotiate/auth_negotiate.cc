@@ -35,20 +35,20 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
-#include "auth/negotiate/auth_negotiate.h"
 #include "auth/Gadgets.h"
+#include "auth/negotiate/auth_negotiate.h"
+#include "auth/negotiate/Scheme.h"
+#include "auth/negotiate/User.h"
+#include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "cache_cf.h"
-#include "mgr/Registration.h"
-#include "Store.h"
 #include "client_side.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
-#include "auth/negotiate/Scheme.h"
-#include "auth/negotiate/User.h"
-#include "auth/negotiate/UserRequest.h"
+#include "Store.h"
 #include "wordlist.h"
 
 /**

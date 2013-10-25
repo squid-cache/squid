@@ -3,8 +3,8 @@
  */
 
 #include "squid.h"
-#include "Store.h"
 #include "ipc/ReadWriteLock.h"
+#include "Store.h"
 
 bool
 Ipc::ReadWriteLock::lockShared()

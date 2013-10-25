@@ -36,14 +36,14 @@
 #endif
 
 #include "squid.h"
-#include "mgr/Registration.h"
 #include "HttpHdrCc.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "MemObject.h"
+#include "mgr/Registration.h"
 #include "RefreshPattern.h"
-#include "SquidTime.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"
 

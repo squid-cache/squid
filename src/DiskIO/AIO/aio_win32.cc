@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "DiskIO/AIO/aio_win32.h"
 #include "comm.h"
+#include "DiskIO/AIO/aio_win32.h"
 #include "fd.h"
 #include "StatCounters.h"
 #include "win32.h"

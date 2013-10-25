@@ -2,11 +2,11 @@
 #define SQUID_ADAPTATION__ACCESS_CHECK_H
 
 #include "acl/Acl.h"
-#include "base/AsyncJob.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/ServiceFilter.h"
+#include "base/AsyncJob.h"
 
 class HttpRequest;
 class HttpReply;

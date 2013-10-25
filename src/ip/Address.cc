@@ -4,8 +4,8 @@
  * COPYRIGHT: GPL version 2, (C)2007-2013 Treehouse Networks Ltd.
  */
 #include "squid.h"
-#include "compat/inet_ntop.h"
 #include "compat/getaddrinfo.h"
+#include "compat/inet_ntop.h"
 #include "Debug.h"
 #include "ip/Address.h"
 #include "ip/tools.h"

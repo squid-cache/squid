@@ -33,9 +33,9 @@
 #include "squid.h"
 #include "globals.h"
 #include "StatCounters.h"
-#include "StoreClient.h"
 #include "Store.h"
 #include "store_swapin.h"
+#include "StoreClient.h"
 
 static StoreIOState::STIOCB storeSwapInFileClosed;
 static StoreIOState::STFNCB storeSwapInFileNotify;

@@ -5,14 +5,14 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "CommCalls.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "CommCalls.h"
 #include "ipc/UdsOp.h"
-#include "snmp_core.h"
 #include "snmp/Inquirer.h"
-#include "snmp/Response.h"
 #include "snmp/Request.h"
+#include "snmp/Response.h"
+#include "snmp_core.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
 

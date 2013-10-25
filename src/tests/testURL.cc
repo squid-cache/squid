@@ -3,9 +3,9 @@
 
 #include <cppunit/TestAssert.h>
 
+#include "Mem.h"
 #include "testURL.h"
 #include "URL.h"
-#include "Mem.h"
 
 #if HAVE_SSTREAM
 #include <sstream>

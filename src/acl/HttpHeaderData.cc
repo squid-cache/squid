@@ -33,15 +33,15 @@
  */
 
 #include "squid.h"
-#include "acl/HttpHeaderData.h"
-#include "acl/Checklist.h"
 #include "acl/Acl.h"
+#include "acl/Checklist.h"
+#include "acl/HttpHeaderData.h"
 #include "acl/RegexData.h"
 #include "cache_cf.h"
-#include "Debug.h"
-#include "wordlist.h"
 #include "ConfigParser.h"
+#include "Debug.h"
 #include "HttpHeaderTools.h"
+#include "wordlist.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.

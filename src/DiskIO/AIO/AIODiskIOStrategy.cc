@@ -41,8 +41,8 @@
  */
 
 #include "squid.h"
-#include "AIODiskIOStrategy.h"
 #include "AIODiskFile.h"
+#include "AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"

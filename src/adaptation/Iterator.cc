@@ -10,9 +10,9 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 #include "base/TextException.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
 #include "HttpMsg.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 
 Adaptation::Iterator::Iterator(
     HttpMsg *aMsg, HttpRequest *aCause,

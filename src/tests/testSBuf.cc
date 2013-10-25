@@ -1,10 +1,10 @@
 #include "squid.h"
 #include "Mem.h"
 #include "SBuf.h"
+#include "SBufFindTest.h"
 #include "SBufStream.h"
 #include "SquidString.h"
 #include "testSBuf.h"
-#include "SBufFindTest.h"
 
 #include <iostream>
 #include <stdexcept>

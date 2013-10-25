@@ -29,9 +29,9 @@ int SMBlib_errno;
 int SMBlib_SMB_Error;
 #define SMBLIB_ERRNO
 
-#include "smblib/smblib.h"
-#include "smblib/smblib-priv.h"
 #include "rfcnb/rfcnb.h"
+#include "smblib/smblib-priv.h"
+#include "smblib/smblib.h"
 
 #include <signal.h>
 #if HAVE_STRING_H

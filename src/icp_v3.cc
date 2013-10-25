@@ -36,9 +36,9 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "ICP.h"
 #include "HttpRequest.h"
+#include "ICP.h"
+#include "Store.h"
 
 /// \ingroup ServerProtocolICPInternal3
 class ICP3State : public ICPState, public StoreClient

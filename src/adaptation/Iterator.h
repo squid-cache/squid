@@ -1,8 +1,8 @@
 #ifndef SQUID_ADAPTATION__ITERATOR_H
 #define SQUID_ADAPTATION__ITERATOR_H
 
-#include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
+#include "adaptation/Initiator.h"
 #include "adaptation/ServiceGroups.h"
 
 class HttpMsg;

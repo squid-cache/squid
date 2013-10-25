@@ -23,8 +23,8 @@
 #include <stdio.h>
 #endif
 
-#include "md5.h"
 #include "crypt_md5.h"
+#include "md5.h"
 
 static unsigned char itoa64[] =	/* 0 ... 63 => ascii - 64 */
     "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";

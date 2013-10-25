@@ -40,9 +40,9 @@
 #include "comm/UdpOpenDialer.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "snmp/Forwarder.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
-#include "snmp/Forwarder.h"
 #include "SnmpRequest.h"
 #include "SquidConfig.h"
 #include "tools.h"
@@ -1152,8 +1152,8 @@ oid2addr(oid * id, Ip::Address &addr, u_int size)
 }
 
 /* SNMP checklists */
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "acl/StringData.h"
 
 class ACLSNMPCommunityStrategy : public ACLStrategy<char const *>

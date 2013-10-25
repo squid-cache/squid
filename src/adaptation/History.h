@@ -2,8 +2,8 @@
 #define SQUID_ADAPT_HISTORY_H
 
 #include "adaptation/DynamicGroupCfg.h"
-#include "base/Vector.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
 #include "HttpHeader.h"
 #include "Notes.h"
 #include "SquidString.h"

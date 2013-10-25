@@ -5,8 +5,8 @@
 #ifndef SQUID_ECAP_SERVICE_REP_H
 #define SQUID_ECAP_SERVICE_REP_H
 
-#include "adaptation/Service.h"
 #include "adaptation/forward.h"
+#include "adaptation/Service.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 

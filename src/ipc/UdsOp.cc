@@ -4,11 +4,11 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "comm.h"
-#include "CommCalls.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "base/TextException.h"
+#include "CommCalls.h"
 #include "ipc/UdsOp.h"
 
 Ipc::UdsOp::UdsOp(const String& pathAddr):

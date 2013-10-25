@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "acl/LocalIp.h"
 #include "acl/FilledChecklist.h"
+#include "acl/LocalIp.h"
 
 char const *
 ACLLocalIP::typeString() const

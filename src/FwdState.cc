@@ -36,8 +36,8 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
-#include "CachePeer.h"
 #include "CacheManager.h"
+#include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -74,10 +74,10 @@
 #if USE_SSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
-#include "ssl/helper.h"
-#include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
+#include "ssl/helper.h"
 #include "ssl/ServerBump.h"
+#include "ssl/support.h"
 #endif
 #if HAVE_ERRNO_H
 #include <errno.h>
