@@ -416,7 +416,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  *
  \param type		Type being initialized
  */
-#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL)))
+#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ? (void)0 : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL)))
 
 /**
  \ingroup CBDATAAPI
@@ -429,7 +429,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  \param type		Type being initialized
  \param free_func	The freehandler called when the last known reference to an allocated entry goes away.
  */
-#define CBDATA_INIT_TYPE_FREECB(type, free_func)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func)))
+#define CBDATA_INIT_TYPE_FREECB(type, free_func)	(CBDATA_##type ? (void)0 : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func)))
 
 /**
  \ingroup CBDATA
