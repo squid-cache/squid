@@ -43,6 +43,7 @@
 #include "mgr/Registration.h"
 #include "redirect.h"
 #include "rfc1738.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #if USE_AUTH
@@ -55,31 +56,53 @@
 /// url maximum lengh + extra informations passed to redirector
 #define MAX_REDIRECTOR_REQUEST_STRLEN (MAX_URL + 1024)
 
-typedef struct {
+class RedirectStateData
+{
+public:
+    explicit RedirectStateData(const char *url);
+    ~RedirectStateData();
+
     void *data;
-    char *orig_url;
+    SBuf orig_url;
 
     Ip::Address client_addr;
     const char *client_ident;
     const char *method_s;
     HLPCB *handler;
-} redirectStateData;
+
+private:
+    CBDATA_CLASS2(RedirectStateData);
+};
 
 static HLPCB redirectHandleReply;
 static HLPCB storeIdHandleReply;
-static void redirectStateFree(redirectStateData * r);
 static helper *redirectors = NULL;
 static helper *storeIds = NULL;
 static OBJH redirectStats;
 static OBJH storeIdStats;
 static int redirectorBypassed = 0;
 static int storeIdBypassed = 0;
-CBDATA_TYPE(redirectStateData);
+
+CBDATA_CLASS_INIT(RedirectStateData);
+
+RedirectStateData::RedirectStateData(const char *url) :
+        data(NULL),
+        orig_url(url),
+        client_addr(),
+        client_ident(NULL),
+        method_s(NULL),
+        handler(NULL)
+{
+}
+
+RedirectStateData::~RedirectStateData()
+{
+}
 
 static void
 redirectHandleReply(void *data, const HelperReply &reply)
 {
-    redirectStateData *r = static_cast<redirectStateData *>(data);
+    RedirectStateData *r = static_cast<RedirectStateData *>(data);
     debugs(61, 5, HERE << "reply=" << reply);
 
     // XXX: This function is now kept only to check for and display the garbage use-case
@@ -118,7 +141,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 HelperReply newReply;
                 // BACKWARD COMPATIBILITY 2012-06-15:
                 // We got HelperReply::Unknown reply result but new
-                // redirectStateData handlers require HelperReply::Okay,
+                // RedirectStateData handlers require HelperReply::Okay,
                 // else will drop the helper reply
                 newReply.result = HelperReply::Okay;
                 newReply.notes.append(&reply.notes);
@@ -150,7 +173,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 if (cbdataReferenceValidDone(r->data, &cbdata))
                     r->handler(cbdata, newReply);
 
-                redirectStateFree(r);
+                delete r;
                 return;
             }
         }
@@ -160,13 +183,13 @@ redirectHandleReply(void *data, const HelperReply &reply)
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata, reply);
 
-    redirectStateFree(r);
+    delete r;
 }
 
 static void
 storeIdHandleReply(void *data, const HelperReply &reply)
 {
-    redirectStateData *r = static_cast<redirectStateData *>(data);
+    RedirectStateData *r = static_cast<RedirectStateData *>(data);
     debugs(61, 5,"StoreId helper: reply=" << reply);
 
     // XXX: This function is now kept only to check for and display the garbage use-case
@@ -176,14 +199,7 @@ storeIdHandleReply(void *data, const HelperReply &reply)
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata, reply);
 
-    redirectStateFree(r);
-}
-
-static void
-redirectStateFree(redirectStateData * r)
-{
-    safe_free(r->orig_url);
-    cbdataFree(r);
+    delete r;
 }
 
 static void
@@ -228,10 +244,9 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
     char myaddr[MAX_IPSTRLEN];
 
     /** TODO: create a standalone method to initialize
-     * the cbdata\redirectStateData for all the helpers.
+     * the RedirectStateData for all the helpers.
      */
-    redirectStateData *r = cbdataAlloc(redirectStateData);
-    r->orig_url = xstrdup(http->uri);
+    RedirectStateData *r = new RedirectStateData(http->uri);
     if (conn != NULL)
         r->client_addr = conn->log_addr;
     else
@@ -276,7 +291,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         fqdn = dash_str;
 
     sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s %s/%s %s %s myip=%s myport=%d\n",
-                  r->orig_url,
+                  r->orig_url.c_str(),
                   r->client_addr.toStr(claddr,MAX_IPSTRLEN),
                   fqdn,
                   r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
@@ -368,26 +383,15 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     constructHelperQuery("storeId helper", storeIds, storeIdHandleReply, http, handler, data);
 }
 
-static void
-redirectRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
-    Mgr::RegisterAction("store_id", "StoreId helper Stats", storeIdStats, 0, 1); /* registering the new StoreID statistics in Mgr*/
-}
-
 void
 redirectInit(void)
 {
-    static int init = 0;
+    static bool init = false;
 
-    redirectRegisterWithCacheManager();
-
-    /** FIXME: Temporary unified helpers startup
-     * When and if needed for more helpers a separated startup
-     * method will be added for each of them.
-     */
-    if (!Config.Program.redirect && !Config.Program.store_id)
-        return;
+    if (!init) {
+        Mgr::RegisterAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
+        Mgr::RegisterAction("store_id", "StoreId helper Stats", storeIdStats, 0, 1);
+    }
 
     if (Config.Program.redirect) {
 
@@ -417,10 +421,7 @@ redirectInit(void)
         helperOpenServers(storeIds);
     }
 
-    if (!init) {
-        init = 1;
-        CBDATA_INIT_TYPE(redirectStateData);
-    }
+    init = true;
 }
 
 void
