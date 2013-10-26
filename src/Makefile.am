@@ -1510,7 +1510,7 @@ tests_testCacheManager_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -1932,7 +1932,7 @@ tests_testEvent_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -2183,7 +2183,7 @@ tests_testEventLoop_SOURCES = \
 	peer_userhash.cc \
 	RemovalPolicy.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	Server.cc \
@@ -2429,7 +2429,7 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.cc \
 	pconn.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -2719,7 +2719,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -3533,7 +3533,7 @@ tests_testURL_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
