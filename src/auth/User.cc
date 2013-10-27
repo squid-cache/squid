@@ -44,10 +44,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if !_USE_INLINE_
-#include "auth/User.cci"
-#endif
-
 // This should be converted into a pooled type. Does not need to be cbdata
 CBDATA_TYPE(AuthUserIP);
 

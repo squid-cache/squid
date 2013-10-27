@@ -31,19 +31,3 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-char const *
-Auth::User::username () const
-{
-    return username_;
-}
-
-void
-Auth::User::username(char const *aString)
-{
-    if (aString) {
-        assert(!username_);
-        username_ = xstrdup(aString);
-    } else {
-        safe_free(username_);
-    }
-}
