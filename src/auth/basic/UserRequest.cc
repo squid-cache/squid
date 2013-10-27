@@ -142,6 +142,10 @@ Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);
 
+    // add new helper kv-pair notes to the credentials object
+    // so that any transaction using those credentials can access them
+    r->auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+
     /* this is okay since we only play with the Auth::Basic::User child fields below
      * and dont pass the pointer itself anywhere */
     Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(r->auth_user_request->user().getRaw());
