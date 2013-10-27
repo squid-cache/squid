@@ -1245,6 +1245,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	int.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
+	Notes.cc \
+	Notes.h \
 	SquidList.h \
 	SquidList.cc \
 	mem_node.cc \
