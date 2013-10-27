@@ -131,6 +131,12 @@ public:
     void append(const NotePairs *src);
 
     /**
+     * Append any new entries of the src NotePairs list to our list.
+     * Entries which already exist in the destination set are ignored.
+     */
+    void appendNewOnly(const NotePairs *src);
+
+    /**
      * Returns a comma separated list of notes with key 'noteKey'.
      * Use findFirst instead when a unique kv-pair is needed.
      */
