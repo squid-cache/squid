@@ -749,7 +749,6 @@ ufsdump_LDADD = \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -772,7 +771,6 @@ ufsdump_DEPENDENCIES = \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -1170,6 +1168,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_errorpage.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libauth.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1196,7 +1195,6 @@ tests_testHttpReply_LDADD=\
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	anyp/libanyp.la \
 	ip/libip.la \
 	base/libbase.la \
@@ -1291,6 +1289,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_HttpRequest.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_ipc_TypedMsgHdr.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsslsquid.cc \
@@ -1332,7 +1331,6 @@ tests_testACLMaxUserIP_LDADD= \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	anyp/libanyp.la \
 	base/libbase.la \
@@ -1527,6 +1525,7 @@ tests_testCacheManager_SOURCES = \
 	StatHist.h \
 	StrList.h \
 	StrList.cc \
+	tests/stub_libauth.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	repl_modules.h \
@@ -1584,7 +1583,6 @@ tests_testCacheManager_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -1727,6 +1725,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+    tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1769,7 +1768,6 @@ tests_testDiskIO_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	libsquid.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
@@ -1986,6 +1984,7 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+    tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
@@ -2014,7 +2013,6 @@ tests_testEvent_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
