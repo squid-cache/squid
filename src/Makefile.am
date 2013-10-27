@@ -749,7 +749,6 @@ ufsdump_LDADD = \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
