@@ -1522,6 +1522,7 @@ tests_testCacheManager_SOURCES = \
 	StatHist.h \
 	StrList.h \
 	StrList.cc \
+	tests/stub_libacls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
@@ -1576,7 +1577,6 @@ nodist_tests_testCacheManager_SOURCES = \
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -1722,6 +1722,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libacls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
@@ -1761,7 +1762,6 @@ tests_testDiskIO_LDADD = \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -1980,6 +1980,7 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libacls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
@@ -2005,7 +2006,6 @@ nodist_tests_testEvent_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 tests_testEvent_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2229,6 +2229,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libacls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
@@ -2254,7 +2255,6 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 tests_testEventLoop_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
