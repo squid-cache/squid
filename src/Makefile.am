@@ -2577,7 +2577,6 @@ tests_testHttpParser_DEPENDENCIES = \
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	HttpParser.cc \
 	HttpParser.h \
 	RequestFlags.h \
@@ -2593,6 +2592,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
@@ -2783,7 +2783,6 @@ tests_testHttpRequest_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
 	ip/libip.la \
