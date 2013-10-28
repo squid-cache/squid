@@ -3,6 +3,8 @@
 #define STUB_API "auth/libacls.la"
 #include "STUB.h"
 
+#include "acl/Acl.h" /* for allow_t */
+
 #include "auth/Acl.h"
 allow_t AuthenticateAcl(ACLChecklist *) STUB
 
