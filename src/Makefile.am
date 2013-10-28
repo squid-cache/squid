@@ -923,7 +923,7 @@ DEFAULT_ERROR_DIR	= $(datadir)/errors
 # Make location configure settings available to the code
 DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
-snmp_core.o snmp_agent.o: ../snmplib/libsnmplib.a $(top_srcdir)/include/cache_snmp.h
+snmp_core.o snmp_agent.o: ../lib/snmplib/libsnmplib.a $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
@@ -1509,7 +1509,7 @@ tests_testCacheManager_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -1931,7 +1931,7 @@ tests_testEvent_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -2182,7 +2182,7 @@ tests_testEventLoop_SOURCES = \
 	peer_userhash.cc \
 	RemovalPolicy.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	Server.cc \
@@ -2428,7 +2428,7 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.cc \
 	pconn.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -2718,7 +2718,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -3532,7 +3532,7 @@ tests_testURL_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	redirect.cc \
+	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
