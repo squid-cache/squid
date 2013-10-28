@@ -3,6 +3,7 @@
 #define STUB_API "auth/libauth.la"
 #include "STUB.h"
 
+#if USE_AUTH
 #include "auth/Config.h"
 Auth::UserRequest::Pointer Auth::Config::CreateAuthUser(const char *) STUB
 Auth::Config * Auth::Config::Find(const char *) STUB
@@ -69,3 +70,5 @@ Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB
 
 #include "AuthReg.h"
 void Auth::Init() STUB_NOP
+
+#endif /* USE_AUTH */
