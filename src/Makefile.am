@@ -2916,6 +2916,7 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	HttpBody.h \
@@ -2966,7 +2967,6 @@ tests_testStore_LDADD= \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -3036,7 +3036,6 @@ SWAP_TEST_DS =\
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -3132,6 +3131,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
+	tests/stub_libauth.cc \
 	mem_node.cc \
 	stmem.cc \
 	mime.h \
@@ -3193,7 +3193,6 @@ tests_testUfs_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
 	ip/libip.la \
@@ -3333,6 +3332,7 @@ tests_testRock_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_libauth.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
@@ -3372,7 +3372,6 @@ tests_testRock_LDADD = \
 	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
-	$(AUTH_LIBS) \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
