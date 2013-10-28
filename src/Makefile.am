@@ -3399,7 +3399,6 @@ tests_testRock_DEPENDENCIES = \
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
@@ -3577,6 +3576,7 @@ tests_testURL_SOURCES = \
 	MemStore.cc \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
@@ -3611,7 +3611,6 @@ tests_testURL_LDADD = \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
