@@ -1372,7 +1372,6 @@ tests_testBoilerplate_DEPENDENCIES = \
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpParser.cc \
 	HttpParser.h \
@@ -1725,7 +1724,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
-    tests/stub_libauth.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1800,7 +1799,6 @@ tests_testDiskIO_DEPENDENCIES = \
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1984,7 +1982,7 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
-    tests/stub_libauth.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
