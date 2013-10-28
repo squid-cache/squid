@@ -3576,6 +3576,7 @@ tests_testURL_SOURCES = \
 	MemStore.cc \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_libacls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -3606,7 +3607,6 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	http/libsquid-http.la \
 	anyp/libanyp.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
