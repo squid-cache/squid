@@ -1,12 +1,13 @@
-#define STUB_API "auth/libauth.la"
-
-#include "STUB.h"
 #include "squid.h"
+
+#define STUB_API "auth/libauth.la"
+#include "STUB.h"
 
 #include "auth/Config.h"
 Auth::UserRequest::Pointer Auth::Config::CreateAuthUser(const char *) STUB
 Auth::Config * Auth::Config::Find(const char *) STUB
 void Auth::Config::registerWithCacheManager(void) STUB_NOP
+Auth::ConfigVector Auth::TheConfig;
 
 #include "auth/Gadgets.h"
 int authenticateActiveSchemeCount(void) STUB
@@ -19,7 +20,10 @@ AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user) STUB
 Auth::User::Pointer AuthUserHashPointer::user() const STUB
 
 #include "auth/Scheme.h"
-/* TODO: Fill in */
+void Auth::Scheme::AddScheme(Auth::Scheme::Pointer) STUB
+Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB
+Vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB
+void Auth::Scheme::FreeAll() STUB
 
 #include "auth/User.h"
 Auth::User::User(Auth::Config *) STUB
@@ -37,6 +41,7 @@ void Auth::User::addToNameCache() STUB
 void Auth::User::UsernameCacheStats(StoreEntry *) STUB
 
 #include "auth/UserRequest.h"
+char const * Auth::UserRequest::username() const STUB_RETVAL("stub_username")
 void Auth::UserRequest::start(AUTHCB *, void *) STUB
 bool Auth::UserRequest::valid() const STUB
 void * Auth::UserRequest::operator new (size_t) STUB
@@ -62,3 +67,5 @@ void authenticateFixHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest 
 void authenticateAddTrailer(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int) STUB
 Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB
 
+#include "AuthReg.h"
+void Auth::Init() STUB_NOP
