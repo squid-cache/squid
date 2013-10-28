@@ -744,7 +744,6 @@ ufsdump_SOURCES = \
 	fd.h \
 	tests/stub_fd.cc
 ufsdump_LDADD = \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
@@ -766,7 +765,6 @@ ufsdump_LDADD = \
 	$(MINGW_LIBS) \
 	$(XTRA_LIBS)
 ufsdump_DEPENDENCIES = \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
@@ -2501,7 +2499,6 @@ tests_test_http_range_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2713,6 +2710,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
+	tests/stub_libacls.cc \
 	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2779,7 +2777,6 @@ tests_testHttpRequest_SOURCES = \
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2962,7 +2959,6 @@ nodist_tests_testStore_SOURCES= \
 
 tests_testStore_LDADD= \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3031,7 +3027,6 @@ tests_testString_DEPENDENCIES = \
 SWAP_TEST_DS =\
 	repl_modules.o \
 	$(DISK_LIBS) \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3188,7 +3183,6 @@ tests_testUfs_LDADD = \
 	http/libsquid-http.la \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
