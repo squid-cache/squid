@@ -3,6 +3,7 @@
 #define STUB_API "auth/libacls.la"
 #include "STUB.h"
 
+#if USE_AUTH
 #include "acl/Acl.h" /* for allow_t */
 
 #include "auth/Acl.h"
@@ -38,3 +39,5 @@ void ProxyAuthLookup::LookupDone(void *) STUB
 ACL * ACLProxyAuth::clone() const STUB
 int ACLProxyAuth::matchForCache(ACLChecklist *) STUB
 int ACLProxyAuth::matchProxyAuth(ACLChecklist *) STUB
+
+#endif /* USE_AUTH */
