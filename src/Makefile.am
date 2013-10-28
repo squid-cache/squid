@@ -2048,7 +2048,6 @@ tests_testEvent_DEPENDENCIES = \
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -2232,6 +2231,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
@@ -2260,7 +2260,6 @@ tests_testEventLoop_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -2297,7 +2296,6 @@ tests_testEventLoop_DEPENDENCIES = \
 
 tests_test_http_range_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
@@ -2337,10 +2335,9 @@ tests_test_http_range_SOURCES = \
 	errorpage.cc \
 	ETag.cc \
 	event.cc \
-	external_acl.cc \
-	ExternalACLEntry.cc \
 	FadingCounter.cc \
 	fatal.h \
+	tests/stub_libauth.cc \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
@@ -2474,6 +2471,7 @@ tests_test_http_range_SOURCES = \
 	StrList.cc \
 	SwapDir.cc \
 	tests/test_http_range.cc \
+	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
 	tests/stub_main_cc.cc \
@@ -2500,7 +2498,6 @@ nodist_tests_test_http_range_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 tests_test_http_range_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
