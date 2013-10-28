@@ -23,7 +23,7 @@ wordlist * ACLMaxUserIP::dump() const STUB
 
 #include "auth/AclProxyAuth.h"
 ACLProxyAuth::~ACLProxyAuth() STUB
-ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) STUB
+ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *, char const *) STUB
 ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &) STUB
 ACLProxyAuth & ACLProxyAuth::operator= (ACLProxyAuth const &) STUB
 char const * ACLProxyAuth::typeString() const STUB
