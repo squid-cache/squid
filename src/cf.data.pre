@@ -3710,6 +3710,21 @@ DOC_START
 
 	HTTP related format codes:
 
+	    REQUEST
+
+		[http::]rm	Request method (GET/POST etc)
+		[http::]>rm	Request method from client
+		[http::]<rm	Request method sent to server or peer
+		[http::]ru	Request URL from client (historic, filtered for logging)
+		[http::]>ru	Request URL from client
+		[http::]<ru	Request URL sent to server or peer
+		[http::]rp	Request URL-Path excluding hostname
+		[http::]>rp	Request URL-Path excluding hostname from client
+		[http::]<rp	Request URL-Path excluding hostname sent to server or peer
+		[http::]rv	Request protocol version
+		[http::]>rv	Request protocol version from client
+		[http::]<rv	Request protocol version sent to server or peer
+
 		[http::]>h	Original received request header. 
 				Usually differs from the request header sent by
 				Squid, although most fields are often preserved.
@@ -3720,37 +3735,41 @@ DOC_START
 				Usually differs from the request header sent by
 				Squid, although most fields are often preserved.
 				Optional header name argument as for >h
+
+
+	    RESPONSE
+
+		[http::]<Hs	HTTP status code received from the next hop
+		[http::]>Hs	HTTP status code sent to the client
+
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
-		[http::]>Hs	HTTP status code sent to the client
-		[http::]<Hs	HTTP status code received from the next hop
+
+		[http::]mt	MIME content type
+
+
+	    SIZE COUNTERS
+
+		[http::]st	Total size of request + reply traffic with client
+		[http::]>st	Total size of request received from client.
+				Excluding chunked encoding bytes.
+		[http::]<st	Total size of reply sent to client (after adaptation)
+
+		[http::]>sh	Size of request headers received from client
+		[http::]<sh	Size of reply headers sent to client (after adaptation)
+
+		[http::]<sH	Reply high offset sent
+		[http::]<sS	Upstream object size
+
 		[http::]<bs	Number of HTTP-equivalent message body bytes 
 				received from the next hop, excluding chunked
 				transfer encoding and control messages.
 				Generated FTP/Gopher listings are treated as
 				received bodies.
-		[http::]mt	MIME content type
-		[http::]rm	Request method (GET/POST etc)
-		[http::]>rm	Request method from client
-		[http::]<rm	Request method sent to server or peer
-		[http::]ru	Request URL from client (historic, filtered for logging)
-		[http::]>ru	Request URL from client
-		[http::]<ru	Request URL sent to server or peer
-		[http::]rp	Request URL-Path excluding hostname
-		[http::]>rp	Request URL-Path excluding hostname from client
-		[http::]<rp	Request URL-Path excluding hostname sento to server or peer
-		[http::]rv	Request protocol version
-		[http::]>rv	Request protocol version from client
-		[http::]<rv	Request protocol version sent to server or peer
-		[http::]<st	Sent reply size including HTTP headers
-		[http::]>st	Received request size including HTTP headers. In the
-				case of chunked requests the chunked encoding metadata
-				are not included
-		[http::]>sh	Received HTTP request headers size
-		[http::]<sh	Sent HTTP reply headers size
-		[http::]st	Request+Reply size including HTTP headers
-		[http::]<sH	Reply high offset sent
-		[http::]<sS	Upstream object size
+
+
+	    TIMING
+
 		[http::]<pt	Peer response time in milliseconds. The timer starts
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
