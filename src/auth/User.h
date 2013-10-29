@@ -39,6 +39,7 @@
 #include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
+#include "Notes.h"
 
 class AuthUserHashPointer;
 class StoreEntry;
@@ -74,6 +75,9 @@ public:
     dlink_list proxy_match_cache;
     size_t ipcount;
     long expiretime;
+
+    /// list of key=value pairs the helper produced
+    NotePairs notes;
 
 public:
     static void cacheInit();

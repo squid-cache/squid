@@ -670,8 +670,7 @@ ClientHttpRequest::logRequest()
 
     /*Add notes*/
     // The al->notes and request->notes must point to the same object.
-    // Enable the following assertion to check for possible bugs.
-    // assert(request->notes == al->notes);
+    (void)SyncNotes(*al, *request);
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
         if (const char *value = (*i)->match(request, al->reply)) {
