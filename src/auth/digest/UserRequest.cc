@@ -282,6 +282,10 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
     assert(replyData->auth_user_request != NULL);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
 
+    // add new helper kv-pair notes to the credentials object
+    // so that any transaction using those credentials can access them
+    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+
     static bool oldHelperWarningDone = false;
     switch (reply.result) {
     case HelperReply::Unknown: {
