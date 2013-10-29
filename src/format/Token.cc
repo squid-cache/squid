@@ -96,22 +96,22 @@ static TokenTableEntry TokenTable2C[] = {
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
 
-    {">st", LFT_REQUEST_SIZE_TOTAL },
-    /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
-    {">sh", LFT_REQUEST_SIZE_HEADERS },
+    {">st", LFT_CLIENT_REQUEST_SIZE_TOTAL },
+    {">sh", LFT_CLIENT_REQUEST_SIZE_HEADERS },
     /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
     /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
-    {"<st", LFT_REPLY_SIZE_TOTAL},
+    {"<st", LFT_ADAPTED_REPLY_SIZE_TOTAL}, // XXX: adapted should be code: <sta
     {"<sH", LFT_REPLY_HIGHOFFSET},
     {"<sS", LFT_REPLY_OBJECTSIZE},
-    /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
-    {"<sh", LFT_REPLY_SIZE_HEADERS },
+    {"<sh", LFT_ADAPTED_REPLY_SIZE_HEADERS }, // XXX: adapted should be code: <sha
     /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
     /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
+    {"st", LFT_CLIENT_IO_SIZE_TOTAL}, // XXX: total from client should be stC ??
+    /*{"stP", LFT_SERVER_IO_SIZE_TOTAL},*/
+
     {"et", LFT_TAG},
-    {"st", LFT_IO_SIZE_TOTAL},
     {"ea", LFT_EXT_LOG},
     {"sn", LFT_SEQUENCE_NUMBER},
 

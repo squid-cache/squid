@@ -88,9 +88,8 @@ typedef enum {
     LFT_SERVER_REQ_VERSION,
 
     /* request meta details */
-    LFT_REQUEST_SIZE_TOTAL,
-    /*LFT_REQUEST_SIZE_LINE, */
-    LFT_REQUEST_SIZE_HEADERS,
+    LFT_CLIENT_REQUEST_SIZE_TOTAL,
+    LFT_CLIENT_REQUEST_SIZE_HEADERS,
     /*LFT_REQUEST_SIZE_BODY, */
     /*LFT_REQUEST_SIZE_BODY_NO_TE, */
 
@@ -118,13 +117,14 @@ typedef enum {
     /* LFT_ADAPTED_REPLY_ALL_HEADERS, */
 
     /* response meta details */
-    LFT_REPLY_SIZE_TOTAL,
+    LFT_ADAPTED_REPLY_SIZE_TOTAL,
     LFT_REPLY_HIGHOFFSET,
     LFT_REPLY_OBJECTSIZE,
-    /*LFT_REPLY_SIZE_LINE, */
-    LFT_REPLY_SIZE_HEADERS,
+    LFT_ADAPTED_REPLY_SIZE_HEADERS,
     /*LFT_REPLY_SIZE_BODY, */
     /*LFT_REPLY_SIZE_BODY_NO_TE, */
+
+    LFT_CLIENT_IO_SIZE_TOTAL,
 
     /* client credentials */
     LFT_USER_NAME,   /* any source will do */
@@ -155,7 +155,6 @@ typedef enum {
 
     LFT_MIME_TYPE,
     LFT_TAG,
-    LFT_IO_SIZE_TOTAL,
     LFT_EXT_LOG,
 
     LFT_SEQUENCE_NUMBER,
