@@ -3724,10 +3724,10 @@ tests_testConfigParser_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 	
 tests_testStatHist_SOURCES = \
-	cbdata.cc \
+	tests/stub_cbdata.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
-	MemBuf.cc \
+	tests/stub_MemBuf.cc \
 	StatHist.cc \
 	StatHist.h \
 	String.cc \
@@ -3750,8 +3750,7 @@ tests_testStatHist_SOURCES = \
 	tests/stub_tools.cc \
 	tests/testMain.cc \
 	tests/testStatHist.cc \
-	tests/testStatHist.h \
-	time.cc
+	tests/testStatHist.h
 nodist_tests_testStatHist_SOURCES = \
 	$(TESTSOURCES)
 tests_testStatHist_LDFLAGS = $(LIBADD_DL)
@@ -3767,8 +3766,7 @@ tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
 tests_testVector_SOURCES = \
 	tests/testVector.cc \
 	tests/testMain.cc \
-	tests/testVector.h \
-	time.cc
+	tests/testVector.h
 nodist_tests_testVector_SOURCES = \
 	$(TESTSOURCES)
 tests_testVector_LDADD= \
