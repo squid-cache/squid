@@ -4,6 +4,11 @@
 #define STUB_API "store.cc"
 #include "tests/STUB.h"
 
+const char *storeStatusStr[] = { };
+const char *pingStatusStr[] = { };
+const char *memStatusStr[] = { };
+const char *swapStatusStr[] = { };
+
 /* and code defined in the wrong .cc file */
 #include "SwapDir.h"
 void StoreController::maintain() STUB
