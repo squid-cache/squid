@@ -3687,8 +3687,9 @@ tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
 	Mem.h \
-	mem.cc \
-	MemBuf.cc \
+	tests/stub_mem.cc \
+	tests/stub_MemBuf.cc \
+	tests/stub_time.cc \
 	String.cc \
 	ConfigParser.cc \
 	fatal.h \
@@ -3704,7 +3705,6 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	time.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testConfigParser_SOURCES = \
