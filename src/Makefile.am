@@ -435,8 +435,8 @@ squid_SOURCES = \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
-	Notes.cc \
 	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Packer.h \
 	Parsing.cc \
@@ -1149,6 +1149,8 @@ tests_testHttpReply_SOURCES=\
 	MemBuf.h \
 	mime_header.h \
 	mime_header.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Packer.h \
 	SquidString.h \
@@ -1669,6 +1671,8 @@ tests_testDiskIO_SOURCES = \
 	mem_node.cc \
 	Mem.h \
 	mem.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	refresh.h \
@@ -2865,6 +2869,8 @@ tests_testStore_SOURCES= \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
@@ -3085,6 +3091,8 @@ tests_testUfs_SOURCES = \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemObject.cc \
+	Notes.h \
+	Notes.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
 	StoreMeta.cc \
@@ -3276,6 +3284,8 @@ tests_testRock_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
@@ -3506,8 +3516,8 @@ tests_testURL_SOURCES = \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
-	Notes.cc \
 	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
