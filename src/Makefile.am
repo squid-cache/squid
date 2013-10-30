@@ -3656,7 +3656,7 @@ tests_testSBuf_SOURCES= \
 	tests/SBufFindTest.cc \
 	$(SBUF_SOURCE) \
 	SBufStream.h \
-	time.cc \
+	tests/stub_time.cc \
 	mem.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
@@ -3668,8 +3668,8 @@ tests_testSBuf_SOURCES= \
 	tests/stub_tools.cc \
 	SquidString.h \
 	String.cc \
-	wordlist.cc \
-	MemBuf.cc
+	tests/stub_wordlist.cc \
+	tests/stub_MemBuf.cc
 nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
 tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 tests_testSBuf_LDADD=\
