@@ -1526,7 +1526,7 @@ tests_testCacheManager_SOURCES = \
 	StatHist.h \
 	StrList.h \
 	StrList.cc \
-	tests/stub_libacls.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
@@ -1728,7 +1728,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
-	tests/stub_libacls.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
@@ -1986,7 +1986,7 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
-	tests/stub_libacls.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
@@ -2235,7 +2235,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
-	tests/stub_libacls.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
@@ -2716,7 +2716,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
-	tests/stub_libacls.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -3580,7 +3580,7 @@ tests_testURL_SOURCES = \
 	MemStore.cc \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
-	tests/stub_libacls.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
