@@ -436,8 +436,8 @@ squid_SOURCES = \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
-	Notes.cc \
 	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Packer.h \
 	Parsing.cc \
@@ -745,7 +745,6 @@ ufsdump_SOURCES = \
 	fd.h \
 	tests/stub_fd.cc
 ufsdump_LDADD = \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
@@ -767,12 +766,10 @@ ufsdump_LDADD = \
 	$(MINGW_LIBS) \
 	$(XTRA_LIBS)
 ufsdump_DEPENDENCIES = \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -1153,6 +1150,8 @@ tests_testHttpReply_SOURCES=\
 	MemBuf.h \
 	mime_header.h \
 	mime_header.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Packer.h \
 	SquidString.h \
@@ -1170,6 +1169,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_errorpage.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libauth.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1196,7 +1196,6 @@ tests_testHttpReply_LDADD=\
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	anyp/libanyp.la \
 	ip/libip.la \
 	base/libbase.la \
@@ -1293,6 +1292,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_HttpRequest.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_ipc_TypedMsgHdr.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsslsquid.cc \
@@ -1334,7 +1334,6 @@ tests_testACLMaxUserIP_LDADD= \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	anyp/libanyp.la \
 	base/libbase.la \
@@ -1376,7 +1375,6 @@ tests_testBoilerplate_DEPENDENCIES = \
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpParser.cc \
 	HttpParser.h \
@@ -1529,6 +1527,8 @@ tests_testCacheManager_SOURCES = \
 	StatHist.h \
 	StrList.h \
 	StrList.cc \
+	tests/stub_libauth_acls.cc \
+	tests/stub_libauth.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	repl_modules.h \
@@ -1582,11 +1582,9 @@ nodist_tests_testCacheManager_SOURCES = \
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -1674,6 +1672,8 @@ tests_testDiskIO_SOURCES = \
 	mem_node.cc \
 	Mem.h \
 	mem.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	refresh.h \
@@ -1729,6 +1729,8 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libauth_acls.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1767,11 +1769,9 @@ tests_testDiskIO_LDADD = \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	libsquid.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
@@ -1804,7 +1804,6 @@ tests_testDiskIO_DEPENDENCIES = \
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -1988,6 +1987,8 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libauth_acls.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
@@ -2012,11 +2013,9 @@ nodist_tests_testEvent_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 tests_testEvent_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -2054,7 +2053,6 @@ tests_testEvent_DEPENDENCIES = \
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.h \
 	CacheDigest.cc \
@@ -2238,6 +2236,8 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libauth_acls.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
@@ -2262,11 +2262,9 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 tests_testEventLoop_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -2303,7 +2301,6 @@ tests_testEventLoop_DEPENDENCIES = \
 
 tests_test_http_range_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
@@ -2343,10 +2340,9 @@ tests_test_http_range_SOURCES = \
 	errorpage.cc \
 	ETag.cc \
 	event.cc \
-	external_acl.cc \
-	ExternalACLEntry.cc \
 	FadingCounter.cc \
 	fatal.h \
+	tests/stub_libauth.cc \
 	tests/stub_fatal.cc \
 	fd.h \
 	fd.cc \
@@ -2480,6 +2476,7 @@ tests_test_http_range_SOURCES = \
 	StrList.cc \
 	SwapDir.cc \
 	tests/test_http_range.cc \
+	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
 	tests/stub_main_cc.cc \
@@ -2506,11 +2503,9 @@ nodist_tests_test_http_range_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 tests_test_http_range_LDADD = \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2586,7 +2581,6 @@ tests_testHttpParser_DEPENDENCIES = \
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	HttpParser.cc \
 	HttpParser.h \
 	RequestFlags.h \
@@ -2602,6 +2596,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
@@ -2722,6 +2717,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_userhash.h \
 	peer_userhash.cc \
 	redirect.h \
+	tests/stub_libauth_acls.cc \
 	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
@@ -2788,11 +2784,9 @@ tests_testHttpRequest_SOURCES = \
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2876,6 +2870,8 @@ tests_testStore_SOURCES= \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
@@ -2925,6 +2921,7 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	HttpBody.h \
@@ -2971,11 +2968,9 @@ nodist_tests_testStore_SOURCES= \
 
 tests_testStore_LDADD= \
 	http/libsquid-http.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -3041,11 +3036,9 @@ tests_testString_DEPENDENCIES = \
 SWAP_TEST_DS =\
 	repl_modules.o \
 	$(DISK_LIBS) \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -3099,6 +3092,8 @@ tests_testUfs_SOURCES = \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemObject.cc \
+	Notes.h \
+	Notes.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
 	StoreMeta.cc \
@@ -3141,6 +3136,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
+	tests/stub_libauth.cc \
 	mem_node.cc \
 	stmem.cc \
 	mime.h \
@@ -3198,11 +3194,9 @@ tests_testUfs_LDADD = \
 	http/libsquid-http.la \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
 	ip/libip.la \
@@ -3291,6 +3285,8 @@ tests_testRock_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
+	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
@@ -3342,6 +3338,7 @@ tests_testRock_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_libauth.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
@@ -3381,7 +3378,6 @@ tests_testRock_LDADD = \
 	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
-	$(AUTH_LIBS) \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
@@ -3408,7 +3404,6 @@ tests_testRock_DEPENDENCIES = \
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
 	AccessLogEntry.cc \
-	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
@@ -3522,8 +3517,8 @@ tests_testURL_SOURCES = \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
-	Notes.cc \
 	Notes.h \
+	Notes.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -3586,6 +3581,8 @@ tests_testURL_SOURCES = \
 	MemStore.cc \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_libauth_acls.cc \
+	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
@@ -3615,12 +3612,10 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	http/libsquid-http.la \
 	anyp/libanyp.la \
-	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -3662,7 +3657,7 @@ tests_testSBuf_SOURCES= \
 	tests/SBufFindTest.cc \
 	$(SBUF_SOURCE) \
 	SBufStream.h \
-	time.cc \
+	tests/stub_time.cc \
 	mem.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
@@ -3674,8 +3669,8 @@ tests_testSBuf_SOURCES= \
 	tests/stub_tools.cc \
 	SquidString.h \
 	String.cc \
-	wordlist.cc \
-	MemBuf.cc
+	tests/stub_wordlist.cc \
+	tests/stub_MemBuf.cc
 nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
 tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 tests_testSBuf_LDADD=\
@@ -3693,8 +3688,9 @@ tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
 	Mem.h \
-	mem.cc \
-	MemBuf.cc \
+	tests/stub_mem.cc \
+	tests/stub_MemBuf.cc \
+	tests/stub_time.cc \
 	String.cc \
 	ConfigParser.cc \
 	fatal.h \
@@ -3710,7 +3706,6 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	time.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testConfigParser_SOURCES = \
@@ -3730,10 +3725,10 @@ tests_testConfigParser_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 	
 tests_testStatHist_SOURCES = \
-	cbdata.cc \
+	tests/stub_cbdata.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
-	MemBuf.cc \
+	tests/stub_MemBuf.cc \
 	StatHist.cc \
 	StatHist.h \
 	String.cc \
@@ -3756,8 +3751,7 @@ tests_testStatHist_SOURCES = \
 	tests/stub_tools.cc \
 	tests/testMain.cc \
 	tests/testStatHist.cc \
-	tests/testStatHist.h \
-	time.cc
+	tests/testStatHist.h
 nodist_tests_testStatHist_SOURCES = \
 	$(TESTSOURCES)
 tests_testStatHist_LDFLAGS = $(LIBADD_DL)
@@ -3773,8 +3767,7 @@ tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
 tests_testVector_SOURCES = \
 	tests/testVector.cc \
 	tests/testMain.cc \
-	tests/testVector.h \
-	time.cc
+	tests/testVector.h
 nodist_tests_testVector_SOURCES = \
 	$(TESTSOURCES)
 tests_testVector_LDADD= \
