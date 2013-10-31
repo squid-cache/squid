@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2010-08-17 06:55+0200\n"
+"PO-Revision-Date: 2013-10-31 13:29+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -388,9 +388,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "FOUT: De gevraagde URL kon niet worden opgehaald"
 
 #: templates/ERR_URN_RESOLVE+html.head.title:4
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "FOUT: De gevraagde URL kon niet worden opgehaald"
+msgstr "FOUT: De gevraagde URN kon niet worden opgehaald"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:23
 msgid "ESI Processing failed."
@@ -400,12 +399,12 @@ msgstr "ESI processing mislukt."
 #: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
 #, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP PUT Succesvol: Bestand aangemaakt"
+msgstr "FTP PUT succesvol."
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
 #, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT/upload mislukt"
+msgstr "FTP PUT upload mislukt"
 
 #: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
 msgid "FTP is Disabled"
