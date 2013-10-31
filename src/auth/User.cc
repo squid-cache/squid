@@ -44,10 +44,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if !_USE_INLINE_
-#include "auth/User.cci"
-#endif
-
 // This should be converted into a pooled type. Does not need to be cbdata
 CBDATA_TYPE(AuthUserIP);
 
@@ -385,5 +381,16 @@ Auth::User::UsernameCacheStats(StoreEntry *output)
                           static_cast<int32_t>(auth_user->expiretime - squid_curtime + ::Config.authenticateTTL),
                           auth_user->username()
                          );
+    }
+}
+
+void
+Auth::User::username(char const *aString)
+{
+    if (aString) {
+        assert(!username_);
+        username_ = xstrdup(aString);
+    } else {
+        safe_free(username_);
     }
 }
