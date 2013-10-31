@@ -62,7 +62,7 @@ storeLog(int tag, const StoreEntry * e)
     MemObject *mem = e->mem_obj;
     HttpReply const *reply;
 
-    if (str_unknown.undefined())
+    if (str_unknown.size()==0)
         str_unknown="unknown"; //hack. Delay initialization as string doesn't support global variables..
 
     if (NULL == storelog)

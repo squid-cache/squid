@@ -1419,7 +1419,7 @@ FtpStateData::checkUrlpath()
     int l;
     size_t t;
 
-    if (str_type_eq.undefined()) //hack. String doesn't support global-static
+    if (str_type_eq.size()==0) //hack. String doesn't support global-static
         str_type_eq="type=";
 
     if ((t = request->urlpath.rfind(';')) != String::npos) {
