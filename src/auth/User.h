@@ -85,8 +85,8 @@ public:
 
     void absorb(Auth::User::Pointer from);
     virtual ~User();
-    _SQUID_INLINE_ char const *username() const;
-    _SQUID_INLINE_ void username(char const *);
+    char const *username() const { return username_; }
+    void username(char const *);
 
     /**
      * How long these credentials are still valid for.
@@ -138,10 +138,6 @@ private:
 };
 
 } // namespace Auth
-
-#if _USE_INLINE_
-#include "auth/User.cci"
-#endif
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_USER_H */
