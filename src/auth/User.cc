@@ -383,3 +383,14 @@ Auth::User::UsernameCacheStats(StoreEntry *output)
                          );
     }
 }
+
+void
+Auth::User::username(char const *aString)
+{
+    if (aString) {
+        assert(!username_);
+        username_ = xstrdup(aString);
+    } else {
+        safe_free(username_);
+    }
+}

@@ -86,14 +86,7 @@ public:
     void absorb(Auth::User::Pointer from);
     virtual ~User();
     char const *username() const { return username_; }
-    void username(char const * u) {
-        if (u) {
-            assert(!username_);
-            username_ = xstrdup(u);
-        } else {
-            safe_free(username_);
-        }
-    }
+    void username(char const *);
 
     /**
      * How long these credentials are still valid for.
