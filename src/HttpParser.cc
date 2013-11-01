@@ -7,10 +7,11 @@
 void
 HttpParser::clear()
 {
-    state = HTTP_PARSE_NONE;
+    completedState_ = HTTP_PARSE_NONE;
     request_parse_status = Http::scNone;
     buf = NULL;
     bufsiz = 0;
+    parseOffset_ = 0;
     req.start = req.end = -1;
     hdr_start = hdr_end = -1;
     req.m_start = req.m_end = -1;
@@ -23,10 +24,10 @@ void
 HttpParser::reset(const char *aBuf, int len)
 {
     clear(); // empty the state.
-    state = HTTP_PARSE_NEW;
+    completedState_ = HTTP_PARSE_NEW;
     buf = aBuf;
     bufsiz = len;
-    debugs(74, 5, HERE << "Request buffer is " << buf);
+    debugs(74, DBG_DATA, "Request parse " << Raw("buf", buf, bufsiz));
 }
 
 int
@@ -36,11 +37,14 @@ HttpParser::parseRequestFirstLine()
     int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
     int line_end = -1; // tracks the last byte BEFORE terminal \r\n or \n sequence
 
-    debugs(74, 5, HERE << "parsing possible request: " << buf);
+    debugs(74, 5, "parsing possible request: bufsiz=" << bufsiz << ", offset=" << parseOffset_);
+    debugs(74, DBG_DATA, Raw("(buf+offset)", buf+parseOffset_, bufsiz-parseOffset_));
 
     // Single-pass parse: (provided we have the whole line anyways)
 
-    req.start = 0;
+    assert(completedState_ == HTTP_PARSE_NEW);
+
+    req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
     if (Config.onoff.relaxed_header_parser) {
         if (Config.onoff.relaxed_header_parser < 0 && buf[req.start] == ' ')
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
@@ -48,6 +52,7 @@ HttpParser::parseRequestFirstLine()
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix spaces (other bytes are valid method values)
         for (; req.start < bufsiz && buf[req.start] == ' '; ++req.start);
+        parseOffset_ = req.start;
     }
     req.end = -1;
     for (int i = 0; i < bufsiz; ++i) {
@@ -146,6 +151,7 @@ HttpParser::parseRequestFirstLine()
         req.v_min = 9;
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // HTTP/0.9
+        parseOffset_ = line_end;
         return 1;
     } else {
         // otherwise last whitespace is somewhere after end of URI.
@@ -176,6 +182,8 @@ HttpParser::parseRequestFirstLine()
         req.v_min = 9;
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // treat as HTTP/0.9
+        completedState_ = HTTP_PARSE_FIRST;
+        parseOffset_ = req.end;
         return 1;
 #else
         // protocol not supported / implemented.
@@ -234,6 +242,8 @@ HttpParser::parseRequestFirstLine()
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
     request_parse_status = Http::scOkay;
+    parseOffset_ = req.end+1; // req.end is the \n byte. Next parse step needs to start *after* that byte.
+    completedState_ = HTTP_PARSE_FIRST;
     return 1;
 }
 
