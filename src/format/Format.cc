@@ -1026,7 +1026,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             outint = al->http.clientRequest.total() + al->http.adaptedReply.total();
             doint = 1;
             break;
-        /*case LFT_SERVER_IO_SIZE_TOTAL: */
+            /*case LFT_SERVER_IO_SIZE_TOTAL: */
 
         case LFT_TAG:
             if (al->request)
