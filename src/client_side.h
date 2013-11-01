@@ -398,7 +398,7 @@ private:
     Auth::UserRequest::Pointer auth_;
 #endif
 
-    HttpParser parser_;
+    HttpParser::Pointer parser_;
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
