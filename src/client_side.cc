@@ -2991,11 +2991,11 @@ ConnStateData::clientParseRequests()
 
         /* Begin the parsing */
         PROF_start(parseHttpRequest);
-        HttpParserInit(&parser_, in.buf, in.notYetUsed);
+        parser_ = new HttpParser(in.buf, in.notYetUsed);
 
         /* Process request */
         Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseHttpRequest(this, &parser_, &method, &http_ver);
+        ClientSocketContext *context = parseHttpRequest(this, parser_.getRaw(), &method, &http_ver);
         PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
@@ -3013,7 +3013,7 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            clientProcessRequest(this, &parser_, context, method, http_ver);
+            clientProcessRequest(this, parser_.getRaw(), context, method, http_ver);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
