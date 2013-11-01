@@ -1,6 +1,7 @@
 #ifndef _SQUID_SRC_HTTPPARSER_H
 #define _SQUID_SRC_HTTPPARSER_H
 
+#include "base/RefCount.h"
 #include "http/StatusCode.h"
 
 // Parser states
@@ -15,9 +16,11 @@
  * \item Request Line (method, URL, protocol, version)
  * \item Mime header block
  */
-class HttpParser
+class HttpParser : public RefCountable
 {
 public:
+    typedef RefCount<HttpParser> Pointer;
+
     HttpParser() { clear(); }
 
     /** Initialize a new parser.
@@ -78,7 +81,6 @@ public:
 };
 
 // Legacy functions
-#define HttpParserInit(h,b,l) (h)->reset((b),(l))
 int HttpParserParseReqLine(HttpParser *hp);
 
 #define MSGDODEBUG 0
