@@ -11,6 +11,7 @@ class testHttpParser : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testParseRequestLineProtocols );
     CPPUNIT_TEST( testParseRequestLineStrange );
     CPPUNIT_TEST( testParseRequestLineInvalid );
+    CPPUNIT_TEST( testDripFeed );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -22,6 +23,8 @@ protected:
     void testParseRequestLineProtocols();   // protocol tokens handled correctly
     void testParseRequestLineStrange();     // strange but valid lines accepted
     void testParseRequestLineInvalid();     // rejection of invalid lines happens
+
+    void testDripFeed(); // test incremental parse works
 };
 
 #endif

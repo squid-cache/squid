@@ -7,6 +7,7 @@
 // Parser states
 #define HTTP_PARSE_NONE   0 // nothing. completely unset state.
 #define HTTP_PARSE_NEW    1 // initialized, but nothing usefully parsed yet.
+#define HTTP_PARSE_FIRST  2 // have parsed request first line
 
 /** HTTP protocol parser.
  *
@@ -38,6 +39,9 @@ public:
     /// Reset the parser for use on a new buffer.
     void reset(const char *aBuf, int len);
 
+    /// whether the parser is already processing the buffer
+    bool isDone() const {return completedState_==HTTP_PARSE_FIRST;}
+
     /**
      * Attempt to parse the first line of a new request message.
      *
@@ -56,7 +60,6 @@ public:
     int parseRequestFirstLine();
 
 public:
-    uint8_t state;
     const char *buf;
     int bufsiz;
 
@@ -78,6 +81,13 @@ public:
      * Http::scNone indicates incomplete parse, Http::scOkay indicates no error.
      */
     Http::StatusCode request_parse_status;
+
+private:
+    /// byte offset for non-parsed region of the buffer
+    size_t parseOffset_;
+
+    /// what stage the parser is currently up to
+    uint8_t completedState_;
 };
 
 // Legacy functions

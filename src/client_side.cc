@@ -2975,7 +2975,7 @@ ConnStateData::clientParseRequests()
     // Loop while we have read bytes that are not needed for producing the body
     // On errors, bodyPipe may become nil, but readMore will be cleared
     while (in.notYetUsed > 0 && !bodyPipe && flags.readMore) {
-        connStripBufferWhitespace(this);
+        connStripBufferWhitespace(this); // XXX: should not be needed anymore.
 
         /* Don't try to parse if the buffer is empty */
         if (in.notYetUsed == 0)
@@ -2991,7 +2991,14 @@ ConnStateData::clientParseRequests()
 
         /* Begin the parsing */
         PROF_start(parseHttpRequest);
-        parser_ = new HttpParser(in.buf, in.notYetUsed);
+
+        // parser is incremental. Generate new parser state if we,
+        // a) dont have one already
+        // b) have completed the previous request parsing already
+        if (!parser_ || parser_->isDone())
+            parser_ = new HttpParser(in.buf, in.notYetUsed);
+        else // update the buffer space being parsed
+            parser_->bufsiz = in.notYetUsed;
 
         /* Process request */
         Http::ProtocolVersion http_ver;
