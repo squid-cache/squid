@@ -87,8 +87,7 @@ public:
         HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
                 timedout(false),
                 aborted(false),
-                clientRequest()
-            {}
+                clientRequest() {}
 
         HttpRequestMethod method;
         int code;

@@ -23,6 +23,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
+	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
 	tests/stub_fd.cc \
 	tests/stub_helper.cc \
@@ -33,6 +34,8 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libauth.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
@@ -52,5 +55,6 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
+	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tests/stub_wordlist.cc 
