@@ -4552,12 +4552,17 @@ DOC_START
 		The new URL is fetched directly by Squid and returned to
 		the client as the response to its request.
 
+	  OK
+		When neither of url= and rewrite-url= are sent Squid does
+		not change the URL.
+
 	  ERR
 		Do not change the URL.
 
 	  BH
 		An internal error occurred in the helper, preventing
-		a result being identified.
+		a result being identified. The 'message=' key name is
+		reserved for delivering a log message.
 
 
 	In the future, the interface protocol will be extended with
