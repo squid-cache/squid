@@ -39,6 +39,10 @@
 #include "profiler/Profiler.h"
 #include "tools.h"
 
+#if HAVE_MATH_H
+#include <math.h>
+#endif
+
 /* The list of event processes */
 
 static OBJH eventDump;
@@ -219,39 +223,37 @@ EventScheduler::cancel(EVH * func, void *arg)
         debug_trap("eventDelete: event not found");
 }
 
+// The event API does not guarantee exact timing, but guarantees that no event
+// is fired before it is due. We may delay firing, but never fire too early.
 int
-EventScheduler::checkDelay()
+EventScheduler::timeRemaining() const
 {
     if (!tasks)
         return EVENT_IDLE;
 
-    int result = (int) ((tasks->when - current_dtime) * 1000);
+    if (tasks->when <= current_dtime) // we are on time or late
+        return 0; // fire the event ASAP
 
-    if (result < 0)
-        return 0;
-
-    return result;
+    const double diff = tasks->when - current_dtime; // microseconds
+    // Round UP: If we come back a nanosecond earlier, we will wait again!
+    const int timeLeft = static_cast<int>(ceil(1000*diff)); // milliseconds
+    // Avoid hot idle: A series of rapid select() calls with zero timeout.
+    const int minDelay = 1; // millisecond
+    return max(minDelay, timeLeft);
 }
 
 int
 EventScheduler::checkEvents(int timeout)
 {
-
-    ev_entry *event = NULL;
-
-    if (NULL == tasks)
-        return checkDelay();
-
-    if (tasks->when > current_dtime)
-        return checkDelay();
+    int result = timeRemaining();
+    if (result != 0)
+        return result;
 
     PROF_start(eventRun);
 
-    debugs(41, 5, HERE << "checkEvents");
-
-    while ((event = tasks)) {
-        if (event->when > current_dtime)
-            break;
+    do {
+        ev_entry *event = tasks;
+        assert(event);
 
         /* XXX assumes event->name is static memory! */
         AsyncCall::Pointer call = asyncCall(41,5, event->name,
@@ -265,14 +267,16 @@ EventScheduler::checkEvents(int timeout)
         tasks = event->next;
         delete event;
 
+        result = timeRemaining();
+
         // XXX: We may be called again during the same event loop iteration.
         // Is there a point in breaking now?
         if (heavy)
             break; // do not dequeue events following a heavy event
-    }
+    } while (result == 0);
 
     PROF_stop(eventRun);
-    return checkDelay();
+    return result;
 }
 
 void
