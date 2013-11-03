@@ -415,11 +415,12 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
- * Alternative to CBDATA_INIT_TYPE_FREECB()
+ * Alternative to CBDATA_INIT_TYPE()
  *
  \param type		Type being initialized
+ \param free_func	The freehandler called when the last known reference to an allocated entry goes away.
  */
-#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL)))
+#define CBDATA_INIT_TYPE_FREECB(type, free_func) do { if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func); } while (false)
 
 /**
  \ingroup CBDATAAPI
@@ -427,12 +428,11 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
- * Alternative to CBDATA_INIT_TYPE()
+ * Alternative to CBDATA_INIT_TYPE_FREECB()
  *
  \param type		Type being initialized
- \param free_func	The freehandler called when the last known reference to an allocated entry goes away.
  */
-#define CBDATA_INIT_TYPE_FREECB(type, free_func)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func)))
+#define CBDATA_INIT_TYPE(type)	CBDATA_INIT_TYPE_FREECB(type, NULL)
 
 /**
  \ingroup CBDATA
