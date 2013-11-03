@@ -643,11 +643,11 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
     memset(url, 0, sizeof(*url));
 #ifdef HAVE_LDAP_URL_LUD_SCHEME
     if (ssl)
-        url->lud_scheme = (char *) "ldaps";
+        url->lud_scheme = xstrdup("ldaps");
     else
-        url->lud_scheme = (char *) "ldap";
+        url->lud_scheme = xstrdup("ldap");
 #endif
-    url->lud_host = host;
+    url->lud_host = xstrdup(host);
     url->lud_port = port;
 #ifdef HAVE_LDAP_SCOPE_DEFAULT
     url->lud_scope = LDAP_SCOPE_DEFAULT;
@@ -710,9 +710,9 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
             url = (LDAPURLDesc *) xmalloc(sizeof(*url));
             memset(url, 0, sizeof(*url));
 #ifdef HAVE_LDAP_URL_LUD_SCHEME
-            url->lud_scheme = (char *) "ldaps";
+            url->lud_scheme = xstrdup("ldaps");
 #endif
-            url->lud_host = host;
+            url->lud_host = xstrdup(host);
             url->lud_port = port;
 #ifdef HAVE_LDAP_SCOPE_DEFAULT
             url->lud_scope = LDAP_SCOPE_DEFAULT;
