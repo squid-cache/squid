@@ -74,7 +74,7 @@ ACLNoteData::parse()
 bool
 ACLNoteData::empty() const
 {
-    return name.undefined();
+    return name.size() == 0;
 }
 
 ACLData<HttpRequest *> *
