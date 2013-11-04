@@ -345,12 +345,15 @@ public:
         FTP_HANDLE_PORT,
         FTP_HANDLE_DATA_REQUEST,
         FTP_HANDLE_UPLOAD_REQUEST,
+        FTP_HANDLE_EPRT,
+        FTP_HANDLE_EPSV,
         FTP_ERROR
     };
     struct {
         String uri;
         FtpState state;
         bool readGreeting;
+        bool gotEpsvAll; ///< restrict data conn setup commands to just EPSV
         Comm::ConnectionPointer dataListenConn;
         Comm::ConnectionPointer dataConn;
         Ip::Address serverDataAddr;

@@ -51,17 +51,6 @@ protected:
     void proceedAfterPreliminaryReply();
     PreliminaryCb thePreliminaryCb;
 
-    enum {
-        BEGIN,
-        SENT_COMMAND,
-        SENT_FEAT,
-        SENT_PASV,
-        SENT_PORT,
-        SENT_DATA_REQUEST,
-        READING_DATA,
-        UPLOADING_DATA,
-        END
-    };
     typedef void (ServerStateData::*SM_FUNC)();
     static const SM_FUNC SM_FUNCS[];
     void readGreeting();
@@ -69,9 +58,9 @@ protected:
     void readReply();
     void readFeatReply();
     void readPasvReply();
-    void readPortReply();
     void readDataReply();
     void readTransferDoneReply();
+    void readEpsvReply();
 
     virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno);
     void scheduleReadControlReply();
@@ -85,14 +74,31 @@ CBDATA_CLASS_INIT(ServerStateData);
 
 const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readGreeting, // BEGIN
-    &ServerStateData::readReply, // SENT_COMMAND
-    &ServerStateData::readFeatReply, // SENT_FEAT
+    NULL,/*&ServerStateData::readReply*/ // SENT_USER
+    NULL,/*&ServerStateData::readReply*/ // SENT_PASS
+    NULL,/*&ServerStateData::readReply*/ // SENT_TYPE
+    NULL,/*&ServerStateData::readReply*/ // SENT_MDTM
+    NULL,/*&ServerStateData::readReply*/ // SENT_SIZE
+    NULL, // SENT_EPRT
+    NULL, // SENT_PORT
+    &ServerStateData::readEpsvReply, // SENT_EPSV_ALL
+    &ServerStateData::readEpsvReply, // SENT_EPSV_1
+    &ServerStateData::readEpsvReply, // SENT_EPSV_2
     &ServerStateData::readPasvReply, // SENT_PASV
-    &ServerStateData::readPortReply, // SENT_PORT
-    &ServerStateData::readDataReply, // SENT_DATA_REQUEST
+    NULL,/*&ServerStateData::readReply*/ // SENT_CWD
+    NULL,/*&ServerStateData::readDataReply,*/ // SENT_LIST
+    NULL,/*&ServerStateData::readDataReply,*/ // SENT_NLST
+    NULL,/*&ServerStateData::readReply*/ // SENT_REST
+    NULL,/*&ServerStateData::readDataReply*/ // SENT_RETR
+    NULL,/*&ServerStateData::readReply*/ // SENT_STOR
+    NULL,/*&ServerStateData::readReply*/ // SENT_QUIT
     &ServerStateData::readTransferDoneReply, // READING_DATA
-    &ServerStateData::readReply, // UPLOADING_DATA
-    NULL // END
+    &ServerStateData::readReply, // WRITING_DATA
+    NULL,/*&ServerStateData::readReply*/ // SENT_MKDIR
+    &ServerStateData::readFeatReply, // SENT_FEAT
+    &ServerStateData::readDataReply,// SENT_DATA_REQUEST
+    &ServerStateData::readReply, // SENT_COMMAND
+    NULL
 };
 
 ServerStateData::ServerStateData(FwdState *const fwdState):
@@ -235,6 +241,7 @@ ServerStateData::handleControlReply()
         return; // didn't get complete reply yet
 
     assert(state < END);
+    assert(this->SM_FUNCS[state] != NULL);
     (this->*SM_FUNCS[state])();
 }
 
@@ -370,7 +377,7 @@ ServerStateData::startDataUpload()
         return;
     }
 
-    state = UPLOADING_DATA;
+    state = WRITING_DATA;
 }
 
 void
@@ -420,6 +427,14 @@ ServerStateData::sendCommand()
     else
         debugs(9, 5, HERE << "command: " << cmd << ", no parameters");
 
+    if (clientState() == ConnStateData::FTP_HANDLE_PASV ||
+        clientState() == ConnStateData::FTP_HANDLE_EPSV ||
+        clientState() == ConnStateData::FTP_HANDLE_EPRT ||
+        clientState() == ConnStateData::FTP_HANDLE_PORT) {
+        sendPassive();
+        return;
+    }
+
     static MemBuf mb;
     mb.reset();
     if (params.size() > 0)
@@ -431,8 +446,6 @@ ServerStateData::sendCommand()
 
     state =
         clientState() == ConnStateData::FTP_HANDLE_FEAT ? SENT_FEAT :
-        clientState() == ConnStateData::FTP_HANDLE_PASV ? SENT_PASV :
-        clientState() == ConnStateData::FTP_HANDLE_PORT ? SENT_PORT :
         clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ? SENT_DATA_REQUEST :
         clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST ? SENT_DATA_REQUEST :
         SENT_COMMAND;
@@ -464,7 +477,7 @@ ServerStateData::readFeatReply()
 void
 ServerStateData::readPasvReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_PASV);
+    assert(clientState() == ConnStateData::FTP_HANDLE_PASV || clientState() == ConnStateData::FTP_HANDLE_EPSV || clientState() == ConnStateData::FTP_HANDLE_PORT || clientState() == ConnStateData::FTP_HANDLE_EPRT);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
@@ -475,18 +488,18 @@ ServerStateData::readPasvReply()
         forwardError();
 }
 
-/// In fact, we are handling a PASV reply here (XXX: remove duplication)
 void
-ServerStateData::readPortReply()
+ServerStateData::readEpsvReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_PORT);
-
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
 
-    if (handlePasvReply(fwd->request->clientConnectionManager->ftp.serverDataAddr))
+    if (handleEpsvReply(fwd->request->clientConnectionManager->ftp.serverDataAddr)) {
+        if (ctrl.message == NULL)
+            return; // didn't get complete reply yet
+
         forwardReply();
-    else
+    } else
         forwardError();
 }
 

@@ -59,7 +59,13 @@ public:
     /// extracts remoteAddr from PASV response, validates it,
     /// sets data address details, and returns true on success
     bool handlePasvReply(Ip::Address &remoteAddr);
+    bool handleEpsvReply(Ip::Address &remoteAddr);
+
+    bool sendEprt();
+    bool sendPort();
+    bool sendPassive();
     void connectDataChannel();
+    bool openListenSocket();
     virtual void maybeReadVirginBody();
     void switchTimeoutToDataChannel();
 
@@ -84,6 +90,35 @@ public:
 
         void addr(const Ip::Address &addr); ///< import host and port
     } data;
+
+    enum {
+        BEGIN,
+        SENT_USER,
+        SENT_PASS,
+        SENT_TYPE,
+        SENT_MDTM,
+        SENT_SIZE,
+        SENT_EPRT,
+        SENT_PORT,
+        SENT_EPSV_ALL,
+        SENT_EPSV_1,
+        SENT_EPSV_2,
+        SENT_PASV,
+        SENT_CWD,
+        SENT_LIST,
+        SENT_NLST,
+        SENT_REST,
+        SENT_RETR,
+        SENT_STOR,
+        SENT_QUIT,
+        READING_DATA,
+        WRITING_DATA,
+        SENT_MKDIR,
+        SENT_FEAT,
+        SENT_DATA_REQUEST, // LIST, NLST or RETR requests..
+        SENT_COMMAND, // General command
+        END
+    } ftp_state_t;
 
     int state;
     char *old_request;
@@ -120,6 +155,8 @@ private:
 
 /// parses and validates "A1,A2,A3,A4,P1,P2" IP,port sequence
 bool ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr);
+/// parses and validates EPRT "<d><net-prt><d><net-addr><d><tcp-port><d>" proto,ip,port sequence
+bool ParseProtoIpPort(const char *buf, Ip::Address &addr);
 
 }; // namespace Ftp
 

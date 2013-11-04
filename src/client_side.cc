@@ -113,6 +113,7 @@
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "internal.h"
+#include "ip/tools.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
 #include "log/access_log.h"
@@ -248,6 +249,8 @@ static FtpReplyHandler FtpHandlePortReply;
 static FtpReplyHandler FtpHandleErrorReply;
 static FtpReplyHandler FtpHandleDataReply;
 static FtpReplyHandler FtpHandleUploadReply;
+static FtpReplyHandler FtpHandleEprtReply;
+static FtpReplyHandler FtpHandleEpsvReply;
 
 static void FtpWriteEarlyReply(ConnStateData *conn, const int code, const char *msg);
 static void FtpWriteReply(ClientSocketContext *context, MemBuf &mb);
@@ -268,9 +271,12 @@ static FtpRequestHandler FtpHandlePasvRequest;
 static FtpRequestHandler FtpHandlePortRequest;
 static FtpRequestHandler FtpHandleDataRequest;
 static FtpRequestHandler FtpHandleUploadRequest;
+static FtpRequestHandler FtpHandleEprtRequest;
+static FtpRequestHandler FtpHandleEpsvRequest;
 
 static bool FtpCheckDataConnPre(ClientSocketContext *context);
 static bool FtpCheckDataConnPost(ClientSocketContext *context);
+static void FtpSetDataCommand(ClientSocketContext *context);
 static void FtpSetReply(ClientSocketContext *context, const int code, const char *msg);
 static bool FtpSupportedCommand(const String &name);
 
@@ -3596,6 +3602,13 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact):
     clientdbEstablished(clientConnection->remote, 1);
 
     flags.readMore = !isFtp;
+
+    if (isFtp) {
+        ftp.gotEpsvAll = false;
+        ftp.readGreeting = false;
+        ftp.state = FTP_BEGIN;
+        ftp.uploadAvailSize = 0;
+    }
 }
 
 /** Handle a new connection on HTTP socket. */
@@ -5183,6 +5196,8 @@ FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer dat
         FtpHandlePortReply, // FTP_HANDLE_PORT
         FtpHandleDataReply, // FTP_HANDLE_DATA_REQUEST
         FtpHandleUploadReply, // FTP_HANDLE_UPLOAD_REQUEST
+        FtpHandleEprtReply,// FTP_HANDLE_EPRT
+        FtpHandleEpsvReply,// FTP_HANDLE_EPSV
         FtpHandleErrorReply // FTP_ERROR
     };
     const ConnStateData::FtpState state = context->getConn()->ftp.state;
@@ -5423,6 +5438,66 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply)
     FtpWriteForwardedReply(context, reply, call);
 }
 
+static void
+FtpHandleEprtReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
+{
+    if (context->http->request->errType != ERR_NONE) {
+        FtpWriteCustomReply(context, 502, "Server does not support PASV (converted from EPRT)", reply);
+        return;
+    }
+
+    FtpWriteCustomReply(context, 200, "EPRT successfully converted to PASV.");
+
+    // and wait for RETR
+}
+
+static void
+FtpHandleEpsvReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
+{
+    if (context->http->request->errType != ERR_NONE) {
+        FtpWriteCustomReply(context, 502, "Cannot connect to server", reply);
+        return;
+    }
+
+    FtpCloseDataConnection(context->getConn());
+
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    ConnStateData * const connState = context->getConn();
+    conn->flags = COMM_NONBLOCKING;
+    conn->local = connState->transparent() ?
+                  connState->port->s : context->clientConnection->local;
+    conn->local.port(0);
+    const char *const note = connState->ftp.uri.termedBuf();
+    comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
+    if (!Comm::IsConnOpen(conn)) {
+            debugs(5, DBG_CRITICAL, "comm_open_listener failed: " <<
+                   conn->local << " error: " << errno);
+            FtpWriteCustomReply(context, 451, "Internal error");
+            return;
+    }
+
+    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+    RefCount<AcceptCall> subCall = commCbCall(5, 5, "FtpAcceptDataConnection",
+        CommAcceptCbPtrFun(FtpAcceptDataConnection, connState));
+    Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+    connState->ftp.listener = subCall.getRaw();
+    connState->ftp.dataListenConn = conn;
+    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
+
+    // conn->fd is the client data connection (and its local port)
+    const unsigned int port = comm_local_port(conn->fd);
+    conn->local.port(port);
+
+    // In interception setups, we combine remote server address with a
+    // local port number and hope that traffic will be redirected to us.
+    MemBuf mb;
+    mb.init();
+    mb.Printf("229 Entering Extended Passive Mode (|||%u|)\r\n", port);
+
+    debugs(11, 3, Raw("writing", mb.buf, mb.size));
+    FtpWriteReply(context, mb);
+}
+
 /// writes FTP error response with given status and reply-derived error details
 static void
 FtpWriteErrorReply(ClientSocketContext *context, const HttpReply *reply, const int status)
@@ -5623,7 +5698,9 @@ FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
         std::make_pair("FEAT", FtpHandleFeatRequest),
         std::make_pair("PASV", FtpHandlePasvRequest),
         std::make_pair("PORT", FtpHandlePortRequest),
-        std::make_pair("RETR", FtpHandleDataRequest)
+        std::make_pair("RETR", FtpHandleDataRequest),
+        std::make_pair("EPRT", FtpHandleEprtRequest),
+        std::make_pair("EPSV", FtpHandleEpsvRequest),
     };
 
     FtpRequestHandler *handler = NULL;
@@ -5694,34 +5771,27 @@ FtpHandleFeatRequest(ClientSocketContext *context, String &cmd, String &params)
 bool
 FtpHandlePasvRequest(ClientSocketContext *context, String &cmd, String &params)
 {
+    ConnStateData *const connState = context->getConn();
+    assert(connState);
+    if (connState->ftp.gotEpsvAll) {
+        FtpSetReply(context, 500, "Bad PASV command");
+        return false;
+    }
+
     if (params.size() > 0) {
         FtpSetReply(context, 501, "Unexpected parameter");
         return false;
     }
 
     FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_PASV, "FtpHandlePasvRequest");
-
+    // no need to fake PASV request via FtpSetDataCommand() in true PASV case
     return true;
 }
 
-#include "FtpServer.h" /* XXX: For Ftp::ParseIpPort() */
-
-bool
-FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
+/// [Re]initializes dataConn for active data transfers. Does not connect.
+static
+bool FtpCreateDataConnection(ClientSocketContext *context, Ip::Address cltAddr)
 {
-    // TODO: Should PORT errors trigger FtpCloseDataConnection() cleanup?
-
-    if (!params.size()) {
-        FtpSetReply(context, 501, "Missing parameter");
-        return false;
-    }
-
-    Ip::Address cltAddr;
-    if (!Ftp::ParseIpPort(params.termedBuf(), NULL, cltAddr)) {
-        FtpSetReply(context, 501, "Invalid parameter");
-        return false;
-    }
-
     ConnStateData *const connState = context->getConn();
     assert(connState);
     assert(connState->clientConnection != NULL);
@@ -5754,20 +5824,38 @@ FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
 
     context->getConn()->ftp.dataConn = conn;
     context->getConn()->ftp.uploadAvailSize = 0;
+    return true;
+}
+
+#include "FtpServer.h" /* XXX: For Ftp::ParseIpPort() */
+
+bool
+FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    // TODO: Should PORT errors trigger FtpCloseDataConnection() cleanup?
+
+    const ConnStateData *connState = context->getConn();
+    if (connState->ftp.gotEpsvAll) {
+        FtpSetReply(context, 500, "Rejecting PORT after EPSV ALL");
+        return false;
+    }
+
+    if (!params.size()) {
+        FtpSetReply(context, 501, "Missing parameter");
+        return false;
+    }
+
+    Ip::Address cltAddr;
+    if (!Ftp::ParseIpPort(params.termedBuf(), NULL, cltAddr)) {
+        FtpSetReply(context, 501, "Invalid parameter");
+        return false;
+    }
+
+    if (!FtpCreateDataConnection(context, cltAddr))
+        return false;
 
     FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_PORT, "FtpHandlePortRequest");
-
-    // convert client PORT command to Squid PASV command because Squid
-    // does not support active FTP transfers on the server side (yet?)
-    ClientHttpRequest *const http = context->http;
-    assert(http != NULL);
-    HttpRequest *const request = http->request;
-    assert(request != NULL);
-    HttpHeader &header = request->header;
-    header.delById(HDR_FTP_COMMAND);
-    header.putStr(HDR_FTP_COMMAND, "PASV");
-    header.delById(HDR_FTP_ARGUMENTS);
-    header.putStr(HDR_FTP_ARGUMENTS, "");
+    FtpSetDataCommand(context);
     return true; // forward our fake PASV request
 }
 
@@ -5791,6 +5879,80 @@ FtpHandleUploadRequest(ClientSocketContext *context, String &cmd, String &params
     FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_UPLOAD_REQUEST, "FtpHandleDataRequest");
 
     return true;
+}
+
+bool
+FtpHandleEprtRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    debugs(11, 3, "Process an EPRT " << params);
+
+    const ConnStateData *connState = context->getConn();
+    if (connState->ftp.gotEpsvAll) {
+        FtpSetReply(context, 500, "Rejecting EPRT after EPSV ALL");
+        return false;
+    }
+
+    if (!params.size()) {
+        FtpSetReply(context, 501, "Missing parameter");
+        return false;
+    }
+
+    Ip::Address cltAddr;
+    if (!Ftp::ParseProtoIpPort(params.termedBuf(), cltAddr)) {
+        FtpSetReply(context, 501, "Invalid parameter");
+        return false;
+    }
+
+    if (!FtpCreateDataConnection(context, cltAddr))
+        return false;
+
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_EPRT, "FtpHandleEprtRequest");
+    FtpSetDataCommand(context);
+    return true; // forward our fake PASV request
+}
+
+bool
+FtpHandleEpsvRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    debugs(11, 3, "Process an EPSV command with params: " << params);
+    if (params.size() <= 0) {
+        // treat parameterless EPSV as "use the protocol of the ctrl conn"
+    } else if (params.caseCmp("ALL") == 0) {
+        ConnStateData *connState = context->getConn();
+        FtpSetReply(context, 200, "EPSV ALL ok");
+        connState->ftp.gotEpsvAll = true;
+        return false;
+    } else if (params.cmp("2") == 0) {
+        if (!Ip::EnableIpv6) {
+            FtpSetReply(context, 522, "Network protocol not supported, use (1)");
+            return false;
+        }
+    } else if (params.cmp("1") != 0) {
+        FtpSetReply(context, 501, "Unsupported EPSV parameter");
+        return false;
+    }
+
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_EPSV, "FtpHandleEpsvRequest");
+    FtpSetDataCommand(context);
+    return true; // forward our fake PASV request
+}
+
+
+// Convert client PORT, EPRT, PASV, or EPSV data command to Squid PASV command.
+// Squid server-side decides what data command to use on that side.
+void
+FtpSetDataCommand(ClientSocketContext *context)
+{
+    ClientHttpRequest *const http = context->http;
+    assert(http != NULL);
+    HttpRequest *const request = http->request;
+    assert(request != NULL);
+    HttpHeader &header = request->header;
+    header.delById(HDR_FTP_COMMAND);
+    header.putStr(HDR_FTP_COMMAND, "PASV");
+    header.delById(HDR_FTP_ARGUMENTS);
+    header.putStr(HDR_FTP_ARGUMENTS, "");
+    debugs(11, 5, "client data command converted to fake PASV");
 }
 
 /// check that client data connection is ready for future I/O or at least
@@ -5906,10 +6068,6 @@ FtpSupportedCommand(const String &name)
     static std::set<std::string> BlackList;
     if (BlackList.empty()) {
         /* Add FTP commands that Squid cannot gateway correctly */
-
-        // IPv6 connection addresses from RFC 2428
-        BlackList.insert("EPRT");
-        BlackList.insert("EPSV");
 
         // we probably do not support AUTH TLS.* and AUTH SSL,
         // but let's disclaim all AUTH support to KISS, for now
