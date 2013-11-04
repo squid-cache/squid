@@ -364,9 +364,9 @@ HttpHdrSc::findTarget(const char *target)
     while (node) {
         HttpHdrScTarget *sct = (HttpHdrScTarget *)node->data;
 
-        if (target && sct->target.defined() && !strcmp (target, sct->target.termedBuf()))
+        if (target && sct->target.size() > 0 && !strcmp(target, sct->target.termedBuf()))
             return sct;
-        else if (!target && sct->target.undefined())
+        else if (!target && sct->target.size() == 0)
             return sct;
 
         node = node->next;

@@ -270,7 +270,7 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 
     two = otherRep->header.getStrOrList(HDR_ETAG);
 
-    if (one.undefined() || two.undefined() || one.caseCmp(two)!=0 ) {
+    if (one.size()==0 || two.size()==0 || one.caseCmp(two)!=0 ) {
         one.clean();
         two.clean();
         return 0;
@@ -284,7 +284,7 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 
     two = otherRep->header.getStrOrList(HDR_CONTENT_MD5);
 
-    if (one.undefined() || two.undefined() || one.caseCmp(two) != 0 ) {
+    if (one.size()==0 || two.size()==0 || one.caseCmp(two)!=0 ) {
         one.clean();
         two.clean();
         return 0;

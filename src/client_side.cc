@@ -597,7 +597,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
     if (request->content_length > 0) // negative when no body or unknown length
-        aLogEntry->cache.requestSize += request->content_length;
+        aLogEntry->http.clientRequest.payloadDataSz += request->content_length; // XXX: actually adaptedRequest payload size ??
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
     // Adapted request, if any, inherits and then collects all the stats, but
@@ -631,7 +631,7 @@ ClientHttpRequest::logRequest()
     debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
 
     if (loggingEntry() && loggingEntry()->mem_obj)
-        al->cache.objectSize = loggingEntry()->contentLen();
+        al->cache.objectSize = loggingEntry()->contentLen(); // payload duplicate ?? with or without TE ?
 
     al->cache.caddr.setNoAddr();
 
@@ -640,11 +640,10 @@ ClientHttpRequest::logRequest()
         al->cache.port =  cbdataReference(getConn()->port);
     }
 
-    al->cache.requestSize = req_sz;
-    al->cache.requestHeadersSize = req_sz;
-
-    al->cache.replySize = out.size;
-    al->cache.replyHeadersSize = out.headers_sz;
+    al->http.clientRequest.headerSz = req_sz;
+    al->http.adaptedReply.headerSz = out.headers_sz;
+    // XXX: calculate without payload encoding or headers !!
+    al->http.adaptedReply.payloadDataSz = out.size - out.headers_sz; // pretend its all un-encoded data for now.
 
     al->cache.highOffset = out.offset;
 

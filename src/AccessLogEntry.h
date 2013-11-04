@@ -40,6 +40,7 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "LogTags.h"
+#include "MessageCounters.h"
 #include "Notes.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
@@ -84,7 +85,9 @@ public:
 
     public:
         HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
-                timedout(false), aborted(false) {}
+                timedout(false),
+                aborted(false),
+                clientRequest() {}
 
         HttpRequestMethod method;
         int code;
@@ -97,6 +100,17 @@ public:
         const char *statusSfx() const {
             return timedout ? "_TIMEDOUT" : (aborted ? "_ABORTED" : "");
         }
+
+        /// counters for the original request received from client
+        // TODO calculate header and payload better (by parser)
+        // XXX payload encoding overheads not calculated at all yet.
+        MessageCounters clientRequest;
+
+        /// counters for the response sent to client
+        // TODO calculate header and payload better (by parser)
+        // XXX payload encoding overheads not calculated at all yet.
+        MessageCounters adaptedReply;
+
     } http;
 
     /** \brief This subclass holds log info for ICP protocol
@@ -144,10 +158,6 @@ public:
 
     public:
         CacheDetails() : caddr(),
-                requestSize(0),
-                replySize(0),
-                requestHeadersSize(0),
-                replyHeadersSize(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
@@ -162,10 +172,6 @@ public:
         }
 
         Ip::Address caddr;
-        int64_t requestSize;
-        int64_t replySize;
-        int requestHeadersSize; ///< received, including request line
-        int replyHeadersSize; ///< sent, including status line
         int64_t highOffset;
         int64_t objectSize;
         LogTags code;
