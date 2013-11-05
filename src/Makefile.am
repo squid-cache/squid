@@ -1115,7 +1115,7 @@ tests_testHttpReply_SOURCES=\
 	cbdata.cc \
 	cbdata.h \
 	ConfigParser.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
 	HttpBody.h \
@@ -1217,7 +1217,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	ConfigParser.cc \
 	DiskIO/ReadRequest.cc \
 	DiskIO/WriteRequest.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
@@ -1428,7 +1428,7 @@ tests_testCacheManager_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1632,7 +1632,7 @@ tests_testDiskIO_SOURCES = \
 	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	EventLoop.cc \
 	event.cc \
 	fatal.h \
@@ -1841,7 +1841,7 @@ tests_testEvent_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -2090,7 +2090,7 @@ tests_testEventLoop_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	EventLoop.h \
 	EventLoop.cc \
 	event.cc \
@@ -2338,7 +2338,7 @@ tests_test_http_range_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	FadingCounter.cc \
 	fatal.h \
@@ -2638,7 +2638,7 @@ tests_testHttpRequest_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	fatal.h \
