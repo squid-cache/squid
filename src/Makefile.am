@@ -1401,7 +1401,7 @@ tests_testCacheManager_SOURCES = \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
 	carp.cc \
 	cbdata.cc \
@@ -1622,7 +1622,7 @@ tests_testCacheManager_DEPENDENCIES = \
 
 tests_testDiskIO_SOURCES = \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cbdata.cc \
 	client_db.h \
 	ClientInfo.h \
@@ -1806,7 +1806,7 @@ tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
 	BodyPipe.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cache_cf.h \
 	AuthReg.h \
 	YesNoNone.h \
@@ -2055,7 +2055,7 @@ tests_testEventLoop_SOURCES = \
 	AccessLogEntry.cc \
 	BodyPipe.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
@@ -2310,7 +2310,7 @@ tests_test_http_range_SOURCES = \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
 	carp.cc \
 	cbdata.cc \
@@ -2612,7 +2612,7 @@ tests_testHttpRequest_SOURCES = \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
 	carp.cc \
 	cbdata.cc \
@@ -2825,7 +2825,7 @@ tests_testHttpRequest_DEPENDENCIES = \
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cbdata.cc \
 	ClientInfo.h \
 	ConfigOption.cc \
@@ -3112,7 +3112,7 @@ tests_testUfs_SOURCES = \
 	event.cc \
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
 	HttpMsg.cc \
@@ -3242,7 +3242,7 @@ testRefCount_LDADD = \
 tests_testRock_SOURCES = \
 	cbdata.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	disk.h \
@@ -3413,7 +3413,7 @@ tests_testURL_SOURCES = \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
 	carp.cc \
 	cbdata.cc \
