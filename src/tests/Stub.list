@@ -54,6 +54,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_SwapDir.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
+	tests/stub_StoreMeta.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_digest.cc \
 	tests/stub_store_rebuild.cc \
@@ -61,6 +62,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_store_swapout.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
+	tests/stub_tunnel.cc \
 	tests/stub_wccp2.cc \
 	tests/stub_whois.cc \
 	tests/stub_wordlist.cc 

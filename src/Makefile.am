@@ -724,13 +724,8 @@ ufsdump_SOURCES = \
 	Parsing.h \
 	store_key_md5.h \
 	store_key_md5.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	String.cc \
 	SquidNew.cc \
 	tests/stub_time.cc \
@@ -1263,13 +1258,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	String.cc \
 	store_dir.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -1550,17 +1540,12 @@ tests_testCacheManager_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
@@ -1688,13 +1673,8 @@ tests_testDiskIO_SOURCES = \
 	stmem.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -1971,13 +1951,8 @@ tests_testEvent_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	tests/stub_SwapDir.cc \
@@ -1994,7 +1969,7 @@ tests_testEvent_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -2219,13 +2194,8 @@ tests_testEventLoop_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	StrList.h \
@@ -2243,7 +2213,7 @@ tests_testEventLoop_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -2463,13 +2433,8 @@ tests_test_http_range_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	StrList.h \
@@ -2485,7 +2450,7 @@ tests_test_http_range_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
@@ -2753,20 +2718,15 @@ tests_testHttpRequest_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	StrList.h \
 	StrList.cc \
 	event.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	url.cc \
@@ -2888,13 +2848,8 @@ tests_testStore_SOURCES= \
 	store_io.cc \
 	store_swapout.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -3566,13 +3521,8 @@ tests_testURL_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	StrList.h \
@@ -3594,7 +3544,7 @@ tests_testURL_SOURCES = \
 	tests/stub_time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.h \
