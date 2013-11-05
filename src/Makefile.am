@@ -3658,7 +3658,7 @@ tests_testSBuf_SOURCES= \
 	$(SBUF_SOURCE) \
 	SBufStream.h \
 	tests/stub_time.cc \
-	mem.cc \
+	tests/stub_mem.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
 	tests/stub_HelperChildConfig.cc \
