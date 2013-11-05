@@ -51,6 +51,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_pconn.cc \
 	tests/stub_redirect.cc \
 	tests/stub_stat.cc \
+	tests/stub_SwapDir.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_client.cc \
