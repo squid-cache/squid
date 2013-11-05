@@ -1571,7 +1571,7 @@ tests_testCacheManager_SOURCES = \
 	wccp2.h \
 	wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -2004,7 +2004,7 @@ tests_testEvent_SOURCES = \
 	wccp2.h \
 	wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc
@@ -2253,7 +2253,7 @@ tests_testEventLoop_SOURCES = \
 	wccp2.h \
 	wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc
@@ -2494,7 +2494,7 @@ tests_test_http_range_SOURCES = \
 	wccp2.h \
 	wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc
@@ -2776,7 +2776,7 @@ tests_testHttpRequest_SOURCES = \
 	wccp2.h \
 	wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -3602,7 +3602,7 @@ tests_testURL_SOURCES = \
 	wccp2.h \
 	wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
