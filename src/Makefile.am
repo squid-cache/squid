@@ -733,7 +733,7 @@ ufsdump_SOURCES = \
 	StoreMetaVary.cc \
 	String.cc \
 	SquidNew.cc \
-	time.cc \
+	tests/stub_time.cc \
 	ufsdump.cc \
 	dlink.h \
 	dlink.cc \
@@ -1183,7 +1183,7 @@ tests_testHttpReply_SOURCES=\
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	url.cc \
 	URLScheme.cc \
 	wordlist.h \
@@ -1315,7 +1315,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	url.cc \
 	URL.h \
 	URLScheme.cc \
@@ -1360,7 +1360,7 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
 	tests/testMain.cc \
 	tests/testBoilerplate.h \
-	time.cc
+	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
@@ -1749,7 +1749,7 @@ tests_testDiskIO_SOURCES = \
 	tests/testMain.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
-	time.cc \
+	tests/stub_time.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
@@ -2560,7 +2560,7 @@ tests_testHttpParser_SOURCES = \
 	tests/testHttpParser.cc \
 	tests/testHttpParser.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpParser_SOURCES = \
@@ -2954,7 +2954,7 @@ tests_testStore_SOURCES= \
 	tests/testStoreSupport.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	time.cc \
+	tests/stub_time.cc \
 	url.cc \
 	URLScheme.cc \
 	wordlist.h \
@@ -3014,7 +3014,7 @@ tests_testString_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	time.cc \
+	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testString_SOURCES = \
@@ -3591,7 +3591,7 @@ tests_testURL_SOURCES = \
 	tests/testURLScheme.cc \
 	tests/testURLScheme.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	tools.h \
 	tools.cc \
 	tunnel.cc \
