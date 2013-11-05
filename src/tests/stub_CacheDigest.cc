@@ -1,10 +1,10 @@
 #include "squid.h"
+#include "typedefs.h" /* for cache_key */
 
 #define STUB_API "CacheDigest.cc"
 #include "tests/STUB.h"
 
 class CacheDigest;
-class cache_key;
 class CacheDigestGuessStats;
 class StoreEntry;
 

@@ -54,6 +54,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_digest.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \

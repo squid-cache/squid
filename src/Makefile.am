@@ -1535,7 +1535,7 @@ tests_testCacheManager_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -1956,7 +1956,7 @@ tests_testEvent_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -2204,7 +2204,7 @@ tests_testEventLoop_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -2448,7 +2448,7 @@ tests_test_http_range_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -2738,7 +2738,7 @@ tests_testHttpRequest_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -3551,7 +3551,7 @@ tests_testURL_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
