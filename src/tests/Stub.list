@@ -21,6 +21,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
+	tests/stub_ETag.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
 	tests/stub_external_acl.cc \
