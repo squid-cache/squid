@@ -1569,7 +1569,7 @@ tests_testCacheManager_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
 	tests/stub_whois.cc \
 	FadingCounter.cc \
@@ -2002,7 +2002,7 @@ tests_testEvent_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
 	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
@@ -2251,7 +2251,7 @@ tests_testEventLoop_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
 	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
@@ -2492,7 +2492,7 @@ tests_test_http_range_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
 	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
@@ -2774,7 +2774,7 @@ tests_testHttpRequest_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
 	tests/stub_whois.cc \
 	FadingCounter.cc \
@@ -3600,7 +3600,7 @@ tests_testURL_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
 	tests/stub_whois.cc \
 	FadingCounter.cc \
