@@ -1275,7 +1275,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	store_key_md5.cc \
 	swap_log_op.cc \
 	swap_log_op.h \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	SwapDir.h \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -1561,7 +1561,7 @@ tests_testCacheManager_SOURCES = \
 	tools.h \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -1707,7 +1707,7 @@ tests_testDiskIO_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
@@ -1980,7 +1980,7 @@ tests_testEvent_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
@@ -2230,7 +2230,7 @@ tests_testEventLoop_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
@@ -2474,7 +2474,7 @@ tests_test_http_range_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	tests/test_http_range.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -2767,7 +2767,7 @@ tests_testHttpRequest_SOURCES = \
 	tools.h \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	url.cc \
 	URLScheme.cc \
