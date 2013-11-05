@@ -3411,7 +3411,7 @@ tests_testURL_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
-	cache_manager.cc \
+	tests/stub_cache_manager.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
 	carp.h \
