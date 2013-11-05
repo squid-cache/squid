@@ -1,4 +1,5 @@
 STUB_SOURCE= tests/STUB.h \
+	tests/stub_CacheDigest.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
