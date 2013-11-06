@@ -1,4 +1,5 @@
 STUB_SOURCE= tests/STUB.h \
+	tests/stub_CacheDigest.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
@@ -21,6 +22,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
+	tests/stub_ETag.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
 	tests/stub_external_acl.cc \
@@ -49,12 +51,18 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_pconn.cc \
 	tests/stub_redirect.cc \
 	tests/stub_stat.cc \
+	tests/stub_SwapDir.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
+	tests/stub_StoreMeta.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_digest.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
+	tests/stub_tunnel.cc \
+	tests/stub_wccp2.cc \
+	tests/stub_whois.cc \
 	tests/stub_wordlist.cc 
