@@ -4,8 +4,8 @@
 #define STUB_API "SwapDir.cc"
 #include "tests/STUB.h"
 
-SwapDir::SwapDir(char const *) STUB
-SwapDir::~SwapDir() STUB
+// SwapDir::SwapDir(char const *) STUB
+// SwapDir::~SwapDir() STUB
 void SwapDir::create() STUB
 void SwapDir::dump(StoreEntry &) const STUB
 bool SwapDir::doubleCheck(StoreEntry &) STUB_RETVAL(false)
