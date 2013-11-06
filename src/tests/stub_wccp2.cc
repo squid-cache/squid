@@ -1,9 +1,10 @@
 #include "squid.h"
 
+#if USE_WCCPv2
+
 #define STUB_API "wccp2.cc"
 #include "tests/STUB.h"
 
-#if USE_WCCPv2
 class StoreEntry;
 
 void wccp2_add_service_list(int, int, int, int, int, int[], int, char *) STUB
