@@ -5,10 +5,14 @@
 #
 # The old boilerplate is assumed to be the first /* comment */ in a source 
 # file, before the first #include statement other than #include "squid.h".
-# Common old boilerplates are removed, with Copyright claims contained in
-# them logged on stdout for recording in CONTRIBUTORS or some such.
+# Common old boilerplates are removed, with copyright-related claims contained
+# in them logged on stdout for recording in CONTRIBUTORS or some such.
+# Copyright and (C) (but not AUTHOR-like) lines are left in sources except
+# when we have a permission to move them to CONTRIBUTORS.
 #
-# The new boilerplate comment is placed at the very beginning of the file.
+# The new boilerplate comment is placed at the very beginning of the file,
+# followed by old copyright lines, "inspired by" lines, and DEBUG section
+# comments (if any were found in the old boilerplate).
 #
 # The script tries hard to detect files with unusual old boilerplates. When
 # detected, the script warns about the problem and leaves the file "as is".
@@ -59,7 +63,24 @@ my $reClaims = qr{
 my $reClaimPrefix = qr{
 	(?:ORIGINAL\s)?AUTHOR:?|
 	based\son\s|
-	based\supon\s
+	based\supon\s|
+	Portions\s
+}xi;
+
+# We have persmission to move these frequent claims to CONTRIBUTORS.
+# XXX: We have not gotten permission for some of the entries yet.
+my $reClaimsOkToMove = qr{
+	Robert.Collins|<robertc\@squid-cache.org>|
+	Francesco.Chemolli|<kinkie\@squid-cache.org>|
+
+	Amos.Jeffries|<amosjeffries\@squid-cache.org>|<squid3\@treenet.co.nz>|
+	Treehouse.Networks.Ltd.|
+	GPL.version.2,..C.2007-2013|
+
+	Henrik.Nordstrom|<henrik\@henriknordstrom.net>|
+	MARA.Systems.AB|
+
+	the.Regents.of.the.University.of
 }xi;
 
 # inspirations are not copyright claims but should be preserved
@@ -127,13 +148,8 @@ foreach my $fname (@FileNames) {
 	my $extras = ''; # DEBUG section, inspired by ..., etc.
 
 	if (defined $boiler) {
-		if ($boiler =~ m/$reDebugFull/) {
-			$extras .= "/* $1 */\n\n";
-		}
-
-		if ($boiler =~ m/$reInspiration/) {
-			$extras .= sprintf("/* %s */\n\n", ucfirst($1));
-		}
+		my $copyClaims = ''; # formatted Copyright claims extraced from sources
+		my $preserveClaims = 0; # whether to preserve them or not
 
 		if (my @rawClaims = ($boiler =~ m/$reClaims/g)) {
 			my @claims = map { &claimList($_) } @rawClaims;
@@ -142,14 +158,48 @@ foreach my $fname (@FileNames) {
 				$claim =~ s/\n+/ /gs;		# streamline multiline claims
 				$claim =~ s@\*/?@ @g;		# clean comment leftovers
 				$claim =~ s/$reClaimPrefix/ /g; # remove common prefixes
+				# this one is sucked in from the old standard boilerplate
+				$claim =~ s/by the Regents of the University of//;
 				$claim =~ s/\s\s+/ /gs;		# clean excessive whitespace
 				$claim =~ s/^\s+|\s+$//gs;	# remove excessive whitespace
 				next unless length $claim;
+
+				# preserve Copyright claims
+				if ($claim =~ m/Copyright|\(c\)/i) {
+					$copyClaims .= sprintf(" * %s\n", $claim);
+
+					# Ignore certain claims, assuming we have their permission.
+					my $c = $claim;
+					$c =~ s/^\s*(Copyright)?[:\s]*([(c)]+)?\s*([0-9,-]+)?\s*(by)?\s*//i; # prefix
+					$c =~ s/$reClaimsOkToMove/ /g;
+					$c =~ s/[,]//g; # markup leftovers
+
+					# But if one claim is preserved, all must be preserved.
+					$preserveClaims = 1 if $c =~ /\S/;
+warn($c) if $c =~ /\S/;
+				}
+
 				next if exists $ReportedClaims{$claim};
 				print("$fname: INFO: Found new claim(s):\n") unless $count++;
 				print("Claim: $claim\n");
 				$ReportedClaims{$claim} = $fname;
 			}
+		}
+		
+		if ($preserveClaims) {
+			die("Internal error: $copyClaims") unless length($copyClaims);
+			my $prefix = " * Portions of this code are copyrighted and released under GPLv2+ by:";
+			my $suffix = " * Please add new claims to the CONTRIBUTORS file instead.";
+			$extras .= sprintf("/*\n%s\n%s%s\n */\n\n",
+				$prefix, $copyClaims, $suffix);
+		}
+
+		if ($boiler =~ m/$reInspiration/) {
+			$extras .= sprintf("/* %s */\n\n", ucfirst($1));
+		}
+
+		if ($boiler =~ m/$reDebugFull/) {
+			$extras .= "/* $1 */\n\n";
 		}
 
 		$code =~ s/\s*$reComment\s*/\n\n/ or
