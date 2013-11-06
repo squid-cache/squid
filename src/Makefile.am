@@ -24,6 +24,21 @@ SBUF_SOURCE= \
 	SBufExceptions.h \
 	SBufExceptions.cc
 
+STOREMETA_SOURCE = \
+	StoreMeta.cc \
+	StoreMeta.h \
+	StoreMetaMD5.cc \
+	StoreMetaMD5.h \
+	StoreMetaSTD.cc \
+	StoreMetaSTD.h \
+	StoreMetaSTDLFS.cc \
+	StoreMetaSTDLFS.h \
+	StoreMetaObjSize.h \
+	StoreMetaURL.cc \
+	StoreMetaURL.h \
+	StoreMetaVary.cc \
+	StoreMetaVary.h
+
 LOADABLE_MODULES_SOURCES = \
 	LoadableModule.h \
 	LoadableModule.cc \
@@ -509,21 +524,9 @@ squid_SOURCES = \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreMeta.cc \
-	StoreMeta.h \
-	StoreMetaMD5.cc \
-	StoreMetaMD5.h \
-	StoreMetaSTD.cc \
-	StoreMetaSTD.h \
-	StoreMetaSTDLFS.cc \
-	StoreMetaSTDLFS.h \
-	StoreMetaObjSize.h \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
-	StoreMetaURL.cc \
-	StoreMetaURL.h \
-	StoreMetaVary.cc \
-	StoreMetaVary.h \
+	$(STOREMETA_SOURCE) \
 	StoreSearch.h \
 	StoreStats.cc \
 	StoreStats.h \
@@ -3051,13 +3054,8 @@ tests_testUfs_SOURCES = \
 	Notes.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
+	$(STOREMETA_SOURCE) \
 	StoreFileSystem.cc \
 	store_io.cc \
 	store_swapout.cc \
@@ -3256,13 +3254,8 @@ tests_testRock_SOURCES = \
 	store.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
-	StoreMetaURL.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaVary.cc \
+	$(STOREMETA_SOURCE) \
 	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
