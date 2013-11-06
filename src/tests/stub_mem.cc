@@ -61,3 +61,5 @@ memFreeBufFunc(size_t size)
 
 void * memAllocate(mem_type type) STUB_RETVAL(NULL)
 void memFree(void *p, int type) STUB
+void Mem::Init(void) STUB_NOP
+

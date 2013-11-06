@@ -24,6 +24,21 @@ SBUF_SOURCE= \
 	SBufExceptions.h \
 	SBufExceptions.cc
 
+STOREMETA_SOURCE = \
+	StoreMeta.cc \
+	StoreMeta.h \
+	StoreMetaMD5.cc \
+	StoreMetaMD5.h \
+	StoreMetaSTD.cc \
+	StoreMetaSTD.h \
+	StoreMetaSTDLFS.cc \
+	StoreMetaSTDLFS.h \
+	StoreMetaObjSize.h \
+	StoreMetaURL.cc \
+	StoreMetaURL.h \
+	StoreMetaVary.cc \
+	StoreMetaVary.h
+
 LOADABLE_MODULES_SOURCES = \
 	LoadableModule.h \
 	LoadableModule.cc \
@@ -509,21 +524,9 @@ squid_SOURCES = \
 	store_swapin.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreMeta.cc \
-	StoreMeta.h \
-	StoreMetaMD5.cc \
-	StoreMetaMD5.h \
-	StoreMetaSTD.cc \
-	StoreMetaSTD.h \
-	StoreMetaSTDLFS.cc \
-	StoreMetaSTDLFS.h \
-	StoreMetaObjSize.h \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
-	StoreMetaURL.cc \
-	StoreMetaURL.h \
-	StoreMetaVary.cc \
-	StoreMetaVary.h \
+	$(STOREMETA_SOURCE) \
 	StoreSearch.h \
 	StoreStats.cc \
 	StoreStats.h \
@@ -724,16 +727,11 @@ ufsdump_SOURCES = \
 	Parsing.h \
 	store_key_md5.h \
 	store_key_md5.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	String.cc \
 	SquidNew.cc \
-	time.cc \
+	tests/stub_time.cc \
 	ufsdump.cc \
 	dlink.h \
 	dlink.cc \
@@ -1115,7 +1113,7 @@ tests_testHttpReply_SOURCES=\
 	cbdata.cc \
 	cbdata.h \
 	ConfigParser.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
 	HttpBody.h \
@@ -1183,7 +1181,7 @@ tests_testHttpReply_SOURCES=\
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	url.cc \
 	URLScheme.cc \
 	wordlist.h \
@@ -1217,7 +1215,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	ConfigParser.cc \
 	DiskIO/ReadRequest.cc \
 	DiskIO/WriteRequest.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
@@ -1263,19 +1261,14 @@ tests_testACLMaxUserIP_SOURCES= \
 	String.cc \
 	store_dir.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
 	swap_log_op.cc \
 	swap_log_op.h \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	SwapDir.h \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -1315,7 +1308,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	url.cc \
 	URL.h \
 	URLScheme.cc \
@@ -1360,7 +1353,7 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
 	tests/testMain.cc \
 	tests/testBoilerplate.h \
-	time.cc
+	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
@@ -1401,9 +1394,9 @@ tests_testCacheManager_SOURCES = \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
-	carp.cc \
+	tests/stub_carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
 	client_db.h \
@@ -1428,7 +1421,7 @@ tests_testCacheManager_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1535,7 +1528,7 @@ tests_testCacheManager_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -1550,18 +1543,13 @@ tests_testCacheManager_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
-	SwapDir.cc \
+	tests/stub_tunnel.cc \
+	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -1569,9 +1557,9 @@ tests_testCacheManager_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -1622,7 +1610,7 @@ tests_testCacheManager_DEPENDENCIES = \
 
 tests_testDiskIO_SOURCES = \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cbdata.cc \
 	client_db.h \
 	ClientInfo.h \
@@ -1632,7 +1620,7 @@ tests_testDiskIO_SOURCES = \
 	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	EventLoop.cc \
 	event.cc \
 	fatal.h \
@@ -1688,13 +1676,8 @@ tests_testDiskIO_SOURCES = \
 	stmem.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -1707,7 +1690,7 @@ tests_testDiskIO_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
@@ -1749,7 +1732,7 @@ tests_testDiskIO_SOURCES = \
 	tests/testMain.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
-	time.cc \
+	tests/stub_time.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
@@ -1806,7 +1789,7 @@ tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
 	BodyPipe.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cache_cf.h \
 	AuthReg.h \
 	YesNoNone.h \
@@ -1815,7 +1798,7 @@ tests_testEvent_SOURCES = \
 	cache_cf.cc \
 	cache_manager.cc \
 	carp.h \
-	carp.cc \
+	tests/stub_carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
 	client_db.h \
@@ -1841,7 +1824,7 @@ tests_testEvent_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1956,7 +1939,7 @@ tests_testEvent_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -1971,16 +1954,11 @@ tests_testEvent_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
@@ -1994,7 +1972,7 @@ tests_testEvent_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -2002,9 +1980,9 @@ tests_testEvent_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc
@@ -2055,7 +2033,7 @@ tests_testEventLoop_SOURCES = \
 	AccessLogEntry.cc \
 	BodyPipe.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
@@ -2064,7 +2042,7 @@ tests_testEventLoop_SOURCES = \
 	RefreshPattern.h \
 	cache_cf.cc \
 	carp.h \
-	carp.cc \
+	tests/stub_carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
 	client_db.h \
@@ -2090,7 +2068,7 @@ tests_testEventLoop_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	EventLoop.h \
 	EventLoop.cc \
 	event.cc \
@@ -2204,7 +2182,7 @@ tests_testEventLoop_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -2219,18 +2197,13 @@ tests_testEventLoop_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
@@ -2243,7 +2216,7 @@ tests_testEventLoop_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
@@ -2251,9 +2224,9 @@ tests_testEventLoop_SOURCES = \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc
@@ -2310,9 +2283,9 @@ tests_test_http_range_SOURCES = \
 	cache_cf.cc \
 	cache_manager.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
-	carp.cc \
+	tests/stub_carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
 	client_db.h \
@@ -2338,7 +2311,7 @@ tests_test_http_range_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	event.cc \
 	FadingCounter.cc \
 	fatal.h \
@@ -2448,7 +2421,7 @@ tests_test_http_range_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -2463,18 +2436,13 @@ tests_test_http_range_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	tests/test_http_range.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -2485,16 +2453,16 @@ tests_test_http_range_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc
@@ -2560,7 +2528,7 @@ tests_testHttpParser_SOURCES = \
 	tests/testHttpParser.cc \
 	tests/testHttpParser.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpParser_SOURCES = \
@@ -2612,9 +2580,9 @@ tests_testHttpRequest_SOURCES = \
 	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
-	carp.cc \
+	tests/stub_carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
 	client_db.h \
@@ -2638,7 +2606,7 @@ tests_testHttpRequest_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	ETag.cc \
+	tests/stub_ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	fatal.h \
@@ -2738,7 +2706,7 @@ tests_testHttpRequest_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -2753,30 +2721,25 @@ tests_testHttpRequest_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	StrList.h \
 	StrList.cc \
 	event.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
-	SwapDir.cc \
+	tests/stub_tunnel.cc \
+	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
@@ -2825,7 +2788,7 @@ tests_testHttpRequest_DEPENDENCIES = \
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	cbdata.cc \
 	ClientInfo.h \
 	ConfigOption.cc \
@@ -2888,13 +2851,8 @@ tests_testStore_SOURCES= \
 	store_io.cc \
 	store_swapout.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -2954,7 +2912,7 @@ tests_testStore_SOURCES= \
 	tests/testStoreSupport.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	time.cc \
+	tests/stub_time.cc \
 	url.cc \
 	URLScheme.cc \
 	wordlist.h \
@@ -3014,7 +2972,7 @@ tests_testString_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	time.cc \
+	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testString_SOURCES = \
@@ -3096,13 +3054,8 @@ tests_testUfs_SOURCES = \
 	Notes.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
+	$(STOREMETA_SOURCE) \
 	StoreFileSystem.cc \
 	store_io.cc \
 	store_swapout.cc \
@@ -3112,7 +3065,7 @@ tests_testUfs_SOURCES = \
 	event.cc \
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
 	HttpMsg.cc \
@@ -3242,7 +3195,7 @@ testRefCount_LDADD = \
 tests_testRock_SOURCES = \
 	cbdata.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	disk.h \
@@ -3301,13 +3254,8 @@ tests_testRock_SOURCES = \
 	store.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
-	StoreMetaURL.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaVary.cc \
+	$(STOREMETA_SOURCE) \
 	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
@@ -3411,11 +3359,11 @@ tests_testURL_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
-	cache_manager.cc \
+	tests/stub_cache_manager.cc \
 	CacheDigest.h \
-	CacheDigest.cc \
+	tests/stub_CacheDigest.cc \
 	carp.h \
-	carp.cc \
+	tests/stub_carp.cc \
 	cbdata.cc \
 	ChunkedCodingParser.cc \
 	client_db.h \
@@ -3551,7 +3499,7 @@ tests_testURL_SOURCES = \
 	store.cc \
 	store_client.cc \
 	store_digest.h \
-	store_digest.cc \
+	tests/stub_store_digest.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
@@ -3566,18 +3514,13 @@ tests_testURL_SOURCES = \
 	store_swapout.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
+	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
-	StoreMetaURL.cc \
-	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
+	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
@@ -3591,18 +3534,18 @@ tests_testURL_SOURCES = \
 	tests/testURLScheme.cc \
 	tests/testURLScheme.h \
 	tests/testMain.cc \
-	time.cc \
+	tests/stub_time.cc \
 	tools.h \
 	tools.cc \
-	tunnel.cc \
+	tests/stub_tunnel.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
-	wccp2.cc \
+	tests/stub_wccp2.cc \
 	whois.h \
-	whois.cc \
+	tests/stub_whois.cc \
 	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
