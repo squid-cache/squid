@@ -40,6 +40,14 @@ const char *GetErrorDescr(ssl_error_t value);
 
 /**
    \ingroup ServerProtocolSSLAPI
+   * Return true if the SSL error is optional and may not supported
+   * by current squid version
+ */
+
+bool ErrorIsOptional(const char *name);
+
+/**
+   \ingroup ServerProtocolSSLAPI
  * Used to pass SSL error details to the error pages returned to the
  * end user.
  */

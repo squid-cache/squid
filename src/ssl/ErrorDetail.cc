@@ -221,6 +221,31 @@ static SslErrorEntry TheSslErrorArray[] = {
     {SSL_ERROR_NONE, NULL}
 };
 
+static const char *OptionalSslErrors[] = {
+    "X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER",
+    "X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION",
+    "X509_V_ERR_KEYUSAGE_NO_CRL_SIGN",
+    "X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION",
+    "X509_V_ERR_INVALID_NON_CA",
+    "X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED",
+    "X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE",
+    "X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED",
+    "X509_V_ERR_INVALID_EXTENSION",
+    "X509_V_ERR_INVALID_POLICY_EXTENSION",
+    "X509_V_ERR_NO_EXPLICIT_POLICY",
+    "X509_V_ERR_DIFFERENT_CRL_SCOPE",
+    "X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE",
+    "X509_V_ERR_UNNESTED_RESOURCE",
+    "X509_V_ERR_PERMITTED_VIOLATION",
+    "X509_V_ERR_EXCLUDED_VIOLATION",
+    "X509_V_ERR_SUBTREE_MINMAX",
+    "X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE",
+    "X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX",
+    "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX",
+    "X509_V_ERR_CRL_PATH_VALIDATION_ERROR",
+    NULL
+};
+
 struct SslErrorAlias {
     const char *name;
     const Ssl::ssl_error_t *errors;
@@ -329,6 +354,16 @@ const char *Ssl::GetErrorName(Ssl::ssl_error_t value)
         return it->second->name;
 
     return NULL;
+}
+
+bool
+Ssl::ErrorIsOptional(const char *name)
+{
+    for (int i = 0; OptionalSslErrors[i] != NULL; ++i) {
+        if (strcmp(name, OptionalSslErrors[i]) == 0)
+            return true;
+    }
+    return false;
 }
 
 const char *
