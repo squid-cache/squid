@@ -22,4 +22,3 @@ void cacheDigestGuessStatsReport(const CacheDigestGuessStats *, StoreEntry *, co
 void cacheDigestReport(CacheDigest *, const char *, StoreEntry *) STUB
 size_t cacheDigestCalcMaskSize(int, int) STUB_RETVAL(1)
 
-
