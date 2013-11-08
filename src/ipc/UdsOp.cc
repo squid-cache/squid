@@ -96,7 +96,6 @@ void Ipc::UdsSender::swanSong()
     UdsOp::swanSong();
 }
 
-
 void Ipc::UdsSender::start()
 {
     UdsOp::start();
