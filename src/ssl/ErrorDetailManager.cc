@@ -218,32 +218,35 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
             }
 
             Ssl::ssl_error_t ssl_error = Ssl::GetErrorCode(errorName.termedBuf());
-            if (ssl_error == SSL_ERROR_NONE) {
+            if (ssl_error != SSL_ERROR_NONE) {
+
+                if (theDetails->getErrorDetail(ssl_error)) {
+                    debugs(83, DBG_IMPORTANT, HERE <<
+                           "WARNING! duplicate entry: " << errorName);
+                    return false;
+                }
+
+                ErrorDetailEntry &entry = theDetails->theList[ssl_error];
+                entry.error_no = ssl_error;
+                entry.name = errorName;
+                String tmp = parser.getByName("detail");
+                httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
+                tmp = parser.getByName("descr");
+                httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
+                bool parseOK = entry.descr.defined() && entry.detail.defined();
+
+                if (!parseOK) {
+                    debugs(83, DBG_IMPORTANT, HERE <<
+                           "WARNING! missing important field for detail error: " <<  errorName);
+                    return false;
+                }
+
+            } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! invalid error detail name: " << errorName);
                 return false;
             }
 
-            if (theDetails->getErrorDetail(ssl_error)) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! duplicate entry: " << errorName);
-                return false;
-            }
-
-            ErrorDetailEntry &entry = theDetails->theList[ssl_error];
-            entry.error_no = ssl_error;
-            entry.name = errorName;
-            String tmp = parser.getByName("detail");
-            httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
-            tmp = parser.getByName("descr");
-            httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
-            bool parseOK = entry.descr.defined() && entry.detail.defined();
-
-            if (!parseOK) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! missing imporant field for detail error: " <<  errorName);
-                return false;
-            }
         }// else {only spaces and black lines; just ignore}
 
         buf.consume(size);
