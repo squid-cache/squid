@@ -442,7 +442,7 @@ squid_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
-	MessageCounters.h \
+	MessageSizes.h \
 	mime.h \
 	mime.cc \
 	mime_header.h \

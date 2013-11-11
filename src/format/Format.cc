@@ -983,12 +983,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_REQUEST_SIZE_TOTAL:
-            outoff = al->http.clientRequest.total();
+            outoff = al->http.clientRequestSz.messageTotal();
             dooff = 1;
             break;
 
         case LFT_CLIENT_REQUEST_SIZE_HEADERS:
-            outoff = al->http.clientRequest.headerSz;
+            outoff = al->http.clientRequestSz.header;
             dooff =1;
             break;
 
@@ -996,7 +996,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             /*case LFT_REQUEST_SIZE_BODY_NO_TE: */
 
         case LFT_ADAPTED_REPLY_SIZE_TOTAL:
-            outoff = al->http.adaptedReply.total();
+            outoff = al->http.clientReplySz.messageTotal();
             dooff = 1;
             break;
 
@@ -1015,7 +1015,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ADAPTED_REPLY_SIZE_HEADERS:
-            outint = al->http.adaptedReply.headerSz;
+            outint = al->http.clientReplySz.header;
             doint = 1;
             break;
 
@@ -1023,7 +1023,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             /*case LFT_REPLY_SIZE_BODY_NO_TE: */
 
         case LFT_CLIENT_IO_SIZE_TOTAL:
-            outint = al->http.clientRequest.total() + al->http.adaptedReply.total();
+            outint = al->http.clientRequestSz.messageTotal() + al->http.clientReplySz.messageTotal();
             doint = 1;
             break;
             /*case LFT_SERVER_IO_SIZE_TOTAL: */

@@ -78,7 +78,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   LogTags_str[al->cache.code],
                   al->http.statusSfx(),
                   al->http.code,
-                  al->http.adaptedReply.total(),
+                  al->http.clientReplySz.messageTotal(),
                   al->_private.method_str,
                   al->url,
                   user ? user : dash_str,
