@@ -1290,7 +1290,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 #endif
     al.cache.code = h->logType;
     // XXX: should use icap-specific counters instead ?
-    al.http.clientRequest.payloadDataSz = h->req_sz;
+    al.http.clientRequestSz.payloadData = h->req_sz;
 
     // leave al.icap.bodyBytesRead negative if no body
     if (replyHttpHeaderSize >= 0 || replyHttpBodySize >= 0) {
@@ -1304,8 +1304,8 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         al.http.content_type = reply_->content_type.termedBuf();
         if (replyHttpBodySize >= 0) {
             // XXX: should use icap-specific counters instead ?
-            al.http.adaptedReply.payloadDataSz = replyHttpBodySize;
-            al.http.adaptedReply.headerSz =  reply_->hdr_sz;
+            al.http.clientReplySz.payloadData = replyHttpBodySize;
+            al.http.clientReplySz.header =  reply_->hdr_sz;
             al.cache.highOffset = replyHttpBodySize;
         }
         //don't set al.cache.objectSize because it hasn't exist yet

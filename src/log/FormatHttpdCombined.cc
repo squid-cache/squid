@@ -77,7 +77,7 @@ Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   AnyP::ProtocolType_str[al->http.version.protocol],
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
-                  al->http.adaptedReply.total(),
+                  al->http.clientReplySz.messageTotal(),
                   referer,
                   agent,
                   LogTags_str[al->cache.code],

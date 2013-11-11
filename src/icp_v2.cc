@@ -223,7 +223,7 @@ icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, i
     al->cache.caddr = caddr;
 
     // XXX: move to use icp.clientReply instead
-    al->http.adaptedReply.payloadDataSz = len;
+    al->http.clientReplySz.payloadData = len;
 
     al->cache.code = logcode;
 
