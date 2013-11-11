@@ -40,7 +40,7 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "LogTags.h"
-#include "MessageCounters.h"
+#include "MessageSizes.h"
 #include "Notes.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
@@ -87,7 +87,8 @@ public:
         HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
                 timedout(false),
                 aborted(false),
-                clientRequest() {}
+                clientRequestSz(),
+                clientReplySz() {}
 
         HttpRequestMethod method;
         int code;
@@ -104,12 +105,12 @@ public:
         /// counters for the original request received from client
         // TODO calculate header and payload better (by parser)
         // XXX payload encoding overheads not calculated at all yet.
-        MessageCounters clientRequest;
+        MessageSizes clientRequestSz;
 
         /// counters for the response sent to client
         // TODO calculate header and payload better (by parser)
         // XXX payload encoding overheads not calculated at all yet.
-        MessageCounters adaptedReply;
+        MessageSizes clientReplySz;
 
     } http;
 
