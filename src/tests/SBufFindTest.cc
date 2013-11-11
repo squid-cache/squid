@@ -20,7 +20,7 @@ SBufFindTest::SBufFindTest():
         thePlacement(placeEof),
         theStringPos(0),
         theBareNeedlePos(0),
-        theFindString(0)
+        theFindString(0),
         theFindSBuf(0),
         theReportFunc(),
         theReportNeedle(),
