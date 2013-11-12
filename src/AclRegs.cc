@@ -5,6 +5,10 @@
     does not get linked in, because nobody is using these classes by name.
 */
 
+#if USE_ADAPTATION
+#include "acl/AdaptationService.h"
+#include "acl/AdaptationServiceData.h"
+#endif
 #include "acl/AllOf.h"
 #include "acl/AnyOf.h"
 #if USE_SQUID_EUI
@@ -193,3 +197,8 @@ Acl::AllOf Acl::AllOf::RegistryEntry_;
 
 ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
 ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
+
+#if USE_ADAPTATION
+ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");
+ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptationServiceData, ACLAdaptationServiceStrategy::Instance(), "adaptation_service");
+#endif
