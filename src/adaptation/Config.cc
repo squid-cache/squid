@@ -67,6 +67,7 @@ const char *metasBlacklist[] = {
     NULL
 };
 Notes Adaptation::Config::metaHeaders("ICAP header", metasBlacklist);
+bool Adaptation::Config::needHistory = false;
 
 Adaptation::ServiceConfig*
 Adaptation::Config::newServiceConfig() const
@@ -99,6 +100,18 @@ Adaptation::Config::removeService(const String& service)
             ++i;
         }
     }
+}
+
+Adaptation::ServiceConfigPointer
+Adaptation::Config::findServiceConfig(const String &service)
+{
+    typedef ServiceConfigs::const_iterator SCI;
+    const ServiceConfigs& configs = serviceConfigs;
+    for (SCI cfg = configs.begin(); cfg != configs.end(); ++cfg) {
+        if ((*cfg)->key == service)
+            return *cfg;
+    }
+    return NULL;
 }
 
 void
