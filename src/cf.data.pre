@@ -1073,6 +1073,15 @@ DOC_START
 	  # Annotation sources include note and adaptation_meta directives
 	  # as well as helper and eCAP responses.
 
+	acl aclname adaptation_service service ...
+	  # Matches the name of any icap_service, ecap_service,
+	  # adaptation_service_set, or adaptation_service_chain that Squid
+	  # has used (or attempted to use) for the master transaction.
+	  # This ACL must be defined after the corresponding adaptation
+	  # service is named in squid.conf. This ACL is usable with
+	  # adaptation_meta because it starts matching immediately after
+	  # the service has been selected for adaptation.
+
 IF USE_SSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]

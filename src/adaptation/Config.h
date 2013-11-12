@@ -49,6 +49,8 @@ public:
 
     static Notes metaHeaders; ///< The list of configured meta headers
 
+    static bool needHistory; ///< HttpRequest adaptation history should recorded
+
     typedef Vector<ServiceConfigPointer> ServiceConfigs;
     ServiceConfigs serviceConfigs;
 
@@ -58,7 +60,7 @@ public:
     void parseService(void);
     void freeService(void);
     void dumpService(StoreEntry *, const char *) const;
-    ServicePointer findService(const String&);
+    ServiceConfigPointer findServiceConfig(const String&);
 
     /**
      * Creates and starts the adaptation services. In the case the adaptation
