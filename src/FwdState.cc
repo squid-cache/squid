@@ -1123,7 +1123,7 @@ FwdState::connectStart()
         debugs(17,7, "pinned peer connection: " << pinned_connection);
         // pinned_connection may become nil after a pconn race
         if (pinned_connection)
-            serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
+            serverConn = pinned_connection->borrowPinnedConnection(request, serverDestinations[0]->getPeer());
         else
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {

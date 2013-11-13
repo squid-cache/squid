@@ -950,7 +950,7 @@ ConnStateData::swanSong()
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
-    unpinConnection();
+    unpinConnection(true);
 
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
@@ -4797,7 +4797,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
     assert(pinning.serverConnection == io.conn);
     pinning.closeHandler = NULL; // Comm unregisters handlers before calling
     const bool sawZeroReply = pinning.zeroReply; // reset when unpinning
-    unpinConnection();
+    unpinConnection(false);
     if (sawZeroReply) {
         debugs(33, 3, "Closing client connection on pinned zero reply.");
         clientConnection->close();
@@ -4815,18 +4815,23 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 void
 ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
 {
-    char desc[FD_DESC_SZ];
+    if (!Comm::IsConnOpen(pinning.serverConnection) || 
+        pinning.serverConnection->fd != pinServer->fd)
+        pinNewConnection(pinServer, request, aPeer, auth);
 
-    if (Comm::IsConnOpen(pinning.serverConnection)) {
-        if (pinning.serverConnection->fd == pinServer->fd)
-            return;
-    }
+    startMonitoringPinnedConnection();
+}
 
-    unpinConnection(); // closes pinned connection, if any, and resets fields
+void
+ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
+{
+    unpinConnection(true); // closes pinned connection, if any, and resets fields
 
     pinning.serverConnection = pinServer;
 
     debugs(33, 3, HERE << pinning.serverConnection);
+
+    Must(pinning.serverConnection != NULL);
 
     // when pinning an SSL bumped connection, the request may be NULL
     const char *pinnedHost = "[unknown]";
@@ -4842,6 +4847,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
     char stmp[MAX_IPSTRLEN];
+    char desc[FD_DESC_SZ];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
              (auth || !aPeer) ? pinnedHost : aPeer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
@@ -4877,14 +4883,69 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
 
     if (!valid) {
         /* The pinning info is not safe, remove any pinning info */
-        unpinConnection();
+        unpinConnection(true);
     }
 
     return pinning.serverConnection;
 }
 
+Comm::ConnectionPointer
+ConnStateData::borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer)
+{
+    debugs(33, 7, pinning.serverConnection);
+    if (validatePinnedConnection(request, aPeer) != NULL)
+        stopMonitoringPinnedConnection();
+
+    return pinning.serverConnection; // closed if validation failed
+}
+
+/// [re]start monitoring pinned connection for server closures so that we can
+/// propagate them to an _idle_ client pinned to the server
 void
-ConnStateData::unpinConnection()
+ConnStateData::startMonitoringPinnedConnection()
+{
+    if (!pinning.reading) {
+         pinning.reading = true;
+         Comm::SetSelect(pinning.serverConnection->fd, COMM_SELECT_READ,
+                         &ConnStateData::ReadPinnedConnection,
+                         new Pointer(this), 0);
+    }
+}
+
+/// stop or suspend monitoring pinned connection for server closures
+void
+ConnStateData::stopMonitoringPinnedConnection()
+{
+    if (pinning.reading) {
+         Comm::SetSelect(pinning.serverConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
+         pinning.reading = false;
+    }
+}
+
+/// read callback for the idle pinned server connection
+void
+ConnStateData::ReadPinnedConnection(int fd, void *data)
+{
+    Pointer *ptr = static_cast<Pointer*>(data);
+    if (ConnStateData *client = dynamic_cast<ConnStateData*>(ptr->valid())) {
+        // get back inside job call protection
+        typedef NullaryMemFunT<ConnStateData> Dialer;
+        AsyncCall::Pointer call = JobCallback(33, 5, Dialer, client,
+                                              ConnStateData::readPinnedConnection);
+        ScheduleCallHere(call);
+    }
+    delete ptr;
+}
+
+void
+ConnStateData::readPinnedConnection()
+{
+    pinning.reading = false; // select loop clears our subscription before cb
+    mustStop("suspected pinned server eof");
+}
+
+void
+ConnStateData::unpinConnection(const bool andClose)
 {
     debugs(33, 3, HERE << pinning.serverConnection);
 
@@ -4896,9 +4957,13 @@ ConnStateData::unpinConnection()
             comm_remove_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
             pinning.closeHandler = NULL;
         }
-        /// also close the server side socket, we should not use it for any future requests...
-        // TODO: do not close if called from our close handler?
-        pinning.serverConnection->close();
+
+        stopMonitoringPinnedConnection();
+
+        // close the server side socket if requested
+        if (andClose)
+            pinning.serverConnection->close();
+        pinning.serverConnection = NULL;
     }
 
     safe_free(pinning.host);
@@ -5751,7 +5816,7 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
         debugs(11, 3, "reset URI from " << connState->ftp.uri << " to " << uri);
         FtpCloseDataConnection(connState);
         connState->ftp.readGreeting = false;
-        connState->unpinConnection(); // close control connection to the server
+        connState->unpinConnection(true); // close control connection to the server
         FtpChangeState(connState, ConnStateData::FTP_BEGIN, "URI reset");
     }
 
