@@ -267,6 +267,7 @@ public:
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
         bool auth;               /* pinned for www authentication */
+        bool reading;   ///< we are monitoring for server connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
@@ -297,14 +298,13 @@ public:
     bool handleReadData(char *buf, size_t size);
     bool handleRequestBodyData();
 
-    /**
-     * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
-     */
+    /// forward future client requests using the given server connection
+    /// monitor pinned server connection for server-side closures
     void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth);
-    /**
-     * Decorrelate the ConnStateData object from its pinned CachePeer
-     */
-    void unpinConnection();
+    /// undo pinConnection() and, optionally, close the pinned connection
+    void unpinConnection(const bool andClose);
+    /// returns validated pinnned server connection (and stops its monitoring)
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer);
     /**
      * Checks if there is pinning info if it is valid. It can close the server side connection
      * if pinned info is not valid.
@@ -422,6 +422,12 @@ private:
     void handleFtpRequestData();
 
     bool concurrentRequestQueueFilled() const;
+
+    void pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth);
+    void startMonitoringPinnedConnection();
+    void stopMonitoringPinnedConnection();
+    static void ReadPinnedConnection(int fd, void *data);
+    void readPinnedConnection();
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection
