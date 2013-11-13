@@ -1,7 +1,7 @@
 #include "squid.h"
+#include "acl/AdaptationService.h"
 #include "acl/Checklist.h"
 #include "acl/IntRange.h"
-#include "acl/AdaptationService.h"
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
 #include "HttpRequest.h"
