@@ -5287,6 +5287,8 @@ FtpHandleFeatReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     // Remove all unsupported commands from the response wrapper.
     int deletedCount = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
+    bool hasEPRT = false;
+    bool hasEPSV = false;
     while (const HttpHeaderEntry *e = filteredHeader.getEntry(&pos)) {
         if (e->id == HDR_FTP_PRE) {
             // assume RFC 2389 FEAT response format, quoted by Squid:
@@ -5303,12 +5305,27 @@ FtpHandleFeatReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
 
             if (!FtpSupportedCommand(cmd))
                 filteredHeader.delAt(pos, deletedCount);
+
+            if (cmd == "EPRT")
+                hasEPRT = true;
+            else if (cmd == "EPSV")
+                hasEPSV = true;
         }
     }
 
-    if (deletedCount) {
+    int insertedCount = 0;
+    if (!hasEPRT) {
+        filteredHeader.putStr(HDR_FTP_PRE, "\" EPRT\"");
+        ++insertedCount;
+    }
+    if (!hasEPSV) {
+        filteredHeader.putStr(HDR_FTP_PRE, "\" EPSV\"");
+        ++insertedCount;
+    }
+
+    if (deletedCount || insertedCount) {
         filteredHeader.refreshMask();
-        debugs(33, 5, "deleted " << deletedCount);
+        debugs(33, 5, "deleted " << deletedCount << " inserted " << insertedCount);
     }
 
     FtpWriteForwardedReply(context, filteredReply);
