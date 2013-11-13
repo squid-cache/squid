@@ -1481,7 +1481,6 @@ tests_testCacheManager_SOURCES = \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
-	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -1509,6 +1508,7 @@ tests_testCacheManager_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -1892,7 +1892,6 @@ tests_testEvent_SOURCES = \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
-	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -1924,6 +1923,7 @@ tests_testEvent_SOURCES = \
 	Server.cc \
 	StrList.h \
 	StrList.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
@@ -2133,7 +2133,6 @@ tests_testEventLoop_SOURCES = \
 	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
@@ -2166,6 +2165,7 @@ tests_testEventLoop_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	Server.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -2373,7 +2373,6 @@ tests_test_http_range_SOURCES = \
 	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
@@ -2406,6 +2405,7 @@ tests_test_http_range_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -2662,7 +2662,6 @@ tests_testHttpRequest_SOURCES = \
 	multicast.h \
 	multicast.cc \
 	mem_node.cc \
-	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -2691,6 +2690,7 @@ tests_testHttpRequest_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -3456,7 +3456,6 @@ tests_testURL_SOURCES = \
 	Mem.h \
 	mem.cc \
 	mem_node.cc \
-	MemBlob.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.h \
@@ -3484,6 +3483,7 @@ tests_testURL_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
