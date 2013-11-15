@@ -1141,7 +1141,7 @@ tests_testHttpReply_SOURCES=\
 	HttpReply.cc \
 	HttpReply.h \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	RegexList.h \
 	RegexList.cc \
 	MemBuf.cc \
@@ -1314,7 +1314,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	URLScheme.cc \
 	URLScheme.h \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	MemBuf.cc \
 	wordlist.h \
 	wordlist.cc
@@ -1376,7 +1376,7 @@ tests_testCacheManager_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	String.cc \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
@@ -1659,7 +1659,7 @@ tests_testDiskIO_SOURCES = \
 	MemObject.cc \
 	mem_node.cc \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	Notes.h \
 	Notes.cc \
 	Packer.cc \
@@ -1890,7 +1890,7 @@ tests_testEvent_SOURCES = \
 	MasterXaction.cc \
 	MasterXaction.h \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -2136,7 +2136,7 @@ tests_testEventLoop_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	mem_node.cc \
 	mime.h \
 	mime.cc \
@@ -2376,7 +2376,7 @@ tests_test_http_range_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	mem_node.cc \
 	mime.h \
 	mime.cc \
@@ -2514,7 +2514,7 @@ tests_testHttpParser_SOURCES = \
 	MemBuf.cc \
 	MemBuf.h \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	String.cc \
 	cache_cf.h \
 	YesNoNone.h \
@@ -2556,7 +2556,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	String.cc \
 	tests/testHttpRequest.h \
 	tests/testHttpRequest.cc \
@@ -2829,7 +2829,7 @@ tests_testStore_SOURCES= \
 	MasterXaction.cc \
 	MasterXaction.h \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -2958,7 +2958,7 @@ tests_testStore_DEPENDENCIES = \
 tests_testString_SOURCES = \
 	ClientInfo.h \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	MemBuf.cc \
 	String.cc \
 	tests/testMain.cc \
@@ -3454,7 +3454,7 @@ tests_testURL_SOURCES = \
 	multicast.h \
 	multicast.cc \
 	Mem.h \
-	mem.cc \
+	tests/stub_mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -3601,7 +3601,7 @@ tests_testSBuf_SOURCES= \
 	$(SBUF_SOURCE) \
 	SBufStream.h \
 	tests/stub_time.cc \
-	mem.cc \
+	tests/stub_mem.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
 	tests/stub_HelperChildConfig.cc \
