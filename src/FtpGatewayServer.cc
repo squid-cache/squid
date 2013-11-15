@@ -520,7 +520,7 @@ ServerStateData::readDataReply()
     assert(clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ||
            clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST);
 
-    if (ctrl.replycode == 150) {
+    if (ctrl.replycode == 125 || ctrl.replycode == 150) {
         if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST)
             forwardPreliminaryReply(&ServerStateData::startDataDownload);
         else // clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST
