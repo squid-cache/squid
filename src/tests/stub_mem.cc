@@ -59,7 +59,14 @@ memFreeBufFunc(size_t size)
     return cxx_xfree;
 }
 
-void * memAllocate(mem_type type) STUB_RETVAL(NULL)
-void memFree(void *p, int type) STUB
+void * memAllocate(mem_type type) {
+    // let's waste plenty of memory. This should cover any possible need
+    return xmalloc(64*1024);
+}
+void memFree(void *p, int type) {
+    xfree(p);
+}
 void Mem::Init(void) STUB_NOP
-
+void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
+int memInUse(mem_type) STUB_RETVAL(0)
+void memConfigure(void) STUB_NOP
