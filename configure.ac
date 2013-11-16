@@ -3391,99 +3391,99 @@ AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
 
-AC_CONFIG_FILES([\
-	Makefile \
-	compat/Makefile \
-	lib/Makefile \
-	lib/ntlmauth/Makefile \
-	lib/libTrie/Makefile \
-	lib/libTrie/test/Makefile \
-	lib/profiler/Makefile \
-	lib/rfcnb/Makefile \
-	lib/smblib/Makefile \
-	lib/snmplib/Makefile \
-	scripts/Makefile \
-	src/Makefile \
-	src/anyp/Makefile \
-	src/base/Makefile \
-	src/acl/Makefile \
-	src/fs/Makefile \
-	src/repl/Makefile \
-	src/auth/Makefile \
-	src/auth/basic/Makefile \
-	src/auth/digest/Makefile \
-	src/auth/negotiate/Makefile \
-	src/auth/ntlm/Makefile \
-	src/adaptation/Makefile \
-	src/adaptation/icap/Makefile \
-	src/adaptation/ecap/Makefile \
-	src/comm/Makefile \
-	src/esi/Makefile \
-	src/eui/Makefile \
-	src/format/Makefile \
-	src/http/Makefile \
-	src/icmp/Makefile \
-	src/ident/Makefile \
-	src/ip/Makefile \
-	src/log/Makefile \
-	src/ipc/Makefile \
-	src/ssl/Makefile \
-	src/mgr/Makefile \
-	src/snmp/Makefile \
-	contrib/Makefile \
-	icons/Makefile \
-	errors/Makefile \
-	test-suite/Makefile \
-	doc/Makefile \
-	doc/manuals/Makefile \
-	helpers/Makefile \
-	helpers/basic_auth/Makefile \
-	helpers/basic_auth/DB/Makefile \
-	helpers/basic_auth/fake/Makefile \
-	helpers/basic_auth/getpwnam/Makefile \
-	helpers/basic_auth/LDAP/Makefile \
-	helpers/basic_auth/MSNT/Makefile \
-	helpers/basic_auth/MSNT-multi-domain/Makefile \
-	helpers/basic_auth/NCSA/Makefile \
-	helpers/basic_auth/NIS/Makefile \
-	helpers/basic_auth/PAM/Makefile \
-	helpers/basic_auth/POP3/Makefile \
-	helpers/basic_auth/RADIUS/Makefile \
-	helpers/basic_auth/SASL/Makefile \
-	helpers/basic_auth/SMB/Makefile \
-	helpers/basic_auth/SSPI/Makefile \
-	helpers/digest_auth/Makefile \
-	helpers/digest_auth/eDirectory/Makefile \
-	helpers/digest_auth/file/Makefile \
-	helpers/digest_auth/LDAP/Makefile \
-	helpers/ntlm_auth/Makefile \
-	helpers/ntlm_auth/fake/Makefile \
-	helpers/ntlm_auth/smb_lm/Makefile \
-	helpers/ntlm_auth/SSPI/Makefile \
-	helpers/negotiate_auth/Makefile \
-	helpers/negotiate_auth/kerberos/Makefile \
-	helpers/negotiate_auth/SSPI/Makefile \
-	helpers/negotiate_auth/wrapper/Makefile \
-	helpers/external_acl/Makefile \
-	helpers/external_acl/AD_group/Makefile \
-	helpers/external_acl/eDirectory_userip/Makefile \
-	helpers/external_acl/file_userip/Makefile \
-	helpers/external_acl/kerberos_ldap_group/Makefile \
-	helpers/external_acl/LDAP_group/Makefile \
-	helpers/external_acl/LM_group/Makefile \
-	helpers/external_acl/session/Makefile \
-	helpers/external_acl/SQL_session/Makefile \
-	helpers/external_acl/unix_group/Makefile \
-	helpers/external_acl/wbinfo_group/Makefile \
-	helpers/external_acl/time_quota/Makefile \
-	helpers/log_daemon/Makefile \
-	helpers/log_daemon/DB/Makefile \
-	helpers/log_daemon/file/Makefile \
-	helpers/url_rewrite/Makefile \
-	helpers/url_rewrite/fake/Makefile \
-	helpers/ssl/Makefile \
-	helpers/storeid_rewrite/Makefile \
-	helpers/storeid_rewrite/file/Makefile \
+AC_CONFIG_FILES([
+	Makefile
+	compat/Makefile
+	lib/Makefile
+	lib/ntlmauth/Makefile
+	lib/libTrie/Makefile
+	lib/libTrie/test/Makefile
+	lib/profiler/Makefile
+	lib/rfcnb/Makefile
+	lib/smblib/Makefile
+	lib/snmplib/Makefile
+	scripts/Makefile
+	src/Makefile
+	src/anyp/Makefile
+	src/base/Makefile
+	src/acl/Makefile
+	src/fs/Makefile
+	src/repl/Makefile
+	src/auth/Makefile
+	src/auth/basic/Makefile
+	src/auth/digest/Makefile
+	src/auth/negotiate/Makefile
+	src/auth/ntlm/Makefile
+	src/adaptation/Makefile
+	src/adaptation/icap/Makefile
+	src/adaptation/ecap/Makefile
+	src/comm/Makefile
+	src/esi/Makefile
+	src/eui/Makefile
+	src/format/Makefile
+	src/http/Makefile
+	src/icmp/Makefile
+	src/ident/Makefile
+	src/ip/Makefile
+	src/log/Makefile
+	src/ipc/Makefile
+	src/ssl/Makefile
+	src/mgr/Makefile
+	src/snmp/Makefile
+	contrib/Makefile
+	icons/Makefile
+	errors/Makefile
+	test-suite/Makefile
+	doc/Makefile
+	doc/manuals/Makefile
+	helpers/Makefile
+	helpers/basic_auth/Makefile
+	helpers/basic_auth/DB/Makefile
+	helpers/basic_auth/fake/Makefile
+	helpers/basic_auth/getpwnam/Makefile
+	helpers/basic_auth/LDAP/Makefile
+	helpers/basic_auth/MSNT/Makefile
+	helpers/basic_auth/MSNT-multi-domain/Makefile
+	helpers/basic_auth/NCSA/Makefile
+	helpers/basic_auth/NIS/Makefile
+	helpers/basic_auth/PAM/Makefile
+	helpers/basic_auth/POP3/Makefile
+	helpers/basic_auth/RADIUS/Makefile
+	helpers/basic_auth/SASL/Makefile
+	helpers/basic_auth/SMB/Makefile
+	helpers/basic_auth/SSPI/Makefile
+	helpers/digest_auth/Makefile
+	helpers/digest_auth/eDirectory/Makefile
+	helpers/digest_auth/file/Makefile
+	helpers/digest_auth/LDAP/Makefile
+	helpers/ntlm_auth/Makefile
+	helpers/ntlm_auth/fake/Makefile
+	helpers/ntlm_auth/smb_lm/Makefile
+	helpers/ntlm_auth/SSPI/Makefile
+	helpers/negotiate_auth/Makefile
+	helpers/negotiate_auth/kerberos/Makefile
+	helpers/negotiate_auth/SSPI/Makefile
+	helpers/negotiate_auth/wrapper/Makefile
+	helpers/external_acl/Makefile
+	helpers/external_acl/AD_group/Makefile
+	helpers/external_acl/eDirectory_userip/Makefile
+	helpers/external_acl/file_userip/Makefile
+	helpers/external_acl/kerberos_ldap_group/Makefile
+	helpers/external_acl/LDAP_group/Makefile
+	helpers/external_acl/LM_group/Makefile
+	helpers/external_acl/session/Makefile
+	helpers/external_acl/SQL_session/Makefile
+	helpers/external_acl/unix_group/Makefile
+	helpers/external_acl/wbinfo_group/Makefile
+	helpers/external_acl/time_quota/Makefile
+	helpers/log_daemon/Makefile
+	helpers/log_daemon/DB/Makefile
+	helpers/log_daemon/file/Makefile
+	helpers/url_rewrite/Makefile
+	helpers/url_rewrite/fake/Makefile
+	helpers/ssl/Makefile
+	helpers/storeid_rewrite/Makefile
+	helpers/storeid_rewrite/file/Makefile
 	tools/Makefile
 	tools/purge/Makefile
 ])
