@@ -31,12 +31,12 @@ testStoreController::testStats()
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
     addSwapDir(aStore2);
-    CPPUNIT_ASSERT(aStore->statsCalled == false);
-    CPPUNIT_ASSERT(aStore2->statsCalled == false);
+    CPPUNIT_ASSERT_EQUAL(false, aStore->statsCalled);
+    CPPUNIT_ASSERT_EQUAL(false, aStore2->statsCalled);
     Store::Stats(logEntry);
     free_cachedir(&Config.cacheSwap);
-    CPPUNIT_ASSERT(aStore->statsCalled == true);
-    CPPUNIT_ASSERT(aStore2->statsCalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
+    CPPUNIT_ASSERT_EQUAL(true, aStore2->statsCalled);
     Store::Root(NULL);
 }
 
@@ -71,7 +71,7 @@ testStoreController::testMaxSize()
     TestSwapDirPointer aStore2 (new TestSwapDir);
     addSwapDir(aStore);
     addSwapDir(aStore2);
-    CPPUNIT_ASSERT(Store::Root().maxSize() == 6);
+    CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(6), Store::Root().maxSize());
     free_cachedir(&Config.cacheSwap);
     Store::Root(NULL);
 }
@@ -140,47 +140,47 @@ testStoreController::testSearch()
     StoreSearchPointer search = aRoot->search (NULL, NULL); /* search for everything in the store */
 
     /* nothing should be immediately available */
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == false);
-    CPPUNIT_ASSERT(search->currentItem() == NULL);
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(false, search->isDone());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
 #if 0
 
-    CPPUNIT_ASSERT(search->next() == false);
+    CPPUNIT_ASSERT_EQUAL(false, search->next());
 #endif
 
     /* trigger a callback */
     cbcalled = false;
     search->next(searchCallback, NULL);
-    CPPUNIT_ASSERT(cbcalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* we should have access to a entry now, that matches the entry we had before */
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == false);
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(false, search->isDone());
     /* note the hash order is random - the test happens to be in a nice order */
-    CPPUNIT_ASSERT(search->currentItem() == entry1);
-    //CPPUNIT_ASSERT(search->next() == false);
+    CPPUNIT_ASSERT_EQUAL(entry1, search->currentItem());
+    //CPPUNIT_ASSERT_EQUAL(false, search->next());
 
     /* trigger another callback */
     cbcalled = false;
     search->next(searchCallback, NULL);
-    CPPUNIT_ASSERT(cbcalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* we should have access to a entry now, that matches the entry we had before */
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == false);
-    CPPUNIT_ASSERT(search->currentItem() == entry2);
-    //CPPUNIT_ASSERT(search->next() == false);
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(false, search->isDone());
+    CPPUNIT_ASSERT_EQUAL(entry2, search->currentItem());
+    //CPPUNIT_ASSERT_EQUAL(false, search->next());
 
     /* trigger another callback */
     cbcalled = false;
     search->next(searchCallback, NULL);
-    CPPUNIT_ASSERT(cbcalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* now we should have no error, we should have finished and have no current item */
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == true);
-    CPPUNIT_ASSERT(search->currentItem() == NULL);
-    //CPPUNIT_ASSERT(search->next() == false);
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(true, search->isDone());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
+    //CPPUNIT_ASSERT_EQUAL(false, search->next());
 
     Store::Root(NULL);
 }

@@ -12,5 +12,5 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testBoilerplate );
 void
 testBoilerplate::testDemonstration()
 {
-    CPPUNIT_ASSERT(0 == 0);
+    CPPUNIT_ASSERT_EQUAL(0, 0);
 }
