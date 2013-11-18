@@ -913,9 +913,6 @@ HttpStateData::haveParsedReplyHeaders()
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     HttpReply *rep = finalReply();
 
-    if (rep->sline.status() == Http::scPartialContent && rep->content_range)
-        currentOffset = rep->content_range->spec.offset;
-
     entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
