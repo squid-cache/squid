@@ -58,15 +58,15 @@ void testConfigParser::testParseQuoted()
 
     // This is a quoted "string" by me
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"This is a quoted \\\"string\\\" by me\"",
-                                     "This is a quoted \"string\" by me"));
+                         "This is a quoted \"string\" by me"));
 
     // escape sequence test: \\"\"\\"
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\"",
-                                     "escape sequence test: \\\\\"\\\"\\\\\""));
+                         "escape sequence test: \\\\\"\\\"\\\\\""));
 
     // \beginning and end test"
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\beginning and end test\\\"\"",
-                                     "\\beginning and end test\""));
+                         "\\beginning and end test\""));
 
     // "
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\"\"", "\""));
