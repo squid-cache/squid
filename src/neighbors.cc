@@ -1316,6 +1316,7 @@ peerProbeConnect(CachePeer * p)
         Comm::ConnectionPointer conn = new Comm::Connection;
         conn->remote = p->addresses[i];
         conn->remote.port(p->http_port);
+        conn->setPeer(p);
         getOutgoingAddress(NULL, conn);
 
         ++ p->testing_now;
