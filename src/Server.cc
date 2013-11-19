@@ -39,6 +39,7 @@
 #include "fd.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Server.h"
@@ -525,6 +526,11 @@ ServerStateData::haveParsedReplyHeaders()
 {
     Must(theFinalReply);
     maybePurgeOthers();
+
+    // adaptation may overwrite old offset computed using the virgin response
+    const bool partial = theFinalReply->content_range &&
+                         theFinalReply->sline.status() == Http::scPartialContent;
+    currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
 }
 
 HttpRequest *
