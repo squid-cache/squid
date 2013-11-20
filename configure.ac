@@ -3434,7 +3434,7 @@ AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
 
-AC_CONFIG_FILES([\
+AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile
 	lib/Makefile
