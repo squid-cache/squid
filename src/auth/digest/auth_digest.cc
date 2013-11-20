@@ -857,37 +857,43 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         switch (type) {
         case DIGEST_USERNAME:
             safe_free(username);
-            username = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                username = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found Username '" << username << "'");
             break;
 
         case DIGEST_REALM:
             safe_free(digest_request->realm);
-            digest_request->realm = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->realm = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found realm '" << digest_request->realm << "'");
             break;
 
         case DIGEST_QOP:
             safe_free(digest_request->qop);
-            digest_request->qop = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->qop = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found qop '" << digest_request->qop << "'");
             break;
 
         case DIGEST_ALGORITHM:
             safe_free(digest_request->algorithm);
-            digest_request->algorithm = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->algorithm = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found algorithm '" << digest_request->algorithm << "'");
             break;
 
         case DIGEST_URI:
             safe_free(digest_request->uri);
-            digest_request->uri = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->uri = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found uri '" << digest_request->uri << "'");
             break;
 
         case DIGEST_NONCE:
             safe_free(digest_request->nonceb64);
-            digest_request->nonceb64 = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->nonceb64 = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found nonce '" << digest_request->nonceb64 << "'");
             break;
 
@@ -901,13 +907,15 @@ Auth::Digest::Config::decode(char const *proxy_auth)
 
         case DIGEST_CNONCE:
             safe_free(digest_request->cnonce);
-            digest_request->cnonce = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->cnonce = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found cnonce '" << digest_request->cnonce << "'");
             break;
 
         case DIGEST_RESPONSE:
             safe_free(digest_request->response);
-            digest_request->response = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0)
+                digest_request->response = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, HERE << "Found response '" << digest_request->response << "'");
             break;
 
