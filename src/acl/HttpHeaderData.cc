@@ -76,7 +76,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
     }
 
-    const SBuf cvalue(value);
+    SBuf cvalue(value);
     return regex_rule->match(cvalue.c_str());
 }
 
