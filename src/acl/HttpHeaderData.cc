@@ -41,6 +41,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "HttpHeaderTools.h"
+#include "SBuf.h"
 #include "wordlist.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
