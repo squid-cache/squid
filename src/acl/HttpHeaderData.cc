@@ -75,13 +75,8 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
     }
 
-    // By now, we know the header is present, but:
-    // HttpHeader::get*() return an undefined String for empty header values;
-    // String::termedBuf() returns NULL for undefined Strings; and
-    // ACLRegexData::match() always fails on NULL strings.
-    // This makes it possible to detect an empty header value using regex:
-    const char *cvalue = value.defined() ? value.termedBuf() : "";
-    return regex_rule->match(cvalue);
+    const SBuf cvalue(value);
+    return regex_rule->match(cvalue.c_str());
 }
 
 wordlist *

@@ -259,8 +259,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
     }
 #endif
 
-    // HttpRequest initializes with null_string. So we must check both defined() and size()
-    if (!r->client_ident && http->request->extacl_user.defined() && http->request->extacl_user.size()) {
+    if (!r->client_ident && http->request->extacl_user.size() > 0) {
         r->client_ident = http->request->extacl_user.termedBuf();
         debugs(61, 5, HERE << "acl-user=" << (r->client_ident?r->client_ident:"NULL"));
     }

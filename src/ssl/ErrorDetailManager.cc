@@ -230,12 +230,11 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
                 entry.error_no = ssl_error;
                 entry.name = errorName;
                 String tmp = parser.getByName("detail");
-                httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
+                int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
                 tmp = parser.getByName("descr");
-                httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
-                bool parseOK = entry.descr.defined() && entry.detail.defined();
+                int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
 
-                if (!parseOK) {
+                if (!detailsParseOk || !descrParseOk) {
                     debugs(83, DBG_IMPORTANT, HERE <<
                            "WARNING! missing important field for detail error: " <<  errorName);
                     return false;
