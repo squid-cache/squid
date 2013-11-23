@@ -1352,7 +1352,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     if (virgin.header->header.has(HDR_PROXY_AUTHORIZATION)) {
         String vh=virgin.header->header.getByName("Proxy-Authorization");
         buf.Printf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
-    } else if (request->extacl_user.defined() && request->extacl_user.size() && request->extacl_passwd.defined() && request->extacl_passwd.size()) {
+    } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
         char loginbuf[256];
         snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->extacl_user),
@@ -1509,7 +1509,7 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
             const char *value = TheConfig.client_username_encode ? old_base64_encode(name) : name;
             buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
         }
-    } else if (request->extacl_user.defined() && request->extacl_user.size()) {
+    } else if (request->extacl_user.size() > 0) {
         const char *value = TheConfig.client_username_encode ? old_base64_encode(request->extacl_user.termedBuf()) : request->extacl_user.termedBuf();
         buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
     }

@@ -404,7 +404,7 @@ static int copy_cn(void *check_data,  ASN1_STRING *cn_data)
     String *str = (String *)check_data;
     if (!str) // no data? abort
         return 0;
-    if (str->defined())
+    if (str->size() > 0)
         str->append(", ");
     str->append((const char *)cn_data->data, cn_data->length);
     return 1;
@@ -501,7 +501,7 @@ const char *Ssl::ErrorDetail::err_descr() const
 
 const char *Ssl::ErrorDetail::err_lib_error() const
 {
-    if (errReason.defined())
+    if (errReason.size() > 0)
         return errReason.termedBuf();
     else if (lib_error_no != SSL_ERROR_NONE)
         return ERR_error_string(lib_error_no, NULL);
@@ -574,7 +574,7 @@ void Ssl::ErrorDetail::buildDetail() const
 
 const String &Ssl::ErrorDetail::toString() const
 {
-    if (!errDetailStr.defined())
+    if (errDetailStr.size() == 0)
         buildDetail();
     return errDetailStr;
 }

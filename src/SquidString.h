@@ -72,14 +72,6 @@ public:
     int psize() const;
 
     /**
-     * \retval true the String has some contents
-     */
-    _SQUID_INLINE_ bool defined() const;
-    /**
-     * \retval true the String does not hold any contents
-     */
-    _SQUID_INLINE_ bool undefined() const;
-    /**
      * Returns a raw pointer to the underlying backing store. The caller has been
      * verified not to make any assumptions about null-termination
      */
@@ -120,6 +112,9 @@ private:
     void allocAndFill(const char *str, int len);
     void allocBuffer(size_type sz);
     void setBuffer(char *buf, size_type sz);
+
+    bool defined() const {return buf_!=NULL;}
+    bool undefined() const {return !defined();}
 
     _SQUID_INLINE_ bool nilCmp(bool, bool, int &) const;
 

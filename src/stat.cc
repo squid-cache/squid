@@ -2050,7 +2050,7 @@ statClientRequests(StoreEntry * s)
             p = http->request->auth_user_request->username();
         else
 #endif
-            if (http->request->extacl_user.defined()) {
+            if (http->request->extacl_user.size() > 0) {
                 p = http->request->extacl_user.termedBuf();
             }
 

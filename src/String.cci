@@ -53,16 +53,6 @@ String::size() const
     return len_;
 }
 
-bool String::defined() const
-{
-    return buf_!=NULL;
-}
-
-bool String::undefined() const
-{
-    return buf_==NULL;
-}
-
 char const *
 String::rawBuf() const
 {
