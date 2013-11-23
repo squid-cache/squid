@@ -362,7 +362,7 @@ HttpStateData::cacheableReply()
         }
 
         // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
-        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().defined()) {
+        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() > 0) {
             /* TODO: we are allowed to cache when no-cache= has parameters.
              * Provided we strip away any of the listed headers unless they are revalidated
              * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
@@ -427,7 +427,7 @@ HttpStateData::cacheableReply()
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCache() && !rep->cache_control->noCache().defined() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() > 0 && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
@@ -1706,7 +1706,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     // Add our own If-None-Match field if the cached entry has a strong ETag.
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
-    if (request->etag.defined()) {
+    if (request->etag.size() > 0) {
         hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
                                               request->etag.termedBuf()));
     }
