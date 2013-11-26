@@ -41,7 +41,6 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
-#include "base/StringArea.h"
 #include "base64.h"
 #include "cache_cf.h"
 #include "event.h"
@@ -50,6 +49,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "rfc2617.h"
+#include "SBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
@@ -816,19 +816,19 @@ Auth::Digest::Config::decode(char const *proxy_auth)
             vlen = 0;
         }
 
-        StringArea keyName(item, nlen);
+        SBuf keyName(item, nlen);
         String value;
 
         if (vlen > 0) {
             // see RFC 2617 section 3.2.1 and 3.2.2 for details on the BNF
 
-            if (keyName == StringArea("domain",6) || keyName == StringArea("uri",3)) {
+            if (keyName == SBuf("domain",6) || keyName == SBuf("uri",3)) {
                 // domain is Special. Not a quoted-string, must not be de-quoted. But is wrapped in '"'
                 // BUG 3077: uri= can also be sent to us in a mangled (invalid!) form like domain
                 if (*p == '"' && *(p + vlen -1) == '"') {
                     value.limitInit(p+1, vlen-2);
                 }
-            } else if (keyName == StringArea("qop",3)) {
+            } else if (keyName == SBuf("qop",3)) {
                 // qop is more special.
                 // On request this must not be quoted-string de-quoted. But is several values wrapped in '"'
                 // On response this is a single un-quoted token.
