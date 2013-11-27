@@ -31,6 +31,7 @@
 
 #include "mgr/Action.h"
 #include "SBuf.h"
+#include "StatHist.h"
 
 class StoreEntry;
 
@@ -55,6 +56,8 @@ private:
 
     SBufStats sbdata;
     MemBlobStats mbdata;
+    StatHist sbsizesatdestruct;
+    StatHist mbsizesatdestruct;
 };
 
 #endif /* SQUID_SBUFSTATSACTION_H */
