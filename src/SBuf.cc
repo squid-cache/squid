@@ -31,6 +31,7 @@
 #include "Debug.h"
 #include "OutOfBoundsException.h"
 #include "SBuf.h"
+#include "SBufDetailedStats.h"
 #include "SBufExceptions.h"
 #include "util.h"
 
@@ -148,6 +149,7 @@ SBuf::~SBuf()
 {
     debugs(24, 8, id << " destructed");
     --stats.live;
+    recordSBufSizeAtDestruct(len_);
 }
 
 MemBlob::Pointer

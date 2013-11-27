@@ -73,3 +73,25 @@ testStatHist::testStatHistLog()
     test.count(max);
     //CPPUNIT_ASSERT(test.val(capacity-1)==1); //FIXME: val() returns a density
 }
+
+void
+testStatHist::testStatHistSum()
+{
+    InspectingStatHist s1, s2;
+    s1.logInit(30,1.0,100.0);
+    s2.logInit(30,1.0,100.0);
+    s1.count(3);
+    s2.count(30);
+    InspectingStatHist ts1, ts2;
+    ts1=s1;
+    ts1+=s2;
+    ts2=s2;
+    ts2+=s1;
+    CPPUNIT_ASSERT(ts1 == ts2);
+    InspectingStatHist ts3;
+    ts3.logInit(30,1.0,100.0);
+    ts3.count(3);
+    ts3.count(30);
+    CPPUNIT_ASSERT(ts3 == ts1);
+
+}
