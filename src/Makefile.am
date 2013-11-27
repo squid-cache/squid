@@ -481,6 +481,8 @@ squid_SOURCES = \
 	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	SBufDetailedStats.cc \
 	SBufStatsAction.h \
 	SBufStatsAction.cc \
 	$(SNMP_SOURCE) \
@@ -1154,6 +1156,9 @@ tests_testHttpReply_SOURCES=\
 	Packer.h \
 	SquidString.h \
 	SquidTime.h \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
 	StrList.cc \
@@ -1258,6 +1263,9 @@ tests_testACLMaxUserIP_SOURCES= \
 	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	store_dir.cc \
 	StoreIOState.cc \
@@ -1509,6 +1517,8 @@ tests_testCacheManager_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -1674,6 +1684,9 @@ tests_testDiskIO_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
 	tests/stub_StoreMeta.cc \
@@ -1924,6 +1937,8 @@ tests_testEvent_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
@@ -2166,6 +2181,8 @@ tests_testEventLoop_SOURCES = \
 	refresh.cc \
 	Server.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -2406,6 +2423,8 @@ tests_test_http_range_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -2691,6 +2710,8 @@ tests_testHttpRequest_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -2856,6 +2877,9 @@ tests_testStore_SOURCES= \
 	StoreSwapLogData.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
 	StrList.cc \
@@ -3085,6 +3109,9 @@ tests_testUfs_SOURCES = \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	tests/stub_debug.cc \
 	tests/stub_client_side_request.cc \
@@ -3263,6 +3290,9 @@ tests_testRock_SOURCES = \
 	store_key_md5.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
 	StrList.cc \
@@ -3484,6 +3514,8 @@ tests_testURL_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -3599,6 +3631,8 @@ tests_testSBuf_SOURCES= \
 	tests/SBufFindTest.h \
 	tests/SBufFindTest.cc \
 	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	SBufStream.h \
 	tests/stub_time.cc \
 	mem.cc \
