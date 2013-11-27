@@ -81,9 +81,9 @@ static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 CBDATA_CLASS_INIT(helper);
-CBDATA_TYPE(helper_server);
+CBDATA_CLASS_INIT(helper_server);
 CBDATA_CLASS_INIT(statefulhelper);
-CBDATA_TYPE(helper_stateful_server);
+CBDATA_CLASS_INIT(helper_stateful_server);
 
 void
 HelperServerBase::initStats()
@@ -223,8 +223,7 @@ helperOpenServers(helper * hlp)
 
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        CBDATA_INIT_TYPE(helper_server);
-        srv = cbdataAlloc(helper_server);
+        srv = new helper_server;
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->initStats();
@@ -344,8 +343,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        CBDATA_INIT_TYPE(helper_stateful_server);
-        helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
+        helper_stateful_server *srv = new helper_stateful_server;
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->flags.reserved = false;
