@@ -3040,6 +3040,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
+	tests/stub_ipcache.cc \
 	tests/stub_libeui.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_pconn.cc \
