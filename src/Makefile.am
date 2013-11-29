@@ -3042,6 +3042,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
