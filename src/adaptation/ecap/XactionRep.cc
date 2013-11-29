@@ -11,6 +11,7 @@
 #include "adaptation/ecap/Config.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "adaptation/Initiator.h"
+#include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -271,6 +272,25 @@ Adaptation::Ecap::XactionRep::swanSong()
         ah->recordXactFinish(adaptHistoryId);
 
     Adaptation::Initiate::swanSong();
+}
+
+void
+Adaptation::Ecap::XactionRep::resume()
+{
+    // go async to gain exception protection and done()-based job destruction
+    typedef NullaryMemFunT<Adaptation::Ecap::XactionRep> Dialer;
+    AsyncCall::Pointer call = asyncCall(93, 5, "Adaptation::Ecap::XactionRep::doResume",
+                                        Dialer(this, &Adaptation::Ecap::XactionRep::doResume));
+    ScheduleCallHere(call);
+}
+
+/// the guts of libecap::host::Xaction::resume() API implementation
+/// which just goes async in Adaptation::Ecap::XactionRep::resume().
+void
+Adaptation::Ecap::XactionRep::doResume()
+{
+    Must(theMaster);
+    theMaster->resume();
 }
 
 libecap::Message &
@@ -593,12 +613,6 @@ Adaptation::Ecap::XactionRep::adaptationAborted()
 {
     tellQueryAborted(true); // should eCAP support retries?
     mustStop("adaptationAborted");
-}
-
-bool
-Adaptation::Ecap::XactionRep::callable() const
-{
-    return !done();
 }
 
 void

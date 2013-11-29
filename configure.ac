@@ -1040,10 +1040,10 @@ then
 
   if test -n "$PKG_CONFIG"; then
     dnl eCAP support requires libecap.
-    dnl This Squid supports libecap v0.2.x.
+    dnl This Squid supports libecap v1.0.x.
     dnl Use EXT_ prefix to distinguish external libecap (that we check for
     dnl here) from our own convenience ecap library in Makefiles.
-    PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 0.2.0 libecap < 0.3])
+    PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 1.0 libecap < 1.1])
   else
     AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
   fi
