@@ -2711,7 +2711,6 @@ case "$squid_host_os" in
     ;;
 esac
 
-
 dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,
@@ -2719,6 +2718,7 @@ AC_ARG_WITH(maxfd,,
   case ${withval} in
     [[0-9]]*)
       squid_filedescriptors_num=$withval
+      AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
       ;;
     *)
       AC_MSG_ERROR(--with-maxfd expects a numeric argument)
@@ -2733,6 +2733,7 @@ AC_ARG_WITH(filedescriptors,
   case ${withval} in
     [[0-9]]*)
       squid_filedescriptors_num=$withval
+      AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
       ;;
     *)
       AC_MSG_ERROR(--with-filedescriptors expects a numeric argument)
@@ -2741,10 +2742,9 @@ AC_ARG_WITH(filedescriptors,
 ])
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
-if test "x$squid_filedescriptors_num" = "x"; then
-  SQUID_CHECK_MAXFD
-else
-  AC_MSG_NOTICE([forcing use of $squid_filedescriptors_num filedescriptors (user-forced)])
+SQUID_CHECK_MAXFD
+if test "x$squid_filedescriptors_num" != "x"; then
+  AC_MSG_NOTICE([Default number of fieldescriptors: $squid_filedescriptors_num])
 fi
 if test "$squid_filedescriptors_num" -lt 512 ; then
     AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
