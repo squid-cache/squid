@@ -19,7 +19,7 @@ public:
     /* libecap::host::Host API */
     virtual std::string uri() const; // unique across all vendors
     virtual void describe(std::ostream &os) const; // free-format info
-    virtual void noteService(const libecap::weak_ptr<libecap::adapter::Service> &s);
+    virtual void noteVersionedService(const char *libEcapVersion, const libecap::weak_ptr<libecap::adapter::Service> &s);
     virtual std::ostream *openDebug(libecap::LogVerbosity lv);
     virtual void closeDebug(std::ostream *debug);
     typedef libecap::shared_ptr<libecap::Message> MessagePtr;

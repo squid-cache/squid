@@ -37,6 +37,8 @@
 #include "EventLoop.h"
 #include "SquidTime.h"
 
+EventLoop *EventLoop::Running = NULL;
+
 EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
         primaryEngine(NULL),
         loop_delay(EVENT_LOOP_TIMEOUT),
@@ -96,7 +98,12 @@ EventLoop::run()
 {
     prepareToRun();
 
+    assert(!Running);
+    Running = this;
+
     while (!runOnce());
+
+    Running = NULL;
 }
 
 bool

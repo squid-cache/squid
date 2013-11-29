@@ -44,6 +44,7 @@ public:
     virtual void blockVirgin();
     virtual void adaptationDelayed(const libecap::Delay &);
     virtual void adaptationAborted();
+    virtual void resume();
     virtual void vbDiscard();
     virtual void vbMake();
     virtual void vbStopMaking();
@@ -52,9 +53,6 @@ public:
     virtual void vbContentShift(libecap::size_type size);
     virtual void noteAbContentDone(bool atEnd);
     virtual void noteAbContentAvailable();
-
-    // libecap::Callable API, via libecap::host::Xaction
-    virtual bool callable() const;
 
     // BodyProducer API
     virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp);
@@ -96,6 +94,8 @@ protected:
     const libecap::Area metaValue(const libecap::Name &name) const;
     /// Return the adaptation meta headers and their values
     void visitEachMetaHeader(libecap::NamedValueVisitor &visitor) const;
+
+    void doResume();
 
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent
