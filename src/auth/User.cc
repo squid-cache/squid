@@ -58,6 +58,7 @@ Auth::User::User(Auth::Config *aConfig) :
         config(aConfig),
         ipcount(0),
         expiretime(0),
+        notes(),
         credentials_state(Auth::Unchecked),
         username_(NULL)
 {
@@ -98,6 +99,9 @@ Auth::User::absorb(Auth::User::Pointer from)
      */
 
     debugs(29, 5, HERE << "auth_user '" << from << "' into auth_user '" << this << "'.");
+
+    // combine the helper response annotations. Ensuring no duplicates are copied.
+    notes.appendNewOnly(&from->notes);
 
     /* absorb the list of IP address sources (for max_user_ip controls) */
     AuthUserIP *new_ipdata;

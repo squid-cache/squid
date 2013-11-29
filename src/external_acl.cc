@@ -1376,6 +1376,8 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 
     // XXX: make entryData store a proper HelperReply object instead of copying.
 
+    entryData.notes.append(&reply.notes);
+
     const char *label = reply.notes.findFirst("tag");
     if (label != NULL && *label != '\0')
         entryData.tag = label;
@@ -1599,6 +1601,18 @@ ExternalACLLookup::LookupDone(void *data, void *result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
+
+    // attach the helper kv-pair to the transaction
+    if (HttpRequest * req = checklist->request) {
+        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+        // workaround by using anything already set in HttpRequest
+        // OR use new and rely on a later Sync copying these to AccessLogEntry
+        if (!req->notes)
+            req->notes = new NotePairs;
+
+        req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+    }
+
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 

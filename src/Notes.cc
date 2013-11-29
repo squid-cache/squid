@@ -206,7 +206,7 @@ bool
 NotePairs::hasPair(const char *key, const char *value) const
 {
     for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
-        if ((*i)->name.cmp(key) == 0 || (*i)->value.cmp(value) == 0)
+        if ((*i)->name.cmp(key) == 0 && (*i)->value.cmp(value) == 0)
             return true;
     }
     return false;
@@ -220,12 +220,25 @@ NotePairs::append(const NotePairs *src)
     }
 }
 
+void
+NotePairs::appendNewOnly(const NotePairs *src)
+{
+    for (Vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+        if (!hasPair((*i)->name.termedBuf(), (*i)->value.termedBuf()))
+            entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
+    }
+}
+
 NotePairs &
 SyncNotes(AccessLogEntry &ale, HttpRequest &request)
 {
+    // XXX: auth code only has access to HttpRequest being authenticated
+    // so we must handle the case where HttpRequest is set without ALE being set.
+
     if (!ale.notes) {
-        assert(!request.notes);
-        ale.notes = request.notes = new NotePairs;
+        if (!request.notes)
+            request.notes = new NotePairs;
+        ale.notes = request.notes;
     } else {
         assert(ale.notes == request.notes);
     }
