@@ -1392,6 +1392,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
+	tests/stub_EventLoop.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2469,6 +2470,7 @@ tests_test_http_range_SOURCES = \
 	tests/stub_main_cc.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_store_stats.cc \
+	tests/stub_EventLoop.cc \
 	time.cc \
 	tools.h \
 	tools.cc \
@@ -2588,6 +2590,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
+	tests/stub_EventLoop.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -3569,6 +3572,7 @@ tests_testURL_SOURCES = \
 	tests/testURLScheme.h \
 	tests/testMain.cc \
 	tests/stub_time.cc \
+	tests/stub_EventLoop.cc \
 	tools.h \
 	tools.cc \
 	tests/stub_tunnel.cc \
