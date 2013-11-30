@@ -1,4 +1,19 @@
 
+Changes to squid-3.3.11 (01 Dec 2013):
+
+	- Regression Bug 3936: error-details.txt parse error with OpenSSL since 3.3.9
+	- Bug 3972: Segfault when getting the deny_info page ID after a reconfigure
+	- Bug 3970: max_filedescriptors disabled due to missing setrlimit
+	- Bug 3967: ipc/Kid.cc compilation failure: 'time' was not declared in this scope
+	- Bug 3960: DEAD cache_peer are not revived
+	- Bug 3956: xstrndup: tried to dup a NULL pointer
+	- Bug 3906: Filedescriptor leaks in SNMP
+	- Bug 3782: Digest authentication not obeying nonce_max_count
+	- HTTP/1.1: Make header parser obey relaxed_header_parser
+	- HTTP/1.1: Re-compute Range response content offset after an FTP response was adapted
+	- SMP: Replace blocking sleep(3) and close UDS socket on failures
+	- Windows: fix several compile errors
+
 Changes to squid-3.3.10 (03 Nov 2013):
 
 	- Bug 3929: request_header_add not working for tunnel requests
