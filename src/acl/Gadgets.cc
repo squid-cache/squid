@@ -54,6 +54,11 @@
 err_type
 aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
 {
+    if (!name) {
+        debugs(28, 3, "ERR_NONE due to a NULL name");
+        return ERR_NONE;
+    }
+
     AclDenyInfoList *A = NULL;
 
     debugs(28, 8, HERE << "got called for " << name);
