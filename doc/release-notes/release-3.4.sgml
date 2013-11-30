@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.4.0.2 release notes</title>
+<title>Squid 3.4.0.3 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.4.0.2 for testing.
+The Squid Team are pleased to announce the release of Squid-3.4.0.3 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.4/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
@@ -28,10 +28,10 @@ We welcome feedback and bug reports. If you find a bug, please see <url url="htt
 Although this release is deemed good enough for use in many setups, please note the existence of 
 <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.4" name="open bugs against Squid-3.4">.
 
-
 <sect1>Changes since earlier releases of Squid-3.4
 <p>
 The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.4/changesets/" name="viewed here">.
+
 
 <sect>Major new features since Squid-3.3
 <p>Squid 3.4 represents a new feature release above 3.3.
@@ -63,7 +63,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Arbitrary key-value pairs can be returned from any helper.
    Allowing future helpers to be forward- and backward- compatible
-   with this and future version of Squid.
+   with this and future versions of Squid.
 
 
 <sect1>SSL Server Certificate Validator
@@ -122,7 +122,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    affects which <em>refresh_pattern</em> directive will be matched.
 
 <p>Store-ID helpers bundled with Squid can be built with the --enable-storeid-rewrite-helpers
-   options which is added in this version. Currently there is a <em>file</em> helper
+   option which is added in this version. Currently there is a <em>file</em> helper
    provided.
 
 
@@ -181,7 +181,7 @@ Most user-facing changes are reflected in squid.conf (see below).
     accordance with RFC 6762.
 
 <p>The <em>dns_multicast_local</em> directive must be set to <em>on</em> to enable this
-   feature. 
+   feature.
 
 <p>The multicast DNS group IP addresses for IPv4 and IPv6 resolving are added to the set
    of available DNS resolvers and used automatically for domain names ending in <em>.local</em>
@@ -190,6 +190,10 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Statistics for multicast DNS resolution can be found on the <em>idns</em> cache manager
    report.
+
+<p><em>NOTE</em> that the external DNS helper interface is now deprecated and has been
+  removed from future Squid versions. Any installations still using it for local hostname
+  resolution need to upgrade to mDNS resolution with this Squid version.
 
 
 <sect>Changes to squid.conf since Squid-3.3
@@ -456,9 +460,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.6
 
 	<tag>external_refresh_check</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>location_rewrite_access</tag>

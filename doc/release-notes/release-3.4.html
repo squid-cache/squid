@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
- <TITLE>Squid 3.4.0.2 release notes</TITLE>
+ <TITLE>Squid 3.4.0.3 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.4.0.2 release notes</H1>
+<H1>Squid 3.4.0.3 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -57,7 +57,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.4.0.2 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.4.0.3 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.4/">http://www.squid-cache.org/Versions/v3/3.4/</A> or the
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -72,12 +72,12 @@ for how to submit a report with a stack trace.</P>
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
 <A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.4">open bugs against Squid-3.4</A>.</P>
 
-
 <H2><A NAME="ss1.2">1.2</A> <A HREF="#toc1.2">Changes since earlier releases of Squid-3.4</A>
 </H2>
 
 <P>The 3.4 change history can be 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.4/changesets/">viewed here</A>.</P>
+
 
 <H2><A NAME="s2">2.</A> <A HREF="#toc2">Major new features since Squid-3.3</A></H2>
 
@@ -113,7 +113,7 @@ helper failure instead of a blanket client rejection.</P>
 
 <P>Arbitrary key-value pairs can be returned from any helper.
 Allowing future helpers to be forward- and backward- compatible
-with this and future version of Squid.</P>
+with this and future versions of Squid.</P>
 
 
 <H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">SSL Server Certificate Validator</A>
@@ -180,7 +180,7 @@ ID key and not the transaction URL. So using the Store-ID feature to alter the v
 affects which <EM>refresh_pattern</EM> directive will be matched.</P>
 
 <P>Store-ID helpers bundled with Squid can be built with the --enable-storeid-rewrite-helpers
-options which is added in this version. Currently there is a <EM>file</EM> helper
+option which is added in this version. Currently there is a <EM>file</EM> helper
 provided.</P>
 
 
@@ -247,7 +247,7 @@ and the external ACL interface does not yet send annotations to the helper.</P>
 accordance with RFC 6762.</P>
 
 <P>The <EM>dns_multicast_local</EM> directive must be set to <EM>on</EM> to enable this
-feature. </P>
+feature.</P>
 
 <P>The multicast DNS group IP addresses for IPv4 and IPv6 resolving are added to the set
 of available DNS resolvers and used automatically for domain names ending in <EM>.local</EM>
@@ -256,6 +256,10 @@ resolvers. Domains without <EM>.local</EM> are resolved using only the configure
 
 <P>Statistics for multicast DNS resolution can be found on the <EM>idns</EM> cache manager
 report.</P>
+
+<P><EM>NOTE</EM> that the external DNS helper interface is now deprecated and has been
+removed from future Squid versions. Any installations still using it for local hostname
+resolution need to upgrade to mDNS resolution with this Squid version.</P>
 
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.3</A></H2>
@@ -329,7 +333,7 @@ Used to improve StoreID performance by quickly eliminating helper delays using A
 </UL>
 </P>
 
-<DT><B>storeurl_rewrite_program</B><DD>
+<DT><B>store_id_rewrite_program</B><DD>
 <P>A helper program to provide cache storage internal key ID value for a request.</P>
 <P>Ported equivalent to <EM>storeurl_rewrite_program</EM> from 2.7</P>
 
@@ -552,9 +556,6 @@ to re-enable /dev/pf support when using PF firewall.</P>
 <P>Not yet ported from 2.6</P>
 
 <DT><B>external_refresh_check</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>ignore_ims_on_miss</B><DD>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>location_rewrite_access</B><DD>
