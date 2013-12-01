@@ -32,7 +32,10 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
+#include "globals.h"
 #include "protos.h"
+#include "SquidConfig.h"
 
 #if _SQUID_WINDOWS_
 #ifndef _MSWSOCK_
@@ -46,17 +49,17 @@
 
 /* forward declarations */
 static void WIN32_Exit(void);
-static void WIN32_Abort(int);
-
 static unsigned int GetOSVersion();
 void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
+extern "C" void WINAPI SquidWinSvcMain(DWORD, char **);
+
 #if USE_WIN32_SERVICE
+static void WIN32_Abort(int);
 static int WIN32_StoreKey(const char *, DWORD, unsigned char *, int);
 static int WIN32_create_key(void);
 static void WIN32_build_argv (char *);
 #endif
-extern "C" void WINAPI SquidWinSvcMain(DWORD, char **);
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 void Squid_Win32InvalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
@@ -67,8 +70,6 @@ SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
 static int s_iInitCount = 0;
 static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
-
-static int Squid_Aborting = 0;
 
 #undef NotifyAddrChange
 typedef DWORD(WINAPI * PFNotifyAddrChange) (OUT PHANDLE, IN LPOVERLAPPED);
@@ -108,6 +109,8 @@ static char *keys[] = {
     NULL,	    /* key[3] */
     NULL	    /* key[4] */
 };
+
+static int Squid_Aborting = 0;
 #endif
 
 /* ====================================================================== */
@@ -388,17 +391,16 @@ GetVerError:
 /* PUBLIC FUNCTIONS */
 /* ====================================================================== */
 
+#if USE_WIN32_SERVICE
 void
 WIN32_Abort(int sig)
 {
-#if USE_WIN32_SERVICE
     svcStatus.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
     svcStatus.dwServiceSpecificExitCode = 1;
-#endif
-
     Squid_Aborting = 1;
     WIN32_Exit();
 }
+#endif
 
 void
 WIN32_IpAddrChangeMonitorExit()
@@ -924,6 +926,7 @@ int main(int argc, char **argv)
     char *c;
     char stderr_path[256];
 
+    SetErrorMode(SEM_NOGPFAULTERRORBOX);
     if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION)) {
         strcpy(stderr_path, argv[0]);
         strcat(stderr_path,".log");
