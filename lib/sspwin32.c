@@ -32,10 +32,10 @@
  */
 
 #include "squid.h"
-#include "util.h"
-
-#include "libntlmauth/ntlmauth.h"
+#include "base64.h"
+#include "ntlmauth/ntlmauth.h"
 #include "sspwin32.h"
+#include "util.h"
 
 typedef struct _AUTH_SEQ {
     BOOL fInitialized;
@@ -513,8 +513,8 @@ const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
     } while (0);
     if (fResult != NULL) {
         challenge = (ntlm_challenge *) fResult;
-        Use_Unicode = NEGOTIATE_UNICODE & challenge->flags;
-        NTLM_LocalCall = NEGOTIATE_THIS_IS_LOCAL_CALL & challenge->flags;
+        Use_Unicode = NTLM_NEGOTIATE_UNICODE & challenge->flags;
+        NTLM_LocalCall = NTLM_NEGOTIATE_THIS_IS_LOCAL_CALL & challenge->flags;
         encoded = base64_encode_bin((char *) fResult, cbOut);
     }
     return encoded;
