@@ -126,12 +126,12 @@ void Ipc::UdsSender::wrote(const CommIoCbParams& params)
     if (params.flag != COMM_OK && retries-- > 0) {
         // perhaps a fresh connection and more time will help?
         conn()->close();
-        sleep();
+        startSleep();
     }
 }
 
 /// pause for a while before resending the message
-void Ipc::UdsSender::sleep()
+void Ipc::UdsSender::startSleep()
 {
     Must(!sleeping);
     sleeping = true;
