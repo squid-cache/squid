@@ -295,13 +295,11 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                A->cfgline);
     }
 
-    /* append */
+    // prepend so that ACLs declared later (and possibly using earlier ACLs)
+    // are destroyed earlier (before the ACLs they use are destroyed)
     assert(head && *head == Config.aclList);
     A->registered = true;
-
-    while (*head)
-        head = &(*head)->next;
-
+    A->next = *head;
     *head = A;
 }
 
