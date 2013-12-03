@@ -30,12 +30,6 @@ SBUF_SOURCE= \
 	$(top_srcdir)/src/OutOfBoundsException.h \
 	$(top_srcdir)/src/SBufExceptions.h \
 	$(top_srcdir)/src/SBufExceptions.cc \
-	$(top_srcdir)/src/SBufTokenizer.h \
-	$(top_srcdir)/src/SBufTokenizer.cc \
-	$(top_srcdir)/src/SBufList.h \
-	$(top_srcdir)/src/SBufList.cc \
-	$(top_srcdir)/src/SBufUtil.h \
-	$(top_srcdir)/src/SBufUtil.cc \
 	$(top_srcdir)/src/String.cc \
 	$(top_srcdir)/src/SquidString.h \
 	$(top_srcdir)/src/base/TextException.h \
