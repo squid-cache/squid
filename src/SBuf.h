@@ -55,6 +55,7 @@
 #define SQUIDSBUFPRINT(s) (s).plength(),(s).rawContent()
 #endif /* SQUIDSBUFPH */
 
+// TODO: move within SBuf and rename
 typedef enum {
     caseSensitive,
     caseInsensitive
