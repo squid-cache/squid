@@ -1896,6 +1896,11 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
         HTTPMSGUNLOCK(request);
         request = new_req;
         HTTPMSGLOCK(request);
+
+        // update the new message to flag whether URL re-writing was done on it
+        if (strcmp(urlCanonical(request),uri) != 0)
+            request->flags.redirected = 1;
+
         /*
          * Store the new URI for logging
          */
