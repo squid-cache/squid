@@ -1,6 +1,7 @@
 #ifndef SQUID_ADAPTATION__SERVICE_H
 #define SQUID_ADAPTATION__SERVICE_H
 
+#include "AccessLogEntry.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "adaptation/ServiceConfig.h"
@@ -31,7 +32,7 @@ public:
     virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
 
-    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
+    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp) = 0;
 
     bool wants(const ServiceFilter &filter) const;
 

@@ -31,7 +31,7 @@ public:
     virtual void finalize();
     virtual bool probed() const;
     virtual bool up() const;
-    virtual Adaptation::Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause);
+    virtual Adaptation::Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp);
     virtual bool wantsUrl(const String &urlPath) const;
     virtual void noteFailure();
     virtual const char *status() const;

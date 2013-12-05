@@ -240,7 +240,7 @@ bool Adaptation::Ecap::ServiceRep::wantsUrl(const String &urlPath) const
 
 Adaptation::Initiate *
 Adaptation::Ecap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
-        HttpRequest *cause)
+        HttpRequest *cause, AccessLogEntry::Pointer &alp)
 {
     Must(up());
 
@@ -253,7 +253,7 @@ Adaptation::Ecap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
         debugs(93, 3, "asyncs: " << AsyncServices.size() << ' ' << TheEngine);
     }
 
-    XactionRep *rep = new XactionRep(virgin, cause, Pointer(this));
+    XactionRep *rep = new XactionRep(virgin, cause, alp, Pointer(this));
     XactionRep::AdapterXaction x(theService->makeXaction(rep));
     rep->master(x);
     return rep;

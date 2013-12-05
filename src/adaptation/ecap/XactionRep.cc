@@ -13,6 +13,7 @@
 #include "adaptation/Initiator.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "format/Format.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidTime.h"
@@ -37,7 +38,7 @@ public:
 };
 
 Adaptation::Ecap::XactionRep::XactionRep(
-    HttpMsg *virginHeader, HttpRequest *virginCause,
+    HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp,
     const Adaptation::ServicePointer &aService):
         AsyncJob("Adaptation::Ecap::XactionRep"),
         Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
@@ -46,7 +47,8 @@ Adaptation::Ecap::XactionRep::XactionRep(
         makingVb(opUndecided), proxyingAb(opUndecided),
         adaptHistoryId(-1),
         vbProductionFinished(false),
-        abProductionFinished(false), abProductionAtEnd(false)
+        abProductionFinished(false), abProductionAtEnd(false),
+        al(alp)
 {
     if (virginCause)
         theCauseRep = new MessageRep(virginCause);
@@ -181,7 +183,7 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
         typedef Notes::iterator ACAMLI;
         for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
             if (name == (*i)->key.termedBuf()) {
-                if (const char *value = (*i)->match(request, reply))
+                if (const char *value = (*i)->match(request, reply, al))
                     return libecap::Area::FromTempString(value);
                 else
                     return libecap::Area();
@@ -202,7 +204,7 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
 
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-        const char *v = (*i)->match(request, reply);
+        const char *v = (*i)->match(request, reply, al);
         if (v) {
             const libecap::Name name((*i)->key.termedBuf());
             const libecap::Area value = libecap::Area::FromTempString(v);
@@ -231,7 +233,7 @@ Adaptation::Ecap::XactionRep::start()
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
         typedef Notes::iterator ACAMLI;
         for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-            const char *v = (*i)->match(request, reply);
+            const char *v = (*i)->match(request, reply, al);
             if (v) {
                 if (ah->metaHeaders == NULL)
                     ah->metaHeaders = new NotePairs();

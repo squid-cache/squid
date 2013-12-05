@@ -3706,6 +3706,16 @@ DOC_START
 				default %d/%b/%Y:%H:%M:%S %z
 		tr	Response time (milliseconds)
 		dt	Total time spent making DNS lookups (milliseconds)
+		tS	Approximate master transaction start time in 
+			<full seconds since epoch>.<fractional seconds> format.
+			Currently, Squid considers the master transaction
+			started when a complete HTTP request header initiating
+			the transaction is received from the client. This is
+			the same value that Squid uses to calculate transaction
+			response time when logging %tr to access.log. Currently,
+			Squid uses millisecond resolution for %tS values,
+			similar to the default access.log "current time" field
+			(%ts.%03tu).
 
 	Access Control related format codes:
 

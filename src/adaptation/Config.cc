@@ -66,7 +66,7 @@ const char *metasBlacklist[] = {
     "Transfer-Complete",
     NULL
 };
-Notes Adaptation::Config::metaHeaders("ICAP header", metasBlacklist);
+Notes Adaptation::Config::metaHeaders("ICAP header", metasBlacklist, true);
 bool Adaptation::Config::needHistory = false;
 
 Adaptation::ServiceConfig*

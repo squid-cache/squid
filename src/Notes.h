@@ -5,6 +5,7 @@
 #include "base/RefCount.h"
 #include "base/Vector.h"
 #include "CbDataList.h"
+#include "format/Format.h"
 #include "MemPool.h"
 #include "SquidString.h"
 #include "typedefs.h"
@@ -15,6 +16,7 @@
 
 class HttpRequest;
 class HttpReply;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 /**
  * Used to store a note configuration. The notes are custom key:value
@@ -31,9 +33,11 @@ public:
     {
     public:
         typedef RefCount<Value> Pointer;
-        String value; ///< a note value
+        String value; ///< Configured annotation value, possibly with %macros
         ACLList *aclList; ///< The access list used to determine if this value is valid for a request
-        explicit Value(const String &aVal) : value(aVal), aclList(NULL) {}
+        /// Compiled annotation value format
+        Format::Format *valueFormat;
+        explicit Value(const String &aVal) : value(aVal), aclList(NULL), valueFormat(NULL) {}
         ~Value();
     };
     typedef Vector<Value::Pointer> Values;
@@ -50,8 +54,10 @@ public:
      * Walks through the  possible values list of the note and selects
      * the first value which matches the given HttpRequest and HttpReply
      * or NULL if none matches.
+     * If an AccessLogEntry given and Value::valueFormat is not null, the
+     * formatted value returned.
      */
-    const char *match(HttpRequest *request, HttpReply *reply);
+    const char *match(HttpRequest *request, HttpReply *reply, const AccessLogEntryPointer &al);
 
     String key; ///< The note key
     Values values; ///< The possible values list for the note
@@ -68,7 +74,7 @@ public:
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    Notes(const char *aDescr, const char **metasBlacklist): descr(aDescr), blacklisted(metasBlacklist) {}
+    Notes(const char *aDescr, const char **metasBlacklist, bool allowFormatted = false): descr(aDescr), blacklisted(metasBlacklist), formattedValues(allowFormatted) {}
     Notes(): descr(NULL), blacklisted(NULL) {}
     ~Notes() { notes.clean(); }
     /**
@@ -92,6 +98,7 @@ public:
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr; ///< A short description for notes list
     const char **blacklisted; ///< Null terminated list of blacklisted note keys
+    bool formattedValues; ///< Whether the formatted values are supported
 
 private:
     /**
