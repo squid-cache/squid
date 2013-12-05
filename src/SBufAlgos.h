@@ -3,6 +3,7 @@
 
 #include "SBuf.h"
 #include <algorithm>
+#include <numeric>
 
 /// SBuf equality predicate for STL algorithms etc
 class SBufEqual {
