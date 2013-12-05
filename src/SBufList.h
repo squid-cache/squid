@@ -14,9 +14,4 @@ typedef std::list<SBuf> SBufList;
  */
 bool IsMember(const SBufList &, const SBuf &, const SBufCaseSensitive isCaseSensitive = caseSensitive);
 
-class wordlist;
-
-/// convert a wordlist to a SBufList
-SBufList ToSBufList(wordlist *);
-
 #endif /* SQUID_SBUFLIST_H */

@@ -2540,6 +2540,8 @@ tests_testHttpParser_SOURCES = \
 	String.cc \
 	cache_cf.h \
 	YesNoNone.h \
+	$(SBUF_SOURCE) \
+	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2989,6 +2991,9 @@ tests_testString_SOURCES = \
 	tests/stub_mem.cc \
 	MemBuf.cc \
 	String.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
@@ -3714,6 +3719,9 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_mem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	ConfigParser.cc \
 	fatal.h \
