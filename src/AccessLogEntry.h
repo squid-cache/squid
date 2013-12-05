@@ -176,6 +176,7 @@ public:
         int64_t highOffset;
         int64_t objectSize;
         LogTags code;
+        struct timeval start_time; ///< The time the master transaction started
         int msec;
         const char *rfc931;
         const char *extuser;

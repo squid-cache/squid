@@ -2042,9 +2042,9 @@ statClientRequests(StoreEntry * s)
         e = http->storeEntry();
         storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
         storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
-                          (long int) http->start_time.tv_sec,
-                          (int) http->start_time.tv_usec,
-                          tvSubDsec(http->start_time, current_time));
+                          (long int) http->al->cache.start_time.tv_sec,
+                          (int) http->al->cache.start_time.tv_usec,
+                          tvSubDsec(http->al->cache.start_time, current_time));
 #if USE_AUTH
         if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();

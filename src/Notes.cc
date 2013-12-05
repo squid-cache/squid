@@ -56,7 +56,7 @@ Note::addValue(const String &value)
 }
 
 const char *
-Note::match(HttpRequest *request, HttpReply *reply)
+Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al)
 {
 
     typedef Values::iterator VLI;
@@ -69,8 +69,15 @@ Note::match(HttpRequest *request, HttpReply *reply)
         const int ret= ch.fastCheck((*i)->aclList);
         debugs(93, 5, HERE << "Check for header name: " << key << ": " << (*i)->value
                <<", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
-        if (ret == ACCESS_ALLOWED)
-            return (*i)->value.termedBuf();
+        if (ret == ACCESS_ALLOWED) {
+            if (al != NULL && (*i)->valueFormat != NULL) {
+                static MemBuf mb;
+                mb.reset();
+                (*i)->valueFormat->assemble(mb, al, 0);
+                return mb.content();
+            } else
+                return (*i)->value.termedBuf();
+        }
     }
     return NULL;
 }
@@ -93,7 +100,10 @@ Note::Pointer
 Notes::parse(ConfigParser &parser)
 {
     String key = ConfigParser::NextToken();
+    ConfigParser::EnableMacros();
     String value = ConfigParser::NextQuotedToken();
+    ConfigParser::DisableMacros();
+    bool valueWasQuoted = ConfigParser::LastTokenWasQuoted();
     Note::Pointer note = add(key);
     Note::Value::Pointer noteValue = note->addValue(value);
 
@@ -101,7 +111,10 @@ Notes::parse(ConfigParser &parser)
     label.append('=');
     label.append(value);
     aclParseAclList(parser, &noteValue->aclList, label.termedBuf());
-
+    if (formattedValues && valueWasQuoted) {
+        noteValue->valueFormat =  new Format::Format(descr ? descr : "Notes");
+        noteValue->valueFormat->parse(value.termedBuf());
+    }
     if (blacklisted) {
         for (int i = 0; blacklisted[i] != NULL; ++i) {
             if (note->key.caseCmp(blacklisted[i]) == 0) {

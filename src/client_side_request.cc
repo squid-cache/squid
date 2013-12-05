@@ -160,9 +160,9 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #endif
         loggingEntry_(NULL)
 {
-    start_time = current_time;
     setConn(aConn);
     al = new AccessLogEntry;
+    al->cache.start_time = current_time;
     al->tcpClient = clientConnection = aConn->clientConnection;
 #if USE_SSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
@@ -322,7 +322,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
-    http->start_time = current_time;
+    if (http->al != NULL)
+        http->al->cache.start_time = current_time;
     /* this is only used to adjust the connection offset in client_side.c */
     http->req_sz = 0;
     tempBuffer.length = taillen;
@@ -1706,7 +1707,7 @@ ClientHttpRequest::doCallouts()
             calloutContext->adaptation_acl_check_done = true;
             if (Adaptation::AccessCheck::Start(
                         Adaptation::methodReqmod, Adaptation::pointPreCache,
-                        request, NULL, this))
+                        request, NULL, calloutContext->http->al, this))
                 return; // will call callback
         }
 #endif
@@ -1855,7 +1856,7 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
     assert(!virginHeadSource);
     assert(!adaptedBodySource);
     virginHeadSource = initiateAdaptation(
-                           new Adaptation::Iterator(request, NULL, g));
+                           new Adaptation::Iterator(request, NULL, al, g));
 
     // we could try to guess whether we can bypass this adaptation
     // initiation failure, but it should not really happen

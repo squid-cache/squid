@@ -140,6 +140,7 @@ typedef enum {
     LFT_TIME_SUBSECOND,
     LFT_TIME_LOCALTIME,
     LFT_TIME_GMT,
+    LFT_TIME_START, // the time the master transaction started
 
     /* processing time details */
     LFT_TIME_TO_HANDLE_REQUEST,

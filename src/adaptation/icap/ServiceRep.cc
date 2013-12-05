@@ -653,9 +653,9 @@ Adaptation::Icap::ServiceRep::optionsFetchTime() const
 
 Adaptation::Initiate *
 Adaptation::Icap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
-        HttpRequest *cause)
+        HttpRequest *cause, AccessLogEntry::Pointer &alp)
 {
-    return new Adaptation::Icap::ModXactLauncher(virgin, cause, this);
+    return new Adaptation::Icap::ModXactLauncher(virgin, cause, alp, this);
 }
 
 // returns a temporary string depicting service status, for debugging

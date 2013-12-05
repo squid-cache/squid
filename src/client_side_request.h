@@ -105,7 +105,6 @@ public:
     // NP: still an enum so each stage altering it must take care when replacing it.
     LogTags logType;
 
-    struct timeval start_time;
     AccessLogEntry::Pointer al; ///< access.log entry
 
     struct {
