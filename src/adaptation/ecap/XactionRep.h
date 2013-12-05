@@ -27,7 +27,7 @@ class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
         public BodyConsumer, public BodyProducer
 {
 public:
-    XactionRep(HttpMsg *virginHeader, HttpRequest *virginCause, const Adaptation::ServicePointer &service);
+    XactionRep(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, const Adaptation::ServicePointer &service);
     virtual ~XactionRep();
 
     typedef libecap::shared_ptr<libecap::adapter::Xaction> AdapterXaction;
@@ -114,6 +114,7 @@ private:
     bool vbProductionFinished; // whether there can be no more vb bytes
     bool abProductionFinished; // whether adapter has finished producing ab
     bool abProductionAtEnd;    // whether adapter produced a complete ab
+    AccessLogEntry::Pointer al; ///< Master transaction AccessLogEntry
 
     CBDATA_CLASS2(XactionRep);
 };

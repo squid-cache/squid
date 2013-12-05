@@ -543,7 +543,7 @@ ClientHttpRequest::updateCounters()
         ++ statCounter.client_http.errors;
 
     clientUpdateStatHistCounters(logType,
-                                 tvSubMsec(start_time, current_time));
+                                 tvSubMsec(al->cache.start_time, current_time));
 
     clientUpdateHierCounters(&request->hier);
 }
@@ -649,7 +649,7 @@ ClientHttpRequest::logRequest()
 
     al->cache.code = logType;
 
-    al->cache.msec = tvSubMsec(start_time, current_time);
+    al->cache.msec = tvSubMsec(al->cache.start_time, current_time);
 
     if (request)
         prepareLogWithRequestDetails(request, al);
@@ -672,7 +672,7 @@ ClientHttpRequest::logRequest()
     (void)SyncNotes(*al, *request);
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-        if (const char *value = (*i)->match(request, al->reply)) {
+        if (const char *value = (*i)->match(request, al->reply, NULL)) {
             NotePairs &notes = SyncNotes(*al, *request);
             notes.add((*i)->key.termedBuf(), value);
             debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);

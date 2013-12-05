@@ -495,6 +495,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         break;
 
+        case LFT_TIME_START: {
+            int precision = fmt->widthMax >=0 ? fmt->widthMax : 3;
+            snprintf(tmp, sizeof(tmp), "%0*" PRId64 ".%0*d", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, al->cache.start_time.tv_sec, precision, (int)(al->cache.start_time.tv_usec / fmt->divisor));
+            out = tmp;
+        }
+            break;
+
         case LFT_TIME_TO_HANDLE_REQUEST:
             outint = al->cache.msec;
             doint = 1;
@@ -1169,7 +1176,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
 
             // enforce width limits if configured
-            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff;
+            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff && !fmt->divisor;
             if (haveMaxWidth || fmt->widthMin) {
                 const int minWidth = fmt->widthMin >= 0 ?
                                      fmt->widthMin :0;

@@ -51,6 +51,7 @@ static TokenTableEntry TokenTable2C[] = {
     {"tu", LFT_TIME_SUBSECOND},
     {"tl", LFT_TIME_LOCALTIME},
     {"tg", LFT_TIME_GMT},
+    {"tS", LFT_TIME_START},
     {"tr", LFT_TIME_TO_HANDLE_REQUEST},
 
     {"<pt", LFT_PEER_RESPONSE_TIME},
@@ -490,18 +491,18 @@ done:
         Config.onoff.log_fqdn = 1;
         break;
 
+    case LFT_TIME_START:
     case LFT_TIME_SUBSECOND:
         divisor = 1000;
 
         if (widthMax > 0) {
-            int i;
             divisor = 1000000;
 
-            for (i = widthMax; i > 1; --i)
+            for (int i = widthMax; i > 0; --i)
                 divisor /= 10;
 
             if (!divisor)
-                divisor = 0;
+                divisor = 1;
         }
         break;
 
