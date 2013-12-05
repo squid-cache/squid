@@ -6,32 +6,35 @@
 #include <numeric>
 
 /// SBuf equality predicate for STL algorithms etc
-class SBufEqual {
+class SBufEqual
+{
 public:
-    explicit SBufEqual(const SBuf &reference, SBufCaseSensitive caseSensitivity_ = caseSensitive) :
-        reference_(reference), sensitivity_(caseSensitivity_) {}
-    inline bool operator() (const SBuf & checking) { return 0 == checking.compare(reference_,sensitivity_); }
+    explicit SBufEqual(const SBuf &reference, SBufCaseSensitive sensitivity = caseSensitive) :
+        reference_(reference), sensitivity_(sensitivity) {}
+    bool operator() (const SBuf & checking) { return checking.compare(reference_,sensitivity_) == 0; }
 private:
     SBuf reference_;
     SBufCaseSensitive sensitivity_;
 };
 
 /// SBuf "starts with" predicate for STL algorithms etc
-class SBufStartsWith {
+class SBufStartsWith
+{
 public:
-    explicit SBufStartsWith(const SBuf &prefix, SBufCaseSensitive caseSensitive = caseSensitive) :
-        prefix_(prefix), sensitive(caseSensitive) {}
-    inline bool operator() (const SBuf & checking) { return checking.startsWith(prefix_,sensitive); }
+    explicit SBufStartsWith(const SBuf &prefix, SBufCaseSensitive sensitivity = caseSensitive) :
+        prefix_(prefix), sensitivity_(sensitivity) {}
+    bool operator() (const SBuf & checking) { return checking.startsWith(prefix_,sensitivity_); }
 private:
     SBuf prefix_;
-    SBufCaseSensitive sensitive;
+    SBufCaseSensitive sensitivity_;
 };
 
 /** SBuf size addition accumulator for STL contaniners
  *
  * Equivalent to prefix_length +  SBuf.length() +  separator.length()
  */
-class SBufAddLength {
+class SBufAddLength
+{
 public:
     explicit SBufAddLength(const SBuf &separator) :
         separator_len(separator.length()) {}
@@ -48,8 +51,7 @@ SBuf
 SBufContainerJoin(const Container &items, const SBuf& separator)
 {
     // optimization: pre-calculate needed storage
-    SBuf::size_type sz;
-    sz = std::accumulate(items.begin(), items.end(), 0, SBufAddLength(separator));
+    const SBuf::size_type sz = std::accumulate(items.begin(), items.end(), 0, SBufAddLength(separator));
 
     // protect against blindly dereferencing items.begin() if items.size()==0
     if (sz == 0)
