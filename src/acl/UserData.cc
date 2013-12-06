@@ -33,11 +33,11 @@
  */
 
 #include "squid.h"
-#include "acl/UserData.h"
 #include "acl/Checklist.h"
+#include "acl/UserData.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
-#include "ConfigParser.h"
 
 template<class T>
 inline void

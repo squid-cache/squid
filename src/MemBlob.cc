@@ -1,6 +1,4 @@
 /*
- * MemBlob.cc (C) 2009 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -33,6 +31,7 @@
 #include "Debug.h"
 #include "Mem.h"
 #include "MemBlob.h"
+#include "SBufDetailedStats.h"
 
 #if HAVE_IOSTREAM
 #include <iostream>
@@ -45,6 +44,17 @@ InstanceIdDefinitions(MemBlob, "blob");
 
 MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
 {}
+
+MemBlobStats&
+MemBlobStats::operator += (const MemBlobStats& s)
+{
+    alloc+=s.alloc;
+    live+=s.live;
+    append+=s.append;
+    liveBytes+=s.liveBytes;
+
+    return *this;
+}
 
 std::ostream&
 MemBlobStats::dump(std::ostream &os) const
@@ -87,6 +97,7 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
+    recordMemBlobSizeAtDestruct(size);
 
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
            << static_cast<void*>(this) << " id=" << id

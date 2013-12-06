@@ -208,10 +208,10 @@ extern "C" {
  * Several function definitions which we provide for security and code safety.
  */
 #include "compat/xalloc.h"
+#include "compat/xis.h"
 #include "compat/xstrerror.h"
 #include "compat/xstring.h"
 #include "compat/xstrto.h"
-#include "compat/xis.h"
 
 /*
  * strtoll() is needed. Squid provides a portable definition.

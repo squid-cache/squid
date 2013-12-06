@@ -6,11 +6,11 @@
 #ifndef SQUID_IPC_START_LISTENING_H
 #define SQUID_IPC_START_LISTENING_H
 
+#include "base/AsyncCall.h"
 #include "base/Subscription.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
 #include "ipc/FdNotes.h"
-#include "base/AsyncCall.h"
 
 #if HAVE_IOSFWD
 #include <iosfwd>

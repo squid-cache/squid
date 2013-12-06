@@ -32,16 +32,16 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "Generic.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "Generic.h"
 #include "SquidList.h"
+#include "Store.h"
 #include "SwapDir.h"
-#include "UFSStrategy.h"
 #include "UFSStoreState.h"
+#include "UFSStrategy.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,UFSStoreState);
 

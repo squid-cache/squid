@@ -32,8 +32,8 @@
 #ifndef SQUID_EVENT_H
 #define SQUID_EVENT_H
 
-#include "base/Vector.h"
 #include "AsyncEngine.h"
+#include "base/Vector.h"
 #include "MemPool.h"
 
 class StoreEntry;
@@ -80,8 +80,8 @@ public:
     void cancel(EVH * func, void * arg);
     /* clean up the used memory in the scheduler */
     void clean();
-    /* how long until the next event ? */
-    int checkDelay();
+    /* either EVENT_IDLE or milliseconds remaining until the next event */
+    int timeRemaining() const;
     /* cache manager output for the event queue */
     void dump(StoreEntry *);
     /* find a scheduled event */

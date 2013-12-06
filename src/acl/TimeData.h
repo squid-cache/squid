@@ -33,9 +33,9 @@
 
 #ifndef SQUID_ACLTIMEDATA_H
 #define SQUID_ACLTIMEDATA_H
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "splay.h"
 
 class ACLTimeData : public ACLData<time_t>
 {

@@ -20,7 +20,6 @@ MAKETEST="distcheck"
 #
 #   --without-default-user \
 #   --without-aufs-threads \
-#   --without-coss-membuf-size \
 #   --without-filedescriptors \
 #   --without-cppunit-basedir \
 #   --without-build-environment \
@@ -71,7 +70,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-leakfinder \
 	--disable-follow-x-forwarded-for \
 	--disable-ident-lookups \
-	--disable-internal-dns \
 	--disable-default-hostsfile \
 	--disable-auth \
 	--disable-basic-auth-helpers \

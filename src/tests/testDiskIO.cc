@@ -1,21 +1,16 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "testDiskIO.h"
-#include "Store.h"
-#include "SwapDir.h"
 #include "DiskIO/DiskIOModule.h"
-#include "Mem.h"
-#include "MemObject.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
+#include "Mem.h"
+#include "MemObject.h"
+#include "Store.h"
 #include "StoreFileSystem.h"
+#include "SwapDir.h"
+#include "testDiskIO.h"
 #include "testStoreSupport.h"
-
-#if 0
-// AYJ: COSS in Squid-3 is disabled.
-#include "fs/coss/CossSwapDir.h"
-#endif
 
 #if HAVE_STDEXCEPT
 #include <stdexcept>

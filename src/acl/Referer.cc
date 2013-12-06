@@ -33,8 +33,8 @@
  */
 
 #include "squid.h"
-#include "acl/Referer.h"
 #include "acl/Checklist.h"
+#include "acl/Referer.h"
 #include "acl/RegexData.h"
 
 /* explicit template instantiation required for some systems */

@@ -36,8 +36,8 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
-#include "CachePeer.h"
 #include "CacheManager.h"
+#include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -74,10 +74,10 @@
 #if USE_SSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
-#include "ssl/helper.h"
-#include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
+#include "ssl/helper.h"
 #include "ssl/ServerBump.h"
+#include "ssl/support.h"
 #endif
 #if HAVE_ERRNO_H
 #include <errno.h>
@@ -163,7 +163,7 @@ void FwdState::start(Pointer aSelf)
 #endif
 
     // do full route options selection
-    peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
+    peerSelect(&serverDestinations, request, al, entry, fwdPeerSelectionCompleteWrapper, this);
 }
 
 #if STRICT_ORIGINAL_DST
@@ -713,17 +713,17 @@ FwdState::negotiateSSL(int fd)
                     if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                         serverBump->sslErrors = cbdataReference(errs);
                 }
-            }
 
-            // For intercepted connections, set the host name to the server
-            // certificate CN. Otherwise, we just hope that CONNECT is using
-            // a user-entered address (a host name or a user-entered IP).
-            const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
-            if (request->flags.sslPeek && !isConnectRequest) {
-                if (X509 *srvX509 = errDetails->peerCert()) {
-                    if (const char *name = Ssl::CommonHostName(srvX509)) {
-                        request->SetHost(name);
-                        debugs(83, 3, HERE << "reset request host: " << name);
+                // For intercepted connections, set the host name to the server
+                // certificate CN. Otherwise, we just hope that CONNECT is using
+                // a user-entered address (a host name or a user-entered IP).
+                const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
+                if (request->flags.sslPeek && !isConnectRequest) {
+                    if (X509 *srvX509 = errDetails->peerCert()) {
+                        if (const char *name = Ssl::CommonHostName(srvX509)) {
+                            request->SetHost(name);
+                            debugs(83, 3, HERE << "reset request host: " << name);
+                        }
                     }
                 }
             }
@@ -964,7 +964,8 @@ FwdState::initiateSSL()
         // unless it was the CONNECT request with a user-typed address.
         const char *hostname = request->GetHost();
         const bool hostnameIsIp = request->GetHostIsNumeric();
-        const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
+        const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                      !request->clientConnectionManager->port->flags.isIntercepted();
         if (!request->flags.sslPeek || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
@@ -1100,7 +1101,7 @@ FwdState::connectStart()
         ctimeout = ftimeout;
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
-        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
+        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
         self = NULL; // refcounted
@@ -1119,9 +1120,11 @@ FwdState::connectStart()
         else
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
+            pinned_connection->stopPinnedConnectionMonitoring();
             flags.connected_okay = true;
             ++n_tries;
             request->flags.pinned = true;
+            request->hier.note(serverConn, pinned_connection->pinning.host);
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);

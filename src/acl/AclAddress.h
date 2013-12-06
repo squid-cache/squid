@@ -29,8 +29,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-#include "ip/Address.h"
 #include "acl/Acl.h"
+#include "ip/Address.h"
 
 /// list of address-based ACLs. Currently a POD.
 class AclAddress

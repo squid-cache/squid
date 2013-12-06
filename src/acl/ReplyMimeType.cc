@@ -33,9 +33,9 @@
  */
 
 #include "squid.h"
-#include "acl/ReplyMimeType.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
+#include "acl/ReplyMimeType.h"
 
 /* explicit template instantiation required for some systems */
 

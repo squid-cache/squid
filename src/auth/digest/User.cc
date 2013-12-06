@@ -6,8 +6,8 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
-Auth::Digest::User::User(Auth::Config *aConfig) :
-        Auth::User(aConfig),
+Auth::Digest::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+        Auth::User(aConfig, aRequestRealm),
         HA1created(0)
 {
     memset(HA1, 0, sizeof(HA1));

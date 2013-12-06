@@ -32,8 +32,8 @@
  */
 #include "squid.h"
 #include "comm/Connection.h"
-#include "ip/Intercept.h"
 #include "fde.h"
+#include "ip/Intercept.h"
 #include "src/tools.h"
 
 #if IPF_TRANSPARENT

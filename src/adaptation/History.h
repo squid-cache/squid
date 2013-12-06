@@ -2,10 +2,11 @@
 #define SQUID_ADAPT_HISTORY_H
 
 #include "adaptation/DynamicGroupCfg.h"
-#include "base/Vector.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
 #include "HttpHeader.h"
 #include "Notes.h"
+#include "SBuf.h"
 #include "SquidString.h"
 
 namespace Adaptation
@@ -46,6 +47,7 @@ public:
     /// store the last meta header fields received from the adaptation service
     void recordMeta(const HttpHeader *lm);
 
+    void recordAdaptationService(SBuf &srvId);
 public:
     /// Last received meta header (REQMOD or RESPMOD, whichever comes last).
     HttpHeader lastMeta;
@@ -54,6 +56,9 @@ public:
     /// key:value pairs set by adaptation_meta, to be added to
     /// AccessLogEntry::notes when ALE becomes available
     NotePairs::Pointer metaHeaders;
+
+    typedef Vector<SBuf> AdaptationServices;
+    AdaptationServices theAdaptationServices; ///< The service groups used
 
     /// sets future services for the Adaptation::AccessCheck to notice
     void setFutureServices(const DynamicGroupCfg &services);

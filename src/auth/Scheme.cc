@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "auth/Scheme.h"
-#include "auth/Gadgets.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h"
+#include "auth/Scheme.h"
 #include "globals.h"
 
 Vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;

@@ -1,8 +1,8 @@
 #ifndef SQUID_ACLPEERNAME_H
 #define SQUID_ACLPEERNAME_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class ACLPeerNameStrategy : public ACLStrategy<const char *>
 {

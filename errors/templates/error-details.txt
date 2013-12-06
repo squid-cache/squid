@@ -1,3 +1,7 @@
+name: SQUID_X509_V_ERR_INFINITE_VALIDATION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "Cert validation infinite loop detected"
+
 name: SQUID_ERR_SSL_HANDSHAKE
 detail: "%ssl_error_descr: %ssl_lib_error"
 descr: "Handshake with SSL server failed"
@@ -129,6 +133,90 @@ descr: "Authority and issuer serial number mismatch"
 name: X509_V_ERR_KEYUSAGE_NO_CERTSIGN
 detail: "%ssl_error_descr: %ssl_subject"
 descr: "Key usage does not include certificate signing"
+
+name: X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "unable to get CRL issuer certificate"
+
+name: X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "unhandled critical extension"
+
+name: X509_V_ERR_KEYUSAGE_NO_CRL_SIGN
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "key usage does not include CRL signing"
+
+name: X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "unhandled critical CRL extension"
+
+name: X509_V_ERR_INVALID_NON_CA
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "invalid non-CA certificate (has CA markings)"
+
+name: X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "proxy path length constraint exceeded"
+
+name: X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "key usage does not include digital signature"
+
+name: X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "proxy certificates not allowed, please set the appropriate flag"
+
+name: X509_V_ERR_INVALID_EXTENSION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "invalid or inconsistent certificate extension"
+
+name: X509_V_ERR_INVALID_POLICY_EXTENSION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "invalid or inconsistent certificate policy extension"
+
+name: X509_V_ERR_NO_EXPLICIT_POLICY
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "no explicit policy"
+
+name: X509_V_ERR_DIFFERENT_CRL_SCOPE
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "Different CRL scope"
+
+name: X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "Unsupported extension feature"
+
+name: X509_V_ERR_UNNESTED_RESOURCE
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "RFC 3779 resource not subset of parent's resources"
+
+name: X509_V_ERR_PERMITTED_VIOLATION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "permitted subtree violation"
+
+name: X509_V_ERR_EXCLUDED_VIOLATION
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "excluded subtree violation"
+
+name: X509_V_ERR_SUBTREE_MINMAX
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "name constraints minimum and maximum not supported"
+
+name: X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "unsupported name constraint type"
+
+name: X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "unsupported or invalid name constraint syntax"
+
+name: X509_V_ERR_UNSUPPORTED_NAME_SYNTAX
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "unsupported or invalid name syntax"
+
+name: X509_V_ERR_CRL_PATH_VALIDATION_ERROR
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "CRL path validation error"
 
 name: X509_V_ERR_APPLICATION_VERIFICATION
 detail: "%ssl_error_descr: %ssl_subject"

@@ -224,7 +224,6 @@ main(int argc, char *argv[])
             } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NTLM_ERR_NONE) {
                 if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, decodedLen) == NTLM_ERR_NONE) {
                     lc(user);
-                    lc(domain);
                     if (strip_domain_enabled) {
                         SEND2("AF %s", user);
                     } else {
@@ -232,7 +231,6 @@ main(int argc, char *argv[])
                     }
                 } else {
                     lc(user);
-                    lc(domain);
                     SEND4("NA invalid credentials, user=%s%s%s", domain, (*domain?"\\":""), user);
                 }
             } else {

@@ -8,10 +8,10 @@
 #include "auth/Acl.h"
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
-#include "Debug.h"
-#include "wordlist.h"
 #include "ConfigParser.h"
+#include "Debug.h"
 #include "Parsing.h"
+#include "wordlist.h"
 
 ACL *
 ACLMaxUserIP::clone() const

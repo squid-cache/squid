@@ -39,8 +39,8 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "esi/Include.h"
 #include "esi/VarState.h"
 #include "HttpReply.h"

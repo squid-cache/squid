@@ -3,16 +3,16 @@
  */
 
 #include "squid.h"
-#include "comm.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "globals.h"
-#include "ipc/Port.h"
-#include "ipc/Messages.h"
 #include "ipc/Kids.h"
-#include "ipc/TypedMsgHdr.h"
-#include "ipc/StartListening.h"
+#include "ipc/Messages.h"
+#include "ipc/Port.h"
 #include "ipc/SharedListen.h"
+#include "ipc/StartListening.h"
+#include "ipc/TypedMsgHdr.h"
 #include "tools.h"
 
 #include <map>

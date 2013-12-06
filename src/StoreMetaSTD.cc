@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "StoreMetaSTD.h"
-#include "Store.h"
 #include "MemObject.h"
+#include "Store.h"
+#include "StoreMetaSTD.h"
 
 bool
 StoreMetaSTD::validLength(int len) const

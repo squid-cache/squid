@@ -6,20 +6,20 @@
 #include "squid.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
-#include "comm/Connection.h"
-#include "globals.h"
-#include "ipc/Strand.h"
-#include "ipc/StrandCoord.h"
-#include "ipc/Messages.h"
-#include "ipc/SharedListen.h"
-#include "ipc/StrandSearch.h"
-#include "ipc/Kids.h"
-#include "mgr/Request.h"
-#include "mgr/Response.h"
-#include "mgr/Forwarder.h"
-#include "SwapDir.h" /* XXX: scope boundary violation */
 #include "CacheManager.h"
 #include "CollapsedForwarding.h"
+#include "comm/Connection.h"
+#include "globals.h"
+#include "ipc/Kids.h"
+#include "ipc/Messages.h"
+#include "ipc/SharedListen.h"
+#include "ipc/Strand.h"
+#include "ipc/StrandCoord.h"
+#include "ipc/StrandSearch.h"
+#include "mgr/Forwarder.h"
+#include "mgr/Request.h"
+#include "mgr/Response.h"
+#include "SwapDir.h" /* XXX: scope boundary violation */
 #if USE_DISKIO_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
 #endif

@@ -1,6 +1,6 @@
 #include "squid.h"
-#include "acl/HierCodeData.h"
 #include "acl/Checklist.h"
+#include "acl/HierCodeData.h"
 #include "cache_cf.h"
 #include "hier_code.h"
 #include "wordlist.h"

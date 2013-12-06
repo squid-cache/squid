@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "comm.h"
-#include "comm/ConnOpener.h"
 #include "comm/Connection.h"
+#include "comm/ConnOpener.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "fde.h"

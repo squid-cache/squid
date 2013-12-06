@@ -36,21 +36,21 @@
 #include "disk.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fde.h"
 #include "ftp.h"
-#include "Store.h"
 #include "html_quote.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "MemObject.h"
-#include "fde.h"
 #include "MemBuf.h"
+#include "MemObject.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
+#include "Store.h"
+#include "tools.h"
+#include "URL.h"
 #include "URL.h"
 #include "URLScheme.h"
-#include "URL.h"
-#include "tools.h"
 #include "wordlist.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -838,7 +838,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         else if (detail) {
             detail->useRequest(request);
             const String &errDetail = detail->toString();
-            if (errDetail.defined()) {
+            if (errDetail.size() > 0) {
                 MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
                 mb.append(detail_mb->content(), detail_mb->contentSize());
                 delete detail_mb;

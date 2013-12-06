@@ -1,7 +1,6 @@
 #ifndef SQUID_FS_ROCK_SWAP_DIR_H
 #define SQUID_FS_ROCK_SWAP_DIR_H
 
-#include "SwapDir.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "fs/rock/RockDbCell.h"
@@ -9,6 +8,7 @@
 #include "ipc/StoreMap.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
+#include "SwapDir.h"
 
 class DiskIOStrategy;
 class ReadRequest;

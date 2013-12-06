@@ -33,9 +33,9 @@
  */
 
 #include "squid.h"
-#include "acl/UrlPath.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
+#include "acl/UrlPath.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 

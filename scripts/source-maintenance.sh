@@ -67,6 +67,17 @@ for FILENAME in `ls -1`; do
         	fi
 	fi
 
+	${ROOT}/scripts/sort-includes.pl ${FILENAME} >${FILENAME}.sorted
+	if test -e ${FILENAME} -a -e "${FILENAME}.sorted"; then
+		md51=`cat  ${FILENAME}| tr -d "\n \t\r" | $MD5`;
+		md52=`cat  ${FILENAME}.sorted| tr -d "\n \t\r" | $MD5`;
+
+		if test "$md51" != "$md52" ; then
+			echo "NOTICE: File $PWD/${FILENAME} changed #include order"
+		fi
+		mv ${FILENAME}.sorted ${FILENAME}
+	fi
+
 	#
 	# REQUIRE squid.h first #include
 	#

@@ -10,10 +10,10 @@
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "fs/rock/RockSwapDir.h"
-#include "fs/rock/RockIoState.h"
 #include "fs/rock/RockIoRequests.h"
+#include "fs/rock/RockIoState.h"
 #include "fs/rock/RockRebuild.h"
+#include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
@@ -217,7 +217,7 @@ Rock::SwapDir::entryLimitAllowed() const
     return min(max(eLimitLo, eWanted), entryLimitHigh());
 }
 
-// TODO: encapsulate as a tool; identical to CossSwapDir::create()
+// TODO: encapsulate as a tool
 void
 Rock::SwapDir::create()
 {
