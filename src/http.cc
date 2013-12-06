@@ -36,9 +36,9 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base64.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "base64.h"
 #include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
@@ -49,8 +49,8 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "HttpControlMsg.h"
 #include "http.h"
+#include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
@@ -371,7 +371,7 @@ HttpStateData::cacheableReply()
         }
 
         // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
-        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().defined()) {
+        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() > 0) {
             /* TODO: we are allowed to cache when no-cache= has parameters.
              * Provided we strip away any of the listed headers unless they are revalidated
              * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
@@ -436,7 +436,7 @@ HttpStateData::cacheableReply()
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCache() && !rep->cache_control->noCache().defined() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0 && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
@@ -922,9 +922,6 @@ HttpStateData::haveParsedReplyHeaders()
     Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
 
-    if (rep->sline.status() == Http::scPartialContent && rep->content_range)
-        currentOffset = rep->content_range->spec.offset;
-
     entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
@@ -995,7 +992,7 @@ no_cache:
             const bool ccMustRevalidate = (rep->cache_control->proxyRevalidate() || rep->cache_control->mustRevalidate());
 
             // CC:no-cache (only if there are no parameters)
-            const bool ccNoCacheNoParams = (rep->cache_control->hasNoCache() && rep->cache_control->noCache().undefined());
+            const bool ccNoCacheNoParams = (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size()==0);
 
             // CC:s-maxage=N
             const bool ccSMaxAge = rep->cache_control->hasSMaxAge();
@@ -1718,7 +1715,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     // Add our own If-None-Match field if the cached entry has a strong ETag.
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
-    if (request->etag.defined()) {
+    if (request->etag.size() > 0) {
         hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
                                               request->etag.termedBuf()));
     }
@@ -1975,12 +1972,30 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     case HDR_IF_MODIFIED_SINCE:
         /** \par If-Modified-Since:
-        * append unless we added our own;
-         * \note at most one client's ims header can pass through */
-
-        if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
+         * append unless we added our own,
+         * but only if cache_miss_revalidate is enabled, or
+         *  the request is not cacheable, or
+         *  the request contains authentication credentials.
+         * \note at most one client's If-Modified-Since header can pass through
+         */
+        // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
+        if (hdr_out->has(HDR_IF_MODIFIED_SINCE))
+            break;
+        else if (Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
             hdr_out->addEntry(e->clone());
+        break;
 
+    case HDR_IF_NONE_MATCH:
+        /** \par If-None-Match:
+         * append if the wildcard '*' special case value is present, or
+         *   cache_miss_revalidate is disabled, or
+         *   the request is not cacheable in this proxy, or
+         *   the request contains authentication credentials.
+         * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
+         */
+        // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
+        if (hdr_out->hasListMember(HDR_IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
+            hdr_out->addEntry(e->clone());
         break;
 
     case HDR_MAX_FORWARDS:

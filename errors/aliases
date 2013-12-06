@@ -29,11 +29,12 @@ ro	ro-ro ro-md
 ru	ru-ru
 sk	sk-sk
 sl	sl-si
-sr-latn	sr sr-sp sr-latn-cs
+sr-cyrl sr-rs sr-cyrl-cs sr-cyrl-rs
+sr-latn	sr sr-sp sr-latn-cs sr-latn-rs
 sv	sv-fi sv-se
 th	th-th
 tr	tr-tr
 uk	uk-ua
 vi	vi-vn
-zh-tw	zh-hk zh-mo
-zh-cn	zh-sg
+zh-hant	zh-hant-tw zh-hant-hk zh-hant-mo zh-tw zh-hk zh-mo
+zh-hans	zh-hans-cn zh-cn zh-hans-sg zh-sg

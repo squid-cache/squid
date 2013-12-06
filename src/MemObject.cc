@@ -76,7 +76,7 @@ MemObject::inUseCount()
 
 const char *
 MemObject::storeId() const {
-    if (!storeId_.defined()) {
+    if (!storeId_.size()) {
         debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
@@ -86,12 +86,12 @@ MemObject::storeId() const {
 
 const char *
 MemObject::logUri() const {
-    return logUri_.defined() ? logUri_.termedBuf() : storeId();
+    return logUri_.size() ? logUri_.termedBuf() : storeId();
 }
 
 bool
 MemObject::hasUris() const {
-    return storeId_.defined();
+    return storeId_.size();
 }
 
 void

@@ -23,7 +23,7 @@ Adaptation::ServiceGroup::~ServiceGroup()
 void
 Adaptation::ServiceGroup::parse()
 {
-    ConfigParser::ParseString(&id);
+    id = ConfigParser::NextToken();
 
     wordlist *names = NULL;
     ConfigParser::ParseWordList(&names);

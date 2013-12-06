@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "helpers/defines.h"
-#include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
+#include "ssl/crtd_message.h"
 
 #if HAVE_CSTRING
 #include <cstring>

@@ -55,8 +55,8 @@ void
 ACLFlags::parseFlags()
 {
     char *nextToken;
-    while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
-
+    while ((nextToken = ConfigParser::PeekAtToken()) != NULL && nextToken[0] == '-') {
+        (void)ConfigParser::NextToken(); //Get token from cfg line
         //if token is the "--" break flag
         if (strcmp(nextToken, "--") == 0)
             break;
@@ -73,10 +73,7 @@ ACLFlags::parseFlags()
 
     /*Regex code needs to parse -i file*/
     if ( isSet(ACL_F_REGEX_CASE))
-        ConfigParser::strtokFilePutBack("-i");
-
-    if (nextToken != NULL && strcmp(nextToken, "--") != 0 )
-        ConfigParser::strtokFileUndo();
+        ConfigParser::TokenPutBack("-i");
 }
 
 const char *
@@ -200,7 +197,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     /* snarf the ACL name */
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
@@ -217,7 +214,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL type */
     const char *theType;
 
-    if ((theType = strtok(NULL, w_space)) == NULL) {
+    if ((theType = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
@@ -298,13 +295,11 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                A->cfgline);
     }
 
-    /* append */
+    // prepend so that ACLs declared later (and possibly using earlier ACLs)
+    // are destroyed earlier (before the ACLs they use are destroyed)
     assert(head && *head == Config.aclList);
     A->registered = true;
-
-    while (*head)
-        head = &(*head)->next;
-
+    A->next = *head;
     *head = A;
 }
 

@@ -31,8 +31,8 @@
 #ifndef SQUID_AUTH_DIGEST_SCHEME_H
 #define SQUID_AUTH_DIGEST_SCHEME_H
 
-#include "auth/Scheme.h"
 #include "auth/digest/auth_digest.h"
+#include "auth/Scheme.h"
 
 namespace Auth
 {

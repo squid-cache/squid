@@ -36,9 +36,9 @@
 #include <crypt.h>
 #endif
 
-#include "util.h"
 #include "hash.h"
 #include "rfc2617.h"
+#include "util.h"
 
 typedef struct _request_data {
     char *user;

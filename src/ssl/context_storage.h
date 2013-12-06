@@ -4,11 +4,11 @@
 #if USE_SSL
 
 #include "base/LruMap.h"
-#include "SquidTime.h"
 #include "CacheManager.h"
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
+#include "SquidTime.h"
 #include "ssl/gadgets.h"
 #if HAVE_MAP
 #include <map>

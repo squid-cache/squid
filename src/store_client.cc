@@ -43,9 +43,9 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
-#include "StoreClient.h"
 #include "Store.h"
 #include "store_swapin.h"
+#include "StoreClient.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS
@@ -261,6 +261,8 @@ store_client::copy(StoreEntry * anEntry,
     anEntry->kickProducer();
 #endif
     anEntry->unlock("store_client::copy");
+
+    // Add no code here. This object may no longer exist.
 }
 
 /// Whether there is (or will be) more entry data for us.
@@ -329,6 +331,9 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     /* Warning: doCopy may indirectly free itself in callbacks,
      * hence the lock to keep it active for the duration of
      * this function
+     * XXX: Locking does not prevent calling sc destructor (it only prevents
+     * freeing sc memory) so sc may become invalid from C++ p.o.v.
+     *
      */
     cbdataInternalLock(sc);
     assert (!sc->flags.store_copying);
@@ -725,6 +730,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     e->kickProducer();
 #endif
 
+    e->unlock(); // after the "++e->lock_count" above
     return 1;
 }
 
@@ -811,7 +817,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     }
 
     if (curlen > expectlen) {
-        debugs(90, 3, "quick-abort? YES bad content length");
+        debugs(90, 3, "quick-abort? YES bad content length (" << curlen << " of " << expectlen << " bytes received)");
         return true;
     }
 

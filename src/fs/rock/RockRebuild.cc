@@ -4,16 +4,16 @@
 
 #include "squid.h"
 #include "disk.h"
+#include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
-#include "fs/rock/RockDbCell.h"
-#include "ipc/StoreMap.h"
 #include "globals.h"
+#include "ipc/StoreMap.h"
 #include "md5.h"
-#include "tools.h"
-#include "typedefs.h"
 #include "SquidTime.h"
 #include "store_rebuild.h"
+#include "tools.h"
+#include "typedefs.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

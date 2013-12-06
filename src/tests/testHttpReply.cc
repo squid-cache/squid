@@ -2,12 +2,12 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
-#include "testHttpReply.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
+#include "testHttpReply.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 
@@ -188,7 +188,7 @@ testHttpReply::testSanityCheckFirstLine()
     error = Http::scNone;
 
     // status line with nul-byte
-    input.append("HTTP/1.1\0200 Okay\n\n", 19); /* real case seen */
+    input.append("HTTP/1.1" "\0" "200 Okay\n\n", 19); /* real case seen */
     hdr_len = headersEnd(input.content(),input.contentSize());
     CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);

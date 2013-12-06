@@ -3,11 +3,11 @@
  */
 
 #include "squid.h"
-#include "HttpMsg.h"
 #include "adaptation/Answer.h"
-#include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
+#include "adaptation/Initiator.h"
 #include "base/AsyncJobCalls.h"
+#include "HttpMsg.h"
 
 namespace Adaptation
 {

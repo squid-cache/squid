@@ -1,9 +1,9 @@
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
-#include "Parsing.h"
 #include "ChunkedCodingParser.h"
+#include "Debug.h"
 #include "MemBuf.h"
+#include "Parsing.h"
 
 ChunkedCodingParser::Step ChunkedCodingParser::psChunkSize = &ChunkedCodingParser::parseChunkSize;
 ChunkedCodingParser::Step ChunkedCodingParser::psUnusedChunkExtension = &ChunkedCodingParser::parseUnusedChunkExtension;

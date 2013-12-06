@@ -4,8 +4,8 @@
  */
 
 #include "squid.h"
-#include "base/TextException.h"
 #include "base/RunnersRegistry.h"
+#include "base/TextException.h"
 #include "ipc/mem/PagePool.h"
 #include "ipc/mem/Pages.h"
 #include "SwapDir.h"

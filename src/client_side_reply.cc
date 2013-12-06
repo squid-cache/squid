@@ -1581,23 +1581,8 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     /** \li If the request has no-cache flag set or some no_cache HACK in operation we
       * 'invalidate' the cached IP entries for this request ???
       */
-    if (r->flags.noCache) {
-
-#if USE_DNSHELPER
-        ipcacheInvalidate(r->GetHost());
-#else
+    if (r->flags.noCache || r->flags.noCacheHack())
         ipcacheInvalidateNegative(r->GetHost());
-#endif /* USE_DNSHELPER */
-
-    } else if (r->flags.noCacheHack()) {
-
-#if USE_DNSHELPER
-        ipcacheInvalidate(r->GetHost());
-#else
-        ipcacheInvalidateNegative(r->GetHost());
-#endif /* USE_DNSHELPER */
-
-    }
 
 #if USE_CACHE_DIGESTS
     lookup_type = http->storeEntry() ? "HIT" : "MISS";

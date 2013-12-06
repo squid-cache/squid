@@ -63,8 +63,8 @@
 #include "NullDelayId.h"
 #include "SquidString.h"
 #include "SquidTime.h"
-#include "StoreClient.h"
 #include "Store.h"
+#include "StoreClient.h"
 
 /// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;

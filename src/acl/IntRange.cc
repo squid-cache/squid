@@ -36,8 +36,8 @@
 #include "acl/IntRange.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "wordlist.h"
 #include "Parsing.h"
+#include "wordlist.h"
 
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS-IGNORE */

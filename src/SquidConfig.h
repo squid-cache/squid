@@ -111,12 +111,8 @@ public:
         int icp_query_max;  /* msec */
         int icp_query_min;  /* msec */
         int mcast_icp_query;    /* msec */
-
-#if !USE_DNSHELPER
         time_msec_t idns_retransmit;
         time_msec_t idns_query;
-#endif
-
     } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
@@ -195,10 +191,6 @@ public:
     char *effectiveGroup;
 
     struct {
-#if USE_DNSHELPER
-        char *dnsserver;
-#endif
-
         wordlist *redirect;
         wordlist *store_id;
 #if USE_UNLINKD
@@ -213,9 +205,6 @@ public:
 #endif
 
     } Program;
-#if USE_DNSHELPER
-    HelperChildConfig dnsChildren;
-#endif
 
     HelperChildConfig redirectChildren;
     HelperChildConfig storeIdChildren;
@@ -337,6 +326,7 @@ public:
         int check_hostnames;
         int allow_underscore;
         int via;
+        int cache_miss_revalidate;
         int emailErrData;
         int httpd_suppress_version_string;
         int global_internal_static;
@@ -356,6 +346,7 @@ public:
         int memory_cache_disk;
         int hostStrictVerify;
         int client_dst_passthru;
+        int dns_mdns;
     } onoff;
 
     int pipeline_max_prefetch;

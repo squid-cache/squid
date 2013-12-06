@@ -38,8 +38,8 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class ACLUrlLoginStrategy : public ACLStrategy<char const *>
 {

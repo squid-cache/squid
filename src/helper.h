@@ -37,9 +37,9 @@
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "dlink.h"
-#include "ip/Address.h"
 #include "HelperChildConfig.h"
 #include "HelperReply.h"
+#include "ip/Address.h"
 
 class helper_request;
 

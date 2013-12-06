@@ -5,8 +5,8 @@
 
 #include "squid.h"
 #include "comm.h"
-#include "CommCalls.h"
 #include "comm/Connection.h"
+#include "CommCalls.h"
 #include "ipc/Port.h"
 
 const char Ipc::coordinatorAddr[] = DEFAULT_STATEDIR "/coordinator.ipc";

@@ -51,6 +51,7 @@ static TokenTableEntry TokenTable2C[] = {
     {"tu", LFT_TIME_SUBSECOND},
     {"tl", LFT_TIME_LOCALTIME},
     {"tg", LFT_TIME_GMT},
+    {"tS", LFT_TIME_START},
     {"tr", LFT_TIME_TO_HANDLE_REQUEST},
 
     {"<pt", LFT_PEER_RESPONSE_TIME},
@@ -96,22 +97,22 @@ static TokenTableEntry TokenTable2C[] = {
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
 
-    {">st", LFT_REQUEST_SIZE_TOTAL },
-    /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
-    {">sh", LFT_REQUEST_SIZE_HEADERS },
+    {">st", LFT_CLIENT_REQUEST_SIZE_TOTAL },
+    {">sh", LFT_CLIENT_REQUEST_SIZE_HEADERS },
     /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
     /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
-    {"<st", LFT_REPLY_SIZE_TOTAL},
+    {"<st", LFT_ADAPTED_REPLY_SIZE_TOTAL}, // XXX: adapted should be code: <sta
     {"<sH", LFT_REPLY_HIGHOFFSET},
     {"<sS", LFT_REPLY_OBJECTSIZE},
-    /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
-    {"<sh", LFT_REPLY_SIZE_HEADERS },
+    {"<sh", LFT_ADAPTED_REPLY_SIZE_HEADERS }, // XXX: adapted should be code: <sha
     /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
     /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
+    {"st", LFT_CLIENT_IO_SIZE_TOTAL}, // XXX: total from client should be stC ??
+    /*{"stP", LFT_SERVER_IO_SIZE_TOTAL},*/
+
     {"et", LFT_TAG},
-    {"st", LFT_IO_SIZE_TOTAL},
     {"ea", LFT_EXT_LOG},
     {"sn", LFT_SEQUENCE_NUMBER},
 
@@ -128,6 +129,7 @@ static TokenTableEntry TokenTableMisc[] = {
     {"err_code", LFT_SQUID_ERROR },
     {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {"note", LFT_NOTE },
+    {"credentials", LFT_CREDENTIALS},
     {NULL, LFT_NONE}		/* this must be last */
 };
 
@@ -490,18 +492,18 @@ done:
         Config.onoff.log_fqdn = 1;
         break;
 
+    case LFT_TIME_START:
     case LFT_TIME_SUBSECOND:
         divisor = 1000;
 
         if (widthMax > 0) {
-            int i;
             divisor = 1000000;
 
-            for (i = widthMax; i > 1; --i)
+            for (int i = widthMax; i > 0; --i)
                 divisor /= 10;
 
             if (!divisor)
-                divisor = 0;
+                divisor = 1;
         }
         break;
 

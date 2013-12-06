@@ -34,8 +34,8 @@
 #ifndef SQUID_ACLTAG_H
 #define SQUID_ACLTAG_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class ACLTagStrategy : public ACLStrategy<const char *>
 {

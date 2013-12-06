@@ -34,8 +34,8 @@
 #define SQUID_STOREIOBUFFER_H
 
 /* TODO: move this and the range() method into a .cci */
-#include "Range.h"
 #include "MemBuf.h"
+#include "Range.h"
 
 class StoreIOBuffer
 {

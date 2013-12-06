@@ -33,16 +33,16 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
+#include "acl/RegexData.h"
+#include "acl/UserData.h"
+#include "auth/Acl.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/Gadgets.h"
-#include "acl/FilledChecklist.h"
-#include "acl/UserData.h"
-#include "acl/RegexData.h"
-#include "client_side.h"
-#include "HttpRequest.h"
-#include "auth/Acl.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
+#include "client_side.h"
+#include "HttpRequest.h"
 
 ACLProxyAuth::~ACLProxyAuth()
 {
@@ -145,7 +145,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != NULL);
     assert(checklist->auth_user_request->valid());
-    checklist->auth_user_request->start(LookupDone, checklist);
+    checklist->auth_user_request->start(checklist->request, checklist->al, LookupDone, checklist);
 }
 
 void
