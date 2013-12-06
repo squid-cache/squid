@@ -87,7 +87,7 @@ public:
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
-    const static size_type npos = std::string::npos;
+    const static size_type npos = -1;
 
     String &operator =(char const *);
     String &operator =(String const &);
