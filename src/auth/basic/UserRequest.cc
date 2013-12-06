@@ -7,6 +7,10 @@
 #include "charset.h"
 #include "Debug.h"
 #include "HelperReply.h"
+#include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "format/Format.h"
+#include "MemBuf.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 
@@ -23,6 +27,15 @@ Auth::Basic::UserRequest::authenticated() const
         return 1;
 
     return 0;
+}
+
+const char *
+Auth::Basic::UserRequest::credentialsStr()
+{
+    Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
+    if (basic_auth)
+        return basic_auth->passwd;
+    return NULL;
 }
 
 /* log a basic user in
@@ -80,7 +93,7 @@ Auth::Basic::UserRequest::module_direction()
 
 /* send the initial data to a basic authenticator module */
 void
-Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
+Auth::Basic::UserRequest::module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     assert(user()->auth_type == Auth::AUTH_BASIC);
     Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
@@ -120,7 +133,12 @@ Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
         xstrncpy(usern, rfc1738_escape(user()->username()), sizeof(usern));
         xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));
     }
-    int sz = snprintf(buf, sizeof(buf), "%s %s\n", usern, pass);
+    int sz = 0;
+    if (const char *keyExtras = helperRequestKeyExtras(request, al))
+        sz = snprintf(buf, sizeof(buf), "%s %s %s\n", usern, pass, keyExtras);
+    else
+        sz = snprintf(buf, sizeof(buf), "%s %s\n", usern, pass);
+
     if (sz<=0) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. Can not build helper validation request.");
         handler(data);

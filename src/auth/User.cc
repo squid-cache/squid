@@ -49,14 +49,15 @@ CBDATA_TYPE(AuthUserIP);
 
 time_t Auth::User::last_discard = 0;
 
-Auth::User::User(Auth::Config *aConfig) :
+Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
         auth_type(Auth::AUTH_UNKNOWN),
         config(aConfig),
         ipcount(0),
         expiretime(0),
         notes(),
         credentials_state(Auth::Unchecked),
-        username_(NULL)
+        username_(NULL),
+        requestRealm_(aRequestRealm)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
@@ -338,6 +339,14 @@ Auth::User::addIp(Ip::Address ipaddr)
     debugs(29, 2, HERE << "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
 
+SBuf
+Auth::User::BuildUserKey(const char *username, const char *realm)
+{
+    SBuf key;
+    key.Printf("%s:%s", username, realm);
+    return key;
+}
+
 /**
  * Add the Auth::User structure to the username cache.
  */
@@ -390,6 +399,8 @@ Auth::User::username(char const *aString)
     if (aString) {
         assert(!username_);
         username_ = xstrdup(aString);
+        if (!requestRealm_.isEmpty())
+            userKey_ = BuildUserKey(username_, requestRealm_.c_str());
     } else {
         safe_free(username_);
     }

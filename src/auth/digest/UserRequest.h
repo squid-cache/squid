@@ -34,7 +34,8 @@ public:
     virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
 #endif
 
-    virtual void module_start(AUTHCB *, void *);
+    virtual void module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
+    virtual const char *credentialsStr();
 
     char *nonceb64;             /* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;               /* "0a4f113b" */

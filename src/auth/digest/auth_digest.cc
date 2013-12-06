@@ -477,12 +477,12 @@ authDigestNoncePurge(digest_nonce_h * nonce)
 
 /* USER related functions */
 static Auth::User::Pointer
-authDigestUserFindUsername(const char *username)
+authDigestUserFindUsername(const char *userkey)
 {
     AuthUserHashPointer *usernamehash;
-    debugs(29, 9, HERE << "Looking for user '" << username << "'");
+    debugs(29, 9, "Looking for user '" << userkey << "'");
 
-    if (username && (usernamehash = static_cast < AuthUserHashPointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
+    if ((usernamehash = static_cast < AuthUserHashPointer * >(hash_lookup(proxy_auth_username_cache, userkey)))) {
         while ((usernamehash->user()->auth_type != Auth::AUTH_DIGEST) && (usernamehash->next))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
 
@@ -523,6 +523,7 @@ Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::Config * 
                       name, "digest", noncemaxuses,
                       name, "digest", (int) noncemaxduration,
                       name, "digest", (int) nonceGCInterval);
+    Auth::Config::dump(entry, name, scheme);
 }
 
 bool
@@ -605,6 +606,8 @@ Auth::Digest::Config::registerWithCacheManager(void)
 void
 Auth::Digest::Config::done()
 {
+    Auth::Config::done();
+
     authdigest_initialised = 0;
 
     if (digestauthenticators)
@@ -666,9 +669,8 @@ Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param
         parse_onoff(&PostWorkaround);
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
-    } else {
-        debugs(29, DBG_CRITICAL, "unrecognised digest auth scheme parameter '" << param_str << "'");
-    }
+    } else
+        Auth::Config::parse(scheme, n_configured, param_str);
 }
 
 const char *
@@ -758,13 +760,13 @@ authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
 
 /* setup the necessary info to log the username */
 static Auth::UserRequest::Pointer
-authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_request)
+authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_request, const char *requestRealm)
 {
     assert(auth_user_request != NULL);
 
     /* log the username */
     debugs(29, 9, "Creating new user for logging '" << (username?username:"[no username]") << "'");
-    Auth::User::Pointer digest_user = new Auth::Digest::User(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
+    Auth::User::Pointer digest_user = new Auth::Digest::User(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")), requestRealm);
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
@@ -779,7 +781,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Digest::Config::decode(char const *proxy_auth)
+Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 {
     const char *item;
     const char *p;
@@ -944,7 +946,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* do we have a username ? */
     if (!username || username[0] == '\0') {
         debugs(29, 2, "Empty or not present username");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -955,7 +957,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
      */
     if (strchr(username, '"')) {
         debugs(29, 2, "Unacceptable username '" << username << "'");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -963,7 +965,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* do we have a realm ? */
     if (!digest_request->realm || digest_request->realm[0] == '\0') {
         debugs(29, 2, "Empty or not present realm");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -971,7 +973,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* and a nonce? */
     if (!digest_request->nonceb64 || digest_request->nonceb64[0] == '\0') {
         debugs(29, 2, "Empty or not present nonce");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -980,7 +982,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
      * authenticate phase, but needs to be given */
     if (!digest_request->uri || digest_request->uri[0] == '\0') {
         debugs(29, 2, "Missing URI field");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -988,7 +990,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* is the response the correct length? */
     if (!digest_request->response || strlen(digest_request->response) != 32) {
         debugs(29, 2, "Response length invalid");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -999,7 +1001,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     else if (strcmp(digest_request->algorithm, "MD5")
              && strcmp(digest_request->algorithm, "MD5-sess")) {
         debugs(29, 2, "invalid algorithm specified!");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -1011,7 +1013,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         if (strcmp(digest_request->qop, QOP_AUTH) != 0) {
             /* we received a qop option we didn't send */
             debugs(29, 2, "Invalid qop option received");
-            rv = authDigestLogUsername(username, digest_request);
+            rv = authDigestLogUsername(username, digest_request, aRequestRealm);
             safe_free(username);
             return rv;
         }
@@ -1019,7 +1021,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         /* check cnonce */
         if (!digest_request->cnonce || digest_request->cnonce[0] == '\0') {
             debugs(29, 2, "Missing cnonce field");
-            rv = authDigestLogUsername(username, digest_request);
+            rv = authDigestLogUsername(username, digest_request, aRequestRealm);
             safe_free(username);
             return rv;
         }
@@ -1027,7 +1029,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         /* check nc */
         if (strlen(digest_request->nc) != 8 || strspn(digest_request->nc, "0123456789abcdefABCDEF") != 8) {
             debugs(29, 2, "invalid nonce count");
-            rv = authDigestLogUsername(username, digest_request);
+            rv = authDigestLogUsername(username, digest_request, aRequestRealm);
             safe_free(username);
             return rv;
         }
@@ -1035,7 +1037,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         /* cnonce and nc both require qop */
         if (digest_request->cnonce || digest_request->nc[0] != '\0') {
             debugs(29, 2, "missing qop!");
-            rv = authDigestLogUsername(username, digest_request);
+            rv = authDigestLogUsername(username, digest_request, aRequestRealm);
             safe_free(username);
             return rv;
         }
@@ -1050,7 +1052,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         debugs(29, 2, "Unexpected or invalid nonce received");
         if (digest_request->user() != NULL)
             digest_request->user()->credentials(Auth::Failed);
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -1061,7 +1063,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* check that we're not being hacked / the username hasn't changed */
     if (nonce->user && strcmp(username, nonce->user->username())) {
         debugs(29, 2, "Username for the nonce does not equal the username for the request");
-        rv = authDigestLogUsername(username, digest_request);
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
         return rv;
     }
@@ -1075,10 +1077,11 @@ Auth::Digest::Config::decode(char const *proxy_auth)
 
     Auth::User::Pointer auth_user;
 
-    if ((auth_user = authDigestUserFindUsername(username)) == NULL) {
+    SBuf key = Auth::User::BuildUserKey(username, aRequestRealm);
+    if (key.isEmpty() || (auth_user = authDigestUserFindUsername(key.c_str())) == NULL) {
         /* the user doesn't exist in the username cache yet */
         debugs(29, 9, HERE << "Creating new digest user '" << username << "'");
-        digest_user = new Auth::Digest::User(this);
+        digest_user = new Auth::Digest::User(this, aRequestRealm);
         /* auth_user is a parent */
         auth_user = digest_user;
         /* save the username */
