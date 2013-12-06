@@ -71,7 +71,7 @@ protected:
     virtual void timedout(); // UdsOp API
 
 private:
-    void sleep();
+    void startSleep();
     void cancelSleep();
     static void DelayedRetry(void *data);
     void delayedRetry();
