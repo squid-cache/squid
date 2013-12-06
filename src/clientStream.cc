@@ -32,10 +32,10 @@
  */
 
 #include "squid.h"
+#include "client_side_request.h"
 #include "clientStream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "client_side_request.h"
 
 /**
  \defgroup ClientStreamInternal Client Streams Internals

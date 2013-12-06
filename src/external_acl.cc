@@ -44,6 +44,7 @@
 #include "cache_cf.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "ConfigParser.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "fde.h"
@@ -330,14 +331,16 @@ parse_externalAclHelper(external_acl ** list)
     a->local_addr.setLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
-    token = strtok(NULL, w_space);
+    token = ConfigParser::NextToken();
 
     if (!token)
         self_destruct();
 
     a->name = xstrdup(token);
 
-    token = strtok(NULL, w_space);
+    // Allow supported %macros inside quoted tokens
+    ConfigParser::EnableMacros();
+    token = ConfigParser::NextToken();
 
     /* Parse options */
     while (token) {
@@ -386,8 +389,9 @@ parse_externalAclHelper(external_acl ** list)
             break;
         }
 
-        token = strtok(NULL, w_space);
+        token = ConfigParser::NextToken();
     }
+    ConfigParser::DisableMacros();
 
     /* check that child startup value is sane. */
     if (a->children.n_startup > a->children.n_max)
@@ -503,7 +507,7 @@ parse_externalAclHelper(external_acl ** list)
 
         *p = format;
         p = &format->next;
-        token = strtok(NULL, w_space);
+        token = ConfigParser::NextToken();
     }
 
     /* There must be at least one format token */
@@ -1376,6 +1380,8 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 
     // XXX: make entryData store a proper HelperReply object instead of copying.
 
+    entryData.notes.append(&reply.notes);
+
     const char *label = reply.notes.findFirst("tag");
     if (label != NULL && *label != '\0')
         entryData.tag = label;
@@ -1599,6 +1605,18 @@ ExternalACLLookup::LookupDone(void *data, void *result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
+
+    // attach the helper kv-pair to the transaction
+    if (HttpRequest * req = checklist->request) {
+        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+        // workaround by using anything already set in HttpRequest
+        // OR use new and rely on a later Sync copying these to AccessLogEntry
+        if (!req->notes)
+            req->notes = new NotePairs;
+
+        req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+    }
+
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 

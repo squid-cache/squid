@@ -1,3 +1,6 @@
+#ifndef _SQUID__LIB_RFCNB_RFCNB_IO_H
+#define _SQUID__LIB_RFCNB_RFCNB_IO_H
+
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
  *
  * Version 1.0
@@ -23,6 +26,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "rfcnb/rfcnb.h"
+
 int RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
 
 int RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
+
+#endif

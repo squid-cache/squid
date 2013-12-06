@@ -45,8 +45,8 @@
 #include "SquidConfig.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
-#include "ssl/support.h"
 #include "ssl/gadgets.h"
+#include "ssl/support.h"
 #include "URL.h"
 
 #if HAVE_ERRNO_H
@@ -239,6 +239,23 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
                       sizeof(buffer));
 
+    // detect infinite loops
+    uint32_t *validationCounter = static_cast<uint32_t *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_validation_counter));
+    if (!validationCounter) {
+        validationCounter = new uint32_t(1);
+        SSL_set_ex_data(ssl, ssl_ex_index_ssl_validation_counter, validationCounter);
+    } else {
+        // overflows allowed if SQUID_CERT_VALIDATION_ITERATION_MAX >= UINT32_MAX
+        (*validationCounter)++;
+    }
+
+    if ((*validationCounter) >= SQUID_CERT_VALIDATION_ITERATION_MAX) {
+        ok = 0; // or the validation loop will never stop
+        error_no = SQUID_X509_V_ERR_INFINITE_VALIDATION;
+        debugs(83, 2, "SQUID_X509_V_ERR_INFINITE_VALIDATION: " <<
+               *validationCounter << " iterations while checking " << buffer);
+    }
+
     if (ok) {
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
@@ -282,30 +299,34 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         else
             debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
 
-        if (check) {
-            ACLFilledChecklist *filledCheck = Filled(check);
-            assert(!filledCheck->sslErrors);
-            filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
-            filledCheck->serverCert.resetAndLock(peer_cert);
-            if (check->fastCheck() == ACCESS_ALLOWED) {
-                debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
-                ok = 1;
-            } else {
-                debugs(83, 5, "confirming SSL error " << error_no);
+        // Check if the certificate error can be bypassed.
+        // Infinity validation loop errors can not bypassed.
+        if (error_no != SQUID_X509_V_ERR_INFINITE_VALIDATION) {
+            if (check) {
+                ACLFilledChecklist *filledCheck = Filled(check);
+                assert(!filledCheck->sslErrors);
+                filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
+                filledCheck->serverCert.resetAndLock(peer_cert);
+                if (check->fastCheck() == ACCESS_ALLOWED) {
+                    debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
+                    ok = 1;
+                } else {
+                    debugs(83, 5, "confirming SSL error " << error_no);
+                }
+                delete filledCheck->sslErrors;
+                filledCheck->sslErrors = NULL;
+                filledCheck->serverCert.reset(NULL);
             }
-            delete filledCheck->sslErrors;
-            filledCheck->sslErrors = NULL;
-            filledCheck->serverCert.reset(NULL);
-        }
-        // If the certificate validator is used then we need to allow all errors and
-        // pass them to certficate validator for more processing
-        else if (Ssl::TheConfig.ssl_crt_validator) {
-            ok = 1;
-            // Check if we have stored certificates chain. Store if not.
-            if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
-                STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
-                if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
-                    sk_X509_pop_free(certStack, X509_free);
+            // If the certificate validator is used then we need to allow all errors and
+            // pass them to certficate validator for more processing
+            else if (Ssl::TheConfig.ssl_crt_validator) {
+                ok = 1;
+                // Check if we have stored certificates chain. Store if not.
+                if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
+                    STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
+                    if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
+                        sk_X509_pop_free(certStack, X509_free);
+                }
             }
         }
     }
@@ -651,6 +672,15 @@ ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
     delete errs;
 }
 
+// "free" function for SSL_get_ex_new_index("ssl_ex_index_ssl_validation_counter")
+static void
+ssl_free_int(void *, void *ptr, CRYPTO_EX_DATA *,
+             int, long, void *)
+{
+    uint32_t *counter = static_cast <uint32_t *>(ptr);
+    delete counter;
+}
+
 /// \ingroup ServerProtocolSSLInternal
 /// Callback handler function to release STACK_OF(X509) "ex" data stored
 /// in an SSL object.
@@ -713,6 +743,7 @@ ssl_initialize(void)
     ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
+    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -1553,11 +1584,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
         if (X509_check_issued(certificate, certificate) == X509_V_OK)
             debugs(83, 5, "Certificate is self-signed, will not be chained");
         else {
-            if (sk_X509_push(chain, certificate))
-                CRYPTO_add(&(certificate->references), 1, CRYPTO_LOCK_X509);
-            else
-                debugs(83, DBG_IMPORTANT, "WARNING: unable to add signing certificate to cert chain");
-            // and add to the chain any certificate loaded from the file
+            // and add to the chain any other certificate exist in the file
             while (X509 *ca = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
                 if (!sk_X509_push(chain, ca))
                     debugs(83, DBG_IMPORTANT, "WARNING: unable to add CA certificate to cert chain");

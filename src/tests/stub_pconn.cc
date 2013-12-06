@@ -2,8 +2,8 @@
  * STUB file for the pconn.cc API
  */
 #include "squid.h"
-#include "pconn.h"
 #include "comm/Connection.h"
+#include "pconn.h"
 
 #define STUB_API "pconn.cc"
 #include "tests/STUB.h"

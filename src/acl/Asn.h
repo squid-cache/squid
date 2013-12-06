@@ -32,10 +32,10 @@
 #ifndef SQUID_ACLASN_H
 #define SQUID_ACLASN_H
 
-#include "acl/Data.h"
-#include "CbDataList.h"
-#include "acl/Strategised.h"
 #include "acl/Checklist.h"
+#include "acl/Data.h"
+#include "acl/Strategised.h"
+#include "CbDataList.h"
 #include "ip/Address.h"
 
 int asnMatchIp(CbDataList<int> *, Ip::Address &);

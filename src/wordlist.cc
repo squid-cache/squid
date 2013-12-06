@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "wordlist.h"
 #include "MemBuf.h"
+#include "wordlist.h"
 
 void
 wordlistDestroy(wordlist ** list)

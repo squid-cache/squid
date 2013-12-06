@@ -194,9 +194,7 @@ typedef enum {
     // following pools are initialized late by their component if needed (or never)
     MEM_FQDNCACHE_ENTRY,
     MEM_FWD_SERVER,
-#if !USE_DNSHELPER
     MEM_IDNS_QUERY,
-#endif
     MEM_IPCACHE_ENTRY,
     MEM_MAX
 } mem_type;

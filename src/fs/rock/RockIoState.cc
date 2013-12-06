@@ -3,17 +3,17 @@
  */
 
 #include "squid.h"
-#include "CollapsedForwarding.h"
 #include "base/TextException.h"
+#include "CollapsedForwarding.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/WriteRequest.h"
-#include "fs/rock/RockIoState.h"
 #include "fs/rock/RockIoRequests.h"
+#include "fs/rock/RockIoState.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
-#include "MemObject.h"
 #include "Mem.h"
+#include "MemObject.h"
 #include "Parsing.h"
 #include "Transients.h"
 

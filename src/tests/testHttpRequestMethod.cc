@@ -3,9 +3,9 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
+#include "HttpRequestMethod.h"
 #include "Mem.h"
 #include "testHttpRequestMethod.h"
-#include "HttpRequestMethod.h"
 
 #if HAVE_SSTREAM
 #include <sstream>

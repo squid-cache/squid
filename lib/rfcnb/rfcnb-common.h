@@ -26,7 +26,7 @@
 #ifndef _RFCNB_RFCNB_COMMON_H
 #define _RFCNB_RFCNB_COMMON_H
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -40,8 +40,7 @@ extern "C" {
 
     } RFCNB_Pkt;
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
-
 #endif
-#endif                          /* _RFCNB_RFCNB_COMMON_H */
+#endif /* _RFCNB_RFCNB_COMMON_H */

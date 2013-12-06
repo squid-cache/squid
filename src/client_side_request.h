@@ -30,10 +30,10 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "acl/forward.h"
 #include "AccessLogEntry.h"
-#include "clientStream.h"
+#include "acl/forward.h"
 #include "client_side.h"
+#include "clientStream.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
 
@@ -105,7 +105,6 @@ public:
     // NP: still an enum so each stage altering it must take care when replacing it.
     LogTags logType;
 
-    struct timeval start_time;
     AccessLogEntry::Pointer al; ///< access.log entry
 
     struct {
@@ -202,11 +201,11 @@ int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-void tunnelStart(ClientHttpRequest *, int64_t *, int *);
+void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntry::Pointer &al);
 
 #if _USE_INLINE_
-#include "Store.h"
 #include "client_side_request.cci"
+#include "Store.h"
 #endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */

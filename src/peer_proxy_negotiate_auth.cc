@@ -210,21 +210,29 @@ extern "C" {
         static krb5_keytab_entry entry;
         static krb5_kt_cursor cursor;
         static krb5_creds *creds = NULL;
-#if HAVE_HEIMDAL_KERBEROS
+#if HAVE_HEIMDAL_KERBEROS && !HAVE_KRB5_GET_RENEWED_CREDS
         static krb5_creds creds2;
 #endif
         static krb5_principal principal = NULL;
         static krb5_deltat skew;
 
+#if HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+        krb5_get_init_creds_opt *options;
+#else
         krb5_get_init_creds_opt options;
+#endif
         krb5_error_code code = 0;
         krb5_deltat rlife;
 #if HAVE_PROFILE_H && HAVE_KRB5_GET_PROFILE && HAVE_PROFILE_GET_INTEGER && HAVE_PROFILE_RELEASE
         profile_t profile;
 #endif
-#if HAVE_HEIMDAL_KERBEROS
+#if HAVE_HEIMDAL_KERBEROS && !HAVE_KRB5_GET_RENEWED_CREDS
         krb5_kdc_flags flags;
-        krb5_realm *client_realm;
+#if HAVE_KRB5_PRINCIPAL_GET_REALM
+        const char *client_realm;
+#else
+        krb5_realm client_realm;
+#endif
 #endif
         char *mem_cache;
 
@@ -236,7 +244,7 @@ restart:
                 (creds->times.endtime - time(0) > skew) &&
                 (creds->times.renew_till - time(0) > 2 * skew)) {
             if (creds->times.endtime - time(0) < 2 * skew) {
-#if !HAVE_HEIMDAL_KERBEROS
+#if HAVE_KRB5_GET_RENEWED_CREDS
                 /* renew ticket */
                 code =
                     krb5_get_renewed_creds(kparam.context, creds, principal,
@@ -256,10 +264,15 @@ restart:
                            << error_message(code));
                     return (1);
                 }
+#if HAVE_KRB5_PRINCIPAL_GET_REALM
+                client_realm = krb5_principal_get_realm(kparam.context, principal);
+#else
                 client_realm = krb5_princ_realm(kparam.context, creds2.client);
+#endif
                 code =
                     krb5_make_principal(kparam.context, &creds2.server,
-                                        *client_realm, KRB5_TGS_NAME, *client_realm, NULL);
+                                        (krb5_const_realm)&client_realm, KRB5_TGS_NAME,
+                                        (krb5_const_realm)&client_realm, NULL);
                 if (code) {
                     debugs(11, 5,
                            HERE << "Error while getting krbtgt principal : " <<
@@ -400,7 +413,11 @@ restart:
 
             creds = (krb5_creds *) xmalloc(sizeof(*creds));
             memset(creds, 0, sizeof(*creds));
+#if HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+            krb5_get_init_creds_opt_alloc(kparam.context, &options);
+#else
             krb5_get_init_creds_opt_init(&options);
+#endif
             code = krb5_string_to_deltat((char *) MAX_RENEW_TIME, &rlife);
             if (code != 0 || rlife == 0) {
                 debugs(11, 5,
@@ -408,11 +425,22 @@ restart:
                        " : " << error_message(code));
                 return (1);
             }
+#if HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+            krb5_get_init_creds_opt_set_renew_life(options, rlife);
+            code =
+                krb5_get_init_creds_keytab(kparam.context, creds, principal,
+                                           keytab, 0, NULL, options);
+#if HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT
+            krb5_get_init_creds_opt_free(kparam.context, options);
+#else
+            krb5_get_init_creds_opt_free(options);
+#endif
+#else
             krb5_get_init_creds_opt_set_renew_life(&options, rlife);
-
             code =
                 krb5_get_init_creds_keytab(kparam.context, creds, principal,
                                            keytab, 0, NULL, &options);
+#endif
             if (code) {
                 debugs(11, 5,
                        HERE <<

@@ -35,9 +35,9 @@
  */
 
 #include "squid.h"
-#include "acl/RegexData.h"
-#include "acl/Checklist.h"
 #include "acl/Acl.h"
+#include "acl/Checklist.h"
+#include "acl/RegexData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "Mem.h"
@@ -322,7 +322,7 @@ aclParseRegexList(RegexList **curlist)
 
     debugs(28, 2, HERE << "aclParseRegexList: new Regex line or file");
 
-    while ((t = ConfigParser::strtokFile()) != NULL) {
+    while ((t = ConfigParser::RegexStrtokFile()) != NULL) {
         const char *clean = removeUnnecessaryWildcards(t);
         if (strlen(clean) > BUFSIZ-1) {
             debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);

@@ -32,8 +32,8 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "format/Token.h"
 #include "format/Quoting.h"
+#include "format/Token.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "log/File.h"
@@ -77,7 +77,7 @@ Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   AnyP::ProtocolType_str[al->http.version.protocol],
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
-                  al->cache.replySize,
+                  al->http.clientReplySz.messageTotal(),
                   referer,
                   agent,
                   LogTags_str[al->cache.code],

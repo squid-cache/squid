@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2011-07-15 08:09+0200\n"
-"Last-Translator: Anonymous Pootle User\n"
+"PO-Revision-Date: 2013-10-31 13:08+0200\n"
+"Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -97,17 +97,13 @@ msgstr ""
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
-"<b>不正なリクエスト</b>のエラーが以下のリクエストを処理しようとしている間に発"
-"生しました:"
+msgstr "<b>不正な要求</b>のエラーが以下のリクエストを処理しようとしている間に発生しました:"
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:20
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
-"<b>不正なリクエスト</b>のエラーが以下のリクエストを処理しようとしている間に発"
-"生しました:"
+msgstr "<b>不正な応答</b>のエラーが以下のリクエストの処理中に発生しました:"
 
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:28
 #, fuzzy
@@ -115,13 +111,12 @@ msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
-"ネットワークからデータを読もうと待っている間にタイムアウトが発生しました。"
-"ネットワークもしくはサーバが稼働していないか、あるいは混雑しています。再度リ"
-"クエストしてください。"
+"ネットワークからデータの読み込み待ち中にタイムアウトとなりました。ネットワークやサーバが動作していないか、または混雑しています。再度リクエストしてみてく"
+"ださい。"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.h2:15
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "リクエストされたURNのURLを調べられませんでした。"
+msgstr "要求されたURNのURLを取得できませんでした。"
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:26
 msgid ""
@@ -140,9 +135,7 @@ msgid ""
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"設定されているアクセス制御の設定のため、今回はあなたからのリクエストは受けつ"
-"けられません。この設定が正しくないと思われる場合には、このサービスの提供者へ"
-"連絡してください。"
+"設定されたアクセス制御によって、現時点ではあなたによる要求は許可できません。この制限が誤っている思われる場合は、このサービスの提供者に連絡してください。"
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
 msgid "All configured parent caches may be currently unreachable."
@@ -152,18 +145,14 @@ msgstr ""
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
-"FTP認証の失敗が、以下のURLから情報を得ようとしている間に発生しました: <a "
-"href=\"%U\">%U</a>"
+msgstr "以下のURLから情報の取得しようとしている間に、FTPの認証に失敗しました: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:20
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.p:20
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
-msgstr ""
-"FTPのプロトコル・エラーが、以下のURLから情報を得ようとしている間に発生しまし"
-"た: <a href=\"%U\">%U</a>"
+msgstr "以下のURLから情報を取得しようとしている間に、FTPでプロトコル上のエラーが発生しました: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
@@ -180,18 +169,14 @@ msgstr ""
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
-msgstr ""
-"ネットワークからデータを受信している間にエラーが発生しました。再度、リクエス"
-"トしてください。"
+msgstr "ネットワークからデータの読み込み待ち中にエラーが発生しました。再度リクエストしてみてください。"
 
 #: templates/ERR_WRITE_ERROR+html.body.div.p:28
 #, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
-msgstr ""
-"ネットワークにデータを送信している間にエラーが発生しました。再度リクエストし"
-"てください。"
+msgstr "ネットワークへデータを送信中にエラーが発生しました。再度リクエストしてみてください。"
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
 msgid "Application verification failure"
@@ -231,11 +216,11 @@ msgstr "キャッシュへのアクセスを拒否されました．"
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Cache Manager Access Denied."
-msgstr "キャッシュマネジャへのアクセスを拒否されました．"
+msgstr "キャッシュマネージャへのアクセスを拒否されました．"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:23
 msgid "Cannot Resolve URN"
-msgstr "URN の解決ができませんでした。"
+msgstr "URN を解決できませんでした。"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
 msgid "Certificate chain too long"
@@ -272,15 +257,15 @@ msgstr "Certificate signature failure"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
-msgstr "接続の存続時間が終了しました。"
+msgstr "接続の有効期間が切れました。"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:23
 msgid "Connection to %I failed."
-msgstr "%I への接続に失敗しました。"
+msgstr "%I に接続できませんでした。"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "POSTまたはPUTのリクエストにContent-Lengthヘッダがありません。"
+msgstr "Content-Lengthヘッダが、POSTまたはPUTの要求に含まれていません。"
 
 #: templates/ERR_DIR_LISTING+html.body.div.h4:19
 msgid "Directory Content:"
@@ -343,15 +328,15 @@ msgstr "エラー"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Access Denied"
-msgstr "エラー: キャッシュにアクセスを拒否されました。"
+msgstr "エラー: キャッシュへのアクセスを拒否されました。"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "エラー: キャッシュ・マネージャにアクセスを拒否されました。"
+msgstr "エラー: キャッシュマネージャへのアクセスを拒否されました。"
 
 #: templates/ERR_FTP_PUT_ERROR+html.head.title:4
 msgid "ERROR: FTP upload failed"
-msgstr "エラー: FTP アップロードは失敗しました"
+msgstr "エラー: FTPでのアップロードに失敗しました。"
 
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
@@ -414,7 +399,7 @@ msgstr "FTPは無効です。"
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:23
 msgid "Failed to establish a secure connection to %I"
-msgstr "%Iへの安全な接続を確立に失敗しました。"
+msgstr "%Iに安全な接続を確立できませんでした。"
 
 #: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:15
 msgid "File created"
@@ -427,17 +412,17 @@ msgstr "ファイルを更新しました。"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Firefoxブラウザをご利用の方はこちらに: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "ブラウザにInternet Exploreをご利用の方はこちらに: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "ブラウザにOperaをご利用の方はこちらに: <ul>"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
 msgid "Format error in CRL's lastUpdate field"
@@ -457,7 +442,7 @@ msgstr "Format error in certificate's notBefore field"
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
-msgstr "転送は拒否されました。"
+msgstr "転送を拒否されました。"
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
 msgid "Gateway Proxy Failure"
@@ -523,7 +508,7 @@ msgstr "やあ、%Tの時点でURNには多くを期待しないでください�
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
 #: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "ご利用のブラウザを設定する方法の探し方:"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
@@ -533,24 +518,22 @@ msgstr "ICAPのプロトコル・エラーです。"
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr ""
-"GETの要求をしていたなら、ダウンロードしようとしていた対象が大きすぎます。"
+msgstr "GETの要求をしていたなら、ダウンロードしようとしたサイズが大きすぎます。"
 
 #: templates/ERR_TOO_BIG+html.body.div.p:26
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
-msgstr ""
-"POSTまたはPUTの要求をしていたなら、アップロードしていた対象が大きすぎます。"
+msgstr "POSTまたはPUTの要求をしていたなら、アップロードしようとしたサイズが大きすぎます。"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33
 #: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "ホスト名に不正な文字が使われています: アンダースコアは使えません。"
+msgstr "ホスト名に不正な文字が含まれています: アンダースコア(下線)は使えません。"
 
 #: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
 msgid "Illegal double-escape in the URL-Path"
-msgstr "不正な二重のエスケープがURLパスにあります。"
+msgstr "不正な二重のエスケープがURLパスに含まれています。"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
@@ -590,7 +573,7 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:28
 msgid "Missing or unknown request method."
-msgstr "要求の方法が抜けているか不明です。"
+msgstr "リクエスト・メソッドが欠けているか、不明なメソッドです。"
 
 #: templates/ERR_NO_RELAY+html.body.div.blockquote.p:23
 msgid "No Wais Relay"
@@ -645,7 +628,7 @@ msgstr "読み込みタイムアウト"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:31
 msgid "Request is too large."
-msgstr "リクエストが長すぎます。"
+msgstr "要求が大きすぎます。"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
@@ -680,11 +663,11 @@ msgstr ""
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "自動検出の設定を選択してください。"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "proxyの自動構成を選択してください。"
 
 #: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
 msgid "Self signed certificate"
@@ -708,7 +691,7 @@ msgstr "ソケット作成に失敗"
 
 #: templates/ERR_INVALID_URL+html.body.div.p:26
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "リクエストされたURLに不正な部分があります。"
+msgstr "指定されたURLに正しくない部分があります。"
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
 #: templates/ERR_CONFLICT_HOST+html.body.div.p:28
@@ -716,49 +699,43 @@ msgstr "リクエストされたURLに不正な部分があります。"
 #: templates/ERR_INVALID_REQ+html.body.div.p:26
 #: templates/ERR_INVALID_URL+html.body.div.p:28
 msgid "Some possible problems are:"
-msgstr "ありそうな問題: "
+msgstr "考えられる問題: "
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr ""
-"申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュマネージャ"
-"に %U をリクエストすることは現在許可されていません。"
+msgstr "申し訳ありませんが、あなた自身を認証するまで、このキャッシュマネージャは %U の要求を許可しません。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr ""
-"申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュに %U をリ"
-"クエストすることは現在許可されていません。"
+msgstr "申し訳ありませんが、あなた自身を認証するまで、このキャッシュは %U の要求を許可しません。"
 
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
 msgid "Squid did not receive any data for this request."
-msgstr "このリクエストにに対してSquidは何もデータを受け取りませんでした。"
+msgstr "この要求に対して、Squidは何もデータを受け取りませんでした。"
 
 #: templates/ERR_UNSUP_REQ+html.body.div.p:26
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squidはすべてのプロトコルに対して、すべてのリクエスト方式をサポートしているわ"
-"けではありません。例えば、POSTをGopherのリクエストで行うことはできません。"
+"Squidはすべてのアクセス・プロトコルに対して、すべてのリクエストメソッドをサポートしているわけではありません。例えば、POSTをGopherのリクエ"
+"ストで行うことはできません。"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:26
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
-msgstr "最大の接続有効時間が過ぎたため、Squidはリクエストを終了しました。"
+msgstr "最大の接続の有効時間が過ぎたため、Squidは要求を終了しました。"
 
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:28
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
-msgstr ""
-"おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リク"
-"エストしてください。"
+msgstr "おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リクエストしてみてください。"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:22
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:22
@@ -778,23 +755,21 @@ msgstr "DNSサーバの応答:"
 
 #: templates/ERR_ESI+html.body.div.p:26
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "ESI処理からの応答:"
 
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"以下のURLを取得しようとしているとき、FTPサーバの負荷が高すぎました: <a href="
-"\"%U\">%U</a>"
+msgstr "以下のURLを取得しようとしましたが、FTPサーバの負荷が高すぎました: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:26
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
-msgstr ""
+msgstr "接続したサーバからのHTTP応答メッセージが解釈できないか、不正な形式です。サイトの運営担当者に連絡してください。"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:32
 msgid "The ICAP server is not reachable."
-msgstr "ICAPサーバに到達到達できません。"
+msgstr "ICAPサーバに到達できません。"
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
 msgid ""
@@ -842,24 +817,22 @@ msgstr "以下のURLを取得できませんでした: <a href=\"%U\">%U</a>"
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URL: <a href=\"%U\">%U</a> の取得中に以下のエラーが発生しました。"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URN: <a href=\"%U\">%U</a> の取得中に以下のエラーが発生しました。"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:28
 #, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
-msgstr ""
-"接続先のホストもしくはネットワークが稼働していません．しばらく待ってからもう"
-"一度試して下さい．"
+msgstr "接続先のホストかネットワークが稼働していません。再び試してください。"
 
 #: templates/ERR_TOO_BIG+html.body.div.blockquote.p:23
 msgid "The request or reply is too large."
-msgstr "リクエストまたはリプライが大きすぎます。"
+msgstr "要求か応答が大きすぎます。"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
@@ -893,7 +866,7 @@ msgstr "リクエストまたはリプライが大きすぎます。"
 #: templates/ERR_WRITE_ERROR+html.body.div.h2:15
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:15
 msgid "The requested URL could not be retrieved"
-msgstr "リクエストされた URL は取得できませんでした"
+msgstr "指定された URL を取得できませんでした"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:27
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:27
@@ -901,7 +874,7 @@ msgstr "リクエストされた URL は取得できませんでした"
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.p:27
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:28
 msgid "The server responded with:"
-msgstr ""
+msgstr "サーバの応答: "
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:26
@@ -924,7 +897,7 @@ msgstr ""
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
-msgstr "WAIS リレー用ホストが定義されていません! 管理者に連絡してください．"
+msgstr "WAISの中継に使用するホストがキャッシュに設定されていません! 管理者に連絡してください．"
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
 #: templates/ERR_TOO_BIG+html.body.div.p:28
@@ -934,25 +907,23 @@ msgid ""
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"これらの制限は、このキャッシュの運用者によって課されています。これがエラーだ"
-"と感じるときは直接運用者に連絡して下さい。"
+"これらの制限は、このキャッシュを運用しているインターネット・サービスの提供者が課しています。これが間違いだと感じるときは、直接サービスの提供者に連絡して"
+"下さい。"
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:26
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "使用しようとされているHTTPのバージョンをSquidは受け付けません。"
 
 #: templates/ERR_FTP_DISABLED+html.body.div.p:26
 msgid "This cache does not support FTP."
-msgstr "キャッシュは FTP をサポートしていません．"
+msgstr "このキャッシュは FTP をサポートしていません．"
 
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:22
 #, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
-msgstr ""
-"このキャッシュは稼働停止の処理に入っていて、現在あなたのリクエストへのサービ"
-"スを提供できません。後で再度リクエストしてください．"
+msgstr "このキャッシュは稼働停止の処理の段階で、現在あなたの要求に応えることができません。後で、再び試してください。"
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
 #, fuzzy
@@ -961,9 +932,8 @@ msgid ""
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"キャッシュ間における関係を強制的に兄弟関係となるようにしているため，キャッ"
-"シュはあなたのリクエストを転送できませんでした．%i のキャッシュが誤った設定と"
-"なっているかもしれません．"
+"キャッシュ間を強制的に兄弟関係となるようにしているため、キャッシュはあなたの要求を転送できませんでした。おそらく、%i "
+"のクライアントは、謝った設定のキャッシュでしょう。"
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:28
 #, fuzzy
@@ -976,13 +946,15 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:28
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "これはICAPの通信で何か失敗した面があったことを意味しています。"
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.p:32
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"これはFTPサーバにアクセス権がないか、ファイルを保存する領域が足りなかったことを意味しています。パス、アクセス権、ディスクの空き容量を確認して、再び試"
+"してください。"
 
 # 'address' in this text means the domain name.
 #: templates/ERR_DNS_FAIL+html.body.div.p:31
@@ -990,15 +962,14 @@ msgstr ""
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
-msgstr ""
-"この意味は次の通りですキャッシュは URL 中のホスト名から IP address を調べるこ"
-"とができませんでした． アドレスが間違っていないか確認してください．"
+msgstr "これはURLで示されているホスト名を、キャッシュがIPアドレスに解決できなかったことを意味します。URLが正しいかどうか確認してください。"
 
 #: templates/ERR_ESI+html.body.div.p:31
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"これはESIのテンプレートの処理を代理サーバで行えなかったことを意味します。このエラーはサイトの管理者(webmaster)に報告してください。"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.p:26
 msgid ""
@@ -1017,9 +988,8 @@ msgid ""
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性がありま"
-"す。その場合に該当するなら、ファイルは<a href=\"%B\">%B</a>に見つかるかもしれ"
-"ません。"
+"これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性があります。もしそうなら、ファイルは<a href=\"%B\">%"
+"B</a>に見つかるかもしれません。"
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
 msgid ""
@@ -1028,6 +998,8 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"このプロキシーと接続先のホストは互いに受け入れられる、あなたの要求を扱うためのセキュリティの設定を得ることができませんでした。接続先のホストが安全な接続"
+"をサポートしていないか、プロキシーは接続先ホストが要求する証明書を満たせなかったといったことが考えられます．"
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:26
 msgid ""
@@ -1049,19 +1021,19 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
-msgstr ""
+msgstr "ツール -&gt; インターネット オプション -&gt; 接続 -&gt; LAN の設定 -&gt; プロキシ サーバー"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
-msgstr ""
+msgstr "ツール -&gt; オプション -&gt; 詳細 -&gt; ネットワーク -&gt; 接続設定"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
-msgstr ""
+msgstr "ツール -&gt; 設定 -&gt; 詳細 -&gt; ネットワーク -&gt; プロキシサーバー"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
 msgid "URI Host Conflict"
@@ -1085,11 +1057,11 @@ msgstr "Unable to decrypt certificate's signature"
 
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "以下のホスト名の IP address を調べられません．<q>%H</q>"
+msgstr "ホスト名 <q>%H</q> の IPアドレスがわかりません。"
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:23
 msgid "Unable to forward this request at this time."
-msgstr "現在，リクエストの転送はできません．"
+msgstr "現在要求を送信できません。"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
 msgid "Unable to get certificate CRL"
@@ -1110,11 +1082,11 @@ msgstr "Unable to verify the first certificate"
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "サポートしていないHTTPのバージョンです。"
 
 #: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:23
 msgid "Unsupported Request Method and Protocol"
-msgstr "サポートされていないリクエスト/プロトコルです．"
+msgstr "サポートしていないリクエストメソッドとプロトコルです。"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
 msgid "Unsupported certificate purpose"
@@ -1124,20 +1096,18 @@ msgstr "Unsupported certificate purpose"
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
-msgstr ""
-"<q>only-if-cached</q> の指定がありましたが，その文書がキャッシュに存在してい"
-"ません．"
+msgstr "<q>only-if-cached</q>を指定されていましたが、有効な文書はキャッシュに存在していませんでした。"
 
 #: templates/ERR_AGENT_CONFIGURE+html.head.title:4
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:15
 #: templates/ERR_AGENT_WPAD+html.head.title:4
 #: templates/ERR_AGENT_WPAD+html.body.div.h2:15
 msgid "Web Browser Configuration"
-msgstr ""
+msgstr "Webブラウザの設定"
 
 #: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:23
 msgid "Write Error"
-msgstr "送信処理中にエラーが発生しました．"
+msgstr "書き込み中にエラーが発生しました。"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:26
 msgid ""
@@ -1204,7 +1174,7 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:23
 msgid "Zero Sized Reply"
-msgstr "サイズがゼロの応答"
+msgstr "中身がありません．"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "エラー: 要求されたURNからデータを取り出せませんでした。"
@@ -1224,10 +1194,8 @@ msgid ""
 "origin servers, and all configured parent caches are currently "
 "unreachable."
 msgstr ""
-"あなたのリクエストは，元のサーバもしくは他の親キャッシュサーバへ転送できま"
-"せん．これは次の理由により発生したと考えられますキャッシュ管理者が元のサー"
-"バに直接接続しないように設定した． 設定されている全ての親キャッシュサーバ"
-"へ現在到達できない．"
+"あなたの要求を起源のサーバや、他のどの親キャッシュサーバに送ることができません。これはキャッシュの管理者が目的のサーバに直接接続しないように設定している"
+"か、設定されているすべての親のキャッシュサーバに現在到達できないことが理由として考えられます。"
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "以下の URL を PUT しようとした際に: <a href=\"%U\">%U</a>"

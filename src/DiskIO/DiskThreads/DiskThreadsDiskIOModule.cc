@@ -52,7 +52,7 @@ DiskThreadsDiskIOModule::init()
 }
 
 void
-DiskThreadsDiskIOModule::shutdown()
+DiskThreadsDiskIOModule::gracefulShutdown()
 {
     DiskThreadsIOStrategy::Instance.done();
 }

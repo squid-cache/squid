@@ -35,8 +35,8 @@
 #define SQUID_ACLSTRATEGISED_H
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
 #include "acl/FilledChecklist.h"
+#include "acl/Strategy.h"
 
 template <class M>
 

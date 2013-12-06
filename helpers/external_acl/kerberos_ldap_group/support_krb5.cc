@@ -33,7 +33,9 @@ struct kstruct {
     krb5_context context;
     char *mem_cache_env;
     krb5_ccache cc;
-} kparam;
+};
+
+static struct kstruct kparam;
 
 #define KT_PATH_MAX 256
 
@@ -50,23 +52,20 @@ krb5_cleanup()
  * create Kerberos memory cache
  */
 int
-krb5_create_cache(struct main_args *margs, char *domain)
+krb5_create_cache(char *domain)
 {
 
     krb5_keytab keytab = 0;
     krb5_keytab_entry entry;
     krb5_kt_cursor cursor;
     krb5_creds *creds = NULL;
-    krb5_creds *tgt_creds = NULL;
     krb5_principal *principal_list = NULL;
     krb5_principal principal = NULL;
     char *service;
     char *keytab_name = NULL, *principal_name = NULL, *mem_cache = NULL;
     char buf[KT_PATH_MAX], *p;
-    int nprinc = 0;
-    int i;
+    size_t j,nprinc = 0;
     int retval = 0;
-    int found = 0;
     krb5_error_code code = 0;
 
     kparam.context = NULL;
@@ -112,6 +111,7 @@ krb5_create_cache(struct main_args *margs, char *domain)
 
     nprinc = 0;
     while ((code = krb5_kt_next_entry(kparam.context, keytab, &entry, &cursor)) == 0) {
+        int found = 0;
 
         principal_list = (krb5_principal *) xrealloc(principal_list, sizeof(krb5_principal) * (nprinc + 1));
         krb5_copy_principal(kparam.context, entry.principal, &principal_list[nprinc++]);
@@ -182,12 +182,14 @@ krb5_create_cache(struct main_args *margs, char *domain)
      * if no principal name found in keytab for domain use the prinipal name which can get a TGT
      */
     if (!principal_name) {
+        size_t i;
         debug((char *) "%s| %s: DEBUG: Did not find a principal in keytab for domain %s.\n", LogTime(), PROGRAM, domain);
         debug((char *) "%s| %s: DEBUG: Try to get principal of trusted domain.\n", LogTime(), PROGRAM);
-        creds = (krb5_creds *) xmalloc(sizeof(*creds));
-        memset(creds, 0, sizeof(*creds));
 
         for (i = 0; i < nprinc; ++i) {
+            krb5_creds *tgt_creds = NULL;
+            creds = (krb5_creds *) xmalloc(sizeof(*creds));
+            memset(creds, 0, sizeof(*creds));
             /*
              * get credentials
              */
@@ -205,8 +207,7 @@ krb5_create_cache(struct main_args *margs, char *domain)
             snprintf(service, strlen("krbtgt") + 2 * strlen(domain) + 3, "krbtgt/%s@%s", domain, domain);
             creds->client = principal_list[i];
             code = krb5_parse_name(kparam.context, service, &creds->server);
-            if (service)
-                xfree(service);
+            xfree(service);
             code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
 #endif
             if (code) {
@@ -233,8 +234,7 @@ krb5_create_cache(struct main_args *margs, char *domain)
             snprintf(service, strlen("krbtgt") + strlen(domain) + strlen(krb5_princ_realm(kparam.context, principal_list[i])->data) + 3, "krbtgt/%s@%s", domain, krb5_princ_realm(kparam.context, principal_list[i])->data);
 #endif
             code = krb5_parse_name(kparam.context, service, &creds->server);
-            if (service)
-                xfree(service);
+            xfree(service);
             if (code) {
                 error((char *) "%s| %s: ERROR: Error while initialising TGT credentials : %s\n", LogTime(), PROGRAM, error_message(code));
                 goto loop_end;
@@ -245,19 +245,22 @@ krb5_create_cache(struct main_args *margs, char *domain)
                 goto loop_end;
             } else {
                 debug((char *) "%s| %s: DEBUG: Found trusted principal name: %s\n", LogTime(), PROGRAM, principal_name);
-                found = 1;
                 break;
             }
 
 loop_end:
-            if (principal_name)
-                xfree(principal_name);
-            principal_name = NULL;
+            safe_free(principal_name);
+            if (tgt_creds) {
+                krb5_free_creds(kparam.context, tgt_creds);
+                tgt_creds = NULL;
+            }
+            if (creds)
+                krb5_free_creds(kparam.context, creds);
+            creds = NULL;
+
         }
 
-        if (tgt_creds)
-            krb5_free_creds(kparam.context, tgt_creds);
-        tgt_creds = NULL;
+        safe_free(principal_name);
         if (creds)
             krb5_free_creds(kparam.context, creds);
         creds = NULL;
@@ -287,8 +290,7 @@ loop_end:
         snprintf(service, strlen("krbtgt") + 2 * strlen(domain) + 3, "krbtgt/%s@%s", domain, domain);
         creds->client = principal;
         code = krb5_parse_name(kparam.context, service, &creds->server);
-        if (service)
-            xfree(service);
+        xfree(service);
         code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
 #endif
         if (code) {
@@ -316,20 +318,16 @@ loop_end:
 cleanup:
     if (keytab)
         krb5_kt_close(kparam.context, keytab);
-    if (keytab_name)
-        xfree(keytab_name);
-    if (principal_name)
-        xfree(principal_name);
-    if (mem_cache)
-        xfree(mem_cache);
+    xfree(keytab_name);
+    xfree(principal_name);
+    xfree(mem_cache);
     if (principal)
         krb5_free_principal(kparam.context, principal);
-    for (i = 0; i < nprinc; ++i) {
-        if (principal_list[i])
-            krb5_free_principal(kparam.context, principal_list[i]);
+    for (j = 0; j < nprinc; ++j) {
+        if (principal_list[j])
+            krb5_free_principal(kparam.context, principal_list[j]);
     }
-    if (principal_list)
-        xfree(principal_list);
+    xfree(principal_list);
     if (creds)
         krb5_free_creds(kparam.context, creds);
 

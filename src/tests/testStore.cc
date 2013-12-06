@@ -1,8 +1,8 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "testStore.h"
 #include "Store.h"
+#include "testStore.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
 
@@ -79,7 +79,7 @@ testStore::testSetRoot()
     StorePointer aStore(new TestStore);
     Store::Root(aStore);
 
-    CPPUNIT_ASSERT(&Store::Root() == aStore.getRaw());
+    CPPUNIT_ASSERT_EQUAL(&Store::Root(),aStore.getRaw());
     Store::Root(NULL);
 }
 
@@ -90,7 +90,7 @@ testStore::testUnsetRoot()
     StorePointer aStore2(new TestStore);
     Store::Root(aStore);
     Store::Root(aStore2);
-    CPPUNIT_ASSERT(&Store::Root() == aStore2.getRaw());
+    CPPUNIT_ASSERT_EQUAL(&Store::Root(),aStore2.getRaw());
     Store::Root(NULL);
 }
 
@@ -99,9 +99,9 @@ testStore::testStats()
 {
     TestStorePointer aStore(new TestStore);
     Store::Root(aStore.getRaw());
-    CPPUNIT_ASSERT(aStore->statsCalled == false);
+    CPPUNIT_ASSERT_EQUAL(false, aStore->statsCalled);
     Store::Stats(NullStoreEntry::getInstance());
-    CPPUNIT_ASSERT(aStore->statsCalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
     Store::Root(NULL);
 }
 
@@ -110,6 +110,6 @@ testStore::testMaxSize()
 {
     StorePointer aStore(new TestStore);
     Store::Root(aStore.getRaw());
-    CPPUNIT_ASSERT(aStore->maxSize() == 3);
+    CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(3), aStore->maxSize());
     Store::Root(NULL);
 }

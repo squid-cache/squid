@@ -33,10 +33,10 @@
  */
 
 #include "squid.h"
-#include "acl/SourceDomain.h"
 #include "acl/Checklist.h"
-#include "acl/RegexData.h"
 #include "acl/DomainData.h"
+#include "acl/RegexData.h"
+#include "acl/SourceDomain.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
 

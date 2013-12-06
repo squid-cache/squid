@@ -33,8 +33,8 @@
 
 #include "squid.h"
 #include "base/Vector.h"
-#include "esi/CustomParser.h"
 #include "Debug.h"
+#include "esi/CustomParser.h"
 #include "libTrie/Trie.h"
 #include "libTrie/TrieCharTransform.h"
 

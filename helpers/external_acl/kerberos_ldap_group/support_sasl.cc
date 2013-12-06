@@ -196,18 +196,12 @@ lutil_sasl_freedefs(
 {
     lutilSASLdefaults *defs = (lutilSASLdefaults *) defaults;
 
-    if (defs->mech)
-        xfree(defs->mech);
-    if (defs->realm)
-        xfree(defs->realm);
-    if (defs->authcid)
-        xfree(defs->authcid);
-    if (defs->passwd)
-        xfree(defs->passwd);
-    if (defs->authzid)
-        xfree(defs->authzid);
-    if (defs->resps)
-        xfree(defs->resps);
+    xfree(defs->mech);
+    xfree(defs->realm);
+    xfree(defs->authcid);
+    xfree(defs->passwd);
+    xfree(defs->authzid);
+    xfree(defs->resps);
 
     xfree(defs);
 }

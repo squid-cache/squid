@@ -38,8 +38,8 @@
 #define DELAYPOOL_H
 
 #if USE_DELAY_POOLS
-#include "CompositePoolNode.h"
 #include "acl/forward.h"
+#include "CompositePoolNode.h"
 
 class StoreEntry;
 

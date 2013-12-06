@@ -34,10 +34,10 @@
 
 #include "squid.h"
 #include "DiskThreads.h"
-#include "Store.h"
-#include "fde.h"
 #include "DiskThreadsIOStrategy.h"
+#include "fde.h"
 #include "Generic.h"
+#include "Store.h"
 
 AIOCounts squidaio_counts;
 

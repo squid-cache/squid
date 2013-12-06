@@ -33,8 +33,8 @@
  */
 
 #include "squid.h"
-#include "acl/MethodData.h"
 #include "acl/Checklist.h"
+#include "acl/MethodData.h"
 #include "cache_cf.h"
 #include "HttpRequestMethod.h"
 #include "wordlist.h"

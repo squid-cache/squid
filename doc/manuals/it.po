@@ -7,15 +7,15 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2010-05-06 12:33+0200\n"
-"Last-Translator: Francesco Chemolli <kinkie@squid-cache.org>\n"
+"PO-Revision-Date: 2013-10-31 11:53+0200\n"
+"Last-Translator: Francesco <kinkie@squid-cache.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.1\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3 helpers/basic_auth/LDAP/basic_ldap_auth.8:3 helpers/basic_auth/NCSA/basic_ncsa_auth.8:3 helpers/basic_auth/PAM/basic_pam_auth.8:3 helpers/basic_auth/RADIUS/basic_radius_auth.8:3 helpers/external_acl/ldap_group/squid_ldap_group.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3 src/squid.8.in:3 tools/cachemgr.cgi.8.in:3 tools/squidclient.1:3
@@ -509,7 +509,7 @@ msgid ""
 "while B<search ing> or only to B<find> the base object."
 msgstr ""
 "B<never>: non risolvere mai gli alias, B<always>: risolvi sempre gli alias, "
-"B<search ing>: solo durante le ricerche, o B<find>: solo per la ricerca dell"
+"B<search>: solo durante le ricerche, o B<find>: solo per la ricerca dell"
 "'oggetto-base."
 
 #. type: Plain text

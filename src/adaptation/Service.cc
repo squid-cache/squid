@@ -3,9 +3,9 @@
  */
 
 #include "squid.h"
-#include "HttpRequest.h"
-#include "adaptation/ServiceFilter.h"
 #include "adaptation/Service.h"
+#include "adaptation/ServiceFilter.h"
+#include "HttpRequest.h"
 
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {

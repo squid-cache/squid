@@ -41,7 +41,7 @@ public:
     static BlockingDiskIOModule &GetInstance();
     BlockingDiskIOModule();
     virtual void init();
-    virtual void shutdown();
+    virtual void gracefulShutdown();
     virtual char const *type () const;
     virtual DiskIOStrategy* createStrategy();
 

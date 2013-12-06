@@ -1,12 +1,12 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "Mem.h"
-#include "testStore.h"
-#include "testStoreEntryStream.h"
 #include "CapturingStoreEntry.h"
+#include "Mem.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
+#include "testStore.h"
+#include "testStoreEntryStream.h"
 
 #if HAVE_IOMANIP
 #include <iomanip>
