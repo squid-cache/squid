@@ -46,7 +46,7 @@ AuthenticateAcl(ACLChecklist *ch)
     /* Note: this fills in auth_user_request when applicable */
     const AuthAclState result = Auth::UserRequest::tryToAuthenticateAndSetAuthUser(
                                     &checklist->auth_user_request, headertype, request,
-                                    checklist->conn(), checklist->src_addr);
+                                    checklist->conn(), checklist->src_addr, checklist->al);
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:

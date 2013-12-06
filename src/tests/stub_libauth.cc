@@ -5,7 +5,7 @@
 
 #if USE_AUTH
 #include "auth/Config.h"
-Auth::UserRequest::Pointer Auth::Config::CreateAuthUser(const char *) STUB_RETVAL(NULL)
+Auth::UserRequest::Pointer Auth::Config::CreateAuthUser(const char *, AccessLogEntry::Pointer &al) STUB_RETVAL(NULL)
 Auth::Config * Auth::Config::Find(const char *) STUB_RETVAL(NULL)
 void Auth::Config::registerWithCacheManager(void) STUB_NOP
 Auth::ConfigVector Auth::TheConfig;
@@ -28,7 +28,7 @@ Vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes
 void Auth::Scheme::FreeAll() STUB
 
 #include "auth/User.h"
-Auth::User::User(Auth::Config *) STUB
+Auth::User::User(Auth::Config *, const char *) STUB
 Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_state)
 void Auth::User::credentials(CredentialState) STUB
 void Auth::User::absorb(Auth::User::Pointer) STUB
@@ -44,7 +44,7 @@ void Auth::User::UsernameCacheStats(StoreEntry *) STUB
 
 #include "auth/UserRequest.h"
 char const * Auth::UserRequest::username() const STUB_RETVAL("stub_username")
-void Auth::UserRequest::start(AUTHCB *, void *) STUB
+void Auth::UserRequest::start(HttpRequest *, AccessLogEntry::Pointer &, AUTHCB *, void *) STUB
 bool Auth::UserRequest::valid() const STUB_RETVAL(false)
 void * Auth::UserRequest::operator new (size_t) STUB_RETVAL((void *)1)
 void Auth::UserRequest::operator delete (void *) STUB
@@ -62,8 +62,8 @@ void Auth::UserRequest::addAuthenticationInfoHeader(HttpReply *, int) STUB
 void Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply *, int) STUB
 void Auth::UserRequest::releaseAuthServer() STUB
 const char * Auth::UserRequest::connLastHeader() STUB_RETVAL("stub")
-AuthAclState Auth::UserRequest::authenticate(Auth::UserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &) STUB_RETVAL(AUTH_AUTHENTICATED)
-AuthAclState Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &) STUB_RETVAL(AUTH_AUTHENTICATED)
+AuthAclState Auth::UserRequest::authenticate(Auth::UserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
+AuthAclState Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
 void Auth::UserRequest::addReplyAuthHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int) STUB
 void authenticateFixHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int) STUB
 void authenticateAddTrailer(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int) STUB

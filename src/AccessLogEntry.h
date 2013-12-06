@@ -169,7 +169,7 @@ public:
                 ssluser(NULL),
 #endif
                 port(NULL) {
-            ;
+            caddr.setNoAddr();
         }
 
         Ip::Address caddr;

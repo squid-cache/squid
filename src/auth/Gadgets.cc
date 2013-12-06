@@ -139,7 +139,7 @@ authenticateReset(void)
 AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
         auth_user(anAuth_user)
 {
-    key = (void *)anAuth_user->username();
+    key = (void *)anAuth_user->userKey();
     next = NULL;
     hash_join(proxy_auth_username_cache, (hash_link *) this);
 }

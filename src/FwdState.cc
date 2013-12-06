@@ -163,7 +163,7 @@ void FwdState::start(Pointer aSelf)
 #endif
 
     // do full route options selection
-    peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
+    peerSelect(&serverDestinations, request, al, entry, fwdPeerSelectionCompleteWrapper, this);
 }
 
 #if STRICT_ORIGINAL_DST
