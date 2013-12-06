@@ -1,6 +1,7 @@
 #ifndef SQUID_ACLFILLED_CHECKLIST_H
 #define SQUID_ACLFILLED_CHECKLIST_H
 
+#include "AccessLogEntry.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "ip/Address.h"
@@ -74,6 +75,8 @@ public:
     /// The peer certificate
     Ssl::X509_Pointer serverCert;
 #endif
+
+    AccessLogEntry::Pointer al; ///< info for the future access.log entry
 
     ExternalACLEntry *extacl_entry;
 

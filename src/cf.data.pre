@@ -319,12 +319,30 @@ DOC_START
 	Ports flagged 'transparent', 'intercept', or 'tproxy' have
 	authentication disabled.
 
+	=== Parameters common to all schemes. ===
+
+	"program" cmdline
+	Specifies the command for the external authenticator.  Such a program
+	runs a loop that, on every iteration, reads a request line from
+	the standard and responds with a scheme-specific answer. The loop
+	stops when all input is exchausted (EOF). See scheme-specific
+	"program" descriptions below for details.
+
+	"key_extras" format
+	Specifies a string to be append to request line format for the
+	authentication helper. "Quoted" format values may contain spaces and
+	logformat %macros. In theory, any logformat %macro can be used.
+	In practice, a %macro expands as a dash (-) if the helper request is
+	sent before the required macro information is available to Squid.
+	By default, Squid uses request formats provided in scheme-specific
+	examples below (search for %credentials).
+
 	=== Parameters for the basic scheme follow. ===
 
 	"program" cmdline
 	Specify the command for the external authenticator.  Such a program
-	reads a line containing "username password" and	replies with one of
-	three results:
+	reads a request_format line ("username password" by default) and
+	replies with one of three results:
 
 	  OK
 		the user exists.
@@ -407,8 +425,8 @@ DOC_START
 	=== Parameters for the digest scheme follow ===
 
 	"program" cmdline
-	Specify the command for the external authenticator.  Such
-	a program reads a line containing "username":"realm" and
+	Specify the command for the external authenticator.  Such a program
+	reads a request_format line ("username":"realm" by default) and
 	replies with one of three results:
 
 	  OK ha1="..."
@@ -576,7 +594,6 @@ DOC_START
 	supported by the proxy.
 
 	auth_param negotiate keep_alive on
-
 	
 	Examples:
 
@@ -3726,6 +3743,11 @@ DOC_START
 		ue	User name from external acl helper
 		ui	User name from ident
 		us	User name from SSL
+		credentials Client credentials. The exact meaning depends on
+			the authentication scheme: For Basic authentication,
+			it is the password; for Digest, the realm sent by the
+			client; for NTLM and Negotiate, the client challenge
+			or client credentials prefixed with "YR " or "KK ".
 
 	HTTP related format codes:
 

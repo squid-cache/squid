@@ -141,6 +141,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
 void
 peerSelect(Comm::ConnectionList * paths,
            HttpRequest * request,
+           AccessLogEntry::Pointer const &al,
            StoreEntry * entry,
            PSC * callback,
            void *callback_data)
@@ -156,6 +157,7 @@ peerSelect(Comm::ConnectionList * paths,
 
     psstate->request = request;
     HTTPMSGLOCK(psstate->request);
+    psstate->al = al;
 
     psstate->entry = entry;
     psstate->paths = paths;
@@ -439,13 +441,17 @@ peerSelectFoo(ps_state * ps)
         if (ps->always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            ps->acl_checklist = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
+            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
+            ch->al = ps->al;
+            ps->acl_checklist = ch;
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
         } else if (ps->never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
+            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
+            ch->al = ps->al;
+            ps->acl_checklist = ch;
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
         } else if (request->flags.noDirect) {
