@@ -206,7 +206,7 @@ There have been changes to Squid's configuration file since Squid-3.3.
     acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
 </verb>
 
-<p>There hasve also been changes to individual directives in the config file.
+<p>There have also been changes to individual directives in the config file.
 
 This section gives a thorough account of those changes in three categories:
 
