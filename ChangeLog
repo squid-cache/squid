@@ -1,3 +1,10 @@
+Changes to squid-3.4.1 (09 Dec 2013):
+
+	- Bug 3935: Invalid pointer dereference when peeking at origin server certificate
+	- Bug 3589: intercepted and ICAP modified request using a cache_peer
+	- ... and several portability fixes
+	- ... and some documentation updates
+
 Changes to squid-3.4.0.3 (01 Dec 2013):
 
 	- Bug 3941: Release notes error
