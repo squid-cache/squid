@@ -39,6 +39,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 <p>The most important of these new features are:
 <itemize>
 	<item>Support libecap v1.0
+	<item>Authentication helper query extensions
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -54,6 +55,20 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>Squid-3.5 can support eCAP adapters built with libecap v1.0,
    but no longer supports adapters built with earlier libecap versions
    due to API changes.
+
+
+<sect1>Authentication helper query extensions
+<p>Details at <url url="http://www.squid-cache.org/Doc/config/auth_param/">.
+
+<p>The new <em>key_extras</em> parameter allows sending of additional
+  details to the authentication helper beyond the minimum required for
+  the HTTP authentication. This is primarily intended to allow switching
+  of authentication databases based on criteria such as client IP subnet,
+  Squid receiving port, or in reverse-proxy the requested domain name.
+
+<p>In theory any <em>logformat</em> code may be used, however only the
+  codes which have available details at the time of authentication
+  will send any meaningful detail.
 
 
 <sect>Changes to squid.conf since Squid-3.4
