@@ -26,11 +26,9 @@ public:
     /// add all characters from the given CharacterSet to this one
     const CharacterSet &operator +=(const CharacterSet &src) {
         // TODO: iterate src.chars_ vector instead of walking the entire 8-bit space
-        for (uint8_t i = 0; i < 256; ++i) {
-            if (src.chars_[i]) {
-//                std::cout << static_cast<int>(i) << ',';
-                chars_[i] = true;
-            }
+        for (size_t i = 0; i < 256; ++i) {
+            if (src.chars_[static_cast<uint8_t>(i)])
+                chars_[static_cast<uint8_t>(i)] = true;
         }
         return *this;
     }
