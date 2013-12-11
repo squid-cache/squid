@@ -1924,7 +1924,14 @@ TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.ftp
 DOC_START
-	Usage:  [ip:]port
+	Usage:  [ip:]port [options]
+
+	Ftp options:
+		ftp-track-dirs=on|off 
+		    Enables tracking of FTP directories by injecting extra
+		    PWD commands and adjusting Request-URI (in wrapping HTTP
+		    requests) to reflect the current FTP server directory.
+		    Disabled by default.
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
 TYPE: acl_tos

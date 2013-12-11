@@ -5,6 +5,7 @@
 
 #include "squid.h"
 
+#include "anyp/PortCfg.h"
 #include "FtpGatewayServer.h"
 #include "FtpServer.h"
 #include "HttpHdrCc.h"
@@ -45,6 +46,9 @@ protected:
     void handleDataRequest();
     void startDataDownload();
     void startDataUpload();
+    bool startDirTracking();
+    void stopDirTracking();
+    bool weAreTrackingDir() const {return savedReply.message != NULL;}
 
     typedef void (ServerStateData::*PreliminaryCb)();
     void forwardPreliminaryReply(const PreliminaryCb cb);
@@ -61,11 +65,20 @@ protected:
     void readDataReply();
     void readTransferDoneReply();
     void readEpsvReply();
+    void readCwdOrCdupReply();
+    void readUserOrPassReply();
 
     virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno);
     void scheduleReadControlReply();
 
     bool forwardingCompleted; ///< completeForwarding() has been called
+
+    struct {
+        wordlist *message; ///< reply message, one  wordlist entry per message line
+        char *lastCommand; ///< the command caused the reply
+        char *lastReply; ///< last line of reply: reply status plus message
+        int replyCode; ///< the reply status
+    } savedReply; ///< set and delayed while we are tracking using PWD
 
     CBDATA_CLASS2(ServerStateData);
 };
@@ -74,8 +87,8 @@ CBDATA_CLASS_INIT(ServerStateData);
 
 const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readGreeting, // BEGIN
-    NULL,/*&ServerStateData::readReply*/ // SENT_USER
-    NULL,/*&ServerStateData::readReply*/ // SENT_PASS
+    &ServerStateData::readUserOrPassReply, // SENT_USER
+    &ServerStateData::readUserOrPassReply, // SENT_PASS
     NULL,/*&ServerStateData::readReply*/ // SENT_TYPE
     NULL,/*&ServerStateData::readReply*/ // SENT_MDTM
     NULL,/*&ServerStateData::readReply*/ // SENT_SIZE
@@ -85,7 +98,7 @@ const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readEpsvReply, // SENT_EPSV_1
     &ServerStateData::readEpsvReply, // SENT_EPSV_2
     &ServerStateData::readPasvReply, // SENT_PASV
-    NULL,/*&ServerStateData::readReply*/ // SENT_CWD
+    &ServerStateData::readCwdOrCdupReply,  // SENT_CWD
     NULL,/*&ServerStateData::readDataReply,*/ // SENT_LIST
     NULL,/*&ServerStateData::readDataReply,*/ // SENT_NLST
     NULL,/*&ServerStateData::readReply*/ // SENT_REST
@@ -96,6 +109,8 @@ const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
     &ServerStateData::readReply, // WRITING_DATA
     NULL,/*&ServerStateData::readReply*/ // SENT_MKDIR
     &ServerStateData::readFeatReply, // SENT_FEAT
+    NULL,/*&ServerStateData::readPwdReply*/ // SENT_PWD
+    &ServerStateData::readCwdOrCdupReply, // SENT_CDUP
     &ServerStateData::readDataReply,// SENT_DATA_REQUEST
     &ServerStateData::readReply, // SENT_COMMAND
     NULL
@@ -105,6 +120,11 @@ ServerStateData::ServerStateData(FwdState *const fwdState):
     AsyncJob("Ftp::Gateway::ServerStateData"), Ftp::ServerStateData(fwdState),
     forwardingCompleted(false)
 {
+    savedReply.message = false;
+    savedReply.lastCommand = NULL;
+    savedReply.lastReply = NULL;
+    savedReply.replyCode = 0;
+
     // Nothing we can do at request creation time can mark the response as
     // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
     entry->releaseRequest();
@@ -113,6 +133,11 @@ ServerStateData::ServerStateData(FwdState *const fwdState):
 ServerStateData::~ServerStateData()
 {
     closeServer(); // TODO: move to Server.cc?
+    if (savedReply.message)
+        wordlistDestroy(&savedReply.message);
+
+    xfree(savedReply.lastCommand);
+    xfree(savedReply.lastReply);
 }
 
 void
@@ -247,6 +272,12 @@ ServerStateData::processReplyBody()
 void
 ServerStateData::handleControlReply()
 {
+    if (!request->clientConnectionManager.valid()) {
+        debugs(9, 5, "client connection gone");
+        closeServer();
+        return;
+    }
+
     Ftp::ServerStateData::handleControlReply();
     if (ctrl.message == NULL)
         return; // didn't get complete reply yet
@@ -456,9 +487,13 @@ ServerStateData::sendCommand()
     writeCommand(mb.content());
 
     state =
+        clientState() == ConnStateData::FTP_HANDLE_CDUP ? SENT_CDUP :
+        clientState() == ConnStateData::FTP_HANDLE_CWD ? SENT_CWD :
         clientState() == ConnStateData::FTP_HANDLE_FEAT ? SENT_FEAT :
         clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ? SENT_DATA_REQUEST :
         clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST ? SENT_DATA_REQUEST :
+        clientState() == ConnStateData::FTP_CONNECTED ? SENT_USER :
+        clientState() == ConnStateData::FTP_HANDLE_PASS ? SENT_PASS :
         SENT_COMMAND;
 }
 
@@ -527,6 +562,82 @@ ServerStateData::readDataReply()
             forwardPreliminaryReply(&ServerStateData::startDataUpload);
     } else
         forwardReply();
+}
+
+bool
+ServerStateData::startDirTracking()
+{
+    if (!fwd->request->clientConnectionManager->port->ftp_track_dirs)
+        return false;
+
+    debugs(9, 5, "Start directory tracking");
+    savedReply.message = ctrl.message;
+    savedReply.lastCommand = ctrl.last_command;
+    savedReply.lastReply = ctrl.last_reply;
+    savedReply.replyCode = ctrl.replycode;
+
+    ctrl.last_command = NULL;
+    ctrl.last_reply = NULL;
+    ctrl.message = NULL;
+    ctrl.offset = 0;
+    writeCommand("PWD\r\n");
+    return true;
+}
+
+void
+ServerStateData::stopDirTracking()
+{
+    debugs(9, 5, "Got code from pwd: " << ctrl.replycode << ", msg: " << ctrl.last_reply);
+
+    if (ctrl.replycode == 257)            
+        fwd->request->clientConnectionManager->ftpSetWorkingDir(Ftp::unescapeDoubleQuoted(ctrl.last_reply));
+
+    wordlistDestroy(&ctrl.message);
+    safe_free(ctrl.last_command);
+    safe_free(ctrl.last_reply);
+
+    ctrl.message = savedReply.message;
+    ctrl.last_command = savedReply.lastCommand;
+    ctrl.last_reply = savedReply.lastReply;
+    ctrl.replycode = savedReply.replyCode;
+
+    savedReply.message = NULL;
+    savedReply.lastReply = NULL;
+    savedReply.lastCommand = NULL;
+}
+
+void
+ServerStateData::readCwdOrCdupReply()
+{
+    assert(clientState() == ConnStateData::FTP_HANDLE_CWD || clientState() == ConnStateData::FTP_HANDLE_CDUP);
+
+    debugs(9, 5, HERE << "Got code " << ctrl.replycode << ", msg: " << ctrl.last_reply);
+
+    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+        return;
+
+    if (weAreTrackingDir()) { // we are tracking
+        stopDirTracking(); // and forward the delayed response below
+    } else if (startDirTracking())
+        return;
+
+    forwardReply();
+}
+
+void
+ServerStateData::readUserOrPassReply()
+{
+    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+        return; //Just ignore
+
+    if (weAreTrackingDir()) { // we are tracking
+        stopDirTracking(); // and forward the delayed response below
+    } else if (ctrl.replycode == 230) { // successful login
+        if (startDirTracking())
+            return;
+    }
+
+    forwardReply();
 }
 
 void

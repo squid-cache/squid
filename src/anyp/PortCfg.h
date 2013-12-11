@@ -87,6 +87,8 @@ public:
     long sslOptions; ///< SSL engine options
 #endif
 
+    bool ftp_track_dirs; ///< Whether to track FTP directories
+
     CBDATA_CLASS2(PortCfg); // namespaced
 };
 

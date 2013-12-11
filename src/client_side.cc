@@ -101,6 +101,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
+#include "FtpServer.h"
 #include "fqdncache.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -273,6 +274,9 @@ static FtpRequestHandler FtpHandleDataRequest;
 static FtpRequestHandler FtpHandleUploadRequest;
 static FtpRequestHandler FtpHandleEprtRequest;
 static FtpRequestHandler FtpHandleEpsvRequest;
+static FtpRequestHandler FtpHandleCwdRequest;
+static FtpRequestHandler FtpHandlePassRequest;
+static FtpRequestHandler FtpHandleCdupRequest;
 
 static bool FtpCheckDataConnPre(ClientSocketContext *context);
 static bool FtpCheckDataConnPost(ClientSocketContext *context);
@@ -4020,10 +4024,9 @@ ftpAccept(const CommAcceptCbParams &params)
     if (connState->transparent()) {
         char buf[MAX_IPSTRLEN];
         connState->clientConnection->local.toUrl(buf, MAX_IPSTRLEN);
-        connState->ftp.uri = "ftp://";
-        connState->ftp.uri.append(buf);
-        connState->ftp.uri.append("/");
-        debugs(33, 5, HERE << "FTP transparent URL: " << connState->ftp.uri);
+        connState->ftp.host = buf;
+        const char *uri = connState->ftpBuildUri();
+        debugs(33, 5, HERE << "FTP transparent URL: " << uri);
     }
 
     FtpWriteEarlyReply(connState, 220, "Service ready");
@@ -4974,6 +4977,35 @@ ConnStateData::unpinConnection(const bool andClose)
      * connection has gone away */
 }
 
+const char *
+ConnStateData::ftpBuildUri(const char *file)
+{
+    ftp.uri = "ftp://";
+    ftp.uri.append(ftp.host);
+    if (port->ftp_track_dirs && ftp.workingDir.size()) {
+        if (ftp.workingDir[0] != '/')
+            ftp.uri.append("/");
+        ftp.uri.append(ftp.workingDir);
+    }
+
+    if (ftp.uri[ftp.uri.size() - 1] != '/')
+        ftp.uri.append("/");
+
+    if (port->ftp_track_dirs && file) {
+        //remove any '/' from the beginning of path
+        while (*file == '/')
+            ++file;
+        ftp.uri.append(file);
+    }
+
+    return ftp.uri.termedBuf();
+}
+
+void
+ConnStateData::ftpSetWorkingDir(const char *dir)
+{
+    ftp.workingDir = dir;
+}
 
 static void
 FtpAcceptDataConnection(const CommAcceptCbParams &params)
@@ -5172,15 +5204,15 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     const String cmd = boc;
     String params = bop;
 
-    if (connState->ftp.uri.size() == 0) {
+    if (!connState->ftp.readGreeting) {
         // the first command must be USER
-        if (cmd.caseCmp("USER") != 0) {
+        if (!connState->pinning.pinned && cmd.caseCmp("USER") != 0) {
             FtpWriteEarlyReply(connState, 530, "Must login first");
             return NULL;
         }
     }
 
-    // We need to process USER request now because it sets request URI.
+    // We need to process USER request now because it sets ftp server Hostname.
     if (cmd.caseCmp("USER") == 0 &&
         !FtpHandleUserRequest(connState, cmd, params))
         return NULL;
@@ -5193,8 +5225,10 @@ FtpParseRequest(ConnStateData *connState, HttpRequestMethod *method_p, Http::Pro
     *method_p = !cmd.caseCmp("APPE") || !cmd.caseCmp("STOR") ||
         !cmd.caseCmp("STOU") ? Http::METHOD_PUT : Http::METHOD_GET;
 
-    assert(connState->ftp.uri.size() > 0);
-    char *uri = xstrdup(connState->ftp.uri.termedBuf());
+    char *uri;
+    const char *aPath = params.size() > 0 && Ftp::hasPathParameter(cmd)?
+        params.termedBuf() : NULL;
+    uri = xstrdup(connState->ftpBuildUri(aPath));
     HttpRequest *const request =
         HttpRequest::CreateFromUrlAndMethod(uri, *method_p);
     if (request == NULL) {
@@ -5263,6 +5297,9 @@ FtpHandleReply(ClientSocketContext *context, HttpReply *reply, StoreIOBuffer dat
         FtpHandleUploadReply, // FTP_HANDLE_UPLOAD_REQUEST
         FtpHandleEprtReply,// FTP_HANDLE_EPRT
         FtpHandleEpsvReply,// FTP_HANDLE_EPSV
+        NULL, // FTP_HANDLE_CWD
+        NULL, //FTP_HANDLE_PASS
+        NULL, // FTP_HANDLE_CDUP
         FtpHandleErrorReply // FTP_ERROR
     };
     const ConnStateData::FtpState state = context->getConn()->ftp.state;
@@ -5783,6 +5820,9 @@ FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
         std::make_pair("RETR", FtpHandleDataRequest),
         std::make_pair("EPRT", FtpHandleEprtRequest),
         std::make_pair("EPSV", FtpHandleEpsvRequest),
+        std::make_pair("CWD", FtpHandleCwdRequest),
+        std::make_pair("PASS", FtpHandlePassRequest),
+        std::make_pair("CDUP", FtpHandleCdupRequest),
     };
 
     FtpRequestHandler *handler = NULL;
@@ -5816,21 +5856,35 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
         return false;
     }
 
-    static const String scheme = "ftp://";
     const String login = params.substr(0, eou);
     const String host = params.substr(eou + 1, params.size());
+    // If we can parse it as raw IPv6 address, then surround with "[]".
+    // Otherwise (domain, IPv4, [bracketed] IPv6, garbage, etc), use as is.
+    if (host.pos(":")) {
+        char ipBuf[MAX_IPSTRLEN];
+        Ip::Address ipa;
+        ipa = host.termedBuf();
+        if (!ipa.isAnyAddr()) {
+            ipa.toHostStr(ipBuf, MAX_IPSTRLEN);
+            connState->ftp.host = ipBuf;
+        }
+    }
+    if (connState->ftp.host.size() == 0)
+        connState->ftp.host = host;
 
-    String uri = scheme;
-    uri.append(host);
-    uri.append("/");
+    String oldUri;
+    if (connState->ftp.readGreeting)
+        oldUri = connState->ftp.uri;
 
-    if (!connState->ftp.uri.size()) {
-        connState->ftp.uri = uri;
+    connState->ftpSetWorkingDir(NULL);
+    connState->ftpBuildUri();
+
+    if (!connState->ftp.readGreeting) {
         debugs(11, 3, "set URI to " << connState->ftp.uri);
-    } else if (uri.caseCmp(connState->ftp.uri) == 0) {
-        debugs(11, 5, "keep URI as " << uri);
+    } else if (oldUri.caseCmp(connState->ftp.uri) == 0) {
+        debugs(11, 5, "keep URI as " << oldUri);
     } else {
-        debugs(11, 3, "reset URI from " << connState->ftp.uri << " to " << uri);
+        debugs(11, 3, "reset URI from " << oldUri << " to " << connState->ftp.uri);
         FtpCloseDataConnection(connState);
         connState->ftp.readGreeting = false;
         connState->unpinConnection(true); // close control connection to the server
@@ -5908,8 +5962,6 @@ bool FtpCreateDataConnection(ClientSocketContext *context, Ip::Address cltAddr)
     context->getConn()->ftp.uploadAvailSize = 0;
     return true;
 }
-
-#include "FtpServer.h" /* XXX: For Ftp::ParseIpPort() */
 
 bool
 FtpHandlePortRequest(ClientSocketContext *context, String &cmd, String &params)
@@ -6019,6 +6071,26 @@ FtpHandleEpsvRequest(ClientSocketContext *context, String &cmd, String &params)
     return true; // forward our fake PASV request
 }
 
+bool
+FtpHandleCwdRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_CWD, "FtpHandleCwdRequest");
+    return true;
+}
+
+bool
+FtpHandlePassRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_PASS, "FtpHandlePassRequest");
+    return true;
+}
+
+bool
+FtpHandleCdupRequest(ClientSocketContext *context, String &cmd, String &params)
+{
+    FtpChangeState(context->getConn(), ConnStateData::FTP_HANDLE_CDUP, "FtpHandleCdupRequest");
+    return true;
+}
 
 // Convert client PORT, EPRT, PASV, or EPSV data command to Squid PASV command.
 // Squid server-side decides what data command to use on that side.

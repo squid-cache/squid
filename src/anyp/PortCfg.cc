@@ -17,10 +17,11 @@ AnyP::PortCfg::PortCfg(const char *aProtocol) :
         next(NULL),
         protocol(xstrdup(aProtocol)),
         name(NULL),
-        defaultsite(NULL)
+        defaultsite(NULL),
 #if USE_SSL
-        ,dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
+        dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
 #endif
+        ftp_track_dirs(false)
 {}
 
 AnyP::PortCfg::~PortCfg()
@@ -65,6 +66,7 @@ AnyP::PortCfg::clone() const
     b->connection_auth_disabled = connection_auth_disabled;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
     b->tcp_keepalive = tcp_keepalive;
+    b->ftp_track_dirs = ftp_track_dirs;
 
 #if 0
     // TODO: AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
