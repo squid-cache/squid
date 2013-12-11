@@ -1,7 +1,7 @@
 #include "squid.h"
+#include "acl/Checklist.h"
 #include "acl/HierCode.h"
 #include "acl/HierCodeData.h"
-#include "acl/Checklist.h"
 #include "HttpRequest.h"
 
 /* explicit template instantiation required for some systems */

@@ -1,8 +1,9 @@
 #ifndef SQUID_ADAPTATION__ITERATOR_H
 #define SQUID_ADAPTATION__ITERATOR_H
 
-#include "adaptation/Initiator.h"
+#include "AccessLogEntry.h"
 #include "adaptation/Initiate.h"
+#include "adaptation/Initiator.h"
 #include "adaptation/ServiceGroups.h"
 
 class HttpMsg;
@@ -25,6 +26,7 @@ class Iterator: public Initiate, public Initiator
 {
 public:
     Iterator(HttpMsg *virginHeader, HttpRequest *virginCause,
+             AccessLogEntry::Pointer &alp,
              const Adaptation::ServiceGroupPointer &aGroup);
     virtual ~Iterator();
 
@@ -57,6 +59,7 @@ protected:
     ServicePlan thePlan; ///< which services to use and in what order
     HttpMsg *theMsg; ///< the message being adapted (virgin for each step)
     HttpRequest *theCause; ///< the cause of the original virgin message
+    AccessLogEntry::Pointer al; ///< info for the future access.log entry
     CbcPointer<Adaptation::Initiate> theLauncher; ///< current transaction launcher
     int iterations; ///< number of steps initiated
     bool adapted; ///< whether the virgin message has been replaced

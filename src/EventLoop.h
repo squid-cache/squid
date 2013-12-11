@@ -89,6 +89,10 @@ public:
 
     int errcount;
 
+    /// the [main program] loop running now; may be nil
+    /// for simplicity, we assume there are no concurrent loops
+    static EventLoop *Running;
+
 private:
     /** setup state variables prior to running */
     void prepareToRun();

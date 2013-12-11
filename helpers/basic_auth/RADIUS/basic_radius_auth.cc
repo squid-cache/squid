@@ -48,8 +48,8 @@
 #include "squid.h"
 #include "helpers/defines.h"
 #include "md5.h"
-#include "radius.h"
 #include "radius-util.h"
+#include "radius.h"
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>

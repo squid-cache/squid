@@ -33,8 +33,8 @@
  */
 
 #include "squid.h"
-#include "acl/HttpStatus.h"
 #include "acl/FilledChecklist.h"
+#include "acl/HttpStatus.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "HttpReply.h"

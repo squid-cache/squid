@@ -76,12 +76,12 @@
 #include <netdb.h>
 #endif
 
-#include "snmp.h"
 #include "asn1.h"
-#include "snmp_vars.h"
-#include "snmp_pdu.h"
-#include "snmp_error.h"
+#include "snmp.h"
 #include "snmp_api_error.h"
+#include "snmp_error.h"
+#include "snmp_pdu.h"
+#include "snmp_vars.h"
 
 #include "util.h"
 

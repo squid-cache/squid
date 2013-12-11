@@ -37,10 +37,10 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "DelayPool.h"
-#include "CommonPool.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "CommonPool.h"
+#include "DelayPool.h"
 #include "Store.h"
 
 DelayPool::DelayPool() : pool (NULL), access (NULL)

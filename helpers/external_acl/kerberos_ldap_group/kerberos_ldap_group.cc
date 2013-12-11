@@ -31,8 +31,8 @@
  */
 #include "squid.h"
 #include "helpers/defines.h"
-#include "util.h"
 #include "rfc1738.h"
+#include "util.h"
 
 #ifdef HAVE_LDAP
 

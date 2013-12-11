@@ -41,10 +41,10 @@
 
 #include "squid.h"
 #include "heap.h"
-#include "store_heap_replacement.h"
+#include "MemObject.h"
 #include "SquidList.h"
 #include "Store.h"
-#include "MemObject.h"
+#include "store_heap_replacement.h"
 #include "wordlist.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_heap;

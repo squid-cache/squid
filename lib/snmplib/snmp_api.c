@@ -76,12 +76,12 @@
 #include "snmp.h"
 
 #include "snmp-internal.h"
-#include "snmp_impl.h"
-#include "snmp_session.h"
 #include "snmp_error.h"
-#include "snmp_vars.h"
-#include "snmp_pdu.h"
+#include "snmp_impl.h"
 #include "snmp_msg.h"
+#include "snmp_pdu.h"
+#include "snmp_session.h"
+#include "snmp_vars.h"
 
 #include "snmp_api.h"
 #include "snmp_api_error.h"

@@ -54,12 +54,12 @@
 #include "Stack.h"
 #include "StatCounters.h"
 #include "stmem.h"
+#include "Store.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
-#include "Store.h"
 #include "StoreClient.h"
 #include "StoreIOState.h"
 #include "StoreMeta.h"
@@ -788,7 +788,7 @@ StoreEntry::setPublicKey()
 #if X_ACCELERATOR_VARY
             vary = mem_obj->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
 
-            if (vary.defined()) {
+            if (vary.size() > 0) {
                 /* Again, we own this structure layout */
                 rep->header.putStr(HDR_X_ACCELERATOR_VARY, vary.termedBuf());
                 vary.clean();

@@ -163,8 +163,8 @@ testUfs::testUfsSearch()
         pe->timestampsSet();
         pe->complete();
         pe->swapOut();
-        CPPUNIT_ASSERT(pe->swap_dirn == 0);
-        CPPUNIT_ASSERT(pe->swap_filen == 0);
+        CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
+        CPPUNIT_ASSERT_EQUAL(0, pe->swap_filen);
         pe->unlock();
     }
 
@@ -178,34 +178,34 @@ testUfs::testUfsSearch()
     /* nothing should be immediately available */
 #if 0
 
-    CPPUNIT_ASSERT(search->next() == false);
+    CPPUNIT_ASSERT_EQUAL(false, search->next());
 #endif
 
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == false);
-    CPPUNIT_ASSERT(search->currentItem() == NULL);
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(false, search->isDone());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
 
     /* trigger a callback */
     cbcalled = false;
     search->next(searchCallback, NULL);
-    CPPUNIT_ASSERT(cbcalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* we should have access to a entry now, that matches the entry we had before */
-    //CPPUNIT_ASSERT(search->next() == false);
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == false);
+    //CPPUNIT_ASSERT_EQUAL(false, search->next());
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(false, search->isDone());
     CPPUNIT_ASSERT(search->currentItem() != NULL);
 
     /* trigger another callback */
     cbcalled = false;
     search->next(searchCallback, NULL);
-    CPPUNIT_ASSERT(cbcalled == true);
+    CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* now we should have no error, we should have finished and have no current item */
-    //CPPUNIT_ASSERT(search->next() == false);
-    CPPUNIT_ASSERT(search->error() == false);
-    CPPUNIT_ASSERT(search->isDone() == true);
-    CPPUNIT_ASSERT(search->currentItem() == NULL);
+    //CPPUNIT_ASSERT_EQUAL(false, search->next());
+    CPPUNIT_ASSERT_EQUAL(false, search->error());
+    CPPUNIT_ASSERT_EQUAL(true, search->isDone());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
 
     Store::Root(NULL);
 

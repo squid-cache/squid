@@ -45,6 +45,7 @@
 #include "acl/Acl.h"
 #include "cbdata.h"
 #include "hash.h"
+#include "Notes.h"
 #include "SquidString.h"
 
 class external_acl;
@@ -62,6 +63,10 @@ public:
     ExternalACLEntryData() : result(ACCESS_DUNNO) {}
 
     allow_t result;
+
+    /// list of all kv-pairs returned by the helper
+    NotePairs notes;
+
 #if USE_AUTH
     // TODO use an AuthUser to hold this info
     String user;
@@ -88,6 +93,10 @@ public:
     dlink_node lru;
     allow_t result;
     time_t date;
+
+    /// list of all kv-pairs returned by the helper
+    NotePairs notes;
+
 #if USE_AUTH
     String user;
     String password;

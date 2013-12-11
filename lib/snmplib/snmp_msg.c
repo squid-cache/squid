@@ -82,11 +82,11 @@
 #include <netdb.h>
 #endif
 
-#include "snmp.h"
 #include "asn1.h"
-#include "snmp_vars.h"
-#include "snmp_pdu.h"
+#include "snmp.h"
 #include "snmp_msg.h"
+#include "snmp_pdu.h"
+#include "snmp_vars.h"
 
 /*
  * RFC 1901: Introduction to Community-based SNMPv2

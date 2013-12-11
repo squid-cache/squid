@@ -35,11 +35,11 @@
 
 #if USE_ICMP
 
-#include "leakcheck.h"
-#include "SquidTime.h"
+#include "Debug.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "Debug.h"
+#include "leakcheck.h"
+#include "SquidTime.h"
 
 const char *icmpPktStr[] = {
     "Echo Reply",

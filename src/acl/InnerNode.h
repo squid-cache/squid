@@ -40,6 +40,7 @@ protected:
     /* ACL API */
     virtual int match(ACLChecklist *checklist);
 
+    // XXX: use refcounting instead of raw pointers
     std::vector<ACL*> nodes; ///< children nodes of this intermediate node
 };
 

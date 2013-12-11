@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "DiskdFile.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
+#include "DiskdFile.h"
 #include "DiskdIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"

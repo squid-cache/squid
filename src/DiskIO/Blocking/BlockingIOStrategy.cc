@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "BlockingIOStrategy.h"
 #include "BlockingFile.h"
+#include "BlockingIOStrategy.h"
 #include "unlinkd.h"
 
 bool

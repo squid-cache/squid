@@ -32,14 +32,14 @@
 #ifndef SQUID_ICAPSERVICEREP_H
 #define SQUID_ICAPSERVICEREP_H
 
-#include "cbdata.h"
-#include "FadingCounter.h"
-#include "adaptation/Service.h"
 #include "adaptation/forward.h"
-#include "adaptation/Initiator.h"
 #include "adaptation/icap/Elements.h"
+#include "adaptation/Initiator.h"
+#include "adaptation/Service.h"
 #include "base/AsyncJobCalls.h"
+#include "cbdata.h"
 #include "comm.h"
+#include "FadingCounter.h"
 #include "pconn.h"
 #include <deque>
 
@@ -97,7 +97,7 @@ public:
     bool availableForNew() const; ///< a new transaction may start communicating with the service
     bool availableForOld() const; ///< a transaction notified about connection slot availability may start communicating with the service
 
-    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause);
+    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp);
 
     void callWhenAvailable(AsyncCall::Pointer &cb, bool priority = false);
     void callWhenReady(AsyncCall::Pointer &cb);

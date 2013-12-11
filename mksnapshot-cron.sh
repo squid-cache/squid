@@ -96,18 +96,18 @@ make_snapshot()
 set +e
 
 # autotool derived files not kept in trunk, but still need to bootstrap for make dist
-../commit/bootstrap squid-3
-make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 3.HEAD 6
+#../commit/bootstrap squid-3
+#make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 3.HEAD 6
 
-rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-cp ../commit/squid-3/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-chmod 444 /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/content/CONTRIBUTORS.txt
-
-rm -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
+#rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+#cp ../commit/squid-3/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+#chmod 444 /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+#mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/content/CONTRIBUTORS.txt
+#
+#rm -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+#cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+#chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+#mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
 
 ../commit/bootstrap squid-3.4
 make_snapshot ../commit/squid-3/mksnapshot.sh 3.4 v3 3.4 30

@@ -32,9 +32,9 @@
 
 #include "squid.h"
 #include "base/InstanceId.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "comm.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "dlink.h"

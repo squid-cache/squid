@@ -42,9 +42,9 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
-#include "StoreClient.h"
 #include "Store.h"
 #include "store_swapin.h"
+#include "StoreClient.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS
@@ -249,12 +249,20 @@ store_client::copy(StoreEntry * anEntry,
     PROF_stop(storeClient_kickReads);
     copying = false;
 
+    // XXX: storeClientCopy2 calls doCopy() whose callback may free 'this'!
+    // We should make store copying asynchronous, to avoid worrying about
+    // 'this' being secretly deleted while we are still inside the object.
+    // For now, lock and use on-stack objects after storeClientCopy2().
+    ++anEntry->lock_count;
+
     storeClientCopy2(entry, this);
 
 #if USE_ADAPTATION
-    if (entry)
-        entry->kickProducer();
+    anEntry->kickProducer();
 #endif
+
+    anEntry->unlock(); // after the "++enEntry->lock_count" above
+    // Add no code here. This object may no longer exist.
 }
 
 /*
@@ -318,6 +326,9 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     /* Warning: doCopy may indirectly free itself in callbacks,
      * hence the lock to keep it active for the duration of
      * this function
+     * XXX: Locking does not prevent calling sc destructor (it only prevents
+     * freeing sc memory) so sc may become invalid from C++ p.o.v.
+     *
      */
     cbdataInternalLock(sc);
     assert (!sc->flags.store_copying);
@@ -712,7 +723,14 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     delete sc;
 
+    // This old assert seemed to imply that a locked entry cannot be deleted,
+    // but this entry may be deleted because StoreEntry::abort() unlocks it.
     assert(e->lock_count > 0);
+    // Since lock_count of 1 is not sufficient to prevent entry destruction,
+    // we must lock again so that we can dereference e after CheckQuickAbort().
+    // Do not call expensive StoreEntry::lock() here; e "use" has been counted.
+    // TODO: Separate entry locking from "use" counting to make locking cheap.
+    ++e->lock_count;
 
     if (mem->nclients == 0)
         CheckQuickAbort(e);
@@ -723,6 +741,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     e->kickProducer();
 #endif
 
+    e->unlock(); // after the "++e->lock_count" above
     return 1;
 }
 

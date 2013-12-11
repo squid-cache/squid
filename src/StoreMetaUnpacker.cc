@@ -32,10 +32,10 @@
  */
 
 #include "squid.h"
-#include "defines.h"
 #include "Debug.h"
-#include "StoreMetaUnpacker.h"
+#include "defines.h"
 #include "StoreMeta.h"
+#include "StoreMetaUnpacker.h"
 
 int const StoreMetaUnpacker::MinimumBufferLength = sizeof(char) + sizeof(int);
 

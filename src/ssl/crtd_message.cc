@@ -1,6 +1,6 @@
 #include "squid.h"
-#include "ssl/gadgets.h"
 #include "ssl/crtd_message.h"
+#include "ssl/gadgets.h"
 #if HAVE_CSTDLIB
 #include <cstdlib>
 #endif

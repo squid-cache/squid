@@ -32,10 +32,10 @@
 #ifndef SQUID_ESIVARSTATE_H
 #define SQUID_ESIVARSTATE_H
 
-#include "esi/Segment.h"
-#include "libTrie/Trie.h"
 #include "base/Vector.h"
+#include "esi/Segment.h"
 #include "HttpHeader.h"
+#include "libTrie/Trie.h"
 
 class HttpReply;
 
