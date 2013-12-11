@@ -2689,8 +2689,8 @@ DOC_START
 		concurrency=
 	
 	The number of requests each certificate validator helper can handle in
-	parallel. Defaults to 0 which indicates the certficate validator
-	is a old-style single threaded redirector.
+	parallel. A value of 0 indicates the certficate validator does not
+	support concurrency. Defaults to 1.
 	
 	When this directive is set to a value >= 1 then the protocol
 	used to communicate with the helper is modified to include

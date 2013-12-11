@@ -16,12 +16,7 @@ public:
 #endif
     char *ssl_crt_validator;
     HelperChildConfig ssl_crt_validator_Children;
-    Config():
-#if USE_SSL_CRTD
-            ssl_crtd(NULL),
-#endif
-            ssl_crt_validator(NULL) {}
-
+    Config();
     ~Config();
 private:
     Config(const Config &); // not implemented

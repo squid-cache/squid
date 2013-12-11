@@ -310,6 +310,12 @@ MemStore::considerKeeping(StoreEntry &e)
         return;
     }
 
+    if (e.mem_obj->vary_headers) {
+        // XXX: We must store/load SerialisedMetaData to cache Vary in RAM
+        debugs(20, 5, "Vary not yet supported: " << e.mem_obj->vary_headers);
+        return;
+    }
+
     keep(e); // may still fail
 }
 
