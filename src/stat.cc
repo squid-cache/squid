@@ -33,8 +33,8 @@
 #include "squid.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
@@ -43,9 +43,9 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
-#include "MemObject.h"
 #include "mem_node.h"
 #include "MemBuf.h"
+#include "MemObject.h"
 #include "mgr/CountersAction.h"
 #include "mgr/FunAction.h"
 #include "mgr/InfoAction.h"
@@ -58,11 +58,11 @@
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "StatCounters.h"
 #include "stat.h"
-#include "StoreClient.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "store_digest.h"
+#include "StoreClient.h"
 #include "tools.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -2042,15 +2042,15 @@ statClientRequests(StoreEntry * s)
         e = http->storeEntry();
         storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
         storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
-                          (long int) http->start_time.tv_sec,
-                          (int) http->start_time.tv_usec,
-                          tvSubDsec(http->start_time, current_time));
+                          (long int) http->al->cache.start_time.tv_sec,
+                          (int) http->al->cache.start_time.tv_usec,
+                          tvSubDsec(http->al->cache.start_time, current_time));
 #if USE_AUTH
         if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
         else
 #endif
-            if (http->request->extacl_user.defined()) {
+            if (http->request->extacl_user.size() > 0) {
                 p = http->request->extacl_user.termedBuf();
             }
 

@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "StoreMetaURL.h"
-#include "Store.h"
 #include "MemObject.h"
+#include "Store.h"
+#include "StoreMetaURL.h"
 
 bool
 StoreMetaURL::checkConsistency(StoreEntry *e) const

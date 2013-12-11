@@ -33,17 +33,17 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "StoreClient.h"
 #include "globals.h"
 #include "Store.h"
+#include "StoreClient.h"
 /* FIXME: Abstract the use of this more */
 #include "mem_node.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
-#include "SwapDir.h"
 #include "StatCounters.h"
 #include "store_log.h"
 #include "swap_log_op.h"
+#include "SwapDir.h"
 
 static void storeSwapOutStart(StoreEntry * e);
 static StoreIOState::STIOCB storeSwapOutFileClosed;

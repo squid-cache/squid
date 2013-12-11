@@ -1,8 +1,8 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "base/Vector.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_type.h"

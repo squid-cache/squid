@@ -31,6 +31,7 @@
 #include "Debug.h"
 #include "Mem.h"
 #include "MemBlob.h"
+#include "SBufDetailedStats.h"
 
 #if HAVE_IOSTREAM
 #include <iostream>
@@ -96,6 +97,7 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
+    recordMemBlobSizeAtDestruct(size);
 
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
            << static_cast<void*>(this) << " id=" << id

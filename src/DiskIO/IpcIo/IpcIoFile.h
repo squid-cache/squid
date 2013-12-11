@@ -5,9 +5,9 @@
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
-#include "SquidString.h"
 #include "ipc/forward.h"
 #include "ipc/mem/Page.h"
+#include "SquidString.h"
 #include <list>
 #include <map>
 #include <memory>

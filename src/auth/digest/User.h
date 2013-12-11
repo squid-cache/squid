@@ -14,7 +14,7 @@ class User : public Auth::User
 public:
     MEMPROXY_CLASS(Auth::Digest::User);
 
-    User(Auth::Config *);
+    User(Auth::Config *, const char *requestRealm);
     ~User();
     int authenticated() const;
 

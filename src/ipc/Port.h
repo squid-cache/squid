@@ -6,8 +6,8 @@
 #ifndef SQUID_IPC_PORT_H
 #define SQUID_IPC_PORT_H
 
-#include "SquidString.h"
 #include "ipc/UdsOp.h"
+#include "SquidString.h"
 
 namespace Ipc
 {

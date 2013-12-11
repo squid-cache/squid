@@ -6,12 +6,12 @@
 #ifndef SQUID_IPC_ASYNCUDSOP_H
 #define SQUID_IPC_ASYNCUDSOP_H
 
-#include "SquidString.h"
 #include "base/AsyncJob.h"
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "ipc/TypedMsgHdr.h"
 #include "ipc/FdNotes.h"
+#include "ipc/TypedMsgHdr.h"
+#include "SquidString.h"
 
 class CommTimeoutCbParams;
 class CommIoCbParams;
@@ -65,11 +65,17 @@ public:
     UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);
 
 protected:
+    virtual void swanSong(); // UdsOp (AsyncJob) API
     virtual void start(); // UdsOp (AsyncJob) API
     virtual bool doneAll() const; // UdsOp (AsyncJob) API
     virtual void timedout(); // UdsOp API
 
 private:
+    void startSleep();
+    void cancelSleep();
+    static void DelayedRetry(void *data);
+    void delayedRetry();
+
     void write(); ///< schedule writing
     void wrote(const CommIoCbParams& params); ///< done writing or error
 
@@ -77,6 +83,7 @@ private:
     TypedMsgHdr message; ///< what to send
     int retries; ///< how many times to try after a write error
     int timeout; ///< total time to send the message
+    bool sleeping; ///< whether we are waiting to retry a failed write
     bool writing; ///< whether Comm started and did not finish writing
 
 private:

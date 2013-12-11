@@ -148,12 +148,6 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
-NAME: ignore_ims_on_miss
-TYPE: obsolete
-DOC_START
-	This option is not yet supported by Squid-3.
-DOC_END
-
 NAME: location_rewrite_program location_rewrite_access location_rewrite_children location_rewrite_concurrency
 TYPE: obsolete
 DOC_START
@@ -166,7 +160,12 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
-# no Options Removed in 3.3
+# Options Removed in 3.3
+NAME: ignore_ims_on_miss
+TYPE: obsolete
+DOC_START
+	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
 
 # Options Removed in 3.2
 NAME: ignore_expect_100
@@ -320,12 +319,30 @@ DOC_START
 	Ports flagged 'transparent', 'intercept', or 'tproxy' have
 	authentication disabled.
 
+	=== Parameters common to all schemes. ===
+
+	"program" cmdline
+	Specifies the command for the external authenticator.  Such a program
+	runs a loop that, on every iteration, reads a request line from
+	the standard and responds with a scheme-specific answer. The loop
+	stops when all input is exchausted (EOF). See scheme-specific
+	"program" descriptions below for details.
+
+	"key_extras" format
+	Specifies a string to be append to request line format for the
+	authentication helper. "Quoted" format values may contain spaces and
+	logformat %macros. In theory, any logformat %macro can be used.
+	In practice, a %macro expands as a dash (-) if the helper request is
+	sent before the required macro information is available to Squid.
+	By default, Squid uses request formats provided in scheme-specific
+	examples below (search for %credentials).
+
 	=== Parameters for the basic scheme follow. ===
 
 	"program" cmdline
 	Specify the command for the external authenticator.  Such a program
-	reads a line containing "username password" and	replies with one of
-	three results:
+	reads a request_format line ("username password" by default) and
+	replies with one of three results:
 
 	  OK
 		the user exists.
@@ -408,8 +425,8 @@ DOC_START
 	=== Parameters for the digest scheme follow ===
 
 	"program" cmdline
-	Specify the command for the external authenticator.  Such
-	a program reads a line containing "username":"realm" and
+	Specify the command for the external authenticator.  Such a program
+	reads a request_format line ("username":"realm" by default) and
 	replies with one of three results:
 
 	  OK ha1="..."
@@ -577,7 +594,6 @@ DOC_START
 	supported by the proxy.
 
 	auth_param negotiate keep_alive on
-
 	
 	Examples:
 
@@ -1073,6 +1089,15 @@ DOC_START
 	  # Names and values are compared using a string equality test.
 	  # Annotation sources include note and adaptation_meta directives
 	  # as well as helper and eCAP responses.
+
+	acl aclname adaptation_service service ...
+	  # Matches the name of any icap_service, ecap_service,
+	  # adaptation_service_set, or adaptation_service_chain that Squid
+	  # has used (or attempted to use) for the master transaction.
+	  # This ACL must be defined after the corresponding adaptation
+	  # service is named in squid.conf. This ACL is usable with
+	  # adaptation_meta because it starts matching immediately after
+	  # the service has been selected for adaptation.
 
 IF USE_SSL
 	acl aclname ssl_error errorname
@@ -3698,6 +3723,16 @@ DOC_START
 				default %d/%b/%Y:%H:%M:%S %z
 		tr	Response time (milliseconds)
 		dt	Total time spent making DNS lookups (milliseconds)
+		tS	Approximate master transaction start time in 
+			<full seconds since epoch>.<fractional seconds> format.
+			Currently, Squid considers the master transaction
+			started when a complete HTTP request header initiating
+			the transaction is received from the client. This is
+			the same value that Squid uses to calculate transaction
+			response time when logging %tr to access.log. Currently,
+			Squid uses millisecond resolution for %tS values,
+			similar to the default access.log "current time" field
+			(%ts.%03tu).
 
 	Access Control related format codes:
 
@@ -3708,8 +3743,28 @@ DOC_START
 		ue	User name from external acl helper
 		ui	User name from ident
 		us	User name from SSL
+		credentials Client credentials. The exact meaning depends on
+			the authentication scheme: For Basic authentication,
+			it is the password; for Digest, the realm sent by the
+			client; for NTLM and Negotiate, the client challenge
+			or client credentials prefixed with "YR " or "KK ".
 
 	HTTP related format codes:
+
+	    REQUEST
+
+		[http::]rm	Request method (GET/POST etc)
+		[http::]>rm	Request method from client
+		[http::]<rm	Request method sent to server or peer
+		[http::]ru	Request URL from client (historic, filtered for logging)
+		[http::]>ru	Request URL from client
+		[http::]<ru	Request URL sent to server or peer
+		[http::]rp	Request URL-Path excluding hostname
+		[http::]>rp	Request URL-Path excluding hostname from client
+		[http::]<rp	Request URL-Path excluding hostname sent to server or peer
+		[http::]rv	Request protocol version
+		[http::]>rv	Request protocol version from client
+		[http::]<rv	Request protocol version sent to server or peer
 
 		[http::]>h	Original received request header. 
 				Usually differs from the request header sent by
@@ -3721,37 +3776,41 @@ DOC_START
 				Usually differs from the request header sent by
 				Squid, although most fields are often preserved.
 				Optional header name argument as for >h
+
+
+	    RESPONSE
+
+		[http::]<Hs	HTTP status code received from the next hop
+		[http::]>Hs	HTTP status code sent to the client
+
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
-		[http::]>Hs	HTTP status code sent to the client
-		[http::]<Hs	HTTP status code received from the next hop
+
+		[http::]mt	MIME content type
+
+
+	    SIZE COUNTERS
+
+		[http::]st	Total size of request + reply traffic with client
+		[http::]>st	Total size of request received from client.
+				Excluding chunked encoding bytes.
+		[http::]<st	Total size of reply sent to client (after adaptation)
+
+		[http::]>sh	Size of request headers received from client
+		[http::]<sh	Size of reply headers sent to client (after adaptation)
+
+		[http::]<sH	Reply high offset sent
+		[http::]<sS	Upstream object size
+
 		[http::]<bs	Number of HTTP-equivalent message body bytes 
 				received from the next hop, excluding chunked
 				transfer encoding and control messages.
 				Generated FTP/Gopher listings are treated as
 				received bodies.
-		[http::]mt	MIME content type
-		[http::]rm	Request method (GET/POST etc)
-		[http::]>rm	Request method from client
-		[http::]<rm	Request method sent to server or peer
-		[http::]ru	Request URL from client (historic, filtered for logging)
-		[http::]>ru	Request URL from client
-		[http::]<ru	Request URL sent to server or peer
-		[http::]rp	Request URL-Path excluding hostname
-		[http::]>rp	Request URL-Path excluding hostname from client
-		[http::]<rp	Request URL-Path excluding hostname sento to server or peer
-		[http::]rv	Request protocol version
-		[http::]>rv	Request protocol version from client
-		[http::]<rv	Request protocol version sent to server or peer
-		[http::]<st	Sent reply size including HTTP headers
-		[http::]>st	Received request size including HTTP headers. In the
-				case of chunked requests the chunked encoding metadata
-				are not included
-		[http::]>sh	Received HTTP request headers size
-		[http::]<sh	Sent HTTP reply headers size
-		[http::]st	Request+Reply size including HTTP headers
-		[http::]<sH	Reply high offset sent
-		[http::]<sS	Upstream object size
+
+
+	    TIMING
+
 		[http::]<pt	Peer response time in milliseconds. The timer starts
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
@@ -4534,12 +4593,17 @@ DOC_START
 		The new URL is fetched directly by Squid and returned to
 		the client as the response to its request.
 
+	  OK
+		When neither of url= and rewrite-url= are sent Squid does
+		not change the URL.
+
 	  ERR
 		Do not change the URL.
 
 	  BH
 		An internal error occurred in the helper, preventing
-		a result being identified.
+		a result being identified. The 'message=' key name is
+		reserved for delivering a log message.
 
 
 	In the future, the interface protocol will be extended with
@@ -7285,6 +7349,25 @@ DOC_START
 	Note: If you want Squid to use parents for all requests see
 	the never_direct directive. prefer_direct only modifies how Squid
 	acts on cacheable requests.
+DOC_END
+
+NAME: cache_miss_revalidate
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.cache_miss_revalidate
+DOC_START
+	Whether Squid on cache MISS will pass client revalidation requests
+	to the server or tries to fetch new content for caching.
+	This is useful while the cache is mostly empty to more quickly
+	have the cache populated.
+
+	When set to 'on' (default), Squid will pass all client If-* headers
+	to the server.
+
+	When set to 'off' and if the request is cacheable, Squid will
+	remove the clients If-Modified-Since and If-None-Match headers from
+	the request sent to the server.
 DOC_END
 
 NAME: always_direct

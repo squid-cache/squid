@@ -35,8 +35,8 @@
 #include "squid.h"
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
-#include "Debug.h"
 #include "cache_cf.h"
+#include "Debug.h"
 #include "wordlist.h"
 
 ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const char *attrs, bool optionalAttr) : validAttributesStr(attrs), attributeIsOptional(optionalAttr), attribute (NULL), values (), sslAttributeCall (sslStrategy)

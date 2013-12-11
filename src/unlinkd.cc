@@ -37,12 +37,12 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "xusleep.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "SwapDir.h"
 #include "tools.h"
+#include "xusleep.h"
 
 /* This code gets linked to Squid */
 

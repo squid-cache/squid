@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
 #include "disk.h"
@@ -40,16 +41,15 @@
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
+#include "ipcache.h"
 #include "MemBuf.h"
-#include "anyp/PortCfg.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ipc/Kids.h"
-#include "ipc/Coordinator.h"
-#include "ipcache.h"
-#include "tools.h"
 #include "SwapDir.h"
+#include "tools.h"
 #include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H

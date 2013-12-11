@@ -1,8 +1,8 @@
 #include "squid.h"
+#include "acl/Checklist.h"
 #include "acl/PeerName.h"
 #include "acl/RegexData.h"
 #include "acl/StringData.h"
-#include "acl/Checklist.h"
 #include "CachePeer.h"
 
 int

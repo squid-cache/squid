@@ -36,10 +36,10 @@
 #include "log/File.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
-#include "Store.h"
-#include "store_log.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "store_log.h"
 
 static const char *storeLogTags[] = {
     "CREATE",
@@ -62,7 +62,7 @@ storeLog(int tag, const StoreEntry * e)
     MemObject *mem = e->mem_obj;
     HttpReply const *reply;
 
-    if (str_unknown.undefined())
+    if (str_unknown.size()==0)
         str_unknown="unknown"; //hack. Delay initialization as string doesn't support global variables..
 
     if (NULL == storelog)

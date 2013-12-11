@@ -28,13 +28,13 @@
  */
 
 #include "squid.h"
-#include "globals.h"
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
-#include "HttpRequest.h"
+#include "globals.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"
@@ -56,7 +56,7 @@ Note::addValue(const String &value)
 }
 
 const char *
-Note::match(HttpRequest *request, HttpReply *reply)
+Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al)
 {
 
     typedef Values::iterator VLI;
@@ -69,8 +69,15 @@ Note::match(HttpRequest *request, HttpReply *reply)
         const int ret= ch.fastCheck((*i)->aclList);
         debugs(93, 5, HERE << "Check for header name: " << key << ": " << (*i)->value
                <<", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
-        if (ret == ACCESS_ALLOWED)
-            return (*i)->value.termedBuf();
+        if (ret == ACCESS_ALLOWED) {
+            if (al != NULL && (*i)->valueFormat != NULL) {
+                static MemBuf mb;
+                mb.reset();
+                (*i)->valueFormat->assemble(mb, al, 0);
+                return mb.content();
+            } else
+                return (*i)->value.termedBuf();
+        }
     }
     return NULL;
 }
@@ -93,7 +100,10 @@ Note::Pointer
 Notes::parse(ConfigParser &parser)
 {
     String key = ConfigParser::NextToken();
+    ConfigParser::EnableMacros();
     String value = ConfigParser::NextQuotedToken();
+    ConfigParser::DisableMacros();
+    bool valueWasQuoted = ConfigParser::LastTokenWasQuoted();
     Note::Pointer note = add(key);
     Note::Value::Pointer noteValue = note->addValue(value);
 
@@ -101,7 +111,10 @@ Notes::parse(ConfigParser &parser)
     label.append('=');
     label.append(value);
     aclParseAclList(parser, &noteValue->aclList, label.termedBuf());
-
+    if (formattedValues && valueWasQuoted) {
+        noteValue->valueFormat =  new Format::Format(descr ? descr : "Notes");
+        noteValue->valueFormat->parse(value.termedBuf());
+    }
     if (blacklisted) {
         for (int i = 0; blacklisted[i] != NULL; ++i) {
             if (note->key.caseCmp(blacklisted[i]) == 0) {
@@ -205,7 +218,7 @@ bool
 NotePairs::hasPair(const char *key, const char *value) const
 {
     for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
-        if ((*i)->name.cmp(key) == 0 || (*i)->value.cmp(value) == 0)
+        if ((*i)->name.cmp(key) == 0 && (*i)->value.cmp(value) == 0)
             return true;
     }
     return false;
@@ -219,12 +232,25 @@ NotePairs::append(const NotePairs *src)
     }
 }
 
+void
+NotePairs::appendNewOnly(const NotePairs *src)
+{
+    for (Vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+        if (!hasPair((*i)->name.termedBuf(), (*i)->value.termedBuf()))
+            entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
+    }
+}
+
 NotePairs &
 SyncNotes(AccessLogEntry &ale, HttpRequest &request)
 {
+    // XXX: auth code only has access to HttpRequest being authenticated
+    // so we must handle the case where HttpRequest is set without ALE being set.
+
     if (!ale.notes) {
-        assert(!request.notes);
-        ale.notes = request.notes = new NotePairs;
+        if (!request.notes)
+            request.notes = new NotePairs;
+        ale.notes = request.notes;
     } else {
         assert(ale.notes == request.notes);
     }

@@ -32,11 +32,11 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "HttpHeaderRange.h"
 #include "client_side_request.h"
-#include "HttpReply.h"
+#include "HttpHeaderRange.h"
 #include "HttpHeaderTools.h"
+#include "HttpReply.h"
+#include "Store.h"
 #include "StrList.h"
 
 /*

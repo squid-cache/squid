@@ -43,8 +43,8 @@
 #include "Store.h"
 #include "store_key_md5.h"
 #include "StoreHashIndex.h"
-#include "SwapDir.h"
 #include "swap_log_op.h"
+#include "SwapDir.h"
 #include "tools.h"
 
 #if HAVE_STATVFS

@@ -35,8 +35,8 @@
 #include "acl/FilledChecklist.h"
 #include "base/Vector.h"
 #include "CachePeer.h"
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -901,7 +901,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
 
-    peerSelect(&(tunnelState->serverDestinations), request,
+    peerSelect(&(tunnelState->serverDestinations), request, al,
                NULL,
                tunnelPeerSelectComplete,
                tunnelState);

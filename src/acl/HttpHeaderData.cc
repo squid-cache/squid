@@ -33,15 +33,16 @@
  */
 
 #include "squid.h"
-#include "acl/HttpHeaderData.h"
-#include "acl/Checklist.h"
 #include "acl/Acl.h"
+#include "acl/Checklist.h"
+#include "acl/HttpHeaderData.h"
 #include "acl/RegexData.h"
 #include "cache_cf.h"
-#include "Debug.h"
-#include "wordlist.h"
 #include "ConfigParser.h"
+#include "Debug.h"
 #include "HttpHeaderTools.h"
+#include "SBuf.h"
+#include "wordlist.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.
@@ -75,13 +76,8 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
     }
 
-    // By now, we know the header is present, but:
-    // HttpHeader::get*() return an undefined String for empty header values;
-    // String::termedBuf() returns NULL for undefined Strings; and
-    // ACLRegexData::match() always fails on NULL strings.
-    // This makes it possible to detect an empty header value using regex:
-    const char *cvalue = value.defined() ? value.termedBuf() : "";
-    return regex_rule->match(cvalue);
+    SBuf cvalue(value);
+    return regex_rule->match(cvalue.c_str());
 }
 
 wordlist *
@@ -108,7 +104,7 @@ ACLHTTPHeaderData::parse()
 bool
 ACLHTTPHeaderData::empty() const
 {
-    return (hdrId == HDR_BAD_HDR && hdrName.undefined()) || regex_rule->empty();
+    return (hdrId == HDR_BAD_HDR && hdrName.size()==0) || regex_rule->empty();
 }
 
 ACLData<HttpHeader*> *

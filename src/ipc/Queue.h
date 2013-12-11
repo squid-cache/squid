@@ -4,9 +4,9 @@
 #ifndef SQUID_IPC_QUEUE_H
 #define SQUID_IPC_QUEUE_H
 
+#include "base/InstanceId.h"
 #include "base/Vector.h"
 #include "Debug.h"
-#include "base/InstanceId.h"
 #include "ipc/AtomicWord.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"

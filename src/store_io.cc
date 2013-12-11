@@ -1,7 +1,7 @@
 #include "squid.h"
-#include "Store.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
+#include "Store.h"
 #include "SwapDir.h"
 
 StoreIoStats store_io_stats;

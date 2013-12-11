@@ -1,8 +1,8 @@
 #ifndef SQUID_ACL_GADGETS_H
 #define SQUID_ACL_GADGETS_H
 
-#include "err_type.h"
 #include "acl/forward.h"
+#include "err_type.h"
 
 #if HAVE_SSTREAM
 #include <sstream>

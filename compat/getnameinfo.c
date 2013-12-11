@@ -75,8 +75,8 @@
 
 #if !HAVE_GETNAMEINFO
 
-#include "compat/inet_ntop.h"
 #include "compat/getaddrinfo.h"
+#include "compat/inet_ntop.h"
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>

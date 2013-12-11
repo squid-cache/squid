@@ -30,10 +30,10 @@
 #ifndef SQUID_HTTPREPLY_H
 #define SQUID_HTTPREPLY_H
 
+#include "http/StatusLine.h"
 #include "HttpBody.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
-#include "http/StatusLine.h"
 
 void httpReplyInitModule(void);
 

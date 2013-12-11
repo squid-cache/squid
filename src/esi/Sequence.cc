@@ -40,10 +40,10 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "esi/Sequence.h"
-#include "esi/Literal.h"
 #include "esi/Attempt.h"
 #include "esi/Except.h"
+#include "esi/Literal.h"
+#include "esi/Sequence.h"
 
 class esiExcept;
 

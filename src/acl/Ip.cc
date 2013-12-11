@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "acl/Ip.h"
 #include "acl/Checklist.h"
+#include "acl/Ip.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "ip/tools.h"
