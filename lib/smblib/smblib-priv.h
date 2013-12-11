@@ -26,8 +26,8 @@
 #ifndef _SMBLIB_PRIV_H_
 #define _SMBLIB_PRIV_H_
 
-#include "smblib/std-defines.h"
 #include "smblib/smblib-common.h"
+#include "smblib/std-defines.h"
 #include <sys/types.h>
 #include <unistd.h>
 

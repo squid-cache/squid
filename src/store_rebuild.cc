@@ -34,15 +34,15 @@
 #include "event.h"
 #include "globals.h"
 #include "md5.h"
-#include "StatCounters.h"
-#include "Store.h"
-#include "store_key_md5.h"
-#include "SwapDir.h"
-#include "store_digest.h"
-#include "store_rebuild.h"
-#include "StoreSearch.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
+#include "Store.h"
+#include "store_digest.h"
+#include "store_key_md5.h"
+#include "store_rebuild.h"
+#include "StoreSearch.h"
+#include "SwapDir.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>
@@ -243,9 +243,9 @@ storeRebuildProgress(int sd_index, int total, int sofar)
 }
 
 #include "fde.h"
-#include "StoreMetaUnpacker.h"
-#include "StoreMeta.h"
 #include "Generic.h"
+#include "StoreMeta.h"
+#include "StoreMetaUnpacker.h"
 
 struct InitStoreEntry : public unary_function<StoreMeta, void> {
     InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey) {}

@@ -1,11 +1,11 @@
 #ifndef SQUID_ADAPTATION__SERVICE_GROUPS_H
 #define SQUID_ADAPTATION__SERVICE_GROUPS_H
 
-#include "SquidString.h"
-#include "base/Vector.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
+#include "SquidString.h"
 
 namespace Adaptation
 {

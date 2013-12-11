@@ -1,8 +1,8 @@
 #include "squid.h"
+#include "mgr/Registration.h"
+#include "ssl/context_storage.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
-#include "ssl/context_storage.h"
-#include "mgr/Registration.h"
 #if HAVE_LIMITS
 #include <limits>
 #endif

@@ -40,12 +40,12 @@
 #if USE_SSL
 
 #include "acl/Certificate.h"
-#include "acl/Checklist.h"
 #include "acl/CertificateData.h"
-#include "HttpRequest.h"
+#include "acl/Checklist.h"
 #include "client_side.h"
 #include "fde.h"
 #include "globals.h"
+#include "HttpRequest.h"
 
 int
 ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)

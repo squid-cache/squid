@@ -3,11 +3,11 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "testHttpRequest.h"
 #include "HttpHeader.h"
 #include "HttpRequest.h"
 #include "Mem.h"
 #include "mime_header.h"
+#include "testHttpRequest.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 

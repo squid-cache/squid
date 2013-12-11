@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "base/TextException.h"
-#include "SquidTime.h"
 #include "FadingCounter.h"
+#include "SquidTime.h"
 
 #if HAVE_MATH_H
 #include <math.h>

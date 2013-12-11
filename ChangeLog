@@ -1,3 +1,18 @@
+Changes to squid-3.4.1 (09 Dec 2013):
+
+	- Bug 3935: Invalid pointer dereference when peeking at origin server certificate
+	- Bug 3589: intercepted and ICAP modified request using a cache_peer
+	- ... and several portability fixes
+	- ... and some documentation updates
+
+Changes to squid-3.4.0.3 (01 Dec 2013):
+
+	- Bug 3941: Release notes error
+	- Receive annotations from authentication and external ACL helpers
+	- basic_nis_auth: Improved portability
+	- ... and several documentation updates
+	- ... and all bug fixes from 3.3.9, 3.3.10, 3.3.11
+
 Changes to squid-3.4.0.2 (03 Oct 2013):
 
 	- Regression Bug 3891: squid.conf parser errors in 3.4.0.1
@@ -53,6 +68,40 @@ Changes to squid-3.4.0.1 (29 Jul 2013):
 	- ... and many Windows portability changes (still incomplete)
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.3.11 (01 Dec 2013):
+
+	- Regression Bug 3936: error-details.txt parse error with OpenSSL since 3.3.9
+	- Bug 3972: Segfault when getting the deny_info page ID after a reconfigure
+	- Bug 3970: max_filedescriptors disabled due to missing setrlimit
+	- Bug 3967: ipc/Kid.cc compilation failure: 'time' was not declared in this scope
+	- Bug 3960: DEAD cache_peer are not revived
+	- Bug 3956: xstrndup: tried to dup a NULL pointer
+	- Bug 3906: Filedescriptor leaks in SNMP
+	- Bug 3782: Digest authentication not obeying nonce_max_count
+	- HTTP/1.1: Make header parser obey relaxed_header_parser
+	- HTTP/1.1: Re-compute Range response content offset after an FTP response was adapted
+	- SMP: Replace blocking sleep(3) and close UDS socket on failures
+	- Windows: fix several compile errors
+
+Changes to squid-3.3.10 (03 Nov 2013):
+
+	- Bug 3929: request_header_add not working for tunnel requests
+	- Bug 3923: cbdata and undefined behavior due to dynamic runtime enumeration
+	- Bug 3918: Self Test Failures on Mac OS X 10.8
+	- Bug 3887: tcp_outgoing_tos not working for IPv6
+	- Bug 3836: Fix issues with automake 1.13+ and make check
+	- Bug 3480: StoreEntry::kickProducer() segfaults in store_client::copy()
+	- Fix pinning hierarchy log information
+	- Fix close idle client connections associated with closed idle pinned connections.
+	- Fix cbdata 'error: expression result unused' errors
+	- Avoid "hot idle": A series of rapid select() calls with zero timeout.
+	- Append Connection:close to OPTIONS requests when icap_persistent_connections is off
+	- ntlm_fake_auth: pass DOMAIN data to Squid in original case
+	- kerberos_ldap_group: fix LDAP string duplication
+	- Use IPv6 localhost nameserver on DNS configuration errors
+	- Add cache_miss_revalidate
+	- ... and several portability improvements
 
 Changes to squid-3.3.9 (11 Sep 2013):
 

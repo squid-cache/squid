@@ -6,8 +6,8 @@
 #ifndef SQUID_MGR_IO_ACTION_H
 #define SQUID_MGR_IO_ACTION_H
 
-#include "mgr/Action.h"
 #include "IoStats.h"
+#include "mgr/Action.h"
 
 namespace Mgr
 {

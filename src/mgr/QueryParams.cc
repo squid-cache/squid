@@ -7,8 +7,8 @@
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/IntParam.h"
-#include "mgr/StringParam.h"
 #include "mgr/QueryParams.h"
+#include "mgr/StringParam.h"
 
 Mgr::QueryParam::Pointer
 Mgr::QueryParams::get(const String& name) const

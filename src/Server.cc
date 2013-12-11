@@ -36,9 +36,10 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
-#include "fd.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fd.h"
+#include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Server.h"
@@ -525,6 +526,11 @@ ServerStateData::haveParsedReplyHeaders()
 {
     Must(theFinalReply);
     maybePurgeOthers();
+
+    // adaptation may overwrite old offset computed using the virgin response
+    const bool partial = theFinalReply->content_range &&
+                         theFinalReply->sline.status() == Http::scPartialContent;
+    currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
 }
 
 HttpRequest *
@@ -555,7 +561,7 @@ ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, H
     }
 
     adaptedHeadSource = initiateAdaptation(
-                            new Adaptation::Iterator(vrep, cause, group));
+                            new Adaptation::Iterator(vrep, cause, fwd->al, group));
     startedAdaptation = initiated(adaptedHeadSource);
     Must(startedAdaptation);
 }
@@ -918,7 +924,7 @@ ServerStateData::adaptOrFinalizeReply()
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
-                                       originalRequest(), virginReply(), this);
+                                       originalRequest(), virginReply(), fwd->al, this);
     debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;

@@ -33,8 +33,8 @@
 #define SQUID_ICAPINOUT_H
 
 #include "HttpMsg.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 
 // IcapInOut manages a pointer to the HTTP message being worked on.
 // For HTTP responses, request header information is also available

@@ -73,23 +73,36 @@ public:
      *  this and the supplied histogram.
      */
     double deltaPctile(const StatHist &B, double pctile) const;
+
     /** obtain the output-transformed value from the specified bin
      *
      */
     double val(unsigned int bin) const;
+
     /** increment the counter for the histogram entry
      * associated to the supplied value
      */
     void count(double val);
+
     /** iterate the supplied bd function over the histogram values
      */
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
+
     /** Initialize the Histogram using a logarithmic values distribution
      */
     void logInit(unsigned int capacity, double min, double max);
+
     /** initialize the histogram to count occurrences in an enum-represented set
      */
     void enumInit(unsigned int last_enum);
+
+    /** Import values from another histogram
+     *
+     * \note: the two histograms MUST have the same capicity, min and max or
+     *      an exception will be raised
+     */
+    StatHist &operator += (const StatHist &B);
+
 protected:
     /** low-level initialize function. called by *Init high-level functions
      * \note Important restrictions on val_in and val_out functions:
@@ -103,16 +116,21 @@ protected:
      *  See log and linear based histograms for examples
      */
     void init(unsigned int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
+
     /// find what entry in the histogram corresponds to v, by applying
     /// the preset input transformation function
     unsigned int findBin(double v);
+
     /// the histogram counters
     bins_type *bins;
     unsigned int capacity_;
+
     /// minimum value to be stored, corresponding to the first bin
     double min_;
+
     /// value of the maximum counter in the histogram
     double max_;
+
     /// scaling factor when looking for a bin
     double scale_;
     hbase_f *val_in;        /* e.g., log() for log-based histogram */

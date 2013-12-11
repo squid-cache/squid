@@ -53,7 +53,7 @@ public:
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
-    const static size_type npos = std::string::npos;
+    const static size_type npos = -1;
 
     String &operator =(char const *);
     String &operator =(String const &);
@@ -71,14 +71,6 @@ public:
     /// throws when size() > MAXINT
     int psize() const;
 
-    /**
-     * \retval true the String has some contents
-     */
-    _SQUID_INLINE_ bool defined() const;
-    /**
-     * \retval true the String does not hold any contents
-     */
-    _SQUID_INLINE_ bool undefined() const;
     /**
      * Returns a raw pointer to the underlying backing store. The caller has been
      * verified not to make any assumptions about null-termination
@@ -120,6 +112,9 @@ private:
     void allocAndFill(const char *str, int len);
     void allocBuffer(size_type sz);
     void setBuffer(char *buf, size_type sz);
+
+    bool defined() const {return buf_!=NULL;}
+    bool undefined() const {return !defined();}
 
     _SQUID_INLINE_ bool nilCmp(bool, bool, int &) const;
 

@@ -16,7 +16,7 @@ class User : public Auth::User
 {
 public:
     MEMPROXY_CLASS(Auth::Negotiate::User);
-    User(Auth::Config *);
+    User(Auth::Config *, const char *requestRealm);
     ~User();
     virtual int32_t ttl() const;
 

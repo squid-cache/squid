@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "adaptation/AccessCheck.h"
 #include "adaptation/AccessRule.h"
@@ -19,13 +20,14 @@ cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,
-                               HttpRequest *req, HttpReply *rep, Adaptation::Initiator *initiator)
+                               HttpRequest *req, HttpReply *rep,
+                               AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator)
 {
 
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
         AsyncJob::Start(new AccessCheck( // we do not store so not a CbcPointer
-                            ServiceFilter(method, vp, req, rep), initiator));
+                            ServiceFilter(method, vp, req, rep, al), initiator));
         return true;
     }
 
@@ -124,6 +126,7 @@ Adaptation::AccessCheck::checkCandidates()
             acl_checklist = new ACLFilledChecklist(r->acl, filter.request, dash_str);
             if ((acl_checklist->reply = filter.reply))
                 HTTPMSGLOCK(acl_checklist->reply);
+            acl_checklist->al = filter.al;
             acl_checklist->nonBlockingCheck(AccessCheckCallbackWrapper, this);
             return;
         }

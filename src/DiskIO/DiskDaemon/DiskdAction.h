@@ -7,8 +7,8 @@
 #define SQUID_DISKD_ACTION_H
 
 #include "ipc/forward.h"
-#include "mgr/forward.h"
 #include "mgr/Action.h"
+#include "mgr/forward.h"
 
 /// store disk daemon stats
 class DiskdActionData

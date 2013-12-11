@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
@@ -7,6 +8,8 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "format/Format.h"
+#include "MemBuf.h"
 #include "SquidTime.h"
 
 Auth::Digest::UserRequest::UserRequest() :
@@ -54,6 +57,12 @@ Auth::Digest::UserRequest::authenticated() const
         return 1;
 
     return 0;
+}
+
+const char *
+Auth::Digest::UserRequest::credentialsStr()
+{
+    return realm;
 }
 
 /** log a digest user in
@@ -149,14 +158,14 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
             digest_request->setDenyMessage("Incorrect password");
             return;
         }
+    }
 
-        /* check for stale nonce */
-        if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
-            debugs(29, 3, HERE << "user '" << auth_user->username() << "' validated OK but nonce stale");
-            auth_user->credentials(Auth::Failed);
-            digest_request->setDenyMessage("Stale nonce");
-            return;
-        }
+    /* check for stale nonce */
+    if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
+        debugs(29, 3, "user '" << auth_user->username() << "' validated OK but nonce stale");
+        auth_user->credentials(Auth::Failed);
+        digest_request->setDenyMessage("Stale nonce");
+        return;
     }
 
     auth_user->credentials(Auth::Ok);
@@ -248,7 +257,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
 
 /* send the initial data to a digest authenticator module */
 void
-Auth::Digest::UserRequest::module_start(AUTHCB * handler, void *data)
+Auth::Digest::UserRequest::module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     char buf[8192];
 
@@ -261,12 +270,19 @@ Auth::Digest::UserRequest::module_start(AUTHCB * handler, void *data)
         return;
     }
 
+    const char *keyExtras = helperRequestKeyExtras(request, al);
     if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->utf8) {
         char userstr[1024];
         latin1_to_utf8(userstr, sizeof(userstr), user()->username());
-        snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
+        if (keyExtras)
+            snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", userstr, realm, keyExtras);
+        else
+            snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
     } else {
-        snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
+        if (keyExtras)
+            snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", user()->username(), realm, keyExtras);
+        else
+            snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
     }
 
     helperSubmit(digestauthenticators, buf, Auth::Digest::UserRequest::HandleReply,
@@ -281,6 +297,10 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     assert(replyData->auth_user_request != NULL);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
+
+    // add new helper kv-pair notes to the credentials object
+    // so that any transaction using those credentials can access them
+    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
 
     static bool oldHelperWarningDone = false;
     switch (reply.result) {

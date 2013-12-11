@@ -43,10 +43,10 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
-#include "ClientRequestContext.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
@@ -62,8 +62,8 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "ipcache.h"
 #include "ip/QosConfig.h"
+#include "ipcache.h"
 #include "log/access_log.h"
 #include "MemObject.h"
 #include "Parsing.h"
@@ -89,8 +89,8 @@
 #endif
 #endif
 #if USE_SSL
-#include "ssl/support.h"
 #include "ssl/ServerBump.h"
+#include "ssl/support.h"
 #endif
 
 #if LINGERING_CLOSE
@@ -160,10 +160,13 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #endif
         loggingEntry_(NULL)
 {
-    start_time = current_time;
     setConn(aConn);
     al = new AccessLogEntry;
+    al->cache.start_time = current_time;
     al->tcpClient = clientConnection = aConn->clientConnection;
+    al->cache.port =  cbdataReference(aConn->port);
+    al->cache.caddr = aConn->log_addr;
+
 #if USE_SSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
         if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
@@ -322,7 +325,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
-    http->start_time = current_time;
+    if (http->al != NULL)
+        http->al->cache.start_time = current_time;
     /* this is only used to adjust the connection offset in client_side.c */
     http->req_sz = 0;
     tempBuffer.length = taillen;
@@ -506,6 +510,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         */
         ConnStateData *conn = http->getConn();
         conn->log_addr = request->indirect_client_addr;
+        http->al->cache.caddr = conn->log_addr;
     }
     request->x_forwarded_for_iterator.clean();
     request->flags.done_follow_x_forwarded_for = true;
@@ -1706,7 +1711,7 @@ ClientHttpRequest::doCallouts()
             calloutContext->adaptation_acl_check_done = true;
             if (Adaptation::AccessCheck::Start(
                         Adaptation::methodReqmod, Adaptation::pointPreCache,
-                        request, NULL, this))
+                        request, NULL, calloutContext->http->al, this))
                 return; // will call callback
         }
 #endif
@@ -1855,7 +1860,7 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
     assert(!virginHeadSource);
     assert(!adaptedBodySource);
     virginHeadSource = initiateAdaptation(
-                           new Adaptation::Iterator(request, NULL, g));
+                           new Adaptation::Iterator(request, NULL, al, g));
 
     // we could try to guess whether we can bypass this adaptation
     // initiation failure, but it should not really happen
@@ -1896,6 +1901,11 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
         HTTPMSGUNLOCK(request);
         request = new_req;
         HTTPMSGLOCK(request);
+
+        // update the new message to flag whether URL re-writing was done on it
+        if (strcmp(urlCanonical(request),uri) != 0)
+            request->flags.redirected = 1;
+
         /*
          * Store the new URI for logging
          */

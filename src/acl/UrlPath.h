@@ -35,8 +35,8 @@
 #define SQUID_ACLURLPATH_H
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class ACLUrlPathStrategy : public ACLStrategy<char const *>
 {

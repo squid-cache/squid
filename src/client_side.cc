@@ -86,9 +86,9 @@
 #include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_db.h"
+#include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
-#include "client_side.h"
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
@@ -136,16 +136,16 @@
 #include "ClientInfo.h"
 #endif
 #if USE_SSL
-#include "ssl/ProxyCerts.h"
 #include "ssl/context_storage.h"
+#include "ssl/gadgets.h"
 #include "ssl/helper.h"
+#include "ssl/ProxyCerts.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
-#include "ssl/gadgets.h"
 #endif
 #if USE_SSL_CRTD
-#include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
+#include "ssl/crtd_message.h"
 #endif
 
 #if HAVE_LIMITS_H
@@ -543,7 +543,7 @@ ClientHttpRequest::updateCounters()
         ++ statCounter.client_http.errors;
 
     clientUpdateStatHistCounters(logType,
-                                 tvSubMsec(start_time, current_time));
+                                 tvSubMsec(al->cache.start_time, current_time));
 
     clientUpdateHierCounters(&request->hier);
 }
@@ -597,7 +597,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
     if (request->content_length > 0) // negative when no body or unknown length
-        aLogEntry->cache.requestSize += request->content_length;
+        aLogEntry->http.clientRequestSz.payloadData += request->content_length; // XXX: actually adaptedRequest payload size ??
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
     // Adapted request, if any, inherits and then collects all the stats, but
@@ -631,26 +631,18 @@ ClientHttpRequest::logRequest()
     debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
 
     if (loggingEntry() && loggingEntry()->mem_obj)
-        al->cache.objectSize = loggingEntry()->contentLen();
+        al->cache.objectSize = loggingEntry()->contentLen(); // payload duplicate ?? with or without TE ?
 
-    al->cache.caddr.setNoAddr();
-
-    if (getConn() != NULL) {
-        al->cache.caddr = getConn()->log_addr;
-        al->cache.port =  cbdataReference(getConn()->port);
-    }
-
-    al->cache.requestSize = req_sz;
-    al->cache.requestHeadersSize = req_sz;
-
-    al->cache.replySize = out.size;
-    al->cache.replyHeadersSize = out.headers_sz;
+    al->http.clientRequestSz.header = req_sz;
+    al->http.clientReplySz.header = out.headers_sz;
+    // XXX: calculate without payload encoding or headers !!
+    al->http.clientReplySz.payloadData = out.size - out.headers_sz; // pretend its all un-encoded data for now.
 
     al->cache.highOffset = out.offset;
 
     al->cache.code = logType;
 
-    al->cache.msec = tvSubMsec(start_time, current_time);
+    al->cache.msec = tvSubMsec(al->cache.start_time, current_time);
 
     if (request)
         prepareLogWithRequestDetails(request, al);
@@ -670,11 +662,10 @@ ClientHttpRequest::logRequest()
 
     /*Add notes*/
     // The al->notes and request->notes must point to the same object.
-    // Enable the following assertion to check for possible bugs.
-    // assert(request->notes == al->notes);
+    (void)SyncNotes(*al, *request);
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-        if (const char *value = (*i)->match(request, al->reply)) {
+        if (const char *value = (*i)->match(request, al->reply, NULL)) {
             NotePairs &notes = SyncNotes(*al, *request);
             notes.add((*i)->key.termedBuf(), value);
             debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
@@ -3798,7 +3789,7 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    certProperties.commonName =  sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
+    certProperties.commonName =  sslCommonName.size() > 0 ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 
     // fake certificate adaptation requires bump-server-first mode
     if (!sslServerBump) {
@@ -3893,7 +3884,7 @@ ConnStateData::getSslContextStart()
         Ssl::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
         sslBumpCertKey = certProperties.dbKey().c_str();
-        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+        assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
 
         debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
@@ -3960,7 +3951,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
         //else it is self-signed or untrusted do not attrach any certificate
 
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
-        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+        assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
         if (sslContext) {
             if (!ssl_ctx_cache.add(sslBumpCertKey.termedBuf(), new Ssl::SSL_CTX_Pointer(sslContext))) {
                 // If it is not in storage delete after using. Else storage deleted it.
@@ -4332,7 +4323,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
     ConnStateData * conn = http->getConn();
     ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
             cbdataReferenceValid(conn) && conn != NULL && conn->clientConnection != NULL ? conn->clientConnection->rfc931 : dash_str);
-
+    ch->al = http->al;
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store
      * the ident result on persistent connections...

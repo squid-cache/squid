@@ -33,8 +33,8 @@
 
 #if USE_AUTH
 
-#include "base/Vector.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
 
 /**
  \defgroup AuthSchemeAPI	Authentication Scheme API

@@ -76,9 +76,9 @@
 /* components as found to be needed                  */
 /*****************************************************/
 
+#include "compat/assert.h"
 #include "compat/compat_shared.h"
 #include "compat/stdvarargs.h"
-#include "compat/assert.h"
 
 /* cstdio has a bunch of problems with 64-bit definitions */
 #include "compat/stdio.h"

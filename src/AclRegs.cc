@@ -5,6 +5,10 @@
     does not get linked in, because nobody is using these classes by name.
 */
 
+#if USE_ADAPTATION
+#include "acl/AdaptationService.h"
+#include "acl/AdaptationServiceData.h"
+#endif
 #include "acl/AllOf.h"
 #include "acl/AnyOf.h"
 #if USE_SQUID_EUI
@@ -24,8 +28,8 @@
 #endif
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "acl/HierCodeData.h"
 #include "acl/HierCode.h"
+#include "acl/HierCodeData.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/HttpRepHeader.h"
 #include "acl/HttpReqHeader.h"
@@ -35,14 +39,14 @@
 #include "acl/LocalIp.h"
 #include "acl/LocalPort.h"
 #include "acl/MaxConnection.h"
-#include "acl/MethodData.h"
 #include "acl/Method.h"
+#include "acl/MethodData.h"
 #include "acl/MyPortName.h"
 #include "acl/Note.h"
 #include "acl/NoteData.h"
 #include "acl/PeerName.h"
-#include "acl/ProtocolData.h"
 #include "acl/Protocol.h"
+#include "acl/ProtocolData.h"
 #include "acl/Random.h"
 #include "acl/Referer.h"
 #include "acl/RegexData.h"
@@ -54,10 +58,10 @@
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
 #if USE_SSL
-#include "acl/SslErrorData.h"
-#include "acl/SslError.h"
-#include "acl/CertificateData.h"
 #include "acl/Certificate.h"
+#include "acl/CertificateData.h"
+#include "acl/SslError.h"
+#include "acl/SslErrorData.h"
 #endif
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
@@ -66,16 +70,16 @@
 #include "acl/ServerCertificate.h"
 #endif
 #include "acl/Tag.h"
-#include "acl/TimeData.h"
 #include "acl/Time.h"
+#include "acl/TimeData.h"
 #include "acl/Url.h"
 #include "acl/UrlLogin.h"
 #include "acl/UrlPath.h"
 #include "acl/UrlPort.h"
 #include "acl/UserData.h"
 #if USE_AUTH
-#include "auth/AclProxyAuth.h"
 #include "auth/AclMaxUserIp.h"
+#include "auth/AclProxyAuth.h"
 #endif
 #if USE_IDENT
 #include "ident/AclIdent.h"
@@ -193,3 +197,8 @@ Acl::AllOf Acl::AllOf::RegistryEntry_;
 
 ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
 ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
+
+#if USE_ADAPTATION
+ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");
+ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptationServiceData, ACLAdaptationServiceStrategy::Instance(), "adaptation_service");
+#endif

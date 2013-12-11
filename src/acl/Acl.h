@@ -135,7 +135,7 @@ public:
 
     char name[ACL_NAME_SZ];
     char *cfgline;
-    ACL *next;
+    ACL *next; // XXX: remove or at least use refcounting
     ACLFlags flags; ///< The list of given ACL flags
     bool registered; ///< added to Config.aclList and can be reused via by FindByName()
 
@@ -244,6 +244,7 @@ public:
 MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
 
 /// \ingroup ACLAPI
+/// XXX: find a way to remove or at least use a refcounted ACL pointer
 extern const char *AclMatchedName;	/* NULL */
 
 #endif /* SQUID_ACL_H */

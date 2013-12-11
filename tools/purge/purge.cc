@@ -115,12 +115,12 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "convert.hh"
-#include "socket.hh"
-#include "signal.hh"
-#include "squid-tlv.hh"
-#include "copyout.hh"
 #include "conffile.hh"
+#include "convert.hh"
+#include "copyout.hh"
+#include "signal.hh"
+#include "socket.hh"
+#include "squid-tlv.hh"
 
 #ifndef DEFAULTHOST
 #define DEFAULTHOST "localhost"

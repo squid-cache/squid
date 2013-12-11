@@ -33,8 +33,8 @@
 #ifndef SQUID_ACLLOCALPORT_H
 #define SQUID_ACLLOCALPORT_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 /// \ingroup ACLAPI
 class ACLLocalPortStrategy : public ACLStrategy<int>

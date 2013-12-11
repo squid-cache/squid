@@ -33,8 +33,8 @@
 #ifndef SQUID_ACLMETHOD_H
 #define SQUID_ACLMETHOD_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "HttpRequestMethod.h"
 
 /// \ingroup ACLAPI

@@ -2,12 +2,12 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
-#include "testHttpReply.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
+#include "testHttpReply.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 

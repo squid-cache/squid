@@ -30,6 +30,7 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/Registration.h"
+#include "SBufDetailedStats.h"
 #include "SBufStatsAction.h"
 #include "StoreEntryStream.h"
 
@@ -48,6 +49,8 @@ SBufStatsAction::add(const Mgr::Action& action)
 {
     sbdata += dynamic_cast<const SBufStatsAction&>(action).sbdata;
     mbdata += dynamic_cast<const SBufStatsAction&>(action).mbdata;
+    sbsizesatdestruct += dynamic_cast<const SBufStatsAction&>(action).sbsizesatdestruct;
+    mbsizesatdestruct += dynamic_cast<const SBufStatsAction&>(action).mbsizesatdestruct;
 }
 
 void
@@ -55,17 +58,24 @@ SBufStatsAction::collect()
 {
     sbdata = SBuf::GetStats();
     mbdata = MemBlob::GetStats();
+    sbsizesatdestruct = *collectSBufDestructTimeStats();
+    mbsizesatdestruct = *collectMemBlobDestructTimeStats();
 }
 
 void
 SBufStatsAction::dump(StoreEntry* entry)
 {
     StoreEntryStream ses(entry);
+    ses << "\n\n\nThese statistics are experimental; their format and contents "
+        "should not be relied upon, they are bound to change as "
+        "the SBuf feature is evolved\n";
     sbdata.dump(ses);
     mbdata.dump(ses);
-    ses << "\n\n\nThese statistics are experimental; their format and contents "
-    "should not be relied upon, they are bound to change as "
-    "the SBuf feature is evolved";
+    ses << "\n";
+    ses << "SBuf size distribution at destruct time:\n";
+    sbsizesatdestruct.dump(entry,NULL);
+    ses << "MemBlob size distribution at destruct time:\n";
+    mbsizesatdestruct.dump(entry,NULL);
 }
 
 void

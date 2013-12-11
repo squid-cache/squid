@@ -1,10 +1,10 @@
 #include "squid.h"
 #include "Mem.h"
 #include "SBuf.h"
+#include "SBufFindTest.h"
 #include "SBufStream.h"
 #include "SquidString.h"
 #include "testSBuf.h"
-#include "SBufFindTest.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -674,7 +674,8 @@ testSBuf::testScanf()
     CPPUNIT_ASSERT_EQUAL(static_cast<float>(123.5),f);
 }
 
-void testSBuf::testCopy()
+void
+testSBuf::testCopy()
 {
     char buf[40]; //shorter than literal()
     SBuf s(fox1),s2;
@@ -687,7 +688,8 @@ void testSBuf::testCopy()
     CPPUNIT_ASSERT_EQUAL(s2,s);
 }
 
-void testSBuf::testStringOps()
+void
+testSBuf::testStringOps()
 {
     SBuf sng(literal.toLower()),
     ref("the quick brown fox jumped over the lazy dog");
@@ -700,7 +702,8 @@ void testSBuf::testStringOps()
     CPPUNIT_ASSERT_EQUAL(0,SBuf("the").compare(SBuf("THE"),caseInsensitive,6));
 }
 
-void testSBuf::testGrow()
+void
+testSBuf::testGrow()
 {
     SBuf t;
     t.assign("foo");
@@ -714,7 +717,8 @@ void testSBuf::testGrow()
     CPPUNIT_ASSERT_EQUAL(ref,match);
 }
 
-void testSBuf::testStartsWith()
+void
+testSBuf::testStartsWith()
 {
     static SBuf casebuf("THE QUICK");
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1)));
@@ -730,7 +734,8 @@ void testSBuf::testStartsWith()
     CPPUNIT_ASSERT_EQUAL(false,literal.startsWith(casebuf,caseInsensitive));
 }
 
-void testSBuf::testSBufStream()
+void
+testSBuf::testSBufStream()
 {
     SBuf b("const.string, int 10 and a float 10.5");
     SBufStream ss;
@@ -747,7 +752,8 @@ void testSBuf::testSBufStream()
     CPPUNIT_ASSERT_EQUAL(f1,SBuf(fox1));
 }
 
-void testSBuf::testFindFirstOf()
+void
+testSBuf::testFindFirstOf()
 {
     SBuf haystack(literal);
     SBuf::size_type idx;
@@ -769,13 +775,15 @@ void testSBuf::testFindFirstOf()
     CPPUNIT_ASSERT_EQUAL(4U,idx);
 }
 
-void testSBuf::testAutoFind()
+void
+testSBuf::testAutoFind()
 {
     SBufFindTest test;
     test.run();
 }
 
-void testSBuf::testStdStringOps()
+void
+testSBuf::testStdStringOps()
 {
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     std::string astr(alphabet);

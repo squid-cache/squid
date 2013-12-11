@@ -6,8 +6,8 @@
 #include "base/TextException.h"
 #include "globals.h"
 #include "ipc/Kids.h"
-#include "tools.h"
 #include "SquidConfig.h"
+#include "tools.h"
 
 Kids TheKids;
 KidName TheKidName;

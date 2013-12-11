@@ -222,7 +222,7 @@ testRock::testRockCreate()
 {
     struct stat sb;
 
-    CPPUNIT_ASSERT(::stat(TESTDIR, &sb) == 0);
+    CPPUNIT_ASSERT_EQUAL(0, ::stat(TESTDIR, &sb));
 
     /* TODO: check the size */
 
@@ -240,8 +240,8 @@ testRock::testRockSwapOut()
 
         StoreEntry *const pe = addEntry(i);
 
-        CPPUNIT_ASSERT(pe->swap_status == SWAPOUT_WRITING);
-        CPPUNIT_ASSERT(pe->swap_dirn == 0);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_WRITING, pe->swap_status);
+        CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
         CPPUNIT_ASSERT(pe->swap_filen >= 0);
 
         // Rock::IoState::finishedWriting() schedules an AsyncCall
@@ -249,7 +249,7 @@ testRock::testRockSwapOut()
         StockEventLoop loop;
         loop.run();
 
-        CPPUNIT_ASSERT(pe->swap_status == SWAPOUT_DONE);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
 
         pe->unlock();
     }
@@ -260,31 +260,30 @@ testRock::testRockSwapOut()
     {
         StoreEntry *const pe = addEntry(4);
 
-        CPPUNIT_ASSERT(pe->swap_status == SWAPOUT_WRITING);
-        CPPUNIT_ASSERT(pe->swap_dirn == 0);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_WRITING, pe->swap_status);
+        CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
         CPPUNIT_ASSERT(pe->swap_filen >= 0);
 
         StockEventLoop loop;
         loop.run();
 
-        CPPUNIT_ASSERT(pe->swap_status == SWAPOUT_DONE);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
     }
 
     // try to swap out entry to a used locked slot
     {
         StoreEntry *const pe = addEntry(5);
 
-        CPPUNIT_ASSERT(pe->swap_status == SWAPOUT_WRITING);
-        CPPUNIT_ASSERT(pe->swap_dirn == 0);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_WRITING, pe->swap_status);
+        CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
         CPPUNIT_ASSERT(pe->swap_filen >= 0);
 
         // the slot is locked here because the async calls have not run yet
         StoreEntry *const pe2 = addEntry(5);
-        CPPUNIT_ASSERT(pe2->swap_status == SWAPOUT_NONE);
-        CPPUNIT_ASSERT(pe2->mem_obj->swapout.decision ==
-                       MemObject::SwapOut::swImpossible);
-        CPPUNIT_ASSERT(pe2->swap_dirn == -1);
-        CPPUNIT_ASSERT(pe2->swap_filen == -1);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_NONE, pe2->swap_status);
+        CPPUNIT_ASSERT_EQUAL(MemObject::SwapOut::swImpossible, pe2->mem_obj->swapout.decision);
+        CPPUNIT_ASSERT_EQUAL(-1, pe2->swap_dirn);
+        CPPUNIT_ASSERT_EQUAL(-1, pe2->swap_filen);
 
         StockEventLoop loop;
         loop.run();
@@ -300,6 +299,6 @@ testRock::testRockSwapOut()
         pe->unlink();
 
         StoreEntry *const pe2 = getEntry(i);
-        CPPUNIT_ASSERT(pe2 == NULL);
+        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
     }
 }

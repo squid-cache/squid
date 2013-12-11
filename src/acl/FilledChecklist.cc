@@ -7,8 +7,8 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 #if USE_AUTH
-#include "auth/UserRequest.h"
 #include "auth/AclProxyAuth.h"
+#include "auth/UserRequest.h"
 #endif
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
