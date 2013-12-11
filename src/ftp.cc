@@ -334,6 +334,9 @@ FTPSM *FTP_SM_FUNCS[] = {
     ftpWriteTransferDone,	/* WRITING_DATA (STOR) */
     ftpReadMkdir,		/* SENT_MKDIR */
     NULL,			/* SENT_FEAT */
+    NULL,			/* SENT_PWD */
+    NULL,			/* SENT_CDUP*/
+    NULL,			/* SENT_DATA_REQUEST */
     NULL			/* SENT_COMMAND */
 };
 

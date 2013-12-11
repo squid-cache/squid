@@ -8,6 +8,7 @@
 
 #include "Server.h"
 
+class String;
 namespace Ftp {
 
 extern const char *const crlf;
@@ -115,6 +116,8 @@ public:
         WRITING_DATA,
         SENT_MKDIR,
         SENT_FEAT,
+        SENT_PWD,
+        SENT_CDUP,
         SENT_DATA_REQUEST, // LIST, NLST or RETR requests..
         SENT_COMMAND, // General command
         END
@@ -157,7 +160,10 @@ private:
 bool ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr);
 /// parses and validates EPRT "<d><net-prt><d><net-addr><d><tcp-port><d>" proto,ip,port sequence
 bool ParseProtoIpPort(const char *buf, Ip::Address &addr);
-
+/// parses a ftp quoted quote-escaped path
+const char *unescapeDoubleQuoted(const char *quotedPath);
+/// Return true if the FTP command takes as parameter a pathname
+bool hasPathParameter(const String &cmd);
 }; // namespace Ftp
 
 #endif /* SQUID_FTP_SERVER_H */

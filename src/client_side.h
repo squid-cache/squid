@@ -347,10 +347,15 @@ public:
         FTP_HANDLE_UPLOAD_REQUEST,
         FTP_HANDLE_EPRT,
         FTP_HANDLE_EPSV,
+        FTP_HANDLE_CWD,
+        FTP_HANDLE_PASS,
+        FTP_HANDLE_CDUP,
         FTP_ERROR
     };
     struct {
         String uri;
+        String host;
+        String workingDir;
         FtpState state;
         bool readGreeting;
         bool gotEpsvAll; ///< restrict data conn setup commands to just EPSV
@@ -363,6 +368,8 @@ public:
         AsyncCall::Pointer connector; ///< set when we are actively connecting
         AsyncCall::Pointer reader; ///< set when we are reading FTP data
     } ftp;
+    const char *ftpBuildUri(const char *file = NULL);
+    void ftpSetWorkingDir(const char *dir);
 
 #if USE_SSL
     /// called by FwdState when it is done bumping the server

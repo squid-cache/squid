@@ -16,8 +16,10 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "ip/tools.h"
+#include "SquidString.h"
 #include "tools.h"
 #include "wordlist.h"
+#include <set>
 
 namespace Ftp {
 
@@ -1172,4 +1174,41 @@ Ftp::ParseProtoIpPort(const char *buf, Ip::Address &addr)
 
     addr.port(port);
     return true;
+}
+
+const char *
+Ftp::unescapeDoubleQuoted(const char *quotedPath)
+{
+    static MemBuf path;
+    path.reset();
+    const char *s = quotedPath;
+    if (*s == '"') {
+        ++s;
+        bool parseDone = false;
+        while (!parseDone) {
+            if (const char *e = strchr(s, '"')) {
+                path.append(s, e - s);
+                s = e + 1;
+                if (*s == '"') {
+                    path.append(s, 1);
+                    ++s;
+                } else
+                    parseDone = true;
+            } else { //parse error
+                parseDone = true;
+                path.reset();
+            }
+        }
+    }
+    return path.content();
+}
+
+bool
+Ftp::hasPathParameter(const String &cmd)
+{
+    static const char *pathCommandsStr[]= {"CWD","SMNT", "RETR", "STOR", "APPE",
+                                           "RNFR", "RNTO", "DELE", "RMD", "MKD",
+                                           "LIST", "NLST", "STAT"};
+    static const std::set<String> pathCommands(pathCommandsStr, pathCommandsStr + sizeof(pathCommandsStr)/sizeof(pathCommandsStr[0]));
+    return pathCommands.find(cmd) != pathCommands.end();
 }
