@@ -32,13 +32,13 @@ testTokenizer_SOURCES = \
 	$(SBUF_SOURCE) \
 	testTokenizer.h \
 	testTokenizer.cc \
-	Tokenizer.h \
+	Tokenizer.h
+nodist_testTokenizer_SOURCES = \
+	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/tests/stub_mem.cc \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/tests/stub_time.cc \
 	$(top_srcdir)/src/tests/stub_SBufDetailedStats.cc
-nodist_testTokenizer_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc
 testTokenizer_LDFLAGS = $(LIBADD_DL)
 testTokenizer_LDADD = \
 	libsquid-parser.la \
