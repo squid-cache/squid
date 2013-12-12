@@ -13,8 +13,10 @@ Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 bool
 Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
 {
-    //TODO
-    return false;
+    const SBuf::size_type pos=find_first_not_in(tokenChars);
+    if (pos == SBuf::npos)
+        return false;
+
 }
 
 bool
@@ -52,7 +54,11 @@ Tokenizer::find_first_in (const CharacterSet &set)
 SBuf::size_type
 Tokenizer::find_first_not_in (const CharacterSet &set)
 {
-    //TODO
+    SBuf::size_type rv;
+    const SBuf::size_type len=buf_.length();
+    for (rv = 0; rv < len; ++rv)
+        if (!set[buf_[rv]])
+            return rv;
     return SBuf::npos;
 }
 
