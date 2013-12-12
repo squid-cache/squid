@@ -46,6 +46,8 @@
 extern "C" {
 #endif
 
+#define SQUID_EUI64_ATON 1
+
     /**
      * Size of the ASCII representation of an EUI-64.
      */
