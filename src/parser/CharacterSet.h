@@ -8,9 +8,10 @@ namespace Parser {
 class CharacterSet
 {
 public:
+    //XXX: use unsigned chars?
     CharacterSet(const char *label, const char * const c) : name(label) {
-        const size_t = strlen(c);
-        for (size_t i = 0; i < len; ++i) {
+        size_t clen = strlen(c);
+        for (size_t i = 0; i < clen; ++i) {
             chars_[static_cast<uint8_t>(c[i])] = true;
         }
     }
@@ -24,8 +25,9 @@ public:
     /// add all characters from the given CharacterSet to this one
     const CharacterSet &operator +=(const CharacterSet &src) {
         // TODO: iterate src.chars_ vector instead of walking the entire 8-bit space
-        for (size_t i = 0; i < 256; ++i)
-            chars_[static_cast<uint8_t>(c)] = true;
+        for (uint8_t i = 0; i < 256; ++i)
+            if (src.chars_[i])
+                chars_[i] = true;
         return *this;
     }
 
