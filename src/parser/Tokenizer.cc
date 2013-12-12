@@ -13,10 +13,16 @@ Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 bool
 Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
 {
-    const SBuf::size_type pos=find_first_not_in(tokenChars);
-    if (pos == SBuf::npos)
+    SBuf::size_type prefixLen = 0;
+    const SBuf::size_type len=buf_.length();
+    while (prefixLen < len) {
+        if (!tokenChars[buf_[prefixLen]])
+            break;
+        ++prefixLen;
+    }
+    if (prefixLen == 0)
         return false;
-    //finish
+    returnedToken = buf_.consume(prefixLen);
     return true;
 }
 
@@ -55,12 +61,7 @@ Tokenizer::find_first_in (const CharacterSet &set)
 SBuf::size_type
 Tokenizer::find_first_not_in (const CharacterSet &set)
 {
-    SBuf::size_type rv;
-    const SBuf::size_type len=buf_.length();
-    for (rv = 0; rv < len; ++rv)
-        if (!set[buf_[rv]])
-            return rv;
-    return SBuf::npos;
+    return 0;
 }
 
 } /* namespace Parser */

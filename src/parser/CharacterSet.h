@@ -3,6 +3,7 @@
 
 #include <vector>
 
+//#include <iostream>
 namespace Parser {
 
 class CharacterSet
@@ -10,10 +11,10 @@ class CharacterSet
 public:
     //XXX: use unsigned chars?
     CharacterSet(const char *label, const char * const c) : name(label) {
+        chars_.reserve(256);
         size_t clen = strlen(c);
-        for (size_t i = 0; i < clen; ++i) {
+        for (size_t i = 0; i < clen; ++i)
             chars_[static_cast<uint8_t>(c[i])] = true;
-        }
     }
 
     /// whether a given character exists in the set
@@ -25,9 +26,12 @@ public:
     /// add all characters from the given CharacterSet to this one
     const CharacterSet &operator +=(const CharacterSet &src) {
         // TODO: iterate src.chars_ vector instead of walking the entire 8-bit space
-        for (uint8_t i = 0; i < 256; ++i)
-            if (src.chars_[i])
+        for (uint8_t i = 0; i < 256; ++i) {
+            if (src.chars_[i]) {
+//                std::cout << static_cast<int>(i) << ',';
                 chars_[i] = true;
+            }
+        }
         return *this;
     }
 
@@ -36,7 +40,7 @@ public:
 
 private:
     /// characters defined in this set
-    std::vector<bool> chars_;
+    std::vector<bool> chars_; //std::vector<bool> is optimized
 };
 
 } // namespace Parser
