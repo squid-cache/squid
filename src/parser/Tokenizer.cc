@@ -16,7 +16,8 @@ Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
     const SBuf::size_type pos=find_first_not_in(tokenChars);
     if (pos == SBuf::npos)
         return false;
-
+    //finish
+    return true;
 }
 
 bool
