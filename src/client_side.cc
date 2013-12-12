@@ -5869,8 +5869,7 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
             connState->ftp.host = ipBuf;
         }
     }
-    if (connState->ftp.host.size() == 0)
-        connState->ftp.host = host;
+    connState->ftp.host = host;
 
     String oldUri;
     if (connState->ftp.readGreeting)
