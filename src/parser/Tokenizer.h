@@ -40,8 +40,8 @@ public:
 
 protected:
     //obtain the length of the longest prefix in buf_ only made of chars in tokenChars
-    SBuf::size_type findPrefixLen(const CharacterSet& tokenChars);
-    SBuf::size_type findFirstOf(const CharacterSet& tokenChars);
+    SBuf::size_type findFirstNotIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos = 0);
+    SBuf::size_type findFirstIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos = 0);
 
 private:
    SBuf buf_; ///< yet unparsed input

@@ -11,7 +11,7 @@ SBuf text("GET http://resource.com/path HTTP/1.1\r\n"
     "Cookie: laijkpk3422r j1noin \r\n"
     "\r\n");
 const Parser::CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-const Parser::CharacterSet whitespace("whitespace"," ");
+const Parser::CharacterSet whitespace("whitespace"," \r\n");
 const Parser::CharacterSet crlf("crlf","\r\n");
 const Parser::CharacterSet tab("tab","\t");
 const Parser::CharacterSet numbers("numbers","0123456789");
@@ -83,6 +83,21 @@ testTokenizer::testTokenizerSkip()
 void
 testTokenizer::testTokenizerToken()
 {
+    Parser::Tokenizer t(text);
+    SBuf s;
+
+    // first scenario: patterns match
+    CPPUNIT_ASSERT(t.token(s,whitespace));
+    CPPUNIT_ASSERT_EQUAL(SBuf("GET"),s);
+    CPPUNIT_ASSERT(t.token(s,whitespace));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://resource.com/path"),s);
+    CPPUNIT_ASSERT(t.token(s,whitespace));
+    CPPUNIT_ASSERT_EQUAL(SBuf("HTTP/1.1"),s);
+    CPPUNIT_ASSERT(t.token(s,whitespace));
+    CPPUNIT_ASSERT_EQUAL(SBuf("Host:"),s);
+
+    //no separator found
+    CPPUNIT_ASSERT(!t.token(s,tab));
 
 }
 

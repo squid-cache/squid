@@ -4,9 +4,9 @@
 namespace Parser {
 
 SBuf::size_type
-Tokenizer::findPrefixLen(const CharacterSet& tokenChars)
+Tokenizer::findFirstNotIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos)
 {
-    SBuf::size_type prefixLen = 0;
+    SBuf::size_type prefixLen = startAtPos;
     const SBuf::size_type len = buf_.length();
     while (prefixLen < len) {
         if (!tokenChars[buf_[prefixLen]])
@@ -17,31 +17,38 @@ Tokenizer::findPrefixLen(const CharacterSet& tokenChars)
 }
 
 SBuf::size_type
-Tokenizer::findFirstOf(const CharacterSet& tokenChars)
+Tokenizer::findFirstIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos)
 {
-    SBuf::size_type s = 0;
+    SBuf::size_type i = startAtPos;
     const SBuf::size_type len = buf_.length();
     bool found = false;
-    while (s < len) {
-        if (tokenChars[buf_[prefixLen]]) {
+    while (i < len) {
+        if (tokenChars[buf_[i]]) {
             found = true;
             break;
         }
-        ++s;
+        ++i;
     }
+    return found ? i : SBuf::npos ;
 }
 
 bool
 Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 {
-    //TODO
-    return false;
+    const SBuf::size_type endOfPreWhiteSpace = findFirstNotIn(whitespace);
+    const SBuf::size_type endOfToken = findFirstIn(whitespace, endOfPreWhiteSpace);
+    if (endOfToken == SBuf::npos)
+        return false;
+    buf_.consume(endOfPreWhiteSpace);
+    returnedToken = buf_.consume(endOfToken - endOfPreWhiteSpace);
+    skip(whitespace);
+    return true;
 }
 
 bool
 Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
 {
-    SBuf::size_type prefixLen = findPrefixLen(tokenChars);
+    SBuf::size_type prefixLen = findFirstNotIn(tokenChars);
     if (prefixLen == 0)
         return false;
     returnedToken = buf_.consume(prefixLen);
@@ -51,7 +58,7 @@ Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
 bool
 Tokenizer::skip(const CharacterSet &tokenChars)
 {
-    SBuf::size_type prefixLen = findPrefixLen(tokenChars);
+    SBuf::size_type prefixLen = findFirstNotIn(tokenChars);
     if (prefixLen == 0)
         return false;
     buf_.consume(prefixLen);
