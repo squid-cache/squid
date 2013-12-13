@@ -3,7 +3,6 @@
 
 #include <vector>
 
-//#include <iostream>
 namespace Parser {
 
 class CharacterSet
@@ -21,15 +20,29 @@ public:
     bool operator[](char c) const {return chars_[static_cast<uint8_t>(c)];}
 
     /// add a given char to the character set
-    void add(const char c) {chars_[static_cast<uint8_t>(c)] = true;}
+    CharacterSet & add(const char c) {chars_[static_cast<uint8_t>(c)] = true; return *this; }
 
     /// add all characters from the given CharacterSet to this one
     const CharacterSet &operator +=(const CharacterSet &src) {
-        // TODO: iterate src.chars_ vector instead of walking the entire 8-bit space
-        for (size_t i = 0; i < 256; ++i) {
-            if (src.chars_[static_cast<uint8_t>(i)])
-                chars_[static_cast<uint8_t>(i)] = true;
+#if 1
+        if (src.chars_.size() > chars_.size())
+            chars_.reserve(src.chars_.size());
+        //notworking
+        std::vector<bool>::const_iterator s = src.chars_.begin();
+        const std::vector<bool>::const_iterator e = src.chars_.end();
+        std::vector<bool>::iterator d = chars_.begin();
+        while (s != e) {
+            if (*s)
+                *d = true;
+            ++s;
+            ++d;
         }
+#else
+        for (int i = 0; i < 256; ++i) {
+            if (src[i])
+                add(i);
+        }
+#endif
         return *this;
     }
 
