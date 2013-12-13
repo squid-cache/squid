@@ -38,6 +38,11 @@ public:
    /// Skips a given character (a token).
    bool skip(const char tokenChar);
 
+protected:
+    //obtain the length of the longest prefix in buf_ only made of chars in tokenChars
+    SBuf::size_type findPrefixLen(const CharacterSet& tokenChars);
+    SBuf::size_type findFirstOf(const CharacterSet& tokenChars);
+
 private:
    SBuf buf_; ///< yet unparsed input
 };

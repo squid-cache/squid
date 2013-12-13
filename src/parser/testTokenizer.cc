@@ -53,6 +53,30 @@ testTokenizer::testTokenizerPrefix()
 void
 testTokenizer::testTokenizerSkip()
 {
+    Parser::Tokenizer t(text);
+    SBuf s;
+
+    // first scenario: patterns match
+    // prep for test
+    CPPUNIT_ASSERT(t.prefix(s,alpha));
+    CPPUNIT_ASSERT_EQUAL(SBuf("GET"),s);
+
+    // test skip testing character set
+    CPPUNIT_ASSERT(t.skip(whitespace));
+    // check that skip was right
+    CPPUNIT_ASSERT(t.prefix(s,alpha));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http"),s);
+
+    //check skip prefix
+    CPPUNIT_ASSERT(t.skip(SBuf("://")));
+    // verify
+    CPPUNIT_ASSERT(t.prefix(s,alpha));
+    CPPUNIT_ASSERT_EQUAL(SBuf("resource"),s);
+
+    // no skip
+    CPPUNIT_ASSERT(!t.skip(alpha));
+    CPPUNIT_ASSERT(!t.skip(SBuf("://")));
+    CPPUNIT_ASSERT(!t.skip('a'));
 
 }
 
