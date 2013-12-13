@@ -5857,7 +5857,7 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
     }
 
     const String login = params.substr(0, eou);
-    const String host = params.substr(eou + 1, params.size());
+    String host = params.substr(eou + 1, params.size());
     // If we can parse it as raw IPv6 address, then surround with "[]".
     // Otherwise (domain, IPv4, [bracketed] IPv6, garbage, etc), use as is.
     if (host.pos(":")) {
@@ -5866,7 +5866,7 @@ FtpHandleUserRequest(ConnStateData *connState, const String &cmd, String &params
         ipa = host.termedBuf();
         if (!ipa.isAnyAddr()) {
             ipa.toHostStr(ipBuf, MAX_IPSTRLEN);
-            connState->ftp.host = ipBuf;
+            host = ipBuf;
         }
     }
     connState->ftp.host = host;
@@ -6200,7 +6200,7 @@ FtpSetReply(ClientSocketContext *context, const int code, const char *msg)
     header.putStr(HDR_FTP_REASON, msg);
     reply->hdrCacheInit();
 
-    setLogUri(http, http->uri,  true);
+    setLogUri(http, http->uri);
 
     clientStreamNode *const node = context->getClientReplyContext();
     clientReplyContext *const repContext =
