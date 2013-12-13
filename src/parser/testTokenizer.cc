@@ -10,11 +10,22 @@ SBuf text("GET http://resource.com/path HTTP/1.1\r\n"
     "Host: resource.com\r\n"
     "Cookie: laijkpk3422r j1noin \r\n"
     "\r\n");
-const Parser::CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+const Parser::CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 const Parser::CharacterSet whitespace("whitespace"," ");
 const Parser::CharacterSet crlf("crlf","\r\n");
 const Parser::CharacterSet tab("tab","\t");
 
+#include <iostream>
+std::ostream &dumpCharSet(std::ostream &os, const Parser::CharacterSet &cs) {
+    for (int i = 0; i < 256; ++i) {
+        if (cs[i])
+            os << static_cast<char>(i);
+        else
+            os << '.';
+    }
+    os << std::endl;
+    return os;
+}
 void
 testTokenizer::testTokenizerPrefix()
 {
@@ -40,11 +51,18 @@ testTokenizer::testTokenizerPrefix()
     CPPUNIT_ASSERT_EQUAL(SBuf("http"),s); //output SBuf left untouched
 
     // match until the end of the sample
-    Parser::CharacterSet all(alpha);
-    // TODO: finish from here. But += is buggy
-//    all += whitespace;
-//    all += crlf;
-
+    dumpCharSet(std::cout,alpha);
+    dumpCharSet(std::cout,whitespace);
+    Parser::CharacterSet all("all"," ");
+    dumpCharSet(std::cout,all);
+    all += alpha;
+    dumpCharSet(std::cout,all);
+    all += crlf;
+    dumpCharSet(std::cout,all);
+    all.add(':').add('.').add('/');
+    dumpCharSet(std::cout,all);
+    CPPUNIT_ASSERT(t.prefix(s,all));
+    CPPUNIT_ASSERT_EQUAL(SBuf(),t.remaining());
 }
 
 void
