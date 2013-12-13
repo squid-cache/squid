@@ -40,10 +40,6 @@ public:
 
 private:
    SBuf buf_; ///< yet unparsed input
-
-   /// find the position of the first character in the set. Return npos if not found
-   SBuf::size_type find_first_in (const CharacterSet &set);
-   SBuf::size_type find_first_not_in (const CharacterSet &set);
 };
 
 
