@@ -46,22 +46,4 @@ Tokenizer::skip(const char tokenChar)
     //TODO
     return false;
 }
-
-SBuf::size_type
-Tokenizer::find_first_in (const CharacterSet &set)
-{
-    SBuf::size_type rv;
-    const SBuf::size_type len=buf_.length();
-    for (rv = 0; rv < len; ++rv)
-        if (set[buf_[rv]])
-            return rv;
-    return SBuf::npos;
-}
-
-SBuf::size_type
-Tokenizer::find_first_not_in (const CharacterSet &set)
-{
-    return 0;
-}
-
 } /* namespace Parser */
