@@ -14,18 +14,8 @@ const Parser::CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL
 const Parser::CharacterSet whitespace("whitespace"," ");
 const Parser::CharacterSet crlf("crlf","\r\n");
 const Parser::CharacterSet tab("tab","\t");
+const Parser::CharacterSet numbers("numbers","0123456789");
 
-#include <iostream>
-std::ostream &dumpCharSet(std::ostream &os, const Parser::CharacterSet &cs) {
-    for (int i = 0; i < 256; ++i) {
-        if (cs[i])
-            os << static_cast<char>(i);
-        else
-            os << '.';
-    }
-    os << std::endl;
-    return os;
-}
 void
 testTokenizer::testTokenizerPrefix()
 {
@@ -51,16 +41,11 @@ testTokenizer::testTokenizerPrefix()
     CPPUNIT_ASSERT_EQUAL(SBuf("http"),s); //output SBuf left untouched
 
     // match until the end of the sample
-    dumpCharSet(std::cout,alpha);
-    dumpCharSet(std::cout,whitespace);
-    Parser::CharacterSet all("all"," ");
-    dumpCharSet(std::cout,all);
+    Parser::CharacterSet all(whitespace);
     all += alpha;
-    dumpCharSet(std::cout,all);
     all += crlf;
-    dumpCharSet(std::cout,all);
+    all += numbers;
     all.add(':').add('.').add('/');
-    dumpCharSet(std::cout,all);
     CPPUNIT_ASSERT(t.prefix(s,all));
     CPPUNIT_ASSERT_EQUAL(SBuf(),t.remaining());
 }
