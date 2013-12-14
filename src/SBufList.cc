@@ -1,7 +1,6 @@
 #include "squid.h"
-#include "SBufList.h"
 #include "SBufAlgos.h"
-#include "wordlist.h"
+#include "SBufList.h"
 
 bool
 IsMember(const SBufList & sl, const SBuf &S, const SBufCaseSensitive case_sensitive)
