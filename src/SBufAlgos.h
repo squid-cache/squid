@@ -2,6 +2,7 @@
 #define SQUID_SBUFALGOS_H_
 
 #include "SBuf.h"
+
 #include <algorithm>
 #include <numeric>
 
@@ -37,12 +38,12 @@ class SBufAddLength
 {
 public:
     explicit SBufAddLength(const SBuf &separator) :
-        separator_len(separator.length()) {}
+        separatorLen_(separator.length()) {}
     SBuf::size_type operator()(const SBuf::size_type sz, const SBuf & item) {
-        return sz + item.length() + separator_len;
+        return sz + item.length() + separatorLen_;
     }
 private:
-    SBuf::size_type separator_len;
+    SBuf::size_type separatorLen_;
 };
 
 /// join all the SBuf in a container of SBuf into a single SBuf, separating with separator
@@ -53,7 +54,11 @@ SBufContainerJoin(const Container &items, const SBuf& separator)
     // optimization: pre-calculate needed storage
     const SBuf::size_type sz = std::accumulate(items.begin(), items.end(), 0, SBufAddLength(separator));
 
-    // protect against blindly dereferencing items.begin() if items.size()==0
+    // sz can be zero in two cases: either items is empty, or all items
+    //  are zero-length. In the former case, we must protect against
+    //  dereferencing the iterator later on, and checking sz is more efficient
+    //  than checking items.size(). This check also provides an optimization
+    //  for the latter case without adding complexity.
     if (sz == 0)
         return SBuf();
 
