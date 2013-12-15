@@ -761,7 +761,7 @@ StoreEntry::setPublicKey()
             StoreEntry *pe = storeCreateEntry(mem_obj->url, mem_obj->log_url, request->flags, request->method);
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
-            rep->setHeaders(HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
+            rep->setHeaders(HTTP_OK, "Internal marker object", "x-squid-internal/vary", 0, -1, squid_curtime + 100000);
             vary = mem_obj->getReply()->header.getList(HDR_VARY);
 
             if (vary.size()) {
@@ -780,11 +780,13 @@ StoreEntry::setPublicKey()
             }
 
 #endif
-            pe->replaceHttpReply(rep);
+            pe->replaceHttpReply(rep, false); // no write until key is public
 
             pe->timestampsSet();
 
             pe->makePublic();
+
+            pe->startWriting(); // after makePublic()
 
             pe->complete();
 

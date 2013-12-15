@@ -507,6 +507,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     if (strcmp(e->mem_obj->url, urlCanonical(r)) != 0) {
         debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->url << "' != '" << urlCanonical(r) << "'");
+        http->logType = LOG_TCP_MISS; // we lack a more precise LOG_*_MISS code
         processMiss();
         return;
     }
@@ -538,6 +539,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     case VARY_CANCEL:
         /* varyEvaluateMatch found a object loop. Process as miss */
         debugs(88, DBG_IMPORTANT, "clientProcessHit: Vary object loop!");
+        http->logType = LOG_TCP_MISS; // we lack a more precise LOG_*_MISS code
         processMiss();
         return;
     }
