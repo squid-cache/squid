@@ -29,6 +29,7 @@
 #ifndef SQUID_SBUF_H
 #define SQUID_SBUF_H
 
+#include "base/CharacterSet.h"
 #include "base/InstanceId.h"
 #include "MemBlob.h"
 #include "SBufExceptions.h"
@@ -513,7 +514,15 @@ public:
      * \param startPos if specified, ignore any occurrences before that position
      *   if npos, then npos is always returned
      */
-    size_type find_first_of(const SBuf &set, size_type startPos = 0) const;
+    size_type find_first_of(const CharacterSet &set, size_type startPos = 0) const;
+
+    /** Find first occurrence character NOT in character set
+     *
+     * \return length() if all characters in the SBuf are from set
+     * \param startPos if specified, ignore any occurrences before that position
+     *   if npos, then npos is always returned
+     */
+    size_type find_first_not_of(const CharacterSet &set, size_type startPos = 0) const;
 
     /** sscanf-alike
      *

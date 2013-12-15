@@ -105,7 +105,7 @@ SBufFindTest::testFindFirstOf()
 {
     theFindString = theStringHay.find_first_of(theStringNeedle, thePos);
     theBareNeedlePos = theStringHay.find_first_of(theStringNeedle);
-    theFindSBuf = theSBufHay.find_first_of(theSBufNeedle, thePos);
+    theFindSBuf = theSBufHay.find_first_of(CharacterSet("cs",theSBufNeedle.c_str()), thePos);
     checkResults("find_first_of");
 }
 
