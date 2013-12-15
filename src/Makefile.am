@@ -1073,6 +1073,7 @@ check_PROGRAMS+=\
 	tests/testString \
 	tests/testURL \
 	tests/testSBuf \
+	tests/testSBufList \
 	tests/testConfigParser \
 	tests/testStatHist \
 	tests/testVector
@@ -2539,6 +2540,8 @@ tests_testHttpParser_SOURCES = \
 	String.cc \
 	cache_cf.h \
 	YesNoNone.h \
+	$(SBUF_SOURCE) \
+	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
@@ -2988,6 +2991,9 @@ tests_testString_SOURCES = \
 	tests/stub_mem.cc \
 	MemBuf.cc \
 	String.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
@@ -3668,12 +3674,54 @@ tests_testSBuf_LDADD=\
 	$(COMMON_LIBS)
 tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
+tests_testSBufList_SOURCES= \
+	tests/testSBufList.h \
+	tests/testSBufList.cc \
+	tests/testMain.cc \
+	$(SBUF_SOURCE) \
+  SBufList.h \
+  SBufList.cc \
+  SBufAlgos.h \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
+	SBufStream.h \
+	tests/stub_time.cc \
+	mem.cc \
+	tests/stub_debug.cc \
+	tests/stub_event.cc \
+	tests/stub_fatal.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_store_stats.cc \
+	tests/stub_tools.cc \
+	SquidString.h \
+	String.cc \
+	tests/stub_wordlist.cc \
+	tests/stub_MemBuf.cc
+nodist_tests_testSBufList_SOURCES=$(TESTSOURCES)
+tests_testSBufList_LDFLAGS = $(LIBADD_DL)
+tests_testSBufList_LDADD=\
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
+	$(COMPAT_LIB) \
+	libsquid.la \
+	ip/libip.la \
+	mgr/libmgr.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMMON_LIBS)
+tests_testSBufList_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
+
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
 	Mem.h \
 	tests/stub_mem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	ConfigParser.cc \
 	fatal.h \
