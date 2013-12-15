@@ -29,7 +29,6 @@
 #ifndef SQUID_SBUF_H
 #define SQUID_SBUF_H
 
-#include "base/CharacterSet.h"
 #include "base/InstanceId.h"
 #include "MemBlob.h"
 #include "SBufExceptions.h"
@@ -101,6 +100,8 @@ public:
 
     SBufStats& operator +=(const SBufStats&);
 };
+
+class CharacterSet;
 
 /**
  * A String or Buffer.

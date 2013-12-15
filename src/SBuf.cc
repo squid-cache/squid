@@ -27,6 +27,7 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "base/RefCount.h"
 #include "Debug.h"
 #include "OutOfBoundsException.h"
