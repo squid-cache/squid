@@ -24,19 +24,7 @@ public:
     CharacterSet & add(const unsigned char c) {chars_[static_cast<uint8_t>(c)] = true; return *this; }
 
     /// add all characters from the given CharacterSet to this one
-    const CharacterSet &operator +=(const CharacterSet &src) {
-        //precondition: src.chars_.size() == chars_.size()
-        vector_type::const_iterator s = src.chars_.begin();
-        const vector_type::const_iterator e = src.chars_.end();
-        vector_type::iterator d = chars_.begin();
-        while (s != e) {
-            if (*s)
-                *d = true;
-            ++s;
-            ++d;
-        }
-        return *this;
-    }
+    const CharacterSet &operator +=(const CharacterSet &src);
 
     /// optional set label fdebugging (default: "anonymous")
     const char * name;
