@@ -9,19 +9,13 @@ class CharacterSet
 public:
     typedef std::vector<uint8_t> vector_type;
 
-    CharacterSet(const char *label, const char * const c)
-    : name(label == NULL ? "anonymous" : label), chars_(vector_type(256,0))
-    {
-        const size_t clen = strlen(c);
-        for (size_t i = 0; i < clen; ++i)
-            add(c[i]);
-    }
+    CharacterSet(const char *label, const char * const c);
 
     /// whether a given character exists in the set
-    bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)];}
+    bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)] == 1;}
 
     /// add a given char to the character set.
-    CharacterSet & add(const unsigned char c) {chars_[static_cast<uint8_t>(c)] = true; return *this; }
+    CharacterSet & add(const unsigned char c);
 
     /// add all characters from the given CharacterSet to this one
     const CharacterSet &operator +=(const CharacterSet &src);
@@ -30,7 +24,12 @@ public:
     const char * name;
 
 private:
-    /// characters present in this set
+    /** characters present in this set.
+     *
+     * \note guaranteed to be always 256 slots wide, as forced in the
+     *  constructor. This assumption is relied upon in operator[], add,
+     *  operator+=
+     */
    vector_type chars_;
 };
 
