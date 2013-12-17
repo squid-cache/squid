@@ -62,21 +62,16 @@ public:
 
     int getMaximum() const {return maximum;}
 
-    int getStrict() const {return flags.strict;}
+    bool getStrict() const {return flags.isSet(ACL_F_STRICT);}
 
 private:
     static Prototype RegistryProtoype;
     static ACLMaxUserIP RegistryEntry_;
+    static ACLFlag  SupportedFlags[];
 
     int match(Auth::UserRequest::Pointer, Ip::Address const &);
     char const *class_;
     int maximum;
-
-    struct Flags {
-        Flags() : strict(false) {}
-
-        bool strict;
-    } flags;
 };
 
 MEMPROXY_CLASS_INLINE(ACLMaxUserIP);
