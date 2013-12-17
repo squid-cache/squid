@@ -9,24 +9,26 @@ class CharacterSet
 public:
     typedef std::vector<uint8_t> vector_type;
 
-    CharacterSet(const char *label, const char * const c);
+    /// define a character set with the given label ("anonymous" if NULL,
+    ///  with specified initial contents
+    CharacterSet(const char *label, const char * const initial);
 
     /// whether a given character exists in the set
     bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)] == 1;}
 
-    /// add a given char to the character set.
+    /// add a given character to the character set.
     CharacterSet & add(const unsigned char c);
 
     /// add all characters from the given CharacterSet to this one
     const CharacterSet &operator +=(const CharacterSet &src);
 
-    /// optional set label fdebugging (default: "anonymous")
+    /// optional set label for debugging (default: "anonymous")
     const char * name;
 
 private:
     /** characters present in this set.
      *
-     * \note guaranteed to be always 256 slots wide, as forced in the
+     * \note guaranteed to be always 256 slots big, as forced in the
      *  constructor. This assumption is relied upon in operator[], add,
      *  operator+=
      */
