@@ -2,18 +2,17 @@
 
 #include "CharacterSet.h"
 
+#include <algorithm>
+
+static bool
+isNonZero(uint8_t i) {
+    return i!=0;
+}
+
 const CharacterSet &
 CharacterSet::operator +=(const CharacterSet &src)
 {
-    vector_type::const_iterator s = src.chars_.begin();
-    const vector_type::const_iterator e = src.chars_.end();
-    vector_type::iterator d = chars_.begin();
-    while (s != e) {
-        if (*s)
-            *d = 1;
-        ++s;
-        ++d;
-    }
+    std::copy_if(src.chars_.begin(),src.chars_.end(),chars_.begin(),isNonZero);
     return *this;
 }
 
