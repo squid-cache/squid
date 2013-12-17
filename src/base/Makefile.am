@@ -13,6 +13,7 @@ libbase_la_SOURCES = \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
 	CharacterSet.h \
+	CharacterSet.cc \
 	TidyPointer.h \
 	CbcPointer.h \
 	InstanceId.h \

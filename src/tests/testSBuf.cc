@@ -784,7 +784,7 @@ testSBuf::testFindFirstNotOf()
 
     // all chars from the set
     idx=haystack.find_first_not_of(CharacterSet("t1",literal.c_str()));
-    CPPUNIT_ASSERT_EQUAL(haystack.length(),idx);
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     // found at beginning
     idx=haystack.find_first_not_of(CharacterSet("t2","a"));
