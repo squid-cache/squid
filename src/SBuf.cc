@@ -731,7 +731,7 @@ SBuf::find_first_not_of(const CharacterSet &set, size_type startPos) const
         ++cur;
     }
     debugs(24, 7, "not found");
-    return length();
+    return npos;
 }
 
 /*
