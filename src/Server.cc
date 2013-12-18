@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
@@ -174,6 +175,8 @@ ServerStateData::setFinalReply(HttpReply *rep)
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
     haveParsedReplyHeaders(); // update the entry/reply (e.g., set timestamps)
+    if (EBIT_TEST(entry->flags, ENTRY_CACHABLE) && blockCaching())
+        entry->release();
     entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
@@ -531,6 +534,24 @@ ServerStateData::haveParsedReplyHeaders()
     const bool partial = theFinalReply->content_range &&
                          theFinalReply->sline.status() == Http::scPartialContent;
     currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
+}
+
+/// whether to prevent caching of an otherwise cachable response
+bool
+ServerStateData::blockCaching()
+{
+    if (const Acl::Tree *acl = Config.accessList.storeMiss) {
+        // This relatively expensive check is not in StoreEntry::checkCachable:
+        // That method lacks HttpRequest and may be called too many times.
+        ACLFilledChecklist ch(acl, originalRequest(), NULL);
+        ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
+        HTTPMSGLOCK(ch.reply);
+        if (ch.fastCheck() != ACCESS_ALLOWED) { // when in doubt, block
+            debugs(20, 3, "store_miss prohibits caching");
+            return true;
+        }
+    }
+    return false;
 }
 
 HttpRequest *
