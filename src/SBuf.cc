@@ -27,6 +27,7 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "base/RefCount.h"
 #include "Debug.h"
 #include "OutOfBoundsException.h"
@@ -688,12 +689,8 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
 }
 
 SBuf::size_type
-SBuf::find_first_of(const SBuf &set, size_type startPos) const
+SBuf::find_first_of(const CharacterSet &set, size_type startPos) const
 {
-    // if set is 1 char big, use the char search. Stats updated there
-    if (set.length() == 1)
-        return find(set[0], startPos);
-
     ++stats.find;
 
     if (startPos == npos)
@@ -702,14 +699,35 @@ SBuf::find_first_of(const SBuf &set, size_type startPos) const
     if (startPos >= length())
         return npos;
 
-    if (set.length() == 0)
+    debugs(24, 7, "first of characterset " << set.name << " in id " << id);
+    char *cur = buf()+startPos;
+    const char *end = bufEnd();
+    while (cur < end) {
+        if (set[*cur])
+            return cur-buf();
+        ++cur;
+    }
+    debugs(24, 7, "not found");
+    return npos;
+}
+
+SBuf::size_type
+SBuf::find_first_not_of(const CharacterSet &set, size_type startPos) const
+{
+    ++stats.find;
+
+    if (startPos == npos)
         return npos;
 
-    debugs(24, 7, "any of '" << set << "' " << " in id " << id);
-    char *cur = buf()+startPos, *end = bufEnd();
+    if (startPos >= length())
+        return npos;
+
+    debugs(24, 7, "first not of characterset " << set.name << " in id " << id);
+    char *cur = buf()+startPos;
+    const char *end = bufEnd();
     while (cur < end) {
-        if (memchr(set.buf(), *cur, set.length()))
-            return (cur-buf());
+        if (!set[*cur])
+            return cur-buf();
         ++cur;
     }
     debugs(24, 7, "not found");
