@@ -15,6 +15,7 @@ DNSSOURCE = \
 	DnsLookupDetails.cc
 
 SBUF_SOURCE= \
+	base/CharacterSet.h \
 	base/InstanceId.h \
 	MemBlob.h \
 	MemBlob.cc \
