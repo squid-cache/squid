@@ -3,20 +3,20 @@
 
 #include <vector>
 
-/// Optimized set of C chars, with quick membership test and merge support
+/// optimized set of C chars, with quick membership test and merge support
 class CharacterSet
 {
 public:
-    typedef std::vector<uint8_t> vector_type;
+    typedef std::vector<uint8_t> Storage;
 
-    /// define a character set with the given label ("anonymous" if NULL,
+    /// define a character set with the given label ("anonymous" if NULL)
     ///  with specified initial contents
     CharacterSet(const char *label, const char * const initial);
 
     /// whether a given character exists in the set
-    bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)] == 1;}
+    bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)] != 0;}
 
-    /// add a given character to the character set.
+    /// add a given character to the character set
     CharacterSet & add(const unsigned char c);
 
     /// add all characters from the given CharacterSet to this one
@@ -26,13 +26,13 @@ public:
     const char * name;
 
 private:
-    /** characters present in this set.
+    /** index of characters in this set
      *
      * \note guaranteed to be always 256 slots big, as forced in the
      *  constructor. This assumption is relied upon in operator[], add,
      *  operator+=
      */
-   vector_type chars_;
+   Storage chars_;
 };
 
 #endif /* _SQUID_SRC_PARSER_CHARACTERSET_H */
