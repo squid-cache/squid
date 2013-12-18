@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "HttpRequestMethod.h"
+#include "SquidConfig.h"
 #include "wordlist.h"
 
 static Http::MethodType &
