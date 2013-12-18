@@ -140,6 +140,7 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void purgeAllCached();
+    bool blockedHit() const;
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();

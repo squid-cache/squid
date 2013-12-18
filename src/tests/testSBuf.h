@@ -35,6 +35,7 @@ class testSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testRFindChar );
     CPPUNIT_TEST( testRFindSBuf );
     CPPUNIT_TEST( testFindFirstOf );
+    CPPUNIT_TEST( testFindFirstNotOf );
     CPPUNIT_TEST( testPrintf );
     CPPUNIT_TEST( testScanf );
     CPPUNIT_TEST( testCopy );
@@ -79,6 +80,7 @@ protected:
     void testStartsWith();
     void testSBufStream();
     void testFindFirstOf();
+    void testFindFirstNotOf();
     void testAutoFind();
     void testStdStringOps();
 };
