@@ -689,7 +689,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
 }
 
 SBuf::size_type
-SBuf::find_first_of(const CharacterSet &set, size_type startPos) const
+SBuf::findFirstOf(const CharacterSet &set, size_type startPos) const
 {
     ++stats.find;
 
@@ -712,7 +712,7 @@ SBuf::find_first_of(const CharacterSet &set, size_type startPos) const
 }
 
 SBuf::size_type
-SBuf::find_first_not_of(const CharacterSet &set, size_type startPos) const
+SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const
 {
     ++stats.find;
 
