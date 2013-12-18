@@ -720,6 +720,9 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     delete sc;
 
     assert(e->locked());
+    // An entry locked by others may be unlocked (and destructed) by others, so
+    // we must lock again to safely dereference e after CheckQuickAbort().
+    e->lock("storeUnregister");
 
     if (mem->nclients == 0)
         CheckQuickAbort(e);
@@ -730,7 +733,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     e->kickProducer();
 #endif
 
-    e->unlock(); // after the "++e->lock_count" above
+    e->unlock("storeUnregister");
     return 1;
 }
 
