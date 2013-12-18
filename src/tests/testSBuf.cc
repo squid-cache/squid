@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "Mem.h"
 #include "SBuf.h"
 #include "SBufFindTest.h"
@@ -759,21 +760,45 @@ testSBuf::testFindFirstOf()
     SBuf::size_type idx;
 
     // not found
-    idx=haystack.find_first_of(SBuf("ADHRWYP"));
+    idx=haystack.findFirstOf(CharacterSet("t1","ADHRWYP"));
     CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
 
     // found at beginning
-    idx=haystack.find_first_of(SBuf("THANDF"));
+    idx=haystack.findFirstOf(CharacterSet("t2","THANDF"));
     CPPUNIT_ASSERT_EQUAL(0U,idx);
 
     //found at end of haystack
-    idx=haystack.find_first_of(SBuf("QWERYVg"));
+    idx=haystack.findFirstOf(CharacterSet("t3","QWERYVg"));
     CPPUNIT_ASSERT_EQUAL(haystack.length()-1,idx);
 
     //found in the middle of haystack
-    idx=haystack.find_first_of(SBuf("QWERqYV"));
+    idx=haystack.findFirstOf(CharacterSet("t4","QWERqYV"));
     CPPUNIT_ASSERT_EQUAL(4U,idx);
 }
+
+void
+testSBuf::testFindFirstNotOf()
+{
+    SBuf haystack(literal);
+    SBuf::size_type idx;
+
+    // all chars from the set
+    idx=haystack.findFirstNotOf(CharacterSet("t1",literal.c_str()));
+    CPPUNIT_ASSERT_EQUAL(SBuf::npos,idx);
+
+    // found at beginning
+    idx=haystack.findFirstNotOf(CharacterSet("t2","a"));
+    CPPUNIT_ASSERT_EQUAL(0U,idx);
+
+    //found at end of haystack
+    idx=haystack.findFirstNotOf(CharacterSet("t3",literal.substr(0,literal.length()-1).c_str()));
+    CPPUNIT_ASSERT_EQUAL(haystack.length()-1,idx);
+
+    //found in the middle of haystack
+    idx=haystack.findFirstNotOf(CharacterSet("t4","The"));
+    CPPUNIT_ASSERT_EQUAL(3U,idx);
+}
+
 
 void
 testSBuf::testAutoFind()
