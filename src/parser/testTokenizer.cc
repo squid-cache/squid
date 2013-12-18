@@ -1,7 +1,7 @@
 #include "squid.h"
 
 #include "testTokenizer.h"
-#include "CharacterSet.h"
+#include "base/CharacterSet.h"
 #include "Tokenizer.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testTokenizer );
@@ -10,11 +10,11 @@ SBuf text("GET http://resource.com/path HTTP/1.1\r\n"
     "Host: resource.com\r\n"
     "Cookie: laijkpk3422r j1noin \r\n"
     "\r\n");
-const Parser::CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-const Parser::CharacterSet whitespace("whitespace"," \r\n");
-const Parser::CharacterSet crlf("crlf","\r\n");
-const Parser::CharacterSet tab("tab","\t");
-const Parser::CharacterSet numbers("numbers","0123456789");
+const CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+const CharacterSet whitespace("whitespace"," \r\n");
+const CharacterSet crlf("crlf","\r\n");
+const CharacterSet tab("tab","\t");
+const CharacterSet numbers("numbers","0123456789");
 
 void
 testTokenizer::testTokenizerPrefix()
@@ -41,7 +41,7 @@ testTokenizer::testTokenizerPrefix()
     CPPUNIT_ASSERT_EQUAL(SBuf("http"),s); //output SBuf left untouched
 
     // match until the end of the sample
-    Parser::CharacterSet all(whitespace);
+    CharacterSet all(whitespace);
     all += alpha;
     all += crlf;
     all += numbers;
@@ -98,7 +98,6 @@ testTokenizer::testTokenizerToken()
 
     //no separator found
     CPPUNIT_ASSERT(!t.token(s,tab));
-
 }
 
 void
