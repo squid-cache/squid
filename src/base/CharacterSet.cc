@@ -1,18 +1,18 @@
 #include "squid.h"
-
 #include "CharacterSet.h"
-
-#include <algorithm>
-
-static bool
-isNonZero(uint8_t i) {
-    return i!=0;
-}
 
 const CharacterSet &
 CharacterSet::operator +=(const CharacterSet &src)
 {
-    std::copy_if(src.chars_.begin(),src.chars_.end(),chars_.begin(),isNonZero);
+    Storage::const_iterator s = src.chars_.begin();
+    const Storage::const_iterator e = src.chars_.end();
+    Storage::iterator d = chars_.begin();
+    while (s != e) {
+        if (*s)
+            *d = 1;
+        ++s;
+        ++d;
+    }
     return *this;
 }
 
@@ -24,7 +24,7 @@ CharacterSet::add(const unsigned char c)
 }
 
 CharacterSet::CharacterSet(const char *label, const char * const c)
-: name(label == NULL ? "anonymous" : label), chars_(vector_type(256,0))
+: name(label == NULL ? "anonymous" : label), chars_(Storage(256,0))
 {
     const size_t clen = strlen(c);
     for (size_t i = 0; i < clen; ++i)
