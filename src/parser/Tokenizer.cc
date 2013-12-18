@@ -3,40 +3,11 @@
 
 namespace Parser {
 
-SBuf::size_type
-Tokenizer::findFirstNotIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos)
-{
-    SBuf::size_type prefixLen = startAtPos;
-    const SBuf::size_type len = buf_.length();
-    while (prefixLen < len) {
-        if (!tokenChars[buf_[prefixLen]])
-            break;
-        ++prefixLen;
-    }
-    return prefixLen;
-}
-
-SBuf::size_type
-Tokenizer::findFirstIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos)
-{
-    SBuf::size_type i = startAtPos;
-    const SBuf::size_type len = buf_.length();
-    bool found = false;
-    while (i < len) {
-        if (tokenChars[buf_[i]]) {
-            found = true;
-            break;
-        }
-        ++i;
-    }
-    return found ? i : SBuf::npos ;
-}
-
 bool
 Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 {
-    const SBuf::size_type endOfPreWhiteSpace = findFirstNotIn(whitespace);
-    const SBuf::size_type endOfToken = findFirstIn(whitespace, endOfPreWhiteSpace);
+    const SBuf::size_type endOfPreWhiteSpace = buf_.findFirstNotOf(whitespace);
+    const SBuf::size_type endOfToken = buf_.findFirstOf(whitespace, endOfPreWhiteSpace);
     if (endOfToken == SBuf::npos)
         return false;
     buf_.consume(endOfPreWhiteSpace);
@@ -48,7 +19,7 @@ Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 bool
 Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
 {
-    SBuf::size_type prefixLen = findFirstNotIn(tokenChars);
+    SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     returnedToken = buf_.consume(prefixLen);
@@ -58,7 +29,7 @@ Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
 bool
 Tokenizer::skip(const CharacterSet &tokenChars)
 {
-    SBuf::size_type prefixLen = findFirstNotIn(tokenChars);
+    SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     buf_.consume(prefixLen);
