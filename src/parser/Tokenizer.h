@@ -1,7 +1,7 @@
 #ifndef SQUID_PARSER_TOKENIZER_H_
 #define SQUID_PARSER_TOKENIZER_H_
 
-#include "CharacterSet.h"
+#include "base/CharacterSet.h"
 #include "SBuf.h"
 
 namespace Parser {
@@ -37,11 +37,6 @@ public:
 
    /// Skips a given character (a token).
    bool skip(const char tokenChar);
-
-protected:
-    //obtain the length of the longest prefix in buf_ only made of chars in tokenChars
-    SBuf::size_type findFirstNotIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos = 0);
-    SBuf::size_type findFirstIn(const CharacterSet& tokenChars, SBuf::size_type startAtPos = 0);
 
 private:
    SBuf buf_; ///< yet unparsed input

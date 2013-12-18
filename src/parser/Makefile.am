@@ -10,11 +10,11 @@ TESTS += testTokenizer
 noinst_LTLIBRARIES = libsquid-parser.la
 
 libsquid_parser_la_SOURCES = \
-	CharacterSet.h \
 	Tokenizer.h \
 	Tokenizer.cc
 
 SBUF_SOURCE= \
+	$(top_srcdir)/base/CharacterSet.h \
 	$(top_srcdir)/src/SBuf.h \
 	$(top_srcdir)/src/SBuf.cc \
 	$(top_srcdir)/src/MemBlob.h \
@@ -43,6 +43,7 @@ testTokenizer_LDFLAGS = $(LIBADD_DL)
 testTokenizer_LDADD = \
 	libsquid-parser.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(top_builddir)/src/base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
