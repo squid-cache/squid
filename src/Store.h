@@ -202,11 +202,12 @@ public:
     virtual int64_t contentLen() const;
 
     /// claim shared ownership of this entry (for use in a given context)
+    /// matching lock() and unlock() contexts eases leak triage but is optional
     void lock(const char *context);
 
     /// disclaim shared ownership; may remove entry from store and delete it
     /// returns remaning lock level (zero for unlocked and possibly gone entry)
-    int unlock(const char *context = "somebody");
+    int unlock(const char *context);
 
     /// returns a local concurrent use counter, for debugging
     int locks() const { return static_cast<int>(lock_count); }

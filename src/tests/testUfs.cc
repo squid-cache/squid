@@ -165,7 +165,7 @@ testUfs::testUfsSearch()
         pe->swapOut();
         CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
         CPPUNIT_ASSERT_EQUAL(0, pe->swap_filen);
-        pe->unlock();
+        pe->unlock("testUfs::testUfsSearch vary");
     }
 
     storeDirWriteCleanLogs(0);
