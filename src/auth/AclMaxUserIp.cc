@@ -13,17 +13,22 @@
 #include "ConfigParser.h"
 #include "Parsing.h"
 
+ACLFlag
+ACLMaxUserIP::SupportedFlags[] = {ACL_F_STRICT, ACL_F_END};
+
 ACL *
 ACLMaxUserIP::clone() const
 {
     return new ACLMaxUserIP(*this);
 }
 
-ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(0)
+ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : ACL(SupportedFlags), class_ (theClass), maximum(0)
 {}
 
-ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), maximum (old.maximum), flags (old.flags)
-{}
+ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) : class_ (old.class_), maximum (old.maximum)
+{
+   flags = old.flags;
+}
 
 ACLMaxUserIP::~ACLMaxUserIP()
 {}
@@ -61,15 +66,6 @@ ACLMaxUserIP::parse()
 
     debugs(28, 5, "aclParseUserMaxIP: First token is " << t);
 
-    if (strcmp("-s", t) == 0) {
-        debugs(28, 5, "aclParseUserMaxIP: Going strict");
-        flags.strict = true;
-        t = ConfigParser::strtokFile();
-    }
-
-    if (!t)
-        return;
-
     maximum = xatoi(t);
 
     debugs(28, 5, "aclParseUserMaxIP: Max IP address's " << maximum);
@@ -97,7 +93,7 @@ ACLMaxUserIP::match(Auth::UserRequest::Pointer auth_user_request, Ip::Address co
     debugs(28, DBG_IMPORTANT, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
 
     /* this is a match */
-    if (flags.strict) {
+    if (flags.isSet(ACL_F_STRICT)) {
         /*
          * simply deny access - the user name is already associated with
          * the request
@@ -153,9 +149,6 @@ ACLMaxUserIP::dump() const
         return NULL;
 
     wordlist *W = NULL;
-
-    if (flags.strict)
-        wordlistAdd(&W, "-s");
 
     char buf[128];
 

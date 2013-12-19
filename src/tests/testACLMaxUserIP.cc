@@ -6,6 +6,7 @@
 
 #include "testACLMaxUserIP.h"
 #include "auth/AclMaxUserIp.h"
+#include "ConfigParser.h"
 
 #if HAVE_STDEXCEPT
 #include <stdexcept>
@@ -29,14 +30,13 @@ void
 testACLMaxUserIP::testParseLine()
 {
     /* a config line to pass with a lead-in token to seed the parser. */
-    char * line = xstrdup("token -s 1");
+    char * line = xstrdup("max_user_ip 1");
     /* seed the parser */
     strtok(line, w_space);
     ACLMaxUserIP anACL("max_user_ip");
     anACL.parse();
-    /* we want a maximum of one, and strict to be true */
+    /* we want a maximum of one */
     CPPUNIT_ASSERT(anACL.getMaximum() == 1);
-    CPPUNIT_ASSERT(anACL.getStrict() == true);
     /* the acl must be vaid */
     CPPUNIT_ASSERT(anACL.valid());
     xfree(line);
