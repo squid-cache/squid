@@ -2,6 +2,7 @@
 
 #include "squid.h"
 #include "Mem.h"
+#include "MemObject.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -24,7 +25,9 @@ addSwapDir(TestSwapDirPointer aStore)
 void
 testStoreHashIndex::testStats()
 {
-    StoreEntry * logEntry = new StoreEntry("dummy_url", "dummy_log_url");
+    StoreEntry *logEntry = new StoreEntry;
+    logEntry->makeMemObject();
+    logEntry->mem_obj->setUris("dummy_storeId", NULL, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
     StorePointer aRoot (new StoreHashIndex());
     Store::Root(aRoot);
@@ -44,7 +47,9 @@ testStoreHashIndex::testStats()
 void
 testStoreHashIndex::testMaxSize()
 {
-    StoreEntry * logEntry = new StoreEntry("dummy_url", "dummy_log_url");
+    StoreEntry *logEntry = new StoreEntry;
+    logEntry->makeMemObject();
+    logEntry->mem_obj->setUris("dummy_storeId", NULL, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
     StorePointer aRoot (new StoreHashIndex());
     Store::Root(aRoot);
@@ -80,7 +85,6 @@ addedEntry(StorePointer hashStore,
 
     CPPUNIT_ASSERT (e->swap_dirn != -1);
     e->swap_file_sz = 0; /* garh lower level */
-    e->lock_count = 0;
     e->lastref = squid_curtime;
     e->timestamp = squid_curtime;
     e->expires = squid_curtime;
