@@ -21,14 +21,12 @@ MemObject::endOffset() const
 void MemObject::trimSwappable() STUB
 void MemObject::trimUnSwappable() STUB
 int64_t MemObject::policyLowestOffsetToKeep(bool swap) const STUB_RETVAL(-1)
-MemObject::MemObject(char const *, char const *) :
-        url(NULL),
+MemObject::MemObject() :
         inmem_lo(0),
         nclients(0),
         request(NULL),
         ping_reply_callback(NULL),
         ircb_data(NULL),
-        log_url(NULL),
         id(0),
         object_sz(-1),
         swap_hdr_sz(0),
@@ -45,6 +43,7 @@ HttpReply const * MemObject::getReply() const
     // XXX: required by testStore
     return NULL;
 }
+void MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod) STUB
 void MemObject::reset() STUB
 void MemObject::delayRead(DeferredRead const &aRead) STUB
 bool MemObject::readAheadPolicyCanRead() const STUB_RETVAL(false)
@@ -62,7 +61,6 @@ void MemObject::kickReads() STUB
 int64_t MemObject::objectBytesOnDisk() const STUB_RETVAL(0)
 bool MemObject::isContiguous() const STUB_RETVAL(false)
 int64_t MemObject::expectedReplySize() const STUB_RETVAL(0)
-void MemObject::resetUrls(char const*, char const*) STUB
 void MemObject::markEndOfReplyHeaders() STUB
 size_t MemObject::inUseCount() STUB_RETVAL(0)
 int64_t MemObject::availableForSwapOut() const STUB_RETVAL(0)

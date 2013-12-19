@@ -21,7 +21,6 @@ StoreIoStats store_io_stats;
 bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
 StoreEntry::StoreEntry() STUB
-StoreEntry::StoreEntry(const char *, const char *) STUB
 StoreEntry::~StoreEntry() STUB
 HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
@@ -53,7 +52,7 @@ int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
 int StoreEntry::locked() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
 bool StoreEntry::memoryCachable() const STUB_RETVAL(false)
-void StoreEntry::makeMemObject() STUB
+MemObject *StoreEntry::makeMemObject() STUB_RETVAL(NULL)
 void StoreEntry::createMemObject(const char *, const char *, const HttpRequestMethod &aMethod) STUB
 void StoreEntry::dump(int debug_lvl) const STUB
 void StoreEntry::hashDelete() STUB
@@ -139,6 +138,13 @@ void destroyStoreEntry(void *) STUB
 // in Packer.cc !? void packerToStoreInit(Packer * p, StoreEntry * e) STUB
 void storeGetMemSpace(int size) STUB
 
-#if !_USE_INLINE_
-#include "Store.cci"
-#endif
+#if !_USE_INLINE_ /* stubs for Store.cci */
+bool StoreEntry::isEmpty () const STUB_RETVAL(true)
+HttpReply const *NullStoreEntry::getReply() const STUB_RETVAL(NULL)
+
+Store &Store::Root()
+{
+    CPPUNIT_ASSERT(CurrentRoot != NULL);
+    return *CurrentRoot;
+}
+#endif /* !_USE_INLINE_ */
