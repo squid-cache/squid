@@ -1243,11 +1243,8 @@ StoreEntry::release()
         setPrivateKey();
 
         if (swap_filen > -1) {
-            /*
-             * Fake a call to StoreEntry->lock()  When rebuilding is done,
-             * we'll just call StoreEntry->unlock() on these.
-             */
-            lock("StoreEntry::release+rebuilding");
+            // lock the entry until rebuilding is done
+            lock("storeLateRelease");
             setReleaseFlag();
             LateReleaseStack.push_back(this);
         } else {

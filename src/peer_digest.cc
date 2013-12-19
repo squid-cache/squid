@@ -371,7 +371,7 @@ peerDigestRequest(PeerDigest * pd)
     if (old_e) {
         debugs(72, 5, "peerDigestRequest: found old entry");
 
-        old_e->lock();
+        old_e->lock("peerDigestRequest");
         old_e->createMemObject(url, url, req->method);
 
         fetch->old_sc = storeClientListAdd(old_e, fetch);
@@ -561,7 +561,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);
 
-            fetch->entry->unlock();
+            fetch->entry->unlock("peerDigestFetchReply 304");
 
             fetch->entry = fetch->old_entry;
 
@@ -577,7 +577,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
                 debugs(72, 3, "peerDigestFetchReply: got new digest, releasing old one");
                 storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
                 fetch->old_entry->releaseRequest();
-                fetch->old_entry->unlock();
+                fetch->old_entry->unlock("peerDigestFetchReply 200");
                 fetch->old_entry = NULL;
             }
         } else {
@@ -910,7 +910,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
         debugs(72, 3, "peerDigestFetchFinish: deleting old entry");
         storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
         fetch->old_entry->releaseRequest();
-        fetch->old_entry->unlock();
+        fetch->old_entry->unlock("peerDigestFetchFinish old");
         fetch->old_entry = NULL;
     }
 
@@ -926,7 +926,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     /* unlock everything */
     storeUnregister(fetch->sc, fetch->entry, fetch);
 
-    fetch->entry->unlock();
+    fetch->entry->unlock("peerDigestFetchFinish new");
 
     HTTPMSGUNLOCK(fetch->request);
 

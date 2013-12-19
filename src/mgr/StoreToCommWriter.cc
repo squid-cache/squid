@@ -138,7 +138,7 @@ Mgr::StoreToCommWriter::swanSong()
             sc = NULL;
         }
         entry->unregisterAbort();
-        entry->unlock();
+        entry->unlock("Mgr::StoreToCommWriter::swanSong");
         entry = NULL;
     }
     close();

@@ -1426,7 +1426,7 @@ peerCountMcastPeersDone(void *data)
 
     fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     HTTPMSGUNLOCK(fake->mem_obj->request);
-    fake->unlock();
+    fake->unlock("peerCountMcastPeersDone");
     HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
 }
