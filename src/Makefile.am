@@ -15,6 +15,7 @@ DNSSOURCE = \
 	DnsLookupDetails.cc
 
 SBUF_SOURCE= \
+	base/CharacterSet.h \
 	base/InstanceId.h \
 	MemBlob.h \
 	MemBlob.cc \
@@ -922,7 +923,7 @@ DEFAULT_ERROR_DIR	= $(datadir)/errors
 # Make location configure settings available to the code
 DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
-snmp_core.o snmp_agent.o: ../lib/snmplib/libsnmplib.a $(top_srcdir)/include/cache_snmp.h
+snmp_core.o snmp_agent.o: ../lib/snmplib/libsnmplib.la $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)

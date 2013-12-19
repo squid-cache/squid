@@ -1126,7 +1126,7 @@ SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
 AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
-    SNMPLIB='../lib/snmplib/libsnmplib.a'
+    SNMPLIB='../lib/snmplib/libsnmplib.la'
     makesnmplib=snmplib
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
@@ -3016,6 +3016,7 @@ AC_CHECK_FUNCS(\
 	bswap_32 \
 	bswap16 \
 	bswap32 \
+	eui64_aton \
 	fchmod \
 	getdtablesize \
 	getpagesize \
@@ -3073,7 +3074,6 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
-	eui64_aton \
 	inet_ntop \
 	inet_pton \
 	initgroups \
