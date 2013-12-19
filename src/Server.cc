@@ -44,6 +44,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Server.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -55,7 +56,6 @@
 #include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
 #include "base/AsyncCall.h"
-#include "SquidConfig.h"
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent
