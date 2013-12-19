@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "HttpRequestMethod.h"
+#include "SquidConfig.h"
 #include "wordlist.h"
 
 static Http::MethodType &
@@ -47,8 +48,16 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
     }
 
     for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
+        // RFC 2616 section 5.1.1 - Method names are case-sensitive
+        // NP: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
         if (0 == strncasecmp(begin, Http::MethodType_str[theMethod], end-begin)) {
-            return;
+
+            // relaxed parser allows mixed-case and corrects them on output
+            if (Config.onoff.relaxed_header_parser)
+                return;
+
+            if (0 == strncmp(begin, Http::MethodType_str[theMethod], end-begin))
+                return;
         }
     }
 

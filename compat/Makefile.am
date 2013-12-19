@@ -9,8 +9,8 @@ include $(top_srcdir)/src/Common.am
 
 # Port Specific Configurations
 
-noinst_LIBRARIES = libcompat-squid.a
-libcompat_squid_a_SOURCES = \
+noinst_LTLIBRARIES = libcompat-squid.la
+libcompat_squid_la_SOURCES = \
 	assert.cc \
 	assert.h \
 	cmsg.h \
@@ -23,6 +23,7 @@ libcompat_squid_a_SOURCES = \
 	debug.h \
 	drand48.h \
 	eui64_aton.h \
+	eui64_aton.c \
 	fdsetsize.h \
 	getaddrinfo.h \
 	getnameinfo.h \
@@ -74,7 +75,7 @@ libcompat_squid_a_SOURCES = \
 	os/solaris.h \
 	os/sunos.h
 
-libcompat_squid_a_LIBADD= $(LIBOBJS)
+libcompat_squid_la_LIBADD= $(LIBOBJS)
 
 check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler
