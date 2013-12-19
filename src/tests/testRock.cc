@@ -251,7 +251,7 @@ testRock::testRockSwapOut()
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
 
-        pe->unlock();
+        pe->unlock("testRock::testRockSwapOut");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)5, store->currentCount());
