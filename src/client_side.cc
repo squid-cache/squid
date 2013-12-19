@@ -5690,8 +5690,8 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
     const int status = header.getInt(HDR_FTP_STATUS);
     debugs(33, 7, HERE << "status: " << status);
 
-    if (status == 150 && connState->ftp.state ==
-        ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
+    if ((status == 125 || status == 150) &&
+        connState->ftp.state == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
         connState->readSomeFtpData();
 
     MemBuf mb;
