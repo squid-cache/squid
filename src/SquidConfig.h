@@ -364,6 +364,8 @@ public:
         acl_access *AlwaysDirect;
         acl_access *ASlists;
         acl_access *noCache;
+        acl_access *sendHit;
+        acl_access *storeMiss;
         acl_access *stats_collection;
 #if SQUID_SNMP
 

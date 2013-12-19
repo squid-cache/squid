@@ -53,6 +53,7 @@ typedef char ACLFlag;
 // ACLData Flags
 #define ACL_F_REGEX_CASE 'i'
 #define ACL_F_NO_LOOKUP 'n'
+#define ACL_F_STRICT 's'
 #define ACL_F_END '\0'
 
 /**

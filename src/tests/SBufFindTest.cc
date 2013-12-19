@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "SBufFindTest.h"
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Message.h>
@@ -99,13 +100,13 @@ SBufFindTest::testFind()
     checkResults("find");
 }
 
-/// tests SBuf::find_first_of(string needle, pos)
+/// tests SBuf::findFirstOf(string needle, pos)
 void
 SBufFindTest::testFindFirstOf()
 {
     theFindString = theStringHay.find_first_of(theStringNeedle, thePos);
     theBareNeedlePos = theStringHay.find_first_of(theStringNeedle);
-    theFindSBuf = theSBufHay.find_first_of(theSBufNeedle, thePos);
+    theFindSBuf = theSBufHay.findFirstOf(CharacterSet("cs",theSBufNeedle.c_str()), thePos);
     checkResults("find_first_of");
 }
 
