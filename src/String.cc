@@ -376,7 +376,8 @@ strwordtok(char *buf, char **t)
         switch (ch) {
 
         case '\\':
-            ++p;
+            if (quoted)
+                ++p;
 
             switch (*p) {
 
