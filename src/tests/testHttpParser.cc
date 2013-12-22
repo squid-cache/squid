@@ -43,7 +43,8 @@ testHttpParser::testParseRequestLineProtocols()
     {
         input.append("GET /\r\n", 7);
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -66,7 +67,8 @@ testHttpParser::testParseRequestLineProtocols()
     {
         input.append("POST /\r\n", 7);
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -89,7 +91,8 @@ testHttpParser::testParseRequestLineProtocols()
     {
         input.append("GET / HTTP/1.0\r\n", 16);
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -112,7 +115,8 @@ testHttpParser::testParseRequestLineProtocols()
     {
         input.append("GET / HTTP/1.1\r\n", 16);
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -135,7 +139,8 @@ testHttpParser::testParseRequestLineProtocols()
     {    input.append("GET / HTTP/1.2\r\n", 16);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -160,7 +165,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/10.12\r\n", 18);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -186,14 +192,16 @@ testHttpParser::testParseRequestLineProtocols()
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
 #if USE_HTTP_VIOLATIONS
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(12, output.req.u_end);
         CPPUNIT_ASSERT_EQUAL(0, memcmp("/ FOO/1.0", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
         CPPUNIT_ASSERT_EQUAL(0, output.req.v_maj);
         CPPUNIT_ASSERT_EQUAL(9, output.req.v_min);
 #else
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
         CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
@@ -218,7 +226,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/\n", 12);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -242,7 +251,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/.1\n", 14);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -266,7 +276,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/11\n", 14);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -290,7 +301,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/-999999.1\n", 21);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -314,7 +326,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/1.\n", 14);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -338,7 +351,8 @@ testHttpParser::testParseRequestLineProtocols()
         input.append("GET / HTTP/1.-999999\n", 21);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -373,7 +387,8 @@ testHttpParser::testParseRequestLineStrange()
         input.append("GET  /     HTTP/1.1\r\n", 21);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -397,7 +412,8 @@ testHttpParser::testParseRequestLineStrange()
         input.append("GET /fo o/ HTTP/1.1\n", 20);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -421,7 +437,8 @@ testHttpParser::testParseRequestLineStrange()
         input.append("GET /     HTTP/1.1\nboo!", 23);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-5, output.req.end);
@@ -456,7 +473,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET / HTTP/1.1\n", 15);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -480,7 +498,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET / HTTP/1.1\n\n", 16);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-2, output.req.end);
@@ -506,7 +525,8 @@ testHttpParser::testParseRequestLineTerminators()
         output.reset(input.content(), input.contentSize());
         Config.onoff.relaxed_header_parser = 1;
         // Being tolerant we can ignore and elide these apparently benign CR
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -532,7 +552,8 @@ testHttpParser::testParseRequestLineTerminators()
         output.reset(input.content(), input.contentSize());
         // strict mode treats these as several bare-CR in the request line which is explicitly invalid.
         Config.onoff.relaxed_header_parser = 0;
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -554,7 +575,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET / HTTP/1.1 \n", 16);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -577,7 +599,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET", 3);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(0, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -594,7 +617,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET ", 4);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(0, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -611,7 +635,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET / HT", 8);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(0, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -628,7 +653,8 @@ testHttpParser::testParseRequestLineTerminators()
         input.append("GET / HTTP/1.1", 14);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(0, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -659,7 +685,8 @@ testHttpParser::testParseRequestLineMethods()
         input.append(". / HTTP/1.1\n", 13);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -683,7 +710,8 @@ testHttpParser::testParseRequestLineMethods()
         input.append("OPTIONS * HTTP/1.1\n", 19);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -707,7 +735,8 @@ testHttpParser::testParseRequestLineMethods()
         input.append("HELLOWORLD / HTTP/1.1\n", 22);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -731,7 +760,8 @@ testHttpParser::testParseRequestLineMethods()
         input.append("A\n", 2);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -751,7 +781,8 @@ testHttpParser::testParseRequestLineMethods()
     {
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -773,7 +804,8 @@ testHttpParser::testParseRequestLineMethods()
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
         Config.onoff.relaxed_header_parser = 1;
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(1, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -798,7 +830,8 @@ testHttpParser::testParseRequestLineMethods()
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
         Config.onoff.relaxed_header_parser = 0;
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -819,7 +852,8 @@ testHttpParser::testParseRequestLineMethods()
         input.append("\tGET / HTTP/1.1\n", 16);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -855,7 +889,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("/ HTTP/1.0\n", 11);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -880,7 +915,8 @@ testHttpParser::testParseRequestLineInvalid()
         output.reset(input.content(), input.contentSize());
         // When tolerantly ignoring SP prefix this case becomes ambiguous with HTTP/0.9 simple-request)
         Config.onoff.relaxed_header_parser = 1;
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(1, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -905,7 +941,8 @@ testHttpParser::testParseRequestLineInvalid()
         output.reset(input.content(), input.contentSize());
         // When tolerantly ignoring SP prefix this case becomes ambiguous with HTTP/0.9 simple-request)
         Config.onoff.relaxed_header_parser = 0;
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -926,7 +963,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("GET\x0B / HTTP/1.1\n", 16);
         //printf("TEST: %d-%d/%d '%.*s'\n", output.req.start, output.req.end, input.contentSize(), 16, input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -951,7 +989,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("GET\r / HTTP/1.1\r\n", 16);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -971,7 +1010,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("GET\0 / HTTP/1.1\n", 16);
         //printf("TEST: %d-%d/%d '%.*s'\n", output.req.start, output.req.end, input.contentSize(), 16, input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -995,7 +1035,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("GET  HTTP/1.1\n", 14);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -1018,7 +1059,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("GET HTTP/1.1\n", 13);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -1041,7 +1083,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("\xB\xC\xE\xF\n", 5);
         //printf("TEST: binary-line\n");
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -1064,7 +1107,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("\t \t \t\n", 6);
         //printf("TEST: mixed whitespace\n");
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -1088,7 +1132,8 @@ testHttpParser::testParseRequestLineInvalid()
         input.append("\t  \r \n", 6);
         //printf("TEST: mixed whitespace with CR\n");
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(-1, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(false, output.parseRequest());
+        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
         CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
@@ -1125,7 +1170,7 @@ testHttpParser::testDripFeed()
     Config.onoff.relaxed_header_parser = 1;
 
     for (; hp.bufsiz < mb.contentSize(); ++hp.bufsiz) {
-        int parseResult = hp.parseRequestFirstLine();
+        bool parseResult = hp.parseRequest();
 
 #if WHEN_TEST_DEBUG_IS_NEEDED
         printf("%d/%d :: %d, %d, %d '%c'\n", hp.bufsiz, mb.contentSize(),
@@ -1136,18 +1181,21 @@ testHttpParser::testDripFeed()
 	// before end of garbage found its a moving offset.
 	if (hp.bufsiz < garbageEnd) {
             CPPUNIT_ASSERT_EQUAL(hp.bufsiz, (int)hp.parseOffset_);
+            CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
             continue;
         }
 
 	// before request line found, parse announces incomplete
         if (hp.bufsiz < reqLineEnd) {
             CPPUNIT_ASSERT_EQUAL(garbageEnd, (int)hp.parseOffset_);
-            CPPUNIT_ASSERT_EQUAL(0, parseResult);
+            CPPUNIT_ASSERT_EQUAL(false, parseResult);
+            CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
             continue;
         }
 
         // once request line is found (AND the following \n) current parser announces success
         CPPUNIT_ASSERT_EQUAL(reqLineEnd, (int)hp.parseOffset_);
-        CPPUNIT_ASSERT_EQUAL(1, parseResult);
+        CPPUNIT_ASSERT_EQUAL(true, parseResult);
+        CPPUNIT_ASSERT_EQUAL(true, hp.isDone());
     }
 }

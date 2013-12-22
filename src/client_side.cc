@@ -2219,7 +2219,6 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     ClientHttpRequest *http;
     ClientSocketContext *result;
     StoreIOBuffer tempBuffer;
-    int r;
 
     /* pre-set these values to make aborting simpler */
     *method_p = Http::METHOD_NONE;
@@ -2235,16 +2234,17 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         return parseHttpRequestAbort(csd, "error:request-too-large");
     }
 
-    /* Attempt to parse the first line; this'll define the method, url, version and header begin */
-    r = hp->parseRequest();
+    /* Attempt to parse the first line; this will define where the method, url, version and header begin */
+    {
+        bool parsedOk = hp->parseRequest();
 
-    if (r == 0) {
-        debugs(33, 5, "Incomplete request, waiting for end of request line");
-        return NULL;
-    }
+        if (!hp->isDone()) {
+            debugs(33, 5, "Incomplete request, waiting for end of request line");
+            return NULL;
+        }
 
-    if (r == -1) {
-        return parseHttpRequestAbort(csd, "error:invalid-request");
+        if (parsedOk)
+            return parseHttpRequestAbort(csd, "error:invalid-request");
     }
 
     /* Request line is valid here .. */
