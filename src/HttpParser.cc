@@ -247,7 +247,7 @@ HttpParser::parseRequestFirstLine()
     return 1;
 }
 
-int
+bool
 HttpParser::parseRequest()
 {
     PROF_start(HttpParserParseReqLine);
@@ -258,5 +258,9 @@ HttpParser::parseRequest()
            "; version " << req.v_start << "->" << req.v_end << " (" << req.v_maj <<
            "/" << req.v_min << ")");
     PROF_stop(HttpParserParseReqLine);
-    return retcode;
+
+    if (retcode != 0)
+        completedState_ = HTTP_PARSE_DONE;
+
+    return (retcode > 0);
 }
