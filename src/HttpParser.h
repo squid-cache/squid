@@ -39,7 +39,8 @@ public:
     /// Reset the parser for use on a new buffer.
     void reset(const char *aBuf, int len);
 
-    /// whether the parser is already processing the buffer
+    /// whether the parser is already done processing the buffer
+    // TODO: parse more than just the request-line
     bool isDone() const {return completedState_==HTTP_PARSE_FIRST;}
 
     /**
