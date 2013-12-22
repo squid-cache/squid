@@ -8,6 +8,7 @@
 #define HTTP_PARSE_NONE   0 // nothing. completely unset state.
 #define HTTP_PARSE_NEW    1 // initialized, but nothing usefully parsed yet.
 #define HTTP_PARSE_FIRST  2 // have parsed request first line
+#define HTTP_PARSE_DONE   99 // have done with parsing so far
 
 /** HTTP protocol parser.
  *
@@ -39,9 +40,11 @@ public:
     /// Reset the parser for use on a new buffer.
     void reset(const char *aBuf, int len);
 
-    /// whether the parser is already done processing the buffer
-    // TODO: parse more than just the request-line
-    bool isDone() const {return completedState_==HTTP_PARSE_FIRST;}
+    /** Whether the parser is already done processing the buffer.
+     * Use to determine between incomplete data and errors results
+     * from the parse methods.
+     */
+    bool isDone() const {return completedState_==HTTP_PARSE_DONE;}
 
     /// size in bytes of the first line (request-line)
     /// including CRLF terminator
@@ -59,9 +62,12 @@ public:
     // convert to SBuf
     const char *rawHeaderBuf() {return buf + hdr_start;}
 
-    /// Attempt to parse a request.
-    /// Wrapper function for parseRequestFirstLine() with debug output of results.
-    int parseRequest();
+    /** Attempt to parse a request.
+     * \return true if a valid request was parsed.
+     * \note Use isDone() method to determine between incomplete parse and errors.
+     */
+    // TODO: parse more than just the request-line
+    bool parseRequest();
 
     /**
      * Attempt to parse the first line of a new request message.
