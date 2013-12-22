@@ -43,6 +43,22 @@ public:
     // TODO: parse more than just the request-line
     bool isDone() const {return completedState_==HTTP_PARSE_FIRST;}
 
+    /// size in bytes of the first line (request-line)
+    /// including CRLF terminator
+    int64_t firstLineSize() const {return req.end - req.start + 1;}
+
+    /// size in bytes of the message headers including CRLF terminator
+    /// but excluding request-line bytes
+    int64_t headerBlockSize() const {return hdr_end - hdr_start + 1;}
+
+    /// size in bytes of HTTP message block, includes request-line and mime headers
+    /// excludes any body/entity/payload bytes
+    int64_t messageHeaderSize() const {return hdr_end - req.start + 1;}
+
+    /// buffer containing HTTP mime headers
+    // convert to SBuf
+    const char *rawHeaderBuf() {return buf + hdr_start;}
+
     /**
      * Attempt to parse the first line of a new request message.
      *
@@ -93,10 +109,5 @@ private:
 
 // Legacy functions
 int HttpParserParseReqLine(HttpParser *hp);
-
-#define HttpParserReqSz(hp)     ( (hp)->req.end - (hp)->req.start + 1 )
-#define HttpParserHdrSz(hp)     ( (hp)->hdr_end - (hp)->hdr_start + 1 )
-#define HttpParserHdrBuf(hp)    ( (hp)->buf + (hp)->hdr_start )
-#define HttpParserRequestLen(hp)        ( (hp)->hdr_end - (hp)->req.start + 1 )
 
 #endif /*  _SQUID_SRC_HTTPPARSER_H */
