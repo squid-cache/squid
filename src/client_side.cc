@@ -206,7 +206,7 @@ static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
+static ClientSocketContext *parseHttpRequest(ConnStateData *, const HttpParserPointer &, HttpRequestMethod *, Http::ProtocolVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -2212,7 +2212,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_p, Http::ProtocolVersion *http_ver)
+parseHttpRequest(ConnStateData *csd, const HttpParserPointer &hp, HttpRequestMethod * method_p, Http::ProtocolVersion *http_ver)
 {
     char *req_hdr = NULL;
     char *end;
@@ -2639,7 +2639,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #endif // USE_SSL
 
 static void
-clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver)
+clientProcessRequest(ConnStateData *conn, const HttpParserPointer &hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2655,7 +2655,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 2, "clientProcessRequest: Invalid Request");
+        debugs(33, 2, "Invalid Request");
         conn->quitAfterError(NULL);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
@@ -2994,7 +2994,7 @@ ConnStateData::clientParseRequests()
 
         /* Process request */
         Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseHttpRequest(this, parser_.getRaw(), &method, &http_ver);
+        ClientSocketContext *context = parseHttpRequest(this, parser_, &method, &http_ver);
         PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
@@ -3012,7 +3012,7 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            clientProcessRequest(this, parser_.getRaw(), context, method, http_ver);
+            clientProcessRequest(this, parser_, context, method, http_ver);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
