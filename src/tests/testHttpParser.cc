@@ -7,7 +7,7 @@
 #define protected public
 
 #include "testHttpParser.h"
-#include "HttpParser.h"
+#include "http/Http1Parser.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"

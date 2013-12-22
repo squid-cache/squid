@@ -406,8 +406,6 @@ squid_SOURCES = \
 	HttpControlMsg.h \
 	HttpMsg.cc \
 	HttpMsg.h \
-	HttpParser.cc \
-	HttpParser.h \
 	HttpReply.cc \
 	HttpReply.h \
 	RequestFlags.h \
@@ -1380,8 +1378,6 @@ tests_testBoilerplate_DEPENDENCIES = \
 tests_testCacheManager_SOURCES = \
 	AccessLogEntry.cc \
 	debug.cc \
-	HttpParser.cc \
-	HttpParser.h \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -1887,8 +1883,6 @@ tests_testEvent_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
-	HttpParser.cc \
-	HttpParser.h \
 	HttpReply.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
@@ -2133,8 +2127,6 @@ tests_testEventLoop_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
-	HttpParser.cc \
-	HttpParser.h \
 	HttpReply.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
@@ -2375,8 +2367,6 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
-	HttpParser.cc \
-	HttpParser.h \
 	HttpReply.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
@@ -2533,8 +2523,6 @@ tests_test_http_range_DEPENDENCIES = \
 
 tests_testHttpParser_SOURCES = \
 	Debug.h \
-	HttpParser.cc \
-	HttpParser.h \
 	MemBuf.cc \
 	MemBuf.h \
 	Mem.h \
@@ -2575,8 +2563,6 @@ tests_testHttpParser_DEPENDENCIES = \
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
-	HttpParser.cc \
-	HttpParser.h \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -3475,8 +3461,6 @@ tests_testURL_SOURCES = \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
-	HttpParser.cc \
-	HttpParser.h \
 	HttpReply.cc \
 	RequestFlags.h \
 	RequestFlags.cc \

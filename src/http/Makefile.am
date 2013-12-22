@@ -4,6 +4,8 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libsquid-http.la
 
 libsquid_http_la_SOURCES = \
+	Http1Parser.cc \
+	Http1Parser.h \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \
