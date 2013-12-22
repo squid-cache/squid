@@ -35,7 +35,7 @@
 
 #include "comm.h"
 #include "HttpControlMsg.h"
-#include "HttpParser.h"
+#include "http/forward.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -398,7 +398,7 @@ private:
     Auth::UserRequest::Pointer auth_;
 #endif
 
-    HttpParser::Pointer parser_;
+    HttpParserPointer parser_;
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
