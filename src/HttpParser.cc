@@ -248,15 +248,15 @@ HttpParser::parseRequestFirstLine()
 }
 
 int
-HttpParserParseReqLine(HttpParser *hmsg)
+HttpParser::parseRequest()
 {
     PROF_start(HttpParserParseReqLine);
-    int retcode = hmsg->parseRequestFirstLine();
-    debugs(74, 5, "Parser: retval " << retcode << ": from " << hmsg->req.start <<
-           "->" << hmsg->req.end << ": method " << hmsg->req.m_start << "->" <<
-           hmsg->req.m_end << "; url " << hmsg->req.u_start << "->" << hmsg->req.u_end <<
-           "; version " << hmsg->req.v_start << "->" << hmsg->req.v_end << " (" << hmsg->req.v_maj <<
-           "/" << hmsg->req.v_min << ")");
+    int retcode = parseRequestFirstLine();
+    debugs(74, 5, "Parser: retval " << retcode << ": from " << req.start <<
+           "->" << req.end << ": method " << req.m_start << "->" <<
+           req.m_end << "; url " << req.u_start << "->" << req.u_end <<
+           "; version " << req.v_start << "->" << req.v_end << " (" << req.v_maj <<
+           "/" << req.v_min << ")");
     PROF_stop(HttpParserParseReqLine);
     return retcode;
 }

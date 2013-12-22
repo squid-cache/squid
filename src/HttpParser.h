@@ -59,6 +59,10 @@ public:
     // convert to SBuf
     const char *rawHeaderBuf() {return buf + hdr_start;}
 
+    /// Attempt to parse a request.
+    /// Wrapper function for parseRequestFirstLine() with debug output of results.
+    int parseRequest();
+
     /**
      * Attempt to parse the first line of a new request message.
      *
@@ -106,8 +110,5 @@ private:
     /// what stage the parser is currently up to
     uint8_t completedState_;
 };
-
-// Legacy functions
-int HttpParserParseReqLine(HttpParser *hp);
 
 #endif /*  _SQUID_SRC_HTTPPARSER_H */

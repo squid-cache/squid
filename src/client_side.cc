@@ -2236,7 +2236,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     }
 
     /* Attempt to parse the first line; this'll define the method, url, version and header begin */
-    r = HttpParserParseReqLine(hp);
+    r = hp->parseRequest();
 
     if (r == 0) {
         debugs(33, 5, "Incomplete request, waiting for end of request line");
