@@ -1,6 +1,6 @@
 #include "squid.h"
 #include "Debug.h"
-#include "HttpParser.h"
+#include "http/Http1Parser.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
