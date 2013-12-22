@@ -106,6 +106,7 @@
 #include "http.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
+#include "HttpParser.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ident/Config.h"
