@@ -2258,7 +2258,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         }
     } else {
         debugs(33, 3, "parseHttpRequest: Missing HTTP identifier");
-        req_sz = HttpParserReqSz(hp);
+        req_sz = hp->firstLineSize();
     }
 
     /* We know the whole request is in hp->buf now */
@@ -2313,13 +2313,13 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     debugs(33, 3, "parseHttpRequest: end = {" << end << "}");
 
     debugs(33, 3, "parseHttpRequest: prefix_sz = " <<
-           (int) HttpParserRequestLen(hp) << ", req_line_sz = " <<
-           HttpParserReqSz(hp));
+           hp->messageHeaderSize() << ", request-line-size=" <<
+           hp->firstLineSize());
 
     /* Ok, all headers are received */
     http = new ClientHttpRequest(csd);
 
-    http->req_sz = HttpParserRequestLen(hp);
+    http->req_sz = hp->messageHeaderSize();
     result = ClientSocketContextNew(csd->clientConnection, http);
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -2697,14 +2697,14 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             (http_ver.major > 1) ) {
 
         clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+        debugs(33, 5, "Unsupported HTTP version discovered. :\n" << hp->rawHeaderBuf());
         conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
-                                    conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
+                                    conn->clientConnection->remote, NULL, hp->rawHeaderBuf(), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
@@ -2713,9 +2713,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     /* compile headers */
     /* we should skip request line! */
     /* XXX should actually know the damned buffer size here */
-    if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
+    if (http_ver.major >= 1 && !request->parseHeader(hp->rawHeaderBuf(), hp->headerBlockSize())) {
         clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
+        debugs(33, 5, "Failed to parse request headers:\n" << hp->rawHeaderBuf());
         conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
