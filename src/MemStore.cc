@@ -430,6 +430,13 @@ MemStore::shouldCache(const StoreEntry &e) const
     }
 
     assert(e.mem_obj);
+
+    if (e.mem_obj->vary_headers) {
+        // XXX: We must store/load SerialisedMetaData to cache Vary in RAM
+        debugs(20, 5, "Vary not yet supported: " << e.mem_obj->vary_headers);
+        return false;
+    }
+
     const int64_t expectedSize = e.mem_obj->expectedReplySize(); // may be < 0
 
     // objects of unknown size are not allowed into memory cache, for now
