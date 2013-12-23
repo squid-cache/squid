@@ -35,7 +35,7 @@
 
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 
 /// \ingroup ACLAPI
 class ACLMethodStrategy : public ACLStrategy<HttpRequestMethod>

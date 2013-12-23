@@ -4,11 +4,14 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libsquid-http.la
 
 libsquid_http_la_SOURCES = \
+	forward.h \
 	Http1Parser.cc \
 	Http1Parser.h \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \
+	RequestMethod.cc \
+	RequestMethod.h \
 	StatusCode.cc \
 	StatusCode.h \
 	StatusLine.cc \

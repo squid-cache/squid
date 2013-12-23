@@ -412,8 +412,6 @@ squid_SOURCES = \
 	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequest.h \
-	HttpRequestMethod.cc \
-	HttpRequestMethod.h \
 	ICP.h \
 	icp_opcode.h \
 	icp_v2.cc \
@@ -739,7 +737,7 @@ ufsdump_SOURCES = \
 	dlink.cc \
 	HelperChildConfig.h \
 	tests/stub_HelperChildConfig.cc \
-	HttpRequestMethod.cc \
+	http/RequestMethod.cc \
 	RemovalPolicy.cc \
 	$(WIN32_SOURCE) \
 	fd.h \
@@ -1244,7 +1242,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
-	HttpRequestMethod.cc \
 	int.h \
 	int.cc \
 	MasterXaction.cc \
@@ -1381,7 +1378,6 @@ tests_testCacheManager_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	HttpRequestMethod.cc \
 	Mem.h \
 	tests/stub_mem.cc \
 	String.cc \
@@ -1658,7 +1654,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHeader.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
-	HttpRequestMethod.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -1887,7 +1882,6 @@ tests_testEvent_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	HttpRequestMethod.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2131,7 +2125,6 @@ tests_testEventLoop_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	HttpRequestMethod.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
@@ -2371,7 +2364,6 @@ tests_test_http_range_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	HttpRequestMethod.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.h \
@@ -2567,7 +2559,6 @@ tests_testHttpRequest_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	HttpRequestMethod.cc \
 	Mem.h \
 	tests/stub_mem.cc \
 	String.cc \
@@ -2835,7 +2826,6 @@ tests_testStore_SOURCES= \
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpMsg.cc \
-	HttpRequestMethod.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
 	int.h \
@@ -3097,7 +3087,6 @@ tests_testUfs_SOURCES = \
 	store_dir.cc \
 	repl_modules.h \
 	store.cc \
-	HttpRequestMethod.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
 	Parsing.cc \
@@ -3253,7 +3242,6 @@ tests_testRock_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
-	HttpRequestMethod.cc \
 	int.h \
 	int.cc \
 	SquidList.h \
@@ -3466,7 +3454,6 @@ tests_testURL_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	HttpRequestMethod.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IPC_SOURCE) \
