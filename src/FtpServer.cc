@@ -1208,7 +1208,7 @@ Ftp::hasPathParameter(const String &cmd)
 {
     static const char *pathCommandsStr[]= {"CWD","SMNT", "RETR", "STOR", "APPE",
                                            "RNFR", "RNTO", "DELE", "RMD", "MKD",
-                                           "LIST", "NLST", "STAT"};
+                                           "LIST", "NLST", "STAT", "MLSD", "MLST"};
     static const std::set<String> pathCommands(pathCommandsStr, pathCommandsStr + sizeof(pathCommandsStr)/sizeof(pathCommandsStr[0]));
     return pathCommands.find(cmd) != pathCommands.end();
 }
