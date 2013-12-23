@@ -2549,6 +2549,7 @@ nodist_tests_testHttpParser_SOURCES = \
 	$(TESTSOURCES)
 tests_testHttpParser_LDADD= \
 	http/libsquid-http.la \
+	anyp/libanyp.la \
 	SquidConfig.o \
 	base/libbase.la \
 	ip/libip.la \
