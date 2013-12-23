@@ -33,7 +33,7 @@
 
 #include "CommRead.h"
 #include "dlink.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
 #include "stmem.h"
 #include "StoreIOBuffer.h"

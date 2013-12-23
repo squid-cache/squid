@@ -36,7 +36,7 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "CbDataList.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 
 /// \ingroup ACLAPI
 class ACLMethodData : public ACLData<HttpRequestMethod>
