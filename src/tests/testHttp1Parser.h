@@ -1,11 +1,11 @@
-#ifndef SQUID_SRC_TESTS_TESTHTTPPARSER_H
-#define SQUID_SRC_TESTS_TESTHTTPPARSER_H
+#ifndef SQUID_SRC_TESTS_TESTHTTP1PARSER_H
+#define SQUID_SRC_TESTS_TESTHTTP1PARSER_H
 
 #include <cppunit/extensions/HelperMacros.h>
 
-class testHttpParser : public CPPUNIT_NS::TestFixture
+class testHttp1Parser : public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testHttpParser );
+    CPPUNIT_TEST_SUITE( testHttp1Parser );
     CPPUNIT_TEST( testParseRequestLineTerminators );
     CPPUNIT_TEST( testParseRequestLineMethods );
     CPPUNIT_TEST( testParseRequestLineProtocols );

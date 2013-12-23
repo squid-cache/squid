@@ -5,7 +5,7 @@
 #include "SquidConfig.h"
 
 void
-HttpParser::clear()
+Http::Http1Parser::clear()
 {
     completedState_ = HTTP_PARSE_NONE;
     request_parse_status = Http::scNone;
@@ -21,7 +21,7 @@ HttpParser::clear()
 }
 
 void
-HttpParser::reset(const char *aBuf, int len)
+Http::Http1Parser::reset(const char *aBuf, int len)
 {
     clear(); // empty the state.
     completedState_ = HTTP_PARSE_NEW;
@@ -31,7 +31,7 @@ HttpParser::reset(const char *aBuf, int len)
 }
 
 int
-HttpParser::parseRequestFirstLine()
+Http::Http1Parser::parseRequestFirstLine()
 {
     int second_word = -1; // track the suspected URI start
     int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
@@ -247,7 +247,7 @@ HttpParser::parseRequestFirstLine()
 }
 
 bool
-HttpParser::parseRequest()
+Http::Http1Parser::parseRequest()
 {
     PROF_start(HttpParserParseReqLine);
     int retcode = parseRequestFirstLine();
