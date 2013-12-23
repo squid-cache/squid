@@ -1,11 +1,9 @@
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
 
+#include "http/forward.h"
 #include "http/MethodType.h"
 #include "SquidString.h"
-#include "SquidString.h"
-
-class SquidConfig;
 
 #include <iosfwd>
 
@@ -17,12 +15,8 @@ class SquidConfig;
  */
 class HttpRequestMethod
 {
-
 public:
-//    static void Configure(SquidConfig &Config);
-
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
-
     HttpRequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
 
     /**
