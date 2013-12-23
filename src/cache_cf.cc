@@ -53,7 +53,6 @@
 #include "format/Format.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
-#include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"

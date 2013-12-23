@@ -36,7 +36,7 @@
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
 #include "HttpMsg.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 

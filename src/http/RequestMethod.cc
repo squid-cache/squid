@@ -3,7 +3,7 @@
  */
 
 #include "squid.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "SquidConfig.h"
 #include "wordlist.h"
 
