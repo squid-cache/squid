@@ -754,11 +754,13 @@ StoreEntry::setPublicKey()
             }
 
 #endif
-            pe->replaceHttpReply(rep);
+            pe->replaceHttpReply(rep, false); // no write until key is public
 
             pe->timestampsSet();
 
             pe->makePublic();
+
+            pe->startWriting(); // after makePublic()
 
             pe->complete();
 
