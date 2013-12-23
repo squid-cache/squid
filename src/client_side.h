@@ -398,9 +398,8 @@ private:
     Auth::UserRequest::Pointer auth_;
 #endif
 
-    HttpParserPointer parser_;
-
-    // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
+    /// the parser state for current HTTP/1.x input buffer processing
+    Http::Http1ParserPointer parser_;
 
 #if USE_SSL
     bool switchedToHttps_;

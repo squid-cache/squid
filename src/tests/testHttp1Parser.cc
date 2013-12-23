@@ -6,17 +6,17 @@
 #define private public
 #define protected public
 
-#include "testHttpParser.h"
+#include "testHttp1Parser.h"
 #include "http/Http1Parser.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "testHttpParser.h"
+#include "testHttp1Parser.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttpParser );
+CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
 
 void
-testHttpParser::globalSetup()
+testHttp1Parser::globalSetup()
 {
     static bool setup_done = false;
     if (setup_done)
@@ -27,13 +27,13 @@ testHttpParser::globalSetup()
 }
 
 void
-testHttpParser::testParseRequestLineProtocols()
+testHttp1Parser::testParseRequestLineProtocols()
 {
     // ensure MemPools etc exist
     globalSetup();
 
     MemBuf input;
-    HttpParser output;
+    Http::Http1Parser output;
     input.init();
 
     // TEST: Do we comply with RFC 1945 section 5.1 ?
@@ -359,13 +359,13 @@ testHttpParser::testParseRequestLineProtocols()
 }
 
 void
-testHttpParser::testParseRequestLineStrange()
+testHttp1Parser::testParseRequestLineStrange()
 {
     // ensure MemPools etc exist
     globalSetup();
 
     MemBuf input;
-    HttpParser output;
+    Http::Http1Parser output;
     input.init();
 
     // space padded URL
@@ -442,13 +442,13 @@ testHttpParser::testParseRequestLineStrange()
 }
 
 void
-testHttpParser::testParseRequestLineTerminators()
+testHttp1Parser::testParseRequestLineTerminators()
 {
     // ensure MemPools etc exist
     globalSetup();
 
     MemBuf input;
-    HttpParser output;
+    Http::Http1Parser output;
     input.init();
 
     // alternative EOL sequence: NL-only
@@ -645,13 +645,13 @@ testHttpParser::testParseRequestLineTerminators()
 }
 
 void
-testHttpParser::testParseRequestLineMethods()
+testHttp1Parser::testParseRequestLineMethods()
 {
     // ensure MemPools etc exist
     globalSetup();
 
     MemBuf input;
-    HttpParser output;
+    Http::Http1Parser output;
     input.init();
 
     // RFC 2616 : . method
@@ -840,13 +840,13 @@ testHttpParser::testParseRequestLineMethods()
 }
 
 void
-testHttpParser::testParseRequestLineInvalid()
+testHttp1Parser::testParseRequestLineInvalid()
 {
     // ensure MemPools etc exist
     globalSetup();
 
     MemBuf input;
-    HttpParser output;
+    Http::Http1Parser output;
     input.init();
 
     // no method (but in a form which is ambiguous with HTTP/0.9 simple-request)
@@ -1105,7 +1105,7 @@ testHttpParser::testParseRequestLineInvalid()
 }
 
 void
-testHttpParser::testDripFeed()
+testHttp1Parser::testDripFeed()
 {
     // Simulate a client drip-feeding Squid a few bytes at a time.
     // extend the size of the buffer from 0 bytes to full request length
@@ -1119,7 +1119,7 @@ testHttpParser::testDripFeed()
     int reqLineEnd = mb.contentSize();
     mb.append("\n", 1);
 
-    HttpParser hp(mb.content(), 0);
+    Http::Http1Parser hp(mb.content(), 0);
 
     // only relaxed parser accepts the garbage whitespace
     Config.onoff.relaxed_header_parser = 1;

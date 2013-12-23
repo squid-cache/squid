@@ -1,9 +1,11 @@
-#ifndef _SQUID_SRC_HTTPPARSER_H
-#define _SQUID_SRC_HTTPPARSER_H
+#ifndef _SQUID_SRC_Http1Parser_H
+#define _SQUID_SRC_Http1Parser_H
 
 #include "base/RefCount.h"
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
+
+namespace Http {
 
 // Parser states
 #define HTTP_PARSE_NONE   0 // nothing. completely unset state.
@@ -19,12 +21,12 @@
  * \item Request Line (method, URL, protocol, version)
  * \item Mime header block
  */
-class HttpParser : public RefCountable
+class Http1Parser : public RefCountable
 {
 public:
-    typedef RefCount<HttpParser> Pointer;
+    typedef RefCount<Http1Parser> Pointer;
 
-    HttpParser() { clear(); }
+    Http1Parser() { clear(); }
 
     /** Initialize a new parser.
      * Presenting it a buffer to work on and the current length of available
@@ -32,7 +34,7 @@ public:
      * NOTE: This is *not* the buffer size, just the parse-able data length.
      * The parse routines may be called again later with more data.
      */
-    HttpParser(const char *aBuf, int len) { reset(aBuf,len); };
+    Http1Parser(const char *aBuf, int len) { reset(aBuf,len); };
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
@@ -123,4 +125,6 @@ private:
     AnyP::ProtocolVersion msgProtocol_;
 };
 
-#endif /*  _SQUID_SRC_HTTPPARSER_H */
+} // namespace Http
+
+#endif /*  _SQUID_SRC_Http1Parser_H */

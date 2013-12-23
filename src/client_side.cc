@@ -206,7 +206,7 @@ static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, const HttpParserPointer &, HttpRequestMethod *);
+static ClientSocketContext *parseHttpRequest(ConnStateData *, const Http::Http1ParserPointer &, HttpRequestMethod *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -2203,7 +2203,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *  \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
  *          to 1 if the request was correctly parsed.
  *  \param[in] csd a ConnStateData. The caller must make sure it is not null
- *  \param[in] hp an HttpParser
+ *  \param[in] hp an Http::Http1Parser
  *  \param[out] mehtod_p will be set as a side-effect of the parsing.
  *          Pointed-to value will be set to Http::METHOD_NONE in case of
  *          parsing failure
@@ -2212,7 +2212,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, const HttpParserPointer &hp, HttpRequestMethod * method_p)
+parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp, HttpRequestMethod * method_p)
 {
     char *req_hdr = NULL;
     char *end;
@@ -2638,7 +2638,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #endif // USE_SSL
 
 static void
-clientProcessRequest(ConnStateData *conn, const HttpParserPointer &hp, ClientSocketContext *context, const HttpRequestMethod& method)
+clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, ClientSocketContext *context, const HttpRequestMethod& method)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2992,7 +2992,7 @@ ConnStateData::clientParseRequests()
         // a) dont have one already
         // b) have completed the previous request parsing already
         if (!parser_ || parser_->isDone())
-            parser_ = new HttpParser(in.buf, in.notYetUsed);
+            parser_ = new Http::Http1Parser(in.buf, in.notYetUsed);
         else // update the buffer space being parsed
             parser_->bufsiz = in.notYetUsed;
 

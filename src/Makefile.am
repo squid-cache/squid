@@ -1066,7 +1066,7 @@ check_PROGRAMS+=\
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
-	tests/testHttpParser \
+	tests/testHttp1Parser \
 	tests/testHttpReply \
 	tests/testHttpRequest \
 	tests/testStore \
@@ -2521,7 +2521,7 @@ tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
-tests_testHttpParser_SOURCES = \
+tests_testHttp1Parser_SOURCES = \
 	Debug.h \
 	MemBuf.cc \
 	MemBuf.h \
@@ -2539,15 +2539,15 @@ tests_testHttpParser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	tests/testHttpParser.cc \
-	tests/testHttpParser.h \
+	tests/testHttp1Parser.cc \
+	tests/testHttp1Parser.h \
 	tests/testMain.cc \
 	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
-nodist_tests_testHttpParser_SOURCES = \
+nodist_tests_testHttp1Parser_SOURCES = \
 	$(TESTSOURCES)
-tests_testHttpParser_LDADD= \
+tests_testHttp1Parser_LDADD= \
 	http/libsquid-http.la \
 	anyp/libanyp.la \
 	SquidConfig.o \
@@ -2557,8 +2557,8 @@ tests_testHttpParser_LDADD= \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testHttpParser_LDFLAGS = $(LIBADD_DL)
-tests_testHttpParser_DEPENDENCIES = \
+tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
+tests_testHttp1Parser_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 ## Tests of the HttpRequest module.
