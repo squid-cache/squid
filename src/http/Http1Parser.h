@@ -2,6 +2,7 @@
 #define _SQUID_SRC_HTTPPARSER_H
 
 #include "base/RefCount.h"
+#include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
 
 // Parser states
@@ -96,8 +97,10 @@ public:
         int m_start, m_end; // method
         int u_start, u_end; // url
         int v_start, v_end; // version (full text)
-        int v_maj, v_min;   // version numerics
     } req;
+
+    /// the protocol label for this message
+    const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     // Offsets for pieces of the MiME Header segment
     int hdr_start, hdr_end;
@@ -115,6 +118,9 @@ private:
 
     /// what stage the parser is currently up to
     uint8_t completedState_;
+
+    /// what protocol label has been found in the first line
+    AnyP::ProtocolVersion msgProtocol_;
 };
 
 #endif /*  _SQUID_SRC_HTTPPARSER_H */

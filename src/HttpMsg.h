@@ -67,6 +67,7 @@ public:
     bool persistent() const;
 
 public:
+    /// transport protocol version for this message
     Http::ProtocolVersion http_ver;
 
     HttpHeader header;
@@ -80,6 +81,7 @@ public:
 
     int64_t content_length;
 
+    /// URL scheme protocol (if relevant)
     AnyP::ProtocolType protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */

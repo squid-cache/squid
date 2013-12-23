@@ -206,7 +206,7 @@ static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, const HttpParserPointer &, HttpRequestMethod *, Http::ProtocolVersion *);
+static ClientSocketContext *parseHttpRequest(ConnStateData *, const HttpParserPointer &, HttpRequestMethod *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -2212,7 +2212,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, const HttpParserPointer &hp, HttpRequestMethod * method_p, Http::ProtocolVersion *http_ver)
+parseHttpRequest(ConnStateData *csd, const HttpParserPointer &hp, HttpRequestMethod * method_p)
 {
     char *req_hdr = NULL;
     char *end;
@@ -2249,10 +2249,9 @@ parseHttpRequest(ConnStateData *csd, const HttpParserPointer &hp, HttpRequestMet
     }
 
     /* Request line is valid here .. */
-    *http_ver = Http::ProtocolVersion(hp->req.v_maj, hp->req.v_min);
 
     /* This call scans the entire request, not just the headers */
-    if (hp->req.v_maj > 0) {
+    if (hp->messageProtocol().major > 0) {
         if ((req_sz = headersEnd(hp->buf, hp->bufsiz)) == 0) {
             debugs(33, 5, "Incomplete request, waiting for end of headers");
             return NULL;
@@ -2639,7 +2638,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #endif // USE_SSL
 
 static void
-clientProcessRequest(ConnStateData *conn, const HttpParserPointer &hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver)
+clientProcessRequest(ConnStateData *conn, const HttpParserPointer &hp, ClientSocketContext *context, const HttpRequestMethod& method)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2648,6 +2647,7 @@ clientProcessRequest(ConnStateData *conn, const HttpParserPointer &hp, ClientSoc
     bool mustReplyToOptions = false;
     bool unsupportedTe = false;
     bool expectBody = false;
+    const AnyP::ProtocolVersion &http_ver = hp->messageProtocol();
 
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
@@ -2787,7 +2787,11 @@ clientProcessRequest(ConnStateData *conn, const HttpParserPointer &hp, ClientSoc
 #endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->clientConnection->local;
     request->myportname = conn->port->name;
-    request->http_ver = http_ver;
+    // XXX: for non-HTTP messages instantiate a different HttpMsg child type
+    // for now Squid only supports HTTP requests
+    assert(request->http_ver.protocol == http_ver.protocol);
+    request->http_ver.major = http_ver.major;
+    request->http_ver.minor = http_ver.minor;
 
     // Link this HttpRequest to ConnStateData relatively early so the following complex handling can use it
     // TODO: this effectively obsoletes a lot of conn->FOO copying. That needs cleaning up later.
@@ -2993,8 +2997,7 @@ ConnStateData::clientParseRequests()
             parser_->bufsiz = in.notYetUsed;
 
         /* Process request */
-        Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseHttpRequest(this, parser_, &method, &http_ver);
+        ClientSocketContext *context = parseHttpRequest(this, parser_, &method);
         PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
@@ -3012,7 +3015,7 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            clientProcessRequest(this, parser_, context, method, http_ver);
+            clientProcessRequest(this, parser_, context, method);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
