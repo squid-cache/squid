@@ -1,5 +1,5 @@
-#ifndef _SQUID_SRC_Http1Parser_H
-#define _SQUID_SRC_Http1Parser_H
+#ifndef _SQUID_SRC_HTTP_HTTP1PARSER_H
+#define _SQUID_SRC_HTTP_HTTP1PARSER_H
 
 #include "base/RefCount.h"
 #include "http/ProtocolVersion.h"
@@ -127,4 +127,4 @@ private:
 
 } // namespace Http
 
-#endif /*  _SQUID_SRC_Http1Parser_H */
+#endif /*  _SQUID_SRC_HTTP_HTTP1PARSER_H */
