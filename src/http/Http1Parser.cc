@@ -17,7 +17,7 @@ HttpParser::clear()
     req.m_start = req.m_end = -1;
     req.u_start = req.u_end = -1;
     req.v_start = req.v_end = -1;
-    req.v_maj = req.v_min = 0;
+    msgProtocol_ = AnyP::ProtocolVersion();
 }
 
 void
@@ -147,8 +147,7 @@ HttpParser::parseRequestFirstLine()
     // RFC 1945: SP and version following URI are optional, marking version 0.9
     // we identify this by the last whitespace being earlier than URI start
     if (last_whitespace < second_word && last_whitespace >= req.start) {
-        req.v_maj = 0;
-        req.v_min = 9;
+        msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // HTTP/0.9
         parseOffset_ = line_end;
@@ -178,8 +177,7 @@ HttpParser::parseRequestFirstLine()
 #if USE_HTTP_VIOLATIONS
         // being lax; old parser accepted strange versions
         // there is a LOT of cases which are ambiguous, therefore we cannot use relaxed_header_parser here.
-        req.v_maj = 0;
-        req.v_min = 9;
+        msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // treat as HTTP/0.9
         completedState_ = HTTP_PARSE_FIRST;
@@ -191,6 +189,7 @@ HttpParser::parseRequestFirstLine()
         return -1;
 #endif
     }
+    msgProtocol_.protocol = AnyP::PROTO_HTTP;
 
     int i = req.v_start + sizeof("HTTP/") -1;
 
@@ -209,7 +208,7 @@ HttpParser::parseRequestFirstLine()
         request_parse_status = Http::scHttpVersionNotSupported;
         return -1;
     }
-    req.v_maj = maj;
+    msgProtocol_.major = maj;
 
     /* next should be .; we -have- to have this as we have a whole line.. */
     if (buf[i] != '.') {
@@ -236,7 +235,7 @@ HttpParser::parseRequestFirstLine()
         request_parse_status = Http::scHttpVersionNotSupported;
         return -1;
     }
-    req.v_min = min;
+    msgProtocol_.minor = min;
 
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.
@@ -255,8 +254,7 @@ HttpParser::parseRequest()
     debugs(74, 5, "Parser: retval " << retcode << ": from " << req.start <<
            "->" << req.end << ": method " << req.m_start << "->" <<
            req.m_end << "; url " << req.u_start << "->" << req.u_end <<
-           "; version " << req.v_start << "->" << req.v_end << " (" << req.v_maj <<
-           "/" << req.v_min << ")");
+           "; proto-version " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
     PROF_stop(HttpParserParseReqLine);
 
     if (retcode != 0)
