@@ -5814,6 +5814,7 @@ FtpHandleRequest(ClientSocketContext *context, String &cmd, String &params) {
     static std::pair<const char *, FtpRequestHandler *> handlers[] = {
         std::make_pair("LIST", FtpHandleDataRequest),
         std::make_pair("NLST", FtpHandleDataRequest),
+        std::make_pair("MLSD", FtpHandleDataRequest),
         std::make_pair("FEAT", FtpHandleFeatRequest),
         std::make_pair("PASV", FtpHandlePasvRequest),
         std::make_pair("PORT", FtpHandlePortRequest),
