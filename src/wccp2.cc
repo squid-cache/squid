@@ -1172,14 +1172,13 @@ wccp2HandleUdp(int sock, void *not_used)
 
     /* FIXME INET6 : drop conversion boundary */
     Ip::Address from_tmp;
+    from_tmp.setIPv4();
 
     len = comm_udp_recvfrom(sock,
                             &wccp2_i_see_you,
                             WCCP_RESPONSE_SIZE,
                             0,
                             from_tmp);
-    /* FIXME INET6 : drop conversion boundary */
-    from_tmp.getSockAddr(from);
 
     if (len < 0)
         return;
@@ -1189,6 +1188,9 @@ wccp2HandleUdp(int sock, void *not_used)
 
     if (ntohl(wccp2_i_see_you.type) != WCCP2_I_SEE_YOU)
         return;
+
+    /* FIXME INET6 : drop conversion boundary */
+    from_tmp.getSockAddr(from);
 
     debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
 
