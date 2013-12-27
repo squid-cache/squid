@@ -2244,7 +2244,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp, HttpReq
             return NULL;
         }
 
-        if (parsedOk)
+        if (!parsedOk)
             return parseHttpRequestAbort(csd, "error:invalid-request");
     }
 
