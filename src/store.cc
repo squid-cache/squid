@@ -542,6 +542,7 @@ StoreEntry::unlock(const char *context)
 {
     debugs(20, 3, (context ? context : "somebody") <<
            " unlocking key " << getMD5Text() << ' ' << *this);
+    assert(lock_count > 0);
     --lock_count;
 
     if (lock_count)
