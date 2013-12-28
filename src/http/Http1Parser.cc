@@ -1,6 +1,7 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/Http1Parser.h"
+#include "http/RequestMethod.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
@@ -18,6 +19,7 @@ Http::Http1Parser::clear()
     req.u_start = req.u_end = -1;
     req.v_start = req.v_end = -1;
     msgProtocol_ = AnyP::ProtocolVersion();
+    method_ = NULL;
 }
 
 void
@@ -136,6 +138,9 @@ Http::Http1Parser::parseRequestFirstLine()
         request_parse_status = Http::scBadRequest; // missing URI?
         return -1;
     }
+
+    /* Set method_ */
+    method_ = new HttpRequestMethod(&buf[req.m_start], &buf[req.m_end]+1);
 
     // First non-whitespace after first SP = beginning of URL+Version
     if (second_word > line_end || second_word < req.start) {
