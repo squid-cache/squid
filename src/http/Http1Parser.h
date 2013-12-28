@@ -2,6 +2,7 @@
 #define _SQUID_SRC_HTTP_HTTP1PARSER_H
 
 #include "base/RefCount.h"
+#include "http/forward.h"
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
 
@@ -104,6 +105,9 @@ public:
     /// the protocol label for this message
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
+    /// the HTTP method if this is a request method
+    const HttpRequestMethodPointer & method() const {return method_;}
+
     // Offsets for pieces of the MiME Header segment
     int hdr_start, hdr_end;
 
@@ -123,6 +127,9 @@ private:
 
     /// what protocol label has been found in the first line
     AnyP::ProtocolVersion msgProtocol_;
+
+    /// what request method has been found on the first line
+    HttpRequestMethodPointer method_;
 };
 
 } // namespace Http
