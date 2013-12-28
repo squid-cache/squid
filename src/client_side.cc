@@ -206,7 +206,7 @@ static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, const Http::Http1ParserPointer &, HttpRequestMethod *);
+static ClientSocketContext *parseHttpRequest(ConnStateData *, const Http::Http1ParserPointer &);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -2212,7 +2212,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp, HttpRequestMethod * method_p)
+parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
 {
     char *req_hdr = NULL;
     char *end;
@@ -2220,9 +2220,6 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp, HttpReq
     ClientHttpRequest *http;
     ClientSocketContext *result;
     StoreIOBuffer tempBuffer;
-
-    /* pre-set these values to make aborting simpler */
-    *method_p = Http::METHOD_NONE;
 
     /* NP: don't be tempted to move this down or remove again.
      * It's the only DDoS protection old-String has against long URL */
@@ -2280,11 +2277,8 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp, HttpReq
         return parseHttpRequestAbort(csd, "error:request-too-large");
     }
 
-    /* Set method_p */
-    *method_p = HttpRequestMethod(&hp->buf[hp->req.m_start], &hp->buf[hp->req.m_end]+1);
-
     /* deny CONNECT via accelerated ports */
-    if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
+    if (*(hp->method()) == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->transport.protocol << " Accelerator port " << csd->port->s.port());
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
@@ -2292,7 +2286,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp, HttpReq
         return parseHttpRequestAbort(csd, "error:method-not-allowed");
     }
 
-    if (*method_p == Http::METHOD_NONE) {
+    if (*(hp->method()) == Http::METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
         hp->request_parse_status = Http::scMethodNotAllowed;
@@ -2638,7 +2632,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #endif // USE_SSL
 
 static void
-clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, ClientSocketContext *context, const HttpRequestMethod& method)
+clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, ClientSocketContext *context)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2648,6 +2642,7 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
     bool unsupportedTe = false;
     bool expectBody = false;
     const AnyP::ProtocolVersion &http_ver = hp->messageProtocol();
+    const HttpRequestMethodPointer method = hp->method();
 
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
@@ -2663,14 +2658,14 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
         assert (repContext);
         switch (hp->request_parse_status) {
         case Http::scHeaderTooLarge:
-            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, *method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf, NULL);
             break;
         case Http::scMethodNotAllowed:
-            repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
+            repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, *method, http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf, NULL);
             break;
         default:
-            repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri,
+            repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, *method, http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf, NULL);
         }
         assert(context->http->out.offset == 0);
@@ -2678,7 +2673,7 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
         goto finish;
     }
 
-    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
+    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, *method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
         conn->quitAfterError(request.getRaw());
@@ -2686,7 +2681,7 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, *method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
@@ -2704,7 +2699,7 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
+        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, *method, http->uri,
                                     conn->clientConnection->remote, NULL, hp->rawHeaderBuf(), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -2722,7 +2717,7 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, *method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
@@ -2805,7 +2800,7 @@ clientProcessRequest(ConnStateData *conn, const Http::Http1ParserPointer &hp, Cl
         unsupportedTe = te.size() && te != "identity";
     } // else implied identity coding
 
-    mustReplyToOptions = (method == Http::METHOD_OPTIONS) &&
+    mustReplyToOptions = (*method == Http::METHOD_OPTIONS) &&
                          (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request.getRaw()) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
@@ -2963,7 +2958,6 @@ ConnStateData::concurrentRequestQueueFilled() const
 bool
 ConnStateData::clientParseRequests()
 {
-    HttpRequestMethod method;
     bool parsed_req = false;
 
     debugs(33, 5, HERE << clientConnection << ": attempting to parse");
@@ -2997,7 +2991,7 @@ ConnStateData::clientParseRequests()
             parser_->bufsiz = in.notYetUsed;
 
         /* Process request */
-        ClientSocketContext *context = parseHttpRequest(this, parser_, &method);
+        ClientSocketContext *context = parseHttpRequest(this, parser_);
         PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
@@ -3015,7 +3009,7 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            clientProcessRequest(this, parser_, context, method);
+            clientProcessRequest(this, parser_, context);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 

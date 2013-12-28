@@ -13,7 +13,7 @@
  * It has a runtime extension facility to allow it to
  * efficiently support new methods
  */
-class HttpRequestMethod
+class HttpRequestMethod : public RefCountable
 {
 public:
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
