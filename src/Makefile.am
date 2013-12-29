@@ -1220,6 +1220,7 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	DiskIO/ReadRequest.cc \
@@ -1282,6 +1283,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	swap_log_op.h \
 	tests/stub_SwapDir.cc \
 	SwapDir.h \
+	Transients.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
@@ -1309,6 +1311,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_Port.cc \
 	repl_modules.h \
 	tests/stub_store.cc \
+	tests/stub_store_client.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -1744,6 +1747,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
+	tests/stub_stat.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
 	store_rebuild.h \
@@ -2943,6 +2947,7 @@ tests_testStore_SOURCES= \
 	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
+	tests/stub_stat.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
 	store_rebuild.h \
@@ -3080,6 +3085,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	tests/stub_stat.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -3313,6 +3319,7 @@ tests_testRock_SOURCES = \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	repl_modules.h \
+	tests/stub_stat.cc \
 	store.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
