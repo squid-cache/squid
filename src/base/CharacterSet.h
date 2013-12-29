@@ -19,11 +19,31 @@ public:
     /// add a given character to the character set
     CharacterSet & add(const unsigned char c);
 
+    /// add a character range to the set from low to high included
+    CharacterSet & addRange(const unsigned char low, const unsigned char high);
+
     /// add all characters from the given CharacterSet to this one
-    const CharacterSet &operator +=(const CharacterSet &src);
+    CharacterSet &operator +=(const CharacterSet &src);
+
+    /// return a new CharacterSet containing the union of two sets
+    CharacterSet operator +(const CharacterSet &src) const;
 
     /// optional set label for debugging (default: "anonymous")
     const char * name;
+
+    // A-Za-z
+    static const CharacterSet ALPHA;
+    // 0-1
+    static const CharacterSet BIT;
+    // CRLF
+    static const CharacterSet CRLF;
+    // 0-9
+    static const CharacterSet DIGIT;
+    // 0-9aAbBcCdDeEfF
+    static const CharacterSet HEXDIG;
+    // <space><tab>
+    static const CharacterSet WSP;
+
 
 private:
     /** index of characters in this set
