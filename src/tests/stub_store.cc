@@ -42,7 +42,6 @@ void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest() STUB
 void StoreEntry::negativeCache() STUB
 void StoreEntry::cacheNegatively() STUB
-void StoreEntry::invokeHandlers() STUB
 void StoreEntry::purgeMem() STUB
 void StoreEntry::swapOut() STUB
 void StoreEntry::swapOutFileClose(int how) STUB
@@ -116,12 +115,12 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 }
 
 size_t storeEntryInUse() STUB_RETVAL(0)
-const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)
 void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequest(HttpRequest * request) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
+StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 void storeInit(void) STUB
 void storeConfigure(void) STUB
 void storeFreeMemory(void) STUB
