@@ -69,6 +69,8 @@
 #include "esi/Esi.h"
 #endif
 
+#include <memory>
+
 CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
@@ -536,6 +538,11 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
        ) {
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
+    } else if (blockedHit()) {
+        debugs(88, 5, "send_hit forces a MISS");
+        http->logType = LOG_TCP_MISS;
+        processMiss();
+        return;
     } else if (!http->flags.internal && refreshCheckHTTP(e, r)) {
         debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
@@ -762,6 +769,30 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
         // otherwise reply with 304 Not Modified
         sendNotModified();
     }
+}
+
+/// whether squid.conf send_hit prevents us from serving this hit
+bool
+clientReplyContext::blockedHit() const
+{
+    if (!Config.accessList.sendHit)
+        return false; // hits are not blocked by default
+
+    if (http->flags.internal)
+        return false; // internal content "hits" cannot be blocked
+
+    if (const HttpReply *rep = http->storeEntry()->getReply()) {
+        std::auto_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
+        chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
+        HTTPMSGLOCK(chl->reply);
+        return chl->fastCheck() != ACCESS_ALLOWED; // when in doubt, block
+    }
+
+    // This does not happen, I hope, because we are called from CacheHit, which
+    // is called via a storeClientCopy() callback, and store should initialize
+    // the reply before calling that callback.
+    debugs(88, 3, "Missing reply!");
+    return false;
 }
 
 void

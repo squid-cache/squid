@@ -517,7 +517,7 @@ public:
      *
      * TODO: rename to camelCase
      */
-    size_type find_first_of(const CharacterSet &set, size_type startPos = 0) const;
+    size_type findFirstOf(const CharacterSet &set, size_type startPos = 0) const;
 
     /** Find first occurrence character NOT in character set
      *
@@ -527,7 +527,7 @@ public:
      *
      * TODO: rename to camelCase
      */
-    size_type find_first_not_of(const CharacterSet &set, size_type startPos = 0) const;
+    size_type findFirstNotOf(const CharacterSet &set, size_type startPos = 0) const;
 
     /** sscanf-alike
      *
