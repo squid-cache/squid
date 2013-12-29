@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 18    Cache Manager Statistics
+ * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -31,9 +31,9 @@
  */
 
 #include "squid.h"
+#include "CollapsedForwarding.h"
 
-#define STUB_API "stat.cc"
+#define STUB_API "CollapsedForwarding.cc"
 #include "tests/STUB.h"
 
-class StoreEntry;
-const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)
+void CollapsedForwarding::Broadcast(StoreEntry const&) STUB
