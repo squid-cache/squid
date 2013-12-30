@@ -441,7 +441,7 @@ MemStore::shouldCache(const StoreEntry &e) const
 
     // objects of unknown size are not allowed into memory cache, for now
     if (expectedSize < 0) {
-        debugs(20, 5, HERE << "Unknown expected size: " << e);
+        debugs(20, 5, "Unknown expected size: " << e);
         return false;
     }
 
@@ -460,7 +460,7 @@ MemStore::shouldCache(const StoreEntry &e) const
     }
 
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) {
-        debugs(20, 5, HERE << "Not mem-caching ENTRY_SPECIAL " << e);
+        debugs(20, 5, "Not mem-caching ENTRY_SPECIAL " << e);
         return false;
     }
 

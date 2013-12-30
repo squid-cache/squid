@@ -135,7 +135,7 @@ void
 Ipc::BaseMultiQueue::clearReaderSignal(const int remoteProcessId)
 {
     QueueReader &reader = localReader();
-    debugs(54, 7, HERE << "reader: " << reader.id);
+    debugs(54, 7, "reader: " << reader.id);
 
     reader.clearSignal();
 
@@ -205,7 +205,7 @@ Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup,
     Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
     Must(readers->theCapacity == metadata->theGroupASize + metadata->theGroupBSize);
 
-    debugs(54, 7, HERE << "queue " << id << " reader: " << localReader().id);
+    debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }
 
 int
@@ -344,7 +344,7 @@ Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
     Must(queues->theCapacity == metadata->theProcessCount * metadata->theProcessCount);
     Must(readers->theCapacity == metadata->theProcessCount);
 
-    debugs(54, 7, HERE << "queue " << id << " reader: " << localReader().id);
+    debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }
 
 bool
