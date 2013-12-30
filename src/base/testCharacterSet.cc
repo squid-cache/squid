@@ -46,7 +46,7 @@ void
 testCharacterSet::CharacterSetAddRange()
 {
     CharacterSet t("test","");
-    t.addRange(CharacterSet::RangeSpec( { { '0','9'} } ) );
+    t.addRange('0','9');
     CPPUNIT_ASSERT_EQUAL(true,t['0']);
     CPPUNIT_ASSERT_EQUAL(true,t['5']);
     CPPUNIT_ASSERT_EQUAL(true,t['9']);
