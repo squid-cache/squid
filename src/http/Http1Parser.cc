@@ -34,6 +34,77 @@ Http::Http1Parser::reset(const char *aBuf, int len)
     debugs(74, DBG_DATA, "Request parse " << Raw("buf", buf, bufsiz));
 }
 
+/**
+ * Attempt to parse the first line of a new request message.
+ *
+ * Governed by RFC 2616 section 4.1
+ *  "
+ *    In the interest of robustness, servers SHOULD ignore any empty
+ *    line(s) received where a Request-Line is expected. In other words, if
+ *    the server is reading the protocol stream at the beginning of a
+ *    message and receives a CRLF first, it should ignore the CRLF.
+ *
+ *    ... To restate what is explicitly forbidden by the
+ *    BNF, an HTTP/1.1 client MUST NOT preface or follow a request with an
+ *    extra CRLF.
+ *  "
+ *
+ * Parsing state is stored between calls to avoid repeating buffer scans.
+ * \return true if garbage whitespace was found
+ */
+bool
+Http::Http1Parser::skipGarbageLines()
+{
+    req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
+
+#if WHEN_RFC_COMPLIANT // CRLF or bare-LF is what RFC 2616 tolerant parsers do ...
+    if (Config.onoff.relaxed_header_parser) {
+        if (Config.onoff.relaxed_header_parser < 0 && (buf[req.start] == '\r' || buf[req.start] == '\n'))
+            debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
+                   "CRLF bytes received ahead of request-line. " <<
+                   "Ignored due to relaxed_header_parser.");
+        // Be tolerant of prefix empty lines
+        for (; req.start < bufsiz && (buf[req.start] == '\n' || ((buf[req.start] == '\r' && (buf[req.start+1] == '\n')); ++req.start);
+        parseOffset_ = req.start;
+    }
+#endif
+
+    /* XXX: this is a Squid-specific tolerance
+     * it appears never to have been relevant outside out unit-tests
+     * because the ConnStateData parser loop starts with consumeWhitespace()
+     * which absorbs any SP HTAB VTAB CR LF characters.
+     * But unit-tests called the HttpParser method directly without that pruning.
+     */
+#if USE_HTTP_VIOLATIONS
+    if (Config.onoff.relaxed_header_parser) {
+        if (Config.onoff.relaxed_header_parser < 0 && buf[req.start] == ' ')
+            debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
+                   "Whitespace bytes received ahead of method. " <<
+                   "Ignored due to relaxed_header_parser.");
+        // Be tolerant of prefix spaces (other bytes are valid method values)
+        for (; req.start < bufsiz && buf[req.start] == ' '; ++req.start);
+        parseOffset_ = req.start;
+    }
+#endif
+
+    return (parseOffset_ > 0);
+}
+
+/**
+ * Attempt to parse the first line of a new request message.
+ *
+ * Governed by:
+ *  RFC 1945 section 5.1
+ *  RFC 2616 section 5.1
+ *
+ * Parsing state is stored between calls. However the current implementation
+ * begins parsing from scratch on every call.
+ * The return value tells you whether the parsing state fields are valid or not.
+ *
+ * \retval -1  an error occurred. request_parse_status indicates HTTP status result.
+ * \retval  1  successful parse. member fields contain the request-line items
+ * \retval  0  more data is needed to complete the parse
+ */
 int
 Http::Http1Parser::parseRequestFirstLine()
 {
@@ -47,15 +118,6 @@ Http::Http1Parser::parseRequestFirstLine()
     // Single-pass parse: (provided we have the whole line anyways)
 
     req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
-    if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && buf[req.start] == ' ')
-            debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
-                   "Whitespace bytes received ahead of method. " <<
-                   "Ignored due to relaxed_header_parser.");
-        // Be tolerant of prefix spaces (other bytes are valid method values)
-        for (; req.start < bufsiz && buf[req.start] == ' '; ++req.start);
-        parseOffset_ = req.start;
-    }
     req.end = -1;
     for (int i = 0; i < bufsiz; ++i) {
         // track first and last whitespace (SP only)
@@ -256,6 +318,11 @@ bool
 Http::Http1Parser::parseRequest()
 {
     // stage 1: locate the request-line
+    if (completedState_ == HTTP_PARSE_NEW) {
+        if (skipGarbageLines() && (size_t)bufsiz < parseOffset_)
+            return 0;
+    }
+
     // stage 2: parse the request-line
     if (completedState_ == HTTP_PARSE_NEW) {
         PROF_start(HttpParserParseReqLine);
