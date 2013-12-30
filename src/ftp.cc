@@ -3051,6 +3051,13 @@ void FtpStateData::readStor()
     debugs(9, 3, HERE);
 
     if (code == 125 || (code == 150 && Comm::IsConnOpen(data.conn))) {
+        if (!originalRequest()->body_pipe) {
+            debugs(9, 3, "zero-size STOR?");
+            state = WRITING_DATA; // make ftpWriteTransferDone() responsible
+            dataComplete(); // XXX: keep in sync with doneSendingRequestBody()
+            return;
+        }
+
         if (!startRequestBodyFlow()) { // register to receive body data
             ftpFail(this);
             return;
