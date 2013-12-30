@@ -11,12 +11,14 @@ class testCharacterSet : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( CharacterSetConstruction );
     CPPUNIT_TEST( CharacterSetAdd );
     CPPUNIT_TEST( CharacterSetAddRange );
+    CPPUNIT_TEST( CharacterSetConstants );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void CharacterSetConstruction();
     void CharacterSetAdd();
     void CharacterSetAddRange();
+    void CharacterSetConstants();
 };
 
 #endif /* SQUID_BASE_TESTCHARACTERSET_H */
