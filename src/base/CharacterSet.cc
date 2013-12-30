@@ -61,11 +61,20 @@ CharacterSet::CharacterSet(const char *label, const RangeSpec & ranges)
 }
 
 const CharacterSet
-CharacterSet::ALPHA("ALPHA", {{ 'a', 'z' }, { 'A', 'Z'} }),
+CharacterSet::ALPHA("ALPHA", {{ 'a', 'z' }, { 'A', 'Z'}}),
 CharacterSet::BIT("BIT","01"),
 CharacterSet::CHAR("CHAR",{{ 1, 127}}),
+CharacterSet::CR("CR","\r"),
 CharacterSet::CRLF("CRLF","\r\n"),
 CharacterSet::DIGIT("DIGIT","0123456789"),
+CharacterSet::DQUOTE("DQUOTE","\""),
+CharacterSet::HTAB("HTAB","\t"),
 CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
-CharacterSet::WSP("WSP"," \t")
+CharacterSet::SP("SP"," "),
+CharacterSet::VCHAR("VCHAR",{{ 0x21, 0x7e }} ),
+CharacterSet::WSP("WSP"," \t"),
+CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}")
+//,CharacterSet::QDTEXT("QDTEXT",{{9,9},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}})
+//,CharacterSet::OBSTEXT("OBSTEXT",{{0x80,0xff}})
 ;
