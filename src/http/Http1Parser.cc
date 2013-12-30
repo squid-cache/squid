@@ -2,6 +2,7 @@
 #include "Debug.h"
 #include "http/Http1Parser.h"
 #include "http/RequestMethod.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
@@ -20,6 +21,7 @@ Http::Http1Parser::clear()
     req.v_start = req.v_end = -1;
     msgProtocol_ = AnyP::ProtocolVersion();
     method_ = NULL;
+    mimeHeaderBytes_ = 0;
 }
 
 void
@@ -43,8 +45,6 @@ Http::Http1Parser::parseRequestFirstLine()
     debugs(74, DBG_DATA, Raw("(buf+offset)", buf+parseOffset_, bufsiz-parseOffset_));
 
     // Single-pass parse: (provided we have the whole line anyways)
-
-    assert(completedState_ == HTTP_PARSE_NEW);
 
     req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
     if (Config.onoff.relaxed_header_parser) {
@@ -155,6 +155,7 @@ Http::Http1Parser::parseRequestFirstLine()
         msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // HTTP/0.9
+        completedState_ = HTTP_PARSE_FIRST;
         parseOffset_ = line_end;
         return 1;
     } else {
@@ -254,16 +255,51 @@ Http::Http1Parser::parseRequestFirstLine()
 bool
 Http::Http1Parser::parseRequest()
 {
-    PROF_start(HttpParserParseReqLine);
-    int retcode = parseRequestFirstLine();
-    debugs(74, 5, "Parser: retval " << retcode << ": from " << req.start <<
-           "->" << req.end << ": method " << req.m_start << "->" <<
-           req.m_end << "; url " << req.u_start << "->" << req.u_end <<
-           "; proto-version " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
-    PROF_stop(HttpParserParseReqLine);
+    // stage 1: locate the request-line
+    // stage 2: parse the request-line
+    if (completedState_ == HTTP_PARSE_NEW) {
+        PROF_start(HttpParserParseReqLine);
+        int retcode = parseRequestFirstLine();
+        debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end << " " << Raw("line", &buf[req.start], req.end-req.start));
+        debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << *method_ << ")");
+        debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " " << Raw("field", &buf[req.u_start], req.u_end-req.u_start));
+        debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
+        debugs(74, 5, "Parser: parse-offset=" << parseOffset_);
+        PROF_stop(HttpParserParseReqLine);
+        if (retcode < 0) {
+            completedState_ = HTTP_PARSE_DONE;
+            return false;
+        }
+    }
 
-    if (retcode != 0)
+    // stage 3: locate the mime header block
+    if (completedState_ == HTTP_PARSE_FIRST) {
+
+        // NP: set these to same value representing 0-byte headers.
+        hdr_start = req.end + 1;
+        hdr_end = hdr_start;
+
+        // HTTP/1.x request-line is valid and parsing completed.
+        if (msgProtocol_.major == 1) {
+            /* NOTE: HTTP/0.9 requests do not have a mime header block.
+             *       So the rest of the code will need to deal with '0'-byte headers
+             *       (ie, none, so don't try parsing em)
+             */
+            if ((mimeHeaderBytes_ = headersEnd(buf+parseOffset_, bufsiz-parseOffset_)) == 0) {
+                debugs(33, 5, "Incomplete request, waiting for end of headers");
+                return false;
+            }
+
+            hdr_start = req.end + 1;
+            hdr_end = parseOffset_ + mimeHeaderBytes_ - 1;
+
+        } else
+            debugs(33, 3, "Missing HTTP/1.x identifier");
+
+        // NP: planned name for this stage is HTTP_PARSE_MIME
+        // but we do not do any further stages here yet so go straight to DONE
         completedState_ = HTTP_PARSE_DONE;
+    }
 
-    return (retcode > 0);
+    return isDone();
 }
