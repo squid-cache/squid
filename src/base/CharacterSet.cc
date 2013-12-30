@@ -32,16 +32,11 @@ CharacterSet::add(const unsigned char c)
 }
 
 CharacterSet &
-CharacterSet::addRange(const RangeSpec & v)
+CharacterSet::addRange(unsigned char low, unsigned char high)
 {
-    for (RangeSpec::const_iterator i = v.begin(); i != v.end(); ++i) {
-        assert(i->first <= i->second);
-        unsigned char c = i->first;
-        unsigned char high = i->second;
-        while (c <= high) {
-            chars_[static_cast<uint8_t>(c)] = 1;
-            ++c;
-        }
+    while (low <= high) {
+        chars_[static_cast<uint8_t>(low)] = 1;
+        ++low;
     }
     return *this;
 }
@@ -54,27 +49,27 @@ CharacterSet::CharacterSet(const char *label, const char * const c)
         add(c[i]);
 }
 
-CharacterSet::CharacterSet(const char *label, const RangeSpec & ranges)
+CharacterSet::CharacterSet(const char *label, unsigned char low, unsigned char high)
 : name(label == NULL ? "anonymous" : label), chars_(Storage(256,0))
 {
-    addRange(ranges);
+    addRange(low,high);
 }
 
 const CharacterSet
-CharacterSet::ALPHA("ALPHA", {{ 'a', 'z' }, { 'A', 'Z'}}),
+CharacterSet::ALPHA("ALPHA", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
 CharacterSet::BIT("BIT","01"),
-CharacterSet::CHAR("CHAR",{{ 1, 127}}),
 CharacterSet::CR("CR","\r"),
+CharacterSet::LF("LF","\n"),
 CharacterSet::CRLF("CRLF","\r\n"),
 CharacterSet::DIGIT("DIGIT","0123456789"),
 CharacterSet::DQUOTE("DQUOTE","\""),
 CharacterSet::HTAB("HTAB","\t"),
 CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
 CharacterSet::SP("SP"," "),
-CharacterSet::VCHAR("VCHAR",{{ 0x21, 0x7e }} ),
+CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
 CharacterSet::WSP("WSP"," \t"),
 CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
 CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}")
 //,CharacterSet::QDTEXT("QDTEXT",{{9,9},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}})
-//,CharacterSet::OBSTEXT("OBSTEXT",{{0x80,0xff}})
+//,CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff)
 ;

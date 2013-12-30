@@ -8,7 +8,6 @@ class CharacterSet
 {
 public:
     typedef std::vector<uint8_t> Storage;
-    typedef std::vector<std::pair<unsigned char, unsigned char> > RangeSpec;
 
     /// define a character set with the given label ("anonymous" if NULL)
     ///  with specified initial contents
@@ -17,7 +16,7 @@ public:
     /// define a character set with the given label ("anonymous" if NULL)
     ///  containing characters defined in the supplied ranges
     /// \see addRange
-    CharacterSet(const char *label, const RangeSpec &);
+    CharacterSet(const char *label, unsigned char low, unsigned char high);
 
     /// whether a given character exists in the set
     bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)] != 0;}
@@ -25,12 +24,8 @@ public:
     /// add a given character to the character set
     CharacterSet & add(const unsigned char c);
 
-    /** add a list of character ranges, expressed as pairs [low,high]
-     *
-     * Both ends of the specified ranges are included in the added set
-     * e.g. addRange(RangeSpec( { { '0','9'}, { 'a', 'z' } ) )
-     */
-    CharacterSet & addRange(const RangeSpec &);
+    /// add a list of character ranges, expressed as pairs [low,high], including both ends
+    CharacterSet & addRange(unsigned char low, unsigned char high);
 
     /// add all characters from the given CharacterSet to this one
     CharacterSet &operator +=(const CharacterSet &src);
@@ -46,10 +41,10 @@ public:
     static const CharacterSet ALPHA;
     // 0-1
     static const CharacterSet BIT;
-    // any 7-bit US-ASCII character, except for NUL
-    static const CharacterSet CHAR;
     // carriage return
     static const CharacterSet CR;
+    // line feed
+    static const CharacterSet LF;
     // CRLF
     static const CharacterSet CRLF;
     // double quote
