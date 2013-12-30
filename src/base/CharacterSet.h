@@ -8,10 +8,16 @@ class CharacterSet
 {
 public:
     typedef std::vector<uint8_t> Storage;
+    typedef std::vector<std::pair<unsigned char, unsigned char> > RangeSpec;
 
     /// define a character set with the given label ("anonymous" if NULL)
     ///  with specified initial contents
     CharacterSet(const char *label, const char * const initial);
+
+    /// define a character set with the given label ("anonymous" if NULL)
+    ///  containing characters defined in the supplied ranges
+    /// \see addRange
+    CharacterSet(const char *label, const RangeSpec &);
 
     /// whether a given character exists in the set
     bool operator[](unsigned char c) const {return chars_[static_cast<uint8_t>(c)] != 0;}
@@ -19,8 +25,12 @@ public:
     /// add a given character to the character set
     CharacterSet & add(const unsigned char c);
 
-    /// add a character range to the set from low to high included
-    CharacterSet & addRange(const unsigned char low, const unsigned char high);
+    /** add a list of character ranges, expressed as pairs [low,high]
+     *
+     * Both ends of the specified ranges are included in the added set
+     * e.g. addRange(RangeSpec( { { '0','9'}, { 'a', 'z' } ) )
+     */
+    CharacterSet & addRange(const RangeSpec &);
 
     /// add all characters from the given CharacterSet to this one
     CharacterSet &operator +=(const CharacterSet &src);
@@ -35,6 +45,8 @@ public:
     static const CharacterSet ALPHA;
     // 0-1
     static const CharacterSet BIT;
+    // any 7-bit US-ASCII character, except for NUL
+    static const CharacterSet CHAR;
     // CRLF
     static const CharacterSet CRLF;
     // 0-9
@@ -43,7 +55,6 @@ public:
     static const CharacterSet HEXDIG;
     // <space><tab>
     static const CharacterSet WSP;
-
 
 private:
     /** index of characters in this set
