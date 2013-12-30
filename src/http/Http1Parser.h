@@ -72,25 +72,7 @@ public:
      * \return true if a valid request was parsed.
      * \note Use isDone() method to determine between incomplete parse and errors.
      */
-    // TODO: parse more than just the request-line
     bool parseRequest();
-
-    /**
-     * Attempt to parse the first line of a new request message.
-     *
-     * Governed by:
-     *  RFC 1945 section 5.1
-     *  RFC 2616 section 5.1
-     *
-     * Parsing state is stored between calls. However the current implementation
-     * begins parsing from scratch on every call.
-     * The return value tells you whether the parsing state fields are valid or not.
-     *
-     * \retval -1  an error occurred. request_parse_status indicates HTTP status result.
-     * \retval  1  successful parse. member fields contain the request-line items
-     * \retval  0  more data is needed to complete the parse
-     */
-    int parseRequestFirstLine();
 
 public:
     const char *buf;
@@ -122,6 +104,9 @@ public:
     Http::StatusCode request_parse_status;
 
 private:
+    bool skipGarbageLines();
+    int parseRequestFirstLine();
+
     /// byte offset for non-parsed region of the buffer
     size_t parseOffset_;
 
