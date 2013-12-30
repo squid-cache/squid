@@ -55,7 +55,7 @@ CharacterSet::CharacterSet(const char *label, const char * const c)
 }
 
 CharacterSet::CharacterSet(const char *label, const RangeSpec & ranges)
-: CharacterSet(label,"")
+: name(label == NULL ? "anonymous" : label), chars_(Storage(256,0))
 {
     addRange(ranges);
 }
