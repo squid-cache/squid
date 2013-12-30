@@ -62,3 +62,21 @@ testCharacterSet::CharacterSetConstants()
     CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['Z']);
     CPPUNIT_ASSERT_EQUAL(false,CharacterSet::ALPHA['5']);
 }
+
+void
+testCharacterSet::CharacterSetUnion()
+{
+    {
+        CharacterSet hex("hex","");
+        hex += CharacterSet::DIGIT;
+        hex += CharacterSet(NULL,"aAbBcCdDeEfF");
+        for (int j = 0; j < 255; ++j)
+            CPPUNIT_ASSERT_EQUAL(CharacterSet::HEXDIG[j],hex[j]);
+    }
+    {
+        CharacterSet hex(NULL,"");
+        hex = CharacterSet::DIGIT + CharacterSet(NULL,"aAbBcCdDeEfF");
+        for (int j = 0; j < 255; ++j)
+            CPPUNIT_ASSERT_EQUAL(CharacterSet::HEXDIG[j],hex[j]);
+    }
+}

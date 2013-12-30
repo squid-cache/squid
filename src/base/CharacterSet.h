@@ -41,20 +41,40 @@ public:
     /// optional set label for debugging (default: "anonymous")
     const char * name;
 
+    // common character sets, insipired to RFC5234
     // A-Za-z
     static const CharacterSet ALPHA;
     // 0-1
     static const CharacterSet BIT;
     // any 7-bit US-ASCII character, except for NUL
     static const CharacterSet CHAR;
+    // carriage return
+    static const CharacterSet CR;
     // CRLF
     static const CharacterSet CRLF;
+    // double quote
+    static const CharacterSet DQUOTE;
     // 0-9
     static const CharacterSet DIGIT;
     // 0-9aAbBcCdDeEfF
     static const CharacterSet HEXDIG;
+    // horizontal tab
+    static const CharacterSet HTAB;
+    // white space
+    static const CharacterSet SP;
+    // visible (printable) characters
+    static const CharacterSet VCHAR;
     // <space><tab>
     static const CharacterSet WSP;
+    // character sets from draft httpbis
+    // any VCHAR except for SPECIAL
+    static const CharacterSet TCHAR;
+    // special VCHARs
+    static const CharacterSet SPECIAL;
+    // qdtext (ready but not enabled for now)
+    //static const CharacterSet QDTEXT;
+    // obs-text
+    //static const CharacterSet OBSTEXT;
 
 private:
     /** index of characters in this set
