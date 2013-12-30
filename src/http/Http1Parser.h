@@ -12,6 +12,7 @@ namespace Http {
 #define HTTP_PARSE_NONE   0 // nothing. completely unset state.
 #define HTTP_PARSE_NEW    1 // initialized, but nothing usefully parsed yet.
 #define HTTP_PARSE_FIRST  2 // have parsed request first line
+#define HTTP_PARSE_MIME   3 // have located end of mime header block
 #define HTTP_PARSE_DONE   99 // have done with parsing so far
 
 /** HTTP protocol parser.
@@ -54,16 +55,17 @@ public:
     /// including CRLF terminator
     int64_t firstLineSize() const {return req.end - req.start + 1;}
 
-    /// size in bytes of the message headers including CRLF terminator
+    /// size in bytes of the message headers including CRLF terminator(s)
     /// but excluding request-line bytes
-    int64_t headerBlockSize() const {return hdr_end - hdr_start + 1;}
+    int64_t headerBlockSize() const {return mimeHeaderBytes_;}
 
     /// size in bytes of HTTP message block, includes request-line and mime headers
     /// excludes any body/entity/payload bytes
-    int64_t messageHeaderSize() const {return hdr_end - req.start + 1;}
+    /// excludes any garbage prefix before the request-line
+    int64_t messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
     /// buffer containing HTTP mime headers
-    // convert to SBuf
+    // TODO: convert to SBuf
     const char *rawHeaderBuf() {return buf + hdr_start;}
 
     /** Attempt to parse a request.
@@ -109,6 +111,7 @@ public:
     const HttpRequestMethodPointer & method() const {return method_;}
 
     // Offsets for pieces of the MiME Header segment
+    // \deprecated use rawHeaderBuf() and headerBlockSize() instead
     int hdr_start, hdr_end;
 
     // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
@@ -130,6 +133,9 @@ private:
 
     /// what request method has been found on the first line
     HttpRequestMethodPointer method_;
+
+    /// number of bytes in the mime header block
+    int64_t mimeHeaderBytes_;
 };
 
 } // namespace Http

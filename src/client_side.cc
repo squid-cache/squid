@@ -2214,8 +2214,6 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 static ClientSocketContext *
 parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
 {
-    char *req_hdr = NULL;
-    char *end;
     size_t req_sz;
     ClientHttpRequest *http;
     ClientSocketContext *result;
@@ -2245,30 +2243,13 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
             return parseHttpRequestAbort(csd, "error:invalid-request");
     }
 
-    /* Request line is valid here .. */
-
-    /* This call scans the entire request, not just the headers */
-    if (hp->messageProtocol().major > 0) {
-        if ((req_sz = headersEnd(hp->buf, hp->bufsiz)) == 0) {
-            debugs(33, 5, "Incomplete request, waiting for end of headers");
-            return NULL;
-        }
-    } else {
-        debugs(33, 3, "parseHttpRequest: Missing HTTP identifier");
-        req_sz = hp->firstLineSize();
-    }
-
     /* We know the whole request is in hp->buf now */
-
+    req_sz = hp->messageHeaderSize();
     assert(req_sz <= (size_t) hp->bufsiz);
 
     /* Will the following be true with HTTP/0.9 requests? probably not .. */
     /* So the rest of the code will need to deal with '0'-byte headers (ie, none, so don't try parsing em) */
     assert(req_sz > 0);
-
-    hp->hdr_end = req_sz - 1;
-
-    hp->hdr_start = hp->req.end + 1;
 
     /* Enforce max_request_size */
     if (req_sz >= Config.maxRequestHeaderSize) {
@@ -2298,17 +2279,13 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
      * TODO: Use httpRequestParse here.
      */
     /* XXX this code should be modified to take a const char * later! */
-    req_hdr = (char *) hp->buf + hp->req.end + 1;
+    const char *req_hdr = hp->rawHeaderBuf();
 
-    debugs(33, 3, "parseHttpRequest: req_hdr = {" << req_hdr << "}");
+    debugs(33, 3, Raw("req_hdr", req_hdr, hp->headerBlockSize()));
 
-    end = (char *) hp->buf + hp->hdr_end;
-
-    debugs(33, 3, "parseHttpRequest: end = {" << end << "}");
-
-    debugs(33, 3, "parseHttpRequest: prefix_sz = " <<
-           hp->messageHeaderSize() << ", request-line-size=" <<
-           hp->firstLineSize());
+    debugs(33, 3, "prefix_sz = " << hp->messageHeaderSize() <<
+           ", request-line-size=" << hp->firstLineSize() <<
+           ", mime-header-size=" << hp->headerBlockSize());
 
     /* Ok, all headers are received */
     http = new ClientHttpRequest(csd);
