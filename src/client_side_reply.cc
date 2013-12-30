@@ -69,6 +69,8 @@
 #include "esi/Esi.h"
 #endif
 
+#include <memory>
+
 CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
