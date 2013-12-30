@@ -32,13 +32,16 @@ CharacterSet::add(const unsigned char c)
 }
 
 CharacterSet &
-CharacterSet::addRange(const unsigned char low, const unsigned char high)
+CharacterSet::addRange(const RangeSpec & v)
 {
-    assert(low <= high);
-    unsigned char c = low;
-    while (c <= high) {
-        chars_[static_cast<uint8_t>(c)] = 1;
-        ++c;
+    for (RangeSpec::const_iterator i = v.begin(); i != v.end(); ++i) {
+        assert(i->first <= i->second);
+        unsigned char c = i->first;
+        unsigned char high = i->second;
+        while (c <= high) {
+            chars_[static_cast<uint8_t>(c)] = 1;
+            ++c;
+        }
     }
     return *this;
 }
@@ -51,9 +54,16 @@ CharacterSet::CharacterSet(const char *label, const char * const c)
         add(c[i]);
 }
 
+CharacterSet::CharacterSet(const char *label, const RangeSpec & ranges)
+: CharacterSet(label,"")
+{
+    addRange(ranges);
+}
+
 const CharacterSet
-CharacterSet::ALPHA("ALPHA","ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"),
+CharacterSet::ALPHA("ALPHA", {{ 'a', 'z' }, { 'A', 'Z'} }),
 CharacterSet::BIT("BIT","01"),
+CharacterSet::CHAR("CHAR",{{ 1, 127}}),
 CharacterSet::CRLF("CRLF","\r\n"),
 CharacterSet::DIGIT("DIGIT","0123456789"),
 CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),

@@ -46,9 +46,19 @@ void
 testCharacterSet::CharacterSetAddRange()
 {
     CharacterSet t("test","");
-    t.addRange('0','9');
+    t.addRange(CharacterSet::RangeSpec( { { '0','9'} } ) );
     CPPUNIT_ASSERT_EQUAL(true,t['0']);
     CPPUNIT_ASSERT_EQUAL(true,t['5']);
     CPPUNIT_ASSERT_EQUAL(true,t['9']);
     CPPUNIT_ASSERT_EQUAL(false,t['a']);
+}
+
+void
+testCharacterSet::CharacterSetConstants()
+{
+    CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['a']);
+    CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['z']);
+    CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['A']);
+    CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['Z']);
+    CPPUNIT_ASSERT_EQUAL(false,CharacterSet::ALPHA['5']);
 }
