@@ -2519,6 +2519,8 @@ tests_testHttp1Parser_SOURCES = \
 	MemBuf.h \
 	Mem.h \
 	tests/stub_mem.cc \
+	mime_header.cc \
+	mime_header.h \
 	String.cc \
 	cache_cf.h \
 	YesNoNone.h \
