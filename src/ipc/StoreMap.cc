@@ -325,7 +325,7 @@ Ipc::StoreMap::openForReadingAt(const sfileno fileno)
 
     if (s.waitingToBeFreed) {
         s.lock.unlockShared();
-        debugs(54, 7, HERE << "cannot open marked entry " << fileno <<
+        debugs(54, 7, "cannot open marked entry " << fileno <<
                " for reading " << path);
         return NULL;
     }

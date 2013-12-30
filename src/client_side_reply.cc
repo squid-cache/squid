@@ -1608,7 +1608,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (http->redirect.status) {
         /** \li If redirection status is True force this to be a MISS */
-        debugs(85, 3, HERE << "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses) " << *e);
+        debugs(85, 3, "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses) " << *e);
         forgetHit();
         http->logType = LOG_TCP_REDIRECT;
         doGetMoreData();

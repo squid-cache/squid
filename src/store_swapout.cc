@@ -381,7 +381,7 @@ StoreEntry::mayStartSwapOut()
 
     // if we swapped out already, do not start over
     if (swap_status == SWAPOUT_DONE) {
-        debugs(20, 3,  HERE << "already did");
+        debugs(20, 3, "already did");
         decision = MemObject::SwapOut::swImpossible;
         return false;
     }
