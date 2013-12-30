@@ -2301,7 +2301,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
-    debugs(33, 5, "parseHttpRequest: Request Header is\n" <<(hp->buf) + hp->hdr_start);
+    debugs(33, 5, "parseHttpRequest: Request Header is\n" << hp->rawHeaderBuf());
 
     /* set url */
     /*
