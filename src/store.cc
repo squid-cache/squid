@@ -392,11 +392,12 @@ StoreEntry::StoreEntry() :
         swap_status(SWAPOUT_NONE),
         lock_count(0)
 {
-    debugs(20, 3, HERE << "new StoreEntry " << this);
+    debugs(20, 5, "StoreEntry constructed, this=" << this);
 }
 
 StoreEntry::~StoreEntry()
 {
+    debugs(20, 5, "StoreEntry destructed, this=" << this);
 }
 
 #if USE_ADAPTATION

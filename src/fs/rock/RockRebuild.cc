@@ -190,7 +190,7 @@ Rock::Rebuild::steps()
 void
 Rock::Rebuild::loadingSteps()
 {
-    debugs(47,5, HERE << sd->index << " slot " << loadingPos << " at " <<
+    debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
     // Balance our desire to maximize the number of entries processed at once
@@ -225,7 +225,7 @@ Rock::Rebuild::loadingSteps()
 void
 Rock::Rebuild::loadOneSlot()
 {
-    debugs(47,5, HERE << sd->index << " slot " << loadingPos << " at " <<
+    debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
     ++counts.scancount;
@@ -385,7 +385,7 @@ Rock::Rebuild::swanSong()
 void
 Rock::Rebuild::failure(const char *msg, int errNo)
 {
-    debugs(47,5, HERE << sd->index << " slot " << loadingPos << " at " <<
+    debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
     if (errNo)
