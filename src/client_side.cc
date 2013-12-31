@@ -2080,7 +2080,7 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
 }
 
 static void
-prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const char *req_hdr)
+prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const Http::Http1ParserPointer &hp)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
@@ -2121,7 +2121,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
-    if (tryHostHeader && (host = mime_get_header_field(req_hdr, "Host")) != NULL) {
+    if (tryHostHeader && (host = hp->getHeaderField("Host")) != NULL) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
@@ -2170,7 +2170,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 }
 
 static void
-prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const char *req_hdr)
+prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const Http::Http1ParserPointer &hp)
 {
     char *host;
     char ipbuf[MAX_IPSTRLEN];
@@ -2180,7 +2180,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    if ((host = mime_get_header_field(req_hdr, "Host")) != NULL) {
+    if ((host = hp->getHeaderField("Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
@@ -2278,11 +2278,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
      * Process headers after request line
      * TODO: Use httpRequestParse here.
      */
-    /* XXX this code should be modified to take a const char * later! */
-    const char *req_hdr = hp->rawHeaderBuf();
-
-    debugs(33, 3, Raw("req_hdr", req_hdr, hp->headerBlockSize()));
-
+    debugs(33, 3, Raw("req_hdr", hp->rawHeaderBuf(), hp->headerBlockSize()));
     debugs(33, 3, "prefix_sz = " << hp->messageHeaderSize() <<
            ", request-line-size=" << hp->firstLineSize() <<
            ", mime-header-size=" << hp->headerBlockSize());
@@ -2336,7 +2332,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
      */
     if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        prepareTransparentURL(csd, http, url, req_hdr);
+        prepareTransparentURL(csd, http, url, hp);
 
     } else if (internalCheck(url)) {
         /* internal URL mode */
@@ -2348,7 +2344,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
 
     } else if (csd->port->flags.accelSurrogate || csd->switchedToHttps()) {
         /* accelerator mode */
-        prepareAcceleratedURL(csd, http, url, req_hdr);
+        prepareAcceleratedURL(csd, http, url, hp);
     }
 
     if (!http->uri) {

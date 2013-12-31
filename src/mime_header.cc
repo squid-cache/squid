@@ -31,76 +31,8 @@
  */
 
 #include "squid.h"
-
-#define GET_HDR_SZ 1024
 #include "Debug.h"
 #include "profiler/Profiler.h"
-
-/*
- * returns a pointer to a field-value of the first matching field-name where
- * field-value matches prefix if any
- */
-char *
-mime_get_header_field(const char *mime, const char *name)
-{
-    LOCAL_ARRAY(char, header, GET_HDR_SZ);
-    const char *p = NULL;
-    char *q = NULL;
-    char got = 0;
-    const int namelen = name ? strlen(name) : 0;
-    int l;
-
-    if (NULL == mime)
-        return NULL;
-
-    assert(NULL != name);
-
-    debugs(25, 5, "mime_get_header: looking for '" << name << "'");
-
-    for (p = mime; *p; p += strcspn(p, "\n\r")) {
-        if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
-            return NULL;
-
-        while (xisspace(*p))
-            ++p;
-
-        if (strncasecmp(p, name, namelen))
-            continue;
-
-        if (!xisspace(p[namelen]) && p[namelen] != ':')
-            continue;
-
-        l = strcspn(p, "\n\r") + 1;
-
-        if (l > GET_HDR_SZ)
-            l = GET_HDR_SZ;
-
-        xstrncpy(header, p, l);
-
-        debugs(25, 5, "mime_get_header: checking '" << header << "'");
-
-        q = header;
-
-        q += namelen;
-
-        if (*q == ':') {
-            ++q;
-            got = 1;
-        }
-
-        while (xisspace(*q)) {
-            ++q;
-            got = 1;
-        }
-
-        if (got) {
-            debugs(25, 5, "mime_get_header: returning '" << q << "'");
-            return q;
-        }
-    }
-
-    return NULL;
-}
 
 size_t
 headersEnd(const char *mime, size_t l)

@@ -74,6 +74,11 @@ public:
      */
     bool parseRequest();
 
+    /**
+     * \return A pointer to a field-value of the first matching field-name, or NULL.
+     */
+    char *getHeaderField(const char *name);
+
 public:
     const char *buf;
     int bufsiz;
