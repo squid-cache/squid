@@ -26,3 +26,24 @@ libbase_la_SOURCES = \
 	TextException.h \
 	Vector.cc \
 	Vector.h
+
+EXTRA_PROGRAMS = \
+	testCharacterSet
+
+check_PROGRAMS += testCharacterSet
+TESTS += testCharacterSet
+
+testCharacterSet_SOURCES = \
+	CharacterSet.h \
+	testCharacterSet.h \
+	testCharacterSet.cc
+nodist_testCharacterSet_SOURCES = \
+	$(top_srcdir)/src/tests/testMain.cc
+testCharacterSet_LDFLAGS = $(LIBADD_DL)
+testCharacterSet_LDADD=\
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
+	libbase.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+testCharacterSet_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
