@@ -2346,7 +2346,10 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
 
     // XXX: crop this dump at the end of headers. No need for extras
     debugs(11, 2, "HTTP Client " << csd->clientConnection);
-    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" << (hp->buf) + hp->req.m_start << "\n----------");
+    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
+           hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol() << "\n" <<
+           hp->rawHeaderBuf() <<
+           "\n----------");
 
     result->flags.parsed_ok = 1;
     return result;

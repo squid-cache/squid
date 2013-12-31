@@ -83,14 +83,6 @@ public:
     const char *buf;
     int bufsiz;
 
-    /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 2616
-    struct request_offsets {
-        int start, end;
-        int m_start, m_end; // method
-        int u_start, u_end; // url
-        int v_start, v_end; // version (full text)
-    } req;
-
     /// the protocol label for this message
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
@@ -110,6 +102,14 @@ public:
 private:
     bool skipGarbageLines();
     int parseRequestFirstLine();
+
+    /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 2616
+    struct request_offsets {
+        int start, end;
+        int m_start, m_end; // method
+        int u_start, u_end; // url
+        int v_start, v_end; // version (full text)
+    } req;
 
     /// byte offset for non-parsed region of the buffer
     size_t parseOffset_;
