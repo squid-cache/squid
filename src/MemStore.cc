@@ -28,7 +28,6 @@ static const char *SpaceLabel = "cache_mem_space";
 // used except for a positivity test. A unique value is handy for debugging.
 static const uint32_t SpacePoolId = 510716;
 
-
 MemStore::MemStore(): map(NULL), lastWritingSlice(-1)
 {
 }
@@ -47,18 +46,18 @@ MemStore::init()
 
     // check compatibility with the disk cache, if any
     if (Config.cacheSwap.n_configured > 0) {
-    const int64_t diskMaxSize = Store::Root().maxObjectSize();
-    const int64_t memMaxSize = maxObjectSize();
-    if (diskMaxSize == -1) {
-        debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
-               "is unlimited but mem-cache maximum object size is " <<
-               memMaxSize / 1024.0 << " KB");
-    } else if (diskMaxSize > memMaxSize) {
-        debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
-               "is too large for mem-cache: " <<
-               diskMaxSize / 1024.0 << " KB > " <<
-               memMaxSize / 1024.0 << " KB");
-    }
+        const int64_t diskMaxSize = Store::Root().maxObjectSize();
+        const int64_t memMaxSize = maxObjectSize();
+        if (diskMaxSize == -1) {
+            debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
+                   "is unlimited but mem-cache maximum object size is " <<
+                   memMaxSize / 1024.0 << " KB");
+        } else if (diskMaxSize > memMaxSize) {
+            debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
+                   "is too large for mem-cache: " <<
+                   diskMaxSize / 1024.0 << " KB > " <<
+                   memMaxSize / 1024.0 << " KB");
+        }
     }
 
     freeSlots = shm_old(Ipc::Mem::PageStack)(SpaceLabel);
@@ -136,7 +135,7 @@ uint64_t
 MemStore::currentSize() const
 {
     return Ipc::Mem::PageLevel(Ipc::Mem::PageId::cachePage) *
-        Ipc::Mem::PageSize();
+           Ipc::Mem::PageSize();
 }
 
 uint64_t
@@ -224,7 +223,7 @@ MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 
     sfileno index;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-        reinterpret_cast<cache_key*>(collapsed.key), index);
+                                                reinterpret_cast<cache_key*>(collapsed.key), index);
     if (!slot)
         return false;
 
@@ -238,10 +237,10 @@ MemStore::updateCollapsed(StoreEntry &collapsed)
 {
     assert(collapsed.mem_obj);
 
-    const sfileno index = collapsed.mem_obj->memCache.index; 
+    const sfileno index = collapsed.mem_obj->memCache.index;
 
     // already disconnected from the cache, no need to update
-    if (index < 0) 
+    if (index < 0)
         return true;
 
     if (!map)
@@ -318,8 +317,8 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
                wasEof << " wasSize " << wasSize << " <= " <<
                anchor.basics.swap_file_sz << " sliceOffset " << sliceOffset <<
                " mem.endOffset " << e.mem_obj->endOffset());
- 
-       if (e.mem_obj->endOffset() < sliceOffset + wasSize) {
+
+        if (e.mem_obj->endOffset() < sliceOffset + wasSize) {
             // size of the slice data that we already copied
             const size_t prefixSize = e.mem_obj->endOffset() - sliceOffset;
             assert(prefixSize <= wasSize);
@@ -343,7 +342,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
             if (wasSize >= slice.size) { // did not grow since we started copying
                 sliceOffset += wasSize;
                 sid = slice.next;
-			}
+            }
         } else if (wasSize >= slice.size) { // did not grow
             break;
         }
@@ -385,7 +384,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
         // XXX: have to copy because httpMsgParseStep() requires 0-termination
         MemBuf mb;
         mb.init(buf.length+1, buf.length+1);
-        mb.append(buf.data, buf.length);        
+        mb.append(buf.data, buf.length);
         mb.terminate();
         const int result = rep->httpMsgParseStep(mb.buf, buf.length, eof);
         if (result > 0) {
@@ -494,7 +493,7 @@ MemStore::copyToShm(StoreEntry &e)
     // not knowing when the wait is over
     if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) {
         debugs(20, 5, "postponing copying " << e << " for ENTRY_FWD_HDR_WAIT");
-        return;         
+        return;
     }
 
     assert(map);
@@ -536,9 +535,9 @@ MemStore::copyToShm(StoreEntry &e)
             slice.next = lastWritingSlice = reserveSapForWriting(page);
             map->extras(lastWritingSlice).page = page;
             debugs(20, 7, "entry " << index << " new slice: " << lastWritingSlice);
-         }
+        }
 
-         copyToShmSlice(e, anchor);
+        copyToShmSlice(e, anchor);
     }
 
     debugs(20, 7, "mem-cached available " << eSize << " bytes of " << e);
@@ -594,7 +593,7 @@ MemStore::reserveSapForWriting(Ipc::Mem::PageId &page)
             freeSlots->push(slot);
         }
     }
-        
+
     // catch free slots delivered to noteFreeMapSlice()
     assert(!waitingFor);
     waitingFor.slot = &slot;
@@ -651,7 +650,7 @@ MemStore::write(StoreEntry &e)
             return;
         }
         break;
-  
+
     case MemObject::ioDone:
     case MemObject::ioReading:
         return; // we should not write in all of the above cases
@@ -667,8 +666,7 @@ MemStore::write(StoreEntry &e)
         else
             CollapsedForwarding::Broadcast(e);
         return;
-    }
-    catch (const std::exception &x) { // TODO: should we catch ... as well?
+    } catch (const std::exception &x) { // TODO: should we catch ... as well?
         debugs(20, 2, "mem-caching error writing entry " << e << ": " << x.what());
         // fall through to the error handling code
     }
@@ -712,7 +710,7 @@ MemStore::unlink(StoreEntry &e)
         // the entry may have been loaded and then disconnected from the cache
         map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
     }
-        
+
     e.destroyMemObject(); // XXX: but it may contain useful info such as a client list. The old code used to do that though, right?
 }
 
@@ -834,8 +832,8 @@ void MemStoreRr::create(const RunnerRegistry &)
 
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
-                                              entryLimit,
-                                              sizeof(Ipc::Mem::PageId));
+                 entryLimit,
+                 sizeof(Ipc::Mem::PageId));
     Must(!mapOwner);
     mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
 }

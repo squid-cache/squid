@@ -75,7 +75,8 @@ MemObject::inUseCount()
 }
 
 const char *
-MemObject::storeId() const {
+MemObject::storeId() const
+{
     if (!storeId_.size()) {
         debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
         dump();
@@ -85,12 +86,14 @@ MemObject::storeId() const {
 }
 
 const char *
-MemObject::logUri() const {
+MemObject::logUri() const
+{
     return logUri_.size() ? logUri_.termedBuf() : storeId();
 }
 
 bool
-MemObject::hasUris() const {
+MemObject::hasUris() const
+{
     return storeId_.size();
 }
 
@@ -100,7 +103,7 @@ MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestM
     storeId_ = aStoreId;
 
     // fast pointer comparison for a common storeCreateEntry(url,url,...) case
-    if (!aLogUri || aLogUri == aStoreId) 
+    if (!aLogUri || aLogUri == aStoreId)
         logUri_.clean(); // use storeId_ by default to minimize copying
     else
         logUri_ = aLogUri;
@@ -334,7 +337,7 @@ bool
 MemObject::readAheadPolicyCanRead() const
 {
     const bool canRead = endOffset() - getReply()->hdr_sz <
-        lowestMemReaderOffset() + Config.readAheadGap;
+                         lowestMemReaderOffset() + Config.readAheadGap;
 
     if (!canRead) {
         debugs(19, 9, "no: " << endOffset() << '-' << getReply()->hdr_sz <<

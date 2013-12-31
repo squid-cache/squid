@@ -293,7 +293,7 @@ store_client::moreToSend() const
     // scheduleRead calls scheduleDiskRead which asserts on STORE_MEM_CLIENTs.
     const MemObject *mem = entry->mem_obj;
     return mem &&
-        mem->inmem_lo <= copyInto.offset && copyInto.offset < mem->endOffset();
+           mem->inmem_lo <= copyInto.offset && copyInto.offset < mem->endOffset();
 }
 
 static void

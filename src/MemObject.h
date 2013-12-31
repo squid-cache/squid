@@ -143,7 +143,8 @@ public:
     typedef enum { ioUndecided, ioWriting, ioReading, ioDone } Io;
 
     /// State of an entry with regards to the [shared] in-transit table.
-    class XitTable {
+    class XitTable
+    {
     public:
         XitTable(): index(-1), io(ioUndecided) {}
 
@@ -153,13 +154,14 @@ public:
     XitTable xitTable; ///< current [shared] memory caching state for the entry
 
     /// State of an entry with regards to the [shared] memory caching.
-    class MemCache {
+    class MemCache
+    {
     public:
         MemCache(): index(-1), offset(0), io(ioUndecided) {}
 
         int32_t index; ///< entry position inside the memory cache
         int64_t offset; ///< bytes written/read to/from the memory cache so far
-        
+
         Io io; ///< current I/O state
     };
     MemCache memCache; ///< current [shared] memory caching state for the entry

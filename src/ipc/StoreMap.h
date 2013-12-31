@@ -24,7 +24,6 @@ public:
     Atomic::WordT<StoreMapSliceId> next; ///< ID of the next entry slice
 };
 
-
 /// Maintains shareable information about a StoreEntry as a whole.
 /// An anchor points to one or more StoreEntry slices. This is the
 /// only lockable part of shared StoreEntry information, providing
@@ -70,7 +69,7 @@ public:
     } basics;
 
     /// where the chain of StoreEntry slices begins [app]
-    Atomic::WordT<StoreMapSliceId> start; 
+    Atomic::WordT<StoreMapSliceId> start;
 
 #if 0
     /// possible persistent states
@@ -86,7 +85,8 @@ public:
 /// A hack to allocate one shared array for both anchors and slices.
 /// Anchors are indexed by store entry ID and are independent from each other.
 /// Slices are indexed by slice IDs and form entry chains using slice.next.
-class StoreMapSlot {
+class StoreMapSlot
+{
 public:
     StoreMapAnchor anchor; ///< information about store entry as a whole
     StoreMapSlice slice; ///< information about one stored entry piece

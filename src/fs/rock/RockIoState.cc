@@ -119,10 +119,10 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
 
     offset_ = coreOff;
     len = min(len,
-        static_cast<size_t>(objOffset + currentReadableSlice().size - coreOff));
+              static_cast<size_t>(objOffset + currentReadableSlice().size - coreOff));
     const uint64_t diskOffset = dir->diskOffset(sidCurrent);
     theFile->read(new ReadRequest(::ReadRequest(buf,
-        diskOffset + sizeof(DbCellHeader) + coreOff - objOffset, len), this));
+                                  diskOffset + sizeof(DbCellHeader) + coreOff - objOffset, len), this));
 }
 
 void
@@ -136,7 +136,6 @@ Rock::IoState::callReaderBack(const char *buf, int rlen)
     if (cbdataReferenceValidDone(read.callback_data, &cbdata))
         callb(cbdata, buf, rlen, this);
 }
-
 
 /// wraps tryWrite() to handle deep write failures centrally and safely
 bool
@@ -154,7 +153,7 @@ Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
     }
 
     // careful: 'this' might be gone here
- 
+
     if (dtor)
         (dtor)(const_cast<char*>(buf)); // cast due to a broken API?
 
@@ -165,7 +164,7 @@ Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
  * Possibly send data to be written to disk:
  * We only write data when full slot is accumulated or when close() is called.
  * We buffer, in part, to avoid forcing OS to _read_ old unwritten portions of
- * the slot when the write does not end at the page or sector boundary. 
+ * the slot when the write does not end at the page or sector boundary.
  */
 void
 Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
@@ -276,7 +275,7 @@ Rock::IoState::writeBufToDisk(const SlotId sidNext, bool eof)
 
     WriteRequest *const r = new WriteRequest(
         ::WriteRequest(static_cast<char*>(wBuf), diskOffset, theBuf.size,
-            memFreeBufFunc(wBufCap)), this);
+                       memFreeBufFunc(wBufCap)), this);
     r->sidCurrent = sidCurrent;
     r->sidNext = sidNext;
     r->eof = eof;

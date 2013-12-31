@@ -44,7 +44,7 @@ Ipc::StoreMap::compareVersions(const sfileno fileno, time_t newVersion) const
 
     if (const time_t diff = newVersion - inode.basics.timestamp)
         return diff < 0 ? -1 : +1;
- 
+
     return 0;
 }
 
@@ -196,7 +196,7 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
         s.waitingToBeFreed = true;
         s.lock.unlockExclusive();
         debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
-	}
+    }
 }
 
 const Ipc::StoreMap::Anchor *
@@ -245,15 +245,15 @@ Ipc::StoreMap::freeEntryByKey(const cache_key *const key)
         if (s.sameKey(key))
             freeChain(idx, s, true);
         s.lock.unlockExclusive();
-	} else if (s.lock.lockShared()) {
+    } else if (s.lock.lockShared()) {
         if (s.sameKey(key))
             s.waitingToBeFreed = true; // mark to free it later
         s.lock.unlockShared();
     } else {
-       // we cannot be sure that the entry we found is ours because we do not
-       // have a lock on it, but we still check to minimize false deletions
-       if (s.sameKey(key))
-           s.waitingToBeFreed = true; // mark to free it later
+        // we cannot be sure that the entry we found is ours because we do not
+        // have a lock on it, but we still check to minimize false deletions
+        if (s.sameKey(key))
+            s.waitingToBeFreed = true; // mark to free it later
     }
 }
 
@@ -419,7 +419,6 @@ Ipc::StoreMap::anchorByKey(const cache_key *const key)
 {
     return shared->slots[anchorIndexByKey(key)].anchor;
 }
-
 
 /* Ipc::StoreMapAnchor */
 

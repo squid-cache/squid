@@ -162,10 +162,10 @@ doPages(StoreEntry *anEntry)
         // Quit if write() fails. Sio is going to call our callback, and that
         // will cleanup, but, depending on the fs, that call may be async.
         const bool ok = mem->swapout.sio->write(
-                     mem->data_hdr.NodeGet(page),
-                     swap_buf_len,
-                     -1,
-                     memNodeWriteComplete);
+                            mem->data_hdr.NodeGet(page),
+                            swap_buf_len,
+                            -1,
+                            memNodeWriteComplete);
 
         if (!ok || anEntry->swap_status != SWAPOUT_WRITING)
             return false;
