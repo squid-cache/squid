@@ -2121,7 +2121,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
-    if (tryHostHeader && (host = mime_get_header(req_hdr, "Host")) != NULL) {
+    if (tryHostHeader && (host = mime_get_header_field(req_hdr, "Host")) != NULL) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
@@ -2180,7 +2180,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
+    if ((host = mime_get_header_field(req_hdr, "Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
