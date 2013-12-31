@@ -229,6 +229,7 @@ Http::Http1Parser::parseRequestFirstLine()
         request_parse_status = Http::scBadRequest; // missing URI
         return -1;
     }
+    uri_.assign(&buf[req.u_start], req.u_end - req.u_start + 1);
 
     // Last whitespace SP = before start of protocol/version
     if (last_whitespace >= line_end) {
@@ -328,7 +329,7 @@ Http::Http1Parser::parseRequest()
         int retcode = parseRequestFirstLine();
         debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end << " " << Raw("line", &buf[req.start], req.end-req.start));
         debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << *method_ << ")");
-        debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " " << Raw("field", &buf[req.u_start], req.u_end-req.u_start));
+        debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
         debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
         debugs(74, 5, "Parser: parse-offset=" << parseOffset_);
         PROF_stop(HttpParserParseReqLine);
