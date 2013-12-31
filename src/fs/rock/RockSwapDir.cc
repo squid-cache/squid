@@ -31,9 +31,9 @@
 
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
-Rock::SwapDir::SwapDir(): ::SwapDir("rock"), 
-    slotSize(HeaderSize), filePath(NULL), map(NULL), io(NULL),
-    waitingForPage(NULL)
+Rock::SwapDir::SwapDir(): ::SwapDir("rock"),
+        slotSize(HeaderSize), filePath(NULL), map(NULL), io(NULL),
+        waitingForPage(NULL)
 {
 }
 
@@ -88,7 +88,7 @@ Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 
     sfileno filen;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-        reinterpret_cast<cache_key*>(collapsed.key), filen);
+                                                reinterpret_cast<cache_key*>(collapsed.key), filen);
     if (!slot)
         return false;
 
@@ -164,7 +164,7 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
     // especially since we may switch from writing to reading. This code relies
     // on Rock::IoState::writeableAnchor_ being set when we locked for writing.
     if (e.mem_obj && e.mem_obj->swapout.sio != NULL &&
-        dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_) {
+            dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_) {
         map->abortWriting(e.swap_filen);
         e.swap_dirn = -1;
         e.swap_filen = -1;
@@ -183,7 +183,7 @@ uint64_t
 Rock::SwapDir::currentSize() const
 {
     const uint64_t spaceSize = !freeSlots ?
-        maxSize() : (slotSize * freeSlots->size());
+                               maxSize() : (slotSize * freeSlots->size());
     // everything that is not free is in use
     return maxSize() - spaceSize;
 }
@@ -278,7 +278,8 @@ Rock::SwapDir::create()
 
 // report Rock DB creation error and exit
 void
-Rock::SwapDir::createError(const char *const msg) {
+Rock::SwapDir::createError(const char *const msg)
+{
     debugs(47, DBG_CRITICAL, "ERROR: Failed to initialize Rock Store db in " <<
            filePath << "; " << msg << " error: " << xstrerror());
     fatal("Rock Store db creation error");
@@ -819,12 +820,12 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
             map->writeableSlice(sio.swap_filen, request->sidCurrent);
         slice.size = request->len - sizeof(DbCellHeader);
         slice.next = request->sidNext;
-        
+
         if (request->eof) {
             assert(sio.e);
             assert(sio.writeableAnchor_);
             sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
-                sio.offset_;
+                                      sio.offset_;
 
             // close, the entry gets the read lock
             map->closeForWriting(sio.swap_filen, true);
@@ -984,7 +985,8 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 }
 
 const char *
-Rock::SwapDir::inodeMapPath() const {
+Rock::SwapDir::inodeMapPath() const
+{
     static String inodesPath;
     inodesPath = path;
     inodesPath.append("_inodes");
@@ -992,7 +994,8 @@ Rock::SwapDir::inodeMapPath() const {
 }
 
 const char *
-Rock::SwapDir::freeSlotsPath() const {
+Rock::SwapDir::freeSlotsPath() const
+{
     static String spacesPath;
     spacesPath = path;
     spacesPath.append("_spaces");

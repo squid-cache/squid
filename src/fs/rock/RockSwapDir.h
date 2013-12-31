@@ -5,9 +5,9 @@
 #include "DiskIO/IORequestor.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockForward.h"
-#include "ipc/StoreMap.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
+#include "ipc/StoreMap.h"
 #include "SwapDir.h"
 
 class DiskIOStrategy;

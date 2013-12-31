@@ -83,7 +83,8 @@ private:
     sfileno lastWritingSlice;
 
     /// temporary storage for slot and page ID pointers; for the waiting cache
-    class SlotAndPage {
+    class SlotAndPage
+    {
     public:
         SlotAndPage(): slot(NULL), page(NULL) {}
         bool operator !() const { return !slot && !page; }

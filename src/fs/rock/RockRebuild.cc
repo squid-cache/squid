@@ -68,15 +68,16 @@ CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
  *  negligible performance impact but saves us from high-damage bugs.
  */
 
-
-namespace Rock {
+namespace Rock
+{
 
 /// maintains information about the store entry being loaded from disk
 /// used for identifying partially stored/loaded entries
-class LoadingEntry {
+class LoadingEntry
+{
 public:
     LoadingEntry(): size(0), version(0), state(leEmpty), anchored(0),
-        mapped(0), freed(0), more(-1) {}
+            mapped(0), freed(0), more(-1) {}
 
     /* store entry-level information indexed by sfileno */
     uint64_t size; ///< payload seen so far
@@ -95,7 +96,6 @@ public:
 };
 
 } /* namespace Rock */
-
 
 Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
         sd(dir),
@@ -169,7 +169,7 @@ bool
 Rock::Rebuild::doneAll() const
 {
     return dbOffset >= dbSize && validationPos >= dbEntryLimit &&
-        AsyncJob::doneAll();
+           AsyncJob::doneAll();
 }
 
 void
@@ -275,7 +275,7 @@ Rock::Rebuild::importEntry(Ipc::StoreMapAnchor &anchor, const sfileno fileno, co
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
     StoreEntry loadedE;
     const uint64_t knownSize = header.entrySize > 0 ?
-        header.entrySize : anchor.basics.swap_file_sz.get();
+                               header.entrySize : anchor.basics.swap_file_sz.get();
     if (!storeRebuildParseEntry(buf, loadedE, key, counts, knownSize))
         return false;
 
@@ -487,12 +487,10 @@ Rock::Rebuild::addSlotToEntry(const sfileno fileno, const SlotId slotId, const D
         assert(anchor.basics.swap_file_sz != static_cast<uint64_t>(-1));
         // perhaps we loaded a later slot (with entrySize) earlier
         totalSize = anchor.basics.swap_file_sz;
-    } else
-    if (totalSize && !anchor.basics.swap_file_sz) {
+    } else if (totalSize && !anchor.basics.swap_file_sz) {
         anchor.basics.swap_file_sz = totalSize;
         assert(anchor.basics.swap_file_sz != static_cast<uint64_t>(-1));
-    } else
-    if (totalSize != anchor.basics.swap_file_sz) {
+    } else if (totalSize != anchor.basics.swap_file_sz) {
         le.state = LoadingEntry::leCorrupted;
         freeBadEntry(fileno, "size mismatch");
         return;
@@ -539,7 +537,7 @@ void
 Rock::Rebuild::startNewEntry(const sfileno fileno, const SlotId slotId, const DbCellHeader &header)
 {
     // If some other from-disk entry is/was using this slot as its inode OR
-    // if some other from-disk entry is/was using our inode slot, then the 
+    // if some other from-disk entry is/was using our inode slot, then the
     // entries are conflicting. We cannot identify other entries, so we just
     // remove ours and hope that the others were/will be handled correctly.
     const LoadingEntry &slice = entries[slotId];
@@ -578,8 +576,8 @@ Rock::Rebuild::sameEntry(const sfileno fileno, const DbCellHeader &header) const
     const LoadingEntry &le = entries[fileno];
     // any order will work, but do fast comparisons first:
     return le.version == header.version &&
-        anchor.start == static_cast<Ipc::StoreMapSliceId>(header.firstSlot) &&
-        anchor.sameKey(reinterpret_cast<const cache_key*>(header.key));
+           anchor.start == static_cast<Ipc::StoreMapSliceId>(header.firstSlot) &&
+           anchor.sameKey(reinterpret_cast<const cache_key*>(header.key));
 }
 
 /// is the new header consistent with information already loaded?
@@ -637,7 +635,7 @@ Rock::Rebuild::useNewSlot(const SlotId slotId, const DbCellHeader &header)
 
     LoadingEntry &le = entries[fileno];
     debugs(47,9, "entry " << fileno << " state: " << le.state << ", inode: " <<
-            header.firstSlot << ", size: " << header.payloadSize);
+           header.firstSlot << ", size: " << header.payloadSize);
 
     switch (le.state) {
 

@@ -6,8 +6,8 @@
 #ifndef SQUID_COLLAPSED_FORWARDING_H
 #define SQUID_COLLAPSED_FORWARDING_H
 
-#include "ipc/Queue.h"
 #include "ipc/forward.h"
+#include "ipc/Queue.h"
 #include "typedefs.h"
 
 #include <memory>

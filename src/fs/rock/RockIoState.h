@@ -55,7 +55,7 @@ private:
     void writeToDisk(const SlotId nextSlot);
     void writeBufToDisk(const SlotId nextSlot, const bool eof);
     SlotId reserveSlotForWriting();
-    
+
     void callBack(int errflag);
 
     Rock::SwapDir::Pointer dir; ///< swap dir that initiated I/O

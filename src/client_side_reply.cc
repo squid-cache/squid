@@ -2167,8 +2167,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
     if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
-        !reqFlags.needValidation &&
-        (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
+            !reqFlags.needValidation &&
+            (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
         // make the entry available for future requests now
         Store::Root().allowCollapsing(e, reqFlags, m);
     }

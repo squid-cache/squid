@@ -496,11 +496,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         break;
 
         case LFT_TIME_START: {
-            int precision = fmt->widthMax >=0 ? fmt->widthMax : 3;
+            int precision = fmt->widthMax >=0 ? fmt->widthMax :3;
             snprintf(tmp, sizeof(tmp), "%0*" PRId64 ".%0*d", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, (int64_t)al->cache.start_time.tv_sec, precision, (int)(al->cache.start_time.tv_usec / fmt->divisor));
             out = tmp;
         }
-            break;
+        break;
 
         case LFT_TIME_TO_HANDLE_REQUEST:
             outint = al->cache.msec;
