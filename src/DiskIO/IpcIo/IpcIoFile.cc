@@ -659,7 +659,7 @@ diskerRead(IpcIoMsg &ipcIo)
     }
 }
 
-/// Tries to write buffer to disk (a few times if needed); 
+/// Tries to write buffer to disk (a few times if needed);
 /// sets ipcIo results, but does no cleanup. The caller must cleanup.
 static void
 diskerWriteAttempts(IpcIoMsg &ipcIo)

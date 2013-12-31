@@ -34,7 +34,7 @@ public:
     int sender; ///< kid ID of sending process
 
     /// transients index, so that workers can find [private] entries to sync
-    sfileno xitIndex; 
+    sfileno xitIndex;
 };
 
 // CollapsedForwarding
@@ -54,7 +54,7 @@ CollapsedForwarding::Broadcast(const StoreEntry &e)
         return;
 
     if (!e.mem_obj || e.mem_obj->xitTable.index < 0 ||
-        !Store::Root().transientReaders(e)) {
+            !Store::Root().transientReaders(e)) {
         debugs(17, 7, "nobody reads " << e);
         return;
     }

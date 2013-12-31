@@ -192,7 +192,7 @@ Fs::Ufs::RebuildState::rebuildFromDirectory()
         return;
 
     const uint64_t expectedSize = sb.st_size > 0 ?
-        static_cast<uint64_t>(sb.st_size) : 0;
+                                  static_cast<uint64_t>(sb.st_size) : 0;
 
     StoreEntry tmpe;
     const bool parsed = storeRebuildParseEntry(buf, tmpe, key, counts,

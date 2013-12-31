@@ -756,7 +756,7 @@ StoreController::get(const cache_key *key)
 {
     if (StoreEntry *e = find(key)) {
         // this is not very precise: some get()s are not initiated by clients
-        e->touch(); 
+        e->touch();
         return e;
     }
     return NULL;
@@ -941,7 +941,7 @@ int
 StoreController::transientReaders(const StoreEntry &e) const
 {
     return (transients && e.mem_obj && e.mem_obj->xitTable.index >= 0) ?
-        transients->readers(e) : 0;
+           transients->readers(e) : 0;
 }
 
 void
@@ -996,7 +996,7 @@ StoreController::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     if (transients)
         transients->startWriting(e, reqFlags, reqMethod);
     debugs(20, 3, "may " << (transients && e->mem_obj->xitTable.index >= 0 ?
-           "SMP-" : "locally-") << "collapse " << *e);
+                             "SMP-" : "locally-") << "collapse " << *e);
 }
 
 void

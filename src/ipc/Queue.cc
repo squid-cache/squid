@@ -160,28 +160,32 @@ Ipc::BaseMultiQueue::rateLimit(const int remoteProcessId) const
 }
 
 Ipc::OneToOneUniQueue &
-Ipc::BaseMultiQueue::inQueue(const int remoteProcessId) {
+Ipc::BaseMultiQueue::inQueue(const int remoteProcessId)
+{
     const OneToOneUniQueue &queue =
         const_cast<const BaseMultiQueue *>(this)->inQueue(remoteProcessId);
     return const_cast<OneToOneUniQueue &>(queue);
 }
 
 Ipc::OneToOneUniQueue &
-Ipc::BaseMultiQueue::outQueue(const int remoteProcessId) {
+Ipc::BaseMultiQueue::outQueue(const int remoteProcessId)
+{
     const OneToOneUniQueue &queue =
         const_cast<const BaseMultiQueue *>(this)->outQueue(remoteProcessId);
     return const_cast<OneToOneUniQueue &>(queue);
 }
 
 Ipc::QueueReader &
-Ipc::BaseMultiQueue::localReader() {
+Ipc::BaseMultiQueue::localReader()
+{
     const QueueReader &reader =
         const_cast<const BaseMultiQueue *>(this)->localReader();
     return const_cast<QueueReader &>(reader);
 }
 
 Ipc::QueueReader &
-Ipc::BaseMultiQueue::remoteReader(const int remoteProcessId) {
+Ipc::BaseMultiQueue::remoteReader(const int remoteProcessId)
+{
     const QueueReader &reader =
         const_cast<const BaseMultiQueue *>(this)->remoteReader(remoteProcessId);
     return const_cast<QueueReader &>(reader);
@@ -295,14 +299,14 @@ int
 Ipc::FewToFewBiQueue::remotesCount() const
 {
     return theLocalGroup == groupA ? metadata->theGroupBSize :
-        metadata->theGroupASize;
+           metadata->theGroupASize;
 }
 
 int
 Ipc::FewToFewBiQueue::remotesIdOffset() const
 {
     return theLocalGroup == groupA ? metadata->theGroupBIdOffset :
-        metadata->theGroupAIdOffset;
+           metadata->theGroupAIdOffset;
 }
 
 Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset):
@@ -351,7 +355,7 @@ bool
 Ipc::MultiQueue::validProcessId(const int processId) const
 {
     return metadata->theProcessIdOffset <= processId &&
-        processId < metadata->theProcessIdOffset + metadata->theProcessCount;
+           processId < metadata->theProcessIdOffset + metadata->theProcessCount;
 }
 
 const Ipc::OneToOneUniQueue &

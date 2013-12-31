@@ -32,8 +32,8 @@
 
 #include "squid.h"
 #include "MemBuf.h"
-#include "SwapDir.h"
 #include "store_rebuild.h"
+#include "SwapDir.h"
 #if HAVE_STRING_H
 #include <string.h>
 #endif

@@ -183,7 +183,7 @@ Transients::copyFromShm(const sfileno index)
 
     // create a brand new store entry and initialize it with stored info
     StoreEntry *e = storeCreatePureEntry(extras.url, extras.url,
-                                     extras.reqFlags, extras.reqMethod);
+                                         extras.reqFlags, extras.reqMethod);
 
     assert(e->mem_obj);
     e->mem_obj->method = extras.reqMethod;
@@ -230,7 +230,7 @@ Transients::findCollapsed(const sfileno index)
 
 void
 Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
-                const HttpRequestMethod &reqMethod)
+                         const HttpRequestMethod &reqMethod)
 {
     assert(e);
     assert(e->mem_obj);
@@ -239,14 +239,14 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
     if (!map) {
         debugs(20, 5, "No map to add " << *e);
         return;
-	}
+    }
 
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e->key), index);
     if (!slot) {
         debugs(20, 5, "collision registering " << *e);
         return;
-	}
+    }
 
     try {
         if (copyToShm(*e, index, reqFlags, reqMethod)) {
@@ -256,14 +256,13 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
             map->startAppending(index);
             // keep write lock -- we will be supplying others with updates
             return;
-		}
+        }
         // fall through to the error handling code
-	} 
-    catch (const std::exception &x) { // TODO: should we catch ... as well?
+    } catch (const std::exception &x) { // TODO: should we catch ... as well?
         debugs(20, 2, "error keeping entry " << index <<
                ' ' << *e << ": " << x.what());
         // fall through to the error handling code
-	}
+    }
 
     map->abortWriting(index);
 }
@@ -280,7 +279,7 @@ Transients::copyToShm(const StoreEntry &e, const sfileno index,
     const size_t urlLen = strlen(url);
     Must(urlLen < sizeof(extras.url)); // we have space to store it all, plus 0
     strncpy(extras.url, url, sizeof(extras.url));
-	extras.url[urlLen] = '\0';
+    extras.url[urlLen] = '\0';
 
     extras.reqFlags = reqFlags;
 
