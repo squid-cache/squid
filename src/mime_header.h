@@ -33,7 +33,6 @@
 #ifndef SQUID_MIME_HEADER_H_
 #define SQUID_MIME_HEADER_H_
 
-char *mime_get_header_field(const char *mime, const char *name);
 size_t headersEnd(const char *, size_t);
 
 #endif /* SQUID_MIME_HEADER_H_ */
