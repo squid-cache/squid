@@ -161,9 +161,12 @@ Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
     return success;
 }
 
-/** We only write data when full slot is accumulated or when close() is called.
- We buffer, in part, to avoid forcing OS to _read_ old unwritten portions of
- the slot when the write does not end at the page or sector boundary. */
+/**
+ * Possibly send data to be written to disk:
+ * We only write data when full slot is accumulated or when close() is called.
+ * We buffer, in part, to avoid forcing OS to _read_ old unwritten portions of
+ * the slot when the write does not end at the page or sector boundary. 
+ */
 void
 Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
 {
@@ -172,7 +175,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
     // either this is the first write or append; we do not support write gaps
     assert(!coreOff || coreOff == -1);
 
-    // allocate the first slice diring the first write
+    // allocate the first slice during the first write
     if (!coreOff) {
         assert(sidCurrent < 0);
         sidCurrent = reserveSlotForWriting(); // throws on failures
@@ -204,7 +207,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
 }
 
 /// Buffers incoming data for the current slot.
-/// Returns the number of bytes buffered.
+/// \return the number of bytes buffered
 size_t
 Rock::IoState::writeToBuffer(char const *buf, size_t size)
 {

@@ -4,13 +4,13 @@
  */
 
 #include "squid.h"
+#include "CollapsedForwarding.h"
+#include "globals.h"
 #include "ipc/mem/Segment.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
 #include "MemObject.h"
-#include "CollapsedForwarding.h"
-#include "globals.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "store_key_md5.h"
@@ -85,7 +85,6 @@ CollapsedForwarding::Notify(const int workerId)
     // TODO: Count and report the total number of notifications, pops, pushes.
     debugs(17, 7, "to kid" << workerId);
     Ipc::TypedMsgHdr msg;
-    // TODO: add proper message type?
     msg.setType(Ipc::mtCollapsedForwardingNotification);
     msg.putInt(KidIdentifier);
     const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrPfx, workerId);
