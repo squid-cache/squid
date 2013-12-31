@@ -97,6 +97,9 @@ public:
     /// the HTTP method if this is a request method
     const HttpRequestMethodPointer & method() const {return method_;}
 
+    /// the request-line URI if this is a request, or an empty string.
+    SBuf requestUri() const {return uri_;}
+
     // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
 
     /** HTTP status code to be used on the invalid-request error page
@@ -119,6 +122,9 @@ private:
 
     /// what request method has been found on the first line
     HttpRequestMethodPointer method_;
+
+    /// raw copy of the origina client reqeust-line URI field
+    SBuf uri_;
 
     /// buffer holding the mime headers
     SBuf mimeHeaderBlock_;
