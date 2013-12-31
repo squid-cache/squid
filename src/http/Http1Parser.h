@@ -5,6 +5,7 @@
 #include "http/forward.h"
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
+#include "SBuf.h"
 
 namespace Http {
 
@@ -57,16 +58,15 @@ public:
 
     /// size in bytes of the message headers including CRLF terminator(s)
     /// but excluding request-line bytes
-    int64_t headerBlockSize() const {return mimeHeaderBytes_;}
+    int64_t headerBlockSize() const {return mimeHeaderBlock_.length();}
 
     /// size in bytes of HTTP message block, includes request-line and mime headers
     /// excludes any body/entity/payload bytes
     /// excludes any garbage prefix before the request-line
     int64_t messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
-    /// buffer containing HTTP mime headers
-    // TODO: convert to SBuf
-    const char *rawHeaderBuf() {return buf + hdr_start;}
+    /// buffer containing HTTP mime headers, excluding request or status line.
+    const char *rawHeaderBuf() {return mimeHeaderBlock_.c_str();}
 
     /** Attempt to parse a request.
      * \return true if a valid request was parsed.
@@ -97,10 +97,6 @@ public:
     /// the HTTP method if this is a request method
     const HttpRequestMethodPointer & method() const {return method_;}
 
-    // Offsets for pieces of the MiME Header segment
-    // \deprecated use rawHeaderBuf() and headerBlockSize() instead
-    int hdr_start, hdr_end;
-
     // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
 
     /** HTTP status code to be used on the invalid-request error page
@@ -124,8 +120,8 @@ private:
     /// what request method has been found on the first line
     HttpRequestMethodPointer method_;
 
-    /// number of bytes in the mime header block
-    int64_t mimeHeaderBytes_;
+    /// buffer holding the mime headers
+    SBuf mimeHeaderBlock_;
 };
 
 } // namespace Http
