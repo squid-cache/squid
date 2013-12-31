@@ -15,13 +15,12 @@ Http::Http1Parser::clear()
     bufsiz = 0;
     parseOffset_ = 0;
     req.start = req.end = -1;
-    hdr_start = hdr_end = -1;
     req.m_start = req.m_end = -1;
     req.u_start = req.u_end = -1;
     req.v_start = req.v_end = -1;
     msgProtocol_ = AnyP::ProtocolVersion();
     method_ = NULL;
-    mimeHeaderBytes_ = 0;
+    mimeHeaderBlock_.clear();
 }
 
 void
@@ -341,24 +340,18 @@ Http::Http1Parser::parseRequest()
 
     // stage 3: locate the mime header block
     if (completedState_ == HTTP_PARSE_FIRST) {
-
-        // NP: set these to same value representing 0-byte headers.
-        hdr_start = req.end + 1;
-        hdr_end = hdr_start;
-
         // HTTP/1.x request-line is valid and parsing completed.
         if (msgProtocol_.major == 1) {
             /* NOTE: HTTP/0.9 requests do not have a mime header block.
              *       So the rest of the code will need to deal with '0'-byte headers
              *       (ie, none, so don't try parsing em)
              */
-            if ((mimeHeaderBytes_ = headersEnd(buf+parseOffset_, bufsiz-parseOffset_)) == 0) {
+            int64_t mimeHeaderBytes = 0;
+            if ((mimeHeaderBytes = headersEnd(buf+parseOffset_, bufsiz-parseOffset_)) == 0) {
                 debugs(33, 5, "Incomplete request, waiting for end of headers");
                 return false;
             }
-
-            hdr_start = req.end + 1;
-            hdr_end = parseOffset_ + mimeHeaderBytes_ - 1;
+            mimeHeaderBlock_.assign(&buf[req.end+1], mimeHeaderBytes);
 
         } else
             debugs(33, 3, "Missing HTTP/1.x identifier");
