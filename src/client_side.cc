@@ -2080,7 +2080,7 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
 }
 
 static void
-prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const Http::Http1ParserPointer &hp)
+prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http::Http1ParserPointer &hp)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
@@ -2091,9 +2091,11 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    if (strncasecmp(url, "cache_object://", 15) == 0)
+    static const SBuf cache_object("cache_object://");
+    if (hp->requestUri().startsWith(cache_object))
         return; /* already in good shape */
 
+    const char *url = hp->requestUri().c_str();
     if (*url != '/') {
         if (conn->port->vhost)
             return; /* already in good shape */
@@ -2145,7 +2147,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         debugs(33, 5, "ACCEL VHOST REWRITE: '" << http->uri << "'");
     } else if (conn->port->defaultsite /* && !vhost */) {
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
-        int url_sz = strlen(url) + 32 + Config.appendDomainLen +
+        int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
                      strlen(conn->port->defaultsite);
         http->uri = (char *)xcalloc(url_sz, 1);
         char vportStr[32];
@@ -2159,7 +2161,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
         debugs(33, 5, "ACCEL VPORT REWRITE: http_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
-        int url_sz = strlen(url) + 32 + Config.appendDomainLen;
+        int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
@@ -2170,30 +2172,30 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 }
 
 static void
-prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const Http::Http1ParserPointer &hp)
+prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http::Http1ParserPointer &hp)
 {
     char *host;
     char ipbuf[MAX_IPSTRLEN];
 
-    if (*url != '/')
+    if (hp->requestUri()[0] != '/')
         return; /* already in good shape */
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
     if ((host = hp->getHeaderField("Host")) != NULL) {
-        int url_sz = strlen(url) + 32 + Config.appendDomainLen +
+        int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s", URLScheme(conn->port->transport.protocol).const_str(), host, url);
+        snprintf(http->uri, url_sz, "%s://%s%s", URLScheme(conn->port->transport.protocol).const_str(), host, hp->requestUri().c_str());
         debugs(33, 5, "TRANSPARENT HOST REWRITE: '" << http->uri <<"'");
     } else {
         /* Put the local socket IP address as the hostname.  */
-        int url_sz = strlen(url) + 32 + Config.appendDomainLen;
+        int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  URLScheme(http->getConn()->port->transport.protocol).const_str(),
-                 ipbuf, http->getConn()->clientConnection->local.port(), url);
+                 ipbuf, http->getConn()->clientConnection->local.port(), hp->requestUri().c_str());
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
@@ -2300,22 +2302,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
     debugs(33, 5, "parseHttpRequest: Request Header is\n" << hp->rawHeaderBuf());
 
     /* set url */
-    /*
-     * XXX this should eventually not use a malloc'ed buffer; the transformation code
-     * below needs to be modified to not expect a mutable nul-terminated string.
-     */
-    char *url = (char *)xmalloc(hp->req.u_end - hp->req.u_start + 16);
-
-    memcpy(url, hp->buf + hp->req.u_start, hp->req.u_end - hp->req.u_start + 1);
-
-    url[hp->req.u_end - hp->req.u_start + 1] = '\0';
-
-#if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
-
-    if ((t = strchr(url, '#')))	/* remove HTML anchors */
-        *t = '\0';
-
-#endif
+    const char *url = hp->requestUri().c_str();
 
     debugs(33,5, HERE << "repare absolute URL from " <<
            (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
@@ -2332,7 +2319,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
      */
     if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        prepareTransparentURL(csd, http, url, hp);
+        prepareTransparentURL(csd, http, hp);
 
     } else if (internalCheck(url)) {
         /* internal URL mode */
@@ -2344,7 +2331,7 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
 
     } else if (csd->port->flags.accelSurrogate || csd->switchedToHttps()) {
         /* accelerator mode */
-        prepareAcceleratedURL(csd, http, url, hp);
+        prepareAcceleratedURL(csd, http, hp);
     }
 
     if (!http->uri) {
@@ -2362,7 +2349,6 @@ parseHttpRequest(ConnStateData *csd, const Http::Http1ParserPointer &hp)
     debugs(11, 2, "HTTP Client REQUEST:\n---------\n" << (hp->buf) + hp->req.m_start << "\n----------");
 
     result->flags.parsed_ok = 1;
-    xfree(url);
     return result;
 }
 
