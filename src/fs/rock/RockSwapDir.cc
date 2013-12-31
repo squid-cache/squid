@@ -149,7 +149,6 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     e.swap_filen = filen;
 }
 
-
 void Rock::SwapDir::disconnect(StoreEntry &e)
 {
     assert(e.swap_dirn == index);

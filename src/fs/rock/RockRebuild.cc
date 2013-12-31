@@ -21,6 +21,54 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
+/**
+ \defgroup RockFsRebuild Rock Store Rebuild
+ \ingroup Filesystems
+ *
+ \section Overview Overview
+ *  Several layers of information are manipualted during the rebuild:
+ \par
+ *  Store Entry: Response message plus all the metainformation associated with
+ *  it. Identified by store key. At any given time, from Squid point
+ *  of view, there is only one entry with a given key, but several
+ *  different entries with the same key can be observed in any historical
+ *  archive (such as an access log or a store database).
+ \par
+ *  Slot chain: A sequence of db slots representing a Store Entry state at
+ *  some point in time. Identified by key+version combination. Due to
+ *  transaction aborts, crashes, and idle periods, some chains may contain
+ *  incomplete or stale information. We assume that no two different chains
+ *  have the same key and version. If that assumption fails, we may serve a
+ *  hodgepodge entry during rebuild, until "extra" slots are loaded/noticed.
+ \par
+ *  Db slot: A db record containing a piece of a single store entry and linked
+ *  to other slots with the same key and version fields, forming a chain.
+ *  Slots are identified by their absolute position in the database file,
+ *  which is naturally unique.
+ \par
+ *  Except for the "mapped", "freed", and "more" fields, LoadingEntry info is
+ *  entry-level and is stored at fileno position. In other words, the array of
+ *  LoadingEntries should be interpreted as two arrays, one that maps slot ID
+ *  to the LoadingEntry::mapped/free/more members, and the second one that maps
+ *  fileno to all other LoadingEntry members. StoreMap maps slot key to fileno.
+ \par
+ *  When information from the newly loaded db slot contradicts the entry-level
+ *  information collected so far (e.g., the versions do not match or the total
+ *  chain size after the slot contribution exceeds the expected number), the
+ *  whole entry (and not just the chain or the slot!) is declared corrupted.
+ \par
+ *  Why invalidate the whole entry? Rock Store is written for high-load
+ *  environments with large caches, where there is usually very few idle slots
+ *  in the database. A space occupied by a purged entry is usually immediately
+ *  reclaimed. A Squid crash or a transaction abort is rather unlikely to
+ *  leave a relatively large number of stale slots in the database. Thus, the
+ *  number of potentially corrupted entries is relatively small. On the other
+ *  hand, the damage from serving a single hadgepodge entry may be significant
+ *  to the user. In such an environment, invalidating the whole entry has
+ *  negligible performance impact but saves us from high-damage bugs.
+ */
+
+
 namespace Rock {
 
 /// maintains information about the store entry being loaded from disk
@@ -47,51 +95,6 @@ public:
 };
 
 } /* namespace Rock */
-
-/** 
-    Several layers of information are manipualted during the rebuild:
-
-    Store Entry: Response message plus all the metainformation associated with
-    it. Identified by store key. At any given time, from Squid point
-    of view, there is only one entry with a given key, but several
-    different entries with the same key can be observed in any historical
-    archive (such as an access log or a store database).
-
-    Slot chain: A sequence of db slots representing a Store Entry state at
-    some point in time. Identified by key+version combination. Due to
-    transaction aborts, crashes, and idle periods, some chains may contain
-    incomplete or stale information. We assume that no two different chains
-    have the same key and version. If that assumption fails, we may serve a
-    hodgepodge entry during rebuild, until "extra" slots are loaded/noticed.
-
-    Db slot: A db record containing a piece of a single store entry and linked
-    to other slots with the same key and version fields, forming a chain.
-    Slots are identified by their absolute position in the database file,
-    which is naturally unique.
-
-
-    Except for the "mapped", "freed", and "more" fields, LoadingEntry info is
-    entry-level and is stored at fileno position. In other words, the array of
-    LoadingEntries should be interpreted as two arrays, one that maps slot ID
-    to the LoadingEntry::mapped/free/more members, and the second one that maps
-    fileno to all other LoadingEntry members. StoreMap maps slot key to fileno.
-
-
-    When information from the newly loaded db slot contradicts the entry-level
-    information collected so far (e.g., the versions do not match or the total
-    chain size after the slot contribution exceeds the expected number), the
-    whole entry (and not just the chain or the slot!) is declared corrupted.
-
-    Why invalidate the whole entry? Rock Store is written for high-load
-    environments with large caches, where there is usually very few idle slots
-    in the database. A space occupied by a purged entry is usually immediately
-    reclaimed. A Squid crash or a transaction abort is rather unlikely to
-    leave a relatively large number of stale slots in the database. Thus, the
-    number of potentially corrupted entries is relatively small. On the other
-    hand, the damage from serving a single hadgepodge entry may be significant
-    to the user. In such an environment, invalidating the whole entry has
-    negligible performance impact but saves us from high-damage bugs.
-*/
 
 
 Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
@@ -249,7 +252,6 @@ Rock::Rebuild::loadOneSlot()
         freeSlotIfIdle(slotId, true);
         return;
     }
-
     memcpy(&header, buf.content(), sizeof(header));
     if (header.empty()) {
         freeSlotIfIdle(slotId, false);

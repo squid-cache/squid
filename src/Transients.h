@@ -16,9 +16,9 @@ struct TransientsMapExtras {
 };
 typedef Ipc::StoreMapWithExtras<TransientsMapExtras> TransientsMap;
 
-/// Keeps track of hits being delivered to clients that arrived before those
-/// hits were [fully] cached. This shared table is necessary to synchronize hit
-/// caching (writing) workers with other workers serving (reading) those hits.
+/// Keeps track of store entries being delivered to clients that arrived before
+/// those entries were [fully] cached. This shared table is necessary to sync
+/// the entry-writing worker with entry-reading worker(s).
 class Transients: public Store, public Ipc::StoreMapCleaner
 {
 public:
@@ -86,4 +86,4 @@ private:
 
 // TODO: Why use Store as a base? We are not really a cache.
 
-#endif /* SQUID_MEMSTORE_H */
+#endif /* SQUID_TRANSIENTS_H */

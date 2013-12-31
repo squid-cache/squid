@@ -4,27 +4,25 @@
  */
 
 #include "squid.h"
-#include "CollapsedForwarding.h"
 #include "base/RunnersRegistry.h"
+#include "CollapsedForwarding.h"
 #include "HttpReply.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
-#include "Transients.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "StoreStats.h"
 #include "tools.h"
+#include "Transients.h"
 
 #if HAVE_LIMITS_H
 #include <limits>
 #endif
 
-
 /// shared memory segment path to use for Transients maps
 static const char *MapLabel = "transients_map";
-
 
 Transients::Transients(): map(NULL), locals(NULL)
 {
@@ -88,6 +86,7 @@ Transients::stat(StoreEntry &e) const
 void
 Transients::maintain()
 {
+    // no lazy garbage collection needed
 }
 
 uint64_t
@@ -127,6 +126,7 @@ Transients::maxObjectSize() const
 void
 Transients::reference(StoreEntry &)
 {
+    // no replacement policy (but the cache(s) storing the entry may have one)
 }
 
 bool
@@ -268,7 +268,6 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
     map->abortWriting(index);
 }
 
-
 /// copies all relevant local data to shared memory
 bool
 Transients::copyToShm(const StoreEntry &e, const sfileno index,
@@ -400,13 +399,15 @@ private:
 
 RunnerRegistrationEntry(rrAfterConfig, TransientsRr);
 
-void TransientsRr::run(const RunnerRegistry &r)
+void
+TransientsRr::run(const RunnerRegistry &r)
 {
     assert(Config.memShared.configured());
     Ipc::Mem::RegisteredRunner::run(r);
 }
 
-void TransientsRr::create(const RunnerRegistry &)
+void
+TransientsRr::create(const RunnerRegistry &)
 {
     if (!Config.onoff.collapsed_forwarding)
         return;

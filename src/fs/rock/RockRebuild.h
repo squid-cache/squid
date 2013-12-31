@@ -51,7 +51,6 @@ private:
     bool canAdd(const sfileno fileno, const SlotId slotId, const DbCellHeader &header) const;
     bool sameEntry(const sfileno fileno, const DbCellHeader &header) const;
 
-
     SwapDir *sd;
     LoadingEntry *entries; ///< store entries being loaded from disk
 

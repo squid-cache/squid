@@ -14,7 +14,6 @@ class PageId;
 
 }
 
-
 namespace Rock
 {
 
@@ -30,6 +29,5 @@ class IoState;
 class DbCellHeader;
 
 }
-
 
 #endif /* SQUID_FS_ROCK_FORWARD_H */
