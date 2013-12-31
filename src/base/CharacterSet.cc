@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "CharacterSet.h"
 
-const CharacterSet &
+CharacterSet &
 CharacterSet::operator +=(const CharacterSet &src)
 {
     Storage::const_iterator s = src.chars_.begin();
@@ -16,10 +16,28 @@ CharacterSet::operator +=(const CharacterSet &src)
     return *this;
 }
 
+CharacterSet
+CharacterSet::operator +(const CharacterSet &src) const
+{
+    CharacterSet rv(*this);
+    rv += src;
+    return rv;
+}
+
 CharacterSet &
 CharacterSet::add(const unsigned char c)
 {
     chars_[static_cast<uint8_t>(c)] = 1;
+    return *this;
+}
+
+CharacterSet &
+CharacterSet::addRange(unsigned char low, unsigned char high)
+{
+    while (low <= high) {
+        chars_[static_cast<uint8_t>(low)] = 1;
+        ++low;
+    }
     return *this;
 }
 
@@ -30,3 +48,28 @@ CharacterSet::CharacterSet(const char *label, const char * const c)
     for (size_t i = 0; i < clen; ++i)
         add(c[i]);
 }
+
+CharacterSet::CharacterSet(const char *label, unsigned char low, unsigned char high)
+: name(label == NULL ? "anonymous" : label), chars_(Storage(256,0))
+{
+    addRange(low,high);
+}
+
+const CharacterSet
+CharacterSet::ALPHA("ALPHA", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+CharacterSet::BIT("BIT","01"),
+CharacterSet::CR("CR","\r"),
+CharacterSet::LF("LF","\n"),
+CharacterSet::CRLF("CRLF","\r\n"),
+CharacterSet::DIGIT("DIGIT","0123456789"),
+CharacterSet::DQUOTE("DQUOTE","\""),
+CharacterSet::HTAB("HTAB","\t"),
+CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
+CharacterSet::SP("SP"," "),
+CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
+CharacterSet::WSP("WSP"," \t"),
+CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}")
+//,CharacterSet::QDTEXT("QDTEXT",{{9,9},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}})
+//,CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff)
+;
