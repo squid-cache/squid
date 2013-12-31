@@ -1592,7 +1592,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (NULL == http->storeEntry()) {
         /** \li If no StoreEntry object is current assume this object isn't in the cache set MISS*/
-        debugs(85, 3, "clientProcessRequest2: StoreEntry is NULL -  MISS");
+        debugs(85, 3, "StoreEntry is NULL -  MISS");
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
         return;
@@ -1600,7 +1600,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (Config.onoff.offline) {
         /** \li If we are running in offline mode set to HIT */
-        debugs(85, 3, "clientProcessRequest2: offline HIT " << *e);
+        debugs(85, 3, "offline HIT " << *e);
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
         return;
@@ -1616,7 +1616,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (!e->validToSend()) {
-        debugs(85, 3, "clientProcessRequest2: !storeEntryValidToSend MISS " << *e);
+        debugs(85, 3, "!storeEntryValidToSend MISS " << *e);
         forgetHit();
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
@@ -1625,21 +1625,21 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
         /* \li Special entries are always hits, no matter what the client says */
-        debugs(85, 3, "clientProcessRequest2: ENTRY_SPECIAL HIT " << *e);
+        debugs(85, 3, "ENTRY_SPECIAL HIT " << *e);
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
         return;
     }
 
     if (r->flags.noCache) {
-        debugs(85, 3, "clientProcessRequest2: no-cache REFRESH MISS " << *e);
+        debugs(85, 3, "no-cache REFRESH MISS " << *e);
         forgetHit();
         http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
         doGetMoreData();
         return;
     }
 
-    debugs(85, 3, "clientProcessRequest2: default HIT " << *e);
+    debugs(85, 3, "default HIT " << *e);
     http->logType = LOG_TCP_HIT;
     doGetMoreData();
 }
@@ -2163,8 +2163,9 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     StoreEntry *e = storeCreateEntry(storeId(), http->log_uri, reqFlags, m);
 
-    // Make entry collapsable ASAP, to increase collapsing chances for others.
-    // TODO: why is !.needValidation required here?
+    // Make entry collapsable ASAP, to increase collapsing chances for others,
+    // TODO: every must-revalidate and similar request MUST reach the origin,
+    // but do we have to prohibit others from collapsing on that request?
     if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
         !reqFlags.needValidation &&
         (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {

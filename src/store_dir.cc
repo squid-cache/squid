@@ -818,7 +818,6 @@ StoreController::find(const cache_key *key)
 
     debugs(20, 4, HERE << "none of " << Config.cacheSwap.n_configured <<
            " cache_dirs have " << storeKeyText(key));
-
     return NULL;
 }
 
