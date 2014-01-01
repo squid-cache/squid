@@ -2,6 +2,7 @@
 
 #include "squid.h"
 #include "Mem.h"
+#include "MemObject.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -23,7 +24,9 @@ addSwapDir(TestSwapDirPointer aStore)
 void
 testStoreController::testStats()
 {
-    StoreEntry * logEntry = new StoreEntry("dummy_url", "dummy_log_url");
+    StoreEntry *logEntry = new StoreEntry;
+    logEntry->makeMemObject();
+    logEntry->mem_obj->setUris("dummy_storeId", NULL, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
     StorePointer aRoot (new StoreController);
     Store::Root(aRoot);
@@ -63,7 +66,9 @@ void
 testStoreController::testMaxSize()
 {
     commonInit();
-    StoreEntry * logEntry = new StoreEntry("dummy_url", "dummy_log_url");
+    StoreEntry *logEntry = new StoreEntry;
+    logEntry->makeMemObject();
+    logEntry->mem_obj->setUris("dummy_storeId", NULL, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
     StorePointer aRoot (new StoreController);
     Store::Root(aRoot);
@@ -99,13 +104,11 @@ addedEntry(StorePointer hashStore,
 
     CPPUNIT_ASSERT (e->swap_dirn != -1);
     e->swap_file_sz = 0; /* garh lower level */
-    e->lock_count = 0;
     e->lastref = squid_curtime;
     e->timestamp = squid_curtime;
     e->expires = squid_curtime;
     e->lastmod = squid_curtime;
     e->refcount = 1;
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;

@@ -184,13 +184,13 @@ IpcIoFile::close()
 bool
 IpcIoFile::canRead() const
 {
-    return diskId >= 0 && canWait();
+    return diskId >= 0 && !error_ && canWait();
 }
 
 bool
 IpcIoFile::canWrite() const
 {
-    return diskId >= 0 && canWait();
+    return diskId >= 0 && !error_ && canWait();
 }
 
 bool
@@ -270,13 +270,19 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
 {
     bool ioError = false;
     if (!response) {
-        debugs(79, 3, HERE << "error: timeout");
+        debugs(79, 3, "disker " << diskId << " timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
     } else if (response->xerrno) {
-        debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(response->xerrno));
+        debugs(79, DBG_IMPORTANT, "ERROR: disker " << diskId <<
+               " error writing " << writeRequest->len << " bytes at " <<
+               writeRequest->offset << ": " << xstrerr(response->xerrno) <<
+               "; this worker will stop using " << dbName);
         ioError = error_ = true;
     } else if (response->len != writeRequest->len) {
-        debugs(79, DBG_IMPORTANT, HERE << "problem: " << response->len << " < " << writeRequest->len);
+        debugs(79, DBG_IMPORTANT, "ERROR: disker " << diskId << " wrote " <<
+               response->len << " instead of " << writeRequest->len <<
+               " bytes (offset " << writeRequest->offset << "); " <<
+               "this worker will stop using " << dbName);
         error_ = true;
     }
 
@@ -653,27 +659,68 @@ diskerRead(IpcIoMsg &ipcIo)
     }
 }
 
+/// Tries to write buffer to disk (a few times if needed);
+/// sets ipcIo results, but does no cleanup. The caller must cleanup.
+static void
+diskerWriteAttempts(IpcIoMsg &ipcIo)
+{
+    const char *buf = Ipc::Mem::PagePointer(ipcIo.page);
+    size_t toWrite = min(ipcIo.len, Ipc::Mem::PageSize());
+    size_t wroteSoFar = 0;
+    off_t offset = ipcIo.offset;
+    // Partial writes to disk do happen. It is unlikely that the caller can
+    // handle partial writes by doing something other than writing leftovers
+    // again, so we try to write them ourselves to minimize overheads.
+    const int attemptLimit = 10;
+    for (int attempts = 1; attempts <= attemptLimit; ++attempts) {
+        const ssize_t result = pwrite(TheFile, buf, toWrite, offset);
+        ++statCounter.syscalls.disk.writes;
+        fd_bytes(TheFile, result, FD_WRITE);
+
+        if (result < 0) {
+            ipcIo.xerrno = errno;
+            assert(ipcIo.xerrno);
+            debugs(47, DBG_IMPORTANT,  "disker" << KidIdentifier <<
+                   " error writing " << toWrite << '/' << ipcIo.len <<
+                   " at " << ipcIo.offset << '+' << wroteSoFar <<
+                   " on " << attempts << " try: " << xstrerr(ipcIo.xerrno));
+            ipcIo.len = wroteSoFar;
+            return; // bail on error
+        }
+
+        const size_t wroteNow = static_cast<size_t>(result); // result >= 0
+        ipcIo.xerrno = 0;
+
+        debugs(47,3, "disker" << KidIdentifier << " wrote " <<
+               (wroteNow >= toWrite ? "all " : "just ") << wroteNow <<
+               " out of " << toWrite << '/' << ipcIo.len << " at " <<
+               ipcIo.offset << '+' << wroteSoFar << " on " << attempts <<
+               " try");
+
+        wroteSoFar += wroteNow;
+
+        if (wroteNow >= toWrite) {
+            ipcIo.xerrno = 0;
+            ipcIo.len = wroteSoFar;
+            return; // wrote everything there was to write
+        }
+
+        buf += wroteNow;
+        offset += wroteNow;
+        toWrite -= wroteNow;
+    }
+
+    debugs(47, DBG_IMPORTANT,  "disker" << KidIdentifier <<
+           " exhausted all " << attemptLimit << " attempts while writing " <<
+           toWrite << '/' << ipcIo.len << " at " << ipcIo.offset << '+' <<
+           wroteSoFar);
+    return; // not a fatal I/O error, unless the caller treats it as such
+}
+
 static void
 diskerWrite(IpcIoMsg &ipcIo)
 {
-    const char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
-    const ssize_t wrote = pwrite(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
-    ++statCounter.syscalls.disk.writes;
-    fd_bytes(TheFile, wrote, FD_WRITE);
-
-    if (wrote >= 0) {
-        ipcIo.xerrno = 0;
-        const size_t len = static_cast<size_t>(wrote); // safe because wrote > 0
-        debugs(47,8, HERE << "disker" << KidIdentifier << " wrote " <<
-               (len == ipcIo.len ? "all " : "just ") << wrote);
-        ipcIo.len = len;
-    } else {
-        ipcIo.xerrno = errno;
-        ipcIo.len = 0;
-        debugs(47,5, HERE << "disker" << KidIdentifier << " write error: " <<
-               ipcIo.xerrno);
-    }
-
+    diskerWriteAttempts(ipcIo); // may fail
     Ipc::Mem::PutPage(ipcIo.page);
 }
 
