@@ -313,6 +313,8 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
+	CollapsedForwarding.cc \
+	CollapsedForwarding.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
 	CommRead.h \
@@ -540,6 +542,8 @@ squid_SOURCES = \
 	swap_log_op.h \
 	SwapDir.cc \
 	SwapDir.h \
+	Transients.cc \
+	Transients.h \
 	MemStore.cc \
 	MemStore.h \
 	time.cc \
@@ -1218,6 +1222,7 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	DiskIO/ReadRequest.cc \
@@ -1280,6 +1285,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	swap_log_op.h \
 	tests/stub_SwapDir.cc \
 	SwapDir.h \
+	Transients.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
@@ -1307,6 +1313,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_Port.cc \
 	repl_modules.h \
 	tests/stub_store.cc \
+	tests/stub_store_client.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -1418,6 +1425,7 @@ tests_testCacheManager_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1561,6 +1569,7 @@ tests_testCacheManager_SOURCES = \
 	StoreSwapLogData.cc \
 	tools.h \
 	tools.cc \
+	Transients.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
@@ -1627,6 +1636,7 @@ tests_testDiskIO_SOURCES = \
 	cbdata.cc \
 	client_db.h \
 	ClientInfo.h \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -1707,6 +1717,7 @@ tests_testDiskIO_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	tests/stub_SwapDir.cc \
+	Transients.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
@@ -1738,6 +1749,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
+	tests/stub_stat.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
 	store_rebuild.h \
@@ -1825,6 +1837,7 @@ tests_testEvent_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1990,6 +2003,7 @@ tests_testEvent_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
+	Transients.cc \
 	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
@@ -2071,6 +2085,7 @@ tests_testEventLoop_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -2236,6 +2251,7 @@ tests_testEventLoop_SOURCES = \
 	time.cc \
 	tools.h \
 	tools.cc \
+	Transients.cc \
 	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
@@ -2316,6 +2332,7 @@ tests_test_http_range_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -2465,6 +2482,7 @@ tests_test_http_range_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	tests/stub_SwapDir.cc \
+	Transients.cc \
 	tests/test_http_range.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -2536,6 +2554,7 @@ tests_testHttpParser_SOURCES = \
 	HttpParser.h \
 	MemBuf.cc \
 	MemBuf.h \
+	tests/stub_MemObject.cc \
 	Mem.h \
 	tests/stub_mem.cc \
 	String.cc \
@@ -2545,9 +2564,14 @@ tests_testHttpParser_SOURCES = \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_stmem.cc \
+	tests/stub_store.cc \
+	tests/stub_store_stats.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/testHttpParser.cc \
@@ -2619,6 +2643,7 @@ tests_testHttpRequest_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -2757,6 +2782,7 @@ tests_testHttpRequest_SOURCES = \
 	event.cc \
 	tools.h \
 	tools.cc \
+	Transients.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
@@ -2819,6 +2845,7 @@ tests_testStore_SOURCES= \
 	tests/stub_CacheDigest.cc \
 	cbdata.cc \
 	ClientInfo.h \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -2922,12 +2949,14 @@ tests_testStore_SOURCES= \
 	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
+	tests/stub_stat.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_stats.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_swapout.cc \
 	tools.h \
+	Transients.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testMain.cc \
@@ -3047,6 +3076,7 @@ tests_testUfs_SOURCES = \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
+	tests/stub_CollapsedForwarding.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
@@ -3060,6 +3090,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	tests/stub_stat.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -3083,6 +3114,7 @@ tests_testUfs_SOURCES = \
 	RequestFlags.cc \
 	SquidList.h \
 	SquidList.cc \
+	Transients.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemObject.cc \
@@ -3234,6 +3266,8 @@ testRefCount_LDADD = \
 tests_testRock_SOURCES = \
 	cbdata.cc \
 	CacheDigest.h \
+	CollapsedForwarding.h \
+	CollapsedForwarding.cc \
 	tests/stub_CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -3290,6 +3324,7 @@ tests_testRock_SOURCES = \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	repl_modules.h \
+	tests/stub_stat.cc \
 	store.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
@@ -3309,6 +3344,8 @@ tests_testRock_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	SwapDir.cc \
+	Transients.h \
+	Transients.cc \
 	tests/testRock.cc \
 	tests/testMain.cc \
 	tests/testRock.h \
@@ -3416,6 +3453,7 @@ tests_testURL_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
+	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -3564,6 +3602,7 @@ tests_testURL_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
+	Transients.cc \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
@@ -3694,6 +3733,7 @@ tests_testSBufList_SOURCES= \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
 	SquidString.h \

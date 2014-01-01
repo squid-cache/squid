@@ -225,7 +225,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     entry = e;
     request = r;
 
-    entry->lock();
+    entry->lock("UrnState::start");
     setUriResFromRequest(r);
 
     if (urlres_r == NULL)
@@ -244,7 +244,7 @@ UrnState::created(StoreEntry *newEntry)
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());
     } else {
-        urlres_e->lock();
+        urlres_e->lock("UrnState::created");
         sc = storeClientListAdd(urlres_e, this);
     }
 
@@ -285,8 +285,8 @@ url_entry_sort(const void *A, const void *B)
 static void
 urnHandleReplyError(UrnState *urnState, StoreEntry *urlres_e)
 {
-    urlres_e->unlock();
-    urnState->entry->unlock();
+    urlres_e->unlock("urnHandleReplyError+res");
+    urnState->entry->unlock("urnHandleReplyError+prime");
     delete urnState;
 }
 
