@@ -32,7 +32,7 @@ testStoreEntryStream::testGetStream()
 
     CapturingStoreEntry * anEntry = new CapturingStoreEntry();
     {
-        StoreEntryStream stream(anEntry);
+        StoreEntryStream stream(anEntry); // locks and unlocks/deletes anEntry
         CPPUNIT_ASSERT_EQUAL(1, anEntry->_buffer_calls);
         CPPUNIT_ASSERT_EQUAL(0, anEntry->_flush_calls);
 
@@ -53,8 +53,5 @@ testStoreEntryStream::testGetStream()
         CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."),
                              anEntry->_appended_text);
     }
-
-    delete anEntry;
-
     Store::Root(NULL);
 }

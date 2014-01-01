@@ -1025,7 +1025,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         return;
     }
 
-    if (entry->lock_count == 0) {
+    if (!entry->locked()) {
         // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
@@ -1426,7 +1426,7 @@ peerCountMcastPeersDone(void *data)
 
     fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     HTTPMSGUNLOCK(fake->mem_obj->request);
-    fake->unlock();
+    fake->unlock("peerCountMcastPeersDone");
     HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
 }
@@ -1732,7 +1732,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
         return;
     }
 
-    if (e->lock_count == 0) {
+    if (!e->locked()) {
         // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);

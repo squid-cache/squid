@@ -129,7 +129,7 @@ testUfs::testUfsSearch()
     /* rebuild is a scheduled event */
     StockEventLoop loop;
 
-    while (StoreController::store_dirs_rebuilding > 1)
+    while (StoreController::store_dirs_rebuilding)
         loop.runOnce();
 
     /* cannot use loop.run(); as the loop will never idle: the store-dir
@@ -137,7 +137,7 @@ testUfs::testUfsSearch()
      */
 
     /* nothing left to rebuild */
-    CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
 
     /* add an entry */
     {
@@ -165,7 +165,7 @@ testUfs::testUfsSearch()
         pe->swapOut();
         CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
         CPPUNIT_ASSERT_EQUAL(0, pe->swap_filen);
-        pe->unlock();
+        pe->unlock("testUfs::testUfsSearch vary");
     }
 
     storeDirWriteCleanLogs(0);

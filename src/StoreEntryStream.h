@@ -48,13 +48,12 @@ class StoreEntryStreamBuf : public std::streambuf
 
 public:
     StoreEntryStreamBuf(StoreEntry *anEntry) : theEntry(anEntry) {
-
-        theEntry->lock();
+        theEntry->lock("StoreEntryStreamBuf");
         theEntry->buffer();
     }
 
     ~StoreEntryStreamBuf() {
-        theEntry->unlock();
+        theEntry->unlock("StoreEntryStreamBuf");
     }
 
 protected:
