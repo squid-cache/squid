@@ -127,13 +127,33 @@ HelperReply::parse(char *buf, size_t len)
     }
 }
 
+/// restrict key names to alphanumeric, hyphen, underscore characters
+static bool
+isKeyNameChar(char c)
+{
+    if (c >= 'a' && c <= 'z')
+        return true;
+
+    if (c >= 'A' && c <= 'Z')
+        return true;
+
+    if (c >= '0' && c <= '9')
+        return true;
+
+    if (c == '-' || c == '_')
+        return true;
+
+    // prevent other characters matching the key=value
+    return false;
+}
+
 void
 HelperReply::parseResponseKeys()
 {
     // parse a "key=value" pair off the 'other()' buffer.
     while (other().hasContent()) {
         char *p = modifiableOther().content();
-        while (*p && *p != '=' && *p != ' ') ++p;
+        while (*p && isKeyNameChar(*p)) ++p;
         if (*p != '=')
             return; // done. Not a key.
 
