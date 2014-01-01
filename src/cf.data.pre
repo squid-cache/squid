@@ -2683,8 +2683,8 @@ DOC_START
 		concurrency=
 	
 	The number of requests each certificate validator helper can handle in
-	parallel. Defaults to 0 which indicates the certficate validator
-	is a old-style single threaded redirector.
+	parallel. A value of 0 indicates the certficate validator does not
+	support concurrency. Defaults to 1.
 	
 	When this directive is set to a value >= 1 then the protocol
 	used to communicate with the helper is modified to include
@@ -4853,18 +4853,97 @@ COMMENT_END
 NAME: cache no_cache
 TYPE: acl_access
 DEFAULT: none
-DEFAULT_DOC: Allow caching, unless rules exist in squid.conf.
+DEFAULT_DOC: By default, this directive is unused and has no effect.
 LOC: Config.accessList.noCache
 DOC_START
-	A list of ACL elements which, if matched and denied, cause the request to
-	not be satisfied from the cache and the reply to not be cached.
-	In other words, use this to force certain objects to never be cached.
-
-	You must use the words 'allow' or 'deny' to indicate whether items
-	matching the ACL should be allowed or denied into the cache.
+	Requests denied by this directive will not be served from the cache
+	and their responses will not be stored in the cache. This directive
+	has no effect on other transactions and on already cached responses.
 
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
+	This and the two other similar caching directives listed below are
+	checked at different transaction processing stages, have different
+	access to response information, affect different cache operations,
+	and differ in slow ACLs support:
+
+	* cache: Checked before Squid makes a hit/miss determination.
+		No access to reply information!
+		Denies both serving a hit and storing a miss.
+		Supports both fast and slow ACLs.
+	* send_hit: Checked after a hit was detected.
+		Has access to reply (hit) information.
+		Denies serving a hit only.
+		Supports fast ACLs only.
+	* store_miss: Checked before storing a cachable miss.
+		Has access to reply (miss) information.
+		Denies storing a miss only.
+		Supports fast ACLs only.
+
+	If you are not sure which of the three directives to use, apply the
+	following decision logic:
+
+	* If your ACL(s) are of slow type _and_ need response info, redesign.
+	  Squid does not support that particular combination at this time.
+        Otherwise:
+	* If your directive ACL(s) are of slow type, use "cache"; and/or
+	* if your directive ACL(s) need no response info, use "cache".
+        Otherwise:
+	* If you do not want the response cached, use store_miss; and/or
+	* if you do not want a hit on a cached response, use send_hit.
+DOC_END
+
+NAME: send_hit
+TYPE: acl_access
+DEFAULT: none
+DEFAULT_DOC: By default, this directive is unused and has no effect.
+LOC: Config.accessList.sendHit
+DOC_START
+	Responses denied by this directive will not be served from the cache
+	(but may still be cached, see store_miss). This directive has no
+	effect on the responses it allows and on the cached objects.
+
+	Please see the "cache" directive for a summary of differences among
+	store_miss, send_hit, and cache directives.
+
+	Unlike the "cache" directive, send_hit only supports fast acl
+	types.  See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
+	For example:
+
+		# apply custom Store ID mapping to some URLs
+		acl MapMe dstdomain .c.example.com
+		store_id_program ...
+		store_id_access allow MapMe
+
+		# but prevent caching of special responses
+		# such as 302 redirects that cause StoreID loops
+		acl Ordinary http_status 200-299
+		store_miss deny MapMe !Ordinary
+
+		# and do not serve any previously stored special responses
+		# from the cache (in case they were already cached before
+		# the above store_miss rule was in effect).
+		send_hit deny MapMe !Ordinary
+DOC_END
+
+NAME: store_miss
+TYPE: acl_access
+DEFAULT: none
+DEFAULT_DOC: By default, this directive is unused and has no effect.
+LOC: Config.accessList.storeMiss
+DOC_START
+	Responses denied by this directive will not be cached (but may still
+	be served from the cache, see send_hit). This directive has no
+	effect on the responses it allows and on the already cached responses.
+
+	Please see the "cache" directive for a summary of differences among
+	store_miss, send_hit, and cache directives. See the
+	send_hit directive for a usage example.
+
+	Unlike the "cache" directive, store_miss only supports fast acl
+	types.  See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: max_stale

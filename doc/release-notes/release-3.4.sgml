@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.4.0.3 release notes</title>
+<title>Squid 3.4.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.4.0.3 for testing.
+The Squid Team are pleased to announce the release of Squid-3.4.2 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.4/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
@@ -206,7 +206,7 @@ There have been changes to Squid's configuration file since Squid-3.3.
     acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
 </verb>
 
-<p>There hasve also been changes to individual directives in the config file.
+<p>There have also been changes to individual directives in the config file.
 
 This section gives a thorough account of those changes in three categories:
 

@@ -1,3 +1,22 @@
+Changes to squid-3.4.2 (30 Dec 2013):
+
+	- Regression Bug 3980: FATAL ERROR due to max_user_ip -s option
+	- Regression Fix: \-unescaping in quoted strings from helpers
+	- Regression Fix: URL helper API bypassing on URL containing '=' character
+	- Bug 3985: 60s limit introduced by balance_on_multiple_ip breaks bad IP recovery
+	- Bug 3806: Caching responses with Vary header
+	- Bug 3498: FTP PUT assertion
+	- WCCPv2: Fix assertion 'Cannot convert non-IPv4 to IPv4' on FreeBSD
+	- Enable concurrency by default for SSL certificate validator
+	- ... and fix several build errors
+
+Changes to squid-3.4.1 (09 Dec 2013):
+
+	- Bug 3935: Invalid pointer dereference when peeking at origin server certificate
+	- Bug 3589: intercepted and ICAP modified request using a cache_peer
+	- ... and several portability fixes
+	- ... and some documentation updates
+
 Changes to squid-3.4.0.3 (01 Dec 2013):
 
 	- Bug 3941: Release notes error

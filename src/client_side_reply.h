@@ -141,6 +141,7 @@ private:
     void sendClientOldEntry();
     void purgeAllCached();
     void forgetHit();
+    bool blockedHit() const;
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();

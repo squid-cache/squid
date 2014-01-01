@@ -131,6 +131,8 @@ protected:
     /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
 
+    bool blockCaching();
+
 #if USE_ADAPTATION
     void startAdaptation(const Adaptation::ServiceGroupPointer &group, HttpRequest *cause);
     void adaptVirginReplyBody(const char *buf, ssize_t len);

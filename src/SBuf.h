@@ -55,6 +55,7 @@
 #define SQUIDSBUFPRINT(s) (s).plength(),(s).rawContent()
 #endif /* SQUIDSBUFPH */
 
+// TODO: move within SBuf and rename
 typedef enum {
     caseSensitive,
     caseInsensitive
@@ -99,6 +100,8 @@ public:
 
     SBufStats& operator +=(const SBufStats&);
 };
+
+class CharacterSet;
 
 /**
  * A String or Buffer.
@@ -511,8 +514,20 @@ public:
      * \return npos if no character in the set could be found
      * \param startPos if specified, ignore any occurrences before that position
      *   if npos, then npos is always returned
+     *
+     * TODO: rename to camelCase
      */
-    size_type find_first_of(const SBuf &set, size_type startPos = 0) const;
+    size_type findFirstOf(const CharacterSet &set, size_type startPos = 0) const;
+
+    /** Find first occurrence character NOT in character set
+     *
+     * \return npos if all characters in the SBuf are from set
+     * \param startPos if specified, ignore any occurrences before that position
+     *   if npos, then npos is always returned
+     *
+     * TODO: rename to camelCase
+     */
+    size_type findFirstNotOf(const CharacterSet &set, size_type startPos = 0) const;
 
     /** sscanf-alike
      *
