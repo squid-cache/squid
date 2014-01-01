@@ -23,6 +23,7 @@ libexec_PROGRAMS = $(PINGER)
 noinst_LTLIBRARIES = libicmp-core.la libicmp.la
 
 SBUF_SOURCE= \
+	$(top_srcdir)/src/base/CharacterSet.h \
 	$(top_srcdir)/src/SBuf.h \
 	$(top_srcdir)/src/SBuf.cc \
 	$(top_srcdir)/src/MemBlob.h \
