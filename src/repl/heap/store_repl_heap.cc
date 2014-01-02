@@ -230,7 +230,7 @@ try_again:
 
     if (entry->locked()) {
 
-        entry->lock();
+        entry->lock("heap_purgeNext");
         linklistPush(&heap_walker->locked_entries, entry);
 
         goto try_again;
@@ -263,7 +263,7 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     while ((entry = (StoreEntry *)linklistShift(&heap_walker->locked_entries))) {
         heap_node *node = heap_insert(h->theHeap, entry);
         h->setPolicyNode(entry, node);
-        entry->unlock();
+        entry->unlock("heap_purgeDone");
     }
 
     safe_free(walker->_data);
