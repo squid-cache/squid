@@ -20,7 +20,12 @@ class PageId
 public:
     PageId(): pool(0), number(0), purpose(maxPurpose) {}
 
-    operator bool() const { return pool && number; }
+    /// true if and only if both critical components have been initialized
+    bool set() const { return pool && number; }
+
+    // safer than bool which would enable silent casts to int
+    typedef const uint32_t PageId::*SaferBool;
+    operator SaferBool() const { return set() ? &PageId::number : NULL; }
 
     uint32_t pool; ///< page pool ID within Squid
     // uint32_t segment; ///< memory segment ID within the pool; unused for now

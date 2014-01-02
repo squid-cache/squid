@@ -320,9 +320,6 @@ storeEntryFlags(const StoreEntry * entry)
     if (EBIT_TEST(flags, REFRESH_REQUEST))
         strcat(buf, "REFRESH_REQUEST,");
 
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        strcat(buf, "CACHABLE,");
-
     if (EBIT_TEST(flags, ENTRY_DISPATCHED))
         strcat(buf, "DISPATCHED,");
 
@@ -371,7 +368,7 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
     mb->Printf("\t%s\n", storeEntryFlags(e));
     mb->Printf("\t%s\n", describeTimestamps(e));
     mb->Printf("\t%d locks, %d clients, %d refs\n",
-               (int) e->lock_count,
+               (int) e->locks(),
                storePendingNClients(e),
                (int) e->refcount);
     mb->Printf("\tSwap Dir %d, File %#08X\n",
@@ -394,11 +391,11 @@ statObjects(void *data)
         if (UsingSmp())
             storeAppendPrintf(state->sentry, "} by kid%d\n\n", KidIdentifier);
         state->sentry->complete();
-        state->sentry->unlock();
+        state->sentry->unlock("statObjects+isDone");
         cbdataFree(state);
         return;
     } else if (EBIT_TEST(state->sentry->flags, ENTRY_ABORTED)) {
-        state->sentry->unlock();
+        state->sentry->unlock("statObjects+aborted");
         cbdataFree(state);
         return;
     } else if (state->sentry->checkDeferRead(-1)) {
@@ -436,7 +433,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
     state->sentry = sentry;
     state->filter = filter;
 
-    sentry->lock();
+    sentry->lock("statObjects");
     state->theSearch = Store::Root().search(NULL, NULL);
 
     eventAdd("statObjects", statObjects, state, 0.0, 1);
