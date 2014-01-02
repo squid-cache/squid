@@ -3727,6 +3727,7 @@ tests_testSBufList_SOURCES= \
 	SBufStream.h \
 	tests/stub_time.cc \
 	mem.cc \
+	tests/stub_MemObject.cc \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_fatal.cc \
