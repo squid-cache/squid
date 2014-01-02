@@ -19,7 +19,7 @@ Http::Http1Parser::clear()
     req.u_start = req.u_end = -1;
     req.v_start = req.v_end = -1;
     msgProtocol_ = AnyP::ProtocolVersion();
-    method_ = NULL;
+    method_ = HttpRequestMethod();
     mimeHeaderBlock_.clear();
 }
 
@@ -201,7 +201,7 @@ Http::Http1Parser::parseRequestFirstLine()
     }
 
     /* Set method_ */
-    method_ = new HttpRequestMethod(&buf[req.m_start], &buf[req.m_end]+1);
+    method_ = HttpRequestMethod(&buf[req.m_start], &buf[req.m_end]+1);
 
     // First non-whitespace after first SP = beginning of URL+Version
     if (second_word > line_end || second_word < req.start) {
@@ -328,7 +328,7 @@ Http::Http1Parser::parseRequest()
         PROF_start(HttpParserParseReqLine);
         int retcode = parseRequestFirstLine();
         debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end << " " << Raw("line", &buf[req.start], req.end-req.start));
-        debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << *method_ << ")");
+        debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << method_ << ")");
         debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
         debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
         debugs(74, 5, "Parser: parse-offset=" << parseOffset_);
