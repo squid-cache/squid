@@ -28,7 +28,9 @@ libufs_la_SOURCES = \
 	ufs/RebuildState.cc
 
 librock_la_SOURCES = \
+	rock/RockDbCell.cc \
 	rock/RockDbCell.h \
+	rock/RockForward.h \
 	rock/RockIoState.cc \
 	rock/RockIoState.h \
 	rock/RockIoRequests.cc \

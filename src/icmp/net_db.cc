@@ -887,7 +887,7 @@ netdbExchangeDone(void *data)
     debugs(38, 3, "netdbExchangeDone: " << ex->e->url()  );
     HTTPMSGUNLOCK(ex->r);
     storeUnregister(ex->sc, ex->e, ex);
-    ex->e->unlock();
+    ex->e->unlock("netdbExchangeDone");
     cbdataReferenceDone(ex->p);
     cbdataFree(ex);
 }
