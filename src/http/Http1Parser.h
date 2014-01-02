@@ -4,6 +4,7 @@
 #include "base/RefCount.h"
 #include "http/forward.h"
 #include "http/ProtocolVersion.h"
+#include "http/RequestMethod.h"
 #include "http/StatusCode.h"
 #include "SBuf.h"
 
@@ -86,11 +87,11 @@ public:
     /// the protocol label for this message
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
-    /// the HTTP method if this is a request method
-    const HttpRequestMethodPointer & method() const {return method_;}
+    /// the HTTP method if this is a request message
+    const HttpRequestMethod & method() const {return method_;}
 
-    /// the request-line URI if this is a request, or an empty string.
-    SBuf requestUri() const {return uri_;}
+    /// the request-line URI if this is a request message, or an empty string.
+    const SBuf &requestUri() const {return uri_;}
 
     // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
 
@@ -121,7 +122,7 @@ private:
     AnyP::ProtocolVersion msgProtocol_;
 
     /// what request method has been found on the first line
-    HttpRequestMethodPointer method_;
+    HttpRequestMethod method_;
 
     /// raw copy of the origina client reqeust-line URI field
     SBuf uri_;
