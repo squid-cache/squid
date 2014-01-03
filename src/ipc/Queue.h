@@ -148,6 +148,7 @@ class BaseMultiQueue
 {
 public:
     BaseMultiQueue(const int aLocalProcessId);
+    virtual ~BaseMultiQueue() {}
 
     /// clears the reader notification received by the local process from the remote process
     void clearReaderSignal(const int remoteProcessId);

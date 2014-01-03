@@ -136,14 +136,3 @@ void storeReplAdd(const char *, REMOVALPOLICYCREATE *) STUB
 void destroyStoreEntry(void *) STUB
 // in Packer.cc !? void packerToStoreInit(Packer * p, StoreEntry * e) STUB
 void storeGetMemSpace(int size) STUB
-
-#if !_USE_INLINE_ /* stubs for Store.cci */
-bool StoreEntry::isEmpty () const STUB_RETVAL(true)
-HttpReply const *NullStoreEntry::getReply() const STUB_RETVAL(NULL)
-
-Store &Store::Root()
-{
-    CPPUNIT_ASSERT(CurrentRoot != NULL);
-    return *CurrentRoot;
-}
-#endif /* !_USE_INLINE_ */
