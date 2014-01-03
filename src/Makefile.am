@@ -591,7 +591,6 @@ noinst_HEADERS = \
 	client_side_request.cci \
 	MemBuf.cci \
 	MemBuf.h \
-	Store.cci \
 	StoreEntryStream.h \
 	String.cci \
 	SquidString.h \

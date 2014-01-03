@@ -41,6 +41,7 @@
 #include "hash.h"
 #include "HttpReply.h"
 #include "HttpRequestMethod.h"
+#include "MemObject.h"
 #include "Range.h"
 #include "RemovalPolicy.h"
 #include "StoreIOBuffer.h"
@@ -56,7 +57,6 @@
 
 class AsyncCall;
 class HttpRequest;
-class MemObject;
 class Packer;
 class RequestFlags;
 class StoreClient;
@@ -84,7 +84,16 @@ public:
 
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
-    virtual _SQUID_INLINE_ bool isEmpty() const;
+
+    /** Check if the Store entry is emtpty
+     * \retval true   Store contains 0 bytes of data.
+     * \retval false  Store contains 1 or more bytes of data.
+     * \retval false  Store contains negative content !!!!!!
+     */
+    virtual bool isEmpty() const {
+        assert (mem_obj);
+        return mem_obj->endOffset() == 0;
+    }
     virtual bool isAccepting() const;
     virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
     virtual void complete();
@@ -251,7 +260,7 @@ public:
     }
 
     const char *getMD5Text() const;
-    _SQUID_INLINE_ HttpReply const *getReply() const;
+    HttpReply const *getReply() const { return NULL; }
     void write (StoreIOBuffer) {}
 
     bool isEmpty () const {return true;}
@@ -284,7 +293,11 @@ class Store : public RefCountable
 
 public:
     /** The root store */
-    static _SQUID_INLINE_ Store &Root();
+    static Store &Root() {
+        if (CurrentRoot == NULL)
+            fatal("No Store Root has been set");
+        return *CurrentRoot;
+    }
     static void Root(Store *);
     static void Root(RefCount<Store>);
     static void Stats(StoreEntry * output);
@@ -503,9 +516,5 @@ void packerToStoreInit(Packer * p, StoreEntry * e);
 
 /// \ingroup StoreAPI
 void storeGetMemSpace(int size);
-
-#if _USE_INLINE_
-#include "Store.cci"
-#endif
 
 #endif /* SQUID_STORE_H */

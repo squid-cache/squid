@@ -2085,7 +2085,3 @@ NullStoreEntry::getSerialisedMetaData()
 {
     return NULL;
 }
-
-#if !_USE_INLINE_
-#include "Store.cci"
-#endif
