@@ -36,7 +36,7 @@ public:
      * NOTE: This is *not* the buffer size, just the parse-able data length.
      * The parse routines may be called again later with more data.
      */
-    Parser(const char *aBuf, int len) { reset(aBuf,len); };
+    Parser(const char *aBuf, int len) { reset(aBuf,len); }
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
@@ -121,7 +121,7 @@ public:
     RequestParser(const char *aBuf, int len) : Parser(aBuf, len) {}
     virtual void clear();
     virtual void noteBufferShift(int64_t n);
-    virtual int64_t messageOffset() const {return req.start;};
+    virtual int64_t messageOffset() const {return req.start;}
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse();
 
