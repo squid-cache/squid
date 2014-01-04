@@ -45,14 +45,23 @@ public:
     /// Reset the parser for use on a new buffer.
     void reset(const char *aBuf, int len);
 
+    /** Adjust parser state to account for a buffer shift of n bytes.
+     *
+     * The leftmost n bytes bytes have been dropped and all other
+     * bytes shifted left n positions.
+     */
+    virtual void noteBufferShift(int64_t n) = 0;
+
     /** Whether the parser is already done processing the buffer.
      * Use to determine between incomplete data and errors results
-     * from the parse methods.
+     * from the parse.
      */
     bool isDone() const {return completedState_==HTTP_PARSE_DONE;}
 
-    /// size in bytes of the first line
-    /// including CRLF terminator
+    /// number of bytes in buffer before the message
+    virtual int64_t messageOffset() const = 0;
+
+    /// size in bytes of the first line including CRLF terminator
     virtual int64_t firstLineSize() const = 0;
 
     /// size in bytes of the message headers including CRLF terminator(s)
@@ -111,6 +120,8 @@ public:
     RequestParser() : Parser() {}
     RequestParser(const char *aBuf, int len) : Parser(aBuf, len) {}
     virtual void clear();
+    virtual void noteBufferShift(int64_t n);
+    virtual int64_t messageOffset() const {return req.start;};
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse();
 

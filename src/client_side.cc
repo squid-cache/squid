@@ -2234,12 +2234,6 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     }
 
     /* We know the whole request is in hp.buf now */
-    size_t req_sz = hp.messageHeaderSize();
-    assert(req_sz <= (size_t) hp.bufsiz);
-
-    /* Will the following be true with HTTP/0.9 requests? probably not .. */
-    /* So the rest of the code will need to deal with '0'-byte headers (ie, none, so don't try parsing em) */
-    assert(req_sz > 0);
 
     /* deny CONNECT via accelerated ports */
     if (hp.method() == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
@@ -2560,7 +2554,6 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
-    bool notedUseOfBuffer = false;
     bool chunked = false;
     bool mustReplyToOptions = false;
     bool unsupportedTe = false;
@@ -2786,10 +2779,6 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         request->body_pipe = conn->expectRequestBody(
                                  chunked ? -1 : request->content_length);
 
-        // consume header early so that body pipe gets just the body
-        connNoteUseOfBuffer(conn, http->req_sz);
-        notedUseOfBuffer = true;
-
         /* Is it too large? */
         if (!chunked && // if chunked, we will check as we accumulate
                 clientIsRequestBodyTooLargeForPolicy(request->content_length)) {
@@ -2822,9 +2811,6 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
     http->doCallouts();
 
 finish:
-    if (!notedUseOfBuffer)
-        connNoteUseOfBuffer(conn, http->req_sz);
-
     /*
      * DPW 2007-05-18
      * Moved the TCP_RESET feature from clientReplyContext::sendMoreData
@@ -2914,6 +2900,11 @@ ConnStateData::clientParseRequests()
 
         /* Process request */
         ClientSocketContext *context = parseHttpRequest(this, *parser_);
+        if (parser_->messageOffset()) {
+            // nothing but prefix garbage in the buffer. consume it.
+            connNoteUseOfBuffer(this, parser_->messageOffset());
+            parser_->noteBufferShift(parser_->messageOffset());
+        }
         PROF_stop(parseHttpRequest);
 
         /* status -1 or 1 */
@@ -2923,6 +2914,9 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
+            // Request has now been shifted out of the buffer.
+            // Consume header early so that next action starts with just the next bytes.
+            connNoteUseOfBuffer(this, parser_->messageHeaderSize() + parser_->messageOffset());
             clientProcessRequest(this, *parser_, context);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
