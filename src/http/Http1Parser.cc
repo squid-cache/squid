@@ -7,30 +7,37 @@
 #include "SquidConfig.h"
 
 void
-Http1::RequestParser::clear()
+Http1::Parser::clear()
 {
     completedState_ = HTTP_PARSE_NONE;
-    request_parse_status = Http::scNone;
     buf = NULL;
     bufsiz = 0;
     parseOffset_ = 0;
-    req.start = req.end = -1;
-    req.m_start = req.m_end = -1;
-    req.u_start = req.u_end = -1;
-    req.v_start = req.v_end = -1;
     msgProtocol_ = AnyP::ProtocolVersion();
-    method_ = HttpRequestMethod();
     mimeHeaderBlock_.clear();
 }
 
 void
-Http1::RequestParser::reset(const char *aBuf, int len)
+Http1::RequestParser::clear()
+{
+    Http1::Parser::clear();
+
+    request_parse_status = Http::scNone;
+    req.start = req.end = -1;
+    req.m_start = req.m_end = -1;
+    req.u_start = req.u_end = -1;
+    req.v_start = req.v_end = -1;
+    method_ = HttpRequestMethod();
+}
+
+void
+Http1::Parser::reset(const char *aBuf, int len)
 {
     clear(); // empty the state.
     completedState_ = HTTP_PARSE_NEW;
     buf = aBuf;
     bufsiz = len;
-    debugs(74, DBG_DATA, "Request parse " << Raw("buf", buf, bufsiz));
+    debugs(74, DBG_DATA, "Parse " << Raw("buf", buf, bufsiz));
 }
 
 /**
@@ -315,7 +322,7 @@ Http1::RequestParser::parseRequestFirstLine()
 }
 
 bool
-Http1::RequestParser::parseRequest()
+Http1::RequestParser::parse()
 {
     // stage 1: locate the request-line
     if (completedState_ == HTTP_PARSE_NEW) {
@@ -369,7 +376,7 @@ Http1::RequestParser::parseRequest()
 #define GET_HDR_SZ	1024
 
 char *
-Http1::RequestParser::getHeaderField(const char *name)
+Http1::Parser::getHeaderField(const char *name)
 {
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const char *p = NULL;

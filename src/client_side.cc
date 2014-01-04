@@ -2229,7 +2229,7 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
 
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
-        const bool parsedOk = hp.parseRequest();
+        const bool parsedOk = hp.parse();
 
         if (!hp.isDone()) {
             debugs(33, 5, "Incomplete request, waiting for end of request line");

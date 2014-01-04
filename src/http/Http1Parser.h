@@ -20,28 +20,27 @@ namespace One {
 
 /** HTTP protocol parser.
  *
- * Works on a raw character I/O buffer and tokenizes the content into
- * either an error state or, an HTTP procotol request major segments:
+ * Works on a raw character I/O buffer and separates the content into
+ * either an error state or HTTP procotol major sections:
  *
- * \item Request Line (method, URL, protocol, version)
- * \item Mime header block
+ * \item first-line (request-line / simple-request / status-line)
+ * \item mime-header block
  */
-class RequestParser : public RefCountable
+class Parser : public RefCountable
 {
 public:
-    RequestParser() { clear(); }
+    Parser() { clear(); }
 
     /** Initialize a new parser.
-     * Presenting it a buffer to work on and the current length of available
-     * data.
+     * Presenting it a buffer to work on and the current length of available data.
      * NOTE: This is *not* the buffer size, just the parse-able data length.
      * The parse routines may be called again later with more data.
      */
-    RequestParser(const char *aBuf, int len) { reset(aBuf,len); };
+    Parser(const char *aBuf, int len) { reset(aBuf,len); };
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
-    void clear();
+    virtual void clear();
 
     /// Reset the parser for use on a new buffer.
     void reset(const char *aBuf, int len);
@@ -52,27 +51,27 @@ public:
      */
     bool isDone() const {return completedState_==HTTP_PARSE_DONE;}
 
-    /// size in bytes of the first line (request-line)
+    /// size in bytes of the first line
     /// including CRLF terminator
-    int64_t firstLineSize() const {return req.end - req.start + 1;}
+    virtual int64_t firstLineSize() const = 0;
 
     /// size in bytes of the message headers including CRLF terminator(s)
-    /// but excluding request-line bytes
+    /// but excluding first-line bytes
     int64_t headerBlockSize() const {return mimeHeaderBlock_.length();}
 
-    /// size in bytes of HTTP message block, includes request-line and mime headers
+    /// size in bytes of HTTP message block, includes first-line and mime headers
     /// excludes any body/entity/payload bytes
-    /// excludes any garbage prefix before the request-line
+    /// excludes any garbage prefix before the first-line
     int64_t messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
-    /// buffer containing HTTP mime headers, excluding request or status line.
+    /// buffer containing HTTP mime headers, excluding message first-line.
     const char *rawHeaderBuf() {return mimeHeaderBlock_.c_str();}
 
-    /** Attempt to parse a request.
-     * \return true if a valid request was parsed.
-     * \note Use isDone() method to determine between incomplete parse and errors.
-     */
-    bool parseRequest();
+    /// attempt to parse a message from the buffer
+    virtual bool parse() = 0;
+
+    /// the protocol label for this message
+    const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     /**
      * \return A pointer to a field-value of the first matching field-name, or NULL.
@@ -83,8 +82,37 @@ public:
     const char *buf;
     int bufsiz;
 
-    /// the protocol label for this message
-    const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
+protected:
+    /// what stage the parser is currently up to
+    uint8_t completedState_;
+
+    /// what protocol label has been found in the first line
+    AnyP::ProtocolVersion msgProtocol_;
+
+    /// byte offset for non-parsed region of the buffer
+    size_t parseOffset_;
+
+    /// buffer holding the mime headers
+    SBuf mimeHeaderBlock_;
+};
+
+/** HTTP protocol request parser.
+ *
+ * Works on a raw character I/O buffer and tokenizes the content into
+ * either an error state or, an HTTP procotol request major segments:
+ *
+ * \item Request Line (method, URL, protocol, version)
+ * \item Mime header block
+ */
+class RequestParser : public Http1::Parser
+{
+public:
+    /* Http::One::Parser API */
+    RequestParser() : Parser() {}
+    RequestParser(const char *aBuf, int len) : Parser(aBuf, len) {}
+    virtual void clear();
+    virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
+    virtual bool parse();
 
     /// the HTTP method if this is a request message
     const HttpRequestMethod & method() const {return method_;}
@@ -109,23 +137,11 @@ private:
         int v_start, v_end; // version (full text)
     } req;
 
-    /// byte offset for non-parsed region of the buffer
-    size_t parseOffset_;
-
-    /// what stage the parser is currently up to
-    uint8_t completedState_;
-
-    /// what protocol label has been found in the first line
-    AnyP::ProtocolVersion msgProtocol_;
-
     /// what request method has been found on the first line
     HttpRequestMethod method_;
 
     /// raw copy of the origina client reqeust-line URI field
     SBuf uri_;
-
-    /// buffer holding the mime headers
-    SBuf mimeHeaderBlock_;
 };
 
 } // namespace One
