@@ -206,7 +206,7 @@ static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, Http::Http1Parser &);
+static ClientSocketContext *parseHttpRequest(ConnStateData *, Http1::RequestParser &);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -2080,7 +2080,7 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
 }
 
 static void
-prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http::Http1Parser &hp)
+prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::RequestParser &hp)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
@@ -2172,7 +2172,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http::Http1
 }
 
 static void
-prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http::Http1Parser &hp)
+prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http1::RequestParser &hp)
 {
     static char ipbuf[MAX_IPSTRLEN];
 
@@ -2205,7 +2205,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http::Http1
  *  \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
  *          to 1 if the request was correctly parsed.
  *  \param[in] csd a ConnStateData. The caller must make sure it is not null
- *  \param[in] hp an Http::Http1Parser
+ *  \param[in] hp an Http1::RequestParser
  *  \param[out] mehtod_p will be set as a side-effect of the parsing.
  *          Pointed-to value will be set to Http::METHOD_NONE in case of
  *          parsing failure
@@ -2214,7 +2214,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http::Http1
  *          a ClientSocketContext structure on success or failure.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, Http::Http1Parser &hp)
+parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
 {
     /* NP: don't be tempted to move this down or remove again.
      * It's the only DDoS protection old-String has against long URL */
@@ -2591,7 +2591,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #endif // USE_SSL
 
 static void
-clientProcessRequest(ConnStateData *conn, Http::Http1Parser &hp, ClientSocketContext *context)
+clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocketContext *context)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2943,7 +2943,7 @@ ConnStateData::clientParseRequests()
         // a) dont have one already
         // b) have completed the previous request parsing already
         if (!parser_ || parser_->isDone())
-            parser_ = new Http::Http1Parser(in.buf, in.notYetUsed);
+            parser_ = new Http1::RequestParser(in.buf, in.notYetUsed);
         else // update the buffer space being parsed
             parser_->bufsiz = in.notYetUsed;
 
