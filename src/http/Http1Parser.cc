@@ -7,7 +7,7 @@
 #include "SquidConfig.h"
 
 void
-Http::Http1Parser::clear()
+Http1::RequestParser::clear()
 {
     completedState_ = HTTP_PARSE_NONE;
     request_parse_status = Http::scNone;
@@ -24,7 +24,7 @@ Http::Http1Parser::clear()
 }
 
 void
-Http::Http1Parser::reset(const char *aBuf, int len)
+Http1::RequestParser::reset(const char *aBuf, int len)
 {
     clear(); // empty the state.
     completedState_ = HTTP_PARSE_NEW;
@@ -52,7 +52,7 @@ Http::Http1Parser::reset(const char *aBuf, int len)
  * \return true if garbage whitespace was found
  */
 bool
-Http::Http1Parser::skipGarbageLines()
+Http1::RequestParser::skipGarbageLines()
 {
     req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
 
@@ -105,7 +105,7 @@ Http::Http1Parser::skipGarbageLines()
  * \retval  0  more data is needed to complete the parse
  */
 int
-Http::Http1Parser::parseRequestFirstLine()
+Http1::RequestParser::parseRequestFirstLine()
 {
     int second_word = -1; // track the suspected URI start
     int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
@@ -315,7 +315,7 @@ Http::Http1Parser::parseRequestFirstLine()
 }
 
 bool
-Http::Http1Parser::parseRequest()
+Http1::RequestParser::parseRequest()
 {
     // stage 1: locate the request-line
     if (completedState_ == HTTP_PARSE_NEW) {
@@ -369,7 +369,7 @@ Http::Http1Parser::parseRequest()
 #define GET_HDR_SZ	1024
 
 char *
-Http::Http1Parser::getHeaderField(const char *name)
+Http1::RequestParser::getHeaderField(const char *name)
 {
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const char *p = NULL;

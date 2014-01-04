@@ -15,12 +15,13 @@ typedef RefCount<HttpReply> HttpReplyPointer;
 
 namespace Http {
 
-class Http1Parser;
-typedef RefCount<Http1Parser> Http1ParserPointer;
-
-//class ParserBase;
-//typedef RefCount<Http::ParserBase> HttpParserPointer;
+namespace One {
+class RequestParser;
+typedef RefCount<Http::One::RequestParser> RequestParserPointer;
+} // namespace One
 
 } // namespace Http
+
+namespace Http1 = Http::One;
 
 #endif /* SQUID_SRC_HTTP_FORWARD_H */
