@@ -175,7 +175,16 @@ Http1::RequestParser::parseRequestFirstLine()
             return -1;
         }
     }
+
     if (req.end == -1) {
+        // DoS protection against long first-line
+        if ( (size_t)bufsiz >= Config.maxRequestHeaderSize) {
+            debugs(33, 5, "Too large request-line");
+            // XXX: return URL-too-log status code if second_whitespace is not yet found.
+            request_parse_status = Http::scHeaderTooLarge;
+            return -1;
+        }
+
         debugs(74, 5, "Parser: retval 0: from " << req.start <<
                "->" << req.end << ": needs more data to complete first line.");
         return 0;
@@ -185,6 +194,13 @@ Http1::RequestParser::parseRequestFirstLine()
     //     From here on any failure is -1, success is 1
 
     // Input Validation:
+
+    // DoS protection against long first-line
+    if ((size_t)(req.end-req.start) >= Config.maxRequestHeaderSize) {
+        debugs(33, 5, "Too large request-line");
+        request_parse_status = Http::scHeaderTooLarge;
+        return -1;
+    }
 
     // Process what we now know about the line structure into field offsets
     // generating HTTP status for any aborts as we go.
@@ -356,7 +372,12 @@ Http1::RequestParser::parse()
              */
             int64_t mimeHeaderBytes = 0;
             if ((mimeHeaderBytes = headersEnd(buf+parseOffset_, bufsiz-parseOffset_)) == 0) {
-                debugs(33, 5, "Incomplete request, waiting for end of headers");
+                if (bufsiz-parseOffset_ >= Config.maxRequestHeaderSize) {
+                    debugs(33, 5, "Too large request");
+                    request_parse_status = Http::scHeaderTooLarge;
+                    completedState_ = HTTP_PARSE_DONE;
+                } else
+                    debugs(33, 5, "Incomplete request, waiting for end of headers");
                 return false;
             }
             mimeHeaderBlock_.assign(&buf[req.end+1], mimeHeaderBytes);
@@ -367,6 +388,13 @@ Http1::RequestParser::parse()
         // NP: planned name for this stage is HTTP_PARSE_MIME
         // but we do not do any further stages here yet so go straight to DONE
         completedState_ = HTTP_PARSE_DONE;
+
+        // Squid could handle these headers, but admin does not want to
+        if (messageHeaderSize() >= Config.maxRequestHeaderSize) {
+            debugs(33, 5, "Too large request");
+            request_parse_status = Http::scHeaderTooLarge;
+            return false;
+        }
     }
 
     return isDone();

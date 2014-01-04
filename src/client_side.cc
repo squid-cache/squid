@@ -2216,17 +2216,6 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
 static ClientSocketContext *
 parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
 {
-    /* NP: don't be tempted to move this down or remove again.
-     * It's the only DDoS protection old-String has against long URL */
-    if ( hp.bufsiz <= 0) {
-        debugs(33, 5, "Incomplete request, waiting for end of request line");
-        return NULL;
-    } else if ( (size_t)hp.bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp.buf, Config.maxRequestHeaderSize) == 0) {
-        debugs(33, 5, "parseHttpRequest: Too large request");
-        hp.request_parse_status = Http::scHeaderTooLarge;
-        return parseHttpRequestAbort(csd, "error:request-too-large");
-    }
-
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
         const bool parsedOk = hp.parse();
@@ -2236,8 +2225,12 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
             return NULL;
         }
 
-        if (!parsedOk)
+        if (!parsedOk) {
+            if (hp.request_parse_status == Http::scHeaderTooLarge)
+                return parseHttpRequestAbort(csd, "error:request-too-large");
+
             return parseHttpRequestAbort(csd, "error:invalid-request");
+        }
     }
 
     /* We know the whole request is in hp.buf now */
@@ -2247,13 +2240,6 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     /* Will the following be true with HTTP/0.9 requests? probably not .. */
     /* So the rest of the code will need to deal with '0'-byte headers (ie, none, so don't try parsing em) */
     assert(req_sz > 0);
-
-    /* Enforce max_request_size */
-    if (req_sz >= Config.maxRequestHeaderSize) {
-        debugs(33, 5, "parseHttpRequest: Too large request");
-        hp.request_parse_status = Http::scHeaderTooLarge;
-        return parseHttpRequestAbort(csd, "error:request-too-large");
-    }
 
     /* deny CONNECT via accelerated ports */
     if (hp.method() == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
@@ -2455,27 +2441,6 @@ connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
 
     if (conn->in.notYetUsed > 0)
         memmove(conn->in.buf, conn->in.buf + byteCount, conn->in.notYetUsed);
-}
-
-/// respond with ERR_TOO_BIG if request header exceeds request_header_max_size
-void
-ConnStateData::checkHeaderLimits()
-{
-    if (in.notYetUsed < Config.maxRequestHeaderSize)
-        return; // can accumulte more header data
-
-    debugs(33, 3, "Request header is too large (" << in.notYetUsed << " > " <<
-           Config.maxRequestHeaderSize << " bytes)");
-
-    ClientSocketContext *context = parseHttpRequestAbort(this, "error:request-too-large");
-    clientStreamNode *node = context->getClientReplyContext();
-    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-    assert (repContext);
-    repContext->setReplyToError(ERR_TOO_BIG,
-                                Http::scBadRequest, Http::METHOD_NONE, NULL,
-                                clientConnection->remote, NULL, NULL, NULL);
-    context->registerWithConn();
-    context->pullData();
 }
 
 void
@@ -2950,14 +2915,6 @@ ConnStateData::clientParseRequests()
         /* Process request */
         ClientSocketContext *context = parseHttpRequest(this, *parser_);
         PROF_stop(parseHttpRequest);
-
-        /* partial or incomplete request */
-        if (!context) {
-            // TODO: why parseHttpRequest can just return parseHttpRequestAbort
-            // (which becomes context) but checkHeaderLimits cannot?
-            checkHeaderLimits();
-            break;
-        }
 
         /* status -1 or 1 */
         if (context) {

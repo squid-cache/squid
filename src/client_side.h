@@ -201,7 +201,6 @@ public:
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
     bool isOpen() const;
-    void checkHeaderLimits();
 
     // HttpControlMsgSink API
     virtual void sendControlMsg(HttpControlMsg msg);
