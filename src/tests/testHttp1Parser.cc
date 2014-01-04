@@ -25,6 +25,11 @@ testHttp1Parser::globalSetup()
 
     Mem::Init();
     setup_done = true;
+
+    // default to strict parser. set for loose parsing specifically where behaviour differs.
+    Config.onoff.relaxed_header_parser = 0;
+
+    Config.maxRequestHeaderSize = 1024; // XXX: unit test the RequestParser handling of this limit
 }
 
 void
