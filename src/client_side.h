@@ -399,7 +399,7 @@ private:
 #endif
 
     /// the parser state for current HTTP/1.x input buffer processing
-    Http::Http1ParserPointer parser_;
+    Http1::RequestParserPointer parser_;
 
 #if USE_SSL
     bool switchedToHttps_;

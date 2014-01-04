@@ -1,5 +1,5 @@
-#ifndef _SQUID_SRC_HTTP_HTTP1PARSER_H
-#define _SQUID_SRC_HTTP_HTTP1PARSER_H
+#ifndef _SQUID_SRC_HTTP_ONEREQUESTPARSER_H
+#define _SQUID_SRC_HTTP_ONEREQUESTPARSER_H
 
 #include "base/RefCount.h"
 #include "http/forward.h"
@@ -9,6 +9,7 @@
 #include "SBuf.h"
 
 namespace Http {
+namespace One {
 
 // Parser states
 #define HTTP_PARSE_NONE   0 // nothing. completely unset state.
@@ -25,12 +26,10 @@ namespace Http {
  * \item Request Line (method, URL, protocol, version)
  * \item Mime header block
  */
-class Http1Parser : public RefCountable
+class RequestParser : public RefCountable
 {
 public:
-    typedef RefCount<Http1Parser> Pointer;
-
-    Http1Parser() { clear(); }
+    RequestParser() { clear(); }
 
     /** Initialize a new parser.
      * Presenting it a buffer to work on and the current length of available
@@ -38,7 +37,7 @@ public:
      * NOTE: This is *not* the buffer size, just the parse-able data length.
      * The parse routines may be called again later with more data.
      */
-    Http1Parser(const char *aBuf, int len) { reset(aBuf,len); };
+    RequestParser(const char *aBuf, int len) { reset(aBuf,len); };
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
@@ -131,6 +130,7 @@ private:
     SBuf mimeHeaderBlock_;
 };
 
+} // namespace One
 } // namespace Http
 
 #endif /*  _SQUID_SRC_HTTP_HTTP1PARSER_H */

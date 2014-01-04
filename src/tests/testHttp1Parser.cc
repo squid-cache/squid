@@ -34,7 +34,7 @@ testHttp1Parser::testParseRequestLineProtocols()
     globalSetup();
 
     MemBuf input;
-    Http::Http1Parser output;
+    Http1::RequestParser output;
     input.init();
 
     // TEST: Do we comply with RFC 1945 section 5.1 ?
@@ -384,7 +384,7 @@ testHttp1Parser::testParseRequestLineStrange()
     globalSetup();
 
     MemBuf input;
-    Http::Http1Parser output;
+    Http1::RequestParser output;
     input.init();
 
     // space padded URL
@@ -473,7 +473,7 @@ testHttp1Parser::testParseRequestLineTerminators()
     globalSetup();
 
     MemBuf input;
-    Http::Http1Parser output;
+    Http1::RequestParser output;
     input.init();
 
     // alternative EOL sequence: NL-only
@@ -687,7 +687,7 @@ testHttp1Parser::testParseRequestLineMethods()
     globalSetup();
 
     MemBuf input;
-    Http::Http1Parser output;
+    Http1::RequestParser output;
     input.init();
 
     // RFC 2616 : . method
@@ -896,7 +896,7 @@ testHttp1Parser::testParseRequestLineInvalid()
     globalSetup();
 
     MemBuf input;
-    Http::Http1Parser output;
+    Http1::RequestParser output;
     input.init();
 
     // no method (but in a form which is ambiguous with HTTP/0.9 simple-request)
@@ -1184,7 +1184,7 @@ testHttp1Parser::testDripFeed()
     int reqLineEnd = mb.contentSize();
     mb.append("Host: example.com\r\n\r\n.", 22);
 
-    Http::Http1Parser hp(mb.content(), 0);
+    Http1::RequestParser hp(mb.content(), 0);
 
     // only relaxed parser accepts the garbage whitespace
     Config.onoff.relaxed_header_parser = 1;
