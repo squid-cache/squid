@@ -92,8 +92,6 @@ public:
     /// the request-line URI if this is a request message, or an empty string.
     const SBuf &requestUri() const {return uri_;}
 
-    // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
-
     /** HTTP status code to be used on the invalid-request error page
      * Http::scNone indicates incomplete parse, Http::scOkay indicates no error.
      */
