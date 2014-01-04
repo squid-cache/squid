@@ -40,6 +40,44 @@ Http1::Parser::reset(const char *aBuf, int len)
     debugs(74, DBG_DATA, "Parse " << Raw("buf", buf, bufsiz));
 }
 
+void
+Http1::RequestParser::noteBufferShift(int64_t n)
+{
+    bufsiz -= n;
+
+    // if parsing done, ignore buffer changes.
+    if (completedState_ == HTTP_PARSE_DONE)
+        return;
+
+    // shift the parser resume point to match buffer content
+    parseOffset_ -= n;
+
+#if WHEN_INCREMENTAL_PARSING
+
+    // if have not yet finished request-line
+    if (completedState_ == HTTP_PARSE_NEW) {
+        // check for and adjust the known request-line offsets.
+
+        /* TODO: when the first-line is parsed incrementally we
+         * will need to recalculate the offsets for req.*
+         * For now, they are all re-calculated based on parserOffset_
+         * with each parse attempt.
+         */
+    }
+
+    // if finished request-line but not mime header
+    // adjust the mime header states
+    if (completedState_ == HTTP_PARSE_FIRST) {
+        /* TODO: when the mime-header is parsed incrementally we
+         * will need to store the initial offset of mime-header block
+         * instead of locatign it from req.end or parseOffset_.
+         * Since req.end may no longer be valid, and parseOffset_ may
+         * have moved into the mime-block interior.
+         */
+    }
+#endif
+}
+
 /**
  * Attempt to parse the first line of a new request message.
  *
@@ -343,7 +381,7 @@ Http1::RequestParser::parse()
     // stage 1: locate the request-line
     if (completedState_ == HTTP_PARSE_NEW) {
         if (skipGarbageLines() && (size_t)bufsiz < parseOffset_)
-            return 0;
+            return false;
     }
 
     // stage 2: parse the request-line
