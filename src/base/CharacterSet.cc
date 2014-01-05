@@ -60,7 +60,6 @@ CharacterSet::ALPHA("ALPHA", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 CharacterSet::BIT("BIT","01"),
 CharacterSet::CR("CR","\r"),
 CharacterSet::LF("LF","\n"),
-CharacterSet::CRLF("CRLF","\r\n"),
 CharacterSet::DIGIT("DIGIT","0123456789"),
 CharacterSet::DQUOTE("DQUOTE","\""),
 CharacterSet::HTAB("HTAB","\t"),
@@ -70,6 +69,7 @@ CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
 CharacterSet::WSP("WSP"," \t"),
 CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
 CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}")
+// QDTEXT and OBSTEXT are omitted for now as they require c++11 constructors
 //,CharacterSet::QDTEXT("QDTEXT",{{9,9},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}})
 //,CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff)
 ;
