@@ -58,6 +58,7 @@ typedef enum {
     /* original Request-Line details recieved from client */
     LFT_CLIENT_REQ_METHOD,
     LFT_CLIENT_REQ_URI,
+    LFT_CLIENT_REQ_URLDOMAIN,
     LFT_CLIENT_REQ_URLPATH,
     /* LFT_CLIENT_REQ_QUERY, */
     LFT_CLIENT_REQ_VERSION,

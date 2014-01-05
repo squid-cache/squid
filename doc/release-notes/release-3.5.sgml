@@ -95,7 +95,18 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
-	<p><em>There are no removed squid.conf directives in Squid-3.5.</em>
+	<tag>collapsed_forwarding</tag>
+	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
+           Collapsing of requests is performed across SMP workers.
+
+	<tag>send_hit</tag>
+	<p>New configuration directive to enable/disable sending cached content
+	   based on ACL selection. ACL can be based on client request or cached
+	   response details.
+
+	<tag>store_miss</tag>
+	<p>New configuration directive to enable/disable caching of MISS responses.
+	   ACL can be based on any request or response details.
 
 </descrip>
 
@@ -209,9 +220,6 @@ This section gives an account of those changes in three categories:
 	<p><em>monitorurl=</em> not yet ported from 2.6
 
 	<tag>cache_vary</tag>
-	<p>Not yet ported from 2.6
-
-	<tag>collapsed_forwarding</tag>
 	<p>Not yet ported from 2.6
 
 	<tag>error_map</tag>

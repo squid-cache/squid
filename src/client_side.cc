@@ -195,9 +195,6 @@ static void clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId
 CBDATA_CLASS_INIT(ClientSocketContext);
 
 /* Local functions */
-/* ClientSocketContext */
-static ClientSocketContext *ClientSocketContextNew(const Comm::ConnectionPointer &clientConn, ClientHttpRequest *);
-/* other */
 static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
 static IOACB httpAccept;
@@ -338,27 +335,21 @@ ClientSocketContext::connIsFinished()
     clientStreamDetach(getTail(), http);
 }
 
-ClientSocketContext::ClientSocketContext() : http(NULL), reply(NULL), next(NULL),
+ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
+        clientConnection(aConn),
+        http(aReq),
+        reply(NULL),
+        next(NULL),
         writtenToSocket(0),
         mayUseConnection_ (false),
         connRegistered_ (false)
 {
+    assert(http != NULL);
     memset (reqbuf, '\0', sizeof (reqbuf));
     flags.deferred = 0;
     flags.parsed_ok = 0;
     deferredparams.node = NULL;
     deferredparams.rep = NULL;
-}
-
-ClientSocketContext *
-ClientSocketContextNew(const Comm::ConnectionPointer &client, ClientHttpRequest * http)
-{
-    ClientSocketContext *newContext;
-    assert(http != NULL);
-    newContext = new ClientSocketContext;
-    newContext->http = http;
-    newContext->clientConnection = client;
-    return newContext;
 }
 
 void
@@ -1980,7 +1971,7 @@ parseHttpRequestAbort(ConnStateData * csd, const char *uri)
     http->req_sz = csd->in.notYetUsed;
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    context = ClientSocketContextNew(csd->clientConnection, http);
+    context = new ClientSocketContext(csd->clientConnection, http);
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
@@ -2264,7 +2255,7 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     ClientHttpRequest *http = new ClientHttpRequest(csd);
 
     http->req_sz = hp.messageHeaderSize();
-    ClientSocketContext *result = ClientSocketContextNew(csd->clientConnection, http);
+    ClientSocketContext *result = new ClientSocketContext(csd->clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
