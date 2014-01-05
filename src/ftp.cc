@@ -3263,7 +3263,7 @@ void
 FtpStateData::completedListing()
 {
     assert(entry);
-    entry->lock();
+    entry->lock("FtpStateData");
     ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request);
     ferr.ftp.listing = &listing;
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
@@ -3272,7 +3272,7 @@ FtpStateData::completedListing()
     entry->replaceHttpReply( ferr.BuildHttpReply() );
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
-    entry->unlock();
+    entry->unlock("FtpStateData");
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -3690,7 +3690,7 @@ FtpStateData::haveParsedReplyHeaders()
          * Authenticated requests can't be cached.
          */
         e->release();
-    } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !getCurrentOffset()) {
+    } else if (!EBIT_TEST(e->flags, RELEASE_REQUEST) && !getCurrentOffset()) {
         e->setPublicKey();
     } else {
         e->release();

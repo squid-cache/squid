@@ -167,7 +167,16 @@ testRock::storeInit()
      */
 
     /* nothing left to rebuild */
-    CPPUNIT_ASSERT_EQUAL(1, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
+}
+
+static const char *
+storeId(const int i)
+{
+    static char buf[64];
+    snprintf(buf, sizeof(buf), "dummy url %i", i);
+    buf[sizeof(buf) - 1] = '\0';
+    return buf;
 }
 
 StoreEntry *
@@ -175,11 +184,8 @@ testRock::createEntry(const int i)
 {
     RequestFlags flags;
     flags.cachable = true;
-    char url[64];
-    snprintf(url, sizeof(url), "dummy url %i", i);
-    url[sizeof(url) - 1] = '\0';
     StoreEntry *const pe =
-        storeCreateEntry(url, "dummy log url", flags, Http::METHOD_GET);
+        storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
     HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
     rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
@@ -213,8 +219,7 @@ testRock::addEntry(const int i)
 StoreEntry *
 testRock::getEntry(const int i)
 {
-    StoreEntry *const pe = createEntry(i);
-    return store->get(reinterpret_cast<const cache_key *>(pe->key));
+    return storeGetPublic(storeId(i), Http::METHOD_GET);
 }
 
 void
@@ -251,7 +256,7 @@ testRock::testRockSwapOut()
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
 
-        pe->unlock();
+        pe->unlock("testRock::testRockSwapOut priming");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)5, store->currentCount());
@@ -268,6 +273,8 @@ testRock::testRockSwapOut()
         loop.run();
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
+
+        pe->unlock("testRock::testRockSwapOut e#4");
     }
 
     // try to swap out entry to a used locked slot
@@ -287,16 +294,29 @@ testRock::testRockSwapOut()
 
         StockEventLoop loop;
         loop.run();
+
+        pe->unlock("testRock::testRockSwapOut e#5.1");
+        pe2->unlock("testRock::testRockSwapOut e#5.2");
+
+        // pe2 has the same public key as pe so it marks old pe for release
+        // here, we add another entry #5 into the now-available slot
+        StoreEntry *const pe3 = addEntry(5);
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_WRITING, pe3->swap_status);
+        CPPUNIT_ASSERT_EQUAL(0, pe3->swap_dirn);
+        CPPUNIT_ASSERT(pe3->swap_filen >= 0);
+        loop.run();
+        CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe3->swap_status);
+        pe3->unlock("testRock::testRockSwapOut e#5.3");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)6, store->currentCount());
 
-    // try to get and unlink entries
+    // try to get and release all entries
     for (int i = 0; i < 6; ++i) {
         StoreEntry *const pe = getEntry(i);
         CPPUNIT_ASSERT(pe != NULL);
 
-        pe->unlink();
+        pe->release(); // destroys pe
 
         StoreEntry *const pe2 = getEntry(i);
         CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);

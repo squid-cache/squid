@@ -240,7 +240,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     stale_flags sf;
 
     if (entry->mem_obj)
-        uri = entry->mem_obj->url;
+        uri = entry->mem_obj->storeId();
     else if (request)
         uri = urlCanonical(request);
 
