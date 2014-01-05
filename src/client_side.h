@@ -83,7 +83,7 @@ class ClientSocketContext : public RefCountable
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
-    ClientSocketContext();
+    ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
     ~ClientSocketContext();
     bool startOfOutput() const;
     void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
