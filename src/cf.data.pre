@@ -3761,6 +3761,7 @@ DOC_START
 		[http::]ru	Request URL from client (historic, filtered for logging)
 		[http::]>ru	Request URL from client
 		[http::]<ru	Request URL sent to server or peer
+		[http::]>rd	Request URL domain from client
 		[http::]rp	Request URL-Path excluding hostname
 		[http::]>rp	Request URL-Path excluding hostname from client
 		[http::]<rp	Request URL-Path excluding hostname sent to server or peer
