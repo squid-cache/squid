@@ -4,8 +4,8 @@
 #define STUB_API "client_side.cc"
 #include "tests/STUB.h"
 
-ClientSocketContext::ClientSocketContext() STUB
-ClientSocketContext::~ClientSocketContext() STUB
+//ClientSocketContext::ClientSocketContext(const ConnectionPointer&, ClientHttpRequest*) STUB
+//ClientSocketContext::~ClientSocketContext() STUB
 bool ClientSocketContext::startOfOutput() const STUB_RETVAL(false)
 void ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag) STUB
 void ClientSocketContext::keepaliveNextRequest() STUB

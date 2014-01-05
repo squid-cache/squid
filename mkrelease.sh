@@ -66,7 +66,7 @@ g/squid_curtime/ s//${RELEASE_TIME}/
 w
 EOS
 
-./configure --silent
+./configure --silent --enable-translation
 make dist-all
 
 cd $startdir

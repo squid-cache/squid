@@ -1127,11 +1127,9 @@ SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
 AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
     SNMPLIB='../lib/snmplib/libsnmplib.la'
-    makesnmplib=snmplib
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
 AC_SUBST(SNMPLIB)
-AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(cachemgr-hostname,
   AS_HELP_STRING([--enable-cachemgr-hostname=hostname],
@@ -3324,15 +3322,14 @@ if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
 fi
 
 
-dnl Squid will usually attempt to translate when packaging or building from VCS 
+dnl Squid will not usually attempt to translate templates when building
 AC_ARG_ENABLE(translation,
- AS_HELP_STRING([--disable-translation],[Prevent Squid generating localized error page templates and manuals.
-		 Which is usually tried, but may not be needed.]), [ 
-SQUID_YESNO([$enableval],
-     [unrecognized argument to --disable-translation: $enableval])
+ AS_HELP_STRING([--enable-translation],[Generate the localized error page templates and manuals.
+		 Which can also be downloaded from http://www.squid-cache.org/Versions/langpack/.]), [ 
+  SQUID_YESNO([$enableval],
+     [unrecognized argument to --enable-translation: $enableval])
 ])
-dnl Squid now has .po translation capability, given the right toolkit
-if test "x${enable_translation:=yes}" = "xyes" ; then
+if test "x${enable_translation:=no}" = "xyes" ; then
   AX_WITH_PROG([PO2HTML],[po2html])
   AX_WITH_PROG([PO2TEXT],[po2txt])
 else
