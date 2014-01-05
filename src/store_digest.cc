@@ -224,11 +224,6 @@ storeDigestAddable(const StoreEntry * e)
 
     /* check various entry flags (mimics StoreEntry::checkCachable XXX) */
 
-    if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
-        debugs(71, 6, "storeDigestAddable: NO: not cachable");
-        return 0;
-    }
-
     if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
         debugs(71, 6, "storeDigestAddable: NO: private key");
         return 0;
@@ -447,7 +442,7 @@ storeDigestRewriteFinish(StoreEntry * e)
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
-    e->unlock();
+    e->unlock("storeDigestRewriteFinish");
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)

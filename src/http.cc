@@ -188,6 +188,8 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     serverConnection->close();
 }
 
+/// Remove an existing public store entry if the incoming response (to be
+/// stored in a currently private entry) is going to invalidate it.
 static void
 httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 {
@@ -195,6 +197,8 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     int forbidden = 0;
     StoreEntry *pe;
 
+    // If the incoming response already goes into a public entry, then there is
+    // nothing to remove. This protects ready-for-collapsing entries as well.
     if (!EBIT_TEST(e->flags, KEY_PRIVATE))
         return;
 
@@ -255,7 +259,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (e->mem_obj->request)
         pe = storeGetPublicByRequest(e->mem_obj->request);
     else
-        pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method);
+        pe = storeGetPublic(e->mem_obj->storeId(), e->mem_obj->method);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -272,7 +276,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (e->mem_obj->request)
         pe = storeGetPublicByRequestMethod(e->mem_obj->request, Http::METHOD_HEAD);
     else
-        pe = storeGetPublic(e->mem_obj->url, Http::METHOD_HEAD);
+        pe = storeGetPublic(e->mem_obj->storeId(), Http::METHOD_HEAD);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -335,11 +339,16 @@ HttpStateData::cacheableReply()
      * condition
      */
 #define REFRESH_OVERRIDE(flag) \
-    ((R = (R ? R : refreshLimits(entry->mem_obj->url))) , \
+    ((R = (R ? R : refreshLimits(entry->mem_obj->storeId()))) , \
     (R && R->flags.flag))
 #else
 #define REFRESH_OVERRIDE(flag) 0
 #endif
+
+    if (EBIT_TEST(entry->flags, RELEASE_REQUEST)) {
+        debugs(22, 3, "NO because " << *entry << " has been released.");
+        return 0;
+    }
 
     // Check for Surrogate/1.0 protocol conditions
     // NP: reverse-proxy traffic our parent server has instructed us never to cache
@@ -700,7 +709,7 @@ HttpStateData::processReplyHeader()
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
     /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
+    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
 
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
@@ -910,7 +919,7 @@ HttpStateData::haveParsedReplyHeaders()
 {
     ServerStateData::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
+    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
 
     entry->timestampsSet();

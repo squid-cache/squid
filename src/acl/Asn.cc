@@ -125,7 +125,7 @@ ASState::~ASState()
 {
     debugs(53, 3, entry->url());
     storeUnregister(sc, entry, this);
-    entry->unlock();
+    entry->unlock("~ASState");
 }
 
 /** entry into the radix tree */
@@ -273,7 +273,7 @@ asnCacheStart(int as)
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request.getRaw());
     } else {
-        e->lock();
+        e->lock("Asn");
         asState->sc = storeClientListAdd(e, asState);
     }
 

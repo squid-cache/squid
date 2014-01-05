@@ -130,12 +130,6 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
-NAME: collapsed_forwarding
-TYPE: obsolete
-DOC_START
-	This option is not yet supported by Squid-3. see http://bugs.squid-cache.org/show_bug.cgi?id=3495
-DOC_END
-
 NAME: error_map
 TYPE: obsolete
 DOC_START
@@ -3438,13 +3432,11 @@ DOC_START
 	====  The rock store type  ====
 
 	Usage:
-	    cache_dir rock Directory-Name Mbytes <max-size=bytes> [options]
+	    cache_dir rock Directory-Name Mbytes [options]
 
 	The Rock Store type is a database-style storage. All cached
-	entries are stored in a "database" file, using fixed-size slots,
-	one entry per slot. The database size is specified in MB. The
-	slot size is specified in bytes using the max-size option. See
-	below for more info on the max-size option.
+	entries are stored in a "database" file, using fixed-size slots.
+	A single entry occupies one or more slots.
 
 	If possible, Squid using Rock Store creates a dedicated kid
 	process called "disker" to avoid blocking Squid worker(s) on disk
@@ -3474,6 +3466,16 @@ DOC_START
 	when disk demand exceeds available disk "bandwidth". By default
 	and when set to zero, disables the disk I/O rate limit
 	enforcement. Currently supported by IpcIo module only.
+
+	slot-size=bytes: The size of a database "record" used for
+	storing cached responses. A cached response occupies at least
+	one slot and all database I/O is done using individual slots so
+	increasing this parameter leads to more disk space waste while
+	decreasing it leads to more disk I/O overheads. Should be a
+	multiple of your operating system I/O page size. Defaults to
+	16KBytes. A housekeeping header is stored with each slot and
+	smaller slot-sizes will be rejected. The header is smaller than
+	100 bytes.
 
 
 	==== COMMON OPTIONS ====
@@ -5700,6 +5702,25 @@ DOC_START
 
 	If set to "off" then such HTTP errors will cause the request
 	or response to be rejected.
+DOC_END
+
+NAME: collapsed_forwarding
+COMMENT: (on|off)
+TYPE: onoff
+LOC: Config.onoff.collapsed_forwarding
+DEFAULT: off
+DOC_START
+       This option controls whether Squid is allowed to merge multiple
+       potentially cachable requests for the same URI before Squid knows
+       whether the response is going to be cachable.
+
+       This feature is disabled by default: Enabling collapsed forwarding
+       needlessly delays forwarding requests that look cachable (when they are
+       collapsed) but then need to be forwarded individually anyway because
+       they end up being for uncachable content. However, in some cases, such
+       as accelleration of highly cachable content with periodic or groupped
+       expiration times, the gains from collapsing [large volumes of
+       simultenous refresh requests] outweigh losses from such delays.
 DOC_END
 
 COMMENT_START
