@@ -6,12 +6,14 @@ namespace Parser {
 bool
 Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 {
-    const SBuf::size_type endOfPreWhiteSpace = buf_.findFirstNotOf(whitespace);
-    const SBuf::size_type endOfToken = buf_.findFirstOf(whitespace, endOfPreWhiteSpace);
-    if (endOfToken == SBuf::npos)
+    SBuf savebuf(buf_);
+    SBuf saveRetVal(returnedToken);
+    skip(whitespace); // skip
+    if (!(prefix(returnedToken,whitespace))) {
+        buf_=savebuf;
+        returnedToken=saveRetVal;
         return false;
-    buf_.consume(endOfPreWhiteSpace);
-    returnedToken = buf_.consume(endOfToken - endOfPreWhiteSpace);
+    }
     skip(whitespace);
     return true;
 }
