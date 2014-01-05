@@ -2566,10 +2566,15 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         assert (repContext);
         switch (hp.request_parse_status) {
         case Http::scHeaderTooLarge:
-            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri,
+                                        conn->clientConnection->remote, NULL, conn->in.buf, NULL);
             break;
         case Http::scMethodNotAllowed:
             repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
+                                        conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+            break;
+        case Http::scHttpVersionNotSupported:
+            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf, NULL);
             break;
         default:
@@ -2590,25 +2595,6 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        goto finish;
-    }
-
-    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
-    /* We currently only support 0.9, 1.0, 1.1 properly */
-    if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-            (http_ver.major > 1) ) {
-
-        clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Unsupported HTTP version discovered. :\n" << hp.messageProtocol());
-        conn->quitAfterError(request.getRaw());
-        // setLogUri should called before repContext->setReplyToError
-        setLogUri(http, http->uri,  true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
-                                    conn->clientConnection->remote, NULL, hp.rawHeaderBuf(), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;

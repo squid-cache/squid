@@ -366,6 +366,13 @@ Http1::RequestParser::parseRequestFirstLine()
     }
     msgProtocol_.minor = min;
 
+    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+    /* We currently only support 0.9, 1.0, 1.1 properly in this parser */
+    if ((maj == 0 && min != 9) || (maj > 1)) {
+        request_parse_status = Http::scHttpVersionNotSupported;
+        return -1;
+    }
+
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
