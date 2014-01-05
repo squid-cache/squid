@@ -108,7 +108,7 @@ ps_state::~ps_state()
 
     if (entry) {
         assert(entry->ping_status != PING_WAITING);
-        entry->unlock();
+        entry->unlock("peerSelect");
         entry = NULL;
     }
 
@@ -173,7 +173,7 @@ peerSelect(Comm::ConnectionList * paths,
 #endif
 
     if (psstate->entry)
-        psstate->entry->lock();
+        psstate->entry->lock("peerSelect");
 
     peerSelectFoo(psstate);
 }

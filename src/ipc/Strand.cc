@@ -7,6 +7,7 @@
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
+#include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "globals.h"
 #include "ipc/Kids.h"
@@ -88,6 +89,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         handleCacheMgrResponse(resp);
     }
     break;
+
+    case mtCollapsedForwardingNotification:
+        CollapsedForwarding::HandleNotification(message);
+        break;
 
 #if SQUID_SNMP
     case mtSnmpRequest: {
