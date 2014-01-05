@@ -313,7 +313,7 @@ mem_hdr::hasContigousContentRange(Range<int64_t> const & range) const
             return true;
     }
 
-    return false;
+    return !range.size(); // empty range is contigous
 }
 
 bool

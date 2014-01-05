@@ -440,7 +440,7 @@ MimeIcon::created (StoreEntry *newEntry)
     e->flush();
     e->complete();
     e->timestampsSet();
-    e->unlock();
+    e->unlock("MimeIcon::created");
     memFree(buf, MEM_4K_BUF);
     debugs(25, 3, "Loaded icon " << url_);
 }

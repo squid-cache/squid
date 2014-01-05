@@ -16,6 +16,7 @@ typedef enum { mtNone = 0, mtRegistration,
                mtStrandSearchRequest, mtStrandSearchResponse,
                mtSharedListenRequest, mtSharedListenResponse,
                mtIpcIoNotification,
+               mtCollapsedForwardingNotification,
                mtCacheMgrRequest, mtCacheMgrResponse
 #if SQUID_SNMP
                ,

@@ -152,8 +152,6 @@ public:
 
     /**
      * The last time that a client requested this object.
-     * Strictly speaking, this time is set whenever the StoreEntry
-     * is locked (via storeLockObject()).
      */
     SwappedTime lastref;
 
