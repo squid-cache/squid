@@ -95,6 +95,13 @@ public:
         return isAppendOffset(off) && willFit(n);
     }
 
+    /** adjusts internal object state as if exactly n bytes were append()ed
+     *
+     * \throw TextException if there was not enough space in the blob
+     * \param n the number of bytes that were appended
+     */
+    void appended(const size_type n);
+
     /** copies exactly n bytes from the source to the available space area,
      *  enlarging the used area by n bytes
      *

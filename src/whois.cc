@@ -89,7 +89,7 @@ whoisStart(FwdState * fwd)
     p->fwd = fwd;
     p->dataWritten = false;
 
-    p->entry->lock();
+    p->entry->lock("whoisStart");
     comm_add_close_handler(fwd->serverConnection()->fd, whoisClose, p);
 
     l = p->request->urlpath.size() + 3;
@@ -185,8 +185,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     entry->timestampsSet();
     entry->flush();
 
-    if (!EBIT_TEST(entry->flags, RELEASE_REQUEST))
-        entry->setPublicKey();
+    entry->makePublic();
 
     fwd->complete();
     debugs(75, 3, "whoisReadReply: Done: " << entry->url());
@@ -198,6 +197,6 @@ whoisClose(const CommCloseCbParams &params)
 {
     WhoisState *p = (WhoisState *)params.data;
     debugs(75, 3, "whoisClose: FD " << params.fd);
-    p->entry->unlock();
+    p->entry->unlock("whoisClose");
     delete p;
 }
