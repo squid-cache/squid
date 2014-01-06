@@ -13,7 +13,7 @@ typedef std::vector<ACL*> Nodes; ///< a collection of nodes
 class InnerNode: public ACL
 {
 public:
-    virtual ~InnerNode();
+    // No ~InnerNode() to delete children. They are aclRegister()ed instead.
 
     /// Resumes matching (suspended by an async call) at the given position.
     bool resumeMatchingAt(ACLChecklist *checklist, Acl::Nodes::const_iterator pos) const;
