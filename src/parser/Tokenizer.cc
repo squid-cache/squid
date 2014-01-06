@@ -8,7 +8,7 @@ Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 {
     SBuf savebuf(buf_);
     SBuf saveRetVal(returnedToken);
-    skip(whitespace); // skip
+    skip(whitespace);
     if (!(prefix(returnedToken,whitespace))) {
         buf_=savebuf;
         returnedToken=saveRetVal;
