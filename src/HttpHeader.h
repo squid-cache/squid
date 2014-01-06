@@ -234,7 +234,7 @@ public:
     void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
     void compact();
     int reset();
-    int parse(const char *header_start, const char *header_end);
+    int parse(const char *header_start, size_t len);
     void packInto(Packer * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(http_hdr_type id) const;

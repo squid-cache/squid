@@ -122,8 +122,6 @@ protected:
     virtual void hdrCacheInit();
 };
 
-int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
-
 #define HTTPMSGUNLOCK(a) if (a) { if ((a)->unlock() == 0) delete (a); (a)=NULL; }
 #define HTTPMSGLOCK(a) (a)->lock()
 
