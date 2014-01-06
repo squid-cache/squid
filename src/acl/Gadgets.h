@@ -13,6 +13,9 @@ class dlink_list;
 class StoreEntry;
 class wordlist;
 
+/// Register an ACL object for future deletion. Repeated registrations are OK.
+/// \ingroup ACLAPI
+void aclRegister(ACL *acl);
 /// \ingroup ACLAPI
 void aclDestroyAccessList(acl_access **list);
 /// \ingroup ACLAPI
