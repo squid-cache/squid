@@ -41,6 +41,7 @@
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
+#include "http/Http1Parser.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
@@ -358,15 +359,13 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     return true;
 }
 
-int
-HttpRequest::parseHeader(const char *parse_start, int len)
+bool
+HttpRequest::parseHeader(Http1::RequestParser &hp)
 {
-    const char *blk_start, *blk_end;
+    if (!hp.headerBlockSize())
+        return false;
 
-    if (!httpMsgIsolateHeaders(&parse_start, len, &blk_start, &blk_end))
-        return 0;
-
-    int result = header.parse(blk_start, blk_end);
+    bool result = header.parse(hp.rawHeaderBuf(), hp.headerBlockSize());
 
     if (result)
         hdrCacheInit();
