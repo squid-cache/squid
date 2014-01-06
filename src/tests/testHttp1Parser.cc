@@ -176,9 +176,9 @@ testHttp1Parser::testParseRequestLineProtocols()
         input.append("GET / HTTP/10.12\r\n", 18);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse()); // BUG: declares true
+        CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
+        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
         CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/10.12\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
