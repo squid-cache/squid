@@ -545,9 +545,10 @@ HttpHeader::reset()
 }
 
 int
-HttpHeader::parse(const char *header_start, const char *header_end)
+HttpHeader::parse(const char *header_start, size_t hdrLen)
 {
     const char *field_ptr = header_start;
+    const char *header_end = header_start + hdrLen; // XXX: remove
     HttpHeaderEntry *e, *e2;
     bool warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
@@ -558,7 +559,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
     ++ HttpHeaderStats[owner].parsedCount;
 
     char *nulpos;
-    if ((nulpos = (char*)memchr(header_start, '\0', header_end - header_start))) {
+    if ((nulpos = (char*)memchr(header_start, '\0', hdrLen))) {
         debugs(55, DBG_IMPORTANT, "WARNING: HTTP header contains NULL characters {" <<
                getStringPrefix(header_start, nulpos) << "}\nNULL\n{" << getStringPrefix(nulpos+1, header_end));
         PROF_stop(HttpHeaderParse);

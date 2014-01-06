@@ -2601,7 +2601,7 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
     }
 
     /* compile headers */
-    if (http_ver.major >= 1 && !request->parseHeader(hp.rawHeaderBuf(), hp.headerBlockSize())) {
+    if (http_ver.major >= 1 && !request->parseHeader(hp)) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << hp.rawHeaderBuf());
         conn->quitAfterError(request.getRaw());
