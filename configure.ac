@@ -1127,11 +1127,9 @@ SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
 AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
     SNMPLIB='../lib/snmplib/libsnmplib.la'
-    makesnmplib=snmplib
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
 AC_SUBST(SNMPLIB)
-AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(cachemgr-hostname,
   AS_HELP_STRING([--enable-cachemgr-hostname=hostname],
