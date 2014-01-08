@@ -1,11 +1,14 @@
 include $(top_srcdir)/src/Common.am
 
 DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
-SUBDIRS=$(makesnmplib)
+SUBDIRS=
 EXTRA_DIST=
 
 if USE_ESI
 SUBDIRS += libTrie
+endif
+if ENABLE_SNMP
+SUBDIRS += snmplib
 endif
 if ENABLE_XPROF_STATS
 SUBDIRS += profiler
