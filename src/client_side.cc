@@ -6201,7 +6201,7 @@ FtpSetReply(ClientSocketContext *context, const int code, const char *msg)
     header.putStr(HDR_FTP_REASON, msg);
     reply->hdrCacheInit();
 
-    setLogUri(http, http->uri);
+    setLogUri(http, urlCanonicalClean(http->request));
 
     clientStreamNode *const node = context->getClientReplyContext();
     clientReplyContext *const repContext =
