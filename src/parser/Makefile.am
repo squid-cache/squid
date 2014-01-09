@@ -28,7 +28,6 @@ SBUF_SOURCE= \
 	$(top_srcdir)/src/base/TextException.cc
 
 testTokenizer_SOURCES = \
-	CharacterSet.h \
 	$(SBUF_SOURCE) \
 	testTokenizer.h \
 	testTokenizer.cc \
