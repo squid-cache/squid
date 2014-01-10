@@ -110,7 +110,8 @@ CollapsedForwarding::HandleNewData(const char *const when)
         debugs(17, 7, "handled entry " << msg.xitIndex << " in transients_map");
 
         // XXX: stop and schedule an async call to continue
-        assert(++poppedCount < SQUID_MAXFD);
+        ++poppedCount;
+        assert(poppedCount < SQUID_MAXFD);
     }
 }
 
