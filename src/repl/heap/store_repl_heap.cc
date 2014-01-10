@@ -221,7 +221,7 @@ heap_purgeNext(RemovalPurgeWalker * walker)
 
 try_again:
 
-    if (!heap_nodes(h->theHeap) > 0)
+    if (heap_empty(h->theHeap))
         return NULL;		/* done */
 
     age = heap_peepminkey(h->theHeap);
