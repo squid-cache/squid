@@ -80,7 +80,7 @@ Acl::InnerNode::match(ACLChecklist *checklist)
 }
 
 bool
-Acl::InnerNode::resumeMatchingAt(ACLChecklist *checklist, Nodes::const_iterator pos) const
+Acl::InnerNode::resumeMatchingAt(ACLChecklist *checklist, Acl::Nodes::const_iterator pos) const
 {
     debugs(28, 5, "checking " << name << " at " << (pos-nodes.begin()));
     const int result = doMatch(checklist, pos);

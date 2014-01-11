@@ -62,7 +62,7 @@ ACLSslErrorData::match(const Ssl::CertErrors *toFind)
 }
 
 /* explicit instantiation required for some systems */
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 // AYJ: 2009-05-20 : Removing. clashes with template <int> instantiation for other ACLs.
 // template cbdata_type Ssl::Errors::CBDATA_CbDataList;
 /** \endcond */

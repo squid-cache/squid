@@ -711,7 +711,7 @@ bool Adaptation::Icap::ServiceRep::detached() const
     return isDetached;
 }
 
-Adaptation::Icap::ConnWaiterDialer::ConnWaiterDialer(const CbcPointer<ModXact> &xact,
+Adaptation::Icap::ConnWaiterDialer::ConnWaiterDialer(const CbcPointer<Adaptation::Icap::ModXact> &xact,
         Adaptation::Icap::ConnWaiterDialer::Parent::Method aHandler):
         Parent(xact, aHandler)
 {

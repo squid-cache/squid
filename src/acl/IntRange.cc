@@ -40,7 +40,7 @@
 #include "wordlist.h"
 
 /* explicit instantiation required for some systems */
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 template cbdata_type CbDataList< Range<int> >::CBDATA_CbDataList;
 /** \endcond */
 
