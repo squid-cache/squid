@@ -14,7 +14,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 /** \endcond */
 

@@ -66,13 +66,13 @@ public:
     void *data; // cbdata-protected
 
     /** The connection which this call pertains to.
-     * \itemize On accept() calls this is the new client connection.
-     * \itemize On connect() finished calls this is the newely opened connection.
-     * \itemize On write calls this is the connection just written to.
-     * \itemize On read calls this is the connection just read from.
-     * \itemize On close calls this describes the connection which is now closed.
-     * \itemize On timeouts this is the connection whose operation timed out.
-     *          NP: timeouts might also return to the connect/read/write handler with COMM_ERR_TIMEOUT.
+     *  - On accept() calls this is the new client connection.
+     *  - On connect() finished calls this is the newely opened connection.
+     *  - On write calls this is the connection just written to.
+     *  - On read calls this is the connection just read from.
+     *  - On close calls this describes the connection which is now closed.
+     *  - On timeouts this is the connection whose operation timed out.
+     *   + NP: timeouts might also return to the connect/read/write handler with COMM_ERR_TIMEOUT.
      */
     Comm::ConnectionPointer conn;
 

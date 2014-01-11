@@ -1927,7 +1927,7 @@ DeferredReadManager::~DeferredReadManager()
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
 /// \endcond
 

@@ -64,7 +64,7 @@ ACLMethodData::match(HttpRequestMethod toFind)
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<HttpRequestMethod>::CBDATA_CbDataList;
 /// \endcond
 

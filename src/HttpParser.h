@@ -11,9 +11,8 @@
  *
  * Works on a raw character I/O buffer and tokenizes the content into
  * either an error state or, an HTTP procotol request major segments:
- *
- * \item Request Line (method, URL, protocol, version)
- * \item Mime header block
+ *  1. Request Line (method, URL, protocol, version)
+ *  2. Mime header block
  */
 class HttpParser
 {
