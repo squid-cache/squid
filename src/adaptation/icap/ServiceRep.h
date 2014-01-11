@@ -216,7 +216,7 @@ class ConnWaiterDialer: public NullaryMemFunT<ModXact>
 public:
     typedef NullaryMemFunT<ModXact> Parent;
     ServiceRep::Pointer theService;
-    ConnWaiterDialer(const CbcPointer<ModXact> &xact, Parent::Method aHandler);
+    ConnWaiterDialer(const CbcPointer<Adaptation::Icap::ModXact> &xact, Adaptation::Icap::ConnWaiterDialer::Parent::Method aHandler);
     ConnWaiterDialer(const Adaptation::Icap::ConnWaiterDialer &aConnWaiter);
     ~ConnWaiterDialer();
 };
