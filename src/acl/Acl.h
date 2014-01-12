@@ -138,7 +138,7 @@ public:
     char *cfgline;
     ACL *next; // XXX: remove or at least use refcounting
     ACLFlags flags; ///< The list of given ACL flags
-    bool registered; ///< added to Config.aclList and can be reused via by FindByName()
+    bool registered; ///< added to the global list of ACLs via aclRegister()
 
 public:
 

@@ -31,6 +31,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -298,12 +299,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                A->cfgline);
     }
 
-    // prepend so that ACLs declared later (and possibly using earlier ACLs)
-    // are destroyed earlier (before the ACLs they use are destroyed)
+    // add to the global list for searching explicit ACLs by name
     assert(head && *head == Config.aclList);
-    A->registered = true;
     A->next = *head;
     *head = A;
+
+    // register for centralized cleanup
+    aclRegister(A);
 }
 
 bool
