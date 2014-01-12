@@ -627,6 +627,7 @@ squid_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
@@ -644,7 +645,6 @@ squid_LDADD = \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -1793,9 +1793,9 @@ tests_testDiskIO_LDADD = \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	mgr/libmgr.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2807,6 +2807,7 @@ tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
 	mgr/libmgr.la \
@@ -2820,7 +2821,6 @@ tests_testHttpRequest_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2994,9 +2994,9 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	anyp/libanyp.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3230,8 +3230,8 @@ tests_testUfs_LDADD = \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
-	ipc/libipc.la \
 	$(SSL_LIBS) \
+	ipc/libipc.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
 	base/libbase.la \
@@ -3411,9 +3411,10 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
+	eui/libeui.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3647,6 +3648,7 @@ tests_testURL_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -3659,7 +3661,6 @@ tests_testURL_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \

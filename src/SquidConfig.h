@@ -492,6 +492,8 @@ public:
     struct {
         int unclean_shutdown;
         char *ssl_engine;
+        int session_ttl;
+        size_t sessionCacheSize;
     } SSL;
 #endif
 
