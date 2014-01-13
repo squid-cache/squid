@@ -3272,7 +3272,7 @@ tests_testRock_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fatal.h \
-	tests/stub_fatal.cc \
+	fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.h \
