@@ -1303,6 +1303,8 @@ MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
     if (*m)
         content->Printf("%s", m);	/* copy tail */
 
+    content->terminate();
+
     assert((size_t)content->contentSize() == strlen(content->content()));
 
     return content;
