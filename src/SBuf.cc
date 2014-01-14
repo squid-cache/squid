@@ -237,10 +237,10 @@ SBuf::append(const char * S, size_type Ssize)
 {
     if (S == NULL)
         return *this;
-    // coverity[access_dbuff_in_call]
     if (Ssize == npos)
         Ssize = strlen(S);
     debugs(24, 7, "from c-string to id " << id);
+    // coverity[access_dbuff_in_call]
     return lowAppend(S, Ssize);
 }
 
