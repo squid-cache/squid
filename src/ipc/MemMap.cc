@@ -7,8 +7,10 @@
 #include "store_key_md5.h"
 #include "tools.h"
 
-Ipc::MemMap::MemMap(const char *const aPath): cleaner(NULL), path(aPath),
-                    shared(shm_old(Shared)(aPath))
+Ipc::MemMap::MemMap(const char *const aPath) :
+        cleaner(NULL),
+        path(aPath),
+        shared(shm_old(Shared)(aPath))
 {
     assert(shared->limit > 0); // we should not be created otherwise
     debugs(54, 5, "attached map [" << path << "] created: " <<
@@ -272,11 +274,12 @@ Ipc::MemMap::freeLocked(Slot &s, bool keepLocked)
 }
 
 /* Ipc::MemMapSlot */
-Ipc::MemMapSlot::MemMapSlot()
+Ipc::MemMapSlot::MemMapSlot() :
+        pSize(0),
+        expire(0)
 {
     memset(key, 0, sizeof(key));
     memset(p, 0, sizeof(p));
-    pSize = 0;
 }
 
 void
