@@ -45,12 +45,7 @@ public:
 
     StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
             length (aLength), offset (anOffset), data (someData) {
-        if (aLength < 0) {
-            flags.error = 1;
-            length = 0;
-        } else {
-            flags.error = 0;
-        }
+        flags.error = 0;
     }
 
     /* Create a StoreIOBuffer from a MemBuf and offset */
