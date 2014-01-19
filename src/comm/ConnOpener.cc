@@ -255,7 +255,7 @@ Comm::ConnOpener::createFd()
     if (callback_ == NULL || callback_->canceled())
         return false;
 
-    temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
+    temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_, conn_->flags, conn_->tos, conn_->nfmark, host_);
     if (temporaryFd_ < 0) {
         sendAnswer(COMM_ERR_CONNECT, 0, "Comm::ConnOpener::createFd");
         return false;
