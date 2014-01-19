@@ -116,6 +116,12 @@ static int refreshStaleness(const StoreEntry * entry, time_t check_time, const t
 
 static RefreshPattern DefaultRefresh;
 
+/** Locate the first refresh_pattern rule that matches the given URL by regex.
+ *
+ * \note regexec() returns 0 if matched, and REG_NOMATCH otherwise
+ *
+ * \return A pointer to the refresh_pattern parameters to use, or NULL if there is no match.
+ */
 const RefreshPattern *
 refreshLimits(const char *url)
 {
@@ -129,6 +135,14 @@ refreshLimits(const char *url)
     return NULL;
 }
 
+/** Locate the first refresh_pattern rule that has the given uncompiled regex.
+ *
+ * \note There is only one reference to this function, below. It always passes "." as the pattern.
+ * This function is only ever called if there is no URI. Because a regex match is impossible, Squid
+ * forces the "." rule to apply (if it exists)
+ *
+ * \return A pointer to the refresh_pattern parameters to use, or NULL if there is no match.
+ */
 static const RefreshPattern *
 refreshUncompiledPattern(const char *pat)
 {
