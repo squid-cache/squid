@@ -426,28 +426,22 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
-    // XXX: temporary for the transition to Comm::Pointer
-    Comm::ConnectionPointer conn = new Comm::Connection();
-    const int sock = comm_openex(sock_type, proto, conn, flags, 0, 0, note);
-    conn->fd = -1; // prevent Comm::Connection closing the FD on destruct
-    return sock;
+    return comm_openex(sock_type, proto, addr, flags, 0, 0, note);
 }
 
 void
 comm_open_listener(int sock_type,
                    int proto,
-                   const Comm::ConnectionPointer &conn,
+                   Comm::ConnectionPointer &conn,
                    const char *note)
 {
     /* all listener sockets require bind() */
     conn->flags |= COMM_DOBIND;
 
     /* attempt native enabled port. */
-    conn->fd = comm_openex(sock_type, proto, conn, conn->flags, 0, 0, note);
-    // XXX: remove the flags parameter to comm_openex()
+    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, 0, 0, note);
 }
 
-// XXX: remove this wrapper
 int
 comm_open_listener(int sock_type,
                    int proto,
@@ -455,13 +449,14 @@ comm_open_listener(int sock_type,
                    int flags,
                    const char *note)
 {
+    int sock = -1;
+
     /* all listener sockets require bind() */
     flags |= COMM_DOBIND;
 
-    // XXX: temporary for the transition to Comm::Pointer
-    Comm::ConnectionPointer conn = new Comm::Connection();
-    const int sock = comm_openex(sock_type, proto, conn, flags, 0, 0, note);
-    conn->fd = -1; // prevent Comm::Connection closing the FD on destruct
+    /* attempt native enabled port. */
+    sock = comm_openex(sock_type, proto, addr, flags, 0, 0, note);
+
     return sock;
 }
 
@@ -533,12 +528,13 @@ comm_set_transparent(int fd)
 int
 comm_openex(int sock_type,
             int proto,
-            const Comm::ConnectionPointer &conn,
+            Ip::Address &addr,
             int flags,
             tos_t tos,
             nfmark_t nfmark,
             const char *note)
 {
+    int new_socket;
     struct addrinfo *AI = NULL;
 
     PROF_start(comm_open);
@@ -546,28 +542,29 @@ comm_openex(int sock_type,
     ++ statCounter.syscalls.sock.sockets;
 
     /* Setup the socket addrinfo details for use */
-    conn->local.getAddrInfo(AI);
+    addr.getAddrInfo(AI);
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
 
-    debugs(50, 3, "Attempt open " << note << " socket for: " << conn);
+    debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    conn->fd = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
     /* try again as IPv4-native if possible */
-    if (conn->fd < 0 && Ip::EnableIpv6 && conn->local.isIPv6() && conn->local.setIPv4()) {
+    if ( new_socket < 0 && Ip::EnableIpv6 && addr.isIPv6() && addr.setIPv4() ) {
         /* attempt to open this IPv4-only. */
         Ip::Address::FreeAddrInfo(AI);
         /* Setup the socket addrinfo details for use */
-        conn->local.getAddrInfo(AI);
+        addr.getAddrInfo(AI);
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
-        debugs(50, 3, "Attempt fallback open " << note << " socket for: " << conn);
-        conn->fd = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
+        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
     }
 
-    if (conn->fd < 0) {
+    if (new_socket < 0) {
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
@@ -585,7 +582,12 @@ comm_openex(int sock_type,
         return -1;
     }
 
-    debugs(50, 3, "Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol);
+    // XXX: temporary for the transition. comm_openex will eventually have a conn to play with.
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    conn->local = addr;
+    conn->fd = new_socket;
+
+    debugs(50, 3, "comm_openex: Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
 
     /* set TOS if needed */
     if (tos)
@@ -595,26 +597,24 @@ comm_openex(int sock_type,
     if (nfmark)
         Ip::Qos::setSockNfmark(conn, nfmark);
 
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && conn->local.isIPv6())
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.isIPv6() )
         comm_set_v6only(conn->fd, 1);
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
     /* Other OS may have this administratively disabled for general use. Same deal. */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && conn->local.isIPv6())
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.isIPv6() )
         comm_set_v6only(conn->fd, 0);
 
     comm_init_opened(conn, tos, nfmark, note, AI);
-    conn->fd = comm_apply_flags(conn->fd, conn->local, flags, AI);
-
-    // XXX: does AI contain the new local port number ??
-    conn->local = *AI;
-    debugs(50, 3, "New Socket details: " << conn);
+    new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     Ip::Address::FreeAddrInfo(AI);
 
     PROF_stop(comm_open);
 
-    return conn->fd;
+    // XXX transition only. prevent conn from closing the new FD on function exit.
+    conn->fd = -1;
+    return new_socket;
 }
 
 /// update FD tables after a local or remote (IPC) comm_openex();

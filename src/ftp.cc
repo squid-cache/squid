@@ -636,13 +636,11 @@ FtpStateData::listenForDataChannel(const Comm::ConnectionPointer &conn, const ch
 
     /* open the conn if its not already open */
     if (!Comm::IsConnOpen(conn)) {
-        comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
+        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
         if (!Comm::IsConnOpen(conn)) {
             debugs(5, DBG_CRITICAL, HERE << "comm_open_listener failed:" << conn->local << " error: " << errno);
             return;
         }
-// XXX: for the 3.3 workaround try grabbing the IP:port from fd_table where comm should have put it.
-        assert(conn->local.port() != 0);
         debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
     }
 
