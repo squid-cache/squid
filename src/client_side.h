@@ -359,6 +359,7 @@ public:
         FtpState state;
         bool readGreeting;
         bool gotEpsvAll; ///< restrict data conn setup commands to just EPSV
+        AsyncCall::Pointer onDataAcceptCall; ///< who to call upon data connection acceptance
         Comm::ConnectionPointer dataListenConn;
         Comm::ConnectionPointer dataConn;
         Ip::Address serverDataAddr;
