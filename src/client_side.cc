@@ -5038,6 +5038,19 @@ FtpAcceptDataConnection(const CommAcceptCbParams &params)
         connState->ftp.dataConn = params.conn;
         connState->ftp.uploadAvailSize = 0;
         debugs(33, 7, "ready for data");
+        if (connState->ftp.onDataAcceptCall != NULL) {
+            AsyncCall::Pointer call = connState->ftp.onDataAcceptCall;
+            connState->ftp.onDataAcceptCall = NULL;
+            // If we got an upload request, start reading data from the client.
+            if (connState->ftp.state == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
+                connState->readSomeFtpData();
+            else
+                Must(connState->ftp.state == ConnStateData::FTP_HANDLE_DATA_REQUEST);
+            MemBuf mb;
+            mb.init();
+            mb.Printf("150 Data connection opened.\r\n");
+            Comm::Write(connState->clientConnection, &mb, call);
+        }
     }
 }
 
@@ -5475,8 +5488,11 @@ FtpHandleDataReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
         return;
     }
 
-    if (!FtpCheckDataConnPost(context))
+    if (!FtpCheckDataConnPost(context)) {
+        FtpWriteCustomReply(context, 425, "Data connection is not established.");
+        FtpCloseDataConnection(conn);
         return;
+    }
 
     debugs(33, 7, HERE << data.length);
 
@@ -5543,10 +5559,8 @@ FtpWroteReplyData(const Comm::ConnectionPointer &conn, char *bufnotused, size_t 
 static void
 FtpHandleUploadReply(ClientSocketContext *context, const HttpReply *reply, StoreIOBuffer data)
 {
-    if (!FtpCheckDataConnPost(context))
-        return;
-  
     FtpWriteForwardedReply(context, reply);
+    // note that the client data connection may already be closed by now
 }
 
 static void
@@ -5690,9 +5704,34 @@ FtpWriteForwardedReply(ClientSocketContext *context, const HttpReply *reply, Asy
     const int status = header.getInt(HDR_FTP_STATUS);
     debugs(33, 7, HERE << "status: " << status);
 
+    // Status 125 or 150 implies upload or data request, but we still check
+    // the state in case the server is buggy.
     if ((status == 125 || status == 150) &&
-        connState->ftp.state == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
-        connState->readSomeFtpData();
+        (connState->ftp.state == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST ||
+         connState->ftp.state == ConnStateData::FTP_HANDLE_DATA_REQUEST)) {
+        if (FtpCheckDataConnPost(context)) {
+            // If the data connection is ready, start reading data (here)
+            // and forward the response to client (further below).
+            debugs(33, 7, "data connection established, start data transfer");
+            if (connState->ftp.state == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
+                connState->readSomeFtpData();
+        } else {
+            // If we are waiting to accept the data connection, keep waiting.
+            if (Comm::IsConnOpen(connState->ftp.dataListenConn)) {
+                debugs(33, 7, "wait for the client to establish a data connection");
+                connState->ftp.onDataAcceptCall = call;
+                // TODO: Add connect timeout for passive connections listener?
+                // TODO: Remember server response so that we can forward it?
+            } else {
+                // Either the connection was establised and closed after the
+                // data was transferred OR we failed to establish an active
+                // data connection and already sent the error to the client.
+                // In either case, there is nothing more to do.
+                debugs(33, 7, "done with data OR active connection failed");
+            }
+            return;
+        }
+    }
 
     MemBuf mb;
     mb.init();
@@ -6152,11 +6191,8 @@ FtpCheckDataConnPost(ClientSocketContext *context)
     ConnStateData *connState = context->getConn();
     assert(connState);
     const Comm::ConnectionPointer &dataConn = connState->ftp.dataConn;
-    if (dataConn != NULL && !Comm::IsConnOpen(dataConn)) {
-        // This check is deliberately missing from FtpCheckDataConnPre()
+    if (!Comm::IsConnOpen(dataConn)) {
         debugs(33, 3, "missing client data conn: " << dataConn);
-        FtpWriteCustomReply(context, 425, "Data connection is not established");
-        FtpCloseDataConnection(connState);
         return false;
     }
     return true;
