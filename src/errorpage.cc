@@ -1166,7 +1166,7 @@ ErrorState::BuildHttpReply()
                 status = Http::scTemporaryRedirect;
         }
 
-        rep->setHeaders(status, NULL, "text/html", 0, 0, -1);
+        rep->setHeaders(status, NULL, "text/html;charset=utf-8", 0, 0, -1);
 
         if (request) {
             MemBuf redirect_location;
@@ -1178,7 +1178,7 @@ ErrorState::BuildHttpReply()
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
         MemBuf *content = BuildContent();
-        rep->setHeaders(httpStatus, NULL, "text/html", content->contentSize(), 0, -1);
+        rep->setHeaders(httpStatus, NULL, "text/html;charset=utf-8", content->contentSize(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
