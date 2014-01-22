@@ -549,7 +549,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 {
     const char *field_ptr = header_start;
     HttpHeaderEntry *e, *e2;
-    bool warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
+    int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
     PROF_start(HttpHeaderParse);
 
