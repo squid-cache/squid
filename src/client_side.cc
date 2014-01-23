@@ -5339,18 +5339,27 @@ FtpHandleFeatReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
     HttpHeaderPos pos = HttpHeaderInitPos;
     bool hasEPRT = false;
     bool hasEPSV = false;
+    int prependSpaces = 1;
     while (const HttpHeaderEntry *e = filteredHeader.getEntry(&pos)) {
         if (e->id == HDR_FTP_PRE) {
             // assume RFC 2389 FEAT response format, quoted by Squid:
             // <"> SP NAME [SP PARAMS] <">
+            // but accommodate MS servers sending four SPs before NAME
             if (e->value.size() < 4)
                 continue;
             const char *raw = e->value.termedBuf();
-            if (raw[0] != '"' && raw[1] != ' ')
+            if (raw[0] != '"' || raw[1] != ' ')
                 continue;
-            const char *beg = raw + 2; // after quote and space
+            const char *beg = raw + 1 + strspn(raw + 1, " "); // after quote and spaces
             // command name ends with (SP parameter) or quote
             const char *end = beg + strcspn(beg, " \"");
+
+            if (end <= beg)
+                continue;
+
+            // compute the number of spaces before the command
+            prependSpaces = beg - raw - 1;
+
             const String cmd = e->value.substr(beg-raw, end-raw);
 
             if (!FtpSupportedCommand(cmd))
@@ -5363,13 +5372,16 @@ FtpHandleFeatReply(ClientSocketContext *context, const HttpReply *reply, StoreIO
         }
     }
 
+    char buf[256];
     int insertedCount = 0;
     if (!hasEPRT) {
-        filteredHeader.putStr(HDR_FTP_PRE, "\" EPRT\"");
+        snprintf(buf, sizeof(buf), "\"%*s\"", prependSpaces + 4, "EPRT");
+        filteredHeader.putStr(HDR_FTP_PRE, buf);
         ++insertedCount;
     }
     if (!hasEPSV) {
-        filteredHeader.putStr(HDR_FTP_PRE, "\" EPSV\"");
+        snprintf(buf, sizeof(buf), "\"%*s\"", prependSpaces + 4, "EPSV");
+        filteredHeader.putStr(HDR_FTP_PRE, buf);
         ++insertedCount;
     }
 
