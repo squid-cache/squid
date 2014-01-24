@@ -56,6 +56,7 @@ extern const char *null_string;	/* "" */
 extern const char *version_string;	/* VERSION */
 extern const char *appname_string;	/* PACKAGE */
 extern char const *visible_appname_string; /* NULL */
+extern char *service_name;        /* xstrdup(APP_SHORTNAME) */
 extern const char *fdTypeStr[];
 extern const char *hier_strings[];
 extern const char *memStatusStr[];
@@ -121,7 +122,6 @@ extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #if _SQUID_WINDOWS_
 extern unsigned int WIN32_OS_version;	/* 0 */
 extern char *WIN32_OS_string;           /* NULL */
-extern char *WIN32_Service_name;        /* NULL */
 extern char *WIN32_Command_Line;        /* NULL */
 extern char *WIN32_Service_Command_Line; /* NULL */
 extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
