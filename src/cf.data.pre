@@ -114,7 +114,11 @@ COMMENT_START
 
 	${process_number} expands to the current Squid process
 	identifier, which is an integer number (e.g., 1, 2, 3) unique
-	across all Squid processes.
+	across all Squid processes of the current service instance.
+
+	${service_name} expands into the current Squid service instance
+	name identifier which is provided by -n on the command line.
+
 COMMENT_END
 
 # options still not yet ported from 2.7 to 3.x
