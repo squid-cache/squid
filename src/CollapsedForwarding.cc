@@ -87,7 +87,7 @@ CollapsedForwarding::Notify(const int workerId)
     Ipc::TypedMsgHdr msg;
     msg.setType(Ipc::mtCollapsedForwardingNotification);
     msg.putInt(KidIdentifier);
-    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrPfx, workerId);
+    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrLabel, workerId);
     Ipc::SendMessage(addr, msg);
 }
 
