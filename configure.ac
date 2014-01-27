@@ -431,6 +431,7 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     AC_MSG_RESULT(yes)
 ],[
     AC_MSG_RESULT(no)
+],[
 ])
 
 
