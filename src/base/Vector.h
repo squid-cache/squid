@@ -122,10 +122,9 @@ public:
     const E& operator [] (unsigned i) const;
     E* data() const { return items; }
 
-    /* Do not change these, until the entry C struct is removed */
+protected:
     size_t capacity;
     size_t count;
-protected:
     E *items;
 };
 
