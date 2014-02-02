@@ -175,7 +175,8 @@ ACLChecklist::ACLChecklist() :
         finished_(false),
         allow_(ACCESS_DENIED),
         asyncStage_(asyncNone),
-        state_(NullState::Instance())
+        state_(NullState::Instance()),
+        asyncLoopDepth_(0)
 {
 }
 
