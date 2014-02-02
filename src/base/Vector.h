@@ -96,7 +96,7 @@ public:
     ~Vector();
     Vector(Vector const &);
     Vector &operator = (Vector const &);
-    void clean();
+    void clear();
     void reserve (size_t capacity);
     void push_back (E);
     Vector &operator += (E item) {push_back(item); return *this;};
@@ -147,12 +147,12 @@ Vector<E>::Vector() : capacity (0), count(0), items (NULL)
 template<class E>
 Vector<E>::~Vector()
 {
-    clean();
+    clear();
 }
 
 template<class E>
 void
-Vector<E>::clean()
+Vector<E>::clear()
 {
     /* could also warn if some objects are left */
     delete[] items;
@@ -316,7 +316,7 @@ template<class E>
 Vector<E> &
 Vector<E>::operator = (Vector<E> const &old)
 {
-    clean();
+    clear();
     reserve (old.size());
 
     for (size_t counter = 0; counter < old.size(); ++counter)

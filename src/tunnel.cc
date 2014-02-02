@@ -238,7 +238,7 @@ TunnelStateData::~TunnelStateData()
     debugs(26, 3, "TunnelStateData destructed this=" << this);
     assert(noConnections());
     xfree(url);
-    serverDestinations.clean();
+    serverDestinations.clear();
     delete connectRespBuf;
 }
 
