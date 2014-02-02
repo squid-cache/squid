@@ -106,20 +106,20 @@ public:
     const E &front() const;
     E &front();
     E &back();
-    E pop_back();
+    void pop_back();
     E shift();         // aka pop_front
     void prune(E);
     void preAppend(int app_count);
-    bool empty() const;
-    size_t size() const;
+    inline bool empty() const;
+    inline size_t size() const;
     iterator begin();
     const_iterator begin () const;
     iterator end();
     const_iterator end () const;
     E& at(unsigned i);
     const E& at(unsigned i) const;
-    E& operator [] (unsigned i);
-    const E& operator [] (unsigned i) const;
+    inline E& operator [] (unsigned i);
+    inline const E& operator [] (unsigned i) const;
     E* data() const { return items; }
 
 protected:
@@ -244,13 +244,12 @@ Vector<E>::shift()
 }
 
 template<class E>
-E
+void
 Vector<E>::pop_back()
 {
     assert (size());
     value_type result = items[--count];
     items[count] = value_type();
-    return result;
 }
 
 template<class E>
