@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
- <TITLE>Squid 3.4.2 release notes</TITLE>
+ <TITLE>Squid 3.4.3 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.4.2 release notes</H1>
+<H1>Squid 3.4.3 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -57,7 +57,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.4.2 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.4.3 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.4/">http://www.squid-cache.org/Versions/v3/3.4/</A> or the
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -504,6 +504,12 @@ and to silence NAT lookup failure messages on recent BSD.</P>
 <P>NOTE: systems such as NetBSD and FreeBSD which do not yet support
 the getsockname() API in recent PF versions require <EM>--with-nat-devpf</EM>
 to re-enable /dev/pf support when using PF firewall.</P>
+
+<DT><B>--disable-translation</B><DD>
+<P>Default changed to prevent translating error page templates during build.
+Use --enable-translation to explicitly build and install the templates.</P>
+<P>The latest pre-translated templates can be downloaded from 
+<A HREF="http://www.squid-cache.org/Versions/langpack/">http://www.squid-cache.org/Versions/langpack/</A></P>
 
 </DL>
 </P>
