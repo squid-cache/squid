@@ -151,8 +151,10 @@ Notes::clean()
 
 NotePairs::~NotePairs()
 {
-    while (!entries.empty())
-        delete entries.pop_back();
+    while (!entries.empty()) {
+        delete entries.back();
+        entries.pop_back();
+    }
 }
 
 const char *

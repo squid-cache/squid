@@ -247,8 +247,10 @@ errorClean(void)
         safe_free(error_text);
     }
 
-    while (ErrorDynamicPages.size())
-        errorDynamicPageInfoDestroy(ErrorDynamicPages.pop_back());
+    while (ErrorDynamicPages.size()) {
+        errorDynamicPageInfoDestroy(ErrorDynamicPages.back());
+        ErrorDynamicPages.pop_back();
+    }
 
     error_page_count = 0;
 
