@@ -474,7 +474,7 @@ HttpHeader::clean()
             delete e;
         }
     }
-    entries.clean();
+    entries.clear();
     httpHeaderMaskInit(&mask, 0);
     len = 0;
     PROF_stop(HttpHeaderClean);

@@ -1871,7 +1871,7 @@ static void
 free_authparam(Auth::ConfigVector * cfg)
 {
     /* Wipe the Auth globals and Detach/Destruct component config + state. */
-    cfg->clean();
+    cfg->clear();
 
     /* remove our pointers to the probably-dead sub-configs */
     while (cfg->size()) {
