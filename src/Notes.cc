@@ -146,7 +146,7 @@ Notes::dump(StoreEntry *entry, const char *key)
 void
 Notes::clean()
 {
-    notes.clean();
+    notes.clear();
 }
 
 NotePairs::~NotePairs()

@@ -341,7 +341,7 @@ void
 HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
 {
     /* reset old array */
-    specs.clean();
+    specs.clear();
     /* merge specs:
      * take one spec from "goods" and merge it with specs from
      * "specs" (if any) until there is no overlap */

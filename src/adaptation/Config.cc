@@ -139,7 +139,7 @@ Adaptation::Config::clear()
     const ServiceConfigs& configs = serviceConfigs;
     for (SCI cfg = configs.begin(); cfg != configs.end(); ++cfg)
         removeService((*cfg)->key);
-    serviceConfigs.clean();
+    serviceConfigs.clear();
     debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
            AllGroups().size() << ", services: " << serviceConfigs.size());
 }
@@ -163,7 +163,7 @@ Adaptation::Config::freeService()
 
     DetachServices();
 
-    serviceConfigs.clean();
+    serviceConfigs.clear();
 }
 
 void
@@ -210,7 +210,7 @@ Adaptation::Config::finalize()
     debugs(93,3, HERE << "Created " << created << " adaptation services");
 
     // services remember their configs; we do not have to
-    serviceConfigs.clean();
+    serviceConfigs.clear();
     return true;
 }
 

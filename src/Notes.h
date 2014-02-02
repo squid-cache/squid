@@ -76,7 +76,7 @@ public:
 
     Notes(const char *aDescr, const char **metasBlacklist, bool allowFormatted = false): descr(aDescr), blacklisted(metasBlacklist), formattedValues(allowFormatted) {}
     Notes(): descr(NULL), blacklisted(NULL) {}
-    ~Notes() { notes.clean(); }
+    ~Notes() { notes.clear(); }
     /**
      * Parse a notes line and returns a pointer to the
      * parsed Note object.
