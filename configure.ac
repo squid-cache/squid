@@ -431,8 +431,8 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     AC_MSG_RESULT(yes)
 ],[
     AC_MSG_RESULT(no)
+],[ AC_MSG_RESULT(cross-compiler cant tell)
 ])
-
 
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
