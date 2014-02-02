@@ -1290,7 +1290,7 @@ storeLateRelease(void *unused)
     }
 
     for (i = 0; i < 10; ++i) {
-        e = LateReleaseStack.count ? LateReleaseStack.pop() : NULL;
+        e = LateReleaseStack.empty() ? NULL : LateReleaseStack.pop();
 
         if (e == NULL) {
             /* done! */
