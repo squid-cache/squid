@@ -115,6 +115,8 @@ public:
     const_iterator begin () const;
     iterator end();
     const_iterator end () const;
+    E& at(unsigned i);
+    const E& at(unsigned i) const;
     E& operator [] (unsigned i);
     const E& operator [] (unsigned i) const;
 
@@ -367,7 +369,7 @@ Vector<E>::end() const
 
 template<class E>
 E &
-Vector<E>::operator [] (unsigned i)
+Vector<E>::at(unsigned i)
 {
     assert (size() > i);
     return items[i];
@@ -375,9 +377,23 @@ Vector<E>::operator [] (unsigned i)
 
 template<class E>
 const E &
-Vector<E>::operator [] (unsigned i) const
+Vector<E>::at(unsigned i) const
 {
     assert (size() > i);
+    return items[i];
+}
+
+template<class E>
+E &
+Vector<E>::operator [] (unsigned i)
+{
+    return items[i];
+}
+
+template<class E>
+const E &
+Vector<E>::operator [] (unsigned i) const
+{
     return items[i];
 }
 
