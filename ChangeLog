@@ -1,3 +1,18 @@
+Changes to squid-3.4.3 (02 Feb 2014):
+
+	- Bug 4008: HttpHeader warnOnError should be an int not a bool
+	- Bug 4002: clang 3.4 unable to compile
+	- Bug 3996: Malformed DNS reply leads to crash
+	- Bug 3995: compile error on CentOS 5 with GCC 4.1.2
+	- Bug 3975: atomic detection cross-compilation failure
+	- Bug 3971: "cannot aggregate mgr:client_list: cmd->profile != NULL" in SMP mode
+	- Bug 3954: compile failure in CpuAffinity.cc
+	- Bug 3927: tests/testRock fatal.cc required
+	- Fix memory leak in peer Cache Digest exchange
+	- Fix external_acl_type async loop failures
+	- Fix destination IP address cycling
+	- ... and a few polishing changes
+
 Changes to squid-3.4.2 (30 Dec 2013):
 
 	- Regression Bug 3980: FATAL ERROR due to max_user_ip -s option
