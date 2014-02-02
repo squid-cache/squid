@@ -700,7 +700,6 @@ serverConnectionsOpen(void)
         snmpOpenPorts();
 #endif
 
-        clientdbInit();
         icmpEngine.Open();
         netdbInit();
         asnInit();
