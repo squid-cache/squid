@@ -88,7 +88,8 @@ public:
     typedef VectorIteratorBase<Vector<E> > iterator;
     typedef VectorIteratorBase<Vector<E> const> const_iterator;
     typedef ptrdiff_t difference_type;
-
+    friend class VectorIteratorBase<Vector<E> >;
+    friend class VectorIteratorBase<Vector<E> const>;
     void *operator new (size_t);
     void operator delete (void *);
 
@@ -119,10 +120,12 @@ public:
     const E& at(unsigned i) const;
     E& operator [] (unsigned i);
     const E& operator [] (unsigned i) const;
+    E* data() const { return items; }
 
     /* Do not change these, until the entry C struct is removed */
     size_t capacity;
     size_t count;
+protected:
     E *items;
 };
 
