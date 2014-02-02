@@ -454,12 +454,12 @@ HttpHeader::clean()
          * has been used.  As a hack, just never count zero-sized header
          * arrays.
          */
-        if (0 != entries.count)
-            HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
+        if (!entries.empty())
+            HttpHeaderStats[owner].hdrUCountDistr.count(entries.size());
 
         ++ HttpHeaderStats[owner].destroyedCount;
 
-        HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
+        HttpHeaderStats[owner].busyDestroyedCount += entries.size() > 0;
     } // if (owner <= hoReply)
 
     while ((e = getEntry(&pos))) {
@@ -748,11 +748,11 @@ HttpHeaderEntry *
 HttpHeader::getEntry(HttpHeaderPos * pos) const
 {
     assert(pos);
-    assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)entries.count);
+    assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)entries.size());
 
-    for (++(*pos); *pos < (ssize_t)entries.count; ++(*pos)) {
-        if (entries.items[*pos])
-            return (HttpHeaderEntry*)entries.items[*pos];
+    for (++(*pos); *pos < (ssize_t)entries.size(); ++(*pos)) {
+        if (entries[*pos])
+            return (HttpHeaderEntry*)entries[*pos];
     }
 
     return NULL;
@@ -871,9 +871,9 @@ void
 HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
 {
     HttpHeaderEntry *e;
-    assert(pos >= HttpHeaderInitPos && pos < (ssize_t)entries.count);
-    e = (HttpHeaderEntry*)entries.items[pos];
-    entries.items[pos] = NULL;
+    assert(pos >= HttpHeaderInitPos && pos < (ssize_t)entries.size());
+    e = (HttpHeaderEntry*)entries[pos];
+    entries[pos] = NULL;
     /* decrement header length, allow for ": " and crlf */
     len -= e->name.size() + 2 + e->value.size() + 2;
     assert(len >= 0);
@@ -914,7 +914,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     assert_eid(e->id);
     assert(e->name.size());
 
-    debugs(55, 7, HERE << this << " adding entry: " << e->id << " at " << entries.count);
+    debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
     if (CBIT_TEST(mask, e->id))
         ++ Headers[e->id].stat.repCount;

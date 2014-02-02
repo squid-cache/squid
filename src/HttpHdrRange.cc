@@ -404,14 +404,14 @@ int
 HttpHdrRange::canonize (int64_t newClen)
 {
     clen = newClen;
-    debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.count <<
+    debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.size() <<
            " specs, clen: " << clen);
     Vector<HttpHdrRangeSpec*> goods;
     getCanonizedSpecs(goods);
     merge (goods);
-    debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.count <<
+    debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.size() <<
            " specs");
-    return specs.count > 0;
+    return specs.size() > 0; // fixme, should return bool
 }
 
 /* hack: returns true if range specs are too "complex" for Squid to handle */

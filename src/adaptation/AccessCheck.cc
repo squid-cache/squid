@@ -102,7 +102,7 @@ Adaptation::AccessCheck::check()
         AccessRule *r = *i;
         if (isCandidate(*r)) {
             debugs(93, 5, HERE << "check: rule '" << r->id << "' is a candidate");
-            candidates += r->id;
+            candidates.push_back(r->id);
         }
     }
 

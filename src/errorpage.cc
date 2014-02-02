@@ -206,7 +206,7 @@ errorInitialize(void)
             /** \par
              * Index any unknown file names used by deny_info.
              */
-            ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
+            ErrorDynamicPageInfo *info = ErrorDynamicPages[i - ERR_MAX];
             assert(info && info->id == i && info->page_name);
 
             const char *pg = info->page_name;
@@ -533,7 +533,7 @@ errorPageId(const char *page_name)
     }
 
     for (size_t j = 0; j < ErrorDynamicPages.size(); ++j) {
-        if (strcmp(ErrorDynamicPages.items[j]->page_name, page_name) == 0)
+        if (strcmp(ErrorDynamicPages[j]->page_name, page_name) == 0)
             return j + ERR_MAX;
     }
 
@@ -563,7 +563,7 @@ errorPageName(int pageId)
         return err_type_str[pageId];
 
     if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.size())
-        return ErrorDynamicPages.items[pageId - ERR_MAX]->page_name;
+        return ErrorDynamicPages[pageId - ERR_MAX]->page_name;
 
     return "ERR_UNKNOWN";	/* should not happen */
 }
@@ -595,8 +595,8 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
 {
     memset(&ftp, 0, sizeof(ftp));
 
-    if (page_id >= ERR_MAX && ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect != Http::scNone)
-        httpStatus = ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect;
+    if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
+        httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
 
     if (req != NULL) {
         request = req;
