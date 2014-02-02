@@ -266,8 +266,10 @@ HttpHdrRange::parseInit(const String * range_spec)
          * at least one syntactically invalid byte-range-specs.
          */
         if (!spec) {
-            while (!specs.empty())
-                delete specs.pop_back();
+            while (!specs.empty()) {
+                delete specs.back();
+                specs.pop_back();
+            }
             debugs(64, 2, "ignoring invalid range field: '" << range_spec << "'");
             break;
         }
@@ -281,8 +283,10 @@ HttpHdrRange::parseInit(const String * range_spec)
 
 HttpHdrRange::~HttpHdrRange()
 {
-    while (specs.size())
-        delete specs.pop_back();
+    while (specs.size()) {
+        delete specs.back();
+        specs.pop_back();
+    }
 }
 
 HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) :
@@ -350,7 +354,8 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
     while (i != basis.end()) {
         if (specs.size() && (*i)->mergeWith(specs.back())) {
             /* merged with current so get rid of the prev one */
-            delete specs.pop_back();
+            delete specs.back();
+            specs.pop_back();
             continue;	/* re-iterate */
         }
 
