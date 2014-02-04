@@ -60,6 +60,8 @@
 #include "ssl/ErrorDetailManager.h"
 #endif
 
+#include <algorithm>
+
 /**
  \defgroup ErrorPageInternal Error Page Internals
  \ingroup ErrorPageAPI
@@ -247,7 +249,6 @@ errorClean(void)
         safe_free(error_text);
     }
 
-    //TODO fix entipattern: destroy pages and then clear in one go
     while (!ErrorDynamicPages.empty()) {
         errorDynamicPageInfoDestroy(ErrorDynamicPages.back());
         ErrorDynamicPages.pop_back();
