@@ -247,7 +247,8 @@ errorClean(void)
         safe_free(error_text);
     }
 
-    while (ErrorDynamicPages.size()) {
+    //TODO fix entipattern: destroy pages and then clear in one go
+    while (!ErrorDynamicPages.empty()) {
         errorDynamicPageInfoDestroy(ErrorDynamicPages.back());
         ErrorDynamicPages.pop_back();
     }

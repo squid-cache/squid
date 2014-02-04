@@ -92,7 +92,8 @@ DiskIOModule::GetModules()
 void
 DiskIOModule::FreeAllModules()
 {
-    while (GetModules().size()) {
+    // TODO fix antipattern: walk the vector and then clear in one go
+    while (!GetModules().empty()) {
         DiskIOModule *fs = GetModules().back();
         GetModules().pop_back();
         fs->gracefulShutdown();

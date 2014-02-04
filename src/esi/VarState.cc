@@ -167,7 +167,7 @@ ESIVarState::~ESIVarState()
 {
     freeResources();
 
-    while (variablesForCleanup.size()) {
+    while (!variablesForCleanup.empty()) {
         delete variablesForCleanup.back();
         variablesForCleanup.pop_back();
     }
