@@ -60,8 +60,6 @@
 #include "ssl/ErrorDetailManager.h"
 #endif
 
-#include <algorithm>
-
 /**
  \defgroup ErrorPageInternal Error Page Internals
  \ingroup ErrorPageAPI
