@@ -87,7 +87,6 @@ StoreFileSystem::GetFileSystems()
 void
 StoreFileSystem::FreeAllFs()
 {
-    //TODO fix antipattern: call for all filesystems and clear in one go.
     while (!GetFileSystems().empty()) {
         StoreFileSystem *fs = GetFileSystems().back();
         GetFileSystems().pop_back();

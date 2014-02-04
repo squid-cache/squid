@@ -100,7 +100,6 @@ public:
     void clear();
     void reserve (size_t capacity);
     void push_back (E);
-    Vector &operator += (E item) {push_back(item); return *this;};
 
     void insert (E);
     const E &front() const;
