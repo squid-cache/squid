@@ -71,6 +71,7 @@ Adaptation::FindService(const Service::Id& key)
 
 void Adaptation::DetachServices()
 {
+    // TODO fix antipattern: walk the vector and then clear in one go
     while (!AllServices().empty()) {
         AllServices().back()->detach();
         AllServices().pop_back();

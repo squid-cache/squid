@@ -1370,7 +1370,7 @@ StoreSearchHashIndex::next(void (aCallback)(void *), void *aCallbackData)
 bool
 StoreSearchHashIndex::next()
 {
-    if (entries.size())
+    if (!entries.empty())
         entries.pop_back();
 
     while (!isDone() && !entries.size())
