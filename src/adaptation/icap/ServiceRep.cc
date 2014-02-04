@@ -374,7 +374,6 @@ void Adaptation::Icap::ServiceRep::noteTimeToNotify()
 
     Pointer us = NULL;
 
-    // TODO fix antipattern: walk the vector and then clear in one go
     while (!theClients.empty()) {
         Client i = theClients.back();
         theClients.pop_back();
