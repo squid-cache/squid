@@ -283,7 +283,7 @@ HttpHdrRange::parseInit(const String * range_spec)
 
 HttpHdrRange::~HttpHdrRange()
 {
-    while (specs.size()) {
+    while (!specs.empty()) {
         delete specs.back();
         specs.pop_back();
     }
