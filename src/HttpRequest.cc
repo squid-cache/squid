@@ -479,7 +479,7 @@ HttpRequest::adaptHistoryImport(const HttpRequest &them)
 bool
 HttpRequest::multipartRangeRequest() const
 {
-    return (range && !range->specs.empty());
+    return (range && range->specs.size() > 1);
 }
 
 bool
