@@ -334,6 +334,16 @@ DOC_START
 	sent before the required macro information is available to Squid.
 	By default, Squid uses request formats provided in scheme-specific
 	examples below (search for %credentials).
+	The expanded key_extras value is added to the Squid credentials
+	cache and, hence, will affect authentication. It can be used to
+	autenticate different users with identical user names (e.g., when user
+	authentication depends on http_port).
+	Avoid adding frequently changing information to key_extras. For
+	example, if you add user source IP, and it changes frequently
+	in your environment, then max_user_ip ACL is going to treat every
+	user+IP combination as a unique "user", breaking the ACL and
+	wasting a lot of memory on those user records. It will also force
+	users to authenticate from scratch whenever their IP changes.
 
 	=== Parameters for the basic scheme follow. ===
 
