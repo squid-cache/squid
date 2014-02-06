@@ -247,7 +247,7 @@ void
 Vector<E>::pop_back()
 {
     assert (size());
-    value_type result = items[--count];
+    --count;
     items[count] = value_type();
 }
 
