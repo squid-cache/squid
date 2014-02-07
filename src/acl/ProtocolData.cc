@@ -37,7 +37,6 @@
 #include "acl/ProtocolData.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 
 ACLProtocolData::ACLProtocolData() : values (NULL)
