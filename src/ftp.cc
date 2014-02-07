@@ -60,7 +60,6 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 
 #if USE_DELAY_POOLS
