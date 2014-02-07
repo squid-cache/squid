@@ -10,7 +10,9 @@ libanyp_la_SOURCES = \
 	ProtocolType.cc \
 	ProtocolType.h \
 	ProtocolVersion.h \
-	TrafficMode.h
+	TrafficMode.h \
+	UriScheme.cc \
+	UriScheme.h
 
 ProtocolType.cc: ProtocolType.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/ProtocolType.h | sed -e 's%PROTO_%%' >$@) || ($(RM) -f $@ && exit 1)

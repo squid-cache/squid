@@ -555,8 +555,6 @@ squid_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URL.h \
-	URLScheme.cc \
-	URLScheme.h \
 	urn.h \
 	urn.cc \
 	wccp.h \
@@ -1193,7 +1191,6 @@ tests_testHttpReply_SOURCES=\
 	tests/testMain.cc \
 	tests/stub_time.cc \
 	url.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
@@ -1327,8 +1324,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_time.cc \
 	url.cc \
 	URL.h \
-	URLScheme.cc \
-	URLScheme.h \
 	Mem.h \
 	tests/stub_mem.cc \
 	MemBuf.cc \
@@ -1574,7 +1569,6 @@ tests_testCacheManager_SOURCES = \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -1762,7 +1756,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_time.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc \
@@ -2007,7 +2000,6 @@ tests_testEvent_SOURCES = \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2255,7 +2247,6 @@ tests_testEventLoop_SOURCES = \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2496,7 +2487,6 @@ tests_test_http_range_SOURCES = \
 	tests/stub_tunnel.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2786,7 +2776,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2973,7 +2962,6 @@ tests_testStore_SOURCES= \
 	tests/TestSwapDir.h \
 	tests/stub_time.cc \
 	url.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc
 
@@ -3202,7 +3190,6 @@ tests_testUfs_SOURCES = \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
 	time.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc \
 	$(DISKIO_SOURCE)
@@ -3385,7 +3372,6 @@ tests_testRock_SOURCES = \
 	tests/stub_tools.cc \
 	time.cc \
 	url.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -3614,8 +3600,8 @@ tests_testURL_SOURCES = \
 	tests/stub_store_stats.cc \
 	tests/testURL.cc \
 	tests/testURL.h \
-	tests/testURLScheme.cc \
-	tests/testURLScheme.h \
+	tests/testUriScheme.cc \
+	tests/testUriScheme.h \
 	tests/testMain.cc \
 	tests/stub_time.cc \
 	tests/stub_EventLoop.cc \
@@ -3623,7 +3609,6 @@ tests_testURL_SOURCES = \
 	tools.cc \
 	tests/stub_tunnel.cc \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
