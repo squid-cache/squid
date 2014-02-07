@@ -40,6 +40,7 @@
 #include "acl/MethodData.h"
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
+#include "anyp/UriScheme.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -78,7 +79,6 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "tools.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"
@@ -3513,7 +3513,7 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
-    const char *portType = URLScheme(s->transport.protocol).const_str();
+    const char *portType = AnyP::UriScheme(s->transport.protocol).c_str();
 
     if (*token == '[') {
         /* [ipv6]:port */
@@ -3832,7 +3832,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         // clone the port options from *s to *(s->next)
         s->next = cbdataReference(s->clone());
         s->next->s.setIPv4();
-        debugs(3, 3, URLScheme(s->transport.protocol) << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).c_str() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
     while (*head)
@@ -3873,7 +3873,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 
         // TODO: compare against prefix of 'n' instead of assuming http_port
         if (s->transport.protocol != AnyP::PROTO_HTTP)
-            storeAppendPrintf(e, " protocol=%s", URLScheme(s->transport.protocol).const_str());
+            storeAppendPrintf(e, " protocol=%s", AnyP::UriScheme(s->transport.protocol).c_str());
 
         if (s->allow_direct)
             storeAppendPrintf(e, " allow-direct");
