@@ -372,7 +372,7 @@ E &
 Vector<E>::at(unsigned i)
 {
     assert (size() > i);
-    return items[i];
+    return operator[](i);
 }
 
 template<class E>
@@ -380,7 +380,7 @@ const E &
 Vector<E>::at(unsigned i) const
 {
     assert (size() > i);
-    return items[i];
+    return operator[](i);
 }
 
 template<class E>
