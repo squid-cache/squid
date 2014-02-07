@@ -204,7 +204,7 @@ errorInitialize(void)
             /** \par
              * Index any unknown file names used by deny_info.
              */
-            ErrorDynamicPageInfo *info = ErrorDynamicPages[i - ERR_MAX];
+            ErrorDynamicPageInfo *info = ErrorDynamicPages.at(i - ERR_MAX);
             assert(info && info->id == i && info->page_name);
 
             const char *pg = info->page_name;
