@@ -41,8 +41,8 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "fde.h"
-#include "ipc/MemMap.h"
 #include "globals.h"
+#include "ipc/MemMap.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "ssl/Config.h"
@@ -1694,7 +1694,7 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
     unsigned int idlen = session->session_id_length;
     unsigned char key[MEMMAP_SLOT_KEY_SIZE];
     // Session ids are of size 32bytes. They should always fit to a
-    // MemMap::Slot::key 
+    // MemMap::Slot::key
     assert(idlen <= MEMMAP_SLOT_KEY_SIZE);
     memset(key, 0, sizeof(key));
     memcpy(key, id, idlen);
@@ -1803,7 +1803,7 @@ Ssl::initialize_session_cache()
     if (!isSslServer()) //no need to configure ssl session cache.
         return;
 
-    // Check if the MemMap keys and data are enough big to hold 
+    // Check if the MemMap keys and data are enough big to hold
     // session ids and session data
     assert(SSL_SESSION_ID_SIZE >= MEMMAP_SLOT_KEY_SIZE);
     assert(SSL_SESSION_MAX_SIZE >= MEMMAP_SLOT_DATA_SIZE);

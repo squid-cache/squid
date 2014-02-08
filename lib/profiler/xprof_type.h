@@ -71,7 +71,6 @@ typedef enum {
     XPROF_storeGetMemSpace,
     XPROF_storeMaintainSwapSpace,
     XPROF_storeRelease,
-    XPROF_storeWriteComplete,
     XPROF_write,
     XPROF_xcalloc,
     XPROF_xmalloc,

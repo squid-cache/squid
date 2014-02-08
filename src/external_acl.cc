@@ -1636,13 +1636,13 @@ ACLExternal::clone() const
     return new ACLExternal(*this);
 }
 
-ACLExternal::ACLExternal (char const *theClass) : data (NULL), class_ (xstrdup (theClass))
+ACLExternal::ACLExternal(char const *theClass) : data(NULL), class_(xstrdup(theClass))
 {}
 
-ACLExternal::ACLExternal (ACLExternal const & old) : data (NULL), class_ (old.class_ ? xstrdup (old.class_) : NULL)
+ACLExternal::ACLExternal(ACLExternal const & old) : data(NULL), class_(old.class_ ? xstrdup(old.class_) : NULL)
 {
     /* we don't have copy constructors for the data yet */
-    assert (!old.data);
+    assert(!old.data);
 }
 
 char const *

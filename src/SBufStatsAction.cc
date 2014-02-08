@@ -67,8 +67,8 @@ SBufStatsAction::dump(StoreEntry* entry)
 {
     StoreEntryStream ses(entry);
     ses << "\n\n\nThese statistics are experimental; their format and contents "
-        "should not be relied upon, they are bound to change as "
-        "the SBuf feature is evolved\n";
+    "should not be relied upon, they are bound to change as "
+    "the SBuf feature is evolved\n";
     sbdata.dump(ses);
     mbdata.dump(ses);
     ses << "\n";

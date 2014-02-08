@@ -54,14 +54,14 @@ CBDATA_CLASS_INIT(DiskThreadsDiskFile);
 DiskThreadsDiskFile::DiskThreadsDiskFile(char const *aPath, DiskThreadsIOStrategy *anIO):fd(-1), errorOccured (false), IO(anIO),
         inProgressIOs (0)
 {
-    assert (aPath);
+    assert(aPath);
     debugs(79, 3, "UFSFile::UFSFile: " << aPath);
-    path_ = xstrdup (aPath);
+    path_ = xstrdup(aPath);
 }
 
 DiskThreadsDiskFile::~DiskThreadsDiskFile()
 {
-    safe_free (path_);
+    safe_free(path_);
     doClose();
 }
 
