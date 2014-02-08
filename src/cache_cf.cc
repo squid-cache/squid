@@ -4499,10 +4499,10 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
-        ca->param = strdup("on");
+        ca->param = xstrdup("on");
     } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidBefore]) == 0) {
         ca->alg = Ssl::algSetValidBefore;
-        ca->param = strdup("on");
+        ca->param = xstrdup("on");
     } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
         ca->alg = Ssl::algSetCommonName;
         if (param) {
@@ -4511,7 +4511,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
                 self_destruct();
                 return;
             }
-            ca->param = strdup(param);
+            ca->param = xstrdup(param);
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
