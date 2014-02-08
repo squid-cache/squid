@@ -45,7 +45,6 @@ libcompat_squid_la_SOURCES = \
 	strnrchr.c \
 	tempnam.h \
 	types.h \
-	unsafe.h \
 	valgrind.h \
 	xalloc.cc \
 	xalloc.h \
