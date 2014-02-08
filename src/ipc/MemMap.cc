@@ -237,7 +237,7 @@ hash_key(const unsigned char *data, unsigned int len, unsigned int hashSize)
 {
     unsigned int n;
     unsigned int j;
-    for(j = 0, n = 0; j < len; j++ ) {
+    for (j = 0, n = 0; j < len; j++ ) {
         n ^= 271 * *data;
         ++data;
     }
@@ -311,7 +311,7 @@ Ipc::MemMapSlot::empty() const
 /* Ipc::MemMap::Shared */
 
 Ipc::MemMap::Shared::Shared(const int aLimit, const size_t anExtrasSize):
-    limit(aLimit), extrasSize(anExtrasSize), count(0), slots(aLimit)
+        limit(aLimit), extrasSize(anExtrasSize), count(0), slots(aLimit)
 {
 }
 

@@ -139,7 +139,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.base = strdup( line+subs[offset].rm_so );
+            cd.base = xstrdup( line+subs[offset].rm_so );
             ++offset;
 
             // extract size information

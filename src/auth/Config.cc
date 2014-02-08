@@ -105,10 +105,10 @@ Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
             delete keyExtras;
 
         keyExtras = nlf;
-        
+
         if (char *t = strtok(NULL, w_space)) {
-               debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
-               self_destruct();
+            debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
+            self_destruct();
         }
     } else {
         debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
@@ -126,6 +126,6 @@ void
 Auth::Config::done()
 {
     delete keyExtras;
-    keyExtras = NULL; 
+    keyExtras = NULL;
     keyExtrasLine.clean();
 }

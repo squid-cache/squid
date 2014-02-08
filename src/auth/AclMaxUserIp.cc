@@ -25,7 +25,7 @@ ACLMaxUserIP::ACLMaxUserIP(ACLMaxUserIP const &old) :
         class_(old.class_),
         maximum(old.maximum)
 {
-   flags = old.flags;
+    flags = old.flags;
 }
 
 ACLMaxUserIP::~ACLMaxUserIP()
