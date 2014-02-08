@@ -107,13 +107,14 @@ for FILENAME in `ls -1`; do
 
 	#
 	# detect functions unsafe for use within Squid.
-	# strdup()
+	# strdup() - only allowed in compat/xstring.h which defines a safe replacement.
+	# sprintf() - not allowed anywhere.
 	#
-	STRDUP=`grep -e "[^x]strdup" ${FILENAME}`;
-	if test "x${STRDUP}" != "x" ; then
+	STRDUP=`grep -e "[^x]strdup(" ${FILENAME}`;
+	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "xstring.h"; then
 		echo "ERROR: ${PWD}/${FILENAME} contains unprotected use of strdup()"
 	fi
-	SPRINTF=`grep -e "[^v]sprintf" ${FILENAME}`;
+	SPRINTF=`grep -e "[^v]sprintf(" ${FILENAME}`;
 	if test "x${SPRINTF}" != "x" ; then
 		echo "ERROR: ${PWD}/${FILENAME} contains unsafe use of sprintf()"
 	fi

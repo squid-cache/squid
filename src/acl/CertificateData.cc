@@ -59,7 +59,7 @@ ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribut
     validAttributes.assign (old.validAttributes.begin(), old.validAttributes.end());
     attributeIsOptional = old.attributeIsOptional;
     if (old.attribute)
-        attribute = xstrdup (old.attribute);
+        attribute = xstrdup(old.attribute);
 }
 
 template<class T>

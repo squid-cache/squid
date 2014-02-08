@@ -76,7 +76,7 @@ private:
      *  constructor. This assumption is relied upon in operator[], add,
      *  operator+=
      */
-   Storage chars_;
+    Storage chars_;
 };
 
 #endif /* _SQUID_SRC_PARSER_CHARACTERSET_H */
