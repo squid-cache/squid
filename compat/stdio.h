@@ -46,8 +46,8 @@ inline FILE * tmpfile(void) { return tmpfile64(); }
 #endif /* __USE_FILE_OFFSET64 && !__REDIRECT */
 
 // Finally import the <cstdio> stuff we actually use
-#if HAVE_CSTDIO
-#include<cstdio>
+#if HAVE_CSTDIO && defined(__cplusplus)
+#include <cstdio>
 #endif
 
 #ifndef MAXPATHLEN
