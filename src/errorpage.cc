@@ -119,7 +119,7 @@ error_hard_text[] = {
 };
 
 /// \ingroup ErrorPageInternal
-static Vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
+static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
 /* local prototypes */
 
