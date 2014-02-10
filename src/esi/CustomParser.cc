@@ -205,7 +205,8 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
                 attribute = end + 1;
             }
 
-            theClient->start (tag + 1, const_cast<const char **>(attributes.data()), attributes.size() >> 1);
+            // TODO: after c++11, replace &attributes.front() with attributes.data()
+            theClient->start (tag + 1, const_cast<const char **>(&attributes.front()), attributes.size() >> 1);
             /* TODO: attributes */
 
             if (*(tagEnd - 1) == '/')
