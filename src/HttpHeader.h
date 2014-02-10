@@ -36,6 +36,8 @@
 #include "MemPool.h"
 #include "SquidString.h"
 
+#include <vector>
+
 /* class forward declarations */
 class HttpHdrCc;
 class HttpHdrContRange;
