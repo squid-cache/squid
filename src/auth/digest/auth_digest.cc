@@ -475,25 +475,6 @@ authDigestNoncePurge(digest_nonce_h * nonce)
     authDigestNonceUnlink(nonce);
 }
 
-/* USER related functions */
-static Auth::User::Pointer
-authDigestUserFindUsername(const char *userkey)
-{
-    AuthUserHashPointer *usernamehash;
-    debugs(29, 9, "Looking for user '" << userkey << "'");
-
-    if ((usernamehash = static_cast < AuthUserHashPointer * >(hash_lookup(proxy_auth_username_cache, userkey)))) {
-        while ((usernamehash->user()->auth_type != Auth::AUTH_DIGEST) && (usernamehash->next))
-            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
-
-        if (usernamehash->user()->auth_type == Auth::AUTH_DIGEST) {
-            return usernamehash->user();
-        }
-    }
-
-    return NULL;
-}
-
 void
 Auth::Digest::Config::rotateHelpers()
 {
@@ -730,7 +711,7 @@ authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
 {
     dlink_node *node;
 
-    if (!user || !nonce)
+    if (!user || !nonce || !nonce->user)
         return;
 
     Auth::Digest::User *digest_user = user;
@@ -1078,7 +1059,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     Auth::User::Pointer auth_user;
 
     SBuf key = Auth::User::BuildUserKey(username, aRequestRealm);
-    if (key.isEmpty() || (auth_user = authDigestUserFindUsername(key.c_str())) == NULL) {
+    if (key.isEmpty() || (auth_user = findUserInCache(key.c_str(), Auth::AUTH_DIGEST)) == NULL) {
         /* the user doesn't exist in the username cache yet */
         debugs(29, 9, HERE << "Creating new digest user '" << username << "'");
         digest_user = new Auth::Digest::User(this, aRequestRealm);
