@@ -46,7 +46,7 @@ class wordlist;
 
 namespace Format
 {
-    class Format;
+class Format;
 }
 
 namespace Auth

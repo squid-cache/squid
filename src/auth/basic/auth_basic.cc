@@ -289,7 +289,6 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         Tolower(cleartext);
     local_basic->username(cleartext);
 
-
     if (local_basic->passwd == NULL) {
         debugs(29, 4, HERE << "no password in proxy authorization header '" << proxy_auth << "'");
         auth_user_request->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");

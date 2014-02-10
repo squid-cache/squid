@@ -103,9 +103,6 @@
  */
 #include "compat/GnuRegex.h"
 
-/* some functions are unsafe to be used in Squid. */
-#include "compat/unsafe.h"
-
 /* cppunit is not quite C++0x compatible yet */
 #include "compat/cppunit.h"
 

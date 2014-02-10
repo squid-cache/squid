@@ -41,9 +41,9 @@
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "format/Format.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "format/Format.h"
 #include "MemBuf.h"
 
 /* Generic Functions */

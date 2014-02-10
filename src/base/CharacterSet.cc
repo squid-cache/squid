@@ -41,16 +41,18 @@ CharacterSet::addRange(unsigned char low, unsigned char high)
     return *this;
 }
 
-CharacterSet::CharacterSet(const char *label, const char * const c)
-: name(label == NULL ? "anonymous" : label), chars_(Storage(256,0))
+CharacterSet::CharacterSet(const char *label, const char * const c) :
+        name(label == NULL ? "anonymous" : label),
+        chars_(Storage(256,0))
 {
     const size_t clen = strlen(c);
     for (size_t i = 0; i < clen; ++i)
         add(c[i]);
 }
 
-CharacterSet::CharacterSet(const char *label, unsigned char low, unsigned char high)
-: name(label == NULL ? "anonymous" : label), chars_(Storage(256,0))
+CharacterSet::CharacterSet(const char *label, unsigned char low, unsigned char high) :
+        name(label == NULL ? "anonymous" : label),
+        chars_(Storage(256,0))
 {
     addRange(low,high);
 }
