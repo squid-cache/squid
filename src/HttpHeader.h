@@ -283,7 +283,7 @@ public:
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
-    Vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
+    std::vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
     HttpHeaderMask mask;	/**< bit set <=> entry present */
     http_hdr_owner_type owner;	/**< request or reply */
     int len;			/**< length when packed, not counting terminating null-byte */
