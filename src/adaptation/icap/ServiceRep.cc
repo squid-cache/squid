@@ -470,7 +470,7 @@ void Adaptation::Icap::ServiceRep::checkOptions()
     if (!theOptions->methods.empty()) {
         bool method_found = false;
         String method_list;
-        Vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
+        std::vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
 
         while (iter != theOptions->methods.end()) {
 
