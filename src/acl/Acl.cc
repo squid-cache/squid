@@ -41,6 +41,8 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
+#include <vector>
+
 const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
 
 const char *AclMatchedName = NULL;
@@ -405,7 +407,7 @@ ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype
     registerMe ();
 }
 
-Vector<ACL::Prototype const *> * ACL::Prototype::Registry;
+std::vector<ACL::Prototype const *> * ACL::Prototype::Registry;
 void *ACL::Prototype::Initialized;
 
 bool
@@ -429,7 +431,7 @@ ACL::Prototype::registerMe ()
     if (!Registry || (Initialized != ((char *)Registry - 5))  ) {
         /* TODO: extract this */
         /* Not initialised */
-        Registry = new Vector <ACL::Prototype const *>;
+        Registry = new std::vector<ACL::Prototype const *>;
         Initialized = (char *)Registry - 5;
     }
 
