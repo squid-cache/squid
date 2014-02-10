@@ -35,7 +35,7 @@
 
 ConfigOptionVector::~ConfigOptionVector()
 {
-    while (options.size()) {
+    while (!options.empty()) {
         delete options.back();
         options.pop_back();
     }

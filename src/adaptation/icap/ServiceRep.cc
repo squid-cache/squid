@@ -375,7 +375,8 @@ void Adaptation::Icap::ServiceRep::noteTimeToNotify()
     Pointer us = NULL;
 
     while (!theClients.empty()) {
-        Client i = theClients.pop_back();
+        Client i = theClients.back();
+        theClients.pop_back();
         ScheduleCallHere(i.callback);
         i.callback = 0;
     }
