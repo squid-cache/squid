@@ -87,7 +87,7 @@ StoreFileSystem::GetFileSystems()
 void
 StoreFileSystem::FreeAllFs()
 {
-    while (GetFileSystems().size()) {
+    while (!GetFileSystems().empty()) {
         StoreFileSystem *fs = GetFileSystems().back();
         GetFileSystems().pop_back();
         fs->done();
