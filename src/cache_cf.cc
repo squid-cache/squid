@@ -250,7 +250,7 @@ static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
-static bool parseNamedIntList(const char *data, const String &name, Vector<int> &list);
+static bool parseNamedIntList(const char *data, const String &name, std::vector<int> &list);
 
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
@@ -490,7 +490,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
     config_lineno = 0;
 
-    Vector<bool> if_states;
+    std::vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
         ++config_lineno;
 
@@ -4261,7 +4261,7 @@ free_access_log(CustomLog ** definitions)
 
 /// parses list of integers form name=N1,N2,N3,...
 static bool
-parseNamedIntList(const char *data, const String &name, Vector<int> &list)
+parseNamedIntList(const char *data, const String &name, std::vector<int> &list)
 {
     if (data && (strncmp(data, name.rawBuf(), name.size()) == 0)) {
         data += name.size();
@@ -4294,7 +4294,7 @@ parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 
     const char *const pToken = ConfigParser::NextToken();
     const char *const cToken = ConfigParser::NextToken();
-    Vector<int> processes, cores;
+    std::vector<int> processes, cores;
     if (!parseNamedIntList(pToken, "process_numbers", processes)) {
         debugs(3, DBG_CRITICAL, "FATAL: bad 'process_numbers' parameter " <<
                "in 'cpu_affinity_map'");

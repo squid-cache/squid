@@ -33,7 +33,6 @@
 #include "squid.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ServiceRep.h"
-#include "base/Vector.h"
 #include "ConfigParser.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
