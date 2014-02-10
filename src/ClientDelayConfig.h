@@ -2,6 +2,7 @@
 #define SQUID_CLIENTDELAYCONFIG_H
 
 #include "acl/forward.h"
+
 #include <vector>
 
 class StoreEntry;
