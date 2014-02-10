@@ -30,7 +30,7 @@ ClientDelayConfig::finalize()
 
 void ClientDelayConfig::freePoolCount()
 {
-    pools.clean();
+    pools.clear();
 }
 
 void ClientDelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) const
