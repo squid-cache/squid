@@ -472,7 +472,7 @@ FwdState::complete()
         entry->reset();
 
         // drop the last path off the selection list. try the next one.
-        serverDestinations.shift();
+        serverDestinations.erase(serverDestinations.begin());
         startConnectionOrFail();
 
     } else {
