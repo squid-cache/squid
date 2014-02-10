@@ -61,7 +61,7 @@ private:
 
 typedef Service::Pointer ServicePointer;
 
-typedef Vector<Adaptation::ServicePointer> Services;
+typedef std::vector<Adaptation::ServicePointer> Services;
 Services &AllServices();
 ServicePointer FindService(const Service::Id &key);
 

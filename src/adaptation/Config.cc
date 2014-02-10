@@ -43,6 +43,8 @@
 #include "HttpRequest.h"
 #include "Store.h"
 
+#include <algorithm>
+
 bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;
 int Adaptation::Config::service_iteration_limit = 16;
@@ -87,15 +89,15 @@ Adaptation::Config::removeService(const String& service)
         for (SGSI it = services.begin(); it != services.end(); ++it) {
             if (*it == service) {
                 group->removedServices.push_back(service);
-                group->services.prune(service);
-                debugs(93, 5, HERE << "adaptation service " << service <<
+                std::remove(group->services.begin(),group->services.end(),service);
+                debugs(93, 5, "adaptation service " << service <<
                        " removed from group " << group->id);
                 break;
             }
         }
         if (services.empty()) {
             removeRule(group->id);
-            AllGroups().prune(group);
+            std::remove(AllGroups().begin(),AllGroups().end(),group);
         } else {
             ++i;
         }
@@ -122,8 +124,8 @@ Adaptation::Config::removeRule(const String& id)
     for (ARI it = rules.begin(); it != rules.end(); ++it) {
         AccessRule* rule = *it;
         if (rule->groupId == id) {
-            debugs(93, 5, HERE << "removing access rules for:" << id);
-            AllRules().prune(rule);
+            debugs(93, 5, "removing access rules for:" << id);
+            std::remove(AllRules().begin(),AllRules().end(),rule);
             delete (rule);
             break;
         }
