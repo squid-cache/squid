@@ -117,17 +117,13 @@ testRock::commonInit()
     StoreFileSystem::SetupAllFs();
 
     Config.Store.avgObjectSize = 1024;
-
     Config.Store.objectsPerBucket = 20;
-
     Config.Store.maxObjectSize = 2048;
 
     Config.store_dir_select_algorithm = xstrdup("round-robin");
 
     Config.replPolicy = new RemovalPolicySettings;
-
-    Config.replPolicy->type = xstrdup ("lru");
-
+    Config.replPolicy->type = xstrdup("lru");
     Config.replPolicy->args = NULL;
 
     /* garh garh */

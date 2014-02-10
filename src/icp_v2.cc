@@ -501,21 +501,15 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 #endif /* USE_ICMP */
 
     /* The peer is allowed to use this cache */
-    ICP2State *state = new ICP2State (header, icp_request);
-
+    ICP2State *state = new ICP2State(header, icp_request);
     state->fd = fd;
-
     state->from = from;
-
-    state->url = xstrdup (url);
-
+    state->url = xstrdup(url);
     state->flags = flags;
-
     state->rtt = rtt;
-
     state->src_rtt = src_rtt;
 
-    StoreEntry::getPublic (state, url, Http::METHOD_GET);
+    StoreEntry::getPublic(state, url, Http::METHOD_GET);
 
     HTTPMSGUNLOCK(icp_request);
 }

@@ -114,7 +114,6 @@ typedef unsigned long ino_t;
 #define snprintf _snprintf
 #define stat _stati64
 #define strcasecmp _stricmp
-#define strdup _strdup
 #define strlwr _strlwr
 #define strncasecmp _strnicmp
 #define tempnam _tempnam
