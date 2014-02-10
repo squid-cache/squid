@@ -50,6 +50,8 @@
 #include "StrList.h"
 #include "TimeOrTag.h"
 
+#include <algorithm>
+
 /*
  * On naming conventions:
  *
@@ -887,7 +889,7 @@ HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
 void
 HttpHeader::compact()
 {
-    entries.prune(NULL);
+    std::remove(entries.begin(), entries.end(), static_cast<HttpHeaderEntry *>(NULL));
 }
 
 /*
@@ -943,7 +945,7 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
     else
         CBIT_SET(mask, e->id);
 
-    entries.insert(e);
+    entries.insert(entries.begin(),e);
 
     /* increment header length, allow for ": " and crlf */
     len += e->name.size() + 2 + e->value.size() + 2;
