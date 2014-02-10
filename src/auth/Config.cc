@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -128,4 +129,23 @@ Auth::Config::done()
     delete keyExtras;
     keyExtras = NULL;
     keyExtrasLine.clean();
+}
+
+Auth::User::Pointer
+Auth::Config::findUserInCache(const char *nameKey, Auth::Type type)
+{
+    AuthUserHashPointer *usernamehash;
+    debugs(29, 9, "Looking for user '" << nameKey << "'");
+
+    if (nameKey && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, nameKey)))) {
+        while (usernamehash) {
+            if ((usernamehash->user()->auth_type == type) &&
+                    !strcmp(nameKey, (char const *)usernamehash->key))
+                return usernamehash->user();
+
+            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
+        }
+    }
+
+    return NULL;
 }
