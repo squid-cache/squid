@@ -3,7 +3,6 @@
 
 #include "adaptation/DynamicGroupCfg.h"
 #include "base/RefCount.h"
-#include "base/Vector.h"
 #include "HttpHeader.h"
 #include "Notes.h"
 #include "SBuf.h"
