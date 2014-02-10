@@ -1783,7 +1783,7 @@ ClientSocketContext::pullData()
 }
 
 /** Adapt stream status to account for Range cases
- * 
+ *
  */
 clientStream_status_t
 ClientSocketContext::socketState()
@@ -1817,7 +1817,7 @@ ClientSocketContext::socketState()
 
             if (bytesSent == bytesExpected) // got everything
                 return STREAM_COMPLETE;
-            
+
             if (bytesSent > bytesExpected) // Error: Sent more than expected
                 return STREAM_UNPLANNED_COMPLETE;
         }

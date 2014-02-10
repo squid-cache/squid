@@ -1833,7 +1833,7 @@ if test "x$ac_krb5_config" = "xyes" ; then
   CPPFLAGS="$CPPFLAGS $KRB5INCS"
   LIBS="$LIBS $KRB5LIBS"
   AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-  if test "x$ac_heimdal" == "x" ; then
+  if test "x$ac_heimdal" = "x" ; then
     AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(profile.h)
   fi
@@ -1853,9 +1853,9 @@ if test "x$ac_krb5_config" = "xyes" ; then
   AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
   ac_com_error_message=no
-  if test "x$ac_cv_header_com_err_h" == "xyes" ; then
+  if test "x$ac_cv_header_com_err_h" = "xyes" ; then
       AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)
-  elif test "x$ac_cv_header_et_com_err_h" == "xyes" ; then
+  elif test "x$ac_cv_header_et_com_err_h" = "xyes" ; then
       AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
   fi
 
@@ -1864,11 +1864,11 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT, 1, [Define to 1 if max_skew in struct krb5_context])
   fi
 
-  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" == "xyes" ; then
+  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
     AC_CHECK_LIB(com_err,error_message,
       AC_DEFINE(HAVE_ERROR_MESSAGE,1,
         [Define to 1 if you have error_message]),)
-  elif test  "x$ac_com_error_message" == "xyes" ; then
+  elif test  "x$ac_com_error_message" = "xyes" ; then
     AC_CHECK_LIB(krb5,error_message,
       AC_DEFINE(HAVE_ERROR_MESSAGE,1,
         [Define to 1 if you have error_message]),)
@@ -2169,6 +2169,7 @@ AC_CHECK_HEADERS( \
   cassert \
   crypt.h \
   cstdarg \
+  cstdio \
   cstdlib \
   cstring \
   list \
@@ -2886,6 +2887,7 @@ case "$host" in
       CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
     fi
   ;;
+
   *-sgi-irix*)
     AC_MSG_NOTICE([Removing -lsocket for IRIX...])
     LIBS=`echo $LIBS | sed -e s/-lsocket//`
@@ -2948,7 +2950,7 @@ assert(myBar != NULL);
 # Remove optimization for GCC 2.95.[123]
 # gcc -O[2] on *BSD and Linux (x86) causes pointers to magically become NULL
 if test "x$GCC" = "xyes"; then
-	GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
+	GCCVER=`$CC -v 2>&1 | awk '$2 == "version" {print $3}'`
 	case "$GCCVER" in
 	[2.95.[123]])
 		AC_MSG_NOTICE([Removing -O for gcc on $host with GCC $GCCVER])

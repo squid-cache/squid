@@ -223,7 +223,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
         time_t stale_age = static_cast<time_t>(lastmod_delta * R->pct);
 
         debugs(22,3, "Last modified " << lastmod_delta << " sec before we cached it, L-M factor " <<
-                     (100.0 * R->pct) << "% = " << stale_age << " sec freshness lifetime");
+               (100.0 * R->pct) << "% = " << stale_age << " sec freshness lifetime");
         sf->lmfactor = true;
 
         if (age >= stale_age) {

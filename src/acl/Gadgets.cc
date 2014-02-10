@@ -53,7 +53,6 @@
 #include <set>
 #include <algorithm>
 
-
 typedef std::set<ACL*> AclSet;
 /// Accumulates all ACLs to facilitate their clean deletion despite reuse.
 static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
