@@ -5,6 +5,8 @@
 #include "adaptation/forward.h"
 #include "SquidString.h"
 
+#include <vector>
+
 class ConfigParser;
 
 namespace Adaptation

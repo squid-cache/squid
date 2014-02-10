@@ -1,4 +1,3 @@
-
 /*
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,6 +35,8 @@
 #include "Packer.h"
 #include "Range.h"
 #include "SquidString.h"
+
+#include <vector>
 
 class HttpReply;
 /* http byte-range-spec */
