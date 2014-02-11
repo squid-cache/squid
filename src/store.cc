@@ -1253,7 +1253,7 @@ StoreEntry::release()
             // lock the entry until rebuilding is done
             lock("storeLateRelease");
             setReleaseFlag();
-            LateReleaseStack.push_back(this);
+            LateReleaseStack.push(this);
         } else {
             destroyStoreEntry(static_cast<hash_link *>(this));
             // "this" is no longer valid
@@ -1289,8 +1289,14 @@ storeLateRelease(void *unused)
         return;
     }
 
+    // TODO: this works but looks unelegant.
     for (i = 0; i < 10; ++i) {
-        e = LateReleaseStack.empty() ? NULL : LateReleaseStack.pop();
+        if (LateReleaseStack.empty()) {
+            e = NULL;
+        } else {
+            e = LateReleaseStack.top();
+            LateReleaseStack.pop();
+        }
 
         if (e == NULL) {
             /* done! */

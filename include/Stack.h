@@ -48,7 +48,7 @@ public:
     typedef typename Vector<S>::value_type value_type;
     typedef typename Vector<S>::pointer pointer;
     value_type pop() {
-        if (!count)
+        if (Vector<S>::empty())
             return value_type();
 
         value_type result = items[--count];
@@ -61,6 +61,10 @@ public:
     /* todo, fatal on empty Top call */
     value_type top() const {
         return count ? items[count - 1] : value_type();
+    }
+
+    void push(S item) {
+        Vector<S>::push_back(item);
     }
 };
 
