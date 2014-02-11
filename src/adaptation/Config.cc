@@ -88,7 +88,7 @@ Adaptation::Config::removeService(const String& service)
         for (SGSI it = services.begin(); it != services.end(); ++it) {
             if (*it == service) {
                 group->removedServices.push_back(service);
-                std::remove(group->services.begin(),group->services.end(),service);
+                std::remove(group->services.begin(), group->services.end(), service);
                 debugs(93, 5, "adaptation service " << service <<
                        " removed from group " << group->id);
                 break;
@@ -96,7 +96,7 @@ Adaptation::Config::removeService(const String& service)
         }
         if (services.empty()) {
             removeRule(group->id);
-            std::remove(AllGroups().begin(),AllGroups().end(),group);
+            std::remove(AllGroups().begin(), AllGroups().end(), group);
         } else {
             ++i;
         }
@@ -124,7 +124,7 @@ Adaptation::Config::removeRule(const String& id)
         AccessRule* rule = *it;
         if (rule->groupId == id) {
             debugs(93, 5, "removing access rules for:" << id);
-            std::remove(AllRules().begin(),AllRules().end(),rule);
+            std::remove(AllRules().begin(), AllRules().end(), rule);
             delete (rule);
             break;
         }
