@@ -33,7 +33,6 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/Vector.h"
 #include "CachePeer.h"
 #include "client_side.h"
 #include "client_side_request.h"
@@ -779,7 +778,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
          */
-        tunnelState->serverDestinations.shift();
+        tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
         if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
 
