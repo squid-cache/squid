@@ -368,7 +368,7 @@ HttpHdrRange::merge (std::vector<HttpHdrRangeSpec *> &basis)
 }
 
 void
-HttpHdrRange::getCanonizedSpecs (std::vector<HttpHdrRangeSpec *> &copy)
+HttpHdrRange::getCanonizedSpecs(std::vector<HttpHdrRangeSpec *> &copy)
 {
     /* canonize each entry and destroy bad ones if any */
 
@@ -379,8 +379,7 @@ HttpHdrRange::getCanonizedSpecs (std::vector<HttpHdrRangeSpec *> &copy)
             delete (*pos);
     }
 
-    debugs(64, 3, "HttpHdrRange::getCanonizedSpecs: found " <<
-           specs.size() - copy.size() << " bad specs");
+    debugs(64, 3, "found " << specs.size() - copy.size() << " bad specs");
 }
 
 #include "HttpHdrContRange.h"
