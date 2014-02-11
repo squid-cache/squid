@@ -118,7 +118,7 @@ public:
         if (calls.size() > 1000)
             return;
 
-        calls.push_back(new CBDataCall(label, aFile, aLine));
+        calls.push(new CBDataCall(label, aFile, aLine));
     }
 
     dlink_node link;
@@ -209,10 +209,11 @@ cbdata_hash(const void *p, unsigned int mod)
 cbdata::~cbdata()
 {
 #if USE_CBDATA_DEBUG
-    CBDataCall *aCall;
 
-    while ((aCall = calls.pop()))
-        delete aCall;
+    while (!calls.empty()) {
+        delete calls.top();
+        calls.pop();
+    }
 
 #endif
 
