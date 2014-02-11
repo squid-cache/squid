@@ -2,7 +2,8 @@
 #define _SQUID_COMM_FORWARD_H
 
 #include "base/RefCount.h"
-#include "base/Vector.h"
+
+#include <vector>
 
 namespace Comm
 {
@@ -11,7 +12,7 @@ class Connection;
 
 typedef RefCount<Comm::Connection> ConnectionPointer;
 
-typedef Vector<Comm::ConnectionPointer> ConnectionList;
+typedef std::vector<Comm::ConnectionPointer> ConnectionList;
 
 bool IsConnOpen(const Comm::ConnectionPointer &conn);
 

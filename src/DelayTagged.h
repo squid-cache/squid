@@ -37,7 +37,6 @@
 #if USE_DELAY_POOLS
 
 #include "auth/Gadgets.h"
-#include "base/Vector.h"
 #include "CompositePoolNode.h"
 #include "DelayBucket.h"
 #include "DelayIdComposite.h"

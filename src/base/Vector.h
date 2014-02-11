@@ -32,7 +32,7 @@
 #define SQUID_ARRAY_H
 
 /**
- \todo CLEANUP: this file should be called Vector.h at least, and probably be replaced by STL Vector<C>
+ \todo remove this after replacing with STL
  */
 
 #include "fatal.h"
