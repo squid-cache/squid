@@ -38,7 +38,6 @@
 
 #include "auth/Gadgets.h"
 #include "auth/User.h"
-#include "base/Vector.h"
 #include "CompositePoolNode.h"
 #include "DelayBucket.h"
 #include "DelayIdComposite.h"
