@@ -51,7 +51,6 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "Stack.h"
 #include "StatCounters.h"
 #include "stmem.h"
 #include "Store.h"
@@ -73,6 +72,8 @@
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif
+
+#include <stack>
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
@@ -125,7 +126,7 @@ static EVH storeLateRelease;
 /*
  * local variables
  */
-static Stack<StoreEntry*> LateReleaseStack;
+static std::stack<StoreEntry*> LateReleaseStack;
 MemAllocator *StoreEntry::pool = NULL;
 
 StorePointer Store::CurrentRoot = NULL;
