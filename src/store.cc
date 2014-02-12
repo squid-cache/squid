@@ -1282,7 +1282,6 @@ static void
 storeLateRelease(void *unused)
 {
     StoreEntry *e;
-    int i;
     static int n = 0;
 
     if (StoreController::store_dirs_rebuilding) {
@@ -1291,18 +1290,13 @@ storeLateRelease(void *unused)
     }
 
     // TODO: this works but looks unelegant.
-    for (i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10; ++i) {
         if (LateReleaseStack.empty()) {
-            e = NULL;
+            debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
+            return;
         } else {
             e = LateReleaseStack.top();
             LateReleaseStack.pop();
-        }
-
-        if (e == NULL) {
-            /* done! */
-            debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
-            return;
         }
 
         e->unlock("storeLateRelease");
