@@ -965,13 +965,14 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
         (*name)[*nl] = atoi(s); // stops at the '.' delimiter
         ++(*nl);
-        // exit with true when teh last octet has been parsed
+        // exit with true when the last octet has been parsed
         if (s[len] == '\0')
             return true;
         s += len+1;
     }
 
     // if we aborted before the lst octet was found, return false.
+    safe_free(name);
     return false;
 }
 
