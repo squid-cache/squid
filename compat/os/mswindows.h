@@ -961,5 +961,7 @@ void syslog(int priority, const char *fmt, ...);
 /* prototypes */
 void WIN32_maperror(unsigned long WIN32_oserrno);
 
+#include "compat/strsep.h"
+
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWINDOWS_H */
