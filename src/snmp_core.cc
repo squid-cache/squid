@@ -59,7 +59,7 @@ static mib_tree_entry * snmpAddNodeStr(const char *base_str, int o, oid_ParseFn 
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, AggrType aggrType, int children,...);
 static oid *snmpCreateOid(int length,...);
 mib_tree_entry * snmpLookupNodeStr(mib_tree_entry *entry, const char *str);
-bool snmpCreateOidFromStr(const char *str, oid **name, int *nl);
+int snmpCreateOidFromStr(const char *str, oid **name, int *nl);
 SQUIDCEXTERN void (*snmplib_debug_hook) (int, char *);
 static oid *static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
@@ -951,28 +951,26 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
     return e;
 }
 
-bool
+int
 snmpCreateOidFromStr(const char *str, oid **name, int *nl)
 {
     char const *delim = ".";
+    char *p;
 
     *name = NULL;
     *nl = 0;
-    const char *s = str;
+    char *s = xstrdup(str);
+    char *s_ = s;
 
     /* Parse the OID string into oid bits */
-    while (size_t len = strcspn(s, delim)) {
+    while ( (p = strsep(&s_, delim)) != NULL) {
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
-        (*name)[*nl] = atoi(s); // stops at the '.' delimiter
+        (*name)[*nl] = atoi(p);
         ++(*nl);
-        // exit with true when teh last octet has been parsed
-        if (s[len] == '\0')
-            return true;
-        s += len+1;
     }
 
-    // if we aborted before the lst octet was found, return false.
-    return false;
+    xfree(s);
+    return 1;
 }
 
 /*
