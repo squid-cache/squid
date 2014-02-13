@@ -3081,7 +3081,6 @@ AC_REPLACE_FUNCS(\
 	getnameinfo \
 	psignal \
 	strerror \
-	strsep \
 	strtoll \
 	tempnam \
 )

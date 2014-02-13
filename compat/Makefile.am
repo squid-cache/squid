@@ -39,7 +39,6 @@ libcompat_squid_la_SOURCES = \
 	stdio.h \
 	stdvarargs.h \
 	strnstr.cc \
-	strsep.h \
 	strtoll.h \
 	strnrchr.h \
 	strnrchr.c \
