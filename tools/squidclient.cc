@@ -147,7 +147,7 @@ static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
 
 #if HAVE_GSSAPI
-static int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function);
+static bool check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function);
 static char *GSSAPI_token(const char *server);
 #endif
 
@@ -694,11 +694,13 @@ main(int argc, char *argv[])
             elapsed_msec = tvSubMsec(tv1, tv2);
             t2s = tv2.tv_sec;
             tmp = localtime(&t2s);
-            fprintf(stderr, "%d-%02d-%02d %02d:%02d:%02d [%d]: %ld.%03ld secs, %f KB/s\n",
+            char tbuf[4096];
+            snprintf(tbuf, sizeof(tbuf)-1, "%d-%02d-%02d %02d:%02d:%02d [%d]: %ld.%03ld secs, %f KB/s",
                     tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
                     tmp->tm_hour, tmp->tm_min, tmp->tm_sec, i + 1,
                     elapsed_msec / 1000, elapsed_msec % 1000,
                     elapsed_msec ? (double) fsize / elapsed_msec : -1.0);
+            std::cerr << tbuf << std::endl;
 
             if (i == 0 || elapsed_msec < ping_min)
                 ping_min = elapsed_msec;
@@ -732,10 +734,10 @@ main(int argc, char *argv[])
     return 0;
 }
 
+/// Set up the source socket address from which to send.
 static int
 client_comm_bind(int sock, const Ip::Address &addr)
 {
-    /* Set up the source socket address from which to send. */
     static struct addrinfo *AI = NULL;
     addr.getAddrInfo(AI);
     int res = bind(sock, AI->ai_addr, AI->ai_addrlen);
@@ -743,10 +745,10 @@ client_comm_bind(int sock, const Ip::Address &addr)
     return res;
 }
 
+/// Set up the destination socket address for message to send to.
 static int
 client_comm_connect(int sock, const Ip::Address &addr, struct timeval *tvp)
 {
-    /* Set up the destination socket address for message to send to. */
     static struct addrinfo *AI = NULL;
     addr.getAddrInfo(AI);
     int res = connect(sock, AI->ai_addr, AI->ai_addrlen);
@@ -770,34 +772,31 @@ void
 catchSignal(int sig)
 {
     interrupted = 1;
-    fprintf(stderr, "Interrupted.\n");
+    std::cerr << "SIGNAL " << sig << " Interrupted." << std::endl;
 }
 
 void
 pipe_handler(int sig)
 {
-    fprintf(stderr, "SIGPIPE received.\n");
+    std::cerr << "SIGPIPE received." << std::endl;
 }
 
 static void
 set_our_signal(void)
 {
 #if HAVE_SIGACTION
-
     struct sigaction sa;
     sa.sa_handler = pipe_handler;
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
 
     if (sigaction(SIGPIPE, &sa, NULL) < 0) {
-        fprintf(stderr, "Cannot set PIPE signal.\n");
+        std::cerr << "ERROR: Cannot set PIPE signal." << std::endl;
         exit(-1);
     }
 #else
     signal(SIGPIPE, pipe_handler);
-
 #endif
-
 }
 
 static ssize_t
@@ -823,14 +822,15 @@ mywrite(int fd, void *buf, size_t len)
 }
 
 #if HAVE_GSSAPI
-/*
+#define BUFFER_SIZE 8192
+/**
  * Check return valuse major_status, minor_status for error and print error description
  * in case of an error.
- * Returns 1 in case of gssapi error
- *         0 in case of no gssapi error
+ *
+ * \retval true in case of gssapi error
+ * \retval false in case of no gssapi error
  */
-#define BUFFER_SIZE 8192
-static int
+static bool
 check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function)
 {
     if (GSS_ERROR(major_status)) {
@@ -873,17 +873,18 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *functi
             }
             gss_release_buffer(&min_stat, &status_string);
         }
-        fprintf(stderr, "%s failed: %s\n", function, buf);
-        return (1);
+        std::cerr << "ERROR: " << function << " failed: " << buf << std::endl;
+        return true;
     }
-    return (0);
+    return false;
 }
 
-/*
+/**
  * Get gssapi token for service HTTP/<server>
  * User has to initiate a kinit user@DOMAIN on commandline first for the
  * function to be successful
- * Returns base64 encoded token if successful
+ *
+ * \return base64 encoded token if successful,
  *         string "ERROR" if unsuccessful
  */
 static char *
@@ -901,7 +902,7 @@ GSSAPI_token(const char *server)
     setbuf(stdin, NULL);
 
     if (!server) {
-        fprintf(stderr, "Error: No server name\n");
+        std::cerr << "ERROR: GSSAPI: No server name" << std::endl;
         return (char *)"ERROR";
     }
     service.value = xmalloc(strlen("HTTP") + strlen(server) + 2);
