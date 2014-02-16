@@ -43,13 +43,11 @@ using namespace Squid;
 /** \endcond */
 #endif
 
+#include <cstdio>
 #include <iostream>
 
 #if _SQUID_WINDOWS_
 #include <io.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
 #endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -122,6 +120,19 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
 
 typedef void SIGHDLR(int sig);
 
+/// display debug messages at varying verbosity levels
+#define debugVerbose(LEVEL, MESSAGE) \
+    while ((LEVEL) <= verbosityLevel) {std::cerr << MESSAGE << std::endl; break;}
+
+/**
+ * What verbosity level to display.
+ *
+ *  0  : display no debug traces
+ *  1  : display outgoing request message
+ *  2+ : display all actions taken
+ */
+int verbosityLevel = 0;
+
 /* Local functions */
 static int client_comm_bind(int, const Ip::Address &);
 
@@ -176,8 +187,9 @@ usage(const char *progname)
             << "    -l host      Specify a local IP address to bind to.  Default is none." << std::endl
             << "    -p port      Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
             << "    -s           Silent.  Do not print response message to stdout." << std::endl
-            << "    -T timeout   Timeout value (seconds) for read/write operations." << std::endl
-            << "    -v           Verbose. Print outgoing request message and actions to stderr." << std::endl
+            << "    -T timeout   Timeout value (seconds) for read/write operations" << std::endl
+            << "    -v           Verbose. Print outgoing request message to stderr." << std::endl
+            << "                 Repeat (-vv) to print action trace to stderr." << std::endl
             << std::endl
             << "HTTP Options:" << std::endl
             << "    -a           Do NOT include Accept: header." << std::endl
@@ -191,8 +203,8 @@ usage(const char *progname)
             << "    -n           Proxy Negotiate(Kerberos) authentication" << std::endl
             << "    -N           WWW Negotiate(Kerberos) authentication" << std::endl
 #endif
-            << "    -P file      PUT request. Using the named file" << std::endl
-            << "    -r           Force cache to reload URL." << std::endl
+            << "    -P file      Send content from the named file as request payload" << std::endl
+            << "    -r           Force cache to reload URL" << std::endl
             << "    -t count     Trace count cache-hops" << std::endl
             << "    -u user      Proxy authentication username" << std::endl
             << "    -U user      WWW authentication username" << std::endl
@@ -213,7 +225,6 @@ main(int argc, char *argv[])
     int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
-    bool opt_verbose = false;
 #if HAVE_GSSAPI
     int www_neg = 0, proxy_neg = 0;
 #endif
@@ -375,7 +386,8 @@ main(int argc, char *argv[])
 #endif
             case 'v':
                 /* undocumented: may increase verb-level by giving more -v's */
-                opt_verbose=true;
+                ++verbosityLevel;
+                debugVerbose(2, "verbosity level set to " << verbosityLevel);
                 break;
 
             case '?':		/* usage */
@@ -411,8 +423,7 @@ main(int argc, char *argv[])
         set_our_signal();
 
         if (put_fd < 0) {
-            fprintf(stderr, "%s: can't open file (%s)\n", argv[0],
-                    xstrerror());
+            std::cerr << "ERROR: can't open file (" << xstrerror() << ")" << std::endl;
             exit(-1);
         }
 #if _SQUID_WINDOWS_
@@ -420,7 +431,7 @@ main(int argc, char *argv[])
 #endif
 
         if (fstat(put_fd, &sb) < 0) {
-            fprintf(stderr, "%s: can't identify length of file (%s)\n", argv[0], xstrerror());
+            std::cerr << "ERROR: can't identify length of file (" << xstrerror() << ")" << std::endl;
         }
     }
 
@@ -490,7 +501,7 @@ main(int argc, char *argv[])
                 password = getpass("Proxy password: ");
 #endif
             if (!password) {
-                fprintf(stderr, "ERROR: Proxy password missing\n");
+                std::cerr << "ERROR: Proxy password missing" << std::endl;
                 exit(1);
             }
             snprintf(buf, BUFSIZ, "%s:%s", user, password);
@@ -505,7 +516,7 @@ main(int argc, char *argv[])
                 password = getpass("WWW password: ");
 #endif
             if (!password) {
-                fprintf(stderr, "ERROR: WWW password missing\n");
+                std::cerr << "ERROR: WWW password missing" << std::endl;
                 exit(1);
             }
             snprintf(buf, BUFSIZ, "%s:%s", user, password);
@@ -518,14 +529,14 @@ main(int argc, char *argv[])
                 snprintf(buf, BUFSIZ, "Authorization: Negotiate %s\r\n", GSSAPI_token(host));
                 strcat(msg, buf);
             } else
-                fprintf(stderr, "ERROR: server host missing\n");
+                std::cerr << "ERROR: server host missing" << std::endl;
         }
         if (proxy_neg) {
             if (hostname) {
                 snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", GSSAPI_token(hostname));
                 strcat(msg, buf);
             } else
-                fprintf(stderr, "ERROR: proxy server host missing\n");
+                std::cerr << "ERROR: proxy server host missing" << std::endl;
         }
 #endif
 
@@ -541,8 +552,7 @@ main(int argc, char *argv[])
         strcat(msg, "\r\n");
     }
 
-    if (opt_verbose)
-        fprintf(stderr, "Request:'%s'\n", msg);
+    debugVerbose(1, "Request:" << std::endl << msg << std::endl << ".");
 
     if (ping) {
 #if HAVE_SIGACTION
@@ -570,83 +580,71 @@ main(int argc, char *argv[])
         int fsize = 0;
         struct addrinfo *AI = NULL;
 
-        if (opt_verbose)
-            fprintf(stderr, "Resolving... %s\n", hostname);
+        debugVerbose(2, "Resolving... " << hostname);
 
         /* Connect to the server */
 
         if (localhost) {
             if ( !iaddr.GetHostByName(localhost) ) {
-                fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", localhost);
+                std::cerr << "ERROR: Cannot resolve " << localhost << ": Host unknown." << std::endl;
                 exit(1);
             }
         } else {
             /* Process the remote host name to locate the Protocol required
                in case we are being asked to link to another version of squid */
             if ( !iaddr.GetHostByName(hostname) ) {
-                fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", hostname);
+                std::cerr << "ERROR: Cannot resolve " << hostname << ": Host unknown." << std::endl;
                 exit(1);
             }
         }
 
         iaddr.getAddrInfo(AI);
         if ((conn = socket(AI->ai_family, AI->ai_socktype, 0)) < 0) {
-            perror("client: socket");
+            std::cerr << "ERROR: could not open socket to " << iaddr << std::endl;
             Ip::Address::FreeAddrInfo(AI);
             exit(1);
         }
         Ip::Address::FreeAddrInfo(AI);
 
         if (localhost && client_comm_bind(conn, iaddr) < 0) {
-            perror("client: bind");
+            std::cerr << "ERROR: could not bind socket to " << iaddr << std::endl;
             exit(1);
         }
 
         iaddr.setEmpty();
         if ( !iaddr.GetHostByName(hostname) ) {
-            fprintf(stderr, "client: ERROR: Cannot resolve %s: Host unknown.\n", hostname);
+            std::cerr << "ERROR: Cannot resolve " << hostname << ": Host unknown." << std::endl;
             exit(1);
         }
 
         iaddr.port(port);
 
-        if (opt_verbose) {
-            char ipbuf[MAX_IPSTRLEN];
-            fprintf(stderr, "Connecting... %s(%s)\n", hostname, iaddr.toStr(ipbuf, MAX_IPSTRLEN));
-        }
+        debugVerbose(2, "Connecting... " << hostname << " (" << iaddr << ")");
 
         if (client_comm_connect(conn, iaddr, ping ? &tv1 : NULL) < 0) {
             char hostnameBuf[MAX_IPSTRLEN];
             iaddr.toUrl(hostnameBuf, MAX_IPSTRLEN);
-            if (errno == 0) {
-                fprintf(stderr, "client: ERROR: Cannot connect to %s: Host unknown.\n", hostnameBuf);
-            } else {
-                char tbuf[BUFSIZ];
-                snprintf(tbuf, BUFSIZ, "client: ERROR: Cannot connect to %s", hostnameBuf);
-                perror(tbuf);
-            }
+            std::cerr << "ERROR: Cannot connect to " << hostnameBuf
+                      << (!errno ?": Host unknown." : "") << std::endl;
             exit(1);
         }
-        if (opt_verbose) {
-            char ipbuf[MAX_IPSTRLEN];
-            fprintf(stderr, "Connected to: %s (%s)\n", hostname, iaddr.toStr(ipbuf, MAX_IPSTRLEN));
-        }
+        debugVerbose(2, "Connected to: " << hostname << " (" << iaddr << ")");
 
         /* Send the HTTP request */
-        fprintf(stderr, "Sending HTTP request ... ");
+        debugVerbose(2, "Sending HTTP request ... ");
         bytesWritten = mywrite(conn, msg, strlen(msg));
 
         if (bytesWritten < 0) {
-            perror("client: ERROR: write");
+            std::cerr << "ERROR: write" << std::endl;
             exit(1);
         } else if ((unsigned) bytesWritten != strlen(msg)) {
-            fprintf(stderr, "client: ERROR: Cannot send request?: %s\n", msg);
+            std::cerr << "ERROR: Cannot send request?: " << std::endl << msg << std::endl;
             exit(1);
         }
-        fprintf(stderr, "done.\n");
+        debugVerbose(2, "done.");
 
         if (put_file) {
-            fprintf(stderr, "Sending HTTP request payload ... ");
+            debugVerbose(1, "Sending HTTP request payload ...");
             int x;
             lseek(put_fd, 0, SEEK_SET);
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
@@ -660,9 +658,9 @@ main(int argc, char *argv[])
             }
 
             if (x != 0)
-                fprintf(stderr, "client: ERROR: Cannot send file.\n");
+                std::cerr << "ERROR: Cannot send file." << std::endl;
             else
-                fprintf(stderr, "done.\n");
+                debugVerbose(1, "done.");
         }
         /* Read the data */
 
@@ -674,7 +672,7 @@ main(int argc, char *argv[])
             fsize += len;
 
             if (to_stdout && fwrite(buf, len, 1, stdout) != 1)
-                perror("client: ERROR writing to stdout");
+                std::cerr << "ERROR: writing to stdout: " << xstrerror() << std::endl;
         }
 
 #if _SQUID_WINDOWS_
@@ -725,13 +723,12 @@ main(int argc, char *argv[])
 
     if (ping && i) {
         ping_mean = ping_sum / i;
-        fprintf(stderr, "%d requests, round-trip (secs) min/avg/max = "
-                "%ld.%03ld/%ld.%03ld/%ld.%03ld\n", i,
-                ping_min / 1000, ping_min % 1000, ping_mean / 1000, ping_mean % 1000,
-                ping_max / 1000, ping_max % 1000);
+        std::cerr << i << " requests, round-trip (secs) min/avg/max = "
+                  << (ping_min/1000) << "." << (ping_min%1000)
+                  << "/" << (ping_mean/1000) << "." << (ping_mean%1000)
+                  << "/" << (ping_max/1000) << "." << (ping_max%1000)
+                  << std::endl;
     }
-    exit(0);
-    /*NOTREACHED */
     return 0;
 }
 
