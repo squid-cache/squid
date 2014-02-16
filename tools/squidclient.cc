@@ -181,15 +181,18 @@ usage(const char *progname)
             << "Usage: " << progname << " [Basic Options] [HTTP Options]" << std::endl
             << std::endl
             << "Basic Options:" << std::endl
-            << "    -g count     Ping mode, perform \"count\" iterations (0 to loop until interrupted)." << std::endl
-            << "    -h host      Send message to server on 'host'.  Default is localhost." << std::endl
-            << "    -I interval  Ping interval in seconds (default 1 second)." << std::endl
-            << "    -l host      Specify a local IP address to bind to.  Default is none." << std::endl
-            << "    -p port      Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
-            << "    -s           Silent.  Do not print response message to stdout." << std::endl
-            << "    -T timeout   Timeout value (seconds) for read/write operations" << std::endl
-            << "    -v           Verbose. Print outgoing request message to stderr." << std::endl
-            << "                 Repeat (-vv) to print action trace to stderr." << std::endl
+            << "    -g count        Ping mode, perform \"count\" iterations (0 to loop until interrupted)." << std::endl
+            << "    -h host         Send message to server on 'host'.  Default is localhost." << std::endl
+            << "    -I interval     Ping interval in seconds (default 1 second)." << std::endl
+            << "    -l host         Specify a local IP address to bind to.  Default is none." << std::endl
+            << "    -p port         Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
+            << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
+            << "    -T timeout      Timeout value (seconds) for read/write operations" << std::endl
+            << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
+            << "                    Levels:" << std::endl
+            << "                      1 - Print outgoing request message to stderr." << std::endl
+            << "                      2 - Print action trace to stderr." << std::endl
+            << "    --help          Display this help text." << std::endl
             << std::endl
             << "HTTP Options:" << std::endl
             << "    -a           Do NOT include Accept: header." << std::endl
@@ -261,19 +264,27 @@ main(int argc, char *argv[])
     ping_int = 1 * 1000;
 
     Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
-    if (argc < 2) {
+    if (argc < 2 || argv[argc-1][0] == '-') {
         usage(argv[0]);		/* need URL */
     } else if (argc >= 2) {
         strncpy(url, argv[argc - 1], BUFSIZ);
         url[BUFSIZ - 1] = '\0';
 
-        if (url[0] == '-')
-            usage(argv[0]);
-#if HAVE_GSSAPI
-        while ((c = getopt(argc, argv, "aA:h:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:nN?")) != -1)
-#else
-        while ((c = getopt(argc, argv, "aA:h:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
-#endif
+        int optIndex = 0;
+        const char *shortOpStr = "aA:h:j:V:l:P:i:kmnN:p:rsvt:g:p:I:H:T:u:U:w:W:?";
+
+        // options for controlling squidclient
+        static struct option basicOptions[] =
+        {
+          /* These are the generic options for squidclient itself */
+          {"help",    no_argument, 0, '?'},
+          {"verbose", no_argument, 0, 'v'},
+          {"quiet",   no_argument, 0, 's'},
+          {0, 0, 0, 0}
+        };
+
+        int c;
+        while ((c = getopt_long(argc, argv, shortOpStr, basicOptions, &optIndex)) != -1) {
             switch (c) {
 
             case 'a':
@@ -375,15 +386,24 @@ main(int argc, char *argv[])
                 www_password = optarg;
                 break;
 
-#if HAVE_GSSAPI
             case 'n':
+#if HAVE_GSSAPI
                 proxy_neg = 1;
+#else
+                std::cerr << "ERROR: Negotiate authentication not supported." << std::endl;
+                usage(argv[0]);
+#endif
                 break;
 
             case 'N':
+#if HAVE_GSSAPI
                 www_neg = 1;
-                break;
+#else
+                std::cerr << "ERROR: Negotiate authentication not supported." << std::endl;
+                usage(argv[0]);
 #endif
+                break;
+
             case 'v':
                 /* undocumented: may increase verb-level by giving more -v's */
                 ++verbosityLevel;
@@ -396,6 +416,7 @@ main(int argc, char *argv[])
                 usage(argv[0]);
                 break;
             }
+        }
     }
 #if _SQUID_WINDOWS_
     {
