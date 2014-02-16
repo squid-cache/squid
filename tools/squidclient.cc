@@ -222,7 +222,7 @@ static int interrupted = 0;
 int
 main(int argc, char *argv[])
 {
-    int conn, c, len, bytesWritten;
+    int conn, len, bytesWritten;
     uint16_t port;
     bool to_stdout, reload;
     int ping, pcount;
