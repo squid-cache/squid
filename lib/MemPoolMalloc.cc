@@ -51,7 +51,11 @@ extern time_t squid_curtime;
 void *
 MemPoolMalloc::allocate()
 {
-    void *obj = freelist.pop();
+    void *obj = NULL;
+    if (!freelist.empty()) {
+        obj = freelist.top();
+        freelist.pop();
+    }
     if (obj) {
         memMeterDec(meter.idle);
         ++saved_calls;
@@ -77,7 +81,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
         if (doZero)
             memset(obj, 0, obj_size);
         memMeterInc(meter.idle);
-        freelist.push_back(obj);
+        freelist.push(obj);
     }
 }
 
@@ -127,13 +131,15 @@ MemPoolMalloc::~MemPoolMalloc()
 bool
 MemPoolMalloc::idleTrigger(int shift) const
 {
-    return freelist.count >> (shift ? 8 : 0);
+    return freelist.size() >> (shift ? 8 : 0);
 }
 
 void
 MemPoolMalloc::clean(time_t maxage)
 {
-    while (void *obj = freelist.pop()) {
+    while (!freelist.empty()) {
+        void *obj = freelist.top();
+        freelist.pop();
         memMeterDec(meter.idle);
         memMeterDec(meter.alloc);
         xfree(obj);

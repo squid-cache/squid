@@ -54,14 +54,14 @@ CBDATA_CLASS_INIT(DiskThreadsDiskFile);
 DiskThreadsDiskFile::DiskThreadsDiskFile(char const *aPath, DiskThreadsIOStrategy *anIO):fd(-1), errorOccured (false), IO(anIO),
         inProgressIOs (0)
 {
-    assert (aPath);
+    assert(aPath);
     debugs(79, 3, "UFSFile::UFSFile: " << aPath);
-    path_ = xstrdup (aPath);
+    path_ = xstrdup(aPath);
 }
 
 DiskThreadsDiskFile::~DiskThreadsDiskFile()
 {
-    safe_free (path_);
+    safe_free(path_);
     doClose();
 }
 
@@ -350,7 +350,7 @@ DiskThreadsDiskFile::writeDone(int rvfd, int errflag, size_t len, RefCount<Write
     --loop_detect;
 }
 
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 template <class RT>
 cbdata_type IoResult<RT>::CBDATA_IoResult = CBDATA_UNKNOWN;
 /** \endcond */

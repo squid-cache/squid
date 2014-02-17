@@ -98,7 +98,7 @@ main(int argc, char **argv)
             run_stats = atoi(optarg);
             break;
         case 'f':
-            fn = strdup(optarg);
+            fn = xstrdup(optarg);
             fp = fopen(fn, "r");
             break;
         case 'i':
@@ -291,7 +291,7 @@ const char *
 make_nam(int id, int size)
 {
     const char *buf = malloc(30);	/* argh */
-    sprintf((char *) buf, "pl:%d/%d", id, size);
+    snprintf((char *)buf, sizeof(buf)-1, "pl:%d/%d", id, size);
     return buf;
 }
 

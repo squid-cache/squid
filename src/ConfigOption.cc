@@ -35,7 +35,7 @@
 
 ConfigOptionVector::~ConfigOptionVector()
 {
-    while (options.size()) {
+    while (!options.empty()) {
         delete options.back();
         options.pop_back();
     }
@@ -44,7 +44,7 @@ ConfigOptionVector::~ConfigOptionVector()
 bool
 ConfigOptionVector::parse(char const *option, const char *value, int isaReconfig)
 {
-    Vector<ConfigOption *>::iterator i = options.begin();
+    std::vector<ConfigOption *>::iterator i = options.begin();
 
     while (i != options.end()) {
         if ((*i)->parse(option,value, isaReconfig))
@@ -59,7 +59,7 @@ ConfigOptionVector::parse(char const *option, const char *value, int isaReconfig
 void
 ConfigOptionVector::dump(StoreEntry * e) const
 {
-    for (Vector<ConfigOption *>::const_iterator i = options.begin();
+    for (std::vector<ConfigOption *>::const_iterator i = options.begin();
             i != options.end(); ++i)
         (*i)->dump(e);
 }

@@ -37,7 +37,6 @@
 #include "acl/ProtocolData.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 
 ACLProtocolData::ACLProtocolData() : values (NULL)
@@ -62,7 +61,7 @@ ACLProtocolData::match(AnyP::ProtocolType toFind)
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<AnyP::ProtocolType>::CBDATA_CbDataList;
 /// \endcond
 

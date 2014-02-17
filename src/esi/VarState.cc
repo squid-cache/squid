@@ -167,8 +167,10 @@ ESIVarState::~ESIVarState()
 {
     freeResources();
 
-    while (variablesForCleanup.size())
-        delete variablesForCleanup.pop_back();
+    while (!variablesForCleanup.empty()) {
+        delete variablesForCleanup.back();
+        variablesForCleanup.pop_back();
+    }
 
     delete defaultVariable;
 }
@@ -202,14 +204,14 @@ ESIVariableUserAgent::getProductVersion (char const *s)
 {
     char const *t;
     int len;
-    t = index (s,'/');
+    t = index(s,'/');
 
     if (!t || !*(++t))
-        return xstrdup ("");
+        return xstrdup("");
 
-    len = strcspn (t, " \r\n()<>@,;:\\\"/[]?={}");
+    len = strcspn(t, " \r\n()<>@,;:\\\"/[]?={}");
 
-    return xstrndup (t, len + 1);
+    return xstrndup(t, len + 1);
 }
 
 ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0), query_elements (0), query_string (NULL)
@@ -219,11 +221,11 @@ ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0)
 
     if (query_start && query_start[1] != '\0' ) {
         unsigned int n;
-        query_string = xstrdup (query_start + 1);
+        query_string = xstrdup(query_start + 1);
         query_elements = 1;
         char const *query_pos = query_start + 1;
 
-        while ((query_pos = strchr (query_pos, '&'))) {
+        while ((query_pos = strchr(query_pos, '&'))) {
             ++query_elements;
             ++query_pos;
         }
@@ -234,8 +236,8 @@ ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0)
         n = 0;
 
         while (query_pos) {
-            char const *next = strchr (query_pos, '&');
-            char const *div = strchr (query_pos, '=');
+            char const *next = strchr(query_pos, '&');
+            char const *div = strchr(query_pos, '=');
 
             if (next)
                 ++next;
@@ -249,19 +251,19 @@ ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0)
                 /* zero length between & and = or & and & */
                 continue;
 
-            query[n].var = xstrndup (query_pos, div - query_pos + 1) ;
+            query[n].var = xstrndup(query_pos, div - query_pos + 1) ;
 
             if (div == next) {
-                query[n].val = xstrdup ("");
+                query[n].val = xstrdup("");
             } else {
-                query[n].val = xstrndup (div + 1, next - div - 1);
+                query[n].val = xstrndup(div + 1, next - div - 1);
             }
 
             query_pos = next;
             ++n;
         }
     } else {
-        query_string = xstrdup ("");
+        query_string = xstrdup("");
     }
 
     if (query) {
@@ -383,14 +385,14 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
             t = index (t, ' ');
 
             if (!t)
-                browserversion = xstrdup ("");
+                browserversion = xstrdup("");
             else {
-                t1 = index (t, ';');
+                t1 = index(t, ';');
 
                 if (!t1)
-                    browserversion = xstrdup (t + 1);
+                    browserversion = xstrdup(t + 1);
                 else
-                    browserversion = xstrndup (t + 1, t1-t);
+                    browserversion = xstrndup(t + 1, t1-t);
             }
         } else if (strstr (s, "Mozilla")) {
             browser = ESI_BROWSER_MOZILLA;
@@ -402,7 +404,7 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
     } else {
         UserOs = ESI_OS_OTHER;
         browser = ESI_BROWSER_OTHER;
-        browserversion = xstrdup ("");
+        browserversion = xstrdup("");
     }
 }
 

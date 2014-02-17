@@ -1,8 +1,8 @@
 #ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
 #define SQUID_ADAPTATION__ACCESS_CHECK_H
 
-#include "acl/Acl.h"
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
@@ -39,7 +39,7 @@ private:
     ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
-    typedef Vector<Candidate> Candidates;
+    typedef std::vector<Candidate> Candidates;
     Candidates candidates;
     Candidate topCandidate() const { return *candidates.begin(); }
     ServiceGroupPointer topGroup() const; // may return nil

@@ -117,7 +117,7 @@ void Ipc::JoinSharedListen(const OpenListenerParams &params,
 
     TypedMsgHdr message;
     request.pack(message);
-    SendMessage(coordinatorAddr, message);
+    SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }
 
 void Ipc::SharedListenJoined(const SharedListenResponse &response)

@@ -3,7 +3,6 @@
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
-#include "base/Vector.h"
 #include "CbDataList.h"
 #include "format/Format.h"
 #include "MemPool.h"
@@ -13,6 +12,7 @@
 #if HAVE_STRING
 #include <string>
 #endif
+#include <vector>
 
 class HttpRequest;
 class HttpReply;
@@ -40,7 +40,7 @@ public:
         explicit Value(const String &aVal) : value(aVal), aclList(NULL), valueFormat(NULL) {}
         ~Value();
     };
-    typedef Vector<Value::Pointer> Values;
+    typedef std::vector<Value::Pointer> Values;
 
     explicit Note(const String &aKey): key(aKey) {}
 
@@ -70,13 +70,13 @@ class ConfigParser;
 class Notes
 {
 public:
-    typedef Vector<Note::Pointer> NotesList;
+    typedef std::vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
     Notes(const char *aDescr, const char **metasBlacklist, bool allowFormatted = false): descr(aDescr), blacklisted(metasBlacklist), formattedValues(allowFormatted) {}
     Notes(): descr(NULL), blacklisted(NULL) {}
-    ~Notes() { notes.clean(); }
+    ~Notes() { notes.clear(); }
     /**
      * Parse a notes line and returns a pointer to the
      * parsed Note object.
@@ -184,7 +184,7 @@ public:
      */
     bool empty() const {return entries.empty();}
 
-    Vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+    std::vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
 
 private:
     NotePairs &operator = (NotePairs const &); // Not implemented

@@ -142,7 +142,7 @@ class Config
 public:
 
     Config();
-    ~Config() {};
+    ~Config() {}
 
     void parseConfigLine();
 

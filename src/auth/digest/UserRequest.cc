@@ -5,10 +5,10 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/State.h"
 #include "charset.h"
+#include "format/Format.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "format/Format.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
 

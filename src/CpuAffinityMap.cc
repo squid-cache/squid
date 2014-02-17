@@ -10,7 +10,7 @@
 #include "Debug.h"
 
 bool
-CpuAffinityMap::add(const Vector<int> &aProcesses, const Vector<int> &aCores)
+CpuAffinityMap::add(const std::vector<int> &aProcesses, const std::vector<int> &aCores)
 {
     if (aProcesses.size() != aCores.size())
         return false;

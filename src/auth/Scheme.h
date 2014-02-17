@@ -34,7 +34,8 @@
 #if USE_AUTH
 
 #include "base/RefCount.h"
-#include "base/Vector.h"
+
+#include <vector>
 
 /**
  \defgroup AuthSchemeAPI	Authentication Scheme API
@@ -60,8 +61,8 @@ class Scheme : public RefCountable
 {
 public:
     typedef RefCount<Scheme> Pointer;
-    typedef Vector<Scheme::Pointer>::iterator iterator;
-    typedef Vector<Scheme::Pointer>::const_iterator const_iterator;
+    typedef std::vector<Scheme::Pointer>::iterator iterator;
+    typedef std::vector<Scheme::Pointer>::const_iterator const_iterator;
 
 public:
     Scheme() : initialised (false) {};
@@ -93,13 +94,13 @@ public:
     Scheme(Scheme const &);
     Scheme &operator=(Scheme const&);
 
-    static Vector<Scheme::Pointer> &GetSchemes();
+    static std::vector<Scheme::Pointer> &GetSchemes();
 
 protected:
     bool initialised;
 
 private:
-    static Vector<Scheme::Pointer> *_Schemes;
+    static std::vector<Scheme::Pointer> *_Schemes;
 };
 
 } // namespace Auth
