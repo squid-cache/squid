@@ -99,7 +99,7 @@ testHttp1Parser::testParseRequestLineProtocols()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -124,7 +124,7 @@ testHttp1Parser::testParseRequestLineProtocols()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -150,7 +150,7 @@ testHttp1Parser::testParseRequestLineProtocols()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -399,7 +399,7 @@ testHttp1Parser::testParseRequestLineStrange()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -425,7 +425,7 @@ testHttp1Parser::testParseRequestLineStrange()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -451,7 +451,7 @@ testHttp1Parser::testParseRequestLineStrange()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-5, output.req.end);
@@ -488,7 +488,7 @@ testHttp1Parser::testParseRequestLineTerminators()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -541,7 +541,7 @@ testHttp1Parser::testParseRequestLineTerminators()
         // Being tolerant we can ignore and elide these apparently benign CR
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -702,7 +702,7 @@ testHttp1Parser::testParseRequestLineMethods()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -728,7 +728,7 @@ testHttp1Parser::testParseRequestLineMethods()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -754,7 +754,7 @@ testHttp1Parser::testParseRequestLineMethods()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -824,7 +824,7 @@ testHttp1Parser::testParseRequestLineMethods()
         Config.onoff.relaxed_header_parser = 1;
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(1, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -874,7 +874,7 @@ testHttp1Parser::testParseRequestLineMethods()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -938,7 +938,7 @@ testHttp1Parser::testParseRequestLineInvalid()
         Config.onoff.relaxed_header_parser = 1;
         CPPUNIT_ASSERT_EQUAL(true, output.parse());
         CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-//        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_NEW, output.completedState_);
+//        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NEW, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(1, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -988,7 +988,7 @@ testHttp1Parser::testParseRequestLineInvalid()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -1036,7 +1036,7 @@ testHttp1Parser::testParseRequestLineInvalid()
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(false, output.parse());
         CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, output.completedState_);
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.completedState_);
         CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
         CPPUNIT_ASSERT_EQUAL(0, output.req.start);
         CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
@@ -1215,7 +1215,7 @@ testHttp1Parser::testDripFeed()
             CPPUNIT_ASSERT_EQUAL(garbageEnd, (int)hp.parseOffset_);
             CPPUNIT_ASSERT_EQUAL(false, parseResult);
             CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
-            CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_NEW, hp.completedState_);
+            CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NEW, hp.completedState_);
             continue;
         }
 
@@ -1225,7 +1225,7 @@ testHttp1Parser::testDripFeed()
             CPPUNIT_ASSERT_EQUAL(false, parseResult);
             CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
             // TODO: add all the other usual tests for request-line details
-            CPPUNIT_ASSERT_EQUAL((uint8_t)HTTP_PARSE_FIRST, hp.completedState_);
+            CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, hp.completedState_);
             continue;
         }
 

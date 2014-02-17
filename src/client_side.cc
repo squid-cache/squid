@@ -2868,7 +2868,7 @@ ConnStateData::clientParseRequests()
         /* Process request */
         ClientSocketContext *context = parseHttpRequest(this, *parser_);
         if (parser_->messageOffset()) {
-            // nothing but prefix garbage in the buffer. consume it.
+            // we are done with some of the buffer. consume it.
             connNoteUseOfBuffer(this, parser_->messageOffset());
             parser_->noteBufferShift(parser_->messageOffset());
         }
