@@ -596,6 +596,7 @@ HttpRequest::maybeCacheable()
 
     switch (protocol) {
     case AnyP::PROTO_HTTP:
+    case AnyP::PROTO_HTTPS:
         if (!method.respMaybeCacheable())
             return false;
 
