@@ -7,7 +7,7 @@
 #include "SquidConfig.h"
 
 void
-Http1::Parser::clear()
+Http::One::Parser::clear()
 {
     completedState_ = HTTP_PARSE_NONE;
     buf = NULL;
@@ -18,7 +18,7 @@ Http1::Parser::clear()
 }
 
 void
-Http1::RequestParser::clear()
+Http::One::RequestParser::clear()
 {
     Http1::Parser::clear();
 
@@ -31,7 +31,7 @@ Http1::RequestParser::clear()
 }
 
 void
-Http1::Parser::reset(const char *aBuf, int len)
+Http::One::Parser::reset(const char *aBuf, int len)
 {
     clear(); // empty the state.
     completedState_ = HTTP_PARSE_NEW;
@@ -41,41 +41,17 @@ Http1::Parser::reset(const char *aBuf, int len)
 }
 
 void
-Http1::RequestParser::noteBufferShift(int64_t n)
+Http::One::RequestParser::noteBufferShift(int64_t n)
 {
-    bufsiz -= n;
-
     // if parsing done, ignore buffer changes.
     if (completedState_ == HTTP_PARSE_DONE)
         return;
 
-    // shift the parser resume point to match buffer content
+    // shift the parser resume point to match buffer content change
     parseOffset_ -= n;
 
-#if WHEN_INCREMENTAL_PARSING
-
-    // if have not yet finished request-line
-    if (completedState_ == HTTP_PARSE_NEW) {
-        // check for and adjust the known request-line offsets.
-
-        /* TODO: when the first-line is parsed incrementally we
-         * will need to recalculate the offsets for req.*
-         * For now, they are all re-calculated based on parserOffset_
-         * with each parse attempt.
-         */
-    }
-
-    // if finished request-line but not mime header
-    // adjust the mime header states
-    if (completedState_ == HTTP_PARSE_FIRST) {
-        /* TODO: when the mime-header is parsed incrementally we
-         * will need to store the initial offset of mime-header block
-         * instead of locatign it from req.end or parseOffset_.
-         * Since req.end may no longer be valid, and parseOffset_ may
-         * have moved into the mime-block interior.
-         */
-    }
-#endif
+    // and remember where to stop before performing buffered data overreads
+    bufsiz -= n;
 }
 
 /**
@@ -97,7 +73,7 @@ Http1::RequestParser::noteBufferShift(int64_t n)
  * \return true if garbage whitespace was found
  */
 bool
-Http1::RequestParser::skipGarbageLines()
+Http::One::RequestParser::skipGarbageLines()
 {
     req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
 
@@ -150,7 +126,7 @@ Http1::RequestParser::skipGarbageLines()
  * \retval  0  more data is needed to complete the parse
  */
 int
-Http1::RequestParser::parseRequestFirstLine()
+Http::One::RequestParser::parseRequestFirstLine()
 {
     int second_word = -1; // track the suspected URI start
     int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
@@ -383,18 +359,17 @@ Http1::RequestParser::parseRequestFirstLine()
 }
 
 bool
-Http1::RequestParser::parse()
+Http::One::RequestParser::parse()
 {
-    // stage 1: locate the request-line
     if (completedState_ == HTTP_PARSE_NEW) {
+
+        // stage 1: locate the request-line
         if (skipGarbageLines() && (size_t)bufsiz < parseOffset_)
             return false;
-    }
 
-    // stage 2: parse the request-line
-    if (completedState_ == HTTP_PARSE_NEW) {
+        // stage 2: parse the request-line
         PROF_start(HttpParserParseReqLine);
-        int retcode = parseRequestFirstLine();
+        const int retcode = parseRequestFirstLine();
         debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end << " " << Raw("line", &buf[req.start], req.end-req.start));
         debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << method_ << ")");
         debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
@@ -449,7 +424,7 @@ Http1::RequestParser::parse()
 #define GET_HDR_SZ	1024
 
 char *
-Http1::Parser::getHeaderField(const char *name)
+Http::One::Parser::getHeaderField(const char *name)
 {
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const char *p = NULL;
