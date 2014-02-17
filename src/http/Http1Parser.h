@@ -20,7 +20,7 @@ namespace One {
 
 /** HTTP protocol parser.
  *
- * Works on a raw character I/O buffer and separates the content into
+ * Works on a raw character I/O buffer and tokenizes the content into
  * either an error state or HTTP procotol major sections:
  *
  * \item first-line (request-line / simple-request / status-line)

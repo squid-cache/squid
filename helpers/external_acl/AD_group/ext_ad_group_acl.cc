@@ -187,7 +187,7 @@ Get_primaryGroup(IADs * pUser)
         CoTaskMemFree(pByte);
 
         *(strrchr(szSID, '-') + 1) = '\0';
-        sprintf(tmpSID, "%s%u", szSID, User_primaryGroupID);
+        snprintf(tmpSID, sizeof(tmpSID)-1, "%s%u", szSID, User_primaryGroupID);
 
         wcsize = MultiByteToWideChar(CP_ACP, 0, tmpSID, -1, wc, 0);
         wc = (wchar_t *) xmalloc(wcsize * sizeof(wchar_t));

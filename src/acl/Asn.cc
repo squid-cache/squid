@@ -75,7 +75,7 @@ struct squid_radix_node_head *AS_tree_head;
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<int>::CBDATA_CbDataList;
 /// \endcond
 

@@ -63,6 +63,9 @@ public:
 
     StoreEntry *createStoreEntry() const; ///< creates store entry from params
 
+    ///< Content-Type: header value for this report
+    virtual const char *contentType() const {return "text/plain;charset=utf-8";}
+
 protected:
     /// calculate and keep local action-specific information
     virtual void collect() {}

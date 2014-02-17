@@ -112,7 +112,7 @@ FwdState::abort(void* d)
     } else {
         debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
-    fwd->serverDestinations.clean();
+    fwd->serverDestinations.clear();
     fwd->self = NULL;
 }
 
@@ -277,7 +277,7 @@ FwdState::~FwdState()
         serverConn->close();
     }
 
-    serverDestinations.clean();
+    serverDestinations.clear();
 
     debugs(17, 3, HERE << "FwdState destructor done");
 }
@@ -472,7 +472,7 @@ FwdState::complete()
         entry->reset();
 
         // drop the last path off the selection list. try the next one.
-        serverDestinations.shift();
+        serverDestinations.erase(serverDestinations.begin());
         startConnectionOrFail();
 
     } else {
@@ -611,7 +611,7 @@ FwdState::retryOrBail()
         if (pconnRace == raceHappened)
             debugs(17, 4, HERE << "retrying the same destination");
         else
-            serverDestinations.shift(); // last one failed. try another.
+            serverDestinations.erase(serverDestinations.begin()); // last one failed. try another.
         startConnectionOrFail();
         return;
     }

@@ -64,6 +64,7 @@ ACLChecklist::preCheck(const char *what)
     // concurrent checks using the same Checklist are not supported
     assert(!occupied_);
     occupied_ = true;
+    asyncLoopDepth_ = 0;
 
     AclMatchedName = NULL;
     finished_ = false;
@@ -77,6 +78,7 @@ ACLChecklist::matchChild(const Acl::InnerNode *current, Acl::Nodes::const_iterat
     // Remember the current tree location to prevent "async loop" cases where
     // the same child node wants to go async more than once.
     matchLoc_ = Breadcrumb(current, pos);
+    asyncLoopDepth_ = 0;
 
     // if there are any breadcrumbs left, then follow them on the way down
     bool result = false;
@@ -116,11 +118,16 @@ ACLChecklist::goAsync(AsyncState *state)
 
     // TODO: add a once-in-a-while WARNING about async loops?
     if (matchLoc_ == asyncLoc_) {
-        debugs(28, 2, this << " a slow ACL resumes by going async again!");
-        return false;
+        debugs(28, 2, this << " a slow ACL resumes by going async again! (loop #" << asyncLoopDepth_ << ")");
+        // external_acl_type may cause async auth lookup plus its own async check
+        // which has the appearance of a loop. Allow some retries.
+        // TODO: make it configurable and check BH retry attempts vs this check?
+        if (asyncLoopDepth_ > 5)
+            return false;
     }
 
     asyncLoc_ = matchLoc_; // prevent async loops
+    ++asyncLoopDepth_;
 
     asyncStage_ = asyncStarting;
     changeState(state);
@@ -168,7 +175,8 @@ ACLChecklist::ACLChecklist() :
         finished_(false),
         allow_(ACCESS_DENIED),
         asyncStage_(asyncNone),
-        state_(NullState::Instance())
+        state_(NullState::Instance()),
+        asyncLoopDepth_(0)
 {
 }
 

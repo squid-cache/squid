@@ -114,7 +114,11 @@ COMMENT_START
 
 	${process_number} expands to the current Squid process
 	identifier, which is an integer number (e.g., 1, 2, 3) unique
-	across all Squid processes.
+	across all Squid processes of the current service instance.
+
+	${service_name} expands into the current Squid service instance
+	name identifier which is provided by -n on the command line.
+
 COMMENT_END
 
 # options still not yet ported from 2.7 to 3.x
@@ -330,6 +334,16 @@ DOC_START
 	sent before the required macro information is available to Squid.
 	By default, Squid uses request formats provided in scheme-specific
 	examples below (search for %credentials).
+	The expanded key_extras value is added to the Squid credentials
+	cache and, hence, will affect authentication. It can be used to
+	autenticate different users with identical user names (e.g., when user
+	authentication depends on http_port).
+	Avoid adding frequently changing information to key_extras. For
+	example, if you add user source IP, and it changes frequently
+	in your environment, then max_user_ip ACL is going to treat every
+	user+IP combination as a unique "user", breaking the ACL and
+	wasting a lot of memory on those user records. It will also force
+	users to authenticate from scratch whenever their IP changes.
 
 	=== Parameters for the basic scheme follow. ===
 
@@ -2374,6 +2388,24 @@ TYPE: string
 DOC_START
 	directory containing CA certificates to use when verifying
 	server certificates while proxying https:// URLs
+DOC_END
+
+NAME: sslproxy_session_ttl
+IFDEF: USE_SSL
+DEFAULT: 300
+LOC: Config.SSL.session_ttl
+TYPE: int
+DOC_START
+	Sets the timeout value for SSL sessions
+DOC_END
+
+NAME: sslproxy_session_cache_size
+IFDEF: USE_SSL
+DEFAULT: 2 MB
+LOC: Config.SSL.sessionCacheSize
+TYPE: b_size_t
+DOC_START
+        Sets the cache size to use for ssl session
 DOC_END
 
 NAME: ssl_bump

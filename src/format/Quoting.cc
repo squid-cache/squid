@@ -19,64 +19,6 @@ static const char c2x[] =
     "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
     "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
 
-#if DEAD_USING_QUOTEMIMEBLOB
-/** copy of Log::QuoteMimeBlob. Bugs there will be found here.
- * This omits [] characters but is otherwise identical to Log::QuoteMimeBlob when OLD_LOG_MIME = 1
- */
-static char *
-username_quote(const char *header)
-{
-    int c;
-    int i;
-    char *buf;
-    char *buf_cursor;
-
-    if (header == NULL) {
-        buf = static_cast<char *>(xcalloc(1, 1));
-        *buf = '\0';
-        return buf;
-    }
-
-    buf = static_cast<char *>(xcalloc(1, (strlen(header) * 3) + 1));
-    buf_cursor = buf;
-    /*
-     * We escape: space \x00-\x1F and space (0x40) and \x7F-\xFF
-     * to prevent garbage in the logs. CR and LF are also there just in case.
-     */
-
-    while ((c = *(const unsigned char *) header++) != '\0') {
-        if (c == '\r') {
-            *buf_cursor = '\\';
-            ++buf_cursor;
-            *buf_cursor = 'r';
-            ++buf_cursor;
-        } else if (c == '\n') {
-            *buf_cursor = '\\';
-            ++buf_cursor;
-            *buf_cursor = 'n';
-            ++buf_cursor;
-        } else if (c <= 0x1F
-                   || c >= 0x7F
-                   || c == '%'
-                   || c == ' ') {
-            *buf_cursor = '%';
-            ++buf_cursor;
-            i = c * 2;
-            *buf_cursor = c2x[i];
-            ++buf_cursor;
-            *buf_cursor = c2x[i + 1];
-            ++buf_cursor;
-        } else {
-            *buf_cursor = (char) c;
-            ++buf_cursor;
-        }
-    }
-
-    *buf_cursor = '\0';
-    return buf;
-}
-#endif // DEAD
-
 char *
 Format::QuoteUrlEncodeUsername(const char *name)
 {
@@ -87,7 +29,6 @@ Format::QuoteUrlEncodeUsername(const char *name)
         return NULL;
 
     return QuoteMimeBlob(name);
-//    return username_quote(name);
 }
 
 char *
@@ -106,7 +47,7 @@ Format::QuoteMimeBlob(const char *header)
 
     buf = static_cast<char *>(xcalloc(1, (strlen(header) * 3) + 1));
     buf_cursor = buf;
-    /**
+    /*
      * Whe OLD_LOG_MIME is defined we escape: \x00-\x1F"#%;<>?{}|\\\\^~`\[\]\x7F-\xFF
      * which is the default escape list for the CPAN Perl5 URI module
      * modulo the inclusion of space (x40) to make the raw logs a bit

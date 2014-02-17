@@ -799,7 +799,6 @@ testSBuf::testFindFirstNotOf()
     CPPUNIT_ASSERT_EQUAL(3U,idx);
 }
 
-
 void
 testSBuf::testAutoFind()
 {

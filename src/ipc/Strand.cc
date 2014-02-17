@@ -32,7 +32,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
 Ipc::Strand::Strand():
-        Port(MakeAddr(strandAddrPfx, KidIdentifier)),
+        Port(MakeAddr(strandAddrLabel, KidIdentifier)),
         isRegistered(false)
 {
 }
@@ -51,7 +51,7 @@ void Ipc::Strand::registerSelf()
     HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
     TypedMsgHdr message;
     ann.pack(message);
-    SendMessage(coordinatorAddr, message);
+    SendMessage(Port::CoordinatorAddr(), message);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 

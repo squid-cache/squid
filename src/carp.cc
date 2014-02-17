@@ -40,7 +40,6 @@
 #include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
-#include "URLScheme.h"
 
 #if HAVE_MATH_H
 #include <math.h>
@@ -195,8 +194,8 @@ carpSelectParent(HttpRequest * request)
             //   corner cases should use the canonical URL
             if (tp->options.carp_key.scheme) {
                 // temporary, until bug 1961 URL handling is fixed.
-                const URLScheme sch = request->protocol;
-                key.append(sch.const_str());
+                const AnyP::UriScheme sch(request->protocol);
+                key.append(sch.c_str());
                 if (key.size()) //if the scheme is not empty
                     key.append("://");
             }

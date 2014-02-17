@@ -108,7 +108,7 @@ void
 ESIContext::setErrorMessage(char const *anError)
 {
     if (!errormessage)
-        errormessage = xstrdup (anError);
+        errormessage = xstrdup(anError);
 }
 
 #endif /* USE_SQUID_ESI == 1 */
