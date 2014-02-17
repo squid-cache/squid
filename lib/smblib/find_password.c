@@ -97,7 +97,7 @@ char *print_password(char * password)
         if (((unsigned)password[i] <= ' ') || ((unsigned)password[i] > 127)) {
 
             pwd_str[j] = '\\';
-            sprintf(temp, "%03i", (int)password[i]);
+            snprintf(temp, sizeof(temp)-1, "%03i", (int)password[i]);
             strcpy(&pwd_str[j + 1], temp);
             j = j + 3;                       /* Space for \ accounted for below */
 
@@ -228,7 +228,7 @@ main(int argc, char *argv[])
 
     }
 
-    sprintf(service_name, "\\\\%s\\%s", server, service); /* Could blow up */
+    sprintf(service_name, sizeof(service_name)-1, "\\\\%s\\%s", server, service); /* Could blow up */
 
     /* Now loop through all password possibilities ... */
 

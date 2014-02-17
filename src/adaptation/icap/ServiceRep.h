@@ -140,7 +140,7 @@ private:
         AsyncCall::Pointer callback;
     };
 
-    typedef Vector<Client> Clients;
+    typedef std::vector<Client> Clients;
     // TODO: rename to theUpWaiters
     Clients theClients; // all clients waiting for a call back
 
@@ -216,7 +216,7 @@ class ConnWaiterDialer: public NullaryMemFunT<ModXact>
 public:
     typedef NullaryMemFunT<ModXact> Parent;
     ServiceRep::Pointer theService;
-    ConnWaiterDialer(const CbcPointer<ModXact> &xact, Parent::Method aHandler);
+    ConnWaiterDialer(const CbcPointer<Adaptation::Icap::ModXact> &xact, Adaptation::Icap::ConnWaiterDialer::Parent::Method aHandler);
     ConnWaiterDialer(const Adaptation::Icap::ConnWaiterDialer &aConnWaiter);
     ~ConnWaiterDialer();
 };

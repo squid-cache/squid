@@ -49,13 +49,13 @@ ACLProxyAuth::~ACLProxyAuth()
     delete data;
 }
 
-ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
+ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data(newData), type_(theType) {}
 
-ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &old) : data (old.data->clone()), type_(old.type_)
+ACLProxyAuth::ACLProxyAuth(ACLProxyAuth const &old) : data(old.data->clone()), type_(old.type_)
 {}
 
 ACLProxyAuth &
-ACLProxyAuth::operator= (ACLProxyAuth const &rhs)
+ACLProxyAuth::operator=(ACLProxyAuth const &rhs)
 {
     data = rhs.data->clone();
     type_ = rhs.type_;
@@ -106,13 +106,13 @@ ACLProxyAuth::dump() const
 }
 
 bool
-ACLProxyAuth::empty () const
+ACLProxyAuth::empty() const
 {
     return data->empty();
 }
 
 bool
-ACLProxyAuth::valid () const
+ACLProxyAuth::valid() const
 {
     if (authenticateSchemeCount() == 0) {
         debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes were compiled.");

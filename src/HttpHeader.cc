@@ -50,6 +50,12 @@
 #include "StrList.h"
 #include "TimeOrTag.h"
 
+#include <algorithm>
+
+/* XXX: the whole set of API managing the entries vector should be rethought
+ *      after the parse4r-ng effort is complete.
+ */
+
 /*
  * On naming conventions:
  *
@@ -435,8 +441,6 @@ HttpHeader::operator =(const HttpHeader &other)
 void
 HttpHeader::clean()
 {
-    HttpHeaderPos pos = HttpHeaderInitPos;
-    HttpHeaderEntry *e;
 
     assert(owner > hoNone && owner < hoEnd);
     debugs(55, 7, "cleaning hdr: " << this << " owner: " << owner);
@@ -454,27 +458,28 @@ HttpHeader::clean()
          * has been used.  As a hack, just never count zero-sized header
          * arrays.
          */
-        if (0 != entries.count)
-            HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
+        if (!entries.empty())
+            HttpHeaderStats[owner].hdrUCountDistr.count(entries.size());
 
         ++ HttpHeaderStats[owner].destroyedCount;
 
-        HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
+        HttpHeaderStats[owner].busyDestroyedCount += entries.size() > 0;
     } // if (owner <= hoReply)
 
-    while ((e = getEntry(&pos))) {
-        /* tmp hack to try to avoid coredumps */
-
+    for (std::vector<HttpHeaderEntry *>::iterator i = entries.begin(); i != entries.end(); ++i) {
+        HttpHeaderEntry *e = *i;
+        if (e == NULL)
+            continue;
         if (e->id < 0 || e->id >= HDR_ENUM_END) {
-            debugs(55, DBG_CRITICAL, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
+            debugs(55, DBG_CRITICAL, "BUG: invalid entry (" << e->id << "). Ignored.");
         } else {
             if (owner <= hoReply)
                 HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
-            /* yes, this deletion leaves us in an inconsistent state */
             delete e;
         }
     }
-    entries.clean();
+
+    entries.clear();
     httpHeaderMaskInit(&mask, 0);
     len = 0;
     PROF_stop(HttpHeaderClean);
@@ -550,7 +555,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
     const char *field_ptr = header_start;
     const char *header_end = header_start + hdrLen; // XXX: remove
     HttpHeaderEntry *e, *e2;
-    bool warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
+    int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
     PROF_start(HttpHeaderParse);
 
@@ -749,11 +754,11 @@ HttpHeaderEntry *
 HttpHeader::getEntry(HttpHeaderPos * pos) const
 {
     assert(pos);
-    assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)entries.count);
+    assert(*pos >= HttpHeaderInitPos && *pos < static_cast<ssize_t>(entries.size()));
 
-    for (++(*pos); *pos < (ssize_t)entries.count; ++(*pos)) {
-        if (entries.items[*pos])
-            return (HttpHeaderEntry*)entries.items[*pos];
+    for (++(*pos); *pos < static_cast<ssize_t>(entries.size()); ++(*pos)) {
+        if (entries[*pos])
+            return static_cast<HttpHeaderEntry*>(entries[*pos]);
     }
 
     return NULL;
@@ -872,9 +877,9 @@ void
 HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
 {
     HttpHeaderEntry *e;
-    assert(pos >= HttpHeaderInitPos && pos < (ssize_t)entries.count);
-    e = (HttpHeaderEntry*)entries.items[pos];
-    entries.items[pos] = NULL;
+    assert(pos >= HttpHeaderInitPos && pos < static_cast<ssize_t>(entries.size()));
+    e = static_cast<HttpHeaderEntry*>(entries[pos]);
+    entries[pos] = NULL;
     /* decrement header length, allow for ": " and crlf */
     len -= e->name.size() + 2 + e->value.size() + 2;
     assert(len >= 0);
@@ -888,7 +893,7 @@ HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
 void
 HttpHeader::compact()
 {
-    entries.prune(NULL);
+    std::remove(entries.begin(), entries.end(), static_cast<HttpHeaderEntry *>(NULL));
 }
 
 /*
@@ -915,7 +920,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     assert_eid(e->id);
     assert(e->name.size());
 
-    debugs(55, 7, HERE << this << " adding entry: " << e->id << " at " << entries.count);
+    debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
     if (CBIT_TEST(mask, e->id))
         ++ Headers[e->id].stat.repCount;
@@ -937,14 +942,14 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
     assert(e);
     assert_eid(e->id);
 
-    debugs(55, 7, HERE << this << " adding entry: " << e->id << " at " << entries.count);
+    debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
     if (CBIT_TEST(mask, e->id))
         ++ Headers[e->id].stat.repCount;
     else
         CBIT_SET(mask, e->id);
 
-    entries.insert(e);
+    entries.insert(entries.begin(),e);
 
     /* increment header length, allow for ": " and crlf */
     len += e->name.size() + 2 + e->value.size() + 2;

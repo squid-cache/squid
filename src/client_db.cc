@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "client_db.h"
 #include "ClientInfo.h"
 #include "event.h"
@@ -112,20 +113,26 @@ clientdbAdd(const Ip::Address &addr)
 }
 
 static void
-clientdbRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("client_list", "Cache Client List", clientdbDump, 0, 1);
-}
-
-void
 clientdbInit(void)
 {
-    clientdbRegisterWithCacheManager();
-
     if (client_table)
         return;
 
     client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
+}
+
+class ClientDbRr: public RegisteredRunner
+{
+public:
+    virtual void run(const RunnerRegistry &);
+};
+RunnerRegistrationEntry(rrAfterConfig, ClientDbRr);
+
+void
+ClientDbRr::run(const RunnerRegistry &r)
+{
+    clientdbInit();
+    Mgr::RegisterAction("client_list", "Cache Client List", clientdbDump, 0, 1);
 }
 
 #if USE_DELAY_POOLS

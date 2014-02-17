@@ -5,10 +5,10 @@
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
+#include "format/Format.h"
 #include "globals.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
-#include "format/Format.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
 

@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -105,10 +106,10 @@ Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
             delete keyExtras;
 
         keyExtras = nlf;
-        
+
         if (char *t = strtok(NULL, w_space)) {
-               debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
-               self_destruct();
+            debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
+            self_destruct();
         }
     } else {
         debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
@@ -126,6 +127,25 @@ void
 Auth::Config::done()
 {
     delete keyExtras;
-    keyExtras = NULL; 
+    keyExtras = NULL;
     keyExtrasLine.clean();
+}
+
+Auth::User::Pointer
+Auth::Config::findUserInCache(const char *nameKey, Auth::Type authType)
+{
+    AuthUserHashPointer *usernamehash;
+    debugs(29, 9, "Looking for user '" << nameKey << "'");
+
+    if (nameKey && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, nameKey)))) {
+        while (usernamehash) {
+            if ((usernamehash->user()->auth_type == authType) &&
+                    !strcmp(nameKey, (char const *)usernamehash->key))
+                return usernamehash->user();
+
+            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
+        }
+    }
+
+    return NULL;
 }

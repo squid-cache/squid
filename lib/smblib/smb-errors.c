@@ -190,7 +190,7 @@ int SMB_Get_SMB_Error_Msg(int err_class, int err_code, char *msg_buf, int len)
 
                 strncpy(msg_buf, err_classes[i].class, len);
                 strncat(msg_buf, " - ", len - strlen(msg_buf));
-                sprintf(internal_buf, "%d", err_code);
+                snprintf(internal_buf, sizeof(internal_buf)-1, "%d", err_code);
                 strncat(msg_buf, internal_buf, len - strlen(msg_buf));
                 strncat(msg_buf, " (Unknown error code).", len - strlen(msg_buf));
 
@@ -200,7 +200,7 @@ int SMB_Get_SMB_Error_Msg(int err_class, int err_code, char *msg_buf, int len)
 
                 strncpy(msg_buf, err_classes[i].class, len);
                 strncat(msg_buf, " - ", len - strlen(msg_buf));
-                sprintf(internal_buf, "%d", err_code);
+                snprintf(internal_buf, sizeof(internal_buf)-1, "%d", err_code);
                 strncat(msg_buf, internal_buf, len - strlen(msg_buf));
 
                 return(strlen(msg_buf));
@@ -211,10 +211,10 @@ int SMB_Get_SMB_Error_Msg(int err_class, int err_code, char *msg_buf, int len)
 
     /* If we get here, we did not recognize the error class */
 
-    sprintf(internal_buf, "%d", err_class);
+    snprintf(internal_buf, sizeof(internal_buf)-1, "%d", err_class);
     strncat(msg_buf, internal_buf, len - strlen(msg_buf));
     strncat(msg_buf, " (Unknown Error Class) - ", len - strlen(msg_buf));
-    sprintf(internal_buf, "%d", err_code);
+    snprintf(internal_buf, sizeof(internal_buf)-1, "%d", err_code);
     strncat(msg_buf, internal_buf, len - strlen(msg_buf));
     strncat(msg_buf, "(error code).", len - strlen(msg_buf));
 

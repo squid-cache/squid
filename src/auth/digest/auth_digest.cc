@@ -194,7 +194,7 @@ authenticateDigestNonceNew(void)
     /* the cache's link */
     authDigestNonceLink(newnonce);
     newnonce->flags.incache = true;
-    debugs(29, 5, "authenticateDigestNonceNew: created nonce " << newnonce << " at " << newnonce->noncedata.creationtime);
+    debugs(29, 5, "created nonce " << newnonce << " at " << newnonce->noncedata.creationtime);
     return newnonce;
 }
 
@@ -240,7 +240,7 @@ authenticateDigestNonceShutdown(void)
     digest_nonce_h *nonce;
 
     if (digest_nonce_cache) {
-        debugs(29, 2, "authenticateDigestNonceShutdown: Shutting down nonce cache ");
+        debugs(29, 2, "Shutting down nonce cache");
         hash_first(digest_nonce_cache);
 
         while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
@@ -256,7 +256,7 @@ authenticateDigestNonceShutdown(void)
     }
 
 #endif
-    debugs(29, 2, "authenticateDigestNonceShutdown: Nonce cache shutdown");
+    debugs(29, 2, "Nonce cache shutdown");
 }
 
 static void
@@ -269,16 +269,16 @@ authenticateDigestNonceCacheCleanup(void *data)
      * first.
      */
     digest_nonce_h *nonce;
-    debugs(29, 3, "authenticateDigestNonceCacheCleanup: Cleaning the nonce cache now");
-    debugs(29, 3, "authenticateDigestNonceCacheCleanup: Current time: " << current_time.tv_sec);
+    debugs(29, 3, "Cleaning the nonce cache now");
+    debugs(29, 3, "Current time: " << current_time.tv_sec);
     hash_first(digest_nonce_cache);
 
     while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-        debugs(29, 3, "authenticateDigestNonceCacheCleanup: nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
-        debugs(29, 4, "authenticateDigestNonceCacheCleanup: Creation time: " << nonce->noncedata.creationtime);
+        debugs(29, 3, "nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
+        debugs(29, 4, "Creation time: " << nonce->noncedata.creationtime);
 
         if (authDigestNonceIsStale(nonce)) {
-            debugs(29, 4, "authenticateDigestNonceCacheCleanup: Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
+            debugs(29, 4, "Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
             assert(nonce->flags.incache);
             /* invalidate nonce so future requests fail */
             nonce->flags.valid = false;
@@ -288,7 +288,7 @@ authenticateDigestNonceCacheCleanup(void *data)
         }
     }
 
-    debugs(29, 3, "authenticateDigestNonceCacheCleanup: Finished cleaning the nonce cache.");
+    debugs(29, 3, "Finished cleaning the nonce cache.");
 
     if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->active())
         eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
@@ -299,7 +299,7 @@ authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
     ++nonce->references;
-    debugs(29, 9, "authDigestNonceLink: nonce '" << nonce << "' now at '" << nonce->references << "'.");
+    debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
 }
 
 #if NOT_USED
@@ -322,10 +322,10 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     if (nonce->references > 0) {
         -- nonce->references;
     } else {
-        debugs(29, DBG_IMPORTANT, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
+        debugs(29, DBG_IMPORTANT, "Attempt to lower nonce " << nonce << " refcount below 0!");
     }
 
-    debugs(29, 9, "authDigestNonceUnlink: nonce '" << nonce << "' now at '" << nonce->references << "'.");
+    debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
 
     if (nonce->references == 0)
         authenticateDigestNonceDelete(nonce);
@@ -348,14 +348,14 @@ authenticateDigestNonceFindNonce(const char *nonceb64)
     if (nonceb64 == NULL)
         return NULL;
 
-    debugs(29, 9, "authDigestNonceFindNonce:looking for nonceb64 '" << nonceb64 << "' in the nonce cache.");
+    debugs(29, 9, "looking for nonceb64 '" << nonceb64 << "' in the nonce cache.");
 
     nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, nonceb64));
 
     if ((nonce == NULL) || (strcmp(authenticateDigestNonceNonceb64(nonce), nonceb64)))
         return NULL;
 
-    debugs(29, 9, "authDigestNonceFindNonce: Found nonce '" << nonce << "'");
+    debugs(29, 9, "Found nonce '" << nonce << "'");
 
     return nonce;
 }
@@ -373,7 +373,7 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 
     /* has it already been invalidated ? */
     if (!nonce->flags.valid) {
-        debugs(29, 4, "authDigestNonceIsValid: Nonce already invalidated");
+        debugs(29, 4, "Nonce already invalidated");
         return 0;
     }
 
@@ -385,7 +385,7 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 
     if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
-        debugs(29, 4, "authDigestNonceIsValid: Nonce count doesn't match");
+        debugs(29, 4, "Nonce count doesn't match");
         nonce->flags.valid = false;
         return 0;
     }
@@ -409,7 +409,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
 
     /* has it's max duration expired? */
     if (nonce->noncedata.creationtime + static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration < current_time.tv_sec) {
-        debugs(29, 4, "authDigestNonceIsStale: Nonce is too old. " <<
+        debugs(29, 4, "Nonce is too old. " <<
                nonce->noncedata.creationtime << " " <<
                static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration << " " <<
                current_time.tv_sec);
@@ -419,13 +419,13 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
     }
 
     if (nonce->nc > 99999998) {
-        debugs(29, 4, "authDigestNonceIsStale: Nonce count overflow");
+        debugs(29, 4, "Nonce count overflow");
         nonce->flags.valid = false;
         return -1;
     }
 
     if (nonce->nc > static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses) {
-        debugs(29, 4, "authDigestNoncelastRequest: Nonce count over user limit");
+        debugs(29, 4, "Nonce count over user limit");
         nonce->flags.valid = false;
         return -1;
     }
@@ -445,12 +445,12 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
         return -1;
 
     if (nonce->nc == 99999997) {
-        debugs(29, 4, "authDigestNoncelastRequest: Nonce count about to overflow");
+        debugs(29, 4, "Nonce count about to overflow");
         return -1;
     }
 
     if (nonce->nc >= static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses - 1) {
-        debugs(29, 4, "authDigestNoncelastRequest: Nonce count about to hit user limit");
+        debugs(29, 4, "Nonce count about to hit user limit");
         return -1;
     }
 
@@ -475,25 +475,6 @@ authDigestNoncePurge(digest_nonce_h * nonce)
     authDigestNonceUnlink(nonce);
 }
 
-/* USER related functions */
-static Auth::User::Pointer
-authDigestUserFindUsername(const char *userkey)
-{
-    AuthUserHashPointer *usernamehash;
-    debugs(29, 9, "Looking for user '" << userkey << "'");
-
-    if ((usernamehash = static_cast < AuthUserHashPointer * >(hash_lookup(proxy_auth_username_cache, userkey)))) {
-        while ((usernamehash->user()->auth_type != Auth::AUTH_DIGEST) && (usernamehash->next))
-            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
-
-        if (usernamehash->user()->auth_type == Auth::AUTH_DIGEST) {
-            return usernamehash->user();
-        }
-    }
-
-    return NULL;
-}
-
 void
 Auth::Digest::Config::rotateHelpers()
 {
@@ -509,7 +490,7 @@ void
 Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
-    debugs(29, 9, "authDigestCfgDump: Dumping configuration");
+    debugs(29, 9, "Dumping configuration");
     storeAppendPrintf(entry, "%s %s", name, "digest");
 
     while (list != NULL) {
@@ -562,7 +543,7 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
     /* on a 407 or 401 we always use a new nonce */
     digest_nonce_h *nonce = authenticateDigestNonceNew();
 
-    debugs(29, 9, HERE << "Sending type:" << hdrType <<
+    debugs(29, 9, "Sending type:" << hdrType <<
            " header: 'Digest realm=\"" << digestAuthRealm << "\", nonce=\"" <<
            authenticateDigestNonceNonceb64(nonce) << "\", qop=\"" << QOP_AUTH <<
            "\", stale=" << (stale ? "true" : "false"));
@@ -730,7 +711,7 @@ authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
 {
     dlink_node *node;
 
-    if (!user || !nonce)
+    if (!user || !nonce || !nonce->user)
         return;
 
     Auth::Digest::User *digest_user = user;
@@ -790,7 +771,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     digest_nonce_h *nonce;
     int ilen;
 
-    debugs(29, 9, "authenticateDigestDecodeAuth: beginning");
+    debugs(29, 9, "beginning");
 
     Auth::Digest::UserRequest *digest_request = new Auth::Digest::UserRequest();
 
@@ -841,14 +822,14 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
                 }
             } else if (*p == '"') {
                 if (!httpHeaderParseQuotedString(p, vlen, &value)) {
-                    debugs(29, 9, HERE << "Failed to parse attribute '" << item << "' in '" << temp << "'");
+                    debugs(29, 9, "Failed to parse attribute '" << item << "' in '" << temp << "'");
                     continue;
                 }
             } else {
                 value.limitInit(p, vlen);
             }
         } else {
-            debugs(29, 9, HERE << "Failed to parse attribute '" << item << "' in '" << temp << "'");
+            debugs(29, 9, "Failed to parse attribute '" << item << "' in '" << temp << "'");
             continue;
         }
 
@@ -860,68 +841,68 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
             safe_free(username);
             if (value.size() != 0)
                 username = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found Username '" << username << "'");
+            debugs(29, 9, "Found Username '" << username << "'");
             break;
 
         case DIGEST_REALM:
             safe_free(digest_request->realm);
             if (value.size() != 0)
                 digest_request->realm = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found realm '" << digest_request->realm << "'");
+            debugs(29, 9, "Found realm '" << digest_request->realm << "'");
             break;
 
         case DIGEST_QOP:
             safe_free(digest_request->qop);
             if (value.size() != 0)
                 digest_request->qop = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found qop '" << digest_request->qop << "'");
+            debugs(29, 9, "Found qop '" << digest_request->qop << "'");
             break;
 
         case DIGEST_ALGORITHM:
             safe_free(digest_request->algorithm);
             if (value.size() != 0)
                 digest_request->algorithm = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found algorithm '" << digest_request->algorithm << "'");
+            debugs(29, 9, "Found algorithm '" << digest_request->algorithm << "'");
             break;
 
         case DIGEST_URI:
             safe_free(digest_request->uri);
             if (value.size() != 0)
                 digest_request->uri = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found uri '" << digest_request->uri << "'");
+            debugs(29, 9, "Found uri '" << digest_request->uri << "'");
             break;
 
         case DIGEST_NONCE:
             safe_free(digest_request->nonceb64);
             if (value.size() != 0)
                 digest_request->nonceb64 = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found nonce '" << digest_request->nonceb64 << "'");
+            debugs(29, 9, "Found nonce '" << digest_request->nonceb64 << "'");
             break;
 
         case DIGEST_NC:
             if (value.size() != 8) {
-                debugs(29, 9, HERE << "Invalid nc '" << value << "' in '" << temp << "'");
+                debugs(29, 9, "Invalid nc '" << value << "' in '" << temp << "'");
             }
             xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found noncecount '" << digest_request->nc << "'");
+            debugs(29, 9, "Found noncecount '" << digest_request->nc << "'");
             break;
 
         case DIGEST_CNONCE:
             safe_free(digest_request->cnonce);
             if (value.size() != 0)
                 digest_request->cnonce = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found cnonce '" << digest_request->cnonce << "'");
+            debugs(29, 9, "Found cnonce '" << digest_request->cnonce << "'");
             break;
 
         case DIGEST_RESPONSE:
             safe_free(digest_request->response);
             if (value.size() != 0)
                 digest_request->response = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, HERE << "Found response '" << digest_request->response << "'");
+            debugs(29, 9, "Found response '" << digest_request->response << "'");
             break;
 
         default:
-            debugs(29, 3, HERE << "Unknown attribute '" << item << "' in '" << temp << "'");
+            debugs(29, 3, "Unknown attribute '" << item << "' in '" << temp << "'");
             break;
         }
     }
@@ -1078,9 +1059,9 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     Auth::User::Pointer auth_user;
 
     SBuf key = Auth::User::BuildUserKey(username, aRequestRealm);
-    if (key.isEmpty() || (auth_user = authDigestUserFindUsername(key.c_str())) == NULL) {
+    if (key.isEmpty() || (auth_user = findUserInCache(key.c_str(), Auth::AUTH_DIGEST)) == NULL) {
         /* the user doesn't exist in the username cache yet */
-        debugs(29, 9, HERE << "Creating new digest user '" << username << "'");
+        debugs(29, 9, "Creating new digest user '" << username << "'");
         digest_user = new Auth::Digest::User(this, aRequestRealm);
         /* auth_user is a parent */
         auth_user = digest_user;
@@ -1100,7 +1081,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
          */
         authDigestUserLinkNonce(digest_user, nonce);
     } else {
-        debugs(29, 9, HERE << "Found user '" << username << "' in the user cache as '" << auth_user << "'");
+        debugs(29, 9, "Found user '" << username << "' in the user cache as '" << auth_user << "'");
         digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());
         digest_user->credentials(Auth::Unchecked);
         xfree(username);
@@ -1110,7 +1091,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     assert(digest_request != NULL);
 
     digest_request->user(digest_user);
-    debugs(29, 9, HERE << "username = '" << digest_user->username() << "'\nrealm = '" <<
+    debugs(29, 9, "username = '" << digest_user->username() << "'\nrealm = '" <<
            digest_request->realm << "'\nqop = '" << digest_request->qop <<
            "'\nalgorithm = '" << digest_request->algorithm << "'\nuri = '" <<
            digest_request->uri << "'\nnonce = '" << digest_request->nonceb64 <<

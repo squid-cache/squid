@@ -114,7 +114,6 @@ typedef unsigned long ino_t;
 #define snprintf _snprintf
 #define stat _stati64
 #define strcasecmp _stricmp
-#define strdup _strdup
 #define strlwr _strlwr
 #define strncasecmp _strnicmp
 #define tempnam _tempnam
@@ -961,8 +960,6 @@ void syslog(int priority, const char *fmt, ...);
 
 /* prototypes */
 void WIN32_maperror(unsigned long WIN32_oserrno);
-
-#include "compat/strsep.h"
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWINDOWS_H */

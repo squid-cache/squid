@@ -114,7 +114,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         ann.strand.tag = dbName;
         Ipc::TypedMsgHdr message;
         ann.pack(message);
-        SendMessage(Ipc::coordinatorAddr, message);
+        SendMessage(Ipc::Port::CoordinatorAddr(), message);
 
         ioRequestor->ioCompletedNotification();
         return;
@@ -126,7 +126,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
     Ipc::TypedMsgHdr msg;
     request.pack(msg);
-    Ipc::SendMessage(Ipc::coordinatorAddr, msg);
+    Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), msg);
 
     WaitingForOpen.push_back(this);
 
@@ -460,7 +460,7 @@ IpcIoFile::Notify(const int peerId)
     Ipc::TypedMsgHdr msg;
     msg.setType(Ipc::mtIpcIoNotification); // TODO: add proper message type?
     msg.putInt(KidIdentifier);
-    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrPfx, peerId);
+    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrLabel, peerId);
     Ipc::SendMessage(addr, msg);
 }
 

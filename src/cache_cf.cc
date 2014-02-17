@@ -40,6 +40,7 @@
 #include "acl/MethodData.h"
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
+#include "anyp/UriScheme.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -77,7 +78,6 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "tools.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"
@@ -249,7 +249,7 @@ static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
-static bool parseNamedIntList(const char *data, const String &name, Vector<int> &list);
+static bool parseNamedIntList(const char *data, const String &name, std::vector<int> &list);
 
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
@@ -378,6 +378,7 @@ SubstituteMacro(char*& line, int& len, const char* macroName, const char* substS
 static void
 ProcessMacros(char*& line, int& len)
 {
+    SubstituteMacro(line, len, "${service_name}", service_name);
     SubstituteMacro(line, len, "${process_name}", TheKidName);
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
@@ -488,7 +489,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
     config_lineno = 0;
 
-    Vector<bool> if_states;
+    std::vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
         ++config_lineno;
 
@@ -1869,12 +1870,7 @@ static void
 free_authparam(Auth::ConfigVector * cfg)
 {
     /* Wipe the Auth globals and Detach/Destruct component config + state. */
-    cfg->clean();
-
-    /* remove our pointers to the probably-dead sub-configs */
-    while (cfg->size()) {
-        cfg->pop_back();
-    }
+    cfg->clear();
 
     /* on reconfigure initialize new auth schemes for the new config. */
     if (reconfiguring) {
@@ -1895,7 +1891,7 @@ static int
 find_fstype(char *type)
 {
     for (size_t i = 0; i < StoreFileSystem::FileSystems().size(); ++i)
-        if (strcasecmp(type, StoreFileSystem::FileSystems().items[i]->type()) == 0)
+        if (strcasecmp(type, StoreFileSystem::FileSystems().at(i)->type()) == 0)
             return (int)i;
 
     return (-1);
@@ -1938,7 +1934,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
             sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
 
-            if (strcmp(sd->type(), StoreFileSystem::FileSystems().items[fs]->type()) != 0) {
+            if (strcmp(sd->type(), StoreFileSystem::FileSystems().at(fs)->type()) != 0) {
                 debugs(3, DBG_CRITICAL, "ERROR: Can't change type of existing cache_dir " <<
                        sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
                 return;
@@ -1963,7 +1959,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
     allocate_new_swapdir(swap);
 
-    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().items[fs]->createSwapDir();
+    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().at(fs)->createSwapDir();
 
     sd = dynamic_cast<SwapDir *>(swap->swapDirs[swap->n_configured].getRaw());
 
@@ -3511,7 +3507,7 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
-    const char *portType = URLScheme(s->transport.protocol).const_str();
+    const char *portType = AnyP::UriScheme(s->transport.protocol).c_str();
 
     if (*token == '[') {
         /* [ipv6]:port */
@@ -3830,7 +3826,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         // clone the port options from *s to *(s->next)
         s->next = cbdataReference(s->clone());
         s->next->s.setIPv4();
-        debugs(3, 3, URLScheme(s->transport.protocol) << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).c_str() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
     while (*head)
@@ -3871,7 +3867,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 
         // TODO: compare against prefix of 'n' instead of assuming http_port
         if (s->transport.protocol != AnyP::PROTO_HTTP)
-            storeAppendPrintf(e, " protocol=%s", URLScheme(s->transport.protocol).const_str());
+            storeAppendPrintf(e, " protocol=%s", AnyP::UriScheme(s->transport.protocol).c_str());
 
         if (s->allow_direct)
             storeAppendPrintf(e, " allow-direct");
@@ -4264,7 +4260,7 @@ free_access_log(CustomLog ** definitions)
 
 /// parses list of integers form name=N1,N2,N3,...
 static bool
-parseNamedIntList(const char *data, const String &name, Vector<int> &list)
+parseNamedIntList(const char *data, const String &name, std::vector<int> &list)
 {
     if (data && (strncmp(data, name.rawBuf(), name.size()) == 0)) {
         data += name.size();
@@ -4297,7 +4293,7 @@ parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 
     const char *const pToken = ConfigParser::NextToken();
     const char *const cToken = ConfigParser::NextToken();
-    Vector<int> processes, cores;
+    std::vector<int> processes, cores;
     if (!parseNamedIntList(pToken, "process_numbers", processes)) {
         debugs(3, DBG_CRITICAL, "FATAL: bad 'process_numbers' parameter " <<
                "in 'cpu_affinity_map'");
@@ -4497,10 +4493,10 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
-        ca->param = strdup("on");
+        ca->param = xstrdup("on");
     } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidBefore]) == 0) {
         ca->alg = Ssl::algSetValidBefore;
-        ca->param = strdup("on");
+        ca->param = xstrdup("on");
     } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
         ca->alg = Ssl::algSetCommonName;
         if (param) {
@@ -4509,7 +4505,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
                 self_destruct();
                 return;
             }
-            ca->param = strdup(param);
+            ca->param = xstrdup(param);
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
