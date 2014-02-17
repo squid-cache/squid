@@ -12,11 +12,13 @@ namespace Http {
 namespace One {
 
 // Parser states
-#define HTTP_PARSE_NONE   0 // nothing. completely unset state.
-#define HTTP_PARSE_NEW    1 // initialized, but nothing usefully parsed yet.
-#define HTTP_PARSE_FIRST  2 // have parsed request first line
-#define HTTP_PARSE_MIME   3 // have located end of mime header block
-#define HTTP_PARSE_DONE   99 // have done with parsing so far
+enum ParseState {
+    HTTP_PARSE_NONE =0,  ///< nothing. completely unset state.
+    HTTP_PARSE_NEW =1,   ///< initialized, but nothing usefully parsed yet
+    HTTP_PARSE_FIRST,    ///< HTTP/1 message first line
+    HTTP_PARSE_MIME,     ///< mime header block
+    HTTP_PARSE_DONE      ///< completed with parsing a full request header
+};
 
 /** HTTP protocol parser.
  *
@@ -50,7 +52,7 @@ public:
      * The leftmost n bytes bytes have been dropped and all other
      * bytes shifted left n positions.
      */
-    virtual void noteBufferShift(int64_t n) = 0;
+    virtual void noteBufferShift(const int64_t n) = 0;
 
     /** Whether the parser is already done processing the buffer.
      * Use to determine between incomplete data and errors results
@@ -77,6 +79,8 @@ public:
     const char *rawHeaderBuf() {return mimeHeaderBlock_.c_str();}
 
     /// attempt to parse a message from the buffer
+    /// \retval true if a full message was found and parsed
+    /// \retval false if incomplete, invalid or no message was found
     virtual bool parse() = 0;
 
     /// the protocol label for this message
@@ -93,7 +97,7 @@ public:
 
 protected:
     /// what stage the parser is currently up to
-    uint8_t completedState_;
+    ParseState completedState_;
 
     /// what protocol label has been found in the first line
     AnyP::ProtocolVersion msgProtocol_;
@@ -120,7 +124,7 @@ public:
     RequestParser() : Parser() {}
     RequestParser(const char *aBuf, int len) : Parser(aBuf, len) {}
     virtual void clear();
-    virtual void noteBufferShift(int64_t n);
+    virtual void noteBufferShift(const int64_t n);
     virtual int64_t messageOffset() const {return req.start;}
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse();
