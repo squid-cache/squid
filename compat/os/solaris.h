@@ -101,8 +101,5 @@ SQUIDCEXTERN int gethostname(char *, int);
 #define _PATH_DEVNULL "/dev/null"
 #endif
 
-/* Solaris 10 does not define strsep() */
-#include "compat/strsep.h"
-
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */
