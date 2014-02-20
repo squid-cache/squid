@@ -11,7 +11,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
-SUBDIRS = purge
+SUBDIRS = purge squidclient
 EXTRA_DIST = 
 man_MANS = 
 DISTCLEANFILES = 
@@ -51,19 +51,6 @@ EXTRA_DIST += helper-mux.pl helper-mux.README
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
-
-## ##### squidclient  #####
-
-bin_PROGRAMS = squidclient
-
-squidclient_SOURCES = squidclient.cc \
-	stub_debug.cc \
-	test_tools.cc \
-	time.cc
-
-EXTRA_DIST += squidclient.1
-man_MANS += squidclient.1
-
 
 
 ## ##### cachemgr.cgi  #####
