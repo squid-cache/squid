@@ -44,6 +44,7 @@ using namespace Squid;
 /** \endcond */
 #endif
 
+#include <csignal>
 #include <cstdio>
 #include <iostream>
 
@@ -61,9 +62,6 @@ using namespace Squid;
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
-#endif
-#if HAVE_SIGNAL_H
-#include <signal.h>
 #endif
 #if HAVE_ERRNO_H
 #include <errno.h>
@@ -129,8 +127,7 @@ static int client_comm_bind(int, const Ip::Address &);
 static int client_comm_connect(int, const Ip::Address &);
 static void usage(const char *progname);
 
-typedef void SIGHDLR(int sig);
-SIGHDLR pipe_handler;
+void pipe_handler(int sig);
 static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
@@ -229,7 +226,6 @@ main(int argc, char *argv[])
     time_t ims = 0;
     int max_forwards = -1;
 
-    int i = 0;
     const char *proxy_user = NULL;
     const char *proxy_password = NULL;
     const char *www_user = NULL;
@@ -565,7 +561,7 @@ main(int argc, char *argv[])
 
     uint32_t loops = Ping::Init();
 
-    for (i = 0; loops == 0 || i < loops; ++i) {
+    for (uint32_t i = 0; loops == 0 || i < loops; ++i) {
         size_t fsize = 0;
         struct addrinfo *AI = NULL;
 
