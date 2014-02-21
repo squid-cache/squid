@@ -29,8 +29,8 @@ ro	ro-ro ro-md
 ru	ru-ru
 sk	sk-sk
 sl	sl-si
-sr-cyrl sr-rs sr-cyrl-cs sr-cyrl-rs
-sr-latn	sr sr-sp sr-latn-cs sr-latn-rs
+sr-cyrl	sr-rs sr-cyrl-cs sr-cyrl-rs sr-cyrl-me
+sr-latn	sr sr-sp sr-latn-cs sr-latn-rs sr-latn-me
 sv	sv-fi sv-se
 th	th-th
 tr	tr-tr
