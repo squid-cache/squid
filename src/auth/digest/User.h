@@ -25,6 +25,8 @@ public:
 
     /* what nonces have been allocated to this user */
     dlink_list nonces;
+
+    digest_nonce_h * currentNonce();
 };
 
 MEMPROXY_CLASS_INLINE(Auth::Digest::User);
