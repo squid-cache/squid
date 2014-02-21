@@ -7,9 +7,7 @@
 #include "testURL.h"
 #include "URL.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testURL );
 

@@ -63,6 +63,8 @@
 #include "ssl/support.h"
 #endif
 
+#include <cerrno>
+#include <cmath>
 #if _SQUID_CYGWIN_
 #include <sys/ioctl.h>
 #endif
@@ -71,12 +73,6 @@
 #endif
 #if HAVE_SYS_UN_H
 #include <sys/un.h>
-#endif
-#if HAVE_MATH_H
-#include <math.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 /*

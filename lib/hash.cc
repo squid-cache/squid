@@ -35,15 +35,10 @@
 #include "hash.h"
 #include "profiler/Profiler.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -51,12 +46,6 @@
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H
 #include <malloc.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_MATH_H
-#include <math.h>
 #endif
 
 static void hash_next_bucket(hash_table * hid);

@@ -15,12 +15,7 @@
 #include "squid.h"
 #include "helpers/defines.h"
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
 
 /**
  * options:

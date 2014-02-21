@@ -6,12 +6,9 @@
 #define SQUID_LRUMAP_H
 
 #include "SquidTime.h"
-#if HAVE_LIST
+
 #include <list>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
 
 template <class EntryValue, size_t EntryCost = sizeof(EntryValue)> class LruMap
 {

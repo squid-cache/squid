@@ -492,8 +492,7 @@ cleanup:
     }
 }
 #else
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #ifndef MAX_AUTHTOKEN_LEN
 #define MAX_AUTHTOKEN_LEN   65535
 #endif

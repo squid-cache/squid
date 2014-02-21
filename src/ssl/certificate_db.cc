@@ -1,14 +1,9 @@
 #include "squid.h"
 #include "ssl/certificate_db.h"
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_FSTREAM
+
+#include <cerrno>
 #include <fstream>
-#endif
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif

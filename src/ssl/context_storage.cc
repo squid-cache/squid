@@ -3,9 +3,8 @@
 #include "ssl/context_storage.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
-#if HAVE_LIMITS
+
 #include <limits>
-#endif
 #if USE_SSL
 #include <openssl/ssl.h>
 #endif

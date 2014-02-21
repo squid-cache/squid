@@ -35,11 +35,10 @@
 #define SQUID_CONFIGPARSER_H
 
 #include "SquidString.h"
+
 #include <queue>
 #include <stack>
-#if HAVE_STRING
 #include <string>
-#endif
 
 class wordlist;
 /**

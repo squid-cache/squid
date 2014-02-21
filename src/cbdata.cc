@@ -52,12 +52,10 @@
 #include "Store.h"
 #include "Generic.h"
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
+#include <climits>
 #if USE_CBDATA_DEBUG
-#include <vector>
 #include <algorithm>
+#include <vector>
 #endif
 
 #if WITH_VALGRIND

@@ -37,9 +37,7 @@
 #ifdef HAVE_LDAP
 
 #include "support.h"
-#ifdef HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
 
 void
 init_args(struct main_args *margs)
@@ -420,8 +418,7 @@ strup(char *s)
 }
 
 #else
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 int
 main(int argc, char *const argv[])
 {

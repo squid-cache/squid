@@ -18,11 +18,9 @@
 #include "testRock.h"
 #include "testStoreSupport.h"
 
+#include <stdexcept>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_STDEXCEPT
-#include <stdexcept>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>

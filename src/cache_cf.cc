@@ -109,12 +109,8 @@
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
-#if HAVE_LIMITS_H
 #include <limits>
-#endif
-#if HAVE_LIST
 #include <list>
-#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif

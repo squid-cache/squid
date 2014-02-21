@@ -12,9 +12,7 @@
 #include "ip/forward.h"
 #include "ipc/FdNotes.h"
 
-#if HAVE_IOSFWD
 #include <iosfwd>
-#endif
 
 namespace Ipc
 {

@@ -4,9 +4,7 @@
 #include "acl/forward.h"
 #include "err_type.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 class ConfigParser;
 class dlink_list;

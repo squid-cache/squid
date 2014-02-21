@@ -8,9 +8,7 @@
 #include "SquidConfig.h"
 #include "testHttpRequestMethod.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequestMethod );
 

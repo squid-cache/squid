@@ -15,16 +15,10 @@
  *
  */
 #include "squid.h"
-
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
 #include "crypt_md5.h"
 #include "md5.h"
+
+#include <cstring>
 
 static unsigned char itoa64[] =	/* 0 ... 63 => ascii - 64 */
     "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
