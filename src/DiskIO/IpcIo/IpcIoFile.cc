@@ -907,17 +907,27 @@ DiskerClose(const String &path)
 }
 
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
-class IpcIoClaimMemoryNeedsRr: public RegisteredRunner
+/// and initializes shared memory segments used by IpcIoFile
+class IpcIoRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &r);
+    IpcIoRr(): owner(NULL) {}
+    virtual ~IpcIoRr();
+    virtual void claimMemoryNeeds();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create();
+
+private:
+    Ipc::FewToFewBiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(rrClaimMemoryNeeds, IpcIoClaimMemoryNeedsRr);
+RunnerRegistrationEntry(IpcIoRr);
 
 void
-IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
+IpcIoRr::claimMemoryNeeds()
 {
     const int itemsCount = Ipc::FewToFewBiQueue::MaxItemsCount(
                                ::Config.workers, ::Config.cacheSwap.n_strands, QueueCapacity);
@@ -929,24 +939,8 @@ IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
                            static_cast<int>(itemsCount * 1.1));
 }
 
-/// initializes shared memory segments used by IpcIoFile
-class IpcIoRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    IpcIoRr(): owner(NULL) {}
-    virtual ~IpcIoRr();
-
-protected:
-    virtual void create(const RunnerRegistry &);
-
-private:
-    Ipc::FewToFewBiQueue::Owner *owner;
-};
-
-RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
-
-void IpcIoRr::create(const RunnerRegistry &)
+void
+IpcIoRr::create()
 {
     if (Config.cacheSwap.n_strands <= 0)
         return;

@@ -72,14 +72,14 @@ class RegisteredRunner: public ::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &r);
+    virtual void useConfig();
 
 protected:
     /// called when the runner should create a new memory segment
-    virtual void create(const RunnerRegistry &) = 0;
+    virtual void create() = 0;
     /// called when the runner should open a previously created segment,
     /// not needed if segments are opened in constructor or init methods
-    virtual void open(const RunnerRegistry &) {}
+    virtual void open() {}
 };
 
 } // namespace Mem

@@ -124,12 +124,13 @@ clientdbInit(void)
 class ClientDbRr: public RegisteredRunner
 {
 public:
-    virtual void run(const RunnerRegistry &);
+    /* RegisteredRunner API */
+    virtual void useConfig();
 };
-RunnerRegistrationEntry(rrAfterConfig, ClientDbRr);
+RunnerRegistrationEntry(ClientDbRr);
 
 void
-ClientDbRr::run(const RunnerRegistry &r)
+ClientDbRr::useConfig()
 {
     clientdbInit();
     Mgr::RegisterAction("client_list", "Cache Client List", clientdbDump, 0, 1);
