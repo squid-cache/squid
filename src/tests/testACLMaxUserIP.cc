@@ -1,5 +1,4 @@
 #define SQUID_UNIT_TEST 1
-
 #include "squid.h"
 
 #if USE_AUTH
@@ -8,9 +7,7 @@
 #include "ConfigParser.h"
 #include "testACLMaxUserIP.h"
 
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
 

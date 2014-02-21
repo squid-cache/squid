@@ -5,7 +5,7 @@
 #define STUB_API "stub_HelperChildconfig.cc"
 #include "tests/STUB.h"
 
-#include <string.h>
+#include <cstring>
 
 HelperChildConfig::HelperChildConfig(const unsigned int m):
         n_max(m),

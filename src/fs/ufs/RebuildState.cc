@@ -42,14 +42,10 @@
 #include "tools.h"
 #include "UFSSwapLogParser.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cerrno>
+#include <cmath>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);

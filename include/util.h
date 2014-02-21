@@ -32,9 +32,6 @@
 #ifndef SQUID_UTIL_H
 #define SQUID_UTIL_H
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_TIME_H
 #include <time.h>
 #endif

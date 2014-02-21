@@ -23,23 +23,16 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
+#include <cerrno>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 #if HAVE_CRYPT_H
 #include <crypt.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 static hash_table *hash = NULL;

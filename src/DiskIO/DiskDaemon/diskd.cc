@@ -34,9 +34,8 @@
 #include "DiskIO/DiskDaemon/diomsg.h"
 #include "hash.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
+#include <iostream>
 #if HAVE_SYS_IPC_H
 #include <sys/ipc.h>
 #endif
@@ -45,9 +44,6 @@
 #endif
 #if HAVE_SYS_SHM_H
 #include <sys/shm.h>
-#endif
-#if HAVE_IOSTREAM
-#include <iostream>
 #endif
 
 void

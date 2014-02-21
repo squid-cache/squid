@@ -46,9 +46,7 @@
 #include "Store.h"
 #include "store_heap_replacement.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 /*
  * Key generation function to implement the LFU-DA policy (Least

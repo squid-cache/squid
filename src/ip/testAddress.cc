@@ -1,13 +1,12 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
-//#include "compat/getaddrinfo.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "testAddress.h"
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
+#include <stdexcept>
+#include <string>
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
@@ -16,12 +15,6 @@
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
-#endif
-#if HAVE_STRING
-#include <string>
-#endif
-#if HAVE_STDEXCEPT
-#include <stdexcept>
 #endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );

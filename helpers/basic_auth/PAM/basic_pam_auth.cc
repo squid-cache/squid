@@ -68,21 +68,10 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
-#endif
+#include <cassert>
+#include <csignal>
+#include <cstring>
+#include <ctime>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

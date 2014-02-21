@@ -11,14 +11,7 @@ namespace Ip
 class Address;
 };
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
-
-/* memcpy and friends */
-#if HAVE_STRING_H
-#include <string.h>
-#endif
 
 namespace Eui
 {

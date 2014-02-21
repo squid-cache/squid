@@ -17,9 +17,7 @@
 #include "tools.h"
 #include "Transients.h"
 
-#if HAVE_LIMITS_H
 #include <limits>
-#endif
 
 /// shared memory segment path to use for Transients maps
 static const char *MapLabel = "transients_map";

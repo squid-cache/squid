@@ -52,14 +52,10 @@
 #include "tools.h"
 #include "UFSSwapDir.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cerrno>
+#include <cmath>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;

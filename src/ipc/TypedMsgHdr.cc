@@ -8,7 +8,7 @@
 #include "ipc/TypedMsgHdr.h"
 #include "tools.h"
 
-#include <string.h>
+#include <cstring>
 
 Ipc::TypedMsgHdr::TypedMsgHdr()
 {

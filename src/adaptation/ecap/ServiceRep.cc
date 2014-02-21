@@ -15,9 +15,7 @@
 #include <libecap/common/options.h>
 #include <libecap/common/name.h>
 #include <libecap/common/named_values.h>
-#if HAVE_LIMITS
 #include <limits>
-#endif
 #include <map>
 
 /// libecap::adapter::services indexed by their URI

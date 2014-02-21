@@ -56,14 +56,9 @@
 #include "helpers/defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
-//#include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <cstring>
 #if HAVE_CRYPT_H
 #include <crypt.h>
 #endif
@@ -72,9 +67,6 @@
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
 #endif
 #if HAVE_STDINT_H
 #include <stdint.h>

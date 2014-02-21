@@ -80,17 +80,14 @@
  */
 
 #include "squid.h"
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+
+#include <cassert>
 
 #include "MemPoolChunked.h"
 
 #define MEM_MAX_MMAP_CHUNKS 2048
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 /*
  * XXX This is a boundary violation between lib and src.. would be good

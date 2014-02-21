@@ -27,9 +27,7 @@
 #ifdef HAVE_LDAP
 
 #include "support.h"
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
+#include <ctime>
 
 const char *
 LogTime()

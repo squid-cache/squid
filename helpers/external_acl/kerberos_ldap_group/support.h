@@ -24,9 +24,7 @@
 
 #define KERBEROS_LDAP_GROUP_VERSION "1.3.1sq"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
