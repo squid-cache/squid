@@ -33,9 +33,7 @@
 #include "MemBlob.h"
 #include "SBufDetailedStats.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");

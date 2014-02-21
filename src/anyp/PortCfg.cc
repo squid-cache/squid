@@ -7,9 +7,7 @@
 #endif
 
 #include <cstring>
-#if HAVE_LIMITS
 #include <limits>
-#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(AnyP, PortCfg);
 

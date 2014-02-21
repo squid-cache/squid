@@ -5,9 +5,7 @@
 #include "MemBuf.h"
 #include "Notes.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 class helper_stateful_server;
 

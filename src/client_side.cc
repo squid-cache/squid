@@ -148,15 +148,9 @@
 #include "ssl/crtd_message.h"
 #endif
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-#if HAVE_MATH_H
-#include <math.h>
-#endif
-#if HAVE_LIMITS
+#include <climits>
+#include <cmath>
 #include <limits>
-#endif
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close

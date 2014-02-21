@@ -62,20 +62,16 @@
 #include "StatHist.h"
 #include "Store.h"
 
+#include <cerrno>
+#include <climits>
 #if HAVE_SYS_DEVPOLL_H
 /* Solaris /dev/poll support, see "man -s 7D poll" */
 #include <sys/devpoll.h>
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
 
 #define DEBUG_DEVPOLL 0
 
-// OPEN_MAX is defined in <limits.h>
+// OPEN_MAX is defined in <climits>
 #define	DEVPOLL_UPDATESIZE	OPEN_MAX
 #define	DEVPOLL_QUERYSIZE	OPEN_MAX
 

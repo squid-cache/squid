@@ -2161,18 +2161,11 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
-  algorithm \
   arpa/inet.h \
   arpa/nameser.h \
   assert.h \
   bstring.h \
-  cassert \
   crypt.h \
-  cstdarg \
-  cstdio \
-  cstdlib \
-  cstring \
-  list \
   ctype.h \
   errno.h \
   execinfo.h \
@@ -2182,11 +2175,6 @@ AC_CHECK_HEADERS( \
   glob.h \
   gnumalloc.h \
   grp.h \
-  iosfwd \
-  iomanip \
-  iostream \
-  fstream \
-  climits \
   ip_compat.h \
   ip_fil_compat.h \
   ip_fil.h \
@@ -2195,16 +2183,13 @@ AC_CHECK_HEADERS( \
   lber.h \
   ldap.h \
   libc.h \
-  limits \
   limits.h \
   linux/posix_types.h \
   linux/types.h \
   machine/byte_swap.h \
   malloc.h \
-  map \
   math.h \
   memory.h \
-  memory \
   mount.h \
   netdb.h \
   netinet/in.h \
@@ -2218,7 +2203,6 @@ AC_CHECK_HEADERS( \
   netinet/tcp.h \
   openssl/engine.h \
   openssl/txt_db.h \
-  ostream \
   paths.h \
   poll.h \
   pwd.h \
@@ -2227,14 +2211,11 @@ AC_CHECK_HEADERS( \
   sched.h \
   siginfo.h \
   signal.h \
-  sstream \
   stdarg.h \
   stdbool.h \
   stddef.h \
-  stdexcept \
   stdio.h \
   stdlib.h \
-  string \
   string.h \
   strings.h \
   sys/bitypes.h \

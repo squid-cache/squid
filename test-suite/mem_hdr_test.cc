@@ -38,12 +38,8 @@
 #include "mem_node.h"
 #include "stmem.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 /*For  a reason required on some platforms */
 unsigned int TextException::FileNameHash(const char *fname)

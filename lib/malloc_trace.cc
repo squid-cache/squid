@@ -36,15 +36,11 @@
 #include "profiler/Profiler.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cassert>
+#include <cctype>
+#include <cerrno>
+#include <cmath>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -52,15 +48,6 @@
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H
 #include <malloc.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_MATH_H
-#include <math.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
 #endif
 
 #if MEM_GEN_TRACE

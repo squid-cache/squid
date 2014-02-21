@@ -9,9 +9,7 @@
 #include "SquidString.h"
 #include "typedefs.h"
 
-#if HAVE_STRING
 #include <string>
-#endif
 #include <vector>
 
 class HttpRequest;

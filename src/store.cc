@@ -69,10 +69,8 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
 
+#include <climits>
 #include <stack>
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2

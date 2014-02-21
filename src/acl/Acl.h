@@ -39,12 +39,8 @@
 #include "dlink.h"
 #include "MemPool.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
 #include <vector>
 
 class ConfigParser;

@@ -29,18 +29,9 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #if HAVE_SASL_SASL_H
 #include <sasl/sasl.h>
 #else

@@ -27,20 +27,13 @@
  * -----------------------------------------------------------------------------
  */
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
+#include <cstring>
+#include <ctime>
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
 #endif
 
 #include "base64.h"

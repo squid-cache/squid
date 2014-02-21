@@ -10,12 +10,9 @@
 #include "mgr/Command.h"
 #include "SquidTime.h"
 #include "ssl/gadgets.h"
-#if HAVE_MAP
-#include <map>
-#endif
-#if HAVE_LIST
+
 #include <list>
-#endif
+#include <map>
 #include <openssl/ssl.h>
 
 /// TODO: Replace on real size.

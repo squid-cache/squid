@@ -15,9 +15,7 @@
 #include "testStoreSupport.h"
 #include "testUfs.h"
 
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 
 #define TESTDIR "testUfs_Store"
 

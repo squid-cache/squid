@@ -23,6 +23,9 @@
 #endif
 #include "helpers/defines.h"
 
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #if HAVE_DB_H
 #include <db.h>
 #endif
@@ -30,12 +33,8 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <time.h>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

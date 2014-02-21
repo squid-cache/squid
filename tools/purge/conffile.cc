@@ -35,13 +35,13 @@
 //
 //
 #include "conffile.hh"
-#include <sys/types.h>
-#include <errno.h>
-#include <memory.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <sys/types.h>
+#include <memory.h>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )

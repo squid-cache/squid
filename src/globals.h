@@ -37,10 +37,6 @@
 #include "IoStats.h"
 #include "rfc2181.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
 extern char tmp_error_buf[ERROR_BUF_SZ];
