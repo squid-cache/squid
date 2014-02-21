@@ -80,7 +80,7 @@ testRock::setUp()
     store->create();
 
     rr = new Rock::SwapDirRr;
-    rr->run(rrAfterConfig);
+    rr->useConfig();
 }
 
 void
@@ -94,7 +94,8 @@ testRock::tearDown()
 
     free_cachedir(&Config.cacheSwap);
 
-    delete rr;
+    rr->finishShutdown(); // deletes rr
+    rr = NULL;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);

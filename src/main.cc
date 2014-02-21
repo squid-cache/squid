@@ -274,6 +274,8 @@ SignalEngine::doShutdown(time_t wait)
     /* detach the auth components (only do this on full shutdown) */
     Auth::Scheme::FreeAll();
 #endif
+
+    RunRegisteredHere(RegisteredRunner::startShutdown);
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -803,6 +805,8 @@ mainReconfigureFinish(void *)
                ") requires a full restart. It has been ignored by reconfigure.");
         Config.workers = oldWorkers;
     }
+
+    RunRegisteredHere(RegisteredRunner::syncConfig);
 
     if (IamPrimaryProcess())
         CpuAffinityCheck();
@@ -1443,9 +1447,9 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
-    ActivateRegistered(rrFinalizeConfig);
-    ActivateRegistered(rrClaimMemoryNeeds);
-    ActivateRegistered(rrAfterConfig);
+    RunRegisteredHere(RegisteredRunner::finalizeConfig);
+    RunRegisteredHere(RegisteredRunner::claimMemoryNeeds);
+    RunRegisteredHere(RegisteredRunner::useConfig);
     enter_suid();
 
     if (!opt_no_daemon && Config.workers > 0)
@@ -1804,9 +1808,9 @@ watch_child(char *argv[])
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
             leave_suid();
-            DeactivateRegistered(rrAfterConfig);
-            DeactivateRegistered(rrClaimMemoryNeeds);
-            DeactivateRegistered(rrFinalizeConfig);
+            // XXX: Master process has no main loop and, hence, should not call
+            // RegisteredRunner::startShutdown which promises a loop iteration.
+            RunRegisteredHere(RegisteredRunner::finishShutdown);
             enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
@@ -1902,9 +1906,6 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-    DeactivateRegistered(rrAfterConfig);
-    DeactivateRegistered(rrClaimMemoryNeeds);
-    DeactivateRegistered(rrFinalizeConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
@@ -1938,6 +1939,8 @@ SquidShutdown()
     comm_exit();
 
     memClean();
+
+    RunRegisteredHere(RegisteredRunner::finishShutdown);
 
 #if XMALLOC_TRACE
 

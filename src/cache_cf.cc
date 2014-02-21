@@ -4602,14 +4602,15 @@ class sslBumpCfgRr: public ::RegisteredRunner
 public:
     static Ssl::BumpMode lastDeprecatedRule;
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &);
+    virtual void finalizeConfig();
 };
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(rrFinalizeConfig, sslBumpCfgRr);
+RunnerRegistrationEntry(sslBumpCfgRr);
 
-void sslBumpCfgRr::run(const RunnerRegistry &r)
+void
+sslBumpCfgRr::finalizeConfig()
 {
     if (lastDeprecatedRule != Ssl::bumpEnd) {
         assert( lastDeprecatedRule == Ssl::bumpClientFirst || lastDeprecatedRule == Ssl::bumpNone);
