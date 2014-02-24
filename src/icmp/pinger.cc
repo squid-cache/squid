@@ -245,7 +245,7 @@ main(int argc, char *argv[])
     return 0;
 }
 
-#else / * !USE_ICMP */
+#else /* !USE_ICMP */
 
 #include <ostream>
 int
