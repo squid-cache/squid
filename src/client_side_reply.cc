@@ -447,8 +447,10 @@ void
 clientReplyContext::cacheHit(StoreIOBuffer result)
 {
     /** Ignore if the HIT object is being deleted. */
-    if (deleting)
+    if (deleting) {
+        debugs(88, 3, "HIT object being deleted. Ignore the HIT.");
         return;
+    }
 
     StoreEntry *e = http->storeEntry();
 
@@ -469,6 +471,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 
     if (result.length == 0) {
+        debugs(88, 5, "store IO buffer has no content. MISS");
         /* the store couldn't get enough data from the file for us to id the
          * object
          */
@@ -527,15 +530,15 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 
     if (r->method == Http::METHOD_PURGE) {
+        debugs(88, 5, "PURGE gets a HIT");
         removeClientStoreReference(&sc, http);
         e = NULL;
         purgeRequest();
         return;
     }
 
-    if (e->checkNegativeHit()
-            && !r->flags.noCacheHack()
-       ) {
+    if (e->checkNegativeHit() && !r->flags.noCacheHack()) {
+        debugs(88, 5, "negative-HIT");
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
     } else if (blockedHit()) {
@@ -589,12 +592,14 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             http->logType = LOG_TCP_MISS;
             processMiss();
         }
-    } else if (r->conditional())
+    } else if (r->conditional()) {
+        debugs(88, 5, "conditional HIT");
         processConditional(result);
-    else {
+    } else {
         /*
          * plain ol' cache hit
          */
+        debugs(88, 5, "plain old HIT");
 
 #if USE_DELAY_POOLS
         if (e->store_status != STORE_OK)
