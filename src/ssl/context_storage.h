@@ -52,7 +52,7 @@ public:
     /// Create new SSL context storage for the local listening address/port.
     void addLocalStorage(Ip::Address const & address, size_t size_of_store);
     /// Return the local storage for the given listening address/port.
-    LocalContextStorage & getLocalStorage(Ip::Address const & address);
+    LocalContextStorage *getLocalStorage(Ip::Address const & address);
     /// When reconfigring should be called this method.
     void reconfigureStart();
 private:
