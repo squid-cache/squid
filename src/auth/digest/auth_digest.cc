@@ -102,10 +102,8 @@ static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
 
 static void authenticateDigestNonceCacheCleanup(void *data);
 static digest_nonce_h *authenticateDigestNonceFindNonce(const char *nonceb64);
-static digest_nonce_h *authenticateDigestNonceNew(void);
 static void authenticateDigestNonceDelete(digest_nonce_h * nonce);
 static void authenticateDigestNonceSetup(void);
-static int authDigestNonceIsStale(digest_nonce_h * nonce);
 static void authDigestNonceEncode(digest_nonce_h * nonce);
 static void authDigestNonceLink(digest_nonce_h * nonce);
 #if NOT_USED
@@ -125,7 +123,7 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     nonce->key = xstrdup(base64_encode_bin((char *) &(nonce->noncedata), sizeof(digest_nonce_data)));
 }
 
-static digest_nonce_h *
+digest_nonce_h *
 authenticateDigestNonceNew(void)
 {
     digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(digest_nonce_pool->alloc());
@@ -379,8 +377,8 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 
     /* is the nonce-count ok ? */
     if (!static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->CheckNonceCount) {
-        ++nonce->nc;
-        return -1;              /* forced OK by configuration */
+        /* Ignore client supplied NC */
+        intnc = nonce->nc + 1;
     }
 
     if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
@@ -390,21 +388,24 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
         return 0;
     }
 
-    /* seems ok */
     /* increment the nonce count - we've already checked that intnc is a
      *  valid representation for us, so we don't need the test here.
      */
     nonce->nc = intnc;
 
-    return -1;
+    return !authDigestNonceIsStale(nonce);
 }
 
-static int
+int
 authDigestNonceIsStale(digest_nonce_h * nonce)
 {
     /* do we have a nonce ? */
 
     if (!nonce)
+        return -1;
+
+    /* Is it already invalidated? */
+    if (!nonce->flags.valid)
         return -1;
 
     /* has it's max duration expired? */
@@ -530,17 +531,23 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
     if (!authenticateProgram)
         return;
 
-    int stale = 0;
-
-    if (auth_user_request != NULL) {
-        Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest*>(auth_user_request.getRaw());
-        assert (digest_request != NULL);
-
-        stale = !digest_request->flags.invalid_password;
-    }
+    bool stale = false;
+    digest_nonce_h *nonce = NULL;
 
     /* on a 407 or 401 we always use a new nonce */
-    digest_nonce_h *nonce = authenticateDigestNonceNew();
+    if (auth_user_request != NULL) {
+        Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
+
+        if (digest_user) {
+            stale = digest_user->credentials() == Auth::Handshake;
+            if (stale) {
+                nonce = digest_user->currentNonce();
+            }
+        }
+    }
+    if (!nonce) {
+        nonce = authenticateDigestNonceNew();
+    }
 
     debugs(29, 9, HERE << "Sending type:" << hdrType <<
            " header: 'Digest realm=\"" << digestAuthRealm << "\", nonce=\"" <<
@@ -703,8 +710,8 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
     nonce->user = NULL;
 }
 
-/* authDigestUserLinkNonce: add a nonce to a given user's struct */
-static void
+/* authDigesteserLinkNonce: add a nonce to a given user's struct */
+void
 authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
 {
     dlink_node *node;
@@ -1026,14 +1033,24 @@ Auth::Digest::Config::decode(char const *proxy_auth)
 
     /* now the nonce */
     nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
+    /* check that we're not being hacked / the username hasn't changed */
+    if (nonce && nonce->user && strcmp(username, nonce->user->username())) {
+        debugs(29, 2, "Username for the nonce does not equal the username for the request");
+        nonce = NULL;
+    }
+    /* check for stale nonce */
+    if (authDigestNonceIsStale(nonce)) {
+        debugs(29, 3, "The received nonce is stale from " << username);
+        digest_request->setDenyMessage("Stale nonce");
+        nonce = NULL;
+    }
     if (!nonce) {
         /* we couldn't find a matching nonce! */
-        debugs(29, 2, "Unexpected or invalid nonce received");
-        if (digest_request->user() != NULL)
-            digest_request->user()->credentials(Auth::Failed);
-        rv = authDigestLogUsername(username, digest_request);
+        debugs(29, 2, "Unexpected or invalid nonce received from " << username);
+        Auth::UserRequest::Pointer auth_request = authDigestLogUsername(username, digest_request);
+        auth_request->user()->credentials(Auth::Handshake);
         safe_free(username);
-        return rv;
+        return auth_request;
     }
 
     digest_request->nonce = nonce;

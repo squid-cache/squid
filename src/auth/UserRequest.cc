@@ -523,9 +523,12 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
             for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
                 Auth::Config *scheme = *i;
 
-                if (scheme->active())
-                    scheme->fixHeader(NULL, rep, type, request);
-                else
+                if (scheme->active()) {
+                    if (auth_user_request != NULL && auth_user_request->scheme()->type() == scheme->type())
+                        scheme->fixHeader(auth_user_request, rep, type, request);
+                    else
+                        scheme->fixHeader(NULL, rep, type, request);
+                } else
                     debugs(29, 4, HERE << "Configured scheme " << scheme->type() << " not Active");
             }
         }
