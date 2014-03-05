@@ -3131,7 +3131,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
   AC_MSG_RESULT(no)
 ])
 
-SQUID_CHECK_STRUCT([cmsghdr],[
+AC_CHECK_TYPE(struct cmsghdr,AC_DEFINE(HAVE_CMSGHDR,1,[The system provides struct cmsghdr]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
   #endif
@@ -3140,7 +3140,7 @@ SQUID_CHECK_STRUCT([cmsghdr],[
   #endif
 ])
 
-SQUID_CHECK_STRUCT([iovec],[
+AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct iovec]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
   #endif
@@ -3149,7 +3149,7 @@ SQUID_CHECK_STRUCT([iovec],[
   #endif
 ])
 
-SQUID_CHECK_STRUCT([msghdr],[
+AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
   #endif
@@ -3158,7 +3158,7 @@ SQUID_CHECK_STRUCT([msghdr],[
   #endif
 ])
 
-SQUID_CHECK_STRUCT([sockaddr_un],[
+AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provides sockaddr_un]),,[
   #if HAVE_SYS_UN_H
   #include <sys/un.h>
   #endif
