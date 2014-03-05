@@ -85,7 +85,7 @@ protected:
     bool canWait() const;
 
 private:
-    void trackPendingRequest(IpcIoPendingRequest *const pending);
+    void trackPendingRequest(const unsigned int id, IpcIoPendingRequest *const pending);
     void push(IpcIoPendingRequest *const pending);
     IpcIoPendingRequest *dequeueRequest(const unsigned int requestId);
 
