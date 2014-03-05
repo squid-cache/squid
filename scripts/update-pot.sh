@@ -58,7 +58,7 @@ cd ..
 
 # Build the po4a.conf
 cat doc/po4a.cnf >po4a.conf
-for f in `ls -1 helpers/*/*/*.8 src/*.8.in tools/*.1 tools/*.8.in` ; do
+for f in `ls -1 helpers/*/*/*.8 src/*.8.in tools/*/*.1 tools/*.8.in` ; do
 	echo "" >>po4a.conf
 	manp=`basename ${f}`
 	echo "[type: man] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
