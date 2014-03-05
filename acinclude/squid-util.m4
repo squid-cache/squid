@@ -248,23 +248,6 @@ AS_IF([test "$ac_res" != no],
 AS_VAR_POPDEF([ac_Search])dnl
 ])
 
-dnl checks that the system provides a given struct type
-dnl defines HAVE_FOO if the type struct FOO exists.
-AC_DEFUN([SQUID_CHECK_STRUCT],[
-  squid_chk_struct="HAVE_$1"
-  AC_MSG_CHECKING([for struct $1])
-  SQUID_TOUPPER_VAR_CONTENTS([squid_chk_struct])
-  AC_COMPILE_IFELSE([
-    AC_LANG_SOURCE([[$2]],[[struct $1 a;]])
-  ],[
-    AC_MSG_RESULT(yes)
-    AC_DEFINE_UNQUOTED([$squid_chk_struct],1,[Define to 1 if struct $1 is provided by the system])
-  ],[
-    AC_MSG_RESULT(no)
-  ])
-  unset squid_chk_struct
-])
-
 dnl Check for Cyrus SASL
 AC_DEFUN([SQUID_CHECK_SASL],[
   squid_cv_check_sasl="auto"
