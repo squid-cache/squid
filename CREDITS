@@ -475,9 +475,7 @@ helpers/url_rewrite/fake/ fake.cc, url_fake_rewrite.sh:
 
 ==============================================================================
 
-include/IPAddress.h lib/IPAddress.cc:
 include/rfc3596.h lib/rfc3596.cc:
-src/ICMPv6.h src/ICMPv6.cc:
 
  This code is copyright (C) 2007-2009 by Treehouse Networks Ltd
  of New Zealand. It is published and Licensed as an extension of
