@@ -1,7 +1,5 @@
 /*
  * DEBUG: section 14    IP Storage and Handling
- * AUTHOR: Amos Jeffries
- * COPYRIGHT: GPL version 2, (C)2007-2013 Treehouse Networks Ltd.
  */
 #ifndef _SQUID_SRC_IP_ADDRESS_H
 #define _SQUID_SRC_IP_ADDRESS_H
