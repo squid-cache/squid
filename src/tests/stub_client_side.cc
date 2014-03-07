@@ -29,7 +29,6 @@ void ClientSocketContext::noteIoError(const int xerrno) STUB
 void ClientSocketContext::writeControlMsg(HttpControlMsg &msg) STUB
 
 void ConnStateData::readSomeData() STUB
-int ConnStateData::getAvailableBufferLength() const STUB_RETVAL(0)
 bool ConnStateData::areAllContextsForThisConnection() const STUB_RETVAL(false)
 void ConnStateData::freeAllContexts() STUB
 void ConnStateData::notifyAllContexts(const int xerrno) STUB
@@ -41,7 +40,6 @@ int ConnStateData::getConcurrentRequestCount() const STUB_RETVAL(0)
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
 void ConnStateData::checkHeaderLimits() STUB
 void ConnStateData::sendControlMsg(HttpControlMsg msg) STUB
-char *ConnStateData::In::addressToReadInto() const STUB_RETVAL(NULL)
 int64_t ConnStateData::mayNeedToReadMoreBody() const STUB_RETVAL(0)
 #if USE_AUTH
 void ConnStateData::setAuth(const Auth::UserRequest::Pointer &aur, const char *cause) STUB

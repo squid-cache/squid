@@ -189,7 +189,6 @@ public:
     ~ConnStateData();
 
     void readSomeData();
-    int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
@@ -212,12 +211,9 @@ public:
     struct In {
         In();
         ~In();
-        char *addressToReadInto() const;
 
         ChunkedCodingParser *bodyParser; ///< parses chunked request body
-        char *buf;
-        size_t notYetUsed;
-        size_t allocatedSize;
+        SBuf buf;
     } in;
 
     /** number of body bytes we need to comm_read for the "current" request
