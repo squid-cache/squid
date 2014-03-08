@@ -253,7 +253,7 @@ ConnStateData::readSomeData()
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     reader = JobCallback(33, 5, Dialer, this, ConnStateData::clientReadRequest);
-    comm_read(clientConnection, in.buf.rawSpace(2), in.buf.spaceSize()-1, reader);
+    comm_read(clientConnection, in.buf.rawSpace(in.buf.spaceSize()), in.buf.spaceSize()-1, reader);
 }
 
 void
