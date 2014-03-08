@@ -248,7 +248,7 @@ ConnStateData::readSomeData()
 
     debugs(33, 4, HERE << clientConnection << ": reading request...");
 
-    if (!maybeMakeSpaceAvailable())
+    if (!in.maybeMakeSpaceAvailable())
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
@@ -2375,19 +2375,19 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 }
 
 bool
-ConnStateData::maybeMakeSpaceAvailable()
+ConnStateData::In::maybeMakeSpaceAvailable()
 {
-    if (in.buf.spaceSize() < 2) {
-        const SBuf::size_type haveCapacity = in.buf.length() + in.buf.spaceSize();
+    if (buf.spaceSize() < 2) {
+        const SBuf::size_type haveCapacity = buf.length() + buf.spaceSize();
         if (haveCapacity >= Config.maxRequestBufferSize) {
             debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
             return false;
         }
         const SBuf::size_type wantCapacity = min(Config.maxRequestBufferSize, haveCapacity*2);
-        in.buf.reserveCapacity(wantCapacity);
-        debugs(33, 2, "growing request buffer: available=" << in.buf.spaceSize() << " used=" << in.buf.length());
+        buf.reserveCapacity(wantCapacity);
+        debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length());
     }
-    return (in.buf.spaceSize() >= 2);
+    return (buf.spaceSize() >= 2);
 }
 
 void
