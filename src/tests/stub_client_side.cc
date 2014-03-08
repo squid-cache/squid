@@ -34,7 +34,6 @@ void ConnStateData::freeAllContexts() STUB
 void ConnStateData::notifyAllContexts(const int xerrno) STUB
 bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
 void ConnStateData::readNextRequest() STUB
-bool ConnStateData::maybeMakeSpaceAvailable() STUB_RETVAL(false)
 void ConnStateData::addContextToQueue(ClientSocketContext * context) STUB
 int ConnStateData::getConcurrentRequestCount() const STUB_RETVAL(0)
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
@@ -73,6 +72,8 @@ void ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServer
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties) STUB
 bool ConnStateData::serveDelayedError(ClientSocketContext *context) STUB_RETVAL(false)
 #endif
+
+bool ConnStateData::In::maybeMakeSpaceAvailable() STUB_RETVAL(false)
 
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl) STUB
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end) STUB_RETVAL(NULL)
