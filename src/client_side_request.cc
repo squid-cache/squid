@@ -875,11 +875,12 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL) {
-        if (getConn() != NULL) {
+        if (getConn() != NULL && getConn()->clientConnection != NULL) {
             ih->rfc931 = getConn()->clientConnection->rfc931;
 #if USE_SSL
-            assert(getConn()->clientConnection != NULL);
-            ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
+            if (getConn()->clientConnection->isOpen()) {
+                ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
+            }
 #endif
         }
         ih->log_uri = log_uri;
