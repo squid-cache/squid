@@ -128,7 +128,14 @@ mail_warranty(void)
     FILE *fp = NULL;
     static char command[256];
 
-    const mode_t prev_umask=umask(S_IRWXU);
+    /*
+     * NP: umask() takes the mask of bits we DONT want set.
+     *
+     * We want the current user to have read/write access
+     * and since this file will be passed to mailsystem,
+     * the group and other must have read access.
+     */
+    const mode_t prev_umask=umask(S_IXUSR|S_IXGRP|S_IWGRP|S_IWOTH|S_IXOTH);
 
 #if HAVE_MKSTEMP
     char filename[] = "/tmp/squid-XXXXXX";
