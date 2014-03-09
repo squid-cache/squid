@@ -1131,8 +1131,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     else {
         req_hdr->delById(HDR_RANGE);
         req_hdr->delById(HDR_REQUEST_RANGE);
-        delete request->range;
-        request->range = NULL;
+        request->ignoreRange("neither HEAD nor GET");
     }
 
     if (req_hdr->has(HDR_AUTHORIZATION))
@@ -1664,7 +1663,7 @@ ClientHttpRequest::doCallouts()
             clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToStoreEntry(e);
+            repContext->setReplyToStoreEntry(e, "immediate SslBump error");
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
             if (calloutContext->readNextRequest)
