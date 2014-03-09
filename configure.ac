@@ -3193,6 +3193,45 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
   AC_MSG_RESULT(no)
 ])
 
+AC_CHECK_TYPE(struct cmsghdr,AC_DEFINE(HAVE_CMSGHDR,1,[The system provides struct cmsghdr]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct iovec]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provides sockaddr_un]),,[
+  #if HAVE_SYS_UN_H
+  #include <sys/un.h>
+  #endif
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
 SQUID_CHECK_FUNC_STRNSTR
 SQUID_CHECK_FUNC_VACOPY
 SQUID_CHECK_FUNC___VACOPY
