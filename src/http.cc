@@ -1725,8 +1725,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* don't cache the result */
         request->flags.cachable = false;
         /* pretend it's not a range request */
-        delete request->range;
-        request->range = NULL;
+        request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
     }
 
