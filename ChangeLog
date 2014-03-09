@@ -1,4 +1,14 @@
 
+Changes to squid-3.3.12 (09 Mar 2014):
+
+	- Regression Bug 3769: client_netmask not evaluated since Comm redesign
+	- Bug 4026: Fix SSL and adaptation_access handling of aborted connections
+	- Bug 3969: Fix credentials caching for Digest authentication
+	- Bug 3806: Caching responses with Vary header
+	- Fix umask default on crash report generated email
+	- Fix pthread library detection on FreeBSD 10
+	- Avoid assertions on Range requests that trigger Squid-generated errors.
+
 Changes to squid-3.3.11 (01 Dec 2013):
 
 	- Regression Bug 3936: error-details.txt parse error with OpenSSL since 3.3.9
