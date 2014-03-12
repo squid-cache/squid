@@ -540,6 +540,10 @@ public:
 
     int client_ip_max_connections;
 
+    char *redirector_extras;
+
+    char *storeId_extras;
+
     struct {
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
