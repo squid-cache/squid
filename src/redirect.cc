@@ -38,6 +38,7 @@
 #include "comm/Connection.h"
 #include "fde.h"
 #include "fqdncache.h"
+#include "format/Format.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
@@ -82,6 +83,8 @@ static OBJH redirectStats;
 static OBJH storeIdStats;
 static int redirectorBypassed = 0;
 static int storeIdBypassed = 0;
+static Format::Format *redirectorExtrasFmt = NULL;
+static Format::Format *storeIdExtrasFmt = NULL;
 
 CBDATA_CLASS_INIT(RedirectStateData);
 
@@ -233,15 +236,13 @@ storeIdStats(StoreEntry * sentry)
 }
 
 static void
-constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data)
+constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data, Format::Format *requestExtrasFmt)
 {
     ConnStateData * conn = http->getConn();
     const char *fqdn;
     char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
     int sz;
     Http::StatusCode status;
-    char claddr[MAX_IPSTRLEN];
-    char myaddr[MAX_IPSTRLEN];
 
     /** TODO: create a standalone method to initialize
      * the RedirectStateData for all the helpers.
@@ -289,14 +290,15 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
     if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
         fqdn = dash_str;
 
-    sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s %s/%s %s %s myip=%s myport=%d\n",
+    static MemBuf requestExtras;
+    requestExtras.reset();
+    if (requestExtrasFmt)
+        requestExtrasFmt->assemble(requestExtras, http->al, 0);
+
+    sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s%s%s\n",
                   r->orig_url.c_str(),
-                  r->client_addr.toStr(claddr,MAX_IPSTRLEN),
-                  fqdn,
-                  r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
-                  r->method_s,
-                  http->request->my_addr.toStr(myaddr,MAX_IPSTRLEN),
-                  http->request->my_addr.port());
+                  requestExtras.hasContent() ? " " : "",
+                  requestExtras.hasContent() ? requestExtras.content() : "");
 
     if ((sz<=0) || (sz>=MAX_REDIRECTOR_REQUEST_STRLEN)) {
         if (sz<=0) {
@@ -353,7 +355,7 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         return;
     }
 
-    constructHelperQuery("redirector", redirectors, redirectHandleReply, http, handler, data);
+    constructHelperQuery("redirector", redirectors, redirectHandleReply, http, handler, data, redirectorExtrasFmt);
 }
 
 /**
@@ -379,7 +381,7 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         return;
     }
 
-    constructHelperQuery("storeId helper", storeIds, storeIdHandleReply, http, handler, data);
+    constructHelperQuery("storeId helper", storeIds, storeIdHandleReply, http, handler, data, storeIdExtrasFmt);
 }
 
 void
@@ -420,6 +422,16 @@ redirectInit(void)
         helperOpenServers(storeIds);
     }
 
+    if (Config.redirector_extras) {
+        redirectorExtrasFmt = new ::Format::Format("redirecor_extras");
+        (void)redirectorExtrasFmt->parse(Config.redirector_extras);
+    }
+
+    if (Config.storeId_extras) {
+        storeIdExtrasFmt = new ::Format::Format("storeId_extras");
+        (void)storeIdExtrasFmt->parse(Config.storeId_extras);
+    }
+
     init = true;
 }
 
@@ -448,4 +460,9 @@ redirectShutdown(void)
     delete storeIds;
     storeIds = NULL;
 
+    delete redirectorExtrasFmt;
+    redirectorExtrasFmt = NULL;
+
+    delete storeIdExtrasFmt;
+    storeIdExtrasFmt = NULL;
 }
