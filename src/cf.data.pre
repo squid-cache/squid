@@ -4755,7 +4755,7 @@ DOC_START
 	be allowed to request.
 DOC_END
 
-NAME: url_rewrite_extras format
+NAME: url_rewrite_extras
 TYPE: TokenOrQuotedString
 LOC: Config.redirector_extras
 DEFAULT: "%>a/%>A %un %>rm myip=%la myport=%lp"
@@ -4820,7 +4820,7 @@ DOC_START
 	By default, a StoreID helper is not used.
 DOC_END
 
-NAME: store_id_extras format
+NAME: store_id_extras
 TYPE: TokenOrQuotedString
 LOC: Config.storeId_extras
 DEFAULT: "%>a/%>A %un %>rm myip=%la myport=%lp"
