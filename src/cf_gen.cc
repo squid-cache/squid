@@ -823,13 +823,13 @@ gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
             if (entry->defaults.preset.size() && entry->defaults.preset.front().compare("none") != 0) {
                 // Display DEFAULT: line(s)
                 for (LineList::const_iterator l = entry->defaults.preset.begin(); l != entry->defaults.preset.end(); ++l) {
-                    snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), gen_quote_escape(*l));
+                    snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), l->c_str());
                     def.push_back(buf);
                 }
             } else if (entry->defaults.if_none.size()) {
                 // Display DEFAULT_IF_NONE: line(s)
                 for (LineList::const_iterator l = entry->defaults.if_none.begin(); l != entry->defaults.if_none.end(); ++l) {
-                    snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), gen_quote_escape(*l));
+                    snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), l->c_str());
                     def.push_back(buf);
                 }
             }

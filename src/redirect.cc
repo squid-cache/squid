@@ -423,12 +423,12 @@ redirectInit(void)
     }
 
     if (Config.redirector_extras) {
-        redirectorExtrasFmt = new ::Format::Format("redirecor_extras");
+        redirectorExtrasFmt = new ::Format::Format("url_rewrite_extras");
         (void)redirectorExtrasFmt->parse(Config.redirector_extras);
     }
 
     if (Config.storeId_extras) {
-        storeIdExtrasFmt = new ::Format::Format("storeId_extras");
+        storeIdExtrasFmt = new ::Format::Format("store_id_extras");
         (void)storeIdExtrasFmt->parse(Config.storeId_extras);
     }
 
