@@ -37,7 +37,6 @@
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "fde.h"
-#include "fqdncache.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "HttpRequest.h"
@@ -66,9 +65,6 @@ public:
     void *data;
     SBuf orig_url;
 
-    Ip::Address client_addr;
-    const char *client_ident;
-    const char *method_s;
     HLPCB *handler;
 
 private:
@@ -91,9 +87,6 @@ CBDATA_CLASS_INIT(RedirectStateData);
 RedirectStateData::RedirectStateData(const char *url) :
         data(NULL),
         orig_url(url),
-        client_addr(),
-        client_ident(NULL),
-        method_s(NULL),
         handler(NULL)
 {
 }
@@ -238,8 +231,6 @@ storeIdStats(StoreEntry * sentry)
 static void
 constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data, Format::Format *requestExtrasFmt)
 {
-    ConnStateData * conn = http->getConn();
-    const char *fqdn;
     char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
     int sz;
     Http::StatusCode status;
@@ -248,47 +239,8 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
      * the RedirectStateData for all the helpers.
      */
     RedirectStateData *r = new RedirectStateData(http->uri);
-    if (conn != NULL)
-        r->client_addr = conn->log_addr;
-    else
-        r->client_addr.setNoAddr();
-    r->client_ident = NULL;
-#if USE_AUTH
-    if (http->request->auth_user_request != NULL) {
-        r->client_ident = http->request->auth_user_request->username();
-        debugs(61, 5, HERE << "auth-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-#endif
-
-    if (!r->client_ident && http->request->extacl_user.size() > 0) {
-        r->client_ident = http->request->extacl_user.termedBuf();
-        debugs(61, 5, HERE << "acl-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-
-    if (!r->client_ident && conn != NULL && conn->clientConnection != NULL && conn->clientConnection->rfc931[0]) {
-        r->client_ident = conn->clientConnection->rfc931;
-        debugs(61, 5, HERE << "ident-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-
-#if USE_SSL
-
-    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-        r->client_ident = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
-        debugs(61, 5, HERE << "ssl-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-#endif
-
-    if (!r->client_ident)
-        r->client_ident = dash_str;
-
-    r->method_s = RequestMethodStr(http->request->method);
-
     r->handler = handler;
-
     r->data = cbdataReference(data);
-
-    if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
-        fqdn = dash_str;
 
     static MemBuf requestExtras;
     requestExtras.reset();
