@@ -6,7 +6,6 @@
 #include "comm/forward.h"
 #include "comm_err_t.h"
 #include "MasterXaction.h"
-#include "SBuf.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
@@ -106,6 +105,8 @@ public:
 
     bool syncWithComm(); // see CommCommonCbParams::syncWithComm
 };
+
+class SBuf;
 
 // read/write (I/O) parameters
 class CommIoCbParams: public CommCommonCbParams
