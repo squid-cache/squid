@@ -4607,7 +4607,7 @@ DOC_START
 
 	For each requested URL, the rewriter will receive on line with the format
 
-	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kv-pairs]<NL>
+	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
 
 	After processing the request the helper must reply using the following format:
@@ -4755,6 +4755,18 @@ DOC_START
 	be allowed to request.
 DOC_END
 
+NAME: url_rewrite_extras
+TYPE: TokenOrQuotedString
+LOC: Config.redirector_extras
+DEFAULT: "%>a/%>A %un %>rm myip=%la myport=%lp"
+DOC_START
+	Specifies a string to be append to request line format for the
+	rewriter helper. "Quoted" format values may contain spaces and
+	logformat %macros. In theory, any logformat %macro can be used.
+	In practice, a %macro expands as a dash (-) if the helper request is
+	sent before the required macro information is available to Squid.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR STORE ID
  -----------------------------------------------------------------------------
@@ -4770,7 +4782,7 @@ DOC_START
 
 	For each requested URL, the helper will receive one line with the format
 
-	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kv-pairs]<NL>
+	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
 
 	After processing the request the helper must reply using the following format:
@@ -4790,8 +4802,8 @@ DOC_START
 		a result being identified.
 
 
-	Helper programs should be prepared to receive and possibly ignore additional
-	kv-pairs with keys they do not support.
+	Helper programs should be prepared to receive and possibly ignore
+	additional whitespace-separated tokens on each input line.
 
 	When using the concurrency= option the protocol is changed by
 	introducing a query channel tag in front of the request/response.
@@ -4806,6 +4818,18 @@ DOC_START
 	         in the wrong cached response returned to the user.
 
 	By default, a StoreID helper is not used.
+DOC_END
+
+NAME: store_id_extras
+TYPE: TokenOrQuotedString
+LOC: Config.storeId_extras
+DEFAULT: "%>a/%>A %un %>rm myip=%la myport=%lp"
+DOC_START
+        Specifies a string to be append to request line format for the
+        StoreId helper. "Quoted" format values may contain spaces and
+        logformat %macros. In theory, any logformat %macro can be used.
+        In practice, a %macro expands as a dash (-) if the helper request is
+        sent before the required macro information is available to Squid.
 DOC_END
 
 NAME: store_id_children storeurl_rewrite_children
