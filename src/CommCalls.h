@@ -6,6 +6,7 @@
 #include "comm/forward.h"
 #include "comm_err_t.h"
 #include "MasterXaction.h"
+#include "SBuf.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
@@ -118,6 +119,7 @@ public:
 public:
     char *buf;
     size_t size;
+    SBuf *buf2;  // alternative buffer for use when buf is unset
 };
 
 // close parameters

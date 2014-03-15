@@ -130,8 +130,19 @@ commHandleRead(int fd, void *data)
     ++ statCounter.syscalls.sock.reads;
     errno = 0;
     int retval;
-    retval = FD_READ_METHOD(fd, ccb->buf, ccb->size);
-    debugs(5, 3, "comm_read_try: FD " << fd << ", size " << ccb->size << ", retval " << retval << ", errno " << errno);
+    if (ccb->buf) {
+        retval = FD_READ_METHOD(fd, ccb->buf, ccb->size);
+        debugs(5, 3, "char FD " << fd << ", size " << ccb->size << ", retval " << retval << ", errno " << errno);
+    } else {
+        assert(ccb->buf2 != NULL);
+        SBuf::size_type sz = ccb->buf2->spaceSize();
+        char *buf = ccb->buf2->rawSpace(sz);
+        retval = FD_READ_METHOD(fd, buf, sz-1); // blocking synchronous read(2)
+        if (retval > 0) {
+            ccb->buf2->append(buf, retval);
+        }
+        debugs(5, 3, "SBuf FD " << fd << ", size " << sz << ", retval " << retval << ", errno " << errno);
+    }
 
     if (retval < 0 && !ignoreErrno(errno)) {
         debugs(5, 3, "comm_read_try: scheduling COMM_ERROR");
@@ -179,6 +190,36 @@ comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCall::P
 
     /* Queue the read */
     ccb->setCallback(Comm::IOCB_READ, callback, (char *)buf, NULL, size);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
+}
+
+/**
+ * Queue a read. handler/handler_data are called when the read
+ * completes, on error, or on file descriptor close.
+ */
+void
+comm_read(const Comm::ConnectionPointer &conn, SBuf &buf, AsyncCall::Pointer &callback)
+{
+    debugs(5, 5, "comm_read, queueing read for " << conn << "; asynCall " << callback);
+
+    /* Make sure we are open and not closing */
+    assert(Comm::IsConnOpen(conn));
+    assert(!fd_table[conn->fd].closing());
+    Comm::IoCallback *ccb = COMMIO_FD_READCB(conn->fd);
+
+    // Make sure we are either not reading or just passively monitoring.
+    // Active/passive conflicts are OK and simply cancel passive monitoring.
+    if (ccb->active()) {
+        // if the assertion below fails, we have an active comm_read conflict
+        assert(fd_table[conn->fd].halfClosedReader != NULL);
+        commStopHalfClosedMonitor(conn->fd);
+        assert(!ccb->active());
+    }
+    ccb->conn = conn;
+    ccb->buf2 = &buf;
+
+    /* Queue the read */
+    ccb->setCallback(Comm::IOCB_READ, callback, NULL, NULL, buf.spaceSize());
     Comm::SetSelect(conn->fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
 }
 
