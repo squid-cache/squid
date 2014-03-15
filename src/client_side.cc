@@ -3631,7 +3631,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         bool ret = connState->handleReadData(&reqStr);
         if (ret)
             ret = connState->clientParseRequests();
-        else {
+
+        if (!ret) {
             debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl bumped connection: " << connState->clientConnection);
             connState->clientConnection->close();
         }
