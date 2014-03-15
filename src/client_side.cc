@@ -253,7 +253,7 @@ ConnStateData::readSomeData()
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     reader = JobCallback(33, 5, Dialer, this, ConnStateData::clientReadRequest);
-    comm_read(clientConnection, in.buf.rawSpace(in.buf.spaceSize()), in.buf.spaceSize()-1, reader);
+    comm_read(clientConnection, in.buf, reader);
 }
 
 void
@@ -1563,7 +1563,7 @@ ConnStateData::readNextRequest()
 
     fd_note(clientConnection->fd, "Idle client: Waiting for next request");
     /**
-     * Set the timeout BEFORE calling clientReadRequest().
+     * Set the timeout BEFORE calling readSomeData().
      */
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
@@ -3006,7 +3006,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
             kb_incr(&(statCounter.client_http.kbytes_in), io.size);
 
             // may comm_close or setReplyToError
-            if (!handleReadData(io.buf, io.size))
+            if (!handleReadData(io.buf2))
                 return;
 
         } else if (io.size == 0) {
@@ -3067,12 +3067,9 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
  * \retval true  we did not call comm_close or setReplyToError
  */
 bool
-ConnStateData::handleReadData(char *buf, size_t size)
+ConnStateData::handleReadData(SBuf *buf)
 {
-    // XXX: make this a no-op when buf given is the MemBlob free space.
-    assert(buf == in.buf.rawSpace(1));
-    assert(size <= in.buf.spaceSize());
-    in.buf.append(buf, size);
+    assert(buf == &in.buf); // XXX: make this abort the transaction if this fails
 
     // if we are reading a body, stuff data into the body pipe
     if (bodyPipe != NULL)
@@ -3623,14 +3620,13 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
 
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
-        static char reqStr[MAX_IPSTRLEN + 80];
         connState->clientConnection->local.toUrl(ip, sizeof(ip));
-        snprintf(reqStr, sizeof(reqStr), "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", ip, ip);
-        bool ret = connState->handleReadData(reqStr, strlen(reqStr));
+        SBuf reqStr;
+        reqStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        bool ret = connState->handleReadData(&reqStr);
         if (ret)
             ret = connState->clientParseRequests();
-
-        if (!ret) {
+        else {
             debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl bumped connection: " << connState->clientConnection);
             connState->clientConnection->close();
         }

@@ -289,7 +289,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    bool handleReadData(char *buf, size_t size);
+    bool handleReadData(SBuf *buf);
     bool handleRequestBodyData();
 
     /**
