@@ -4,8 +4,9 @@
 #include "base/AsyncCall.h"
 #include "comm/forward.h"
 #include "comm_err_t.h"
-#include "SBuf.h"
 #include "typedefs.h"
+
+class SBuf;
 
 namespace Comm
 {
