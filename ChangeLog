@@ -1,3 +1,15 @@
+Changes to squid-3.4.4 (09 Mar 2014):
+
+	- Bug 4029: intercepted HTTPS requests bypass caching checks
+	- Bug 4001: remove use of strsep()
+	- Bug 3186 and 3628: Digest authentication always sending stale=false for nonce
+	- Fix stalled concurrent rock store reads
+	- Fix helper ID number assignment
+	- Fix build failures from CMSG related definitions
+	- Fix build failures from libcompat unsafe.h protections
+	- Copyright: Relicense helpers by Treehouse Networks Ltd.
+	- ... and all bug fixes from 3.3.12
+
 Changes to squid-3.4.3 (02 Feb 2014):
 
 	- Bug 4008: HttpHeader warnOnError should be an int not a bool
@@ -95,6 +107,16 @@ Changes to squid-3.4.0.1 (29 Jul 2013):
 	- ... and many Windows portability changes (still incomplete)
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.3.12 (09 Mar 2014):
+
+	- Regression Bug 3769: client_netmask not evaluated since Comm redesign
+	- Bug 4026: Fix SSL and adaptation_access handling of aborted connections
+	- Bug 3969: Fix credentials caching for Digest authentication
+	- Bug 3806: Caching responses with Vary header
+	- Fix umask default on crash report generated email
+	- Fix pthread library detection on FreeBSD 10
+	- Avoid assertions on Range requests that trigger Squid-generated errors.
 
 Changes to squid-3.3.11 (01 Dec 2013):
 

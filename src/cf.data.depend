@@ -55,6 +55,7 @@ peer_access		cache_peer acl
 pipelinePrefetch
 PortCfg
 QosConfig
+TokenOrQuotedString
 refreshpattern
 removalpolicy
 size_t
