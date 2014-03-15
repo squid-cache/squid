@@ -1734,8 +1734,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* don't cache the result */
         request->flags.cachable = false;
         /* pretend it's not a range request */
-        delete request->range;
-        request->range = NULL;
+        request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
     }
 
@@ -2115,7 +2114,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     Http::ProtocolVersion httpver(1,1);
     const char * url;
     if (_peer && !_peer->options.originserver)
-        url = entry->url();
+        url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
     mb->Printf("%s %s %s/%d.%d\r\n",
