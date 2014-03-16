@@ -12,6 +12,7 @@ negotiate_kerberos_auth_LDFLAGS =
 negotiate_kerberos_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
@@ -20,6 +21,7 @@ negotiate_kerberos_auth_test_LDFLAGS =
 negotiate_kerberos_auth_test_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
