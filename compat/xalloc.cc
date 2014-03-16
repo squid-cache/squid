@@ -92,9 +92,6 @@ xcalloc(size_t n, size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz * n);
 #endif
-#if XMALLOC_TRACE
-    xmalloc_show_trace(p, 1);
-#endif
 #if MEM_GEN_TRACE
     if (tracefp)
         fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int) n, (unsigned int) sz, p);
@@ -133,9 +130,6 @@ xmalloc(size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
-#if XMALLOC_TRACE
-    xmalloc_show_trace(p, 1);
-#endif
 #if MEM_GEN_TRACE
     if (tracefp)
         fprintf(tracefp, "m:%d:%p\n", sz, p);
@@ -149,9 +143,6 @@ void *
 xrealloc(void *s, size_t sz)
 {
     PROF_start(xrealloc);
-#if XMALLOC_TRACE
-    xmalloc_show_trace(s, -1);
-#endif
 
     if (sz < 1)
         sz = 1;
@@ -182,9 +173,6 @@ xrealloc(void *s, size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
-#if XMALLOC_TRACE
-    xmalloc_show_trace(p, 1);
-#endif
 #if MEM_GEN_TRACE
     if (tracefp)                /* new ptr, old ptr, new size */
         fprintf(tracefp, "r:%p:%p:%d\n", p, s, sz);
@@ -199,9 +187,6 @@ free_const(const void *s_const)
     void *s = const_cast<void *>(s_const);
 
     PROF_start(free_const);
-#if XMALLOC_TRACE
-    xmalloc_show_trace(s, -1);
-#endif
 
 #if XMALLOC_DEBUG
     check_free(s);
