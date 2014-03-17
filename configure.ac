@@ -1053,18 +1053,6 @@ else
 fi
 AC_SUBST(ADAPTATION_LIBS)
 
-
-dnl This is a developer only option. Developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(mem-gen-trace,
-dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
-dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
-dnl   fi
-dnl ])
-
-
 test "x$squid_host_os" = "xmingw" && enable_wccp=no
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [

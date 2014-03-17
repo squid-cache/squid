@@ -50,27 +50,3 @@
 #include <malloc.h>
 #endif
 
-#if MEM_GEN_TRACE
-
-static FILE *tracefp = NULL;
-
-void
-log_trace_init(char *fn)
-{
-    tracefp = fopen(fn, "a+");
-
-    if (!tracefp) {
-        perror("log_trace_init");
-        exit(1);
-    }
-}
-
-void
-log_trace_done()
-{
-    fclose(tracefp);
-    tracefp = NULL;
-}
-
-#endif
-

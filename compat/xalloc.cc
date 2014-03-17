@@ -89,10 +89,6 @@ xcalloc(size_t n, size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz * n);
 #endif
-#if MEM_GEN_TRACE
-    if (tracefp)
-        fprintf(tracefp, "c:%u:%u:%p\n", (unsigned int) n, (unsigned int) sz, p);
-#endif
 
     PROF_stop(xcalloc);
     return p;
@@ -123,10 +119,6 @@ xmalloc(size_t sz)
 
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
-#endif
-#if MEM_GEN_TRACE
-    if (tracefp)
-        fprintf(tracefp, "m:%d:%p\n", sz, p);
 #endif
 
     PROF_stop(xmalloc);
@@ -160,10 +152,7 @@ xrealloc(void *s, size_t sz)
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
-#if MEM_GEN_TRACE
-    if (tracefp)                /* new ptr, old ptr, new size */
-        fprintf(tracefp, "r:%p:%p:%d\n", p, s, sz);
-#endif
+
     PROF_stop(xrealloc);
     return (p);
 }
@@ -177,10 +166,5 @@ free_const(const void *s_const)
     PROF_start(free);
     free(s);
     PROF_stop(free);
-
-#if MEM_GEN_TRACE
-    if (tracefp)
-        fprintf(tracefp, "f:%p\n", s);
-#endif
     PROF_stop(free_const);
 }

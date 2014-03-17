@@ -82,10 +82,6 @@ and report the trace back to squid-bugs@squid-cache.org.\n\
 Thanks!\n"
 
 static void mail_warranty(void);
-#if MEM_GEN_TRACE
-void log_trace_done();
-void log_trace_init(char *);
-#endif
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
 
@@ -463,22 +459,10 @@ sigusr2_handle(int sig)
     DebugSignal = sig;
 
     if (state == 0) {
-#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
-#else
-
-        log_trace_done();
-#endif
-
         state = 1;
     } else {
-#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
-#else
-
-        log_trace_init("/tmp/squid.alloc");
-#endif
-
         state = 0;
     }
 
