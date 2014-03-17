@@ -3,6 +3,7 @@
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
+#include "base/Vector.h"
 #include "CbDataList.h"
 #include "format/Format.h"
 #include "MemPool.h"
@@ -10,7 +11,6 @@
 #include "typedefs.h"
 
 #include <string>
-#include <vector>
 
 class HttpRequest;
 class HttpReply;
@@ -38,7 +38,7 @@ public:
         explicit Value(const String &aVal) : value(aVal), aclList(NULL), valueFormat(NULL) {}
         ~Value();
     };
-    typedef std::vector<Value::Pointer> Values;
+    typedef Vector<Value::Pointer> Values;
 
     explicit Note(const String &aKey): key(aKey) {}
 
@@ -68,7 +68,7 @@ class ConfigParser;
 class Notes
 {
 public:
-    typedef std::vector<Note::Pointer> NotesList;
+    typedef Vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
@@ -182,7 +182,7 @@ public:
      */
     bool empty() const {return entries.empty();}
 
-    std::vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+    Vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
 
 private:
     NotePairs &operator = (NotePairs const &); // Not implemented

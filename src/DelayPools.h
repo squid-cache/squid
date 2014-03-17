@@ -32,7 +32,7 @@
 #ifndef SQUID_DELAYPOOLS_H
 #define SQUID_DELAYPOOLS_H
 
-#include <vector>
+#include "base/Vector.h"
 
 class DelayPool;
 class Updateable;
@@ -75,7 +75,7 @@ private:
     static time_t LastUpdate;
     static unsigned short pools_;
     static void FreeDelayData ();
-    static std::vector<Updateable *> toUpdate;
+    static Vector<Updateable *> toUpdate;
     static void RegisterWithCacheManager(void);
 };
 

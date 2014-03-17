@@ -150,7 +150,7 @@ public:
     Format::Format *keyExtras; ///< The compiled request format
 };
 
-typedef std::vector<Config *> ConfigVector;
+typedef Vector<Config *> ConfigVector;
 
 extern ConfigVector TheConfig;
 
