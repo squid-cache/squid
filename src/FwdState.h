@@ -2,6 +2,7 @@
 #define SQUID_FORWARD_H
 
 #include "base/RefCount.h"
+#include "base/Vector.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_type.h"

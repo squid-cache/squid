@@ -36,13 +36,12 @@
 #include "adaptation/History.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
+#include "base/Vector.h"
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Store.h"
-
-#include <algorithm>
 
 bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;
@@ -88,19 +87,15 @@ Adaptation::Config::removeService(const String& service)
         for (SGSI it = services.begin(); it != services.end(); ++it) {
             if (*it == service) {
                 group->removedServices.push_back(service);
-                ServiceGroup::Store::iterator newend;
-                newend = std::remove(group->services.begin(), group->services.end(), service);
-                group->services.resize(newend-group->services.begin());
-                debugs(93, 5, "adaptation service " << service <<
+                group->services.prune(service);
+                debugs(93, 5, HERE << "adaptation service " << service <<
                        " removed from group " << group->id);
                 break;
             }
         }
         if (services.empty()) {
             removeRule(group->id);
-            Groups::iterator newend;
-            newend = std::remove(AllGroups().begin(), AllGroups().end(), group);
-            AllGroups().resize(newend-AllGroups().begin());
+            AllGroups().prune(group);
         } else {
             ++i;
         }
@@ -127,10 +122,8 @@ Adaptation::Config::removeRule(const String& id)
     for (ARI it = rules.begin(); it != rules.end(); ++it) {
         AccessRule* rule = *it;
         if (rule->groupId == id) {
-            debugs(93, 5, "removing access rules for:" << id);
-            AccessRules::iterator newend;
-            newend = std::remove(AllRules().begin(), AllRules().end(), rule);
-            AllRules().resize(newend-AllRules().begin());
+            debugs(93, 5, HERE << "removing access rules for:" << id);
+            AllRules().prune(rule);
             delete (rule);
             break;
         }

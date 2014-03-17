@@ -39,7 +39,7 @@ private:
     ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
-    typedef std::vector<Candidate> Candidates;
+    typedef Vector<Candidate> Candidates;
     Candidates candidates;
     Candidate topCandidate() const { return *candidates.begin(); }
     ServiceGroupPointer topGroup() const; // may return nil

@@ -2,8 +2,7 @@
 #define SQUID_CLIENTDELAYCONFIG_H
 
 #include "acl/forward.h"
-
-#include <vector>
+#include "base/Vector.h"
 
 class StoreEntry;
 class ConfigParser;
@@ -22,7 +21,7 @@ public:
     int64_t highwatermark;
 };
 
-typedef std::vector<ClientDelayPool> ClientDelayPools;
+typedef Vector<ClientDelayPool> ClientDelayPools;
 
 /* represents configuration of client write limiting delay pools */
 class ClientDelayConfig

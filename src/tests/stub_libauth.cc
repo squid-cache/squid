@@ -21,11 +21,10 @@ AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user) STUB
 Auth::User::Pointer AuthUserHashPointer::user() const STUB_RETVAL(NULL)
 
 #include "auth/Scheme.h"
-#include <vector>
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
+Vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
 void Auth::Scheme::AddScheme(Auth::Scheme::Pointer) STUB
 Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(NULL)
-std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes);
+Vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes);
 void Auth::Scheme::FreeAll() STUB
 
 #include "auth/User.h"

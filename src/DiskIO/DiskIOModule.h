@@ -32,7 +32,7 @@
 #ifndef SQUID_DISKIOMODULE_H
 #define SQUID_DISKIOMODULE_H
 
-#include <vector>
+#include "base/Vector.h"
 
 /* forward decls */
 
@@ -57,9 +57,9 @@ public:
      * available module for this system.
      */
     static DiskIOModule *FindDefault();
-    static std::vector<DiskIOModule*> const &Modules();
-    typedef std::vector<DiskIOModule*>::iterator iterator;
-    typedef std::vector<DiskIOModule*>::const_iterator const_iterator;
+    static Vector<DiskIOModule*> const &Modules();
+    typedef Vector<DiskIOModule*>::iterator iterator;
+    typedef Vector<DiskIOModule*>::const_iterator const_iterator;
     DiskIOModule();
     virtual ~DiskIOModule() {}
 
@@ -78,8 +78,8 @@ protected:
     static void RegisterAllModulesWithCacheManager(void);
 
 private:
-    static std::vector<DiskIOModule*> &GetModules();
-    static std::vector<DiskIOModule*> *_Modules;
+    static Vector<DiskIOModule*> &GetModules();
+    static Vector<DiskIOModule*> *_Modules;
 };
 
 #endif /* SQUID_DISKIOMODULE_H */

@@ -51,7 +51,7 @@ public:
 
     static bool needHistory; ///< HttpRequest adaptation history should recorded
 
-    typedef std::vector<ServiceConfigPointer> ServiceConfigs;
+    typedef Vector<ServiceConfigPointer> ServiceConfigs;
     ServiceConfigs serviceConfigs;
 
     Config();

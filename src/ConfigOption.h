@@ -30,7 +30,7 @@
 #ifndef SQUID_CONFIGOPTION_H
 #define SQUID_CONFIGOPTION_H
 
-#include <vector>
+#include "base/Vector.h"
 
 class StoreEntry;
 
@@ -53,7 +53,7 @@ public:
     virtual ~ConfigOptionVector();
     virtual bool parse(char const *option, const char *value, int reconfiguring);
     virtual void dump(StoreEntry * e) const;
-    std::vector<ConfigOption *>options;
+    Vector<ConfigOption *>options;
 };
 
 template <class C>
