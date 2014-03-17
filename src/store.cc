@@ -51,6 +51,7 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Stack.h"
 #include "StatCounters.h"
 #include "stmem.h"
 #include "Store.h"
@@ -71,7 +72,6 @@
 #endif
 
 #include <climits>
-#include <stack>
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
@@ -124,7 +124,7 @@ static EVH storeLateRelease;
 /*
  * local variables
  */
-static std::stack<StoreEntry*> LateReleaseStack;
+static Stack<StoreEntry*> LateReleaseStack;
 MemAllocator *StoreEntry::pool = NULL;
 
 StorePointer Store::CurrentRoot = NULL;
@@ -1252,7 +1252,7 @@ StoreEntry::release()
             // lock the entry until rebuilding is done
             lock("storeLateRelease");
             setReleaseFlag();
-            LateReleaseStack.push(this);
+            LateReleaseStack.push_back(this);
         } else {
             destroyStoreEntry(static_cast<hash_link *>(this));
             // "this" is no longer valid
@@ -1280,6 +1280,7 @@ static void
 storeLateRelease(void *unused)
 {
     StoreEntry *e;
+    int i;
     static int n = 0;
 
     if (StoreController::store_dirs_rebuilding) {
@@ -1287,14 +1288,13 @@ storeLateRelease(void *unused)
         return;
     }
 
-    // TODO: this works but looks unelegant.
-    for (int i = 0; i < 10; ++i) {
-        if (LateReleaseStack.empty()) {
+    for (i = 0; i < 10; ++i) {
+        e = LateReleaseStack.empty() ? NULL : LateReleaseStack.pop();
+
+        if (e == NULL) {
+            /* done! */
             debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
             return;
-        } else {
-            e = LateReleaseStack.top();
-            LateReleaseStack.pop();
         }
 
         e->unlock("storeLateRelease");

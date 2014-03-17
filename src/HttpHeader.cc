@@ -52,10 +52,6 @@
 
 #include <algorithm>
 
-/* XXX: the whole set of API managing the entries vector should be rethought
- *      after the parse4r-ng effort is complete.
- */
-
 /*
  * On naming conventions:
  *
@@ -441,6 +437,8 @@ HttpHeader::operator =(const HttpHeader &other)
 void
 HttpHeader::clean()
 {
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    HttpHeaderEntry *e;
 
     assert(owner > hoNone && owner < hoEnd);
     debugs(55, 7, "cleaning hdr: " << this << " owner: " << owner);
@@ -466,19 +464,18 @@ HttpHeader::clean()
         HttpHeaderStats[owner].busyDestroyedCount += entries.size() > 0;
     } // if (owner <= hoReply)
 
-    for (std::vector<HttpHeaderEntry *>::iterator i = entries.begin(); i != entries.end(); ++i) {
-        HttpHeaderEntry *e = *i;
-        if (e == NULL)
-            continue;
+    while ((e = getEntry(&pos))) {
+        /* tmp hack to try to avoid coredumps */
+
         if (e->id < 0 || e->id >= HDR_ENUM_END) {
-            debugs(55, DBG_CRITICAL, "BUG: invalid entry (" << e->id << "). Ignored.");
+            debugs(55, DBG_CRITICAL, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
         } else {
             if (owner <= hoReply)
                 HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
+            /* yes, this deletion leaves us in an inconsistent state */
             delete e;
         }
     }
-
     entries.clear();
     httpHeaderMaskInit(&mask, 0);
     len = 0;

@@ -22,8 +22,6 @@
 
 #include "MemPool.h"
 
-#include <stack>
-
 /// \ingroup MemPoolsAPI
 class MemPoolMalloc : public MemImplementingAllocator
 {
@@ -44,7 +42,7 @@ protected:
     virtual void *allocate();
     virtual void deallocate(void *, bool aggressive);
 private:
-    std::stack<void *> freelist;
+    Stack<void *> freelist;
 };
 
 #endif /* _MEM_POOL_MALLOC_H_ */
