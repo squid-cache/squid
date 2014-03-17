@@ -86,9 +86,6 @@ xcalloc(size_t n, size_t sz)
         exit(1);
     }
 
-#if XMALLOC_DEBUG
-    check_malloc(p, sz * n);
-#endif
 #if XMALLOC_STATISTICS
     malloc_stat(sz * n);
 #endif
@@ -124,9 +121,6 @@ xmalloc(size_t sz)
         exit(1);
     }
 
-#if XMALLOC_DEBUG
-    check_malloc(p, sz);
-#endif
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
@@ -147,10 +141,6 @@ xrealloc(void *s, size_t sz)
     if (sz < 1)
         sz = 1;
 
-#if XMALLOC_DEBUG
-    if (s != NULL)
-        check_free(s);
-#endif
     PROF_start(realloc);
     void *p= realloc(s, sz);
     PROF_stop(realloc);
@@ -167,9 +157,6 @@ xrealloc(void *s, size_t sz)
         exit(1);
     }
 
-#if XMALLOC_DEBUG
-    check_malloc(p, sz);
-#endif
 #if XMALLOC_STATISTICS
     malloc_stat(sz);
 #endif
@@ -187,11 +174,6 @@ free_const(const void *s_const)
     void *s = const_cast<void *>(s_const);
 
     PROF_start(free_const);
-
-#if XMALLOC_DEBUG
-    check_free(s);
-#endif
-
     PROF_start(free);
     free(s);
     PROF_stop(free);
