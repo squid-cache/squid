@@ -122,9 +122,6 @@ extern char *WIN32_Command_Line;        /* NULL */
 extern char *WIN32_Service_Command_Line; /* NULL */
 extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
 #endif
-#if HAVE_SBRK
-extern void *sbrk_start;	/* 0 */
-#endif
 
 extern int ssl_ex_index_server;	/* -1 */
 extern int ssl_ctx_ex_index_dont_verify_domain; /* -1 */
