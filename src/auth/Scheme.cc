@@ -37,7 +37,7 @@
 #include "auth/Scheme.h"
 #include "globals.h"
 
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
+Vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
 
 void
 Auth::Scheme::AddScheme(Auth::Scheme::Pointer instance)
@@ -63,11 +63,11 @@ Auth::Scheme::Find(const char *typestr)
     return Auth::Scheme::Pointer(NULL);
 }
 
-std::vector<Auth::Scheme::Pointer> &
+Vector<Auth::Scheme::Pointer> &
 Auth::Scheme::GetSchemes()
 {
     if (!_Schemes)
-        _Schemes = new std::vector<Auth::Scheme::Pointer>;
+        _Schemes = new Vector<Auth::Scheme::Pointer>;
 
     return *_Schemes;
 }

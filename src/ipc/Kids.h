@@ -4,9 +4,8 @@
 #ifndef SQUID_IPC_KIDS_H
 #define SQUID_IPC_KIDS_H
 
+#include "base/Vector.h"
 #include "ipc/Kid.h"
-
-#include <vector>
 
 /// a collection of kids
 class Kids
@@ -47,7 +46,7 @@ public:
     size_t count() const;
 
 private:
-    std::vector<Kid> storage;
+    Vector<Kid> storage;
 };
 
 extern Kids TheKids; ///< All kids being maintained

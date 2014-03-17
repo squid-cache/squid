@@ -342,7 +342,7 @@ HttpHdrRange::packInto(Packer * packer) const
 }
 
 void
-HttpHdrRange::merge (std::vector<HttpHdrRangeSpec *> &basis)
+HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
 {
     /* reset old array */
     specs.clear();
@@ -368,7 +368,7 @@ HttpHdrRange::merge (std::vector<HttpHdrRangeSpec *> &basis)
 }
 
 void
-HttpHdrRange::getCanonizedSpecs(std::vector<HttpHdrRangeSpec *> &copy)
+HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)
 {
     /* canonize each entry and destroy bad ones if any */
 
@@ -379,7 +379,8 @@ HttpHdrRange::getCanonizedSpecs(std::vector<HttpHdrRangeSpec *> &copy)
             delete (*pos);
     }
 
-    debugs(64, 3, "found " << specs.size() - copy.size() << " bad specs");
+    debugs(64, 3, "HttpHdrRange::getCanonizedSpecs: found " <<
+           specs.size() - copy.size() << " bad specs");
 }
 
 #include "HttpHdrContRange.h"
@@ -410,7 +411,7 @@ HttpHdrRange::canonize (int64_t newClen)
     clen = newClen;
     debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.size() <<
            " specs, clen: " << clen);
-    std::vector<HttpHdrRangeSpec*> goods;
+    Vector<HttpHdrRangeSpec*> goods;
     getCanonizedSpecs(goods);
     merge (goods);
     debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.size() <<
@@ -578,7 +579,7 @@ HttpHdrRange::contains(HttpHdrRangeSpec& r) const
 const HttpHdrRangeSpec *
 HttpHdrRangeIter::currentSpec() const
 {
-    if (pos != end)
+    if (pos.incrementable())
         return *pos;
 
     return NULL;
@@ -590,7 +591,7 @@ HttpHdrRangeIter::updateSpec()
     assert (debt_size == 0);
     assert (valid);
 
-    if (pos != end) {
+    if (pos.incrementable()) {
         debt(currentSpec()->length);
     }
 }

@@ -71,7 +71,7 @@ public:
     const char *error; // human-readable information; set iff !valid()
 
     // ICAP server MUST supply this info
-    std::vector<ICAP::Method> methods;
+    Vector<ICAP::Method> methods;
     String istag;
 
     // ICAP server MAY supply this info. If not, Squid supplies defaults.

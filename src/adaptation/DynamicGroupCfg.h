@@ -1,9 +1,8 @@
 #ifndef SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
 #define SQUID_ADAPTATION__DYNAMIC_GROUP_CFG_H
 
+#include "base/Vector.h"
 #include "SquidString.h"
-
-#include <vector>
 
 namespace Adaptation
 {
@@ -12,7 +11,7 @@ namespace Adaptation
 class DynamicGroupCfg
 {
 public:
-    typedef std::vector<String> Store;
+    typedef Vector<String> Store;
     typedef String Id;
 
     Id id; ///< group id

@@ -72,16 +72,16 @@ private:
 
     private:
         RefCount<DelayVector> theVector;
-        std::vector<DelayIdComposite::Pointer> ids;
-        typedef std::vector<DelayIdComposite::Pointer>::iterator iterator;
-        typedef std::vector<DelayIdComposite::Pointer>::const_iterator const_iterator;
+        Vector<DelayIdComposite::Pointer> ids;
+        typedef Vector<DelayIdComposite::Pointer>::iterator iterator;
+        typedef Vector<DelayIdComposite::Pointer>::const_iterator const_iterator;
     };
 
     friend class Id;
 
-    std::vector<CompositePoolNode::Pointer> pools;
-    typedef std::vector<CompositePoolNode::Pointer>::iterator iterator;
-    typedef std::vector<CompositePoolNode::Pointer>::const_iterator const_iterator;
+    Vector<CompositePoolNode::Pointer> pools;
+    typedef Vector<CompositePoolNode::Pointer>::iterator iterator;
+    typedef Vector<CompositePoolNode::Pointer>::const_iterator const_iterator;
 };
 
 #endif /* USE_DELAY_POOLS */

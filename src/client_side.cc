@@ -1705,7 +1705,7 @@ ClientSocketContext::canPackMoreRanges() const
     if (!http->range_iter.debt()) {
         debugs(33, 5, HERE << "At end of current range spec for " << clientConnection);
 
-        if (http->range_iter.pos != http->range_iter.end)
+        if (http->range_iter.pos.incrementable())
             ++http->range_iter.pos;
 
         http->range_iter.updateSpec();

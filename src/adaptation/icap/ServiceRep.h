@@ -140,7 +140,7 @@ private:
         AsyncCall::Pointer callback;
     };
 
-    typedef std::vector<Client> Clients;
+    typedef Vector<Client> Clients;
     // TODO: rename to theUpWaiters
     Clients theClients; // all clients waiting for a call back
 

@@ -1,9 +1,8 @@
 #ifndef _SQUID_SRC_COMM_ACCEPT_LIMITER_H
 #define _SQUID_SRC_COMM_ACCEPT_LIMITER_H
 
+#include "base/Vector.h"
 #include "comm/TcpAcceptor.h"
-
-#include <vector>
 
 namespace Comm
 {
@@ -25,7 +24,7 @@ namespace Comm
  * or to NULL an entry while scanning the list for empty spaces.
  * Side effect: TcpAcceptor->kick() becomes allowed to pull off multiple accept()'s in bunches
  *
- * 2) re-implement as a std::queue instead of std::vector
+ * 2) re-implement as a list instead of vector?
  * storing head/tail pointers for fast push/pop and avoiding the whole shift() overhead
  */
 class AcceptLimiter
@@ -48,7 +47,7 @@ private:
     static AcceptLimiter Instance_;
 
     /** FIFO queue */
-    std::vector<TcpAcceptor::Pointer> deferred_;
+    Vector<TcpAcceptor::Pointer> deferred_;
 };
 
 }; // namepace Comm

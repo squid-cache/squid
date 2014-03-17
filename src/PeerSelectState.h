@@ -35,6 +35,7 @@
 
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
+#include "base/Vector.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "hier_code.h"
