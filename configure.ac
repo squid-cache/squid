@@ -2295,8 +2295,6 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #endif
 ])
 
-SQUID_HAVE_STRUCT_MALLINFO
-
 dnl Override rusage() detect on MinGW because is emulated in source code
 case "$squid_host_os" in
   mingw)
@@ -2471,7 +2469,6 @@ SQUID_DEFINE_BOOL(HAVE_UNIXSOCKET,$squid_cv_unixsocket,[System supports unix soc
 AC_CHECK_LIB(gnumalloc, malloc)
 if test "x$ac_cv_lib_gnumalloc_malloc" = "xyes"; then
   AC_MSG_NOTICE([Disabling extended malloc functions when using bundled gnumalloc])
-  ac_cv_func_mallinfo=no
   ac_cv_func_mallocblksize=no
   ac_cv_func_mallopt=no
 else
@@ -2928,16 +2925,6 @@ if test "x$GCC" = "xyes"; then
 	esac
 fi
 
-# Recommended by Balint Nagy Endre <bne@CareNet.hu>
-case "$host" in
-  *-univel-sysv4.2MP)
-    if test `uname -v` = "2.03"; then
-      AC_MSG_NOTICE([disabling mallinfo for $host])
-      ac_cv_func_mallinfo=no
-    fi
-    ;;
-esac
-
 dnl This has to be before AC_CHECK_FUNCS
 # Disable poll() on certain platforms. Override by setting ac_cv_func_poll
 # when running configure.
@@ -2998,7 +2985,6 @@ AC_CHECK_FUNCS(\
 	htobe16 \
 	htole16 \
 	lrand48 \
-	mallinfo \
 	mallocblksize \
 	mallopt \
 	memcpy \
