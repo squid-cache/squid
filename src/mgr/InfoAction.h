@@ -68,9 +68,6 @@ public:
     double cpu_usage;
     double cpu_usage5;
     double cpu_usage60;
-#if HAVE_SBRK
-    double proc_data_seg;
-#endif
     double maxrss;
     double page_faults;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
@@ -93,8 +90,8 @@ public:
     double mp_uordbytes;
     double mp_allocated;
     double mp_treeoverhead;
-#endif
-#endif
+#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
+#endif /* HAVE_MALLINFO && HAVE_STRUCT_MALLINFO */
     double total_accounted;
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
     double mem_pool_allocated;
