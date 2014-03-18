@@ -48,7 +48,7 @@ Adaptation::ServiceGroup::finalize()
         }
         s.cut(s.size() - 1);
         debugs(93, DBG_IMPORTANT, "Adaptation group '" << id << "' contains disabled member(s) after reconfiguration: " << s);
-        removedServices.clear();
+        removedServices.clean();
     }
 
     String baselineKey;

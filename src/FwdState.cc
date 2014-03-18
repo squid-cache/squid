@@ -112,7 +112,7 @@ FwdState::abort(void* d)
     } else {
         debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
-    fwd->serverDestinations.clear();
+    fwd->serverDestinations.clean();
     fwd->self = NULL;
 }
 
@@ -277,7 +277,7 @@ FwdState::~FwdState()
         serverConn->close();
     }
 
-    serverDestinations.clear();
+    serverDestinations.clean();
 
     debugs(17, 3, HERE << "FwdState destructor done");
 }
