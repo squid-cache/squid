@@ -70,7 +70,7 @@ ExternalACLEntry::update(ExternalACLEntryData const &someData)
     result = someData.result;
 
     // replace all notes. not combine
-    notes.entries.clear();
+    notes.entries.clean();
     notes.append(&someData.notes);
 
 #if USE_AUTH

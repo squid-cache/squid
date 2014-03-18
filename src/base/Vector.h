@@ -32,7 +32,7 @@
 #define SQUID_ARRAY_H
 
 /**
- \todo remove this after replacing with STL
+ \todo CLEANUP: this file should be called Vector.h at least, and probably be replaced by STL Vector<C>
  */
 
 #include "fatal.h"
@@ -88,8 +88,7 @@ public:
     typedef VectorIteratorBase<Vector<E> > iterator;
     typedef VectorIteratorBase<Vector<E> const> const_iterator;
     typedef ptrdiff_t difference_type;
-    friend class VectorIteratorBase<Vector<E> >;
-    friend class VectorIteratorBase<Vector<E> const>;
+
     void *operator new (size_t);
     void operator delete (void *);
 
@@ -97,31 +96,29 @@ public:
     ~Vector();
     Vector(Vector const &);
     Vector &operator = (Vector const &);
-    void clear();
+    void clean();
     void reserve (size_t capacity);
     void push_back (E);
+    Vector &operator += (E item) {push_back(item); return *this;};
 
     void insert (E);
     const E &front() const;
     E &front();
     E &back();
-    void pop_back();
+    E pop_back();
     E shift();         // aka pop_front
     void prune(E);
     void preAppend(int app_count);
-    inline bool empty() const;
-    inline size_t size() const;
+    bool empty() const;
+    size_t size() const;
     iterator begin();
     const_iterator begin () const;
     iterator end();
     const_iterator end () const;
-    E& at(unsigned i);
-    const E& at(unsigned i) const;
-    inline E& operator [] (unsigned i);
-    inline const E& operator [] (unsigned i) const;
-    E* data() const { return items; }
+    E& operator [] (unsigned i);
+    const E& operator [] (unsigned i) const;
 
-protected:
+    /* Do not change these, until the entry C struct is removed */
     size_t capacity;
     size_t count;
     E *items;
@@ -148,12 +145,12 @@ Vector<E>::Vector() : capacity (0), count(0), items (NULL)
 template<class E>
 Vector<E>::~Vector()
 {
-    clear();
+    clean();
 }
 
 template<class E>
 void
-Vector<E>::clear()
+Vector<E>::clean()
 {
     /* could also warn if some objects are left */
     delete[] items;
@@ -243,12 +240,13 @@ Vector<E>::shift()
 }
 
 template<class E>
-void
+E
 Vector<E>::pop_back()
 {
     assert (size());
-    --count;
+    value_type result = items[--count];
     items[count] = value_type();
+    return result;
 }
 
 template<class E>
@@ -316,7 +314,7 @@ template<class E>
 Vector<E> &
 Vector<E>::operator = (Vector<E> const &old)
 {
-    clear();
+    clean();
     reserve (old.size());
 
     for (size_t counter = 0; counter < old.size(); ++counter)
@@ -369,24 +367,9 @@ Vector<E>::end() const
 
 template<class E>
 E &
-Vector<E>::at(unsigned i)
-{
-    assert (size() > i);
-    return operator[](i);
-}
-
-template<class E>
-const E &
-Vector<E>::at(unsigned i) const
-{
-    assert (size() > i);
-    return operator[](i);
-}
-
-template<class E>
-E &
 Vector<E>::operator [] (unsigned i)
 {
+    assert (size() > i);
     return items[i];
 }
 
@@ -394,6 +377,7 @@ template<class E>
 const E &
 Vector<E>::operator [] (unsigned i) const
 {
+    assert (size() > i);
     return items[i];
 }
 
