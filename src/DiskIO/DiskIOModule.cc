@@ -92,7 +92,7 @@ DiskIOModule::GetModules()
 void
 DiskIOModule::FreeAllModules()
 {
-    while (!GetModules().empty()) {
+    while (GetModules().size()) {
         DiskIOModule *fs = GetModules().back();
         GetModules().pop_back();
         fs->gracefulShutdown();

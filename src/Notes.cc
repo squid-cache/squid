@@ -146,15 +146,13 @@ Notes::dump(StoreEntry *entry, const char *key)
 void
 Notes::clean()
 {
-    notes.clear();
+    notes.clean();
 }
 
 NotePairs::~NotePairs()
 {
-    while (!entries.empty()) {
-        delete entries.back();
-        entries.pop_back();
-    }
+    while (!entries.empty())
+        delete entries.pop_back();
 }
 
 const char *
