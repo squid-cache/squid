@@ -9006,13 +9006,15 @@ DOC_END
 NAME: high_memory_warning
 TYPE: b_size_t
 LOC: Config.warnings.high_memory
+IFDEF: HAVE_MSTATS && HAVE_GNUMALLOC_H
 DEFAULT: 0 KB
 DEFAULT_DOC: disabled.
 DOC_START
-	If the memory usage (as determined by mallinfo) exceeds
-	this amount, Squid prints a WARNING with debug level 0 to get
+	If the memory usage (as determined by gnumalloc, if available and used)
+	exceeds	this amount, Squid prints a WARNING with debug level 0 to get
 	the administrators attention.
 DOC_END
+# TODO: link high_memory_warning to mempools?
 
 NAME: sleep_after_fork
 COMMENT: (microseconds)
