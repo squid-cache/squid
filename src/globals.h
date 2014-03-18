@@ -66,7 +66,6 @@ extern int NDnsServersAlloc;	/* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;		/* SQUID_MAXFD */
 extern int config_lineno;	/* 0 */
-extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
 extern int neighbors_do_private_keys;	/* 1 */
 extern int opt_catch_signals;	/* 1 */
