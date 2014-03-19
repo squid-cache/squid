@@ -449,16 +449,6 @@ dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
 
-dnl This is a developer only option.. developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(xmalloc-debug,
-dnl [  --enable-xmalloc-debug  Do some simple malloc debugging],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([malloc debugging enabled])
-dnl     AC_DEFINE(XMALLOC_DEBUG,1,[Define to do simple malloc debugging])
-dnl   fi
-dnl ])
-
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
@@ -1062,18 +1052,6 @@ else
     ADAPTATION_LIBS=""
 fi
 AC_SUBST(ADAPTATION_LIBS)
-
-
-dnl This is a developer only option. Developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(mem-gen-trace,
-dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
-dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
-dnl   fi
-dnl ])
-
 
 test "x$squid_host_os" = "xmingw" && enable_wccp=no
 AC_ARG_ENABLE(wccp,
@@ -2317,8 +2295,6 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #endif
 ])
 
-SQUID_HAVE_STRUCT_MALLINFO
-
 dnl Override rusage() detect on MinGW because is emulated in source code
 case "$squid_host_os" in
   mingw)
@@ -2493,7 +2469,6 @@ SQUID_DEFINE_BOOL(HAVE_UNIXSOCKET,$squid_cv_unixsocket,[System supports unix soc
 AC_CHECK_LIB(gnumalloc, malloc)
 if test "x$ac_cv_lib_gnumalloc_malloc" = "xyes"; then
   AC_MSG_NOTICE([Disabling extended malloc functions when using bundled gnumalloc])
-  ac_cv_func_mallinfo=no
   ac_cv_func_mallocblksize=no
   ac_cv_func_mallopt=no
 else
@@ -2950,16 +2925,6 @@ if test "x$GCC" = "xyes"; then
 	esac
 fi
 
-# Recommended by Balint Nagy Endre <bne@CareNet.hu>
-case "$host" in
-  *-univel-sysv4.2MP)
-    if test `uname -v` = "2.03"; then
-      AC_MSG_NOTICE([disabling mallinfo for $host])
-      ac_cv_func_mallinfo=no
-    fi
-    ;;
-esac
-
 dnl This has to be before AC_CHECK_FUNCS
 # Disable poll() on certain platforms. Override by setting ac_cv_func_poll
 # when running configure.
@@ -3020,7 +2985,6 @@ AC_CHECK_FUNCS(\
 	htobe16 \
 	htole16 \
 	lrand48 \
-	mallinfo \
 	mallocblksize \
 	mallopt \
 	memcpy \

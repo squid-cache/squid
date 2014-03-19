@@ -189,10 +189,6 @@ static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
-#if MEM_GEN_TRACE
-void log_trace_done();
-void log_trace_init(char *);
-#endif
 static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
@@ -1001,12 +997,6 @@ mainInitialize(void)
 
     fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
 
-#if MEM_GEN_TRACE
-
-    log_trace_init("/tmp/squid.alloc");
-
-#endif
-
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
 
@@ -1101,8 +1091,6 @@ mainInitialize(void)
         statInit();
         storeInit();
         mainSetCwd();
-        /* after this point we want to see the mallinfo() output */
-        do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
         refreshInit();
 #if USE_DELAY_POOLS
@@ -1922,12 +1910,6 @@ SquidShutdown()
     memClean();
 
     RunRegisteredHere(RegisteredRunner::finishShutdown);
-
-#if MEM_GEN_TRACE
-
-    log_trace_done();
-
-#endif
 
     if (IamPrimaryProcess()) {
         if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {

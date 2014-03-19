@@ -58,7 +58,6 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	malloc_trace.cc \
 	MemPool.cc \
 	MemPoolChunked.cc \
 	MemPoolMalloc.cc \
