@@ -949,11 +949,23 @@ StoreEntry::checkTooSmall()
     return 0;
 }
 
-// TODO: remove checks already performed by swapoutPossible()
 // TODO: move "too many open..." checks outside -- we are called too early/late
 int
 StoreEntry::checkCachable()
 {
+    // XXX: This method is used for both memory and disk caches, but some
+    // checks are specific to disk caches. Move them to mayStartSwapOut().
+
+    // XXX: This method may be called several times, sometimes with different
+    // outcomes, making store_check_cachable_hist counters misleading.
+
+    // check this first to optimize handling of repeated calls for uncachables
+    if (EBIT_TEST(flags, RELEASE_REQUEST)) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
+        ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
+        return 0; // avoid rerequesting release below
+    }
+
 #if CACHE_ALL_METHODS
 
     if (mem_obj->method != Http::METHOD_GET) {
@@ -964,9 +976,6 @@ StoreEntry::checkCachable()
         if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (EBIT_TEST(flags, RELEASE_REQUEST)) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
-            ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
         } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
@@ -1400,8 +1409,11 @@ storeConfigure(void)
 }
 
 bool
-StoreEntry::memoryCachable() const
+StoreEntry::memoryCachable()
 {
+    if (!checkCachable())
+        return 0;
+
     if (mem_obj == NULL)
         return 0;
 

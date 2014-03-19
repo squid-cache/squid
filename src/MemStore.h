@@ -58,7 +58,7 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    bool shouldCache(const StoreEntry &e) const;
+    bool shouldCache(StoreEntry &e) const;
     bool startCaching(StoreEntry &e);
 
     void copyToShm(StoreEntry &e);

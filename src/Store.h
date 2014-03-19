@@ -120,11 +120,14 @@ public:
     bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
     void swapOutFileClose(int how);
     const char *url() const;
+    /// generally cachable (checks agnostic to disk/RAM-specific requirements)
+    /// common part of mayStartSwapOut() and memoryCachable()
+    /// TODO: Make private so only those two methods can call this.
     int checkCachable();
     int checkNegativeHit() const;
     int locked() const;
     int validToSend() const;
-    bool memoryCachable() const; ///< may be cached in memory
+    bool memoryCachable(); ///< checkCachable() and can be cached in memory
 
     /// if needed, initialize mem_obj member w/o URI-related information
     MemObject *makeMemObject();
@@ -272,7 +275,7 @@ private:
     store_client_t storeClientType() const {return STORE_MEM_CLIENT;}
 
     char const *getSerialisedMetaData();
-    bool mayStartSwapout() {return false;}
+    virtual bool mayStartSwapOut() { return false; }
 
     void trimMemory(const bool preserveSwappable) {}
 
