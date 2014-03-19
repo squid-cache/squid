@@ -411,7 +411,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
 
 /// whether we should cache the entry
 bool
-MemStore::shouldCache(const StoreEntry &e) const
+MemStore::shouldCache(StoreEntry &e) const
 {
     if (e.mem_status == IN_MEMORY) {
         debugs(20, 5, "already loaded from mem-cache: " << e);
@@ -451,6 +451,11 @@ MemStore::shouldCache(const StoreEntry &e) const
         debugs(20, 5, HERE << "Too big max(" <<
                loadedSize << ", " << expectedSize << "): " << e);
         return false; // will not cache due to cachable entry size limits
+    }
+
+    if (!e.mem_obj->isContiguous()) {
+        debugs(20, 5, "not contiguous");
+        return false;
     }
 
     if (!map) {
