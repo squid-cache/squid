@@ -95,6 +95,7 @@ mem_hdr::unlink(mem_node *aNode)
         return false;
     }
 
+    debugs(19, 8, this << " removing " << aNode);
     nodes.remove (aNode, NodeCompare);
     delete aNode;
     return true;
@@ -103,6 +104,7 @@ mem_hdr::unlink(mem_node *aNode)
 int64_t
 mem_hdr::freeDataUpto(int64_t target_offset)
 {
+    debugs(19, 8, this << " up to " << target_offset);
     /* keep the last one to avoid change to other part of code */
     SplayNode<mem_node*> const * theStart;
 
@@ -232,7 +234,7 @@ mem_hdr::debugDump() const
     debugs (19, 0, "mem_hdr::debugDump: lowest offset: " << lowestOffset() << " highest offset + 1: " << endOffset() << ".");
     std::ostringstream result;
     PointerPrinter<mem_node *> foo(result, " - ");
-    for_each (getNodes().begin(), getNodes().end(), foo);
+    getNodes().visit(foo);
     debugs (19, 0, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
 }
 
