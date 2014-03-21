@@ -2105,7 +2105,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     Http::ProtocolVersion httpver(1,1);
     const char * url;
     if (_peer && !_peer->options.originserver)
-        url = entry->url();
+        url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
     mb->Printf("%s %s %s/%d.%d\r\n",
