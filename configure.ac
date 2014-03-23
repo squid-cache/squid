@@ -3209,6 +3209,9 @@ AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct io
   #if HAVE_WINSOCK2_H
   #include <winsock2.h>
   #endif
+  #if HAVE_SYS_UIO_H
+  #include <sys/uio.h>
+  #endif
 ])
 
 AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
