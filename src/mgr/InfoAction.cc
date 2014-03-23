@@ -81,9 +81,6 @@ Mgr::InfoActionData::operator += (const InfoActionData& stats)
     cpu_usage += stats.cpu_usage;
     cpu_usage5 += stats.cpu_usage5;
     cpu_usage60 += stats.cpu_usage60;
-#if HAVE_SBRK
-    proc_data_seg += stats.proc_data_seg;
-#endif
     maxrss += stats.maxrss;
     page_faults += stats.page_faults;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
@@ -106,8 +103,8 @@ Mgr::InfoActionData::operator += (const InfoActionData& stats)
     mp_uordbytes += stats.mp_uordbytes;
     mp_allocated += stats.mp_allocated;
     mp_treeoverhead += stats.mp_treeoverhead;
-#endif
-#endif
+#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
+#endif /* HAVE_MALLINFO && HAVE_STRUCT_MALLINFO */
     total_accounted += stats.total_accounted;
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
     mem_pool_allocated += stats.mem_pool_allocated;

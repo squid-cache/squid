@@ -501,13 +501,7 @@ mainParseOptions(int argc, char *argv[])
                 fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
 
-            } else {
-#if XMALLOC_TRACE
-                xmalloc_trace = !xmalloc_trace;
-#else
-                fatal("Need to configure --enable-xmalloc-debug-trace to use -m option");
-#endif
-            }
+            } 
             break;
 
 #if USE_WIN32_SERVICE
@@ -1302,10 +1296,6 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#if HAVE_SBRK
-    sbrk_start = sbrk(0);
-#endif
-
     Debug::parseOptions(NULL);
     debug_log = stderr;
 
@@ -1927,15 +1917,6 @@ SquidShutdown()
     mimeFreeMemory();
     errorClean();
 #endif
-#if !XMALLOC_TRACE
-
-    if (opt_no_daemon) {
-        file_close(0);
-        file_close(1);
-        file_close(2);
-    }
-
-#endif
     // clear StoreController
     Store::Root(NULL);
 
@@ -1945,13 +1926,6 @@ SquidShutdown()
 
     memClean();
 
-#if XMALLOC_TRACE
-
-    xmalloc_find_leaks();
-
-    debugs(1, DBG_CRITICAL, "Memory used after shutdown: " << xmalloc_total);
-
-#endif
 #if MEM_GEN_TRACE
 
     log_trace_done();

@@ -459,18 +459,6 @@ dnl     AC_DEFINE(XMALLOC_DEBUG,1,[Define to do simple malloc debugging])
 dnl   fi
 dnl ])
 
-dnl This is a developer only option.. developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(xmalloc-debug-trace,
-dnl [  --enable-xmalloc-debug-trace
-dnl                           Detailed trace of memory allocations],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([malloc debug trace enabled])
-dnl     AC_DEFINE(XMALLOC_TRACE,1,[Define to have a detailed trace of memory allocations])
-dnl     AC_DEFINE(XMALLOC_DEBUG,1)
-dnl   fi
-dnl ])
-
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
@@ -3095,7 +3083,6 @@ AC_CHECK_FUNCS(\
 	res_init \
 	__res_init \
 	rint \
-	sbrk \
 	sched_getaffinity \
 	sched_setaffinity \
 	select \
