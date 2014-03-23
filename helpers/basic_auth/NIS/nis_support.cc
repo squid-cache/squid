@@ -20,8 +20,9 @@
 #define BOOL_DEFINED
 #endif
 
+#if HAVE_RPCSVC_YPCLNT_H
 #include <rpcsvc/ypclnt.h>
-
+#endif
 #if HAVE_RPCSVC_YP_PROT_H
 #include <rpcsvc/yp_prot.h>
 #endif
