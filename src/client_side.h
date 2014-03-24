@@ -189,14 +189,12 @@ public:
     ~ConnStateData();
 
     void readSomeData();
-    int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
-    bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
@@ -212,12 +210,10 @@ public:
     struct In {
         In();
         ~In();
-        char *addressToReadInto() const;
+        bool maybeMakeSpaceAvailable();
 
         ChunkedCodingParser *bodyParser; ///< parses chunked request body
-        char *buf;
-        size_t notYetUsed;
-        size_t allocatedSize;
+        SBuf buf;
     } in;
 
     /** number of body bytes we need to comm_read for the "current" request
@@ -293,7 +289,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    bool handleReadData(char *buf, size_t size);
+    bool handleReadData(SBuf *buf);
     bool handleRequestBodyData();
 
     /**
