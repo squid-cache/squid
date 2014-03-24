@@ -2388,7 +2388,7 @@ ConnStateData::In::maybeMakeSpaceAvailable()
             debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
             return false;
         }
-        const SBuf::size_type wantCapacity = min(Config.maxRequestBufferSize, haveCapacity*2);
+        const SBuf::size_type wantCapacity = min(reinterpret_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
         buf.reserveCapacity(wantCapacity);
         debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length());
     }
