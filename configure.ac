@@ -16,7 +16,7 @@ m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_0x.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
 m4_include([acinclude/ax_cxx_0x_types.m4])
 
 PRESET_CFLAGS="$CFLAGS"
@@ -82,16 +82,15 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
-# Check for C++0x compiler support
-AX_CXX_COMPILE_STDCXX_0X
-if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
-  "x$squid_host_os" != "xmingw" ; then
+# Check for C++11 compiler support
+if test "x$squid_host_os" != "xmingw" ; then
     #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
     # in the system libraries, which makes some c99 methods unavailable
     # (e.g. strtoll), yet configure detects them as avilable.
     case "$CXX" in
       *clang++*) ;; #do nothing
-      *) CXXFLAGS="$CXXFLAGS -std=c++0x" ;;
+      *)
+      AX_CXX_COMPILE_STDCXX_11([noext],[optional])
     esac
 fi
 
