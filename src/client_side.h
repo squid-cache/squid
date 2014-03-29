@@ -36,6 +36,7 @@
 #include "comm.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
+#include "SBuf.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
