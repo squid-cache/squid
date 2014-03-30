@@ -41,6 +41,8 @@ CLEANFILES += test_tools.cc stub_debug.cc time.cc
 bin_PROGRAMS = squidclient
 
 squidclient_SOURCES = \
+	gssapi_support.cc \
+	gssapi_support.h \
 	Parameters.h \
 	Ping.cc \
 	Ping.h \
