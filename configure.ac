@@ -1204,32 +1204,6 @@ fi
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(NETTLELIB)
 
-# SSL is not enabled by default.
-# Default is to use OpenSSL when available
-AC_ARG_ENABLE(ssl,
-  AS_HELP_STRING([--enable-ssl],
-                 [Enable ssl gatewaying support using OpenSSL]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-ssl: $enableval])
-])
-# USE_OPENSSL is AC_DEFINED later
-# default for ssl is set here
-if test "x${enable_ssl:=no}" = "xyes" ; then
-  if test "x$squid_host_os" = "xmingw" ; then
-    SSLLIB='-lssleay32 -leay32 -lgdi32'
-  else
-    SSLLIB='-lssl -lcrypto'
-  fi
-  if test "x$with_openssl" = "x"; then
-    with_openssl=yes
-  fi
-  if test "x$with_openssl" = "x"; then
-    with_openssl=yes
-  fi
-fi
-AM_CONDITIONAL(ENABLE_SSL,[ test "x$enable_ssl" = "xyes" ])
-AC_MSG_NOTICE([SSL gatewaying support enabled: $enable_ssl])
-
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
   AS_HELP_STRING([--with-openssl=PATH],
@@ -1245,35 +1219,62 @@ case "$with_openssl" in
     if test ! -d "$withval" ; then
       AC_MSG_ERROR([--with-openssl path does not point to a directory])
     fi
-    SSLLIBDIR="$with_openssl/lib"
+    LIBOPENSSL_LIBS="-L$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
     with_openssl=yes
   esac
 ])
-SQUID_DEFINE_BOOL(USE_SSL,$enable_ssl,
-   [Define this to include code for SSL gatewaying support])
-AC_MSG_NOTICE([Using OpenSSL library: ${with_openssl:=no}])
-if test "x$enable_ssl" = "xyes"; then
-  if test "x$SSLLIB" = "x" -a "x$with_nettle" = "xno"; then
-    SSLLIB="-lcrypto" # for MD5 routines
+AH_TEMPLATE(USE_SSL,[OpenSSL support is available])
+## OpenSSL is default disable due to licensing issues on some OS
+if test "x$with_openssl" = "xyes"; then
+  AC_CHECK_HEADERS( \
+    openssl/err.h \
+    openssl/md5.h \
+    openssl/opensslv.h \
+    openssl/ssl.h \
+    openssl/x509v3.h \
+    openssl/engine.h \
+    openssl/txt_db.h \
+  )
+
+  # User may have provided a custom location for OpenSSL
+  if test "x$LIBOPENSSL_LIBS" = "x" ; then
+    # auto-detect using pkg-config
+    PKG_CHECK_MODULES([LIBOPENSSL],[openssl])
+    if test "x$with_openssl" = "xyes" -a "x$LIBOPENSSL_LIBS" = "x"; then
+      AC_MSG_ERROR([Required OpenSSL library not found])
+    fi
   fi
+
+  # Windows MinGW has some special libraries ...
+  if test "x${with_openssl:=yes}" = "xyes" -a "x$squid_host_os" = "xmingw" ; then
+    SSLLIB='-lssleay32 -leay32 -lgdi32 $SSLLIB'
+    AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
+  fi
+
   # This is a workaround for RedHat 9 brain damage..
   if test -d /usr/kerberos/include -a "x$SSLLIBDIR" = "x" -a -f /usr/include/openssl/kssl.h; then
     AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    SSLLIBDIR="/usr/kerberos/lib"
+    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
     CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
   fi
-fi
-if test "x$SSLLIBDIR" != "x" ; then
-  SSLLIB="-L$SSLLIBDIR $SSLLIB"
-fi
-AC_SUBST(SSLLIB)
 
-if test "x$with_openssl" = "xyes"; then
-SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
-SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
-SQUID_CHECK_OPENSSL_TXTDB
+  if test "x$LIBOPENSSL_LIBS" != "x" ; then
+    CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
+    SSLLIB="$LIBOPENSSL_LIBS $SSLLIB"
+    AC_DEFINE(USE_SSL,1,[OpenSSL support is available])
+
+    # check for other specific broken implementations
+    SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+    SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
+    SQUID_CHECK_OPENSSL_TXTDB
+  else
+    with_openssl=no
+  fi
 fi
+AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_LIBS}])
+AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
+AC_SUBST(SSLLIB)
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -1663,8 +1664,8 @@ AC_ARG_ENABLE(ssl-crtd,
   [unrecogized argument to --enable-ssl-crtd: $enableval])
 ])
 
-if test "x$enable_ssl_crtd" = "xyes" -a "x$enable_ssl" = "xno" ; then
-   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --enable-ssl. ])
+if test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno" ; then
+   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --with-openssl. ])
 fi
 SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
 AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
