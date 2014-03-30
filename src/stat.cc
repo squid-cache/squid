@@ -70,7 +70,7 @@
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -1913,7 +1913,7 @@ statClientRequests(StoreEntry * s)
         if (!p && conn != NULL && conn->clientConnection->rfc931[0])
             p = conn->clientConnection->rfc931;
 
-#if USE_SSL
+#if USE_OPENSSL
 
         if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);

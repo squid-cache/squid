@@ -122,7 +122,7 @@
 #if USE_SSL_CRTD
 #include "ssl/certificate_db.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
 #endif
@@ -750,7 +750,7 @@ mainReconfigureStart(void)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
     Ssl::TheGlobalContextStorage.reconfigureStart();
@@ -837,7 +837,7 @@ mainReconfigureFinish(void *)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1042,7 +1042,7 @@ mainInitialize(void)
     Ssl::Helper::GetInstance()->Init();
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!configured_once)
         Ssl::initialize_session_cache();
 
@@ -1831,7 +1831,7 @@ SquidShutdown()
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
 #endif

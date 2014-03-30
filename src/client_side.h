@@ -40,7 +40,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -162,7 +162,7 @@ private:
 };
 
 class ConnectionDetail;
-#if USE_SSL
+#if USE_OPENSSL
 namespace Ssl
 {
 class ServerBump;
@@ -334,7 +334,7 @@ public:
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
 
-#if USE_SSL
+#if USE_OPENSSL
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
@@ -399,7 +399,7 @@ private:
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
-#if USE_SSL
+#if USE_OPENSSL
     bool switchedToHttps_;
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request

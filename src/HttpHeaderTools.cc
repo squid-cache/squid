@@ -50,7 +50,7 @@
 #include "Store.h"
 #include "StrList.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 

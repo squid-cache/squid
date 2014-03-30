@@ -482,7 +482,7 @@ getMyHostname(void)
     if (Config.Sockaddr.http && sa.isAnyAddr())
         sa = Config.Sockaddr.http->s;
 
-#if USE_SSL
+#if USE_OPENSSL
 
     if (Config.Sockaddr.https && sa.isAnyAddr())
         sa = Config.Sockaddr.https->s;
@@ -1142,7 +1142,7 @@ getMyPort(void)
             return p->s.port();
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if ((p = Config.Sockaddr.https)) {
         // skip any special interception ports
         while (p && p->flags.isIntercepted())
