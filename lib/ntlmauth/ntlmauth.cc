@@ -109,8 +109,6 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int32_t type)
 lstring
 ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr * str, const uint32_t flags)
 {
-    int16_t l;			/* length */
-    int32_t o;			/* offset */
     static char buf[NTLM_MAX_FIELD_LENGTH];
     lstring rv;
     char *d;
@@ -118,8 +116,8 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     rv.str = NULL;
     rv.l = -1;
 
-    l = le16toh(str->len);
-    o = le32toh(str->offset);
+    int16_t l = le16toh(str->len);
+    int32_t o = le32toh(str->offset);
     // debug("ntlm_fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o);
 
     if (l < 0 || l > NTLM_MAX_FIELD_LENGTH || o + l > packet_size || o == 0) {
@@ -133,13 +131,13 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
         unsigned short *s = (unsigned short *)rv.str;
         rv.str = d = buf;
 
-        for (l >>= 1; l; ++s, --l) {
-            unsigned short c = le16toh(*s);
+        for (uint32_t len = (l>>1); len; ++s, --len) {
+            uint16_t c = le16toh(*s);
             if (c > 254 || c == '\0') {
                 fprintf(stderr, "ntlmssp: bad unicode: %04x\n", c);
                 return rv;
             }
-            *d = c;
+            *d = static_cast<char>(c&0xFF);
             ++d;
             ++rv.l;
         }
@@ -171,14 +169,15 @@ ntlm_add_to_payload(const ntlmhdr *packet_hdr,
                     int *payload_length,
                     strhdr * hdr,
                     const char *toadd,
-                    const int toadd_length)
+                    const uint16_t toadd_length)
 {
     int l = (*payload_length);
     memcpy(payload + l, toadd, toadd_length);
 
     hdr->len = htole16(toadd_length);
     hdr->maxlen = htole16(toadd_length);
-    hdr->offset = htole32(l + payload - (char*)packet_hdr);
+    const off_t o = l + reinterpret_cast<const ntlmhdr *>(payload) - packet_hdr;
+    hdr->offset = htole32(o & 0xFFFFFFFF);
     (*payload_length) += toadd_length;
 }
 
@@ -200,12 +199,11 @@ void
 ntlm_make_nonce(char *nonce)
 {
     static unsigned hash;
-    int i;
-    int r = (int) rand();
+    uint32_t r = static_cast<uint32_t>(rand());
     r = (hash ^ r) + r;
 
-    for (i = 0; i < NTLM_NONCE_LEN; ++i) {
-        nonce[i] = r;
+    for (int i = 0; i < NTLM_NONCE_LEN; ++i) {
+        nonce[i] = static_cast<char>(r & 0xFF);
         r = (r >> 2) ^ r;
     }
     hash = r;
@@ -226,7 +224,10 @@ ntlm_make_challenge(ntlm_challenge *ch,
     memcpy(ch->hdr.signature, "NTLMSSP", 8);		/* set the signature */
     ch->hdr.type = htole32(NTLM_CHALLENGE);	/* this is a challenge */
     if (domain != NULL) {
-        ntlm_add_to_payload(&ch->hdr, ch->payload, &pl, &ch->target, domain, strlen(domain));
+        // silently truncate the domain if it exceeds 2^16-1 bytes.
+        // NTLM packets normally expect 2^8 bytes of domain.
+        const uint16_t dlen = strlen(domain) & 0xFFFF;
+        ntlm_add_to_payload(&ch->hdr, ch->payload, &pl, &ch->target, domain, dlen);
     }
     ch->flags = htole32(flags);
     ch->context_low = 0;		/* check this out */
