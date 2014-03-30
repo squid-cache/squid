@@ -1,8 +1,11 @@
 #include "squid.h"
+
+#if HAVE_GSSAPI
+
 #include "base64.h"
 #include "tools/squidclient/gssapi_support.h"
 
-#if HAVE_GSSAPI
+#include <iostream>
 
 #if !defined(gss_mech_spnego)
 static gss_OID_desc _gss_mech_spnego = {6, (void *) "\x2b\x06\x01\x05\x05\x02"};
