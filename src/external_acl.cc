@@ -63,7 +63,7 @@
 #include "tools.h"
 #include "URL.h"
 #include "wordlist.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 #if USE_AUTH
@@ -183,7 +183,7 @@ struct _external_acl_format {
         EXT_ACL_HEADER_REPLY_ID,
         EXT_ACL_HEADER_REPLY_ID_MEMBER,
 
-#if USE_SSL
+#if USE_OPENSSL
         EXT_ACL_USER_CERT,
         EXT_ACL_USER_CA_CERT,
         EXT_ACL_USER_CERT_RAW,
@@ -468,7 +468,7 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_PATH;
         else if (strcmp(token, "%METHOD") == 0 || strcmp(token, "%>rm") == 0)
             format->type = _external_acl_format::EXT_ACL_METHOD;
-#if USE_SSL
+#if USE_OPENSSL
         else if (strcmp(token, "%USER_CERT") == 0)
             format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
         else if (strcmp(token, "%USER_CERTCHAIN") == 0)
@@ -623,7 +623,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE(PORT);
                 DUMP_EXT_ACL_TYPE(PATH);
                 DUMP_EXT_ACL_TYPE(METHOD);
-#if USE_SSL
+#if USE_OPENSSL
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT_RAW, " %%USER_CERT_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT, " %%USER_CERT_%s", format->header);
@@ -1111,7 +1111,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 str = sb.termedBuf();
             }
             break;
-#if USE_SSL
+#if USE_OPENSSL
 
         case _external_acl_format::EXT_ACL_USER_CERT_RAW:
 

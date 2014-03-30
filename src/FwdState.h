@@ -8,7 +8,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -19,7 +19,7 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
-#if USE_SSL
+#if USE_OPENSSL
 namespace Ssl
 {
 class ErrorDetail;
@@ -83,7 +83,7 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-#if USE_SSL
+#if USE_OPENSSL
     /// Callback function called when squid receive message from cert validator helper
     static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
     /// Process response from cert validator helper

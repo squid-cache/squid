@@ -40,8 +40,11 @@
 #include "Notes.h"
 #include "YesNoNone.h"
 
-#if USE_SSL
+#if USE_OPENSSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
+#endif
+
 class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
 #endif
@@ -135,7 +138,7 @@ public:
 
     struct {
         AnyP::PortCfg *http;
-#if USE_SSL
+#if USE_OPENSSL
         AnyP::PortCfg *https;
 #endif
     } Sockaddr;
@@ -199,7 +202,7 @@ public:
 #endif
 
         char *diskd;
-#if USE_SSL
+#if USE_OPENSSL
 
         char *ssl_password;
 #endif
@@ -385,7 +388,7 @@ public:
         acl_access *htcp_clr;
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
         acl_access *ssl_bump;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
@@ -487,7 +490,7 @@ public:
         int rebuild_chunk_percentage;
     } digest;
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 
     struct {
         int unclean_shutdown;
@@ -509,7 +512,7 @@ public:
     time_t minimum_expiry_time; /* seconds */
     external_acl *externalAclHelperList;
 
-#if USE_SSL
+#if USE_OPENSSL
 
     struct {
         char *cert;

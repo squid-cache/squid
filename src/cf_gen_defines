@@ -25,7 +25,7 @@ BEGIN {
 	define["USE_SQUID_ESI"]="--enable-esi"
 	define["USE_SQUID_EUI"]="--enable-eui"
 	define["USE_SSL_CRTD"]="--enable-ssl-crtd"
-	define["USE_SSL"]="--enable-ssl"
+	define["USE_OPENSSL"]="--with-openssl"
 	define["USE_UNLINKD"]="--enable-unlinkd"
 	define["USE_WCCP"]="--enable-wccp"
 	define["USE_WCCPv2"]="--enable-wccpv2"
