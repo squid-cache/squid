@@ -1,6 +1,6 @@
 #include "squid.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "fatal.h"
 

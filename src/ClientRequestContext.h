@@ -40,7 +40,7 @@ public:
 
     void adaptationAccessCheck();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     /**
      * Initiates and start the acl checklist to check if the a CONNECT
      * request must be bumped.
@@ -77,7 +77,7 @@ public:
     bool interpreted_req_hdrs;
     bool tosToClientDone;
     bool nfmarkToClientDone;
-#if USE_SSL
+#if USE_OPENSSL
     bool sslBumpCheckDone;
 #endif
     ErrorState *error; ///< saved error page for centralized/delayed processing

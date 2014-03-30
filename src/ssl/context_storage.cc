@@ -5,7 +5,7 @@
 #include "StoreEntryStream.h"
 
 #include <limits>
-#if USE_SSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
 

@@ -60,7 +60,7 @@
 #include "StoreIOBuffer.h"
 #include "tools.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -1009,7 +1009,7 @@ commLingerTimeout(const FdeCbParams &params)
 void
 comm_lingering_close(int fd)
 {
-#if USE_SSL
+#if USE_OPENSSL
     if (fd_table[fd].ssl)
         ssl_shutdown_method(fd_table[fd].ssl);
 #endif
@@ -1068,7 +1068,7 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 void
 commStartSslClose(const FdeCbParams &params)
 {
@@ -1080,7 +1080,7 @@ commStartSslClose(const FdeCbParams &params)
 void
 comm_close_complete(const FdeCbParams &params)
 {
-#if USE_SSL
+#if USE_OPENSSL
     fde *F = &fd_table[params.fd];
 
     if (F->ssl) {
@@ -1143,7 +1143,7 @@ _comm_close(int fd, char const *file, int line)
 
     F->flags.close_request = true;
 
-#if USE_SSL
+#if USE_OPENSSL
     if (F->ssl) {
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
                                                 FdeCbPtrFun(commStartSslClose, NULL));

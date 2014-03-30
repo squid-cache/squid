@@ -6,7 +6,7 @@
 #include "anyp/TrafficMode.h"
 #include "comm/Connection.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -19,7 +19,7 @@ public:
     PortCfg();
     ~PortCfg();
     AnyP::PortCfg *clone() const;
-#if USE_SSL
+#if USE_OPENSSL
     /// creates, configures, and validates SSL context and related port options
     void configureSslServerContext();
 #endif
@@ -64,7 +64,7 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
-#if USE_SSL
+#if USE_OPENSSL
     char *cert;
     char *key;
     int version;

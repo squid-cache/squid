@@ -1224,7 +1224,7 @@ case "$with_openssl" in
     with_openssl=yes
   esac
 ])
-AH_TEMPLATE(USE_SSL,[OpenSSL support is available])
+AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
   AC_CHECK_HEADERS( \
@@ -1262,7 +1262,7 @@ if test "x$with_openssl" = "xyes"; then
   if test "x$LIBOPENSSL_LIBS" != "x" ; then
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBOPENSSL_LIBS $SSLLIB"
-    AC_DEFINE(USE_SSL,1,[OpenSSL support is available])
+    AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
 
     # check for other specific broken implementations
     SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS

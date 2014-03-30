@@ -71,7 +71,7 @@
 #include "StoreClient.h"
 #include "urn.h"
 #include "whois.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
@@ -85,7 +85,7 @@
 
 static PSC fwdPeerSelectionCompleteWrapper;
 static CLCB fwdServerClosedWrapper;
-#if USE_SSL
+#if USE_OPENSSL
 static PF fwdNegotiateSSLWrapper;
 #endif
 static CNCB fwdConnectDoneWrapper;
@@ -229,7 +229,7 @@ FwdState::completed()
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
-#if USE_SSL
+#if USE_OPENSSL
             if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
                 CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                              ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
@@ -508,7 +508,7 @@ fwdServerClosedWrapper(const CommCloseCbParams &params)
     fwd->serverClosed(params.fd);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 static void
 fwdNegotiateSSLWrapper(int fd, void *data)
 {
@@ -646,7 +646,7 @@ FwdState::handleUnregisteredServerEnd()
     retryOrBail();
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 void
 FwdState::negotiateSSL(int fd)
 {
@@ -1032,7 +1032,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!request->flags.pinned) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
@@ -1258,7 +1258,7 @@ FwdState::dispatch()
     }
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
     if (request->flags.sslPeek) {
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                      ConnStateData::httpsPeeked, serverConnection());
@@ -1279,7 +1279,7 @@ FwdState::dispatch()
         request->peer_domain = NULL;
 
         switch (request->protocol) {
-#if USE_SSL
+#if USE_OPENSSL
 
         case AnyP::PROTO_HTTPS:
             httpStart(this);
