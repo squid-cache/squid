@@ -1237,29 +1237,37 @@ if test "x$with_openssl" = "xyes"; then
     openssl/txt_db.h \
   )
 
-  # User may have provided a custom location for OpenSSL
+  # User may have provided a custom location for OpenSSL. Otherwise...
   if test "x$LIBOPENSSL_LIBS" = "x" ; then
     # auto-detect using pkg-config
-    PKG_CHECK_MODULES([LIBOPENSSL],[openssl])
-    if test "x$with_openssl" = "xyes" -a "x$LIBOPENSSL_LIBS" = "x"; then
-      AC_MSG_ERROR([Required OpenSSL library not found])
+    PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
+      ## For some OS pkg-config is broken or unavailable.
+      ## Detect libraries the hard way.
+
+      # Windows MinGW has some special libraries ...
+      if test "x$squid_host_os" = "xmingw" ; then
+        LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
+        AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
+      fi
+
+      AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
+        AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
+      ])
+      AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+        AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
+      ])
+
+    ])
+
+    # This is a workaround for RedHat 9 brain damage..
+    if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
+      AC_MSG_NOTICE([OpenSSL depends on Kerberos])
+      LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
+      CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
     fi
   fi
 
-  # Windows MinGW has some special libraries ...
-  if test "x${with_openssl:=yes}" = "xyes" -a "x$squid_host_os" = "xmingw" ; then
-    SSLLIB='-lssleay32 -leay32 -lgdi32 $SSLLIB'
-    AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
-  fi
-
-  # This is a workaround for RedHat 9 brain damage..
-  if test -d /usr/kerberos/include -a "x$SSLLIBDIR" = "x" -a -f /usr/include/openssl/kssl.h; then
-    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
-    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-  fi
-
-  if test "x$LIBOPENSSL_LIBS" != "x" ; then
+  if test "x$LIBOPENSSL_LIBS" != "x"; then
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBOPENSSL_LIBS $SSLLIB"
     AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
@@ -1268,8 +1276,9 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
     SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
     SQUID_CHECK_OPENSSL_TXTDB
-  else
-    with_openssl=no
+  fi
+  if test "x$SSLLIB" = "x"; then
+    AC_MSG_ERROR([Required OpenSSL library not found])
   fi
 fi
 AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_LIBS}])
@@ -2183,14 +2192,7 @@ AC_CHECK_HEADERS( \
   netinet/in.h \
   netinet/in_systm.h \
   netinet/ip_fil_compat.h \
-  openssl/err.h \
-  openssl/md5.h \
-  openssl/opensslv.h \
-  openssl/ssl.h \
-  openssl/x509v3.h \
   netinet/tcp.h \
-  openssl/engine.h \
-  openssl/txt_db.h \
   paths.h \
   poll.h \
   pwd.h \
