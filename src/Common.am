@@ -27,7 +27,7 @@ INCLUDES += $(KRB5INCS)
 
 ## Loadable Modules requires LTDL include paths.
 ## Because we need this to use the libray linking headers...
-if USE_LOADABLE_MODULES
+if ENABLE_LOADABLE_MODULES
 INCLUDES += $(INCLTDL)
 endif
 

@@ -150,7 +150,7 @@ AC_ARG_ENABLE(loadable-modules,
   SQUID_YESNO([$enableval],
     [Unrecognized argument to --disable-loadable-modules: $enableval])
 ])
-AM_CONDITIONAL(USE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
+AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
 AC_MSG_RESULT([$enable_loadable_modules])
 
 if test "x$enable_loadable_modules" = "xyes";
