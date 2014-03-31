@@ -4,8 +4,10 @@
 namespace Http
 {
 
-// see IANA registry:
-// also: https://datatracker.ietf.org/doc/draft-ietf-httpbis-method-registrations
+/*
+ * The IANA registry for HTTP status codes can be found at:
+ * http://www.iana.org/assignments/http-methods/http-methods.xhtml
+ */
 typedef enum _method_t {
     METHOD_NONE = 0,
 
