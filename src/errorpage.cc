@@ -1156,7 +1156,7 @@ ErrorState::BuildHttpReply()
 
     if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
-        Http::StatusCode status = Http::scMovedTemporarily;
+        Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
         if (name[0] == '3')
             status = httpStatus;
