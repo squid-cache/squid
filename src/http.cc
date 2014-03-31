@@ -182,7 +182,7 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
-        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGateway_Timeout, fwd->request));
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, fwd->request));
     }
 
     serverConnection->close();
@@ -212,7 +212,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 
     case Http::scMovedPermanently:
 
-    case Http::scMovedTemporarily:
+    case Http::scFound:
 
     case Http::scGone:
 
@@ -496,7 +496,7 @@ HttpStateData::cacheableReply()
 
         /* Responses that only are cacheable if the server says so */
 
-    case Http::scMovedTemporarily:
+    case Http::scFound:
     case Http::scTemporaryRedirect:
         if (rep->date <= 0) {
             debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Date missing/invalid");
@@ -526,7 +526,7 @@ HttpStateData::cacheableReply()
 
     case Http::scMethodNotAllowed:
 
-    case Http::scRequestUriTooLarge:
+    case Http::scUriTooLong:
 
     case Http::scInternalServerError:
 
@@ -536,8 +536,8 @@ HttpStateData::cacheableReply()
 
     case Http::scServiceUnavailable:
 
-    case Http::scGateway_Timeout:
-        debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status());
+    case Http::scGatewayTimeout:
+        debugs(22, 3, "MAYBE because HTTP status " << rep->sline.status());
         return -1;
 
         /* NOTREACHED */
@@ -565,7 +565,7 @@ HttpStateData::cacheableReply()
     case Http::scConflict:
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scRequestEntityTooLarge:
+    case Http::scPayloadTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked:

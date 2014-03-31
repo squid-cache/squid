@@ -7,10 +7,12 @@ Http::StatusCodeString(const Http::StatusCode status)
 {
     switch (status) {
 
+    // 000
     case Http::scNone:
         return "Init";		/* we init .status with code 0 */
         break;
 
+    // 100-199
     case Http::scContinue:
         return "Continue";
         break;
@@ -19,6 +21,11 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Switching Protocols";
         break;
 
+    case Http::scProcessing:
+        return "Processing";
+        break;
+
+    // 200-299
     case Http::scOkay:
         return "OK";
         break;
@@ -51,6 +58,15 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Multi-Status";
         break;
 
+    case Http::scAlreadyReported:
+        return "Already Reported";
+        break;
+
+    case Http::scImUsed:
+        return "IM Used";
+        break;
+
+    // 300-399
     case Http::scMultipleChoices:
         return "Multiple Choices";
         break;
@@ -59,8 +75,8 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Moved Permanently";
         break;
 
-    case Http::scMovedTemporarily:
-        return "Moved Temporarily";
+    case Http::scFound:
+        return "Found";
         break;
 
     case Http::scSeeOther:
@@ -83,6 +99,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Permanent Redirect";
         break;
 
+    // 400-499
     case Http::scBadRequest:
         return "Bad Request";
         break;
@@ -116,7 +133,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         break;
 
     case Http::scRequestTimeout:
-        return "Request Time-out";
+        return "Request Timeout";
         break;
 
     case Http::scConflict:
@@ -135,12 +152,12 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Precondition Failed";
         break;
 
-    case Http::scRequestEntityTooLarge:
-        return "Request Entity Too Large";
+    case Http::scPayloadTooLarge:
+        return "Payload Too Large";
         break;
 
-    case Http::scRequestUriTooLarge:
-        return "Request-URI Too Large";
+    case Http::scUriTooLong:
+        return "URI Too Long";
         break;
 
     case Http::scUnsupportedMediaType:
@@ -155,6 +172,35 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Expectation Failed";
         break;
 
+    case Http::scUnprocessableEntity:
+        return "Unprocessable Entity";
+        break;
+
+    case Http::scLocked:
+        return "Locked";
+        break;
+
+    case Http::scFailedDependency:
+        return "Failed Dependency";
+        break;
+
+    case Http::scUpgradeRequired:
+        return "Upgrade Required";
+        break;
+
+    case Http::scPreconditionRequired:
+        return "Precondition Required";
+        break;
+
+    case Http::scTooManyRequests:
+        return "Too Many Requests";
+        break;
+
+    case Http::scRequestHeaderFieldsTooLarge:
+        return "Request Header Fields Too Large";
+        break;
+
+    // 500-599
     case Http::scInternalServerError:
         return "Internal Server Error";
         break;
@@ -171,33 +217,41 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Service Unavailable";
         break;
 
-    case Http::scGateway_Timeout:
-        return "Gateway Time-out";
+    case Http::scGatewayTimeout:
+        return "Gateway Timeout";
         break;
 
     case Http::scHttpVersionNotSupported:
         return "HTTP Version not supported";
         break;
 
-        // RFC 6585
-    case Http::scPreconditionRequired: // 428
-        return "Precondition Required";
+    case Http::scVariantAlsoNegotiates:
+        return "Variant Also Negotiates";
         break;
 
-    case Http::scTooManyFields: // 429
-        return "Too Many Requests";
+    case Http::scInsufficientStorage:
+        return "Insufficient Storage";
         break;
 
-    case Http::scRequestHeaderFieldsTooLarge: // 431
-        return "Request Header Fields Too Large";
+    case Http::scLoopDetected:
+        return "Loop Detected";
         break;
 
-    case Http::scNetworkAuthenticationRequired: // 511
+    case Http::scNotExtended:
+        return "Not Extended";
+        break;
+
+    case Http::scNetworkAuthenticationRequired:
         return "Network Authentication Required";
         break;
 
+    // 600+
+    case Http::scInvalidHeader:
+    case Http::scHeaderTooLarge:
+        // fall through to default.
+
     default:
-        debugs(57, 3, "Unknown HTTP status code: " << status);
-        return "Unknown";
+        debugs(57, 3, "Unassigned HTTP status code: " << status);
     }
+    return "Unassigned";
 }
