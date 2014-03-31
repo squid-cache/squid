@@ -676,7 +676,7 @@ squid_DEPENDENCIES = \
 	ipc/libipc.la \
 	mgr/libmgr.la
 
-if USE_LOADABLE_MODULES
+if ENABLE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
 squid_LDADD += -L$(top_builddir) $(LIBLTDL)
 squid_LDFLAGS = -export-dynamic -dlopen force
