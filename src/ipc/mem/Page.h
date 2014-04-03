@@ -1,12 +1,7 @@
-/*
- */
-
 #ifndef SQUID_IPC_MEM_PAGE_H
 #define SQUID_IPC_MEM_PAGE_H
 
-#if HAVE_IOSFWD
 #include <iosfwd>
-#endif
 
 namespace Ipc
 {

@@ -17,9 +17,7 @@
 #include "tools.h"
 #include "Transients.h"
 
-#if HAVE_LIMITS_H
 #include <limits>
-#endif
 
 /// shared memory segment path to use for Transients maps
 static const char *MapLabel = "transients_map";
@@ -386,27 +384,27 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     TransientsRr(): mapOwner(NULL) {}
-    virtual void run(const RunnerRegistry &);
+    virtual void useConfig();
     virtual ~TransientsRr();
 
 protected:
-    virtual void create(const RunnerRegistry &);
+    virtual void create();
 
 private:
     TransientsMap::Owner *mapOwner;
 };
 
-RunnerRegistrationEntry(rrAfterConfig, TransientsRr);
+RunnerRegistrationEntry(TransientsRr);
 
 void
-TransientsRr::run(const RunnerRegistry &r)
+TransientsRr::useConfig()
 {
     assert(Config.memShared.configured());
-    Ipc::Mem::RegisteredRunner::run(r);
+    Ipc::Mem::RegisteredRunner::useConfig();
 }
 
 void
-TransientsRr::create(const RunnerRegistry &)
+TransientsRr::create()
 {
     if (!Config.onoff.collapsed_forwarding)
         return;

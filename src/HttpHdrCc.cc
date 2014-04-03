@@ -41,9 +41,7 @@
 #include "Store.h"
 #include "StrList.h"
 
-#if HAVE_MAP
 #include <map>
-#endif
 
 /* a row in the table used for parsing cache control header and statistics */
 typedef struct {

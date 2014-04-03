@@ -7,6 +7,7 @@ ntlm_fake_auth_LDADD = \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 

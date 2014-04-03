@@ -134,16 +134,16 @@ public:
     virtual ~CollapsedForwardingRr();
 
 protected:
-    virtual void create(const RunnerRegistry &);
-    virtual void open(const RunnerRegistry &);
+    virtual void create();
+    virtual void open();
 
 private:
     Ipc::MultiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(rrAfterConfig, CollapsedForwardingRr);
+RunnerRegistrationEntry(CollapsedForwardingRr);
 
-void CollapsedForwardingRr::create(const RunnerRegistry &)
+void CollapsedForwardingRr::create()
 {
     Must(!owner);
     owner = Ipc::MultiQueue::Init(ShmLabel, Config.workers, 1,
@@ -151,7 +151,7 @@ void CollapsedForwardingRr::create(const RunnerRegistry &)
                                   QueueCapacity);
 }
 
-void CollapsedForwardingRr::open(const RunnerRegistry &)
+void CollapsedForwardingRr::open()
 {
     CollapsedForwarding::Init();
 }

@@ -1,9 +1,7 @@
 #ifndef _SQUID_SRC_ANYP_PROTOCOLTYPE_H
 #define _SQUID_SRC_ANYP_PROTOCOLTYPE_H
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 namespace AnyP
 {

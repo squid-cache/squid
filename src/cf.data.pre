@@ -842,7 +842,7 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.aclList
-IF USE_SSL
+IF USE_OPENSSL
 DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
 DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
 DEFAULT: ssl::certDomainMismatch ssl_error SQUID_X509_V_ERR_DOMAIN_MISMATCH
@@ -1107,7 +1107,7 @@ DOC_START
 	  # adaptation_meta because it starts matching immediately after
 	  # the service has been selected for adaptation.
 
-IF USE_SSL
+IF USE_OPENSSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
 	  #
@@ -1838,7 +1838,7 @@ NOCOMMENT_END
 DOC_END
 
 NAME: https_port
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.https
@@ -2071,9 +2071,18 @@ DEFAULT: none
 LOC: Ip::Qos::TheConfig
 DOC_START
 	Allows you to select a TOS/DSCP value to mark outgoing
-	connections with, based on where the reply was sourced.	For
-	platforms using netfilter, allows you to set a netfilter mark
+	connections to the client, based on where the reply was sourced.
+	For platforms using netfilter, allows you to set a netfilter mark
 	value instead of, or in addition to, a TOS value.
+
+	By default this functionality is disabled. To enable it with the default
+	settings simply use "qos_flows mark" or "qos_flows tos". Default
+	settings will result in the netfilter mark or TOS value being copied
+	from the upstream connection to the client. Note that it is the connection
+	CONNMARK value not the packet MARK value that is copied.
+
+	It is not currently possible to copy the mark or TOS value from the
+	client to the upstream connection request.
 
 	TOS values really only have local significance - so you should
 	know what you're specifying. For more information, see RFC2474,
@@ -2273,7 +2282,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: ssl_unclean_shutdown
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 TYPE: onoff
 DEFAULT: off
 LOC: Config.SSL.unclean_shutdown
@@ -2283,7 +2292,7 @@ DOC_START
 DOC_END
 
 NAME: ssl_engine
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 TYPE: string
 LOC: Config.SSL.ssl_engine
 DEFAULT: none
@@ -2293,7 +2302,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_client_certificate
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.cert
 TYPE: string
@@ -2302,7 +2311,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_client_key
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.key
 TYPE: string
@@ -2311,7 +2320,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_version
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: 1
 DEFAULT_DOC: automatic SSL/TLS version negotiation
 LOC: Config.ssl_client.version
@@ -2330,7 +2339,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_options
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.options
 TYPE: string
@@ -2360,7 +2369,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cipher
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.cipher
 TYPE: string
@@ -2371,7 +2380,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cafile
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.cafile
 TYPE: string
@@ -2381,7 +2390,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_capath
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.capath
 TYPE: string
@@ -2391,7 +2400,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_session_ttl
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: 300
 LOC: Config.SSL.session_ttl
 TYPE: int
@@ -2400,7 +2409,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_session_cache_size
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: 2 MB
 LOC: Config.SSL.sessionCacheSize
 TYPE: b_size_t
@@ -2409,7 +2418,7 @@ DOC_START
 DOC_END
 
 NAME: ssl_bump
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
 DEFAULT_DOC: Does not bump unless rules are present in squid.conf
@@ -2468,7 +2477,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_flags
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.ssl_client.flags
 TYPE: string
@@ -2481,7 +2490,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_error
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 DEFAULT_DOC: Server certificate errors terminate the transaction.
 LOC: Config.ssl_client.cert_error
@@ -2516,7 +2525,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_sign
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 POSTSCRIPTUM: signUntrusted ssl::certUntrusted
 POSTSCRIPTUM: signSelf ssl::certSelfSigned
@@ -2562,7 +2571,7 @@ DOC_START
 DOC_END
 
 NAME: sslproxy_cert_adapt
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 TYPE: sslproxy_cert_adapt
 LOC: Config.ssl_client.cert_adapt
@@ -2605,7 +2614,7 @@ DOC_START
 DOC_END
 
 NAME: sslpassword_program
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Config.Program.ssl_password
 TYPE: string
@@ -2670,7 +2679,7 @@ DOC_END
 
 NAME: sslcrtvalidator_program
 TYPE: eol
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: none
 LOC: Ssl::TheConfig.ssl_crt_validator
 DOC_START
@@ -2686,7 +2695,7 @@ DOC_END
 
 NAME: sslcrtvalidator_children
 TYPE: HelperChildConfig
-IFDEF: USE_SSL
+IFDEF: USE_OPENSSL
 DEFAULT: 32 startup=5 idle=1 concurrency=1
 LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
@@ -4607,7 +4616,7 @@ DOC_START
 
 	For each requested URL, the rewriter will receive on line with the format
 
-	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kv-pairs]<NL>
+	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
 
 	After processing the request the helper must reply using the following format:
@@ -4755,6 +4764,18 @@ DOC_START
 	be allowed to request.
 DOC_END
 
+NAME: url_rewrite_extras
+TYPE: TokenOrQuotedString
+LOC: Config.redirector_extras
+DEFAULT: "%>a/%>A %un %>rm myip=%la myport=%lp"
+DOC_START
+	Specifies a string to be append to request line format for the
+	rewriter helper. "Quoted" format values may contain spaces and
+	logformat %macros. In theory, any logformat %macro can be used.
+	In practice, a %macro expands as a dash (-) if the helper request is
+	sent before the required macro information is available to Squid.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR STORE ID
  -----------------------------------------------------------------------------
@@ -4770,7 +4791,7 @@ DOC_START
 
 	For each requested URL, the helper will receive one line with the format
 
-	  [channel-ID <SP>] URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kv-pairs]<NL>
+	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
 
 	After processing the request the helper must reply using the following format:
@@ -4790,8 +4811,8 @@ DOC_START
 		a result being identified.
 
 
-	Helper programs should be prepared to receive and possibly ignore additional
-	kv-pairs with keys they do not support.
+	Helper programs should be prepared to receive and possibly ignore
+	additional whitespace-separated tokens on each input line.
 
 	When using the concurrency= option the protocol is changed by
 	introducing a query channel tag in front of the request/response.
@@ -4806,6 +4827,18 @@ DOC_START
 	         in the wrong cached response returned to the user.
 
 	By default, a StoreID helper is not used.
+DOC_END
+
+NAME: store_id_extras
+TYPE: TokenOrQuotedString
+LOC: Config.storeId_extras
+DEFAULT: "%>a/%>A %un %>rm myip=%la myport=%lp"
+DOC_START
+        Specifies a string to be append to request line format for the
+        StoreId helper. "Quoted" format values may contain spaces and
+        logformat %macros. In theory, any logformat %macro can be used.
+        In practice, a %macro expands as a dash (-) if the helper request is
+        sent before the required macro information is available to Squid.
 DOC_END
 
 NAME: store_id_children storeurl_rewrite_children
@@ -8982,13 +9015,15 @@ DOC_END
 NAME: high_memory_warning
 TYPE: b_size_t
 LOC: Config.warnings.high_memory
+IFDEF: HAVE_MSTATS && HAVE_GNUMALLOC_H
 DEFAULT: 0 KB
 DEFAULT_DOC: disabled.
 DOC_START
-	If the memory usage (as determined by mallinfo) exceeds
-	this amount, Squid prints a WARNING with debug level 0 to get
+	If the memory usage (as determined by gnumalloc, if available and used)
+	exceeds	this amount, Squid prints a WARNING with debug level 0 to get
 	the administrators attention.
 DOC_END
+# TODO: link high_memory_warning to mempools?
 
 NAME: sleep_after_fork
 COMMENT: (microseconds)

@@ -56,9 +56,7 @@
 #include "Store.h"
 #include "StoreSearch.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 /*
  * local types

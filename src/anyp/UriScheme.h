@@ -2,9 +2,8 @@
 #define SQUID_ANYP_URISCHEME_H
 
 #include "anyp/ProtocolType.h"
-#if HAVE_IOSFWD
+
 #include <iosfwd>
-#endif
 
 namespace AnyP
 {

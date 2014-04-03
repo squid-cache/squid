@@ -15,7 +15,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #endif
 
@@ -801,7 +801,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             if (!out)
                 out = strOrNull(al->cache.extuser);
-#if USE_SSL
+#if USE_OPENSSL
             if (!out)
                 out = strOrNull(al->cache.ssluser);
 #endif
@@ -877,7 +877,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-#if USE_SSL
+#if USE_OPENSSL
             if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
                 if (! (out = Ssl::GetErrorName(al->request->errDetail))) {
                     snprintf(tmp, sizeof(tmp), "SSL_ERR=%d", al->request->errDetail);
@@ -1063,7 +1063,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             dooff = 1;
             break;
 
-#if USE_SSL
+#if USE_OPENSSL
         case LFT_SSL_BUMP_MODE: {
             const Ssl::BumpMode mode = static_cast<Ssl::BumpMode>(al->ssl.bumpMode);
             // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'

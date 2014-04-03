@@ -1,12 +1,8 @@
 #ifndef SQUID_SSL_CRTD_MESSAGE_H
 #define SQUID_SSL_CRTD_MESSAGE_H
 
-#if HAVE_STRING
-#include <string>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
+#include <string>
 
 namespace Ssl
 {

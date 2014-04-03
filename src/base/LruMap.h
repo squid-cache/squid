@@ -6,12 +6,9 @@
 #define SQUID_LRUMAP_H
 
 #include "SquidTime.h"
-#if HAVE_LIST
+
 #include <list>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
 
 template <class EntryValue, size_t EntryCost = sizeof(EntryValue)> class LruMap
 {
@@ -50,7 +47,7 @@ public:
     /// The available size for the map
     size_t memLimit() const {return memLimit_;}
     /// The free space of the map
-    size_t freeMem() const { return (memLimit() - size());}
+    size_t freeMem() const { return (memLimit() > size() ? memLimit() - size() : 0);}
     /// The current size of the map
     size_t size() const {return (entries_ * EntryCost);}
     /// The number of stored entries

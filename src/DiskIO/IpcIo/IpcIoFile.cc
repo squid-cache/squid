@@ -307,9 +307,11 @@ IpcIoFile::ioInProgress() const
 
 /// track a new pending request
 void
-IpcIoFile::trackPendingRequest(IpcIoPendingRequest *const pending)
+IpcIoFile::trackPendingRequest(const unsigned int id, IpcIoPendingRequest *const pending)
 {
-    newerRequests->insert(std::make_pair(lastRequestId, pending));
+    const std::pair<RequestMap::iterator,bool> result =
+        newerRequests->insert(std::make_pair(id, pending));
+    Must(result.second); // failures means that id was not unique
     if (!timeoutCheckScheduled)
         scheduleTimeoutCheck();
 }
@@ -319,6 +321,7 @@ void
 IpcIoFile::push(IpcIoPendingRequest *const pending)
 {
     // prevent queue overflows: check for responses to earlier requests
+    // warning: this call may result in indirect push() recursion
     HandleResponses("before push");
 
     debugs(47, 7, HERE);
@@ -328,6 +331,8 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 
     IpcIoMsg ipcIo;
     try {
+        if (++lastRequestId == 0) // don't use zero value as requestId
+            ++lastRequestId;
         ipcIo.requestId = lastRequestId;
         ipcIo.start = current_time;
         if (pending->readRequest) {
@@ -351,7 +356,7 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 
         if (queue->push(diskId, ipcIo))
             Notify(diskId); // must notify disker
-        trackPendingRequest(pending);
+        trackPendingRequest(ipcIo.requestId, pending);
     } catch (const Queue::Full &) {
         debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
@@ -609,9 +614,6 @@ IpcIoMsg::IpcIoMsg():
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
         file(aFile), readRequest(NULL), writeRequest(NULL)
 {
-    Must(file != NULL);
-    if (++file->lastRequestId == 0) // don't use zero value as requestId
-        ++file->lastRequestId;
 }
 
 void
@@ -905,17 +907,27 @@ DiskerClose(const String &path)
 }
 
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
-class IpcIoClaimMemoryNeedsRr: public RegisteredRunner
+/// and initializes shared memory segments used by IpcIoFile
+class IpcIoRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &r);
+    IpcIoRr(): owner(NULL) {}
+    virtual ~IpcIoRr();
+    virtual void claimMemoryNeeds();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create();
+
+private:
+    Ipc::FewToFewBiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(rrClaimMemoryNeeds, IpcIoClaimMemoryNeedsRr);
+RunnerRegistrationEntry(IpcIoRr);
 
 void
-IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
+IpcIoRr::claimMemoryNeeds()
 {
     const int itemsCount = Ipc::FewToFewBiQueue::MaxItemsCount(
                                ::Config.workers, ::Config.cacheSwap.n_strands, QueueCapacity);
@@ -927,24 +939,8 @@ IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
                            static_cast<int>(itemsCount * 1.1));
 }
 
-/// initializes shared memory segments used by IpcIoFile
-class IpcIoRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    IpcIoRr(): owner(NULL) {}
-    virtual ~IpcIoRr();
-
-protected:
-    virtual void create(const RunnerRegistry &);
-
-private:
-    Ipc::FewToFewBiQueue::Owner *owner;
-};
-
-RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
-
-void IpcIoRr::create(const RunnerRegistry &)
+void
+IpcIoRr::create()
 {
     if (Config.cacheSwap.n_strands <= 0)
         return;

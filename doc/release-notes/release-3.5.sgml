@@ -190,12 +190,13 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p><em>There are no removed ./configure options in Squid-3.5.</em>
-
 	<tag>--disable-internal-dns</tag>
 	<p>DNS external helper interface has been removed. It was no longer
 	   able to provide high performance service and the internal DNS
 	   client library with multicast DNS cover all modern use-cases.
+
+	<tag>--enable-ssl</tag>
+	<p>Removed. Use <em>--with-openssl</em> to enable OpenSSL library support.
 
 </descrip>
 

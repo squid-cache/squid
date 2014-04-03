@@ -142,7 +142,7 @@ private:
     StoreEntry *loggingEntry_;
     ConnStateData * conn_;
 
-#if USE_SSL
+#if USE_OPENSSL
     /// whether (and how) the request needs to be bumped
     Ssl::BumpMode sslBumpNeed_;
 

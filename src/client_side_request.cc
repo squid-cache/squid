@@ -88,7 +88,7 @@
 #include "adaptation/icap/History.h"
 #endif
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
@@ -110,7 +110,7 @@ CBDATA_CLASS_INIT(ClientRequestContext);
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(allow_t, void *);
-#if USE_SSL
+#if USE_OPENSSL
 static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
 #endif
 static int clientHierarchical(ClientHttpRequest * http);
@@ -146,7 +146,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
     store_id_fail_count = 0;
     no_cache_done = false;
     interpreted_req_hdrs = false;
-#if USE_SSL
+#if USE_OPENSSL
     sslBumpCheckDone = false;
 #endif
     debugs(85,3, HERE << this << " ClientRequestContext constructed");
@@ -167,7 +167,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     al->cache.port =  cbdataReference(aConn->port);
     al->cache.caddr = aConn->log_addr;
 
-#if USE_SSL
+#if USE_OPENSSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
         if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
             al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
@@ -177,7 +177,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     sslBumpNeed_ = Ssl::bumpEnd;
 #endif
 }
@@ -855,7 +855,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     if (ih != NULL) {
         if (getConn() != NULL && getConn()->clientConnection != NULL) {
             ih->rfc931 = getConn()->clientConnection->rfc931;
-#if USE_SSL
+#if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
                 ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
             }
@@ -897,7 +897,7 @@ void
 ClientRequestContext::clientRedirectStart()
 {
     debugs(33, 5, HERE << "'" << http->uri << "'");
-
+    (void)SyncNotes(*http->al, *http->request);
     if (Config.accessList.redirector) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
         acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
@@ -1151,8 +1151,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     else {
         req_hdr->delById(HDR_RANGE);
         req_hdr->delById(HDR_REQUEST_RANGE);
-        delete request->range;
-        request->range = NULL;
+        request->ignoreRange("neither HEAD nor GET");
     }
 
     if (req_hdr->has(HDR_AUTHORIZATION))
@@ -1280,17 +1279,17 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
             // TODO: change default redirect status for appropriate requests
             // Squid defaults to 302 status for now for better compatibility with old clients.
-            // HTTP/1.0 client should get 302 (Http::scMovedTemporarily)
+            // HTTP/1.0 client should get 302 (Http::scFound)
             // HTTP/1.1 client contacting reverse-proxy should get 307 (Http::scTemporaryRedirect)
             // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
-            Http::StatusCode status = Http::scMovedTemporarily;
+            Http::StatusCode status = Http::scFound;
             if (statusNote != NULL) {
                 const char * result = statusNote;
                 status = static_cast<Http::StatusCode>(atoi(result));
             }
 
             if (status == Http::scMovedPermanently
-                    || status == Http::scMovedTemporarily
+                    || status == Http::scFound
                     || status == Http::scSeeOther
                     || status == Http::scPermanentRedirect
                     || status == Http::scTemporaryRedirect) {
@@ -1439,7 +1438,7 @@ ClientRequestContext::checkNoCacheDone(const allow_t &answer)
     http->doCallouts();
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 bool
 ClientRequestContext::sslBumpAccessCheck()
 {
@@ -1520,7 +1519,7 @@ ClientHttpRequest::processRequest()
     debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
 
     if (request->method == Http::METHOD_CONNECT && !redirect.status) {
-#if USE_SSL
+#if USE_OPENSSL
         if (sslBumpNeeded()) {
             sslBumpStart();
             return;
@@ -1550,7 +1549,7 @@ ClientHttpRequest::httpStart()
     PROF_stop(httpStart);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 
 void
 ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
@@ -1790,7 +1789,7 @@ ClientHttpRequest::doCallouts()
         }
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     // We need to check for SslBump even if the calloutContext->error is set
     // because bumping may require delaying the error until after CONNECT.
     if (!calloutContext->sslBumpCheckDone) {
@@ -1804,7 +1803,7 @@ ClientHttpRequest::doCallouts()
     if (calloutContext->error) {
         const char *storeUri = request->storeId();
         StoreEntry *e= storeCreateEntry(storeUri, storeUri, request->flags, request->method);
-#if USE_SSL
+#if USE_OPENSSL
         if (sslBumpNeeded()) {
             // set final error but delay sending until we bump
             Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e);
@@ -1819,7 +1818,7 @@ ClientHttpRequest::doCallouts()
             clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToStoreEntry(e);
+            repContext->setReplyToStoreEntry(e, "immediate SslBump error");
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
             if (calloutContext->readNextRequest)

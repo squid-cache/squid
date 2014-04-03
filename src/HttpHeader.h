@@ -70,7 +70,7 @@ typedef enum {
 #endif
     hoRequest,
     hoReply,
-#if USE_SSL
+#if USE_OPENSSL
     hoErrorDetail,
 #endif
     hoEnd

@@ -35,7 +35,6 @@
  * - initial version (Richard Huveneers <Richard.Huveneers@hekkihek.hacom.nl>)
  */
 
-#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>

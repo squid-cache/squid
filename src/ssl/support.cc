@@ -36,7 +36,7 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
  */
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
@@ -1839,26 +1839,26 @@ class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     SharedSessionCacheRr(): owner(NULL) {}
-    virtual void run(const RunnerRegistry &);
+    virtual void useConfig();
     virtual ~SharedSessionCacheRr();
 
 protected:
-    virtual void create(const RunnerRegistry &);
+    virtual void create();
 
 private:
     Ipc::MemMap::Owner *owner;
 };
 
-RunnerRegistrationEntry(rrAfterConfig, SharedSessionCacheRr);
+RunnerRegistrationEntry(SharedSessionCacheRr);
 
 void
-SharedSessionCacheRr::run(const RunnerRegistry &r)
+SharedSessionCacheRr::useConfig()
 {
-    Ipc::Mem::RegisteredRunner::run(r);
+    Ipc::Mem::RegisteredRunner::useConfig();
 }
 
 void
-SharedSessionCacheRr::create(const RunnerRegistry &)
+SharedSessionCacheRr::create()
 {
     if (!isSslServer()) //no need to configure ssl session cache.
         return;
@@ -1874,4 +1874,4 @@ SharedSessionCacheRr::~SharedSessionCacheRr()
     delete owner;
 }
 
-#endif /* USE_SSL */
+#endif /* USE_OPENSSL */

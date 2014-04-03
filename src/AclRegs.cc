@@ -57,7 +57,7 @@
 #include "acl/SourceAsn.h"
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "acl/Certificate.h"
 #include "acl/CertificateData.h"
 #include "acl/SslError.h"
@@ -66,7 +66,7 @@
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
 #include "acl/StringData.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "acl/ServerCertificate.h"
 #endif
 #include "acl/Tag.h"
@@ -151,7 +151,7 @@ ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrl
 ACL::Prototype ACLUrlPort::RegistryProtoype(&ACLUrlPort::RegistryEntry_, "port");
 ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrategy::Instance(), "port");
 
-#if USE_SSL
+#if USE_OPENSSL
 ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
 ACLStrategised<const Ssl::CertErrors *> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
 ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");

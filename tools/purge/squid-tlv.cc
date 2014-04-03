@@ -33,7 +33,6 @@
 //
 //
 #include "squid.h"
-//#include <assert.h>
 #include "squid-tlv.hh"
 
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )

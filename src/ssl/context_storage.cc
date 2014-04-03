@@ -3,10 +3,9 @@
 #include "ssl/context_storage.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
-#if HAVE_LIMITS
+
 #include <limits>
-#endif
-#if USE_SSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
 
@@ -65,16 +64,20 @@ void Ssl::GlobalContextStorage::addLocalStorage(Ip::Address const & address, siz
     configureStorage.insert(std::pair<Ip::Address, size_t>(address, size_of_store));
 }
 
-Ssl::LocalContextStorage & Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const & address)
+Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const & address)
 {
     reconfigureFinish();
     std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.find(address);
-    assert (i != storage.end());
-    return *(i->second);
+
+    if (i == storage.end())
+        return NULL;
+    else
+        return i->second;
 }
 
 void Ssl::GlobalContextStorage::reconfigureStart()
 {
+    configureStorage.clear();
     reconfiguring = true;
 }
 
@@ -86,7 +89,7 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
         // remove or change old local storages.
         for (std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.begin(); i != storage.end(); ++i) {
             std::map<Ip::Address, size_t>::iterator conf_i = configureStorage.find(i->first);
-            if (conf_i == configureStorage.end()) {
+            if (conf_i == configureStorage.end() || conf_i->second <= 0) {
                 storage.erase(i);
             } else {
                 i->second->setMemLimit(conf_i->second);
@@ -95,7 +98,7 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
 
         // add new local storages.
         for (std::map<Ip::Address, size_t>::iterator conf_i = configureStorage.begin(); conf_i != configureStorage.end(); ++conf_i ) {
-            if (storage.find(conf_i->first) == storage.end()) {
+            if (storage.find(conf_i->first) == storage.end() && conf_i->second > 0) {
                 storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(-1, conf_i->second)));
             }
         }

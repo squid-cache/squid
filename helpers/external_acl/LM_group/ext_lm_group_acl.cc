@@ -77,20 +77,13 @@
 int _wcsicmp(const wchar_t *, const wchar_t *);
 #endif
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#undef assert
+#include <cassert>
+#include <cctype>
+#include <cstring>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#undef assert
-#include <assert.h>
 #include <windows.h>
 #include <lm.h>
 #include <ntsecapi.h>

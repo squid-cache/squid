@@ -54,7 +54,7 @@
 #include "auth/UserRequest.h"
 #endif
 #include "SquidTime.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
 #endif
 
@@ -228,7 +228,7 @@ errorInitialize(void)
         error_stylesheet.Printf("%s",tmpl.text());
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     Ssl::errorDetailInitialize();
 #endif
 }
@@ -252,7 +252,7 @@ errorClean(void)
 
     error_page_count = 0;
 
-#if USE_SSL
+#if USE_OPENSSL
     Ssl::errorDetailClean();
 #endif
 }
@@ -588,7 +588,7 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
         callback_data(NULL),
         request_hdrs(NULL),
         err_msg(NULL),
-#if USE_SSL
+#if USE_OPENSSL
         detail(NULL),
 #endif
         detailCode(ERR_DETAIL_NONE)
@@ -708,7 +708,7 @@ ErrorState::~ErrorState()
     if (err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err_language);
-#if USE_SSL
+#if USE_OPENSSL
     delete detail;
 #endif
 }
@@ -833,7 +833,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'D':
         if (!allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
-#if USE_SSL
+#if USE_OPENSSL
         // currently only SSL error details implemented
         else if (detail) {
             detail->useRequest(request);
@@ -1071,7 +1071,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'x':
-#if USE_SSL
+#if USE_OPENSSL
         if (detail)
             mb.Printf("%s", detail->errorName());
         else
@@ -1156,7 +1156,7 @@ ErrorState::BuildHttpReply()
 
     if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
-        Http::StatusCode status = Http::scMovedTemporarily;
+        Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
         if (name[0] == '3')
             status = httpStatus;
@@ -1222,7 +1222,7 @@ ErrorState::BuildHttpReply()
     // error tracking.
     if (request) {
         int edc = ERR_DETAIL_NONE; // error detail code
-#if USE_SSL
+#if USE_OPENSSL
         if (detail)
             edc = detail->errorNo();
         else
