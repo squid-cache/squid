@@ -9,7 +9,7 @@
 void
 Http::One::Parser::clear()
 {
-    completedState_ = HTTP_PARSE_NONE;
+    parsingStage_ = HTTP_PARSE_NONE;
     buf = NULL;
     bufsiz = 0;
     parseOffset_ = 0;
@@ -34,7 +34,8 @@ void
 Http::One::Parser::reset(const char *aBuf, int len)
 {
     clear(); // empty the state.
-    completedState_ = HTTP_PARSE_NEW;
+    parsingStage_ = HTTP_PARSE_NEW;
+    parseOffset_ = 0;
     buf = aBuf;
     bufsiz = len;
     debugs(74, DBG_DATA, "Parse " << Raw("buf", buf, bufsiz));
@@ -44,7 +45,7 @@ void
 Http::One::RequestParser::noteBufferShift(int64_t n)
 {
     // if parsing done, ignore buffer changes.
-    if (completedState_ == HTTP_PARSE_DONE)
+    if (parsingStage_ == HTTP_PARSE_DONE)
         return;
 
     // shift the parser resume point to match buffer content change
@@ -70,22 +71,20 @@ Http::One::RequestParser::noteBufferShift(int64_t n)
  *  "
  *
  * Parsing state is stored between calls to avoid repeating buffer scans.
- * \return true if garbage whitespace was found
+ * If garbage is found the parsing offset is incremented.
  */
-bool
+void
 Http::One::RequestParser::skipGarbageLines()
 {
-    req.start = parseOffset_; // avoid re-parsing any portion we managed to complete
-
 #if WHEN_RFC_COMPLIANT // CRLF or bare-LF is what RFC 2616 tolerant parsers do ...
     if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && (buf[req.start] == '\r' || buf[req.start] == '\n'))
+        if (Config.onoff.relaxed_header_parser < 0 && (buf[parseOffset_] == '\r' || buf[parseOffset_] == '\n'))
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                    "CRLF bytes received ahead of request-line. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix empty lines
-        for (; req.start < bufsiz && (buf[req.start] == '\n' || ((buf[req.start] == '\r' && (buf[req.start+1] == '\n')); ++req.start);
-        parseOffset_ = req.start;
+        // ie any series of either \n or \r\n with no other characters and no repeated \r
+        for (; parseOffset_ < (size_t)bufsiz && (buf[parseOffset_] == '\n' || ((buf[parseOffset_] == '\r' && (buf[parseOffset_+1] == '\n')); ++parseOffset_);
     }
 #endif
 
@@ -97,17 +96,14 @@ Http::One::RequestParser::skipGarbageLines()
      */
 #if USE_HTTP_VIOLATIONS
     if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && buf[req.start] == ' ')
+        if (Config.onoff.relaxed_header_parser < 0 && buf[parseOffset_] == ' ')
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                    "Whitespace bytes received ahead of method. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix spaces (other bytes are valid method values)
-        for (; req.start < bufsiz && buf[req.start] == ' '; ++req.start);
-        parseOffset_ = req.start;
+        for (; parseOffset_ < (size_t)bufsiz && buf[parseOffset_] == ' '; ++parseOffset_);
     }
 #endif
-
-    return (parseOffset_ > 0);
 }
 
 /**
@@ -253,8 +249,6 @@ Http::One::RequestParser::parseRequestFirstLine()
         msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // HTTP/0.9
-        completedState_ = HTTP_PARSE_FIRST;
-        parseOffset_ = line_end;
         return 1;
     } else {
         // otherwise last whitespace is somewhere after end of URI.
@@ -285,8 +279,6 @@ Http::One::RequestParser::parseRequestFirstLine()
         msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
         request_parse_status = Http::scOkay; // treat as HTTP/0.9
-        completedState_ = HTTP_PARSE_FIRST;
-        parseOffset_ = req.end;
         return 1;
 #else
         // protocol not supported / implemented.
@@ -353,21 +345,28 @@ Http::One::RequestParser::parseRequestFirstLine()
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
     request_parse_status = Http::scOkay;
-    parseOffset_ = req.end+1; // req.end is the \n byte. Next parse step needs to start *after* that byte.
-    completedState_ = HTTP_PARSE_FIRST;
     return 1;
 }
-
+#include <cstdio>
 bool
 Http::One::RequestParser::parse()
 {
-    if (completedState_ == HTTP_PARSE_NEW) {
+    // stage 1: locate the request-line
+    if (parsingStage_ == HTTP_PARSE_NEW) {
+fprintf(stderr, "parse GARBAGE: '%s'\n", buf);
+        skipGarbageLines();
+fprintf(stderr, "parse GBG A(%d) < B(%u)\n", bufsiz, parseOffset_);
 
-        // stage 1: locate the request-line
-        if (skipGarbageLines() && (size_t)bufsiz < parseOffset_)
+        // if we hit something before EOS treat it as a message
+        if ((size_t)bufsiz > parseOffset_)
+            parsingStage_ = HTTP_PARSE_FIRST;
+        else
             return false;
+    }
 
-        // stage 2: parse the request-line
+    // stage 2: parse the request-line
+    if (parsingStage_ == HTTP_PARSE_FIRST) {
+fprintf(stderr, "parse FIRST: '%s'\n", buf);
         PROF_start(HttpParserParseReqLine);
         const int retcode = parseRequestFirstLine();
         debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end << " " << Raw("line", &buf[req.start], req.end-req.start));
@@ -376,14 +375,26 @@ Http::One::RequestParser::parse()
         debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
         debugs(74, 5, "Parser: parse-offset=" << parseOffset_);
         PROF_stop(HttpParserParseReqLine);
+
+        // syntax errors already
         if (retcode < 0) {
-            completedState_ = HTTP_PARSE_DONE;
+            parsingStage_ = HTTP_PARSE_DONE;
+fprintf(stderr, "parse FIRST DONE (error)\n");
             return false;
         }
+
+        // first-line (or a look-alike) found successfully.
+        if (retcode > 0) {
+            parseOffset_ += firstLineSize(); // first line bytes including CRLF terminator are now done.
+            parsingStage_ = HTTP_PARSE_MIME;
+fprintf(stderr, "parse FIRST (next: MIME)\n");
+        }
+else fprintf(stderr, "parse FIRST: ret=%d\n",retcode);
     }
 
     // stage 3: locate the mime header block
-    if (completedState_ == HTTP_PARSE_FIRST) {
+    if (parsingStage_ == HTTP_PARSE_MIME) {
+fprintf(stderr, "parse MIME: '%s'\n", buf);
         // HTTP/1.x request-line is valid and parsing completed.
         if (msgProtocol_.major == 1) {
             /* NOTE: HTTP/0.9 requests do not have a mime header block.
@@ -395,19 +406,22 @@ Http::One::RequestParser::parse()
                 if (bufsiz-parseOffset_ >= Config.maxRequestHeaderSize) {
                     debugs(33, 5, "Too large request");
                     request_parse_status = Http::scHeaderTooLarge;
-                    completedState_ = HTTP_PARSE_DONE;
-                } else
+                    parsingStage_ = HTTP_PARSE_DONE;
+fprintf(stderr, "parse DONE: HTTP/1.x\n");
+                } else {
                     debugs(33, 5, "Incomplete request, waiting for end of headers");
-                return false;
+fprintf(stderr, "parse MIME incomplete\n");
+}                return false;
             }
             mimeHeaderBlock_.assign(&buf[req.end+1], mimeHeaderBytes);
+            parseOffset_ += mimeHeaderBytes; // done with these bytes now.
 
-        } else
+        } else {
             debugs(33, 3, "Missing HTTP/1.x identifier");
-
-        // NP: planned name for this stage is HTTP_PARSE_MIME
-        // but we do not do any further stages here yet so go straight to DONE
-        completedState_ = HTTP_PARSE_DONE;
+fprintf(stderr, "parse MIME: HTTP/0.9\n");
+}
+        // NP: we do not do any further stages here yet so go straight to DONE
+        parsingStage_ = HTTP_PARSE_DONE;
 
         // Squid could handle these headers, but admin does not want to
         if (messageHeaderSize() >= Config.maxRequestHeaderSize) {
