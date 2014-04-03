@@ -45,7 +45,7 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -137,7 +137,7 @@ public:
         const char *opcode;
     } htcp;
 
-#if USE_SSL
+#if USE_OPENSSL
     /// logging information specific to the SSL protocol
     class SslDetails
     {
@@ -165,7 +165,7 @@ public:
                 msec(0),
                 rfc931 (NULL),
                 extuser(NULL),
-#if USE_SSL
+#if USE_OPENSSL
                 ssluser(NULL),
 #endif
                 port(NULL) {
@@ -180,7 +180,7 @@ public:
         int msec;
         const char *rfc931;
         const char *extuser;
-#if USE_SSL
+#if USE_OPENSSL
 
         const char *ssluser;
         Ssl::X509_Pointer sslClientCert; ///< cert received from the client

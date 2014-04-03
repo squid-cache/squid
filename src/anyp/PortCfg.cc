@@ -2,14 +2,12 @@
 #include "anyp/PortCfg.h"
 #include "comm.h"
 #include "fatal.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
 #include <cstring>
-#if HAVE_LIMITS
 #include <limits>
-#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(AnyP, PortCfg);
 
@@ -31,7 +29,7 @@ AnyP::PortCfg::PortCfg() :
         vport(0),
         disable_pmtu_discovery(0),
         listenConn()
-#if USE_SSL
+#if USE_OPENSSL
         ,cert(NULL),
         key(NULL),
         version(0),
@@ -73,7 +71,7 @@ AnyP::PortCfg::~PortCfg()
     safe_free(name);
     safe_free(defaultsite);
 
-#if USE_SSL
+#if USE_OPENSSL
     safe_free(cert);
     safe_free(key);
     safe_free(options);
@@ -108,7 +106,7 @@ AnyP::PortCfg::clone() const
 #if 0
     // TODO: AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
 
-#if USE_SSL
+#if USE_OPENSSL
     char *cert;
     char *key;
     int version;
@@ -129,7 +127,7 @@ AnyP::PortCfg::clone() const
     return b;
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 void
 AnyP::PortCfg::configureSslServerContext()
 {

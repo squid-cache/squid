@@ -32,9 +32,7 @@
 
 #include "SBuf.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 /** streambuf class for a SBuf-backed stream interface.
  *

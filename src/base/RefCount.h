@@ -36,9 +36,7 @@
 // reference counting requires the Lock API on base classes
 #include "base/Lock.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 /**
  * Template for Reference Counting pointers.

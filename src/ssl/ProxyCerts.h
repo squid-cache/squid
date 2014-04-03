@@ -29,7 +29,7 @@
  *
  */
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "acl/forward.h"
 
 class sslproxy_cert_sign

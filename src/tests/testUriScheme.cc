@@ -9,9 +9,7 @@
 #include "SquidString.h"
 #include "tests/testUriScheme.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testUriScheme );
 

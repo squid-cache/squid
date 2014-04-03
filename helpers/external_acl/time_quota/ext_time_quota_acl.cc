@@ -18,22 +18,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-#if HAVE_CONFIG_H
 #include "squid.h"
-#endif
 #include "helpers/defines.h"
 
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <string.h>
-#include <time.h>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif

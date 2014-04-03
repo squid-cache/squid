@@ -90,7 +90,7 @@
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/Config.h"
 #include "ssl/support.h"
 #endif
@@ -108,12 +108,8 @@
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
-#if HAVE_LIMITS_H
 #include <limits>
-#endif
-#if HAVE_LIST
 #include <list>
-#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
@@ -124,7 +120,7 @@
 #include <sys/stat.h>
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -193,7 +189,7 @@ static void defaults_postscriptum(void);
 static int parse_line(char *);
 static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
-#if USE_SSL
+#if USE_OPENSSL
 static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
 #endif
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
@@ -234,7 +230,7 @@ static void parsePortCfg(AnyP::PortCfg **, const char *protocol);
 static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfg *);
 static void free_PortCfg(AnyP::PortCfg **);
 
-#if USE_SSL
+#if USE_OPENSSL
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign);
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
@@ -244,7 +240,7 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
-#endif /* USE_SSL */
+#endif /* USE_OPENSSL */
 
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
@@ -916,7 +912,7 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-#if USE_SSL
+#if USE_OPENSSL
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
@@ -2288,7 +2284,7 @@ parse_peer(CachePeer ** head)
             if (token[13])
                 p->domain = xstrdup(token + 13);
 
-#if USE_SSL
+#if USE_OPENSSL
 
         } else if (strcmp(token, "ssl") == 0) {
             p->use_ssl = 1;
@@ -3036,6 +3032,21 @@ parse_eol(char *volatile *var)
 #define free_eol free_string
 
 static void
+parse_TokenOrQuotedString(char **var)
+{
+    char *token = ConfigParser::NextQuotedToken();
+    safe_free(*var);
+
+    if (token == NULL)
+        self_destruct();
+
+    *var = xstrdup(token);
+}
+
+#define dump_TokenOrQuotedString dump_string
+#define free_TokenOrQuotedString free_string
+
+static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
     storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
@@ -3705,7 +3716,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             ++t;
             s->tcp_keepalive.timeout = xatoui(t);
         }
-#if USE_SSL
+#if USE_OPENSSL
     } else if (strcmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
                "in http_port. Use 'ssl-bump' instead.");
@@ -3807,7 +3818,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         parse_port_option(s, token);
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
@@ -3914,7 +3925,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
         }
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if (s->flags.tunnelSslBumping)
         storeAppendPrintf(e, " ssl-bump");
 
@@ -3984,7 +3995,7 @@ void
 configFreeMemory(void)
 {
     free_all();
-#if USE_SSL
+#if USE_OPENSSL
     SSL_CTX_free(Config.ssl_client.sslContext);
 #endif
 }
@@ -4467,7 +4478,7 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 }
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
     char *al;
@@ -4605,14 +4616,15 @@ class sslBumpCfgRr: public ::RegisteredRunner
 public:
     static Ssl::BumpMode lastDeprecatedRule;
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &);
+    virtual void finalizeConfig();
 };
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(rrFinalizeConfig, sslBumpCfgRr);
+RunnerRegistrationEntry(sslBumpCfgRr);
 
-void sslBumpCfgRr::run(const RunnerRegistry &r)
+void
+sslBumpCfgRr::finalizeConfig()
 {
     if (lastDeprecatedRule != Ssl::bumpEnd) {
         assert( lastDeprecatedRule == Ssl::bumpClientFirst || lastDeprecatedRule == Ssl::bumpNone);

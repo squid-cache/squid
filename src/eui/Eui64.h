@@ -8,16 +8,9 @@ namespace Ip
 class Address;
 }
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
 #if HAVE_SYS_EUI64_H
 #include <sys/eui64.h>
-#endif
-
-/* memcpy and friends */
-#if HAVE_STRING_H
-#include <string.h>
 #endif
 
 namespace Eui

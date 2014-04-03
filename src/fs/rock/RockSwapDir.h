@@ -143,7 +143,7 @@ public:
 
 protected:
     /* Ipc::Mem::RegisteredRunner API */
-    virtual void create(const RunnerRegistry &);
+    virtual void create();
 
 private:
     std::vector<SwapDir::DirMap::Owner *> mapOwners;

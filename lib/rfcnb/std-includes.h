@@ -41,7 +41,6 @@ typedef short int16;
 #endif
 #include <signal.h>
 #include <errno.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #define TRUE 1

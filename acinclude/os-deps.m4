@@ -197,26 +197,6 @@ AC_DEFUN([SQUID_CHECK_UNIX_SOCKET],[
 ])
 
 
-dnl checks that the system provides struct mallinfo and mallinfo.mxfast.
-dnl AC_DEFINEs HAVE_STRUCT_MALLINFO  and HAVE_STRUCT_MALLINFO_MXFAST if so
-
-AC_DEFUN([SQUID_HAVE_STRUCT_MALLINFO],[
-AC_CHECK_TYPE(struct mallinfo,AC_DEFINE(HAVE_STRUCT_MALLINFO,1,[The system provides struct mallinfo]),,[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_MALLOC_H
-#include <malloc.h>
-#endif])
-AC_CHECK_MEMBERS([struct mallinfo.mxfast],,,[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_MALLOC_H
-#include <malloc.h>
-#endif])
-])
-
 dnl check the default FD_SETSIZE size.
 dnl not cached, people are likely to tune this
 dnl defines DEFAULT_FD_SETSIZE

@@ -24,7 +24,6 @@ MAKETEST="distcheck"
 #   --with-aufs-threads=N \
 #   --with-filedescriptors=N \
 #   --with-cppunit-basedir=PATH \
-#   --with-openssl=PATH \
 #   --with-po2html=PATH \
 #   --with-tags=TAGS \
 #
@@ -67,7 +66,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-cachemgr-hostname \
 	--enable-eui \
 	--enable-htcp \
-	--enable-ssl \
 	--enable-forw-via-db \
 	--enable-cache-digests \
 	--enable-poll \
@@ -107,6 +105,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \
 	--enable-ssl-crtd \
+	--with-openssl \
 	"
 
 # Fix the distclean testing.

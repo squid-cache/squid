@@ -8,7 +8,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -69,7 +69,7 @@ public:
     char *snmp_community;
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
     /// SSL [certificate validation] errors, in undefined order
     Ssl::CertErrors *sslErrors;
     /// The peer certificate

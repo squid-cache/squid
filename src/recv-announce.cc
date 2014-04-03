@@ -31,15 +31,14 @@
  */
 #include "squid.h"
 
-#include <stdio.h>
+#include <csignal>
+#include <cstring>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <signal.h>
 
 #define RECV_BUF_SIZE 8192
 

@@ -1,15 +1,10 @@
 #include "squid.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
-#if HAVE_CSTDLIB
+
 #include <cstdlib>
-#endif
-#if HAVE_CSTRING
 #include <cstring>
-#endif
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 
 Ssl::CrtdMessage::CrtdMessage(MessageKind kind)
         :   body_size(0), state(kind == REPLY ? BEFORE_LENGTH: BEFORE_CODE)

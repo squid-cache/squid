@@ -122,7 +122,7 @@
 #if USE_SSL_CRTD
 #include "ssl/certificate_db.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
 #endif
@@ -189,10 +189,6 @@ static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
-#if MEM_GEN_TRACE
-void log_trace_done();
-void log_trace_init(char *);
-#endif
 static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
@@ -274,6 +270,8 @@ SignalEngine::doShutdown(time_t wait)
     /* detach the auth components (only do this on full shutdown) */
     Auth::Scheme::FreeAll();
 #endif
+
+    RunRegisteredHere(RegisteredRunner::startShutdown);
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -499,13 +497,7 @@ mainParseOptions(int argc, char *argv[])
                 fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
 
-            } else {
-#if XMALLOC_TRACE
-                xmalloc_trace = !xmalloc_trace;
-#else
-                fatal("Need to configure --enable-xmalloc-debug-trace to use -m option");
-#endif
-            }
+            } 
             break;
 
         case 'n':
@@ -758,7 +750,7 @@ mainReconfigureStart(void)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
     Ssl::TheGlobalContextStorage.reconfigureStart();
@@ -804,6 +796,8 @@ mainReconfigureFinish(void *)
         Config.workers = oldWorkers;
     }
 
+    RunRegisteredHere(RegisteredRunner::syncConfig);
+
     if (IamPrimaryProcess())
         CpuAffinityCheck();
     CpuAffinityReconfigure();
@@ -843,7 +837,7 @@ mainReconfigureFinish(void *)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1003,12 +997,6 @@ mainInitialize(void)
 
     fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
 
-#if MEM_GEN_TRACE
-
-    log_trace_init("/tmp/squid.alloc");
-
-#endif
-
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
 
@@ -1054,7 +1042,7 @@ mainInitialize(void)
     Ssl::Helper::GetInstance()->Init();
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!configured_once)
         Ssl::initialize_session_cache();
 
@@ -1103,8 +1091,6 @@ mainInitialize(void)
         statInit();
         storeInit();
         mainSetCwd();
-        /* after this point we want to see the mallinfo() output */
-        do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
         refreshInit();
 #if USE_DELAY_POOLS
@@ -1296,10 +1282,6 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#if HAVE_SBRK
-    sbrk_start = sbrk(0);
-#endif
-
     Debug::parseOptions(NULL);
     debug_log = stderr;
 
@@ -1443,9 +1425,9 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
-    ActivateRegistered(rrFinalizeConfig);
-    ActivateRegistered(rrClaimMemoryNeeds);
-    ActivateRegistered(rrAfterConfig);
+    RunRegisteredHere(RegisteredRunner::finalizeConfig);
+    RunRegisteredHere(RegisteredRunner::claimMemoryNeeds);
+    RunRegisteredHere(RegisteredRunner::useConfig);
     enter_suid();
 
     if (!opt_no_daemon && Config.workers > 0)
@@ -1804,9 +1786,9 @@ watch_child(char *argv[])
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
             leave_suid();
-            DeactivateRegistered(rrAfterConfig);
-            DeactivateRegistered(rrClaimMemoryNeeds);
-            DeactivateRegistered(rrFinalizeConfig);
+            // XXX: Master process has no main loop and, hence, should not call
+            // RegisteredRunner::startShutdown which promises a loop iteration.
+            RunRegisteredHere(RegisteredRunner::finishShutdown);
             enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
@@ -1849,7 +1831,7 @@ SquidShutdown()
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
 #endif
@@ -1902,9 +1884,6 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-    DeactivateRegistered(rrAfterConfig);
-    DeactivateRegistered(rrClaimMemoryNeeds);
-    DeactivateRegistered(rrFinalizeConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
@@ -1921,15 +1900,6 @@ SquidShutdown()
     mimeFreeMemory();
     errorClean();
 #endif
-#if !XMALLOC_TRACE
-
-    if (opt_no_daemon) {
-        file_close(0);
-        file_close(1);
-        file_close(2);
-    }
-
-#endif
     // clear StoreController
     Store::Root(NULL);
 
@@ -1939,18 +1909,7 @@ SquidShutdown()
 
     memClean();
 
-#if XMALLOC_TRACE
-
-    xmalloc_find_leaks();
-
-    debugs(1, DBG_CRITICAL, "Memory used after shutdown: " << xmalloc_total);
-
-#endif
-#if MEM_GEN_TRACE
-
-    log_trace_done();
-
-#endif
+    RunRegisteredHere(RegisteredRunner::finishShutdown);
 
     if (IamPrimaryProcess()) {
         if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {

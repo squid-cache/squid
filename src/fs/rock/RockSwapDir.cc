@@ -1004,10 +1004,10 @@ Rock::SwapDir::freeSlotsPath() const
 
 namespace Rock
 {
-RunnerRegistrationEntry(rrAfterConfig, SwapDirRr);
+RunnerRegistrationEntry(SwapDirRr);
 }
 
-void Rock::SwapDirRr::create(const RunnerRegistry &)
+void Rock::SwapDirRr::create()
 {
     Must(mapOwners.empty() && freeSlotsOwners.empty());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {

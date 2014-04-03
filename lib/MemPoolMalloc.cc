@@ -32,15 +32,10 @@
  */
 
 #include "squid.h"
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-
 #include "MemPoolMalloc.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cstring>
 
 /*
  * XXX This is a boundary violation between lib and src.. would be good
