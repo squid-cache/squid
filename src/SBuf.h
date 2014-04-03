@@ -34,19 +34,11 @@
 #include "SBufExceptions.h"
 #include "SquidString.h"
 
-#if HAVE_CLIMITS
 #include <climits>
-#elif HAVE_LIMITS_H
-#include <limits.h>
-#endif
+#include <cstdarg>
+#include <iosfwd>
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-#if HAVE_IOSFWD
-#include <iosfwd>
 #endif
 
 /* SBuf placeholder for printf */

@@ -93,18 +93,17 @@
 #include "squid.h"
 #include "util.h"
 
-#include <stdarg.h>
-#include <stdio.h>
+#include <cerrno>
+#include <climits>
+#include <csignal>
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
 #include <dirent.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <signal.h>
-#include <errno.h>
 
 #if HAVE_SIGINFO_H
 #include <siginfo.h>

@@ -34,9 +34,7 @@
 #include "squid.h"
 #include "mem_node.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 /* TODO: put this in a libTest */
 void

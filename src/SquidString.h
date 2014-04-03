@@ -33,9 +33,7 @@
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 /* squid string placeholder (for printf) */
 #ifndef SQUIDSTRINGPH

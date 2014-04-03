@@ -7,18 +7,15 @@ A simple HTTP web client tool
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B squidclient
+.if !'po4a'hide' .B "[ \-\-ping [ping-options] ] "
 .if !'po4a'hide' .B "[ \-aknNrsv ] [ \-A"
 string
-.if !'po4a'hide' .B "] [ \-g"
-count
 .if !'po4a'hide' .B "] [ \-h"
 remote host
 .if !'po4a'hide' .B "] [ \-H '"
 string
 .if !'po4a'hide' .B "' ] [ \-i"
 IMS
-.if !'po4a'hide' .B "] [ \-I"
-ping interval
 .if !'po4a'hide' .B "] [ \-j '"
 Host header
 .if !'po4a'hide' .B "' ] [ \-l"
@@ -46,6 +43,12 @@ password
 .if !'po4a'hide' .B "] "
 url
 .
+.if !'po4a'hide' .B "Ping options: [ \-g"
+count
+.if !'po4a'hide' .B "] [ \-I"
+interval
+.if !'po4a'hide' .B "] "
+.
 .SH DESCRIPTION
 .B squidclient
 is a tool providing a command line interface for retrieving URLs.
@@ -67,12 +70,6 @@ Send
 as User-Agent: header. To omit the header completely set string to empty ('').
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-g count"
-Ping mode, perform
-.I count
-iterations (0 to loop until interrupted).
-.
-.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-h host"
 Retrieve URL from cache on hostname.  Default is
 .B localhost
@@ -86,10 +83,6 @@ for new lines.
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-i time"
 If\-Modified\-Since time (in Epoch seconds).
-.
-.if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-I interval"
-Ping interval in seconds (default 1 second).
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-j hosthdr"
@@ -183,6 +176,21 @@ Proxy authentication password
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-W password"
 WWW authentication password
+.
+.if !'po4a'hide' .TP 10
+.if !'po4a'hide' .B "\-\-ping [options]"
+Enable ping mode. Optional \-g and \-I parameters must follow immediately if used.
+Repeated use resets to default ping settings.
+.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-g count"
+Ping mode, perform
+.I count
+iterations (default is to loop until interrupted).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-I interval"
+Ping interval in seconds (default 1 second).
 .
 .SH AUTHOR
 Derived from Harvest. Further developed by by numerous individuals from

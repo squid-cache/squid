@@ -39,17 +39,13 @@
 #include "rfc1738.h"
 #include "util.h"
 
+#include <cctype>
+#include <cerrno>
+#include <csignal>
+#include <cstring>
+#include <ctime>
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -70,12 +66,6 @@
 #endif
 #if HAVE_PWD_H
 #include <pwd.h>
-#endif
-#if HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
 #endif
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -100,9 +90,6 @@
 #endif
 #if HAVE_LIBC_H
 #include <libc.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
 #endif
 #if HAVE_STRINGS_H
 #include <strings.h>

@@ -14,6 +14,7 @@ digest_ldap_auth_LDADD = \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
 	$(LBERLIB) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

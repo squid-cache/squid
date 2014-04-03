@@ -1285,7 +1285,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     if (h->rfc931.size())
         al.cache.rfc931 = h->rfc931.termedBuf();
 
-#if USE_SSL
+#if USE_OPENSSL
     if (h->ssluser.size())
         al.cache.ssluser = h->ssluser.termedBuf();
 #endif

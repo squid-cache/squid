@@ -10,13 +10,14 @@
  * The code originated from denyusers.c.
  */
 
-#include <stdlib.h>
+#include "msntauth.h"
+#include "usersfile.h"
+
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/param.h>
-#include <string.h>
-#include "msntauth.h"
-#include "usersfile.h"
 
 static usersfile AllowUsers;
 static int init = 0;

@@ -39,9 +39,7 @@
 #include "Store.h"
 #include "tools.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 /* The list of event processes */
 

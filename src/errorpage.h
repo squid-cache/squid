@@ -43,7 +43,7 @@
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #endif
 
@@ -180,7 +180,7 @@ public:
     char *request_hdrs;
     char *err_msg; /* Preformatted error message from the cache */
 
-#if USE_SSL
+#if USE_OPENSSL
     Ssl::ErrorDetail *detail;
 #endif
     /// type-specific detail about the transaction error;

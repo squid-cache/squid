@@ -16,7 +16,7 @@ m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_0x.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
 m4_include([acinclude/ax_cxx_0x_types.m4])
 
 PRESET_CFLAGS="$CFLAGS"
@@ -82,16 +82,15 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
-# Check for C++0x compiler support
-AX_CXX_COMPILE_STDCXX_0X
-if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
-  "x$squid_host_os" != "xmingw" ; then
+# Check for C++11 compiler support
+if test "x$squid_host_os" != "xmingw" ; then
     #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
     # in the system libraries, which makes some c99 methods unavailable
     # (e.g. strtoll), yet configure detects them as avilable.
     case "$CXX" in
       *clang++*) ;; #do nothing
-      *) CXXFLAGS="$CXXFLAGS -std=c++0x" ;;
+      *)
+      AX_CXX_COMPILE_STDCXX_11([noext],[optional])
     esac
 fi
 
@@ -151,7 +150,7 @@ AC_ARG_ENABLE(loadable-modules,
   SQUID_YESNO([$enableval],
     [Unrecognized argument to --disable-loadable-modules: $enableval])
 ])
-AM_CONDITIONAL(USE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
+AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
 AC_MSG_RESULT([$enable_loadable_modules])
 
 if test "x$enable_loadable_modules" = "xyes";
@@ -449,28 +448,6 @@ dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
 
-dnl This is a developer only option.. developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(xmalloc-debug,
-dnl [  --enable-xmalloc-debug  Do some simple malloc debugging],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([malloc debugging enabled])
-dnl     AC_DEFINE(XMALLOC_DEBUG,1,[Define to do simple malloc debugging])
-dnl   fi
-dnl ])
-
-dnl This is a developer only option.. developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(xmalloc-debug-trace,
-dnl [  --enable-xmalloc-debug-trace
-dnl                           Detailed trace of memory allocations],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([malloc debug trace enabled])
-dnl     AC_DEFINE(XMALLOC_TRACE,1,[Define to have a detailed trace of memory allocations])
-dnl     AC_DEFINE(XMALLOC_DEBUG,1)
-dnl   fi
-dnl ])
-
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
@@ -606,7 +583,7 @@ for module in $squid_disk_module_candidates none; do
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
-            if test `echo "$squid_host_os_version" | cut -b1` -lt 7 ; then
+            if test `echo "$squid_host_os_version" | tr -d .` -lt 70 ; then
                 AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
                 squid_opt_use_diskthreads="no"
             else
@@ -1075,18 +1052,6 @@ else
 fi
 AC_SUBST(ADAPTATION_LIBS)
 
-
-dnl This is a developer only option. Developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(mem-gen-trace,
-dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
-dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
-dnl   fi
-dnl ])
-
-
 test "x$squid_host_os" = "xmingw" && enable_wccp=no
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
@@ -1214,32 +1179,30 @@ SQUID_DEFINE_BOOL(USE_HTCP,${enable_htcp:=yes},
 AM_CONDITIONAL(ENABLE_HTCP, [test "x$enable_htcp" = "xyes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
-
-# SSL is not enabled by default.
-# Default is to use OpenSSL when available
-AC_ARG_ENABLE(ssl,
-  AS_HELP_STRING([--enable-ssl],
-                 [Enable ssl gatewaying support using OpenSSL]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-ssl: $enableval])
+# Cryptograhic libraries
+AC_ARG_WITH(nettle,
+  AS_HELP_STRING([--without-nettle],[Compile without the Nettle crypto library.]),[
+case "$with_nettle" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-nettle path does not point to a directory])
+    fi
+    NETTLELIBDIR="-L$with_nettle/lib"
+    CPPFLAGS="-I$with_nettle/include $CPPFLAGS"
+    with_nettle=yes
+  esac
 ])
-# USE_OPENSSL is AC_DEFINED later
-# default for ssl is set here
-if test "x${enable_ssl:=no}" = "xyes" ; then
-  if test "x$squid_host_os" = "xmingw" ; then
-    SSLLIB='-lssleay32 -leay32 -lgdi32'
-  else
-    SSLLIB='-lssl -lcrypto'
-  fi
-  if test "x$with_openssl" = "x"; then
-    with_openssl=yes
-  fi
-  if test "x$with_openssl" = "x"; then
-    with_openssl=yes
-  fi
+if test "x$with_nettle" != "xno" ; then
+  AC_CHECK_LIB(nettle, nettle_md5_init,[
+    NETTLELIB="$NETTLELIBDIR -lnettle"
+    AC_CHECK_HEADERS(nettle/md5.h)
+  ],[with_nettle=no])
 fi
-AM_CONDITIONAL(ENABLE_SSL,[ test "x$enable_ssl" = "xyes" ])
-AC_MSG_NOTICE([SSL gatewaying support enabled: $enable_ssl])
+AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
+AC_SUBST(NETTLELIB)
 
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
@@ -1256,37 +1219,71 @@ case "$with_openssl" in
     if test ! -d "$withval" ; then
       AC_MSG_ERROR([--with-openssl path does not point to a directory])
     fi
-    SSLLIBDIR="$with_openssl/lib"
+    LIBOPENSSL_LIBS="-L$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
     with_openssl=yes
   esac
 ])
-SQUID_DEFINE_BOOL(USE_SSL,$enable_ssl,
-   [Define this to include code for SSL gatewaying support])
-AC_MSG_NOTICE([Using OpenSSL MD5 implementation: ${with_openssl:=no}])
-SQUID_DEFINE_BOOL(USE_OPENSSL,${with_openssl},
-   [Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid-supplied MD5 implementation or if building with SSL encryption])
-if test "x$enable_ssl" = "xyes"; then
-  if test "x$SSLLIB" = "x"; then
-    SSLLIB="-lcrypto" # for MD5 routines
-  fi
-  # This is a workaround for RedHat 9 brain damage..
-  if test -d /usr/kerberos/include -a "x$SSLLIBDIR" = "x" -a -f /usr/include/openssl/kssl.h; then
-    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    SSLLIBDIR="/usr/kerberos/lib"
-    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-  fi
-fi
-if test "x$SSLLIBDIR" != "x" ; then
-  SSLLIB="-L$SSLLIBDIR $SSLLIB"
-fi
-AC_SUBST(SSLLIB)
-
+AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
+## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
-SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
-SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
-SQUID_CHECK_OPENSSL_TXTDB
+  AC_CHECK_HEADERS( \
+    openssl/err.h \
+    openssl/md5.h \
+    openssl/opensslv.h \
+    openssl/ssl.h \
+    openssl/x509v3.h \
+    openssl/engine.h \
+    openssl/txt_db.h \
+  )
+
+  # User may have provided a custom location for OpenSSL. Otherwise...
+  if test "x$LIBOPENSSL_LIBS" = "x" ; then
+    # auto-detect using pkg-config
+    PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
+      ## For some OS pkg-config is broken or unavailable.
+      ## Detect libraries the hard way.
+
+      # Windows MinGW has some special libraries ...
+      if test "x$squid_host_os" = "xmingw" ; then
+        LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
+        AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
+      fi
+
+      AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
+        AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
+      ])
+      AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+        AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
+      ])
+
+    ])
+
+    # This is a workaround for RedHat 9 brain damage..
+    if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
+      AC_MSG_NOTICE([OpenSSL depends on Kerberos])
+      LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
+      CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+    fi
+  fi
+
+  if test "x$LIBOPENSSL_LIBS" != "x"; then
+    CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
+    SSLLIB="$LIBOPENSSL_LIBS $SSLLIB"
+    AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
+
+    # check for other specific broken implementations
+    SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+    SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
+    SQUID_CHECK_OPENSSL_TXTDB
+  fi
+  if test "x$SSLLIB" = "x"; then
+    AC_MSG_ERROR([Required OpenSSL library not found])
+  fi
 fi
+AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_LIBS}])
+AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
+AC_SUBST(SSLLIB)
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -1676,8 +1673,8 @@ AC_ARG_ENABLE(ssl-crtd,
   [unrecogized argument to --enable-ssl-crtd: $enableval])
 ])
 
-if test "x$enable_ssl_crtd" = "xyes" -a "x$enable_ssl" = "xno" ; then
-   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --enable-ssl. ])
+if test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno" ; then
+   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --with-openssl. ])
 fi
 SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
 AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
@@ -2161,18 +2158,11 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
-  algorithm \
   arpa/inet.h \
   arpa/nameser.h \
   assert.h \
   bstring.h \
-  cassert \
   crypt.h \
-  cstdarg \
-  cstdio \
-  cstdlib \
-  cstring \
-  list \
   ctype.h \
   errno.h \
   execinfo.h \
@@ -2182,11 +2172,6 @@ AC_CHECK_HEADERS( \
   glob.h \
   gnumalloc.h \
   grp.h \
-  iosfwd \
-  iomanip \
-  iostream \
-  fstream \
-  climits \
   ip_compat.h \
   ip_fil_compat.h \
   ip_fil.h \
@@ -2195,30 +2180,19 @@ AC_CHECK_HEADERS( \
   lber.h \
   ldap.h \
   libc.h \
-  limits \
   limits.h \
   linux/posix_types.h \
   linux/types.h \
   machine/byte_swap.h \
   malloc.h \
-  map \
   math.h \
   memory.h \
-  memory \
   mount.h \
   netdb.h \
   netinet/in.h \
   netinet/in_systm.h \
   netinet/ip_fil_compat.h \
-  openssl/err.h \
-  openssl/md5.h \
-  openssl/opensslv.h \
-  openssl/ssl.h \
-  openssl/x509v3.h \
   netinet/tcp.h \
-  openssl/engine.h \
-  openssl/txt_db.h \
-  ostream \
   paths.h \
   poll.h \
   pwd.h \
@@ -2227,14 +2201,11 @@ AC_CHECK_HEADERS( \
   sched.h \
   siginfo.h \
   signal.h \
-  sstream \
   stdarg.h \
   stdbool.h \
   stddef.h \
-  stdexcept \
   stdio.h \
   stdlib.h \
-  string \
   string.h \
   strings.h \
   sys/bitypes.h \
@@ -2325,8 +2296,6 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #include <time.h>
 #endif
 ])
-
-SQUID_HAVE_STRUCT_MALLINFO
 
 dnl Override rusage() detect on MinGW because is emulated in source code
 case "$squid_host_os" in
@@ -2502,7 +2471,6 @@ SQUID_DEFINE_BOOL(HAVE_UNIXSOCKET,$squid_cv_unixsocket,[System supports unix soc
 AC_CHECK_LIB(gnumalloc, malloc)
 if test "x$ac_cv_lib_gnumalloc_malloc" = "xyes"; then
   AC_MSG_NOTICE([Disabling extended malloc functions when using bundled gnumalloc])
-  ac_cv_func_mallinfo=no
   ac_cv_func_mallocblksize=no
   ac_cv_func_mallopt=no
 else
@@ -2959,16 +2927,6 @@ if test "x$GCC" = "xyes"; then
 	esac
 fi
 
-# Recommended by Balint Nagy Endre <bne@CareNet.hu>
-case "$host" in
-  *-univel-sysv4.2MP)
-    if test `uname -v` = "2.03"; then
-      AC_MSG_NOTICE([disabling mallinfo for $host])
-      ac_cv_func_mallinfo=no
-    fi
-    ;;
-esac
-
 dnl This has to be before AC_CHECK_FUNCS
 # Disable poll() on certain platforms. Override by setting ac_cv_func_poll
 # when running configure.
@@ -3029,7 +2987,6 @@ AC_CHECK_FUNCS(\
 	htobe16 \
 	htole16 \
 	lrand48 \
-	mallinfo \
 	mallocblksize \
 	mallopt \
 	memcpy \
@@ -3052,7 +3009,6 @@ AC_CHECK_FUNCS(\
 	res_init \
 	__res_init \
 	rint \
-	sbrk \
 	sched_getaffinity \
 	sched_setaffinity \
 	select \
@@ -3148,6 +3104,48 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
   AC_DEFINE(HAVE_CONSTANT_CMSG_SPACE, 1, [Define to 1 if CMSG_SPACE is constant])
 ], [
   AC_MSG_RESULT(no)
+])
+
+AC_CHECK_TYPE(struct cmsghdr,AC_DEFINE(HAVE_CMSGHDR,1,[The system provides struct cmsghdr]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct iovec]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+  #if HAVE_SYS_UIO_H
+  #include <sys/uio.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provides sockaddr_un]),,[
+  #if HAVE_SYS_UN_H
+  #include <sys/un.h>
+  #endif
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
 ])
 
 SQUID_CHECK_FUNC_STRNSTR
@@ -3484,6 +3482,7 @@ AC_CONFIG_FILES([
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	tools/Makefile
+	tools/squidclient/Makefile
 	tools/purge/Makefile
 ])
 

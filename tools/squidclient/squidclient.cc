@@ -35,7 +35,9 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "rfc1123.h"
-#include "SquidTime.h"
+#include "tools/squidclient/gssapi_support.h"
+#include "tools/squidclient/Parameters.h"
+#include "tools/squidclient/Ping.h"
 
 #if _SQUID_WINDOWS_
 /** \cond AUTODOCS-IGNORE */
@@ -43,29 +45,21 @@ using namespace Squid;
 /** \endcond */
 #endif
 
-#include <cstdio>
+#include <cerrno>
+#include <csignal>
+#include <cstring>
 #include <iostream>
-
 #if _SQUID_WINDOWS_
 #include <io.h>
 #endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
-#endif
-#if HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -80,34 +74,6 @@ using namespace Squid;
 #include <getopt.h>
 #endif
 
-#if HAVE_GSSAPI
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif /* HAVE_GSSAPI_GSSAPI_H/HAVE_GSSAPI_H */
-#if !HAVE_HEIMDAL_KERBEROS
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_GENERIC_H
-#include <gssapi/gssapi_generic.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_EXT_H
-#include <gssapi/gssapi_ext.h>
-#endif
-#endif
-
-#ifndef gss_nt_service_name
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#endif
-
-#ifndef gss_mech_spnego
-static gss_OID_desc _gss_mech_spnego = {6, (void *) "\x2b\x06\x01\x05\x05\x02"};
-gss_OID gss_mech_spnego = &_gss_mech_spnego;
-#endif
-#endif /* HAVE_GSSAPI */
-
 #ifndef BUFSIZ
 #define BUFSIZ		8192
 #endif
@@ -118,38 +84,22 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
 #define HEADERLEN	65536
 #endif
 
-typedef void SIGHDLR(int sig);
-
 /// display debug messages at varying verbosity levels
 #define debugVerbose(LEVEL, MESSAGE) \
-    while ((LEVEL) <= verbosityLevel) {std::cerr << MESSAGE << std::endl; break;}
-
-/**
- * What verbosity level to display.
- *
- *  0  : display no debug traces
- *  1  : display outgoing request message
- *  2+ : display all actions taken
- */
-int verbosityLevel = 0;
+    while ((LEVEL) <= scParams.verbosityLevel) {std::cerr << MESSAGE << std::endl; break;}
 
 /* Local functions */
 static int client_comm_bind(int, const Ip::Address &);
 
-static int client_comm_connect(int, const Ip::Address &, struct timeval *);
+static int client_comm_connect(int, const Ip::Address &);
 static void usage(const char *progname);
 
-static int Now(struct timeval *);
-SIGHDLR catchSignal;
-SIGHDLR pipe_handler;
+void pipe_handler(int sig);
 static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
 
-#if HAVE_GSSAPI
-static bool check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function);
-static char *GSSAPI_token(const char *server);
-#endif
+Parameters scParams;
 
 static int put_fd;
 static char *put_file = NULL;
@@ -178,54 +128,52 @@ static void
 usage(const char *progname)
 {
     std::cerr << "Version: " << VERSION << std::endl
-            << "Usage: " << progname << " [Basic Options] [HTTP Options]" << std::endl
-            << std::endl
-            << "Basic Options:" << std::endl
-            << "    -g count        Ping mode, perform \"count\" iterations (0 to loop until interrupted)." << std::endl
-            << "    -h host         Send message to server on 'host'.  Default is localhost." << std::endl
-            << "    -I interval     Ping interval in seconds (default 1 second)." << std::endl
-            << "    -l host         Specify a local IP address to bind to.  Default is none." << std::endl
-            << "    -p port         Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
-            << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
-            << "    -T timeout      Timeout value (seconds) for read/write operations" << std::endl
-            << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
-            << "                    Levels:" << std::endl
-            << "                      1 - Print outgoing request message to stderr." << std::endl
-            << "                      2 - Print action trace to stderr." << std::endl
-            << "    --help          Display this help text." << std::endl
-            << std::endl
-            << "HTTP Options:" << std::endl
-            << "    -a           Do NOT include Accept: header." << std::endl
-            << "    -A           User-Agent: header. Use \"\" to omit." << std::endl
-            << "    -H 'string'  Extra headers to send. Use '\\n' for new lines." << std::endl
-            << "    -i IMS       If-Modified-Since time (in Epoch seconds)." << std::endl
-            << "    -j hosthdr   Host header content" << std::endl
-            << "    -k           Keep the connection active. Default is to do only one request then close." << std::endl
-            << "    -m method    Request method, default is GET." << std::endl
+              << "Usage: " << progname << " [Basic Options] [HTTP Options]" << std::endl
+              << std::endl
+              << "Basic Options:" << std::endl
+              << "    -h host         Send message to server on 'host'.  Default is localhost." << std::endl
+              << "    -l host         Specify a local IP address to bind to.  Default is none." << std::endl
+              << "    -p port         Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
+              << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
+              << "    -T timeout      Timeout value (seconds) for read/write operations" << std::endl
+              << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
+              << "                    Levels:" << std::endl
+              << "                      1 - Print outgoing request message to stderr." << std::endl
+              << "                      2 - Print action trace to stderr." << std::endl
+              << "    --help          Display this help text." << std::endl
+              << std::endl;
+    Ping::Config.usage();
+    std::cerr
+        << "HTTP Options:" << std::endl
+        << "    -a           Do NOT include Accept: header." << std::endl
+        << "    -A           User-Agent: header. Use \"\" to omit." << std::endl
+        << "    -H 'string'  Extra headers to send. Use '\\n' for new lines." << std::endl
+        << "    -i IMS       If-Modified-Since time (in Epoch seconds)." << std::endl
+        << "    -j hosthdr   Host header content" << std::endl
+        << "    -k           Keep the connection active. Default is to do only one request then close." << std::endl
+        << "    -m method    Request method, default is GET." << std::endl
 #if HAVE_GSSAPI
-            << "    -n           Proxy Negotiate(Kerberos) authentication" << std::endl
-            << "    -N           WWW Negotiate(Kerberos) authentication" << std::endl
+        << "    -n           Proxy Negotiate(Kerberos) authentication" << std::endl
+        << "    -N           WWW Negotiate(Kerberos) authentication" << std::endl
 #endif
-            << "    -P file      Send content from the named file as request payload" << std::endl
-            << "    -r           Force cache to reload URL" << std::endl
-            << "    -t count     Trace count cache-hops" << std::endl
-            << "    -u user      Proxy authentication username" << std::endl
-            << "    -U user      WWW authentication username" << std::endl
-            << "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case" << std::endl
-            << "    -w password  Proxy authentication password" << std::endl
-            << "    -W password  WWW authentication password" << std::endl
-    ;
+        << "    -P file      Send content from the named file as request payload" << std::endl
+        << "    -r           Force cache to reload URL" << std::endl
+        << "    -t count     Trace count cache-hops" << std::endl
+        << "    -u user      Proxy authentication username" << std::endl
+        << "    -U user      WWW authentication username" << std::endl
+        << "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case" << std::endl
+        << "    -w password  Proxy authentication password" << std::endl
+        << "    -W password  WWW authentication password" << std::endl
+        ;
     exit(1);
 }
 
-static int interrupted = 0;
 int
 main(int argc, char *argv[])
 {
     int conn, len, bytesWritten;
     uint16_t port;
     bool to_stdout, reload;
-    int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
 #if HAVE_GSSAPI
@@ -240,10 +188,6 @@ main(int argc, char *argv[])
     time_t ims = 0;
     int max_forwards = -1;
 
-    struct timeval tv1, tv2;
-    int i = 0, loops;
-    long ping_int;
-    long ping_min = 0, ping_max = 0, ping_sum = 0, ping_mean = 0;
     const char *proxy_user = NULL;
     const char *proxy_password = NULL;
     const char *www_user = NULL;
@@ -259,9 +203,6 @@ main(int argc, char *argv[])
     port = CACHE_HTTP_PORT;
     to_stdout = true;
     reload = false;
-    ping = 0;
-    pcount = 0;
-    ping_int = 1 * 1000;
 
     Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
     if (argc < 2 || argv[argc-1][0] == '-') {
@@ -271,21 +212,37 @@ main(int argc, char *argv[])
         url[BUFSIZ - 1] = '\0';
 
         int optIndex = 0;
-        const char *shortOpStr = "aA:h:j:V:l:P:i:kmnN:p:rsvt:g:p:I:H:T:u:U:w:W:?";
+        const char *shortOpStr = "aA:h:j:V:l:P:i:kmnN:p:rsvt:p:H:T:u:U:w:W:?";
 
         // options for controlling squidclient
-        static struct option basicOptions[] =
-        {
-          /* These are the generic options for squidclient itself */
-          {"help",    no_argument, 0, '?'},
-          {"verbose", no_argument, 0, 'v'},
-          {"quiet",   no_argument, 0, 's'},
-          {0, 0, 0, 0}
+        static struct option basicOptions[] = {
+            /* These are the generic options for squidclient itself */
+            {"help",    no_argument, 0, '?'},
+            {"verbose", no_argument, 0, 'v'},
+            {"quiet",   no_argument, 0, 's'},
+            {"ping",    no_argument, 0, '\1'},
+            {0, 0, 0, 0}
         };
 
         int c;
         while ((c = getopt_long(argc, argv, shortOpStr, basicOptions, &optIndex)) != -1) {
+
+            // modules parse their own specific options
             switch (c) {
+            case '\1':
+                to_stdout = 0;
+                if (Ping::Config.parseCommandOpts(argc, argv, c, optIndex))
+                    continue;
+                break;
+
+            default: // fall through to next switch
+                break;
+            }
+
+            switch (c) {
+
+            case '\0': // dummy value for end-of-options
+                break;
 
             case 'a':
                 opt_noaccept = 1;
@@ -346,17 +303,6 @@ main(int argc, char *argv[])
                 max_forwards = atoi(optarg);
                 break;
 
-            case 'g':
-                ping = 1;
-                pcount = atoi(optarg);
-                to_stdout = 0;
-                break;
-
-            case 'I':
-                if ((ping_int = atoi(optarg) * 1000) <= 0)
-                    usage(argv[0]);
-                break;
-
             case 'H':
                 if (strlen(optarg)) {
                     char *t;
@@ -406,8 +352,8 @@ main(int argc, char *argv[])
 
             case 'v':
                 /* undocumented: may increase verb-level by giving more -v's */
-                ++verbosityLevel;
-                debugVerbose(2, "verbosity level set to " << verbosityLevel);
+                ++scParams.verbosityLevel;
+                debugVerbose(2, "verbosity level set to " << scParams.verbosityLevel);
                 break;
 
             case '?':		/* usage */
@@ -575,30 +521,10 @@ main(int argc, char *argv[])
 
     debugVerbose(1, "Request:" << std::endl << msg << std::endl << ".");
 
-    if (ping) {
-#if HAVE_SIGACTION
+    uint32_t loops = Ping::Init();
 
-        struct sigaction sa, osa;
-
-        if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler == SIG_DFL) {
-            sa.sa_handler = catchSignal;
-            sa.sa_flags = 0;
-            sigemptyset(&sa.sa_mask);
-            (void) sigaction(SIGINT, &sa, NULL);
-        }
-#else
-        void (*osig) (int);
-
-        if ((osig = signal(SIGINT, catchSignal)) != SIG_DFL)
-            (void) signal(SIGINT, osig);
-
-#endif
-
-    }
-    loops = ping ? pcount : 1;
-
-    for (i = 0; loops == 0 || i < loops; ++i) {
-        int fsize = 0;
+    for (uint32_t i = 0; loops == 0 || i < loops; ++i) {
+        size_t fsize = 0;
         struct addrinfo *AI = NULL;
 
         debugVerbose(2, "Resolving... " << hostname);
@@ -642,7 +568,7 @@ main(int argc, char *argv[])
 
         debugVerbose(2, "Connecting... " << hostname << " (" << iaddr << ")");
 
-        if (client_comm_connect(conn, iaddr, ping ? &tv1 : NULL) < 0) {
+        if (client_comm_connect(conn, iaddr) < 0) {
             char hostnameBuf[MAX_IPSTRLEN];
             iaddr.toUrl(hostnameBuf, MAX_IPSTRLEN);
             std::cerr << "ERROR: Cannot connect to " << hostnameBuf
@@ -702,56 +628,13 @@ main(int argc, char *argv[])
 
         (void) close(conn);	/* done with socket */
 
-        if (interrupted)
+        if (Ping::LoopDone(i))
             break;
 
-        if (ping) {
-
-            struct tm *tmp;
-            time_t t2s;
-            long elapsed_msec;
-
-            (void) Now(&tv2);
-            elapsed_msec = tvSubMsec(tv1, tv2);
-            t2s = tv2.tv_sec;
-            tmp = localtime(&t2s);
-            char tbuf[4096];
-            snprintf(tbuf, sizeof(tbuf)-1, "%d-%02d-%02d %02d:%02d:%02d [%d]: %ld.%03ld secs, %f KB/s",
-                    tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
-                    tmp->tm_hour, tmp->tm_min, tmp->tm_sec, i + 1,
-                    elapsed_msec / 1000, elapsed_msec % 1000,
-                    elapsed_msec ? (double) fsize / elapsed_msec : -1.0);
-            std::cerr << tbuf << std::endl;
-
-            if (i == 0 || elapsed_msec < ping_min)
-                ping_min = elapsed_msec;
-
-            if (i == 0 || elapsed_msec > ping_max)
-                ping_max = elapsed_msec;
-
-            ping_sum += elapsed_msec;
-
-            /* Delay until next "ping_int" boundary */
-            if ((loops == 0 || i + 1 < loops) && elapsed_msec < ping_int) {
-
-                struct timeval tvs;
-                long msec_left = ping_int - elapsed_msec;
-
-                tvs.tv_sec = msec_left / 1000;
-                tvs.tv_usec = (msec_left % 1000) * 1000;
-                select(0, NULL, NULL, NULL, &tvs);
-            }
-        }
+        Ping::TimerStop(fsize);
     }
 
-    if (ping && i) {
-        ping_mean = ping_sum / i;
-        std::cerr << i << " requests, round-trip (secs) min/avg/max = "
-                  << (ping_min/1000) << "." << (ping_min%1000)
-                  << "/" << (ping_mean/1000) << "." << (ping_mean%1000)
-                  << "/" << (ping_max/1000) << "." << (ping_max%1000)
-                  << std::endl;
-    }
+    Ping::DisplayStats();
     return 0;
 }
 
@@ -768,32 +651,14 @@ client_comm_bind(int sock, const Ip::Address &addr)
 
 /// Set up the destination socket address for message to send to.
 static int
-client_comm_connect(int sock, const Ip::Address &addr, struct timeval *tvp)
+client_comm_connect(int sock, const Ip::Address &addr)
 {
     static struct addrinfo *AI = NULL;
     addr.getAddrInfo(AI);
     int res = connect(sock, AI->ai_addr, AI->ai_addrlen);
     Ip::Address::FreeAddrInfo(AI);
-    if (tvp)
-        (void) Now(tvp);
+    Ping::TimerStart();
     return res;
-}
-
-static int
-Now(struct timeval *tp)
-{
-#if GETTIMEOFDAY_NO_TZP
-    return gettimeofday(tp);
-#else
-    return gettimeofday(tp, NULL);
-#endif
-}
-
-void
-catchSignal(int sig)
-{
-    interrupted = 1;
-    std::cerr << "SIGNAL " << sig << " Interrupted." << std::endl;
 }
 
 void
@@ -841,129 +706,3 @@ mywrite(int fd, void *buf, size_t len)
     return write(fd, buf, len);
 #endif
 }
-
-#if HAVE_GSSAPI
-#define BUFFER_SIZE 8192
-/**
- * Check return valuse major_status, minor_status for error and print error description
- * in case of an error.
- *
- * \retval true in case of gssapi error
- * \retval false in case of no gssapi error
- */
-static bool
-check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function)
-{
-    if (GSS_ERROR(major_status)) {
-        OM_uint32 maj_stat, min_stat;
-        OM_uint32 msg_ctx = 0;
-        gss_buffer_desc status_string;
-        char buf[BUFFER_SIZE];
-        size_t len;
-
-        len = 0;
-        msg_ctx = 0;
-        while (!msg_ctx) {
-            /* convert major status code (GSS-API error) to text */
-            maj_stat = gss_display_status(&min_stat, major_status,
-                                          GSS_C_GSS_CODE,
-                                          GSS_C_NULL_OID,
-                                          &msg_ctx, &status_string);
-            if (maj_stat == GSS_S_COMPLETE) {
-                snprintf(buf + len, BUFFER_SIZE-len, "%s", (char *) status_string.value);
-                len += status_string.length;
-                gss_release_buffer(&min_stat, &status_string);
-                break;
-            }
-            gss_release_buffer(&min_stat, &status_string);
-        }
-        snprintf(buf + len, BUFFER_SIZE-len, "%s", ". ");
-        len += 2;
-        msg_ctx = 0;
-        while (!msg_ctx) {
-            /* convert minor status code (underlying routine error) to text */
-            maj_stat = gss_display_status(&min_stat, minor_status,
-                                          GSS_C_MECH_CODE,
-                                          GSS_C_NULL_OID,
-                                          &msg_ctx, &status_string);
-            if (maj_stat == GSS_S_COMPLETE) {
-                snprintf(buf + len, BUFFER_SIZE-len,"%s", (char *) status_string.value);
-                len += status_string.length;
-                gss_release_buffer(&min_stat, &status_string);
-                break;
-            }
-            gss_release_buffer(&min_stat, &status_string);
-        }
-        std::cerr << "ERROR: " << function << " failed: " << buf << std::endl;
-        return true;
-    }
-    return false;
-}
-
-/**
- * Get gssapi token for service HTTP/<server>
- * User has to initiate a kinit user@DOMAIN on commandline first for the
- * function to be successful
- *
- * \return base64 encoded token if successful,
- *         string "ERROR" if unsuccessful
- */
-static char *
-GSSAPI_token(const char *server)
-{
-    OM_uint32 major_status, minor_status;
-    gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
-    gss_name_t server_name = GSS_C_NO_NAME;
-    gss_buffer_desc service = GSS_C_EMPTY_BUFFER;
-    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
-    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-    char *token = NULL;
-
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
-
-    if (!server) {
-        std::cerr << "ERROR: GSSAPI: No server name" << std::endl;
-        return (char *)"ERROR";
-    }
-    service.value = xmalloc(strlen("HTTP") + strlen(server) + 2);
-    snprintf((char *) service.value, strlen("HTTP") + strlen(server) + 2, "%s@%s", "HTTP", server);
-    service.length = strlen((char *) service.value);
-
-    major_status = gss_import_name(&minor_status, &service,
-                                   gss_nt_service_name, &server_name);
-
-    if (!check_gss_err(major_status, minor_status, "gss_import_name()")) {
-
-        major_status = gss_init_sec_context(&minor_status,
-                                            GSS_C_NO_CREDENTIAL,
-                                            &gss_context,
-                                            server_name,
-                                            gss_mech_spnego,
-                                            0,
-                                            0,
-                                            GSS_C_NO_CHANNEL_BINDINGS,
-                                            &input_token,
-                                            NULL,
-                                            &output_token,
-                                            NULL,
-                                            NULL);
-
-        if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()")) {
-
-            if (output_token.length)
-                token = (char *) base64_encode_bin((const char *) output_token.value, output_token.length);
-        }
-    }
-
-    if (!output_token.length)
-        token = (char *) "ERROR";
-    gss_delete_sec_context(&minor_status, &gss_context, NULL);
-    gss_release_buffer(&minor_status, &service);
-    gss_release_buffer(&minor_status, &input_token);
-    gss_release_buffer(&minor_status, &output_token);
-    gss_release_name(&minor_status, &server_name);
-
-    return token;
-}
-#endif

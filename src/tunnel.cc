@@ -55,12 +55,8 @@
 #include "DelayId.h"
 #endif
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <climits>
+#include <cerrno>
 
 /**
  * TunnelStateData is the state engine performing the tasks for

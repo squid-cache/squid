@@ -18,11 +18,9 @@
 #include "testRock.h"
 #include "testStoreSupport.h"
 
+#include <stdexcept>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_STDEXCEPT
-#include <stdexcept>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -82,7 +80,7 @@ testRock::setUp()
     store->create();
 
     rr = new Rock::SwapDirRr;
-    rr->run(rrAfterConfig);
+    rr->useConfig();
 }
 
 void
@@ -96,7 +94,8 @@ testRock::tearDown()
 
     free_cachedir(&Config.cacheSwap);
 
-    delete rr;
+    rr->finishShutdown(); // deletes rr
+    rr = NULL;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);

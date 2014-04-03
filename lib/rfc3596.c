@@ -57,9 +57,6 @@
 #include "compat/inet_pton.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

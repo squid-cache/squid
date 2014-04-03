@@ -1282,7 +1282,7 @@ PREDEFINED             = __cplusplus \
                          USE_SELECT \
                          USE_SELECT_WIN32 \
                          USE_SQUID_ESI \
-                         USE_SSL \
+                         USE_OPENSSL \
                          USE_LINUX_TPROXY2 \
                          USE_LINUX_TPROXY4 \
                          USE_UNLINKD \

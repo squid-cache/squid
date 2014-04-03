@@ -33,9 +33,7 @@
 
 #include "squid.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 class CallCounter
 {

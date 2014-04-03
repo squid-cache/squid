@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"POT-Creation-Date: 2014-03-06 11:09+1300\n"
 "PO-Revision-Date: 2013-10-31 13:08+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -12,6 +12,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.1.6\n"
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:30
+msgid "%D"
+msgstr ""
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:29
+msgid "%E (TLS code: %x)"
+msgstr ""
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -45,41 +53,63 @@ msgstr ""
 msgid "%g"
 msgstr ""
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:73
 msgid "%ssl_error_descr"
 msgstr "%ssl_error_descr"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:97
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:117
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:101
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:129
 msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
-#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:5
 #, fuzzy
 msgid "%ssl_error_descr: %ssl_lib_error"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
-#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:17
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:21
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:29
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:33
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:45
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:49
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:61
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:65
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:85
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:89
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:93
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:101
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:105
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:109
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:113
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:121
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:129
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:133
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.detail:1
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:25
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:37
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:69
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:97
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:133
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.detail:137
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.detail:141
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.detail:145
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.detail:149
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.detail:153
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.detail:157
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.detail:161
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.detail:165
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.detail:169
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.detail:173
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.detail:177
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.detail:181
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.detail:185
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.detail:189
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.detail:193
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.detail:197
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.detail:201
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.detail:205
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.detail:209
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.detail:213
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.detail:217
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:221
 msgid "%ssl_error_descr: %ssl_subject"
 msgstr "%ssl_error_descr: %ssl_subject"
 
@@ -97,7 +127,9 @@ msgstr ""
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>不正な要求</b>のエラーが以下のリクエストを処理しようとしている間に発生しました:"
+msgstr ""
+"<b>不正な要求</b>のエラーが以下のリクエストを処理しようとしている間に発生しま"
+"した:"
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:20
 msgid ""
@@ -111,7 +143,8 @@ msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
-"ネットワークからデータの読み込み待ち中にタイムアウトとなりました。ネットワークやサーバが動作していないか、または混雑しています。再度リクエストしてみてく"
+"ネットワークからデータの読み込み待ち中にタイムアウトとなりました。ネットワー"
+"クやサーバが動作していないか、または混雑しています。再度リクエストしてみてく"
 "ださい。"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.h2:15
@@ -135,7 +168,8 @@ msgid ""
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"設定されたアクセス制御によって、現時点ではあなたによる要求は許可できません。この制限が誤っている思われる場合は、このサービスの提供者に連絡してください。"
+"設定されたアクセス制御によって、現時点ではあなたによる要求は許可できません。"
+"この制限が誤っている思われる場合は、このサービスの提供者に連絡してください。"
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
 msgid "All configured parent caches may be currently unreachable."
@@ -145,14 +179,18 @@ msgstr ""
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr "以下のURLから情報の取得しようとしている間に、FTPの認証に失敗しました: <a href=\"%U\">%U</a>"
+msgstr ""
+"以下のURLから情報の取得しようとしている間に、FTPの認証に失敗しました: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:20
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.p:20
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
-msgstr "以下のURLから情報を取得しようとしている間に、FTPでプロトコル上のエラーが発生しました: <a href=\"%U\">%U</a>"
+msgstr ""
+"以下のURLから情報を取得しようとしている間に、FTPでプロトコル上のエラーが発生"
+"しました: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
@@ -169,16 +207,20 @@ msgstr ""
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
-msgstr "ネットワークからデータの読み込み待ち中にエラーが発生しました。再度リクエストしてみてください。"
+msgstr ""
+"ネットワークからデータの読み込み待ち中にエラーが発生しました。再度リクエスト"
+"してみてください。"
 
 #: templates/ERR_WRITE_ERROR+html.body.div.p:28
 #, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
-msgstr "ネットワークへデータを送信中にエラーが発生しました。再度リクエストしてみてください。"
+msgstr ""
+"ネットワークへデータを送信中にエラーが発生しました。再度リクエストしてみてく"
+"ださい。"
 
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:221
 msgid "Application verification failure"
 msgstr "Application verification failure"
 
@@ -188,23 +230,27 @@ msgid ""
 "has failed."
 msgstr ""
 
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:129
 msgid "Authority and issuer serial number mismatch"
 msgstr "Authority and issuer serial number mismatch"
 
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:125
 msgid "Authority and subject key identifier mismatch"
 msgstr "Authority and subject key identifier mismatch"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:53
 msgid "CRL has expired"
 msgstr "CRL has expired"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:49
 msgid "CRL is not yet valid"
 msgstr "CRL is not yet valid"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.descr:217
+msgid "CRL path validation error"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:37
 msgid "CRL signature failure"
 msgstr "CRL signature failure"
 
@@ -222,36 +268,40 @@ msgstr "キャッシュマネージャへのアクセスを拒否されました
 msgid "Cannot Resolve URN"
 msgstr "URN を解決できませんでした。"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
+msgid "Cert validation infinite loop detected"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:93
 msgid "Certificate chain too long"
 msgstr "Certificate chain too long"
 
-#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:9
 #, fuzzy
 msgid "Certificate does not match domainname"
 msgstr "Certificate is not yet valid"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:45
 msgid "Certificate has expired"
 msgstr "Certificate has expired"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:41
 msgid "Certificate is not yet valid"
 msgstr "Certificate is not yet valid"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:113
 msgid "Certificate not trusted"
 msgstr "Certificate not trusted"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:117
 msgid "Certificate rejected"
 msgstr "Certificate rejected"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:97
 msgid "Certificate revoked"
 msgstr "Certificate revoked"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:33
 msgid "Certificate signature failure"
 msgstr "Certificate signature failure"
 
@@ -266,6 +316,10 @@ msgstr "%I に接続できませんでした。"
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "Content-Lengthヘッダが、POSTまたはPUTの要求に含まれていません。"
+
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
+msgid "Different CRL scope"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.body.div.h4:19
 msgid "Directory Content:"
@@ -424,19 +478,19 @@ msgstr "ブラウザにInternet Exploreをご利用の方はこちらに: <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "ブラウザにOperaをご利用の方はこちらに: <ul>"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's lastUpdate field"
 msgstr "Format error in CRL's lastUpdate field"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:69
 msgid "Format error in CRL's nextUpdate field"
 msgstr "Format error in CRL's nextUpdate field"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:61
 msgid "Format error in certificate's notAfter field"
 msgstr "Format error in certificate's notAfter field"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:57
 msgid "Format error in certificate's notBefore field"
 msgstr "Format error in certificate's notBefore field"
 
@@ -480,7 +534,7 @@ msgstr ""
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:36
 #: templates/ERR_READ_ERROR+html.body.div.p:36
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:36
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:42
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:30
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:36
 #: templates/ERR_TOO_BIG+html.body.div.p:36
@@ -497,7 +551,7 @@ msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
-#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr ""
 
@@ -518,18 +572,22 @@ msgstr "ICAPのプロトコル・エラーです。"
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr "GETの要求をしていたなら、ダウンロードしようとしたサイズが大きすぎます。"
+msgstr ""
+"GETの要求をしていたなら、ダウンロードしようとしたサイズが大きすぎます。"
 
 #: templates/ERR_TOO_BIG+html.body.div.p:26
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
-msgstr "POSTまたはPUTの要求をしていたなら、アップロードしようとしたサイズが大きすぎます。"
+msgstr ""
+"POSTまたはPUTの要求をしていたなら、アップロードしようとしたサイズが大きすぎま"
+"す。"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33
 #: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "ホスト名に不正な文字が含まれています: アンダースコア(下線)は使えません。"
+msgstr ""
+"ホスト名に不正な文字が含まれています: アンダースコア(下線)は使えません。"
 
 #: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
 msgid "Illegal double-escape in the URL-Path"
@@ -541,7 +599,7 @@ msgstr "不正な二重のエスケープがURLパスに含まれています。
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr ""
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:101
 msgid "Invalid CA certificate"
 msgstr "Invalid CA certificate"
 
@@ -549,7 +607,7 @@ msgstr "Invalid CA certificate"
 msgid "Invalid URL"
 msgstr "不正なURL"
 
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:133
 msgid "Key usage does not include certificate signing"
 msgstr "Key usage does not include certificate signing"
 
@@ -584,11 +642,11 @@ msgstr "Waisの中継先が指定されていません。"
 msgid "Operation successful"
 msgstr "操作に成功"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:73
 msgid "Out of memory"
 msgstr "Out of memory"
 
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:105
 msgid "Path length constraint exceeded"
 msgstr "Path length constraint exceeded"
 
@@ -618,6 +676,10 @@ msgstr ""
 msgid "Precondition Failed."
 msgstr ""
 
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.descr:189
+msgid "RFC 3779 resource not subset of parent's resources"
+msgstr ""
+
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
 msgstr "読み込みエラー"
@@ -630,20 +692,20 @@ msgstr "読み込みタイムアウト"
 msgid "Request is too large."
 msgstr "要求が大きすぎます。"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:85
 msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
 msgstr "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:41
 msgid "SSL Certficate is not valid before: %ssl_notbefore"
 msgstr "SSL Certficate is not valid before: %ssl_notbefore"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:45
 msgid "SSL Certificate expired on: %ssl_notafter"
 msgstr "SSL Certificate expired on: %ssl_notafter"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:61
 msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
@@ -651,7 +713,7 @@ msgstr ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:57
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr ""
@@ -669,19 +731,19 @@ msgstr "自動検出の設定を選択してください。"
 msgid "Select Use Automatic proxy configuration"
 msgstr "proxyの自動構成を選択してください。"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:77
 msgid "Self signed certificate"
 msgstr "Self signed certificate"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:81
 msgid "Self signed certificate in certificate chain"
 msgstr "Self signed certificate in certificate chain"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:81
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
 msgstr "Self-signed SSL Certificate in chain: %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:77
 msgid "Self-signed SSL Certificate: %ssl_subject"
 msgstr "Self-signed SSL Certificate: %ssl_subject"
 
@@ -705,13 +767,17 @@ msgstr "考えられる問題: "
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr "申し訳ありませんが、あなた自身を認証するまで、このキャッシュマネージャは %U の要求を許可しません。"
+msgstr ""
+"申し訳ありませんが、あなた自身を認証するまで、このキャッシュマネージャは %U "
+"の要求を許可しません。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr "申し訳ありませんが、あなた自身を認証するまで、このキャッシュは %U の要求を許可しません。"
+msgstr ""
+"申し訳ありませんが、あなた自身を認証するまで、このキャッシュは %U の要求を許"
+"可しません。"
 
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
 msgid "Squid did not receive any data for this request."
@@ -722,8 +788,9 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squidはすべてのアクセス・プロトコルに対して、すべてのリクエストメソッドをサポートしているわけではありません。例えば、POSTをGopherのリクエ"
-"ストで行うことはできません。"
+"Squidはすべてのアクセス・プロトコルに対して、すべてのリクエストメソッドをサ"
+"ポートしているわけではありません。例えば、POSTをGopherのリクエストで行うこと"
+"はできません。"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:26
 msgid ""
@@ -735,7 +802,9 @@ msgstr "最大の接続の有効時間が過ぎたため、Squidは要求を終�
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
-msgstr "おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リクエストしてみてください。"
+msgstr ""
+"おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リク"
+"エストしてみてください。"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:22
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:22
@@ -745,7 +814,7 @@ msgstr "おそらく過大な負荷のため、SquidはTCPソケットを作成�
 msgid "Squid sent the following FTP command:"
 msgstr "Squidは以下のFTPコマンドを送りました:"
 
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:121
 msgid "Subject issuer mismatch"
 msgstr "Subject issuer mismatch"
 
@@ -759,13 +828,17 @@ msgstr "ESI処理からの応答:"
 
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr "以下のURLを取得しようとしましたが、FTPサーバの負荷が高すぎました: <a href=\"%U\">%U</a>"
+msgstr ""
+"以下のURLを取得しようとしましたが、FTPサーバの負荷が高すぎました: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:26
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
-msgstr "接続したサーバからのHTTP応答メッセージが解釈できないか、不正な形式です。サイトの運営担当者に連絡してください。"
+msgstr ""
+"接続したサーバからのHTTP応答メッセージが解釈できないか、不正な形式です。サイ"
+"トの運営担当者に連絡してください。"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:32
 msgid "The ICAP server is not reachable."
@@ -876,11 +949,15 @@ msgstr "指定された URL を取得できませんでした"
 msgid "The server responded with:"
 msgstr "サーバの応答: "
 
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:27
+#, fuzzy
+msgid "The system returned:"
+msgstr "システムが以下のエラーを返しました: <i>%E</i>"
+
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:26
 #: templates/ERR_READ_ERROR+html.body.div.p:26
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:26
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:26
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
@@ -897,7 +974,9 @@ msgstr ""
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
-msgstr "WAISの中継に使用するホストがキャッシュに設定されていません! 管理者に連絡してください．"
+msgstr ""
+"WAISの中継に使用するホストがキャッシュに設定されていません! 管理者に連絡して"
+"ください．"
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
 #: templates/ERR_TOO_BIG+html.body.div.p:28
@@ -907,7 +986,8 @@ msgid ""
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"これらの制限は、このキャッシュを運用しているインターネット・サービスの提供者が課しています。これが間違いだと感じるときは、直接サービスの提供者に連絡して"
+"これらの制限は、このキャッシュを運用しているインターネット・サービスの提供者"
+"が課しています。これが間違いだと感じるときは、直接サービスの提供者に連絡して"
 "下さい。"
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:26
@@ -923,7 +1003,9 @@ msgstr "このキャッシュは FTP をサポートしていません．"
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
-msgstr "このキャッシュは稼働停止の処理の段階で、現在あなたの要求に応えることができません。後で、再び試してください。"
+msgstr ""
+"このキャッシュは稼働停止の処理の段階で、現在あなたの要求に応えることができま"
+"せん。後で、再び試してください。"
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
 #, fuzzy
@@ -932,8 +1014,9 @@ msgid ""
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"キャッシュ間を強制的に兄弟関係となるようにしているため、キャッシュはあなたの要求を転送できませんでした。おそらく、%i "
-"のクライアントは、謝った設定のキャッシュでしょう。"
+"キャッシュ間を強制的に兄弟関係となるようにしているため、キャッシュはあなたの"
+"要求を転送できませんでした。おそらく、%i のクライアントは、謝った設定のキャッ"
+"シュでしょう。"
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:28
 #, fuzzy
@@ -953,8 +1036,9 @@ msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
-"これはFTPサーバにアクセス権がないか、ファイルを保存する領域が足りなかったことを意味しています。パス、アクセス権、ディスクの空き容量を確認して、再び試"
-"してください。"
+"これはFTPサーバにアクセス権がないか、ファイルを保存する領域が足りなかったこと"
+"を意味しています。パス、アクセス権、ディスクの空き容量を確認して、再び試して"
+"ください。"
 
 # 'address' in this text means the domain name.
 #: templates/ERR_DNS_FAIL+html.body.div.p:31
@@ -962,14 +1046,17 @@ msgstr ""
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
-msgstr "これはURLで示されているホスト名を、キャッシュがIPアドレスに解決できなかったことを意味します。URLが正しいかどうか確認してください。"
+msgstr ""
+"これはURLで示されているホスト名を、キャッシュがIPアドレスに解決できなかったこ"
+"とを意味します。URLが正しいかどうか確認してください。"
 
 #: templates/ERR_ESI+html.body.div.p:31
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
-"これはESIのテンプレートの処理を代理サーバで行えなかったことを意味します。このエラーはサイトの管理者(webmaster)に報告してください。"
+"これはESIのテンプレートの処理を代理サーバで行えなかったことを意味します。この"
+"エラーはサイトの管理者(webmaster)に報告してください。"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.p:26
 msgid ""
@@ -988,18 +1075,20 @@ msgid ""
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性があります。もしそうなら、ファイルは<a href=\"%B\">%"
-"B</a>に見つかるかもしれません。"
+"これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性がありま"
+"す。もしそうなら、ファイルは<a href=\"%B\">%B</a>に見つかるかもしれません。"
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:34
 msgid ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
 "security settings for handling your request. It is possible that the remote "
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
-"このプロキシーと接続先のホストは互いに受け入れられる、あなたの要求を扱うためのセキュリティの設定を得ることができませんでした。接続先のホストが安全な接続"
-"をサポートしていないか、プロキシーは接続先ホストが要求する証明書を満たせなかったといったことが考えられます．"
+"このプロキシーと接続先のホストは互いに受け入れられる、あなたの要求を扱うため"
+"のセキュリティの設定を得ることができませんでした。接続先のホストが安全な接続"
+"をサポートしていないか、プロキシーは接続先ホストが要求する証明書を満たせな"
+"かったといったことが考えられます．"
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:26
 msgid ""
@@ -1021,7 +1110,9 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
-msgstr "ツール -&gt; インターネット オプション -&gt; 接続 -&gt; LAN の設定 -&gt; プロキシ サーバー"
+msgstr ""
+"ツール -&gt; インターネット オプション -&gt; 接続 -&gt; LAN の設定 -&gt; プロ"
+"キシ サーバー"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
@@ -1039,19 +1130,19 @@ msgstr "ツール -&gt; 設定 -&gt; 詳細 -&gt; ネットワーク -&gt; プ�
 msgid "URI Host Conflict"
 msgstr ""
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:29
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
 msgstr "Unable to decode issuer (CA) public key: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:29
 msgid "Unable to decode issuer public key"
 msgstr "Unable to decode issuer public key"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:25
 msgid "Unable to decrypt CRL's signature"
 msgstr "Unable to decrypt CRL's signature"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:21
 msgid "Unable to decrypt certificate's signature"
 msgstr "Unable to decrypt certificate's signature"
 
@@ -1063,19 +1154,19 @@ msgstr "ホスト名 <q>%H</q> の IPアドレスがわかりません。"
 msgid "Unable to forward this request at this time."
 msgstr "現在要求を送信できません。"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:17
 msgid "Unable to get certificate CRL"
 msgstr "Unable to get certificate CRL"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:13
 msgid "Unable to get issuer certificate"
 msgstr "Unable to get issuer certificate"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:85
 msgid "Unable to get local issuer certificate"
 msgstr "Unable to get local issuer certificate"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:89
 msgid "Unable to verify the first certificate"
 msgstr "Unable to verify the first certificate"
 
@@ -1088,15 +1179,22 @@ msgstr "サポートしていないHTTPのバージョンです。"
 msgid "Unsupported Request Method and Protocol"
 msgstr "サポートしていないリクエストメソッドとプロトコルです。"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:109
 msgid "Unsupported certificate purpose"
+msgstr "Unsupported certificate purpose"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.descr:185
+#, fuzzy
+msgid "Unsupported extension feature"
 msgstr "Unsupported certificate purpose"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
-msgstr "<q>only-if-cached</q>を指定されていましたが、有効な文書はキャッシュに存在していませんでした。"
+msgstr ""
+"<q>only-if-cached</q>を指定されていましたが、有効な文書はキャッシュに存在して"
+"いませんでした。"
 
 #: templates/ERR_AGENT_CONFIGURE+html.head.title:4
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:15
@@ -1150,7 +1248,7 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:28
 #: templates/ERR_READ_ERROR+html.body.div.p:30
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:30
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:24
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:30
 #: templates/ERR_TOO_BIG+html.body.div.p:30
@@ -1176,6 +1274,79 @@ msgstr ""
 msgid "Zero Sized Reply"
 msgstr "中身がありません．"
 
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.descr:197
+msgid "excluded subtree violation"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:153
+#, fuzzy
+msgid "invalid non-CA certificate (has CA markings)"
+msgstr "Invalid CA certificate"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.descr:169
+msgid "invalid or inconsistent certificate extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.descr:173
+msgid "invalid or inconsistent certificate policy extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.descr:145
+#, fuzzy
+msgid "key usage does not include CRL signing"
+msgstr "Key usage does not include certificate signing"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.descr:161
+#, fuzzy
+msgid "key usage does not include digital signature"
+msgstr "Key usage does not include certificate signing"
+
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.descr:201
+msgid "name constraints minimum and maximum not supported"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.descr:177
+msgid "no explicit policy"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.descr:193
+msgid "permitted subtree violation"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.descr:165
+msgid "proxy certificates not allowed, please set the appropriate flag"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.descr:157
+#, fuzzy
+msgid "proxy path length constraint exceeded"
+msgstr "Path length constraint exceeded"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.descr:137
+#, fuzzy
+msgid "unable to get CRL issuer certificate"
+msgstr "Unable to get issuer certificate"
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.descr:149
+msgid "unhandled critical CRL extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.descr:141
+msgid "unhandled critical extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.descr:205
+msgid "unsupported name constraint type"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.descr:209
+msgid "unsupported or invalid name constraint syntax"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:213
+msgid "unsupported or invalid name syntax"
+msgstr ""
+
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "エラー: 要求されたURNからデータを取り出せませんでした。"
 
@@ -1187,15 +1358,17 @@ msgstr "中身がありません．"
 #~ msgstr "親のディレクトリ"
 
 #, fuzzy
-msgid ""
-"This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to "
-"origin servers, and all configured parent caches are currently "
-"unreachable."
-msgstr ""
-"あなたの要求を起源のサーバや、他のどの親キャッシュサーバに送ることができません。これはキャッシュの管理者が目的のサーバに直接接続しないように設定している"
-"か、設定されているすべての親のキャッシュサーバに現在到達できないことが理由として考えられます。"
+#~ msgid ""
+#~ "This request could not be forwarded to the origin server or to any parent "
+#~ "caches. The most likely cause for this error is that the cache "
+#~ "administrator does not allow this cache to make direct connections to "
+#~ "origin servers, and all configured parent caches are currently "
+#~ "unreachable."
+#~ msgstr ""
+#~ "あなたの要求を起源のサーバや、他のどの親キャッシュサーバに送ることができま"
+#~ "せん。これはキャッシュの管理者が目的のサーバに直接接続しないように設定して"
+#~ "いるか、設定されているすべての親のキャッシュサーバに現在到達できないことが"
+#~ "理由として考えられます。"
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "以下の URL を PUT しようとした際に: <a href=\"%U\">%U</a>"

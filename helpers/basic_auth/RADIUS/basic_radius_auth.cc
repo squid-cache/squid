@@ -51,6 +51,10 @@
 #include "radius-util.h"
 #include "radius.h"
 
+#include <cctype>
+#include <cerrno>
+#include <cstring>
+#include <ctime>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -66,12 +70,6 @@
 #if _SQUID_WINDOWS_
 #include <io.h>
 #endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -81,17 +79,8 @@
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
-#if HAVE_TIME_H
-#include <time.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 /* AYJ: helper input buffer may be a lot larger than this used to expect... */

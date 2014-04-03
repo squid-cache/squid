@@ -36,17 +36,9 @@
 #include "SBufExceptions.h"
 #include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-
-#if HAVE_SSTREAM
-#include <sstream>
-#endif
-
-#if HAVE_IOSTREAM
+#include <cstring>
 #include <iostream>
-#endif
+#include <sstream>
 
 #ifdef VA_COPY
 #undef VA_COPY

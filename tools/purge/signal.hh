@@ -50,9 +50,7 @@
 
 #include "squid.h"
 
-#if HAVE_SIGNAL_H
-#include <signal.h>
-#endif
+#include <csignal>
 
 #if !defined(__cplusplus)
 #ifndef HAVE_BOOL

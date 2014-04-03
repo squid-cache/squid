@@ -171,8 +171,12 @@ max(A const & lhs, A const & rhs)
  * Signalling flags are apparently not always provided.
  * TODO find out if these can be moved into specific OS portability files.
  */
+#if defined(__cplusplus)
+#include <csignal>
+#else
 #if HAVE_SIGNAL_H
 #include <signal.h>
+#endif
 #endif
 #ifndef SA_RESTART
 #define SA_RESTART 0

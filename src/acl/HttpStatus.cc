@@ -40,9 +40,7 @@
 #include "HttpReply.h"
 #include "wordlist.h"
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
+#include <climits>
 
 static void aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);

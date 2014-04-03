@@ -8,10 +8,7 @@
 #include "testStore.h"
 #include "testStoreEntryStream.h"
 
-#if HAVE_IOMANIP
 #include <iomanip>
-#endif
-
 #include <cppunit/TestAssert.h>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStoreEntryStream );

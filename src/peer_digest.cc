@@ -314,8 +314,7 @@ peerDigestRequest(PeerDigest * pd)
     if (p->digest_url)
         url = xstrdup(p->digest_url);
     else
-        url = internalRemoteUri(p->host, p->http_port,
-                                "/squid-internal-periodic/", StoreDigestFileName);
+        url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestFileName));
 
     req = HttpRequest::CreateFromUrl(url);
 

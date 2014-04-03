@@ -31,8 +31,6 @@
 /* ensure we don't overwrite strings when not passed enough space. Also */
 /* added code to say unknown error codes if we see any                  */
 
-#include <stdio.h>
-
 typedef struct {
     char *name;
     int code;
