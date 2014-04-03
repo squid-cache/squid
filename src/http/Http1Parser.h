@@ -58,10 +58,10 @@ public:
      * Use to determine between incomplete data and errors results
      * from the parse.
      */
-    bool isDone() const {return completedState_==HTTP_PARSE_DONE;}
+    bool isDone() const {return parsingStage_==HTTP_PARSE_DONE;}
 
-    /// number of bytes in buffer before the message
-    virtual int64_t messageOffset() const = 0;
+    /// number of bytes at the start of the buffer which are no longer needed
+    int64_t doneBytes() const {return (int64_t)parseOffset_;}
 
     /// size in bytes of the first line including CRLF terminator
     virtual int64_t firstLineSize() const = 0;
@@ -97,7 +97,7 @@ public:
 
 protected:
     /// what stage the parser is currently up to
-    ParseState completedState_;
+    ParseState parsingStage_;
 
     /// what protocol label has been found in the first line
     AnyP::ProtocolVersion msgProtocol_;
@@ -125,7 +125,6 @@ public:
     RequestParser(const char *aBuf, int len) : Parser(aBuf, len) {}
     virtual void clear();
     virtual void noteBufferShift(const int64_t n);
-    virtual int64_t messageOffset() const {return req.start;}
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse();
 
@@ -141,10 +140,11 @@ public:
     Http::StatusCode request_parse_status;
 
 private:
-    bool skipGarbageLines();
+    void skipGarbageLines();
     int parseRequestFirstLine();
 
     /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 2616
+    /// only valid before and during parse stage HTTP_PARSE_FIRST
     struct request_offsets {
         int start, end;
         int m_start, m_end; // method

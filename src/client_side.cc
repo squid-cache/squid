@@ -2792,15 +2792,6 @@ finish:
     }
 }
 
-static void
-connStripBufferWhitespace (ConnStateData * conn)
-{
-    while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
-        memmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
-        -- conn->in.notYetUsed;
-    }
-}
-
 /**
  * Limit the number of concurrent requests.
  * \return true  when there are available position(s) in the pipeline queue for another request.
@@ -2840,7 +2831,6 @@ ConnStateData::clientParseRequests()
     // Loop while we have read bytes that are not needed for producing the body
     // On errors, bodyPipe may become nil, but readMore will be cleared
     while (in.notYetUsed > 0 && !bodyPipe && flags.readMore) {
-        connStripBufferWhitespace(this); // XXX: should not be needed anymore.
 
         /* Don't try to parse if the buffer is empty */
         if (in.notYetUsed == 0)
@@ -2849,10 +2839,6 @@ ConnStateData::clientParseRequests()
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
-
-        /* Should not be needed anymore */
-        /* Terminate the string */
-        in.buf[in.notYetUsed] = '\0';
 
         /* Begin the parsing */
         PROF_start(parseHttpRequest);
@@ -2867,10 +2853,10 @@ ConnStateData::clientParseRequests()
 
         /* Process request */
         ClientSocketContext *context = parseHttpRequest(this, *parser_);
-        if (parser_->messageOffset()) {
-            // we are done with some of the buffer. consume it.
-            connNoteUseOfBuffer(this, parser_->messageOffset());
-            parser_->noteBufferShift(parser_->messageOffset());
+        if (parser_->doneBytes()) {
+            // we are done with some of the buffer. consume it now.
+            connNoteUseOfBuffer(this, parser_->doneBytes());
+            parser_->noteBufferShift(parser_->doneBytes());
         }
         PROF_stop(parseHttpRequest);
 
@@ -2881,9 +2867,6 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            // Request has now been shifted out of the buffer.
-            // Consume header early so that next action starts with just the next bytes.
-            connNoteUseOfBuffer(this, parser_->messageHeaderSize() + parser_->messageOffset());
             clientProcessRequest(this, *parser_, context);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
