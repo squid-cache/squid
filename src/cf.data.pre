@@ -4486,9 +4486,9 @@ DOC_START
 DOC_END
 
 NAME: ftp_epsv
-TYPE: onoff
-DEFAULT: on
-LOC: Config.Ftp.epsv
+TYPE: ftp_epsv
+DEFAULT: none
+LOC: Config.accessList.ftp_epsv
 DOC_START
 	FTP Protocol extensions permit the use of a special "EPSV" command.
 
@@ -4497,10 +4497,18 @@ DOC_START
 	and therefore, translation of the data portion of the segments 
 	will never be needed.
 
-	Turning this OFF will prevent EPSV being attempted.
-	WARNING: Doing so will convert Squid back to the old behavior with all
-	the related problems with external NAT devices/layers.
+	EPSV is often required to interoperate with FTP servers on IPv6
+	networks. On the other hand, it may break some IPv4 servers.
 
+	By default, EPSV may try EPSV with any FTP server. To fine tune
+	that decision, you may restrict EPSV to certain clients or servers
+	using ACLs:
+
+		ftp_epsv allow|deny al1 acl2 ...
+
+	WARNING: Disabling EPSV may cause problems with external NAT and IPv6.
+
+	Only fast ACLs are supported.
 	Requires ftp_passive to be ON (default) for any effect.
 DOC_END
 
