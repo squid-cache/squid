@@ -75,3 +75,4 @@ wordlist
 sslproxy_ssl_bump	acl
 sslproxy_cert_sign	acl
 sslproxy_cert_adapt	acl
+ftp_epsv                acl
