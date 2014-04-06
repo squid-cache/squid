@@ -77,6 +77,7 @@ public:
     uint64_t compareFast; ///<number of comparison operations not requiring data scan
     uint64_t copyOut; ///<number of data-copies to other forms of buffers
     uint64_t rawAccess; ///<number of accesses to raw contents
+    uint64_t nulTerminate; ///<number of c_str() terminations
     uint64_t chop;  ///<number of chop operations
     uint64_t trim;  ///<number of trim operations
     uint64_t find;  ///<number of find operations
