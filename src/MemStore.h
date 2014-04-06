@@ -72,7 +72,7 @@ protected:
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const sfileno sliceId);
+    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId);
 
 private:
     // TODO: move freeSlots into map

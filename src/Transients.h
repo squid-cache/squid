@@ -73,7 +73,7 @@ protected:
     bool abandonedAt(const sfileno index) const;
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const sfileno sliceId);
+    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId);
 
 private:
     /// shared packed info indexed by Store keys, for creating new StoreEntries
