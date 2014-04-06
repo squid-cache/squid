@@ -2035,9 +2035,18 @@ DEFAULT: none
 LOC: Ip::Qos::TheConfig
 DOC_START
 	Allows you to select a TOS/DSCP value to mark outgoing
-	connections with, based on where the reply was sourced.	For
-	platforms using netfilter, allows you to set a netfilter mark
+	connections to the client, based on where the reply was sourced.
+	For platforms using netfilter, allows you to set a netfilter mark
 	value instead of, or in addition to, a TOS value.
+
+	By default this functionality is disabled. To enable it with the default
+	settings simply use "qos_flows mark" or "qos_flows tos". Default
+	settings will result in the netfilter mark or TOS value being copied
+	from the upstream connection to the client. Note that it is the connection
+	CONNMARK value not the packet MARK value that is copied.
+
+	It is not currently possible to copy the mark or TOS value from the
+	client to the upstream connection request.
 
 	TOS values really only have local significance - so you should
 	know what you're specifying. For more information, see RFC2474,
