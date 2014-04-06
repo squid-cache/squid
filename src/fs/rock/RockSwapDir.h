@@ -46,8 +46,10 @@ public:
     // temporary path to the shared memory stack of free slots
     const char *freeSlotsPath() const;
 
-    int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
-    int64_t entryLimitAllowed() const;
+    int64_t entryLimitAbsolute() const { return SwapFilenMax+1; } ///< Core limit
+    int64_t entryLimitActual() const; ///< max number of possible entries in db
+    int64_t slotLimitAbsolute() const; ///< Rock store implementation limit
+    int64_t slotLimitActual() const; ///< total number of slots in this db
 
     /// removes a slot from a list of free slots or returns false
     bool useFreeSlot(Ipc::Mem::PageId &pageId);
@@ -61,7 +63,7 @@ public:
     void writeError(StoreEntry &e);
 
     /* StoreMapCleaner API */
-    virtual void noteFreeMapSlice(const sfileno fileno);
+    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId fileno);
 
     uint64_t slotSize; ///< all db slots are of this size
 
@@ -108,9 +110,6 @@ protected:
     void ignoreReferences(StoreEntry &e); ///< delete from repl policy scope
 
     int64_t diskOffsetLimit() const;
-    int entryLimit() const { return map->entryLimit(); }
-    int entryMaxPayloadSize() const;
-    int entriesNeeded(const int64_t objSize) const;
 
     void anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor);
     bool updateCollapsedWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor);

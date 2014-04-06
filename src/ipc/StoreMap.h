@@ -108,13 +108,13 @@ public:
     class Shared
     {
     public:
-        Shared(const int aLimit, const size_t anExtrasSize);
+        Shared(const int aSlotLimit, const size_t anExtrasSize);
         size_t sharedMemorySize() const;
-        static size_t SharedMemorySize(const int limit, const size_t anExtrasSize);
+        static size_t SharedMemorySize(const int aSlotLimit, const size_t anExtrasSize);
 
-        const int limit; ///< maximum number of store entries
-        const size_t extrasSize; ///< size of slice extra data
-        Atomic::Word count; ///< current number of entries
+        const int slotLimit; ///< total number of slots
+        const size_t extrasSize; ///< size of extra data in each slot
+        Atomic::Word entryCount; ///< current number of entries
         Atomic::WordT<uint32_t> victim; ///< starting point for purge search
         Ipc::Mem::FlexibleArray<StoreMapSlot> slots; ///< storage
     };
@@ -123,7 +123,7 @@ public:
     typedef Mem::Owner<Shared> Owner;
 
     /// initialize shared memory
-    static Owner *Init(const char *const path, const int limit);
+    static Owner *Init(const char *const path, const int slotLimit);
 
     StoreMap(const char *const aPath);
 
@@ -186,9 +186,12 @@ public:
     /// copies slice to its designated position
     void importSlice(const SliceId sliceId, const Slice &slice);
 
-    bool valid(const int n) const; ///< whether n is a valid slice coordinate
+    /* SwapFilenMax limits the number of entries, but not slices or slots */
+    bool validEntry(const int n) const; ///< whether n is a valid slice coordinate
+    bool validSlice(const int n) const; ///< whether n is a valid slice coordinate
     int entryCount() const; ///< number of writeable and readable entries
     int entryLimit() const; ///< maximum entryCount() possible
+    int sliceLimit() const; ///< maximum number of slices possible
 
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
@@ -224,9 +227,9 @@ public:
     StoreMapWithExtras(const char *const path);
 
     /// write access to the extras; call openForWriting() first!
-    ExtrasT &extras(const sfileno fileno);
+    ExtrasT &extras(const StoreMapSliceId sid);
     /// read-only access to the extras; call openForReading() first!
-    const ExtrasT &extras(const sfileno fileno) const;
+    const ExtrasT &extras(const StoreMapSliceId sid) const;
 
 protected:
 
@@ -240,7 +243,7 @@ public:
     virtual ~StoreMapCleaner() {}
 
     /// adjust slice-linked state before a locked Readable slice is erased
-    virtual void noteFreeMapSlice(const sfileno sliceId) = 0;
+    virtual void noteFreeMapSlice(const StoreMapSliceId sliceId) = 0;
 };
 
 // StoreMapWithExtras implementation
@@ -257,24 +260,24 @@ StoreMapWithExtras<ExtrasT>::StoreMapWithExtras(const char *const aPath):
         StoreMap(aPath)
 {
     const size_t sharedSizeWithoutExtras =
-        Shared::SharedMemorySize(entryLimit(), 0);
+        Shared::SharedMemorySize(sliceLimit(), 0);
     sharedExtras = reinterpret_cast<Extras *>(reinterpret_cast<char *>(shared.getRaw()) + sharedSizeWithoutExtras);
 }
 
 template <class ExtrasT>
 ExtrasT &
-StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno)
+StoreMapWithExtras<ExtrasT>::extras(const StoreMapSliceId sid)
 {
-    return const_cast<ExtrasT &>(const_cast<const StoreMapWithExtras *>(this)->extras(fileno));
+    return const_cast<ExtrasT &>(const_cast<const StoreMapWithExtras *>(this)->extras(sid));
 }
 
 template <class ExtrasT>
 const ExtrasT &
-StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno) const
+StoreMapWithExtras<ExtrasT>::extras(const StoreMapSliceId sid) const
 {
     assert(sharedExtras);
-    assert(valid(fileno));
-    return sharedExtras[fileno];
+    assert(validSlice(sid));
+    return sharedExtras[sid];
 }
 
 } // namespace Ipc
