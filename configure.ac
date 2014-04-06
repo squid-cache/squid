@@ -1216,6 +1216,30 @@ SQUID_DEFINE_BOOL(USE_HTCP,${enable_htcp:=yes},
 AM_CONDITIONAL(ENABLE_HTCP, [test "x$enable_htcp" = "xyes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
+# Cryptograhic libraries
+AC_ARG_WITH(nettle,
+  AS_HELP_STRING([--without-nettle],[Compile without the Nettle crypto library.]),[
+case "$with_nettle" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-nettle path does not point to a directory])
+    fi
+    NETTLELIBDIR="-L$with_nettle/lib"
+    CPPFLAGS="-I$with_nettle/include $CPPFLAGS"
+    with_nettle=yes
+  esac
+])
+if test "x$with_nettle" != "xno" ; then
+  AC_CHECK_LIB(nettle, nettle_md5_init,[
+    NETTLELIB="$NETTLELIBDIR -lnettle"
+    AC_CHECK_HEADERS(nettle/md5.h)
+  ],[with_nettle=no])
+fi
+AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
+AC_SUBST(NETTLELIB)
 
 # SSL is not enabled by default.
 # Default is to use OpenSSL when available
@@ -1265,11 +1289,9 @@ case "$with_openssl" in
 ])
 SQUID_DEFINE_BOOL(USE_SSL,$enable_ssl,
    [Define this to include code for SSL gatewaying support])
-AC_MSG_NOTICE([Using OpenSSL MD5 implementation: ${with_openssl:=no}])
-SQUID_DEFINE_BOOL(USE_OPENSSL,${with_openssl},
-   [Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid-supplied MD5 implementation or if building with SSL encryption])
+AC_MSG_NOTICE([Using OpenSSL library: ${with_openssl:=no}])
 if test "x$enable_ssl" = "xyes"; then
-  if test "x$SSLLIB" = "x"; then
+  if test "x$SSLLIB" = "x" -a "x$with_nettle" = "xno"; then
     SSLLIB="-lcrypto" # for MD5 routines
   fi
   # This is a workaround for RedHat 9 brain damage..
