@@ -59,7 +59,7 @@ SBufStats::SBufStats()
         : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
         assignFast(0), clear(0), append(0), toStream(0), setChar(0),
         getChar(0), compareSlow(0), compareFast(0), copyOut(0),
-        rawAccess(0), chop(0), trim(0), find(0), scanf(0),
+        rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
         caseChange(0), cowFast(0), cowSlow(0), live(0)
 {}
 
@@ -80,6 +80,7 @@ SBufStats::operator +=(const SBufStats& ss)
     compareFast += ss.compareFast;
     copyOut += ss.copyOut;
     rawAccess += ss.rawAccess;
+    nulTerminate += ss.nulTerminate;
     chop += ss.chop;
     trim += ss.trim;
     find += ss.find;
@@ -491,6 +492,7 @@ SBuf::c_str()
     *rawSpace(1) = '\0';
     ++store_->size;
     ++stats.setChar;
+    ++stats.nulTerminate;
     return buf();
 }
 
@@ -764,6 +766,7 @@ SBufStats::dump(std::ostream& os) const
     "\ncomparisons not requiring data-scan: " << compareFast <<
     "\ncopy-out ops: " << copyOut <<
     "\nraw access to memory: " << rawAccess <<
+    "\nNULL terminate C string: " << nulTerminate <<
     "\nchop operations: " << chop <<
     "\ntrim operations: " << trim <<
     "\nfind: " << find <<
