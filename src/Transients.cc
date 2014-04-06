@@ -288,7 +288,7 @@ Transients::copyToShm(const StoreEntry &e, const sfileno index,
 }
 
 void
-Transients::noteFreeMapSlice(const sfileno sliceId)
+Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
     // TODO: we should probably find the entry being deleted and abort it
 }
