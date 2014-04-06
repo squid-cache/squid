@@ -189,6 +189,8 @@ int
 ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
+    if (checklist->request->flags.sslBumped)
+        return 1; // AuthenticateAcl() already handled this bumped request
     if (!authenticateUserAuthenticated(Filled(checklist)->auth_user_request)) {
         return 0;
     }
