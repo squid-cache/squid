@@ -173,7 +173,7 @@ WIN32_SOURCE =
 WINSVC_SOURCE =
 endif
 
-if USE_IPC_WIN32
+if ENABLE_WIN32_IPC
 IPC_SOURCE = SquidIpc.h ipc_win32.cc
 else
 IPC_SOURCE = SquidIpc.h ipc.cc
@@ -182,13 +182,13 @@ endif
 AIO_WIN32_ALL_SOURCES = \
 	DiskIO/AIO/aio_win32.cc \
 	DiskIO/AIO/aio_win32.h
-if USE_AIO_WIN32
+if ENABLE_WIN32_AIO
 AIO_WIN32_SOURCES = $(AIO_WIN32_ALL_SOURCES)
 else
 AIO_WIN32_SOURCES =
 endif
 
-if USE_AIOPS_WIN32
+if ENABLE_WIN32_AIOPS
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
 	DiskIO/DiskThreads/CommIO.cc \
 	DiskIO/DiskThreads/CommIO.h
