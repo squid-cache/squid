@@ -206,7 +206,7 @@ AC_SUBST(CGIEXT)
 
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
                [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
-AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
+AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
 case "$squid_host_os" in
 mingw)
@@ -536,7 +536,7 @@ AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]
 AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 AH_TEMPLATE(USE_DISKIO_AIO, [Whether POSIX AIO support is needed. Automatic])
 AH_TEMPLATE(USE_DISKIO_DISKTHREADS, [Whether pthreads support is needed. Automatic])
-USE_AIOPS_WIN32=0
+ENABLE_WIN32_AIOPS=0
 squid_opt_use_aio=
 squid_opt_use_diskthreads=
 AIOLIB=
@@ -579,7 +579,7 @@ for module in $squid_disk_module_candidates none; do
       dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
         case "$squid_host_os" in
           mingw)
-            USE_AIOPS_WIN32=1
+            ENABLE_WIN32_AIOPS=1
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
@@ -691,7 +691,7 @@ for module in $squid_disk_module_candidates none; do
         DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
         case "$squid_host_os" in
           mingw)
-            USE_AIO_WIN32=1
+            ENABLE_WIN32_AIO=1
             AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
             ;;
           *)
@@ -750,8 +750,8 @@ AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
 AC_SUBST(DISK_LINKOBJS)
 AC_SUBST(DISK_OS_LIBS)
-AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = "1"])
-AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = "1"])
+AM_CONDITIONAL([ENABLE_WIN32_AIOPS], [test "$ENABLE_WIN32_AIOPS" = "1"])
+AM_CONDITIONAL([ENABLE_WIN32_AIO], [test "$ENABLE_WIN32_AIO" = "1"])
 
 
 dnl Check what Storage formats are wanted.
