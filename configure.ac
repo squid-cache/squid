@@ -1204,6 +1204,15 @@ fi
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(NETTLELIB)
 
+dnl Check for libcrypt
+CRYPTLIB=
+dnl Some of our helpers use crypt(3) which may be in libc, or in
+dnl libcrypt (eg FreeBSD)
+AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
+dnl Solaris10 provides MD5 natively through libmd5
+AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
+AC_SUBST(CRYPTLIB)
+
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
   AS_HELP_STRING([--with-openssl=PATH],
@@ -2197,7 +2206,6 @@ AC_CHECK_HEADERS( \
   paths.h \
   poll.h \
   pwd.h \
-  shadow.h \
   regex.h \
   sched.h \
   siginfo.h \
@@ -2560,22 +2568,6 @@ if test "x$enable_ipv6" = "xyes" ; then
 fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
-
-
-dnl Check for libcrypt
-CRYPTLIB=
-dnl Some of our helpers use crypt(3) which may be in libc, or in
-dnl libcrypt (eg FreeBSD)
-AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
-dnl Solaris10 provides MD5 natively through libmd5
-AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
-AC_SUBST(CRYPTLIB)
-
-# check for crypt, may require -lcrypt
-SAVED_LIBS="$LIBS"
-LIBS="$LIBS $CRYPTLIB"
-AC_CHECK_FUNCS(crypt)
-LIBS="$SAVED_LIBS"
 
 
 dnl Check for libdl, used by auth_modules/PAM
