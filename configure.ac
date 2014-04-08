@@ -1219,7 +1219,7 @@ case "$with_openssl" in
     if test ! -d "$withval" ; then
       AC_MSG_ERROR([--with-openssl path does not point to a directory])
     fi
-    LIBOPENSSL_LIBS="-L$with_openssl/lib"
+    LIBOPENSSL_PATH="-L$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
     with_openssl=yes
   esac
@@ -1238,38 +1238,39 @@ if test "x$with_openssl" = "xyes"; then
   )
 
   # User may have provided a custom location for OpenSSL. Otherwise...
-  if test "x$LIBOPENSSL_LIBS" = "x" ; then
-    # auto-detect using pkg-config
-    PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
+  SQUID_STATE_SAVE(squid_openssl_state)
+  LIBS="$LIBS $LIBOPENSSL_PATH"
 
-      # Windows MinGW has some special libraries ...
-      if test "x$squid_host_os" = "xmingw" ; then
-        LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
-        AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
-      fi
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
+    ## For some OS pkg-config is broken or unavailable.
+    ## Detect libraries the hard way.
 
-      AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
-        AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
-      ])
-      AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
-        AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
-      ])
-
-    ])
-
-    # This is a workaround for RedHat 9 brain damage..
-    if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
-      AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-      LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
-      CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+    # Windows MinGW has some special libraries ...
+    if test "x$squid_host_os" = "xmingw" ; then
+      LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
+      AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
     fi
+
+    AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
+    ])
+    AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
+    ])
+  ])
+
+  # This is a workaround for RedHat 9 brain damage..
+  if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
+    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
+    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
+    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
   fi
+  SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
   if test "x$LIBOPENSSL_LIBS" != "x"; then
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
-    SSLLIB="$LIBOPENSSL_LIBS $SSLLIB"
+    SSLLIB="$LIBOPENSSL_PATH $LIBOPENSSL_LIBS $SSLLIB"
     AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
 
     # check for other specific broken implementations
@@ -1281,7 +1282,7 @@ if test "x$with_openssl" = "xyes"; then
     AC_MSG_ERROR([Required OpenSSL library not found])
   fi
 fi
-AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_LIBS}])
+AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} ${LIBOPENSSL_LIBS}])
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
