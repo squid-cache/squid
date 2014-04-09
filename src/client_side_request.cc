@@ -1273,17 +1273,17 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
             // TODO: change default redirect status for appropriate requests
             // Squid defaults to 302 status for now for better compatibility with old clients.
-            // HTTP/1.0 client should get 302 (Http::scMovedTemporarily)
+            // HTTP/1.0 client should get 302 (Http::scFound)
             // HTTP/1.1 client contacting reverse-proxy should get 307 (Http::scTemporaryRedirect)
             // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
-            Http::StatusCode status = Http::scMovedTemporarily;
+            Http::StatusCode status = Http::scFound;
             if (statusNote != NULL) {
                 const char * result = statusNote;
                 status = static_cast<Http::StatusCode>(atoi(result));
             }
 
             if (status == Http::scMovedPermanently
-                    || status == Http::scMovedTemporarily
+                    || status == Http::scFound
                     || status == Http::scSeeOther
                     || status == Http::scPermanentRedirect
                     || status == Http::scTemporaryRedirect) {

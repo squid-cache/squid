@@ -124,7 +124,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 newReply.notes.append(&reply.notes);
 
                 if (status == Http::scMovedPermanently
-                        || status == Http::scMovedTemporarily
+                        || status == Http::scFound
                         || status == Http::scSeeOther
                         || status == Http::scPermanentRedirect
                         || status == Http::scTemporaryRedirect) {
@@ -289,7 +289,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
             status = Http::scInternalServerError;
             debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to " << name << ". Request ABORTED.");
         } else {
-            status = Http::scRequestUriTooLarge;
+            status = Http::scUriTooLong;
             debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to " << name << " exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
         }
 

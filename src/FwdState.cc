@@ -1053,7 +1053,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == serverDestinations[0]->fd);
 
     if (entry->isEmpty()) {
-        ErrorState *anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGateway_Timeout, request);
+        ErrorState *anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request);
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
 
@@ -1384,7 +1384,7 @@ ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
     return new ErrorState(type, request->flags.needValidation ?
-                          Http::scGateway_Timeout : Http::scServiceUnavailable, request);
+                          Http::scGatewayTimeout : Http::scServiceUnavailable, request);
 }
 
 static void
@@ -1423,7 +1423,7 @@ FwdState::reforwardableStatus(const Http::StatusCode s) const
 
     case Http::scBadGateway:
 
-    case Http::scGateway_Timeout:
+    case Http::scGatewayTimeout:
         return true;
 
     case Http::scForbidden:

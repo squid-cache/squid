@@ -3510,7 +3510,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        ftperr = new ErrorState(error, Http::scGateway_Timeout, fwd->request);
+        ftperr = new ErrorState(error, Http::scGatewayTimeout, fwd->request);
         break;
 
     default:
