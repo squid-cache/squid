@@ -1044,8 +1044,7 @@ void Rock::SwapDirRr::create()
             // TODO: somehow remove pool id and counters from PageStack?
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
                 shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
-                                             i+1, capacity,
-                                             sizeof(DbCellHeader));
+                                             i+1, capacity, 0);
             freeSlotsOwners.push_back(freeSlotsOwner);
 
             // TODO: add method to initialize PageStack with no free pages

@@ -829,8 +829,7 @@ MemStoreRr::create()
 
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
-                 entryLimit,
-                 sizeof(Ipc::Mem::PageId));
+                 entryLimit, 0);
     Must(!mapOwner);
     mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
 }
