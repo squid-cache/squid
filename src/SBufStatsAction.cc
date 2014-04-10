@@ -62,6 +62,14 @@ SBufStatsAction::collect()
     mbsizesatdestruct = *collectMemBlobDestructTimeStats();
 }
 
+static void
+statHistSBufDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+{
+    if (count == 0)
+        return;
+    storeAppendPrintf(sentry, "\t%d-%d\t%d\n", static_cast<int>(val), static_cast<int>(val+size), count);
+}
+
 void
 SBufStatsAction::dump(StoreEntry* entry)
 {
@@ -73,9 +81,9 @@ SBufStatsAction::dump(StoreEntry* entry)
     mbdata.dump(ses);
     ses << "\n";
     ses << "SBuf size distribution at destruct time:\n";
-    sbsizesatdestruct.dump(entry,NULL);
+    sbsizesatdestruct.dump(entry,statHistSBufDumper);
     ses << "MemBlob size distribution at destruct time:\n";
-    mbsizesatdestruct.dump(entry,NULL);
+    mbsizesatdestruct.dump(entry,statHistSBufDumper);
 }
 
 void
