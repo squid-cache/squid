@@ -52,11 +52,11 @@ Acl::NotNode::clone() const
     return NULL;
 }
 
-wordlist*
+SBufList
 Acl::NotNode::dump() const
 {
-    wordlist *text = NULL;
-    wordlistAdd(&text, name);
+    SBufList text;
+    text.push_back(SBuf(name));
     return text;
 }
 

@@ -54,7 +54,7 @@ public:
     ACLHTTPHeaderData();
     virtual ~ACLHTTPHeaderData();
     virtual bool match(HttpHeader* hdr);
-    virtual wordlist *dump();
+    virtual SBufList dump();
     virtual void parse();
     virtual bool empty() const;
     virtual ACLData<HttpHeader*> *clone() const;

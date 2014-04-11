@@ -42,7 +42,7 @@ struct acl_httpstatus_data {
     int status1, status2;
     acl_httpstatus_data(int);
     acl_httpstatus_data(int, int);
-    void toStr(char* buf, int len) const;
+    SBuf repr() const; // was toStr
 
     static int compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b);
 };
@@ -63,7 +63,7 @@ public:
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
     virtual bool empty () const;
     virtual bool requiresReply() const { return true; }
 

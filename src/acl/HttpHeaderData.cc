@@ -80,15 +80,13 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
     return regex_rule->match(cvalue.c_str());
 }
 
-wordlist *
+SBufList
 ACLHTTPHeaderData::dump()
 {
-    wordlist *W = NULL;
-    wordlistAdd(&W, hdrName.termedBuf());
-    wordlist * regex_dump = regex_rule->dump();
-    wordlistAddWl(&W, regex_dump);
-    wordlistDestroy(&regex_dump);
-    return W;
+    SBufList sl;
+    sl.push_back(SBuf(hdrName));
+    sl.splice(sl.end(),regex_rule->dump());
+    return sl;
 }
 
 void

@@ -64,13 +64,13 @@ Acl::InnerNode::lineParse()
     return;
 }
 
-wordlist*
+SBufList
 Acl::InnerNode::dump() const
 {
-    wordlist *values = NULL;
+    SBufList rv;
     for (Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i)
-        wordlistAdd(&values, (*i)->name);
-    return values;
+        rv.push_back(SBuf((*i)->name));
+    return rv;
 }
 
 int

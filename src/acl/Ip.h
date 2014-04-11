@@ -50,6 +50,7 @@ public:
 
     acl_ip_data (Ip::Address const &, Ip::Address const &, Ip::Address const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
+    SBuf toSBuf() const;
 
     Ip::Address addr1;
 
@@ -85,7 +86,7 @@ public:
     virtual void parse();
     //    virtual bool isProxyAuth() const {return true;}
     virtual int match(ACLChecklist *checklist) = 0;
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
     virtual bool empty () const;
 
 protected:

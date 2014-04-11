@@ -18,7 +18,7 @@ public:
     virtual char const *typeString() const;
     virtual ACL *clone() const;
     virtual void parse();
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
 
 private:
     /* Acl::InnerNode API */
