@@ -32,7 +32,7 @@
 #ifndef SQUID_ACLDATA_H
 #define SQUID_ACLDATA_H
 
-class wordlist;
+#include "SBufList.h"
 
 /// \ingroup ACLAPI
 template <class M>
@@ -44,7 +44,7 @@ public:
     virtual ~ACLData() {}
 
     virtual bool match(M) =0;
-    virtual wordlist *dump() =0;
+    virtual SBufList dump() =0;
     virtual void parse() =0;
     virtual ACLData *clone() const =0;
     virtual void prepareForUse() {}

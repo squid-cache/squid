@@ -37,6 +37,7 @@
 #include "acl/Strategised.h"
 #include "CbDataList.h"
 #include "ip/Address.h"
+#include "SBufList.h"
 
 int asnMatchIp(CbDataList<int> *, Ip::Address &);
 
@@ -56,7 +57,7 @@ public:
     virtual ~ACLASN();
 
     virtual bool match(Ip::Address);
-    virtual wordlist *dump();
+    virtual SBufList dump();
     virtual void parse();
     bool empty() const;
     virtual ACLData<Ip::Address> *clone() const;

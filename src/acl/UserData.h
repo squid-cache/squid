@@ -45,7 +45,7 @@ public:
 
     virtual ~ACLUserData();
     bool match(char const *user);
-    wordlist *dump();
+    SBufList dump();
     void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;

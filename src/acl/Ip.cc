@@ -528,12 +528,12 @@ ACLIP::~ACLIP()
         data->destroy(IPSplay::DefaultFree);
 }
 
-wordlist *
+SBufList
 ACLIP::dump() const
 {
-    wordlist *w = NULL;
-    data->walk (DumpIpListWalkee, &w);
-    return w;
+    SBufList sl;
+    data->walk (DumpIpListWalkee, &sl);
+    return sl;
 }
 
 bool
