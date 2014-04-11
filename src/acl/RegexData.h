@@ -34,6 +34,7 @@
 
 #include "acl/Data.h"
 #include "MemPool.h"
+#include "SBufList.h"
 
 class RegexList;
 
@@ -45,7 +46,7 @@ public:
 
     virtual ~ACLRegexData();
     virtual bool match(char const *user);
-    virtual wordlist *dump();
+    virtual SBufList dump();
     virtual void parse();
     virtual bool empty() const;
     virtual ACLData<char const *> *clone() const;

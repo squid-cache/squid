@@ -36,6 +36,7 @@
 #include "acl/Data.h"
 #include "CbDataList.h"
 #include "Range.h"
+#include "SBufList.h"
 
 /// \ingroup ACLAPI
 class ACLIntRange : public ACLData<int>
@@ -46,7 +47,7 @@ public:
 
     virtual ~ACLIntRange();
     virtual bool match(int);
-    virtual wordlist *dump();
+    virtual SBufList dump();
     virtual void parse();
     virtual bool empty() const;
     virtual ACLData<int> *clone() const;

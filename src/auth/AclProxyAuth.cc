@@ -99,7 +99,7 @@ ACLProxyAuth::match(ACLChecklist *checklist)
     }
 }
 
-wordlist *
+SBufList
 ACLProxyAuth::dump() const
 {
     return data->dump();
