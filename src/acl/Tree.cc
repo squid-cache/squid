@@ -65,7 +65,9 @@ Acl::Tree::treeDump(const char *prefix, const ActionToString &convert) const
             ++action;
         }
 
-        text.splice(text.end(),(*node)->dump());
+        // temp is needed until c++11 move constructor
+        SBufList temp = (*node)->dump();
+        text.splice(text.end(), temp);
         text.push_back(SBuf("\n"));
     }
     return text;
