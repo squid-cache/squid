@@ -101,7 +101,7 @@ aclDumpUserListWalkee(char * const & node_data, void *outlist)
 }
 
 SBufList
-ACLUserData::dump()
+ACLUserData::dump() const
 {
     SBufList sl;
 

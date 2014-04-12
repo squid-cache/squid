@@ -50,7 +50,7 @@ public:
     ACLProtocolData &operator= (ACLProtocolData const &);
     virtual ~ACLProtocolData();
     bool match(AnyP::ProtocolType);
-    SBufList dump();
+    SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<AnyP::ProtocolType> *clone() const;

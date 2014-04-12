@@ -112,7 +112,7 @@ ACLIntRange::~ACLIntRange()
 {}
 
 SBufList
-ACLIntRange::dump()
+ACLIntRange::dump() const
 {
     SBufList sl;
     CbDataListIterator<RangeType> iter(ranges);

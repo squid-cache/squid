@@ -66,7 +66,7 @@ template cbdata_type CbDataList<AnyP::ProtocolType>::CBDATA_CbDataList;
 /// \endcond
 
 SBufList
-ACLProtocolData::dump()
+ACLProtocolData::dump() const
 {
     SBufList sl;
     CbDataList<AnyP::ProtocolType> *data = values;

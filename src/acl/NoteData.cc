@@ -52,7 +52,7 @@ ACLNoteData::match(HttpRequest *request)
 }
 
 SBufList
-ACLNoteData::dump()
+ACLNoteData::dump() const
 {
     SBufList sl;
     sl.push_back(SBuf(name));

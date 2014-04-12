@@ -44,7 +44,7 @@ public:
     virtual ~ACLData() {}
 
     virtual bool match(M) =0;
-    virtual SBufList dump() =0;
+    virtual SBufList dump() const =0;
     virtual void parse() =0;
     virtual ACLData *clone() const =0;
     virtual void prepareForUse() {}

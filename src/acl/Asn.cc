@@ -551,7 +551,7 @@ ACLASN::match(Ip::Address toMatch)
 }
 
 SBufList
-ACLASN::dump()
+ACLASN::dump() const
 {
     SBufList sl;
 
