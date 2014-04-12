@@ -50,7 +50,7 @@ acl_httpstatus_data::acl_httpstatus_data(int x) : status1(x), status2(x) { ; }
 acl_httpstatus_data::acl_httpstatus_data(int x, int y) : status1(x), status2(y) { ; }
 
 SBuf
-acl_httpstatus_data::repr() const
+acl_httpstatus_data::toStr() const
 {
     SBuf rv;
     if (status2 == INT_MAX)
@@ -71,8 +71,8 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
         ret = aclHTTPStatusCompare(a, b);
 
     if (ret == 0) {
-        const SBuf sa = a->repr();
-        const SBuf sb = b->repr();
+        const SBuf sa = a->toStr();
+        const SBuf sb = b->toStr();
         debugs(28, DBG_CRITICAL, "WARNING: '" << sa << "' is a subrange of '" << sb << "'");
         debugs(28, DBG_CRITICAL, "WARNING: because of this '" << sa << "' is ignored to keep splay tree searching predictable");
         debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << sb << "' from the ACL named '" << AclMatchedName << "'");
@@ -185,7 +185,7 @@ static void
 aclDumpHTTPStatusListWalkee(acl_httpstatus_data * const &node, void *state)
 {
     // state is a SBufList*
-    static_cast<SBufList *>(state)->push_back(node->repr());
+    static_cast<SBufList *>(state)->push_back(node->toStr());
 }
 
 SBufList
