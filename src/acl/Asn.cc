@@ -50,7 +50,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "StoreClient.h"
-#include "wordlist.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096

@@ -2,7 +2,6 @@
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
 #include "Debug.h"
-#include "wordlist.h"
 
 /* Acl::NotNode */
 
