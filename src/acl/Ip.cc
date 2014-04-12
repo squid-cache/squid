@@ -532,12 +532,12 @@ SBufList
 ACLIP::dump() const
 {
     SBufList sl;
-    data->walk (DumpIpListWalkee, &sl);
+    data->walk(DumpIpListWalkee, &sl);
     return sl;
 }
 
 bool
-ACLIP::empty () const
+ACLIP::empty() const
 {
     return data->empty();
 }
@@ -561,6 +561,6 @@ ACLIP::match(Ip::Address &clientip)
     return !splayLastResult;
 }
 
-acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
+acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+acl_ip_data::acl_ip_data(Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
