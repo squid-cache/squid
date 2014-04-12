@@ -56,7 +56,9 @@ ACLNoteData::dump() const
 {
     SBufList sl;
     sl.push_back(SBuf(name));
-    sl.splice(sl.end(),values->dump());
+    // temp is needed until c++11 move constructor
+    SBufList temp = values->dump();
+    sl.splice(sl.end(), temp);
     return sl;
 }
 
