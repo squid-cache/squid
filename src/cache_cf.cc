@@ -72,6 +72,7 @@
 #include "PeerDigest.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
+#include "SBufList.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -1287,15 +1288,13 @@ parseBytesUnits(const char *unit)
     return 0;
 }
 
-/*****************************************************************************
- * Max
- *****************************************************************************/
-
 static void
-dump_wordlist(StoreEntry * entry, wordlist *words)
+dump_SBufList(StoreEntry * entry, const SBufList &words)
 {
-    for (wordlist *word = words; word; word = word->next)
-        storeAppendPrintf(entry, "%s ", word->key);
+    for (SBufList::const_iterator i = words.begin(); i != words.end(); ++i) {
+        entry->append(i->rawContent(), i->length());
+        entry->append(" ",1);
+    }
 }
 
 static void
@@ -1308,11 +1307,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
                           ae->name,
                           ae->typeString(),
                           ae->flags.flagsStr());
-        wordlist *w = ae->dump();
-        dump_wordlist(entry, w);
-
-        storeAppendPrintf(entry, "\n");
-        wordlistDestroy(&w);
+        dump_SBufList(entry, ae->dump());
         ae = ae->next;
     }
 }
@@ -1332,19 +1327,14 @@ free_acl(ACL ** ae)
 void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
-    wordlist *values = head->dump();
-    dump_wordlist(entry, values);
-    wordlistDestroy(&values);
+    dump_SBufList(entry, head->dump());
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
-    if (head) {
-        wordlist *lines = head->treeDump(name, NULL);
-        dump_wordlist(entry, lines);
-        wordlistDestroy(&lines);
-    }
+    if (head)
+        dump_SBufList(entry, head->dump());
 }
 
 static void
@@ -4880,11 +4870,8 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
 
 static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
 {
-    if (ftp_epsv) {
-        wordlist *lines = ftp_epsv->treeDump(name, NULL);
-        dump_wordlist(entry, lines);
-        wordlistDestroy(&lines);
-    }
+    if (ftp_epsv)
+        dump_SBufList(entry, ftp_epsv->treeDump(name, NULL));
 }
 
 static void free_ftp_epsv(acl_access **ftp_epsv)
