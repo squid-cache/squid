@@ -42,7 +42,6 @@
 #include "Debug.h"
 #include "HttpHeaderTools.h"
 #include "SBuf.h"
-#include "wordlist.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.
@@ -80,15 +79,13 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
     return regex_rule->match(cvalue.c_str());
 }
 
-wordlist *
-ACLHTTPHeaderData::dump()
+SBufList
+ACLHTTPHeaderData::dump() const
 {
-    wordlist *W = NULL;
-    wordlistAdd(&W, hdrName.termedBuf());
-    wordlist * regex_dump = regex_rule->dump();
-    wordlistAddWl(&W, regex_dump);
-    wordlistDestroy(&regex_dump);
-    return W;
+    SBufList sl;
+    sl.push_back(SBuf(hdrName));
+    sl.splice(sl.end(),regex_rule->dump());
+    return sl;
 }
 
 void

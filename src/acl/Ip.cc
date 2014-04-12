@@ -62,20 +62,7 @@ ACLIP::operator delete (void *address)
 void
 ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
 {
-    char tmpbuf[ ((MAX_IPSTRLEN*2)+6) ]; // space for 2 IPs and a CIDR mask(3) and seperators(3).
-    MemBuf mb;
-    wordlist **W = static_cast<wordlist **>(state);
-    tmpbuf[0] = '\0';
-
-    mb.init();
-    assert(mb.max_capacity > 0 && 1==1 );
-
-    ip->toStr(tmpbuf, sizeof(tmpbuf) );
-    assert(mb.max_capacity > 0 && 2==2 );
-    mb.append(tmpbuf, strlen(tmpbuf) );
-    assert(mb.max_capacity > 0 && 3==3);
-    wordlistAdd(W, mb.buf);
-    mb.clean();
+    static_cast<SBufList *>(state)->push_back(ip->toSBuf());
 }
 
 /**
@@ -114,6 +101,16 @@ acl_ip_data::toStr(char *buf, int len) const
     } else
         b3[0] = '\0';
 }
+
+SBuf
+acl_ip_data::toSBuf() const
+{
+    const int bufsz = MAX_IPSTRLEN*2+6;
+    static char tmpbuf[ bufsz ];
+    toStr(tmpbuf,bufsz);
+    return SBuf(tmpbuf);
+}
+
 
 /*
  * aclIpAddrNetworkCompare - The guts of the comparison for IP ACLs
@@ -528,16 +525,16 @@ ACLIP::~ACLIP()
         data->destroy(IPSplay::DefaultFree);
 }
 
-wordlist *
+SBufList
 ACLIP::dump() const
 {
-    wordlist *w = NULL;
-    data->walk (DumpIpListWalkee, &w);
-    return w;
+    SBufList sl;
+    data->walk(DumpIpListWalkee, &sl);
+    return sl;
 }
 
 bool
-ACLIP::empty () const
+ACLIP::empty() const
 {
     return data->empty();
 }
@@ -561,6 +558,6 @@ ACLIP::match(Ip::Address &clientip)
     return !splayLastResult;
 }
 
-acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
+acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+acl_ip_data::acl_ip_data(Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
