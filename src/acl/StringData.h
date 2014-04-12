@@ -48,7 +48,7 @@ public:
     ACLStringData &operator= (ACLStringData const &);
     virtual ~ACLStringData();
     bool match(char const *);
-    SBufList dump();
+    SBufList dump() const;
     virtual void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;

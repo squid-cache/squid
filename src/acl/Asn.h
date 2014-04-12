@@ -56,7 +56,7 @@ public:
     virtual ~ACLASN();
 
     virtual bool match(Ip::Address);
-    virtual SBufList dump();
+    virtual SBufList dump() const;
     virtual void parse();
     bool empty() const;
     virtual ACLData<Ip::Address> *clone() const;

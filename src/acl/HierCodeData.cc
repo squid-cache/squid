@@ -25,7 +25,7 @@ ACLHierCodeData::match(hier_code toFind)
 }
 
 SBufList
-ACLHierCodeData::dump()
+ACLHierCodeData::dump() const
 {
     SBufList sl;
 

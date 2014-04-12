@@ -98,10 +98,10 @@ ACLTimeData::match(time_t when)
 }
 
 SBufList
-ACLTimeData::dump()
+ACLTimeData::dump() const
 {
     SBufList sl;
-    ACLTimeData *t = this;
+    const ACLTimeData *t = this;
 
     while (t != NULL) {
         SBuf s;

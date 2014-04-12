@@ -68,7 +68,7 @@ template cbdata_type CbDataList<HttpRequestMethod>::CBDATA_CbDataList;
 /// \endcond
 
 SBufList
-ACLMethodData::dump()
+ACLMethodData::dump() const
 {
     SBufList sl;
     CbDataList<HttpRequestMethod> *data = values;
