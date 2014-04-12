@@ -54,7 +54,7 @@ public:
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *cl);
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
     virtual bool empty() const;
     virtual bool valid() const;
     virtual bool requiresRequest() const {return true;}

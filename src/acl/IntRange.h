@@ -46,7 +46,7 @@ public:
 
     virtual ~ACLIntRange();
     virtual bool match(int);
-    virtual wordlist *dump();
+    virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const;
     virtual ACLData<int> *clone() const;
