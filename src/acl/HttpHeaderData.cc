@@ -42,7 +42,6 @@
 #include "Debug.h"
 #include "HttpHeaderTools.h"
 #include "SBuf.h"
-#include "wordlist.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.

@@ -37,7 +37,6 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "Parsing.h"
-#include "wordlist.h"
 
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS_IGNORE */
