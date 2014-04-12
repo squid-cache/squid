@@ -103,7 +103,7 @@ ACLIdent::match(ACLChecklist *cl)
     return -1;
 }
 
-wordlist *
+SBufList
 ACLIdent::dump() const
 {
     return data->dump();
