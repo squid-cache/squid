@@ -144,7 +144,7 @@ aclDumpDomainListWalkee(char * const & node_data, void *outlist)
 }
 
 SBufList
-ACLDomainData::dump()
+ACLDomainData::dump() const
 {
     SBufList sl;
     /* damn this is VERY inefficient for long ACL lists... filling

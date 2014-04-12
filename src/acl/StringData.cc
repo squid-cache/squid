@@ -94,7 +94,7 @@ aclDumpStringWalkee(char * const & node_data, void *outlist)
 }
 
 SBufList
-ACLStringData::dump()
+ACLStringData::dump() const
 {
     SBufList sl;
     /* damn this is VERY inefficient for long ACL lists... filling

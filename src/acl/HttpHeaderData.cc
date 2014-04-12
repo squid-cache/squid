@@ -80,7 +80,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
 }
 
 SBufList
-ACLHTTPHeaderData::dump()
+ACLHTTPHeaderData::dump() const
 {
     SBufList sl;
     sl.push_back(SBuf(hdrName));

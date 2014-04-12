@@ -102,7 +102,7 @@ ACLRegexData::match(char const *word)
 }
 
 SBufList
-ACLRegexData::dump()
+ACLRegexData::dump() const
 {
     SBufList sl;
     RegexList *temp = data;
