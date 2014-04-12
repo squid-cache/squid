@@ -37,7 +37,6 @@
 #include "acl/Strategised.h"
 #include "CbDataList.h"
 #include "ip/Address.h"
-#include "SBufList.h"
 
 int asnMatchIp(CbDataList<int> *, Ip::Address &);
 

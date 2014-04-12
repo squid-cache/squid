@@ -34,7 +34,6 @@
 
 #include "acl/Data.h"
 #include "MemPool.h"
-#include "SBufList.h"
 
 class RegexList;
 

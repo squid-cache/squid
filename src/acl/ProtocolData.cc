@@ -65,18 +65,18 @@ ACLProtocolData::match(AnyP::ProtocolType toFind)
 template cbdata_type CbDataList<AnyP::ProtocolType>::CBDATA_CbDataList;
 /// \endcond
 
-wordlist *
+SBufList
 ACLProtocolData::dump()
 {
-    wordlist *W = NULL;
+    SBufList sl;
     CbDataList<AnyP::ProtocolType> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, AnyP::ProtocolType_str[data->element]);
+        sl.push_back(SBuf(AnyP::ProtocolType_str[data->element]));
         data = data->next;
     }
 
-    return W;
+    return sl;
 }
 
 void

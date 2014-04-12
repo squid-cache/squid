@@ -7,7 +7,6 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
-#include "wordlist.h"
 #include <algorithm>
 
 void

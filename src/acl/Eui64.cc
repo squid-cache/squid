@@ -41,8 +41,8 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
+#include "globals.h"
 #include "ip/Address.h"
-#include "wordlist.h"
 
 static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);
 static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c);
@@ -177,13 +177,13 @@ aclDumpEuiListWalkee(Eui::Eui64 * const &node, void *state)
 {
     static char buf[48];
     node->encode(buf, 48);
-    wordlistAdd((wordlist **)state, buf);
+    static_cast<SBufList *>(state)->push_back(SBuf(buf));
 }
 
-wordlist *
+SBufList
 ACLEui64::dump() const
 {
-    wordlist *w = NULL;
+    SBufList w;
     data->walk(aclDumpEuiListWalkee, &w);
     return w;
 }
