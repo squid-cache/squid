@@ -48,28 +48,25 @@ Acl::Tree::add(ACL *rule)
     InnerNode::add(rule);
 }
 
-wordlist*
+SBufList
 Acl::Tree::treeDump(const char *prefix, const ActionToString &convert) const
 {
-    wordlist *text = NULL;
+    SBufList text;
     Actions::const_iterator action = actions.begin();
     typedef Nodes::const_iterator NCI;
     for (NCI node = nodes.begin(); node != nodes.end(); ++node) {
 
-        wordlistAdd(&text, prefix);
+        text.push_back(SBuf(prefix));
 
         if (action != actions.end()) {
             const char *act = convert ? convert[action->kind] :
                               (*action == ACCESS_ALLOWED ? "allow" : "deny");
-            wordlistAdd(&text, act ? act : "???");
+            text.push_back(act?SBuf(act):SBuf("???"));
             ++action;
         }
 
-        wordlist *rule = (*node)->dump();
-        wordlistAddWl(&text, rule);
-        wordlistDestroy(&rule);
-
-        wordlistAdd(&text, "\n");
+        text.splice(text.end(),(*node)->dump());
+        text.push_back(SBuf("\n"));
     }
     return text;
 }

@@ -38,7 +38,6 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "src/URL.h"
-#include "wordlist.h"
 
 template<class T>
 inline void
@@ -140,20 +139,20 @@ ACLDomainData::match(char const *host)
 static void
 aclDumpDomainListWalkee(char * const & node_data, void *outlist)
 {
-    /* outlist is really a wordlist ** */
-    wordlistAdd((wordlist **)outlist, (char const *)node_data);
+    /* outlist is really a SBufList ** */
+    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
 }
 
-wordlist *
-ACLDomainData::dump()
+SBufList
+ACLDomainData::dump() const
 {
-    wordlist *wl = NULL;
+    SBufList sl;
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    domains->walk(aclDumpDomainListWalkee, &wl);
-    return wl;
+    domains->walk(aclDumpDomainListWalkee, &sl);
+    return sl;
 }
 
 void

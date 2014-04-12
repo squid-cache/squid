@@ -24,7 +24,7 @@ public:
     /* ACL API */
     virtual void prepareForUse();
     virtual bool empty() const;
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
 
     /// parses one "acl name type acl1 acl2..." line, appending to nodes
     void lineParse();

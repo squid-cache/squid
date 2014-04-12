@@ -2,6 +2,7 @@
 #define SQUID_ACL_TREE_H
 
 #include "acl/BoolOps.h"
+#include "SBufList.h"
 
 namespace Acl
 {
@@ -14,7 +15,7 @@ public:
     /// dumps <name, action, rule, new line> tuples
     /// action.kind is mapped to a string using the supplied conversion table
     typedef const char **ActionToString;
-    wordlist* treeDump(const char *name, const ActionToString &convert) const;
+    SBufList treeDump(const char *name, const ActionToString &convert) const;
 
     /// Returns the corresponding action after a successful tree match.
     allow_t winningAction() const;
