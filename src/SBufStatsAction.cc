@@ -82,7 +82,7 @@ SBufStatsAction::dump(StoreEntry* entry)
     ses << "\n";
     ses << "SBuf size distribution at destruct time:\n";
     sbsizesatdestruct.dump(entry,statHistSBufDumper);
-    ses << "MemBlob size distribution at destruct time:\n";
+    ses << "MemBlob capacity distribution at destruct time:\n";
     mbsizesatdestruct.dump(entry,statHistSBufDumper);
 }
 
