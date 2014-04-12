@@ -108,11 +108,11 @@ ACLIntRange::clone() const
     return new ACLIntRange (*this);
 }
 
-ACLIntRange::~ACLIntRange ()
+ACLIntRange::~ACLIntRange()
 {}
 
 SBufList
-ACLIntRange::dump ()
+ACLIntRange::dump()
 {
     SBufList sl;
     CbDataListIterator<RangeType> iter(ranges);
