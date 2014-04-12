@@ -48,7 +48,7 @@ public:
     ACLTimeData&operator=(ACLTimeData const &);
     virtual ~ACLTimeData();
     bool match(time_t);
-    SBufList dump() const;
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<time_t> *clone() const;

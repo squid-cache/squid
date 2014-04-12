@@ -42,7 +42,7 @@ struct acl_httpstatus_data {
     int status1, status2;
     acl_httpstatus_data(int);
     acl_httpstatus_data(int, int);
-    SBuf repr() const; // was toStr
+    SBuf toStr() const; // was toStr
 
     static int compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b);
 };
