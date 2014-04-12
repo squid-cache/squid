@@ -84,7 +84,9 @@ ACLHTTPHeaderData::dump() const
 {
     SBufList sl;
     sl.push_back(SBuf(hdrName));
-    sl.splice(sl.end(),regex_rule->dump());
+    // temp is needed until c++11 move-constructor
+    SBufList temp = regex_rule->dump();
+    sl.splice(sl.end(), temp);
     return sl;
 }
 
