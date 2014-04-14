@@ -39,6 +39,9 @@ tos_t GetTosToServer(HttpRequest * request);
  */
 nfmark_t GetNfmarkToServer(HttpRequest * request);
 
+/// Sets initial TOS value and Netfilter for the future outgoing connection.
+void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
+
 class HelperReply;
 
 class FwdState : public RefCountable
