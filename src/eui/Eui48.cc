@@ -361,6 +361,8 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
         set(arpReq.arp_ha.sa_data, 6);
         return true;
+    } else {
+        close(tmpSocket);
     }
 
 #elif _SQUID_FREEBSD_ || _SQUID_NETBSD_ || _SQUID_OPENBSD_ || _SQUID_DRAGONFLY_ || _SQUID_KFREEBSD_
