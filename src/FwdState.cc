@@ -1191,18 +1191,7 @@ FwdState::connectStart()
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    /* Get the server side TOS and Netfilter mark to be set on the connection. */
-    if (Ip::Qos::TheConfig.isAclTosActive()) {
-        serverDestinations[0]->tos = GetTosToServer(request);
-    }
-#if SO_MARK && USE_LIBCAP
-    serverDestinations[0]->nfmark = GetNfmarkToServer(request);
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos)
-           << ", netfilter mark " << serverDestinations[0]->nfmark);
-#else
-    serverDestinations[0]->nfmark = 0;
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos));
-#endif
+    GetMarkingsToServer(request, *serverDestinations[0]);
 
     calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
     Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, ctimeout);
@@ -1583,4 +1572,21 @@ GetNfmarkToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
     return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+}
+
+void
+GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
+{
+    // Get the server side TOS and Netfilter mark to be set on the connection.
+    if (Ip::Qos::TheConfig.isAclTosActive()) {
+        conn.tos = GetTosToServer(request);
+        debugs(17, 3, "from " << conn.local << " tos " << int(conn.tos));
+    }
+
+#if SO_MARK && USE_LIBCAP
+    conn.nfmark = GetNfmarkToServer(request);
+    debugs(17, 3, "from " << conn.local << " netfilter mark " << conn.nfmark);
+#else
+    conn.nfmark = 0;
+#endif
 }
