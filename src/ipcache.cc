@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "CacheManager.h"
+#include "dlink.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "ip/Address.h"

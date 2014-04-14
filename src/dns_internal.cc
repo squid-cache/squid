@@ -37,6 +37,7 @@
 #include "comm.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
+#include "dlink.h"
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
