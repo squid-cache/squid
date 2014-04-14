@@ -53,7 +53,12 @@ close RULES;
 URL: while (<STDIN>) {
 	chomp;
 	last if $_ eq 'quit';
-	
+
+  my $channel = "";
+  if (s/^(\d+\s+)//o) {
+    $channel = $1;
+  }
+
 	foreach my $rule (@rules) {
 		if (my @match = /$rule->[0]/) {
 			$_ = $rule->[1];
@@ -61,11 +66,11 @@ URL: while (<STDIN>) {
 			for (my $i=1; $i<=scalar(@match); $i++) {
 				s/\$$i/$match[$i-1]/g;
 			}
-			print "OK store-id=$_\n";
+			print $channel, "OK store-id=$_\n";
 			next URL;
 		}
 	}
-	print "ERR\n";
+	print $channel, "ERR\n";
 }
 
 =pod
