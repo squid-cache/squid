@@ -42,6 +42,7 @@
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "FwdState.h"
 #include "http.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
@@ -828,9 +829,6 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
-
-tos_t GetTosToServer(HttpRequest * request);
-nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 void
 tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const AccessLogEntryPointer &al)
