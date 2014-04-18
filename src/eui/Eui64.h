@@ -34,9 +34,9 @@ class Eui64
 {
 
 public:
-    Eui64() { clear(); };
-    Eui64(const Eui64 &t) { memcpy(this, &t, sizeof(Eui64)); };
-    ~Eui64() {};
+    Eui64() { clear(); }
+    Eui64(const Eui64 &t) { memcpy(this, &t, sizeof(Eui64)); }
+    ~Eui64() {}
 
     const unsigned char *get(void);
 
@@ -45,9 +45,9 @@ public:
         if (len < SZ_EUI64_BUF) clear();
         memcpy(eui, src, len);
         return true;
-    };
+    }
 
-    void clear() { memset(eui, 0, SZ_EUI64_BUF); };
+    void clear() { memset(eui, 0, SZ_EUI64_BUF); }
 
     /**
      * Decode an ascii representation of an EUI-64 address.

@@ -388,10 +388,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
 #if USE_SQUID_EUI
     if (Eui::TheConfig.euiLookup) {
-        if (conn->remote.isIPv4()) {
-            conn->remoteEui48.lookup(conn->remote);
-        } else if (conn->remote.isIPv6()) {
-            conn->remoteEui64.lookup(conn->remote);
+        if (details->remote.isIPv4()) {
+            details->remoteEui48.lookup(details->remote);
+        } else if (details->remote.isIPv6()) {
+            details->remoteEui64.lookup(details->remote);
         }
     }
 #endif
