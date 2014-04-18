@@ -177,7 +177,6 @@ static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * de
 static void free_access_log(CustomLog ** definitions);
 static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMissing);
 
-static void update_maxobjsize(void);
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
@@ -270,29 +269,6 @@ void
 self_destruct(void)
 {
     LegacyParser.destruct();
-}
-
-static void
-update_maxobjsize(void)
-{
-    int64_t ms = -1;
-
-    // determine the maximum size object that can be stored to disk
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        assert (Config.cacheSwap.swapDirs[i].getRaw());
-
-        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
-        if (ms < storeMax)
-            ms = storeMax;
-    }
-
-    // Ensure that we do not discard objects which could be stored only in memory.
-    // It is governed by maximum_object_size_in_memory (for now)
-    // TODO: update this to check each in-memory location (SMP and local memory limits differ)
-    if (ms < static_cast<int64_t>(Config.Store.maxInMemObjSize))
-        ms = Config.Store.maxInMemObjSize;
-
-    store_maxobjsize = ms;
 }
 
 static void
@@ -1943,9 +1919,6 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
             }
 
             sd->reconfigure();
-
-            update_maxobjsize();
-
             return;
         }
     }
@@ -1969,9 +1942,6 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     sd->parse(swap->n_configured, path_str);
 
     ++swap->n_configured;
-
-    /* Update the max object size */
-    update_maxobjsize();
 }
 
 static const char *
