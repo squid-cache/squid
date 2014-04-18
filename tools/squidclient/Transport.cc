@@ -9,6 +9,7 @@
 #if HAVE_GNUTLS_X509_H
 #include <gnutls/x509.h>
 #endif
+#include <iostream>
 
 Transport::TheConfig Transport::Config;
 
