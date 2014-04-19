@@ -206,7 +206,7 @@ main(int argc, char *argv[])
             {"local",   required_argument, 0, 'l'},
             {"port",    required_argument, 0, 'p'},
             {"ping",    no_argument, 0, '\1'},
-            {"tls",     no_argument, 0, '\3'},
+            {"https",   no_argument, 0, '\3'},
             {0, 0, 0, 0}
         };
 
