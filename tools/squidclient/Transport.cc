@@ -25,10 +25,10 @@ Transport::TheConfig::usage()
               << "  -p | --port port     Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
               << "  -T timeout           Timeout in seconds for read/write operations" << std::endl
 #if USE_GNUTLS
-              << "  --tls [TLS options]  Use TLS on the connection" << std::endl
+              << "  --https              Use TLS/SSL on the HTTP connection" << std::endl
               << std::endl
               << "  TLS options:" << std::endl
-              << "    --anonymous        Use Anonymous TLS. Sets default parameters:" << std::endl
+              << "    --anonymous-tls    Use Anonymous TLS. Sets default parameters:" << std::endl
               << "                         \"PERFORMANCE:+ANON-ECDH:+ANON-DH\"" << std::endl
               << "    --params=\"...\"   Use the given parameters." << std::endl
               << "    --cert=FILE        Path to a PEM file holding the client X.509 certificate chain." << std::endl
@@ -36,8 +36,8 @@ Transport::TheConfig::usage()
               << "    --trusted-ca=PATH  Path to a PEM file holding trusted CA certificate(s)." << std::endl
               << "                       May be repeated." << std::endl
               << "                       Example path: \"/etc/ssl/certs/ca-certificates.crt\"" << std::endl
-              << std::endl;
 #endif
+              << std::endl;
 }
 
 bool
@@ -48,8 +48,8 @@ Transport::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIn
 
     // options for controlling squidclient transport connection
     static struct option longOptions[] = {
-        {"anonymous",    no_argument, 0, '\1'},
-        {"tls",          no_argument, 0, '\3'},
+        {"anonymous-tls",no_argument, 0, '\1'},
+        {"https",        no_argument, 0, '\3'},
         {"trusted-ca",   required_argument, 0, 'A'},
         {"cert",         required_argument, 0, 'C'},
         {"host",         required_argument, 0, 'h'},
