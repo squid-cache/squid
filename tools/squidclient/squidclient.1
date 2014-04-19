@@ -9,7 +9,7 @@ A simple HTTP web client tool
 .if !'po4a'hide' .B squidclient
 .if !'po4a'hide' .B "[ \-aknNrsv ] "
 .if !'po4a'hide' .B "[ \-\-ping [ping\-options] ] "
-.if !'po4a'hide' .B "[ \-\-tls [tls\-options] ] [ \-A"
+.if !'po4a'hide' .B "[ \-\-https] [tls\-options] [ \-A"
 string
 .if !'po4a'hide' .B "] [ \-h | \-\-host"
 remote host
@@ -50,7 +50,7 @@ count
 interval
 .if !'po4a'hide' .B "] "
 .
-.if !'po4a'hide' .B "TLS options: [ \-\-anonymous ] [ \-\-trusted\-ca"
+.if !'po4a'hide' .B "TLS options: [ \-\-anonymous\-tls ] [ \-\-trusted\-ca"
 CA certificates file
 .if !'po4a'hide' .B "...] [ \-\-cert"
 client X.509 certificate file
@@ -186,6 +186,31 @@ Proxy authentication password
 .if !'po4a'hide' .B "\-W password"
 WWW authentication password
 .
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-https"
+Use Transport Layer Security on the HTTP connection.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-anonymous\-tls"
+Use TLS with unauthenticated (anonymous) certificate.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-cert file"
+File containing client X.509 certificate in PEM format.
+May be repeated to load several client certificates.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-trusted-ca file"
+File containing trusted Certificate Authority (CA) certificates in PEM format.
+May be repeated to load any number of files.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-params values"
+TLS library specific parameters for the communication session.
+See the library documentation for details on valid parameters.
+.if !'po4a'hide' .I "GnuTLS: http://gnutls.org/manual/html_node/Priority\-Strings.html"
+If repeated only the last value will have effect.
+.
 .if !'po4a'hide' .TP 10
 .if !'po4a'hide' .B "\-\-ping [options]"
 Enable ping mode. Optional \-g and \-I parameters must follow immediately if used.
@@ -200,31 +225,6 @@ iterations (default is to loop until interrupted).
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-I interval"
 Ping interval in seconds (default 1 second).
-.
-.if !'po4a'hide' .TP 10
-.if !'po4a'hide' .B "\-\-tls [options]"
-Use Transport Layer Security on the connection.
-.
-.if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B "\-\-anonymous"
-Use TLS with unauthenticated (anonymous) certificate.
-.
-.if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-\-cert file"
-File containing client X.509 certificate in PEM format.
-May be repeated to load several client certificates.
-.
-.if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B "\-\-trusted-ca file"
-File containing trusted Certificate Authority (CA) certificates in PEM format.
-May be repeated to load any number of files.
-.
-.if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B "\-\-params values"
-TLS library specific parameters for the communication session.
-See the library documentation for details on valid parameters.
-.if !'po4a'hide' .I "GnuTLS: http://gnutls.org/manual/html_node/Priority\-Strings.html"
-If repeated only the last value will have effect.
 .
 .SH AUTHOR
 Derived from Harvest. Further developed by by numerous individuals from
