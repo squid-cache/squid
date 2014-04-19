@@ -1537,7 +1537,7 @@ StoreEntry::validToSend() const
         return 0;
 
     if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
-        return 0;
+        return 1;
 
     // StoreEntry::storeClientType() assumes DISK_CLIENT here, but there is no
     // disk cache backing so we should not rely on the store cache at all. This
