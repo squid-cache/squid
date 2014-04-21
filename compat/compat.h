@@ -56,6 +56,7 @@
 /*****************************************************/
 
 #include "compat/os/aix.h"
+#include "compat/os/android.h"
 #include "compat/os/dragonfly.h"
 #include "compat/os/freebsd.h"
 #include "compat/os/hpux.h"
