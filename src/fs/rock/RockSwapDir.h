@@ -42,7 +42,7 @@ public:
     virtual void parse(int index, char *path);
 
     // temporary path to the shared memory map of first slots of cached entries
-    const char *inodeMapPath() const;
+    SBuf inodeMapPath() const;
     // temporary path to the shared memory stack of free slots
     const char *freeSlotsPath() const;
 

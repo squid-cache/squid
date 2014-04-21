@@ -9,12 +9,13 @@
 #include <vector>
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
-struct TransientsMapExtras {
+struct TransientsMapExtraItem {
     char url[MAX_URL+1]; ///< Request-URI; TODO: decrease MAX_URL by one
     RequestFlags reqFlags; ///< request flags
     Http::MethodType reqMethod; ///< request method; extensions are not supported
 };
-typedef Ipc::StoreMapWithExtras<TransientsMapExtras> TransientsMap;
+typedef Ipc::StoreMapItems<TransientsMapExtraItem> TransientsMapExtras;
+typedef Ipc::StoreMap TransientsMap;
 
 /// Keeps track of store entries being delivered to clients that arrived before
 /// those entries were [fully] cached. This shared table is necessary to sync
@@ -78,6 +79,10 @@ protected:
 private:
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
+
+    /// shared packed info that standard StoreMap does not store for us
+    typedef TransientsMapExtras Extras;
+    Ipc::Mem::Pointer<Extras> extras;
 
     typedef std::vector<StoreEntry*> Locals;
     /// local collapsed entries indexed by transient ID, for syncing old StoreEntries
