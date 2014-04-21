@@ -1907,9 +1907,9 @@ SquidShutdown()
 
     comm_exit();
 
-    memClean();
-
     RunRegisteredHere(RegisteredRunner::finishShutdown);
+
+    memClean();
 
     if (IamPrimaryProcess()) {
         if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
