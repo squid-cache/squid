@@ -60,7 +60,7 @@ public:
     /// Meant for cleanup and state saving that may require other modules.
     virtual void startShutdown() {}
 
-    /// Called after stopping the main loop.
+    /// Called after stopping the main loop and before releasing memory.
     /// Meant for quick/basic cleanup that does not require any other modules.
     virtual ~RegisteredRunner() {}
     /// exists to simplify caller interface; override the destructor instead
