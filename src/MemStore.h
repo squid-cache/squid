@@ -7,10 +7,11 @@
 #include "Store.h"
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
-struct MemStoreMapExtras {
+struct MemStoreMapExtraItem {
     Ipc::Mem::PageId page; ///< shared memory page with entry slice content
 };
-typedef Ipc::StoreMapWithExtras<MemStoreMapExtras> MemStoreMap;
+typedef Ipc::StoreMapItems<MemStoreMapExtraItem> MemStoreMapExtras;
+typedef Ipc::StoreMap MemStoreMap;
 
 /// Stores HTTP entities in RAM. Current implementation uses shared memory.
 /// Unlike a disk store (SwapDir), operations are synchronous (and fast).
@@ -78,6 +79,9 @@ private:
     // TODO: move freeSlots into map
     Ipc::Mem::Pointer<Ipc::Mem::PageStack> freeSlots; ///< unused map slot IDs
     MemStoreMap *map; ///< index of mem-cached entries
+
+    typedef MemStoreMapExtras Extras;
+    Ipc::Mem::Pointer<Extras> extras; ///< IDs of pages with slice data
 
     /// the last allocate slice for writing a store entry (during copyToShm)
     sfileno lastWritingSlice;

@@ -1007,13 +1007,10 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
 }
 
-const char *
+SBuf
 Rock::SwapDir::inodeMapPath() const
 {
-    static String inodesPath;
-    inodesPath = path;
-    inodesPath.append("_inodes");
-    return inodesPath.termedBuf();
+    return Ipc::Mem::Segment::Name(SBuf(path), "map");
 }
 
 const char *
