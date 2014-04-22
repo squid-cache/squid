@@ -916,7 +916,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_CLIENT_REQ_METHOD:
             if (al->request) {
-                out = al->request->method.image();
+                const SBuf &s = al->request->method.image();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;
@@ -952,7 +954,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REQUEST_METHOD:
-            out = al->_private.method_str;
+            if (al->_private.method_str) // ICP, HTCP method code
+                out = al->_private.method_str;
+            else {
+                const SBuf &s = al->http.method.image();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
+                quote = 1;
+            }
             break;
 
         case LFT_REQUEST_URI:
@@ -967,7 +976,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SERVER_REQ_METHOD:
             if (al->adapted_request) {
-                out = al->adapted_request->method.image();
+                const SBuf &s = al->adapted_request->method.image();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;

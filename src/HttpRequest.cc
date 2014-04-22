@@ -391,8 +391,8 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath),
+    packerPrintf(p, SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+                 SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
                  http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
@@ -414,7 +414,7 @@ httpRequestPack(void *obj, Packer *p)
 int
 HttpRequest::prefixLen()
 {
-    return strlen(RequestMethodStr(method)) + 1 +
+    return method.image().length() + 1 +
            urlpath.size() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
@@ -524,8 +524,8 @@ const char *HttpRequest::packableURI(bool full_uri) const
 void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
 {
     // form HTTP request-line
-    packerPrintf(p, "%s %s HTTP/%d.%d\r\n",
-                 RequestMethodStr(method),
+    packerPrintf(p, SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
+                 SQUIDSBUFPRINT(method.image()),
                  packableURI(full_uri),
                  http_ver.major, http_ver.minor);
 }

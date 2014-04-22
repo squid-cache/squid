@@ -1046,7 +1046,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(request->method) << " " << entry->url() << "\"" );
+        debugs(11, 2, "Request not yet fully sent " << request->method << ' ' << entry->url());
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -2117,8 +2117,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
-    mb->Printf("%s %s %s/%d.%d\r\n",
-               RequestMethodStr(request->method),
+    mb->Printf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+               SQUIDSBUFPRINT(request->method.image()),
                url && *url ? url : "/",
                AnyP::ProtocolType_str[httpver.protocol],
                httpver.major,httpver.minor);
@@ -2269,7 +2269,7 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
 void
 httpStart(FwdState *fwd)
 {
-    debugs(11, 3, "httpStart: \"" << RequestMethodStr(fwd->request->method) << " " << fwd->entry->url() << "\"" );
+    debugs(11, 3, fwd->request->method << ' ' << fwd->entry->url());
     AsyncJob::Start(new HttpStateData(fwd));
 }
 
