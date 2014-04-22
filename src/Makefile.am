@@ -3804,6 +3804,9 @@ tests_testStatHist_SOURCES = \
 	fatal.h \
 	tests/stub_fatal.cc \
 	tests/stub_MemBuf.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	StatHist.h \
 	String.cc \
@@ -3822,6 +3825,7 @@ tests_testStatHist_SOURCES = \
 	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
+	time.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/testMain.cc \

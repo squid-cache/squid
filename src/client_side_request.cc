@@ -758,8 +758,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
     acl_checklist = NULL;
     err_type page_id;
     Http::StatusCode status;
-    debugs(85, 2, "The request " <<
-           RequestMethodStr(http->request->method) << " " <<
+    debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
            "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
 
@@ -1516,7 +1515,7 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
 void
 ClientHttpRequest::processRequest()
 {
-    debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
+    debugs(85, 4, request->method << ' ' << uri);
 
     if (request->method == Http::METHOD_CONNECT && !redirect.status) {
 #if USE_OPENSSL

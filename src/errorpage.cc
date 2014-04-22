@@ -764,8 +764,8 @@ ErrorState::Dump(MemBuf * mb)
         else
             urlpath_or_slash = "/";
 
-        str.Printf("%s " SQUIDSTRINGPH " %s/%d.%d\n",
-                   RequestMethodStr(request->method),
+        str.Printf(SQUIDSBUFPH " " SQUIDSTRINGPH " %s/%d.%d\n",
+                   SQUIDSBUFPRINT(request->method.image()),
                    SQUIDSTRINGPRINT(urlpath_or_slash),
                    AnyP::ProtocolType_str[request->http_ver.protocol],
                    request->http_ver.major, request->http_ver.minor);
@@ -940,10 +940,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'M':
-        if (request)
-            p = RequestMethodStr(request->method);
-        else if (!building_deny_info_url)
-            p= "[unknown method]";
+        if (request) {
+           const SBuf &m = request->method.image();
+           mb.append(m.rawContent(), m.length());
+        } else if (!building_deny_info_url)
+            p = "[unknown method]";
         break;
 
     case 'o':
@@ -983,8 +984,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             else
                 urlpath_or_slash = "/";
 
-            mb.Printf("%s " SQUIDSTRINGPH " %s/%d.%d\n",
-                      RequestMethodStr(request->method),
+            mb.Printf(SQUIDSBUFPH " " SQUIDSTRINGPH " %s/%d.%d\n",
+                      SQUIDSBUFPRINT(request->method.image()),
                       SQUIDSTRINGPRINT(urlpath_or_slash),
                       AnyP::ProtocolType_str[request->http_ver.protocol],
                       request->http_ver.major, request->http_ver.minor);
