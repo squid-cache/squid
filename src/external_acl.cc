@@ -1058,7 +1058,11 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_METHOD:
-            str = RequestMethodStr(request->method);
+            {
+                const SBuf &s = request->method.image();
+                sb.append(s.rawContent(), s.length());
+            }
+            str = sb.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REQUEST:

@@ -1203,7 +1203,7 @@ FwdState::connectStart()
 void
 FwdState::dispatch()
 {
-    debugs(17, 3, HERE << clientConn << ": Fetching '" << RequestMethodStr(request->method) << " " << entry->url() << "'");
+    debugs(17, 3, clientConn << ": Fetching " << request->method << ' ' << entry->url());
     /*
      * Assert that server_fd is set.  This is to guarantee that fwdState
      * is attached to something and will be deallocated when server_fd

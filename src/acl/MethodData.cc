@@ -74,7 +74,7 @@ ACLMethodData::dump() const
     CbDataList<HttpRequestMethod> *data = values;
 
     while (data != NULL) {
-        sl.push_back(SBuf(RequestMethodStr(data->element)));
+        sl.push_back(data->element.image());
         data = data->next;
     }
 
