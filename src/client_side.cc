@@ -2810,6 +2810,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http->request->method == Http::METHOD_CONNECT) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
+
+        // consume header early so that tunnel gets just the body
+        connNoteUseOfBuffer(conn, http->req_sz);
+        notedUseOfBuffer = true;
     }
 
 #if USE_OPENSSL
