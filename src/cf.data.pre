@@ -66,13 +66,13 @@ COMMENT_START
 
   Values with byte units
 
-	Squid supports some directive parameters in bytes with a unit
-	measure. All such directives are documented with a default value
-	displaying a unit measure.
+	Squid accepts size units on some size related directives. All
+	such directives are documented with a default value displaying
+	a unit.
 
 	Units accepted by Squid are:
-		bytes - bytes
-		KB - Kilobyte
+		bytes - byte
+		KB - Kilobyte (1024 bytes)
 		MB - Megabyte
 		GB - Gigabyte
 
