@@ -675,7 +675,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     *tunnelState->status_ptr = Http::scOkay;
     if (cbdataReferenceValid(tunnelState)) {
 
-        // Bug 3371: shovel any payload already pushed into ConnStateData by the client request
+        // Shovel any payload already pushed into reply buffer by the server response
         if (!tunnelState->server.len)
             tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
         else {
