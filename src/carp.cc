@@ -185,7 +185,7 @@ carpSelectParent(HttpRequest * request)
 
     /* select CachePeer */
     for (k = 0; k < n_carp_peers; ++k) {
-        String key;
+        SBuf key;
         tp = carp_peers[k];
         if (tp->options.carp_key.set) {
             //this code follows urlCanonical's pattern.
@@ -194,7 +194,7 @@ carpSelectParent(HttpRequest * request)
                 // temporary, until bug 1961 URL handling is fixed.
                 const AnyP::UriScheme sch(request->protocol);
                 key.append(sch.c_str());
-                if (key.size()) //if the scheme is not empty
+                if (key.length()) //if the scheme is not empty
                     key.append("://");
             }
             if (tp->options.carp_key.host) {
@@ -206,26 +206,26 @@ carpSelectParent(HttpRequest * request)
                 key.append(portbuf);
             }
             if (tp->options.carp_key.path) {
-                String::size_type pos;
-                if ((pos=request->urlpath.find('?'))!=String::npos)
+                SBuf::size_type pos;
+                if ((pos=request->urlpath.find('?'))!=SBuf::npos)
                     key.append(request->urlpath.substr(0,pos));
                 else
                     key.append(request->urlpath);
             }
             if (tp->options.carp_key.params) {
-                String::size_type pos;
-                if ((pos=request->urlpath.find('?'))!=String::npos)
-                    key.append(request->urlpath.substr(pos,request->urlpath.size()));
+                SBuf::size_type pos;
+                if ((pos=request->urlpath.find('?'))!=SBuf::npos)
+                    key.append(request->urlpath.substr(pos, request->urlpath.size()));
             }
         }
         // if the url-based key is empty, e.g. because the user is
         // asking to balance on the path but the request doesn't supply any,
         // then fall back to canonical URL
 
-        if (key.size()==0)
-            key=urlCanonical(request);
+        if (key.isEmpty())
+            key=SBuf(urlCanonical(request));
 
-        for (const char *c = key.rawBuf(), *e=key.rawBuf()+key.size(); c < e; ++c)
+        for (const char *c = key.rawContent(), *e=key.rawContent()+key.length(); c < e; ++c)
             user_hash += ROTATE_LEFT(user_hash, 19) + *c;
         combined_hash = (user_hash ^ tp->carp.hash);
         combined_hash += combined_hash * 0x62531965;
