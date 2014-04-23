@@ -64,6 +64,17 @@ COMMENT_START
   from causing Squid entering an infinite loop whilst trying to load
   configuration files.
 
+  Values with byte units
+
+	Squid accepts size units on some size related directives. All
+	such directives are documented with a default value displaying
+	a unit.
+
+	Units accepted by Squid are:
+		bytes - byte
+		KB - Kilobyte (1024 bytes)
+		MB - Megabyte
+		GB - Gigabyte
 
   Values with spaces, quotes, and other special characters
 
@@ -3329,6 +3340,41 @@ DOC_START
 	and http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
 DOC_END
 
+NAME: minimum_object_size
+COMMENT: (bytes)
+TYPE: b_int64_t
+DEFAULT: 0 KB
+DEFAULT_DOC: no limit
+LOC: Config.Store.minObjectSize
+DOC_START
+	Objects smaller than this size will NOT be saved on disk.  The
+	value is specified in bytes, and the default is 0 KB, which
+	means all responses can be stored.
+DOC_END
+
+NAME: maximum_object_size
+COMMENT: (bytes)
+TYPE: b_int64_t
+DEFAULT: 4 MB
+LOC: Config.Store.maxObjectSize
+DOC_START
+	Set the default value for max-size parameter on any cache_dir
+	which follow.
+	
+	The value is specified in bytes, and the default is 4 MB.
+	
+	If you wish to get a high BYTES hit ratio, you should probably
+	increase this (one 32 MB object hit counts for 3200 10KB
+	hits).
+	
+	If you wish to increase hit ratio more than you want to
+	save bandwidth you should leave this low.
+	
+	NOTE: if using the LFUDA replacement policy you should increase
+	this value to maximize the byte hit rate improvement of LFUDA!
+	See cache_replacement_policy for a discussion of this policy.
+DOC_END
+
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
@@ -3489,9 +3535,10 @@ DOC_START
 
 	max-size=n	the maximum object size in bytes this cache_dir
 			supports.
-			The value in maximum_object_size directive, sets
-			a default unless more specific details are available
-			about the cache_dir (ie a small store capacity).
+			The value in maximum_object_size directive above
+			this cache_dir line sets a default unless more
+			specific details are available (ie a small store
+			capacity).
 
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
@@ -3566,40 +3613,6 @@ DOC_START
 	descriptors are open.
 
 	A value of 0 indicates no limit.
-DOC_END
-
-NAME: minimum_object_size
-COMMENT: (bytes)
-TYPE: b_int64_t
-DEFAULT: 0 KB
-DEFAULT_DOC: no limit
-LOC: Config.Store.minObjectSize
-DOC_START
-	Objects smaller than this size will NOT be saved on disk.  The
-	value is specified in bytes, and the default is 0 KB, which
-	means all responses can be stored.
-DOC_END
-
-NAME: maximum_object_size
-COMMENT: (bytes)
-TYPE: b_int64_t
-DEFAULT: 4 MB
-LOC: Config.Store.maxObjectSize
-DOC_START
-	The default limit on size of objects stored to disk.
-	This size is used for cache_dir where max-size is not set.
-	The value is specified in bytes, and the default is 4 MB.
-
-	If you wish to get a high BYTES hit ratio, you should probably
-	increase this (one 32 MB object hit counts for 3200 10KB
-	hits).
-
-	If you wish to increase hit ratio more than you want to
-	save bandwidth you should leave this low.
-
-	NOTE: if using the LFUDA replacement policy you should increase
-	this value to maximize the byte hit rate improvement of LFUDA!
-	See replacement_policy below for a discussion of this policy.
 DOC_END
 
 NAME: cache_swap_low
@@ -8881,6 +8894,7 @@ DOC_END
 NAME: high_memory_warning
 TYPE: b_size_t
 LOC: Config.warnings.high_memory
+IFDEF: HAVE_MSTATS&&HAVE_GNUMALLOC_H
 DEFAULT: 0 KB
 DEFAULT_DOC: disabled.
 DOC_START
