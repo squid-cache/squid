@@ -242,7 +242,7 @@ peerSelectDnsPaths(ps_state *psstate)
             // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
             Comm::ConnectionPointer p = new Comm::Connection();
             p->remote = req->clientConnectionManager->clientConnection->local;
-            p->peerType = fs->code;
+            p->peerType = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
             p->setPeer(fs->_peer);
 
             // check for a configured outgoing address for this destination...
