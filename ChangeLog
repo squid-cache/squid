@@ -1,3 +1,21 @@
+Changes to squid-3.4.4.1 (23 Apr 2014):
+
+	- Regression Bug 4019: Cache digest exchange segmentation fault
+	- Regression Bug 3982: EUI logging and helpers show blank MAC address
+	- Bug 4047: Support Android builds
+	- Bug 4043: Remove XMALLOC_TRACE and references to sbrk(2)
+	- Bug 4041: Missing files in compat/Makefile.am
+	- Bug 4014: Build failure with --disable-optimizations --disable-auth
+	- Bug 3986: (partial) assertion due to incorrect error page buffer size
+	- Bug 3955: Solaris EUI-48 lookup leaks FDs
+	- Bug 3371: CONNECT with data sent at once loses data
+	- C++11: Upgrade auto-detection to use the formal -std=c++11
+	- Crypto-NG: libnettle MD5 algorithm support
+	- SSL-Bump: Fix Basic auth caching on bumped connections
+	- Store-ID: Fix request URI when forwarding requests to peers
+	- ... and fix several other build errors
+	- ... and some documentation updates
+
 Changes to squid-3.4.4 (09 Mar 2014):
 
 	- Bug 4029: intercepted HTTPS requests bypass caching checks
