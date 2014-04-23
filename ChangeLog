@@ -1,3 +1,7 @@
+Changes to squid-3.4.4.2 (23 Apr 2014):
+
+	- versino bump for packaging re-build with altered toolchain
+
 Changes to squid-3.4.4.1 (23 Apr 2014):
 
 	- Regression Bug 4019: Cache digest exchange segmentation fault
