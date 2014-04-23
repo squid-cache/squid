@@ -554,7 +554,7 @@ urlCanonicalClean(const HttpRequest * request)
         switch (request->method.id()) {
 
         case Http::METHOD_CONNECT:
-            snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
+            snprintf(buf, MAX_URL, "%s:%d", request->GetHost(), request->port);
             break;
 
         default:
