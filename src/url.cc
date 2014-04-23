@@ -506,22 +506,30 @@ urlCanonical(HttpRequest * request)
     if (request->protocol == AnyP::PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
-    } else if (request->method.id() == Http::METHOD_CONNECT) {
-        snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
     } else {
-        portbuf[0] = '\0';
+        switch (request->method.id()) {
 
-        if (request->port != urlDefaultPort(request->protocol))
-            snprintf(portbuf, 32, ":%d", request->port);
+        case Http::METHOD_CONNECT:
+            snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
+            break;
 
-        const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
-        snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
-                 sch.c_str(),
-                 request->login,
-                 *request->login ? "@" : null_string,
-                 request->GetHost(),
-                 portbuf,
-                 SQUIDSTRINGPRINT(request->urlpath));
+        default:
+            {
+                portbuf[0] = '\0';
+
+                if (request->port != urlDefaultPort(request->protocol))
+                    snprintf(portbuf, 32, ":%d", request->port);
+
+                const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
+                snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
+                         sch.c_str(),
+                         request->login,
+                         *request->login ? "@" : null_string,
+                         request->GetHost(),
+                         portbuf,
+                         SQUIDSTRINGPRINT(request->urlpath));
+            }
+        }
     }
 
     return (request->canonical = xstrdup(urlbuf));
@@ -542,39 +550,45 @@ urlCanonicalClean(const HttpRequest * request)
     if (request->protocol == AnyP::PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
-    } else if (request->method.id() == Http::METHOD_CONNECT) {
-        snprintf(buf, MAX_URL, "%s:%d", request->GetHost(), request->port);
     } else {
-        portbuf[0] = '\0';
+        switch (request->method.id()) {
 
-        if (request->port != urlDefaultPort(request->protocol))
-            snprintf(portbuf, 32, ":%d", request->port);
+        case Http::METHOD_CONNECT:
+            snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
+            break;
 
-        loginbuf[0] = '\0';
+        default:
+            {
+                portbuf[0] = '\0';
 
-        if ((int) strlen(request->login) > 0) {
-            strcpy(loginbuf, request->login);
+                if (request->port != urlDefaultPort(request->protocol))
+                    snprintf(portbuf, 32, ":%d", request->port);
 
-            if ((t = strchr(loginbuf, ':')))
-                *t = '\0';
+                loginbuf[0] = '\0';
 
-            strcat(loginbuf, "@");
+                if ((int) strlen(request->login) > 0) {
+                    strcpy(loginbuf, request->login);
+
+                    if ((t = strchr(loginbuf, ':')))
+                        *t = '\0';
+
+                    strcat(loginbuf, "@");
+                }
+
+                const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
+                snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
+                         sch.c_str(),
+                         loginbuf,
+                         request->GetHost(),
+                         portbuf,
+                         SQUIDSTRINGPRINT(request->urlpath));
+
+                // strip arguments AFTER a question-mark
+                if (Config.onoff.strip_query_terms)
+                    if ((t = strchr(buf, '?')))
+                        *(++t) = '\0';
+            }
         }
-
-        const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
-        snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
-                 sch.c_str(),
-                 loginbuf,
-                 request->GetHost(),
-                 portbuf,
-                 SQUIDSTRINGPRINT(request->urlpath));
-        /*
-         * strip arguments AFTER a question-mark
-         */
-
-        if (Config.onoff.strip_query_terms)
-            if ((t = strchr(buf, '?')))
-                *(++t) = '\0';
     }
 
     if (stringHasCntl(buf))
