@@ -90,6 +90,13 @@ CBDATA_CLASS_INIT(ps_state);
 
 ps_state::~ps_state()
 {
+    while (servers) {
+        FwdServer *next = servers->next;
+        cbdataReferenceDone(servers->_peer);
+        memFree(servers, MEM_FWD_SERVER);
+        servers = next;
+    }
+
     if (entry) {
         debugs(44, 3, entry->url());
 
@@ -229,6 +236,12 @@ peerSelectDnsPaths(ps_state *psstate)
 {
     FwdServer *fs = psstate->servers;
 
+    if (!cbdataReferenceValid(psstate->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete psstate;
+        return;
+    }
+
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must use only the original client destination when going DIRECT
@@ -318,6 +331,12 @@ static void
 peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data)
 {
     ps_state *psstate = (ps_state *)data;
+
+    if (!cbdataReferenceValid(psstate->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete psstate;
+        return;
+    }
 
     psstate->request->recordLookup(details);
 
@@ -432,6 +451,12 @@ peerCheckNetdbDirect(ps_state * psstate)
 static void
 peerSelectFoo(ps_state * ps)
 {
+    if (!cbdataReferenceValid(ps->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete ps;
+        return;
+    }
+
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
