@@ -206,16 +206,16 @@ carpSelectParent(HttpRequest * request)
                 key.append(portbuf);
             }
             if (tp->options.carp_key.path) {
-                SBuf::size_type pos;
-                if ((pos=request->urlpath.find('?'))!=SBuf::npos)
-                    key.append(request->urlpath.substr(0,pos));
+                String::size_type pos;
+                if ((pos=request->urlpath.find('?'))!=String::npos)
+                    key.append(SBuf(request->urlpath.substr(0,pos)));
                 else
-                    key.append(request->urlpath);
+                    key.append(SBuf(request->urlpath));
             }
             if (tp->options.carp_key.params) {
-                SBuf::size_type pos;
-                if ((pos=request->urlpath.find('?'))!=SBuf::npos)
-                    key.append(request->urlpath.substr(pos, request->urlpath.size()));
+                String::size_type pos;
+                if ((pos=request->urlpath.find('?'))!=String::npos)
+                    key.append(SBuf(request->urlpath.substr(pos,request->urlpath.size())));
             }
         }
         // if the url-based key is empty, e.g. because the user is
