@@ -1240,9 +1240,11 @@ if test "x$with_gnutls" != "xno"; then
   LIBS="$LIBS $LIBGNUTLS_PATH"
 
   # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls],,[
+  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.1.5],,[
     ## find the package without pkg-config
-    AC_CHECK_LIB(gnutls,gnutls_init,[LIBGNUTLS_LIBS="-lgnutls"])
+    ## check that the library is actually new enough.
+    ## by testing for a 3.1.5+ function which we use
+    AC_CHECK_LIB(gnutls,gnutls_certificate_verify_peers3,[LIBGNUTLS_LIBS="-lgnutls"])
   ])
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
