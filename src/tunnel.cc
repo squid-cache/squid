@@ -52,6 +52,9 @@
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
+#if USE_OPENSSL
+#include "ssl/PeerConnector.h"
+#endif
 #include "tools.h"
 #if USE_DELAY_POOLS
 #include "DelayId.h"
@@ -160,7 +163,38 @@ public:
 
     void copyRead(Connection &from, IOCB *completion);
 
+    /// continue to set up connection to a peer, going async for SSL peers
+    void connectToPeer();
+
 private:
+#if USE_OPENSSL
+    /// Gives PeerConnector access to Answer in the TunnelStateData callback dialer.
+    class MyAnswerDialer: public CallDialer, public Ssl::PeerConnector::CbDialer
+    {
+    public:
+        typedef void (TunnelStateData::*Method)(Ssl::PeerConnectorAnswer &);
+
+        MyAnswerDialer(Method method, TunnelStateData *tunnel):
+                       method_(method), tunnel_(tunnel), answer_() {}
+
+        /* CallDialer API */
+        virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
+        void dial(AsyncCall &call) { ((&(*tunnel_))->*method_)(answer_); }
+        virtual void print(std::ostream &os) const {
+            os << '(' << tunnel_.get() << ", " << answer_ << ')'; }
+
+        /* Ssl::PeerConnector::CbDialer API */
+        virtual Ssl::PeerConnectorAnswer &answer() { return answer_; }
+
+    private:
+        Method method_;
+        CbcPointer<TunnelStateData> tunnel_;
+        Ssl::PeerConnectorAnswer answer_;
+    };
+
+    void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
+#endif
+
     CBDATA_CLASS2(TunnelStateData);
     bool keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
@@ -839,7 +873,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     }
 
     if (tunnelState->request->flags.proxying)
-        tunnelRelayConnectRequest(conn, tunnelState);
+        tunnelState->connectToPeer();
     else {
         tunnelConnected(conn, tunnelState);
     }
@@ -911,6 +945,45 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
                tunnelPeerSelectComplete,
                tunnelState);
 }
+
+void
+TunnelStateData::connectToPeer() {
+    const Comm::ConnectionPointer &srv = server.conn;
+
+#if USE_OPENSSL
+    if (CachePeer *p = srv->getPeer()) {
+        if (p->use_ssl) {
+            AsyncCall::Pointer callback = asyncCall(5,4,
+                "TunnelStateData::ConnectedToPeer",
+                MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
+            Ssl::PeerConnector *connector =
+                new Ssl::PeerConnector(request, srv, callback);
+            AsyncJob::Start(connector); // will call our callback
+            return;
+        }
+    }
+#endif
+
+    tunnelRelayConnectRequest(srv, this);
+}
+
+#if USE_OPENSSL
+/// Ssl::PeerConnector callback
+void
+TunnelStateData::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
+{
+    if (ErrorState *error = answer.error.get()) {
+        *status_ptr = error->httpStatus;
+        error->callback = tunnelErrorComplete;
+        error->callback_data = this;
+        errorSend(client.conn, error);
+        answer.error.clear(); // preserve error for errorSendComplete()
+        return;
+    }
+
+    tunnelRelayConnectRequest(server.conn, this);
+}
+#endif
 
 static void
 tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
