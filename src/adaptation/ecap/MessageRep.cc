@@ -254,7 +254,7 @@ Adaptation::Ecap::RequestLineRep::method() const
     case Http::METHOD_TRACE:
         return libecap::methodTrace;
     default:
-        return Name(theMessage.method.image());
+        return Name(theMessage.method.image().toStdString());
     }
 }
 
