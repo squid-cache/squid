@@ -3583,6 +3583,19 @@ DOC_START
 	disks. This algorithm does not spread objects by size, so any
 	I/O loading per-disk may appear very unbalanced and volatile.
 
+	If several cache_dirs use similar min-size, max-size, or other
+	limits to to reject certain responses, then do not group such
+	cache_dir lines together, to avoid round-robin selection bias
+	towards the first cache_dir after the group. Instead, interleave
+	cache_dir lines from different groups. For example:
+
+		store_dir_select_algorithm round-robin
+		cache_dir rock /hdd1 ... min-size=100000
+		cache_dir rock /ssd1 ... max-size=99999
+		cache_dir rock /hdd2 ... min-size=100000
+		cache_dir rock /ssd2 ... max-size=99999
+		cache_dir rock /hdd3 ... min-size=100000
+		cache_dir rock /ssd3 ... max-size=99999
 DOC_END
 
 NAME: max_open_disk_fds
