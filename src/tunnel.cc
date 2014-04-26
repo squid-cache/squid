@@ -688,7 +688,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
         }
 
         // Bug 3371: shovel any payload already pushed into ConnStateData by the client request
-        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.notYetUsed) {
+        if (tunnelState->http.valid() && tunnelState->http->getConn() && tunnelState->http->getConn()->in.notYetUsed) {
             struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
             debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << Raw("", in->buf, in->notYetUsed) << "\n----------");
 
