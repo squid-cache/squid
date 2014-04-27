@@ -2720,20 +2720,23 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
-        if (internalHostnameIs(request->GetHost()) &&
-                request->port == getMyPort()) {
+        if (internalHostnameIs(request->GetHost()) && request->port == getMyPort()) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port);
             http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port << " (global_internal_static on)");
             request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = true;
-        }
+        } else
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port << " (not this proxy)");
     }
 
-    if (http->flags.internal) {
-        request->protocol = AnyP::PROTO_HTTP;
+    if (http->flags.internal)
         request->login[0] = '\0';
-    }
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));

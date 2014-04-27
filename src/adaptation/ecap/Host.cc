@@ -45,7 +45,6 @@ Adaptation::Ecap::Host::Host()
     libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
     libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
     libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);
-    protocolInternal.assignHostId(AnyP::PROTO_INTERNAL);
     protocolCacheObj.assignHostId(AnyP::PROTO_CACHE_OBJECT);
     protocolIcp.assignHostId(AnyP::PROTO_ICP);
 #if USE_HTCP

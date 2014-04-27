@@ -1045,7 +1045,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_PROTO:
-            str = AnyP::ProtocolType_str[request->protocol];
+            str = request->url.getScheme().c_str();
             break;
 
         case _external_acl_format::EXT_ACL_PORT:

@@ -729,7 +729,7 @@ DOC_START
 	  %SRCPORT	Client source port
 	  %URI		Requested URI
 	  %DST		Requested host
-	  %PROTO	Requested protocol
+	  %PROTO	Requested URL scheme
 	  %PORT		Requested port
 	  %PATH		Requested URL path
 	  %METHOD	Request method
