@@ -321,7 +321,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
      */
 
     if ( Config.accessList.miss && !request->client_addr.isNoAddr() &&
-            request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHE_OBJECT) {
+            !request->flags.internal && request->url.getScheme() != AnyP::PROTO_CACHE_OBJECT) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access).
          * Intentionally replace the src_addr automatically selected by the checklist code
@@ -361,13 +361,16 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         return;
     }
 
-    switch (request->protocol) {
-
-    case AnyP::PROTO_INTERNAL:
+    if (request->flags.internal) {
+        debugs(17, 2, "calling internalStart() due to request flag");
         internalStart(clientConn, request, entry);
         return;
+    }
+
+    switch (request->url.getScheme()) {
 
     case AnyP::PROTO_CACHE_OBJECT:
+        debugs(17, 2, "calling CacheManager due to request scheme " << request->url.getScheme());
         CacheManager::GetInstance()->Start(clientConn, request, entry);
         return;
 
@@ -692,7 +695,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 #if USE_OPENSSL
     if (!request->flags.pinned) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-                (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
+                (!serverConnection()->getPeer() && request->url.getScheme() == AnyP::PROTO_HTTPS) ||
                 request->flags.sslPeek) {
 
             HttpRequest::Pointer requestPointer = request;
@@ -946,7 +949,7 @@ FwdState::dispatch()
         request->peer_login = NULL;
         request->peer_domain = NULL;
 
-        switch (request->protocol) {
+        switch (request->url.getScheme()) {
 #if USE_OPENSSL
 
         case AnyP::PROTO_HTTPS:
@@ -967,8 +970,6 @@ FwdState::dispatch()
             break;
 
         case AnyP::PROTO_CACHE_OBJECT:
-
-        case AnyP::PROTO_INTERNAL:
 
         case AnyP::PROTO_URN:
             fatal_dump("Should never get here");

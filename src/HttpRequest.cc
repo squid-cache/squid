@@ -82,7 +82,7 @@ void
 HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
 {
     method = aMethod;
-    protocol = aProtocol;
+    url.setScheme(aProtocol);
     urlpath = aUrlpath;
 }
 
@@ -90,7 +90,7 @@ void
 HttpRequest::init()
 {
     method = Http::METHOD_NONE;
-    protocol = AnyP::PROTO_NONE;
+    url.clear();
     urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
@@ -150,6 +150,7 @@ HttpRequest::clean()
 
     safe_free(vary_headers);
 
+    url.clear();
     urlpath.clean();
 
     header.clean();
@@ -197,7 +198,7 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(method, protocol, urlpath.termedBuf());
+    HttpRequest *copy = new HttpRequest(method, url.getScheme(), urlpath.termedBuf());
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
     copy->hdrCacheInit();
@@ -594,7 +595,7 @@ HttpRequest::maybeCacheable()
     if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
-    switch (protocol) {
+    switch (url.getScheme()) {
     case AnyP::PROTO_HTTP:
     case AnyP::PROTO_HTTPS:
         if (!method.respMaybeCacheable())

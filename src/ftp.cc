@@ -3732,7 +3732,7 @@ ftpUrlWith2f(HttpRequest * request)
 {
     String newbuf = "%2f";
 
-    if (request->protocol != AnyP::PROTO_FTP)
+    if (request->url.getScheme() != AnyP::PROTO_FTP)
         return NULL;
 
     if ( request->urlpath[0]=='/' ) {

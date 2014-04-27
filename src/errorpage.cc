@@ -972,7 +972,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'P':
         if (request) {
-            p = AnyP::ProtocolType_str[request->protocol];
+            p = request->url.getScheme().c_str();
         } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }
