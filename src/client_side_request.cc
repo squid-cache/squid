@@ -678,10 +678,10 @@ ClientRequestContext::hostHeaderVerify()
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
-    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
+    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->url.getScheme())) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
-        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
+        debugs(85, 3, "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->url.getScheme()));
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
         // Okay no problem.
@@ -983,13 +983,13 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->flags.loopDetected)
         return 0;
 
-    if (request->protocol == AnyP::PROTO_HTTP)
+    if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
 
-    if (request->protocol == AnyP::PROTO_GOPHER)
+    if (request->url.getScheme() == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
 
-    if (request->protocol == AnyP::PROTO_CACHE_OBJECT)
+    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
         return 0;
 
     return 1;

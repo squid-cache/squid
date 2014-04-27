@@ -146,9 +146,6 @@ urlParseProtocol(const char *b, const char *e)
     if (strncasecmp(b, "whois", len) == 0)
         return AnyP::PROTO_WHOIS;
 
-    if (strncasecmp(b, "internal", len) == 0)
-        return AnyP::PROTO_INTERNAL;
-
     return AnyP::PROTO_NONE;
 }
 
@@ -179,8 +176,6 @@ urlDefaultPort(AnyP::ProtocolType p)
         return 210;
 
     case AnyP::PROTO_CACHE_OBJECT:
-
-    case AnyP::PROTO_INTERNAL:
         return CACHE_HTTP_PORT;
 
     case AnyP::PROTO_WHOIS:
@@ -503,7 +498,7 @@ urlCanonical(HttpRequest * request)
     if (request->canonical)
         return request->canonical;
 
-    if (request->protocol == AnyP::PROTO_URN) {
+    if (request->url.getScheme() == AnyP::PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
     } else {
@@ -517,12 +512,11 @@ urlCanonical(HttpRequest * request)
             {
                 portbuf[0] = '\0';
 
-                if (request->port != urlDefaultPort(request->protocol))
+                if (request->port != urlDefaultPort(request->url.getScheme()))
                     snprintf(portbuf, 32, ":%d", request->port);
 
-                const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
                 snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
-                         sch.c_str(),
+                         request->url.getScheme().c_str(),
                          request->login,
                          *request->login ? "@" : null_string,
                          request->GetHost(),
@@ -547,7 +541,7 @@ urlCanonicalClean(const HttpRequest * request)
     LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
 
-    if (request->protocol == AnyP::PROTO_URN) {
+    if (request->url.getScheme() == AnyP::PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
     } else {
@@ -561,7 +555,7 @@ urlCanonicalClean(const HttpRequest * request)
             {
                 portbuf[0] = '\0';
 
-                if (request->port != urlDefaultPort(request->protocol))
+                if (request->port != urlDefaultPort(request->url.getScheme()))
                     snprintf(portbuf, 32, ":%d", request->port);
 
                 loginbuf[0] = '\0';
@@ -575,9 +569,8 @@ urlCanonicalClean(const HttpRequest * request)
                     strcat(loginbuf, "@");
                 }
 
-                const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
                 snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
-                         sch.c_str(),
+                         request->url.getScheme().c_str(),
                          loginbuf,
                          request->GetHost(),
                          portbuf,
@@ -667,7 +660,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
-    if (req->protocol == AnyP::PROTO_URN) {
+    if (req->url.getScheme() == AnyP::PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(req->urlpath));
         return (urlbuf);
@@ -675,10 +668,9 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     size_t urllen;
 
-    const AnyP::UriScheme sch = req->protocol; // temporary, until bug 1961 URL handling is fixed.
-    if (req->port != urlDefaultPort(req->protocol)) {
+    if (req->port != urlDefaultPort(req->url.getScheme())) {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
-                          sch.c_str(),
+                          req->url.getScheme().c_str(),
                           req->login,
                           *req->login ? "@" : null_string,
                           req->GetHost(),
@@ -686,7 +678,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
                          );
     } else {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
-                          sch.c_str(),
+                          req->url.getScheme().c_str(),
                           req->login,
                           *req->login ? "@" : null_string,
                           req->GetHost()
@@ -844,7 +836,7 @@ urlCheckRequest(const HttpRequest * r)
         return 1;
 
     /* does method match the protocol? */
-    switch (r->protocol) {
+    switch (r->url.getScheme()) {
 
     case AnyP::PROTO_URN:
 
