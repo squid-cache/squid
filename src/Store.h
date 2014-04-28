@@ -120,10 +120,10 @@ public:
     bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
     void swapOutFileClose(int how);
     const char *url() const;
-    /// generally cachable (checks agnostic to disk/RAM-specific requirements)
-    /// common part of mayStartSwapOut() and memoryCachable()
-    /// TODO: Make private so only those two methods can call this.
-    int checkCachable();
+    /// Satisfies cachability requirements shared among disk and RAM caches.
+    /// Encapsulates common checks of mayStartSwapOut() and memoryCachable().
+    /// TODO: Rename and make private so only those two methods can call this.
+    bool checkCachable();
     int checkNegativeHit() const;
     int locked() const;
     int validToSend() const;

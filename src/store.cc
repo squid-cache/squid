@@ -950,7 +950,7 @@ StoreEntry::checkTooSmall()
 }
 
 // TODO: move "too many open..." checks outside -- we are called too early/late
-int
+bool
 StoreEntry::checkCachable()
 {
     // XXX: This method is used for both memory and disk caches, but some
