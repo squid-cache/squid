@@ -74,7 +74,7 @@ Ipc::StoreMap::forgetWritingEntry(sfileno fileno)
     inode.rewind();
 
     inode.lock.unlockExclusive();
-    anchors->count;
+    --anchors->count;
 
     debugs(54, 8, "closed entry " << fileno << " for writing " << path);
 }
