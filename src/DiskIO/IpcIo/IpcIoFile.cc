@@ -18,6 +18,7 @@
 #include "ipc/Queue.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -43,8 +44,8 @@ std::auto_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
 bool IpcIoFile::DiskerHandleMoreRequestsScheduled = false;
 
-static bool DiskerOpen(const String &path, int flags, mode_t mode);
-static void DiskerClose(const String &path);
+static bool DiskerOpen(const SBuf &path, int flags, mode_t mode);
+static void DiskerClose(const SBuf &path);
 
 /// IpcIo wrapper for debugs() streams; XXX: find a better class name
 struct SipcIo {
@@ -98,7 +99,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
 
     if (IamDiskProcess()) {
-        error_ = !DiskerOpen(dbName, flags, mode);
+        error_ = !DiskerOpen(SBuf(dbName.termedBuf()), flags, mode);
         if (error_)
             return;
 
@@ -177,7 +178,7 @@ IpcIoFile::close()
     assert(ioRequestor != NULL);
 
     if (IamDiskProcess())
-        DiskerClose(dbName);
+        DiskerClose(SBuf(dbName.termedBuf()));
     // XXX: else nothing to do?
 
     ioRequestor->closeCompleted();
@@ -636,7 +637,7 @@ IpcIoPendingRequest::completeIo(IpcIoMsg *const response)
 
 /* XXX: disker code that should probably be moved elsewhere */
 
-static String DbName; ///< full db file name
+static SBuf DbName; ///< full db file name
 static int TheFile = -1; ///< db file descriptor
 
 static void
@@ -884,12 +885,12 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 }
 
 static bool
-DiskerOpen(const String &path, int flags, mode_t mode)
+DiskerOpen(const SBuf &path, int flags, mode_t mode)
 {
     assert(TheFile < 0);
 
     DbName = path;
-    TheFile = file_open(DbName.termedBuf(), flags);
+    TheFile = file_open(DbName.c_str(), flags);
 
     if (TheFile < 0) {
         const int xerrno = errno;
@@ -899,12 +900,12 @@ DiskerOpen(const String &path, int flags, mode_t mode)
     }
 
     ++store_open_disk_fd;
-    debugs(79,3, HERE << "rock db opened " << DbName << ": FD " << TheFile);
+    debugs(79,3, "rock db opened " << DbName << ": FD " << TheFile);
     return true;
 }
 
 static void
-DiskerClose(const String &path)
+DiskerClose(const SBuf &path)
 {
     if (TheFile >= 0) {
         file_close(TheFile);
@@ -912,7 +913,7 @@ DiskerClose(const String &path)
         TheFile = -1;
         --store_open_disk_fd;
     }
-    DbName.clean();
+    DbName.clear();
 }
 
 /// reports our needs for shared memory pages to Ipc::Mem::Pages

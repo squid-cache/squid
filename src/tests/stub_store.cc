@@ -46,7 +46,7 @@ void StoreEntry::purgeMem() STUB
 void StoreEntry::swapOut() STUB
 void StoreEntry::swapOutFileClose(int how) STUB
 const char *StoreEntry::url() const STUB_RETVAL(NULL)
-int StoreEntry::checkCachable() STUB_RETVAL(0)
+bool StoreEntry::checkCachable() STUB_RETVAL(0)
 int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
 int StoreEntry::locked() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
