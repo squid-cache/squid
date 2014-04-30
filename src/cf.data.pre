@@ -64,6 +64,17 @@ COMMENT_START
   from causing Squid entering an infinite loop whilst trying to load
   configuration files.
 
+  Values with byte units
+
+	Squid accepts size units on some size related directives. All
+	such directives are documented with a default value displaying
+	a unit.
+
+	Units accepted by Squid are:
+		bytes - byte
+		KB - Kilobyte (1024 bytes)
+		MB - Megabyte
+		GB - Gigabyte
 
   Values with spaces, quotes, and other special characters
 
@@ -718,7 +729,7 @@ DOC_START
 	  %SRCPORT	Client source port
 	  %URI		Requested URI
 	  %DST		Requested host
-	  %PROTO	Requested protocol
+	  %PROTO	Requested URL scheme
 	  %PORT		Requested port
 	  %PATH		Requested URL path
 	  %METHOD	Request method
@@ -3075,7 +3086,8 @@ DOC_START
 	
 	connect-fail-limit=N
 			How many times connecting to a peer must fail before
-			it is marked as down. Default is 10.
+			it is marked as down. Standby connection failures
+			count towards this limit. Default is 10.
 	
 	allow-miss	Disable Squid's use of only-if-cached when forwarding
 			requests to siblings. This is primarily useful when
@@ -3085,8 +3097,50 @@ DOC_START
 			For example to deny peer usage on requests from peer
 			by denying cache_peer_access if the source is a peer.
 	
-	max-conn=N	Limit the amount of connections Squid may open to this
-			peer. see also 
+	max-conn=N 	Limit the number of concurrent connections the Squid
+			may open to this peer, including already opened idle
+			and standby connections. There is no peer-specific
+			connection limit by default.
+	
+			A peer exceeding the limit is not used for new
+			requests unless a standby connection is available.
+	
+			max-conn currently works poorly with idle persistent
+			connections: When a peer reaches its max-conn limit,
+			and there are idle persistent connections to the peer,
+			the peer may not be selected because the limiting code
+			does not know whether Squid can reuse those idle
+			connections.
+	
+	standby=N	Maintain a pool of N "hot standby" connections to an
+			UP peer, available for requests when no idle
+			persistent connection is available (or safe) to use.
+			By default and with zero N, no such pool is maintained.
+			N must not exceed the max-conn limit (if any).
+	
+			At start or after reconfiguration, Squid opens new TCP
+			standby connections until there are N connections
+			available and then replenishes the standby pool as
+			opened connections are used up for requests. A used
+			connection never goes back to the standby pool, but
+			may go to the regular idle persistent connection pool
+			shared by all peers and origin servers.
+	
+			Squid never opens multiple new standby connections
+			concurrently.  This one-at-a-time approach minimizes
+			flooding-like effect on peers. Furthermore, just a few
+			standby connections should be sufficient in most cases
+			to supply most new requests with a ready-to-use
+			connection.
+	
+			Standby connections obey server_idle_pconn_timeout.
+			For the feature to work as intended, the peer must be
+			configured to accept and keep them open longer than
+			the idle timeout at the connecting Squid, to minimize
+			race conditions typical to idle used persistent
+			connections. Default request_timeout and
+			server_idle_pconn_timeout values ensure such a
+			configuration.
 	
 	name=xxx	Unique name for the peer.
 			Required if you have multiple peers on the same host
@@ -3383,6 +3437,39 @@ DOC_START
 	and http://fog.hpl.external.hp.com/techreports/98/HPL-98-173.html.
 DOC_END
 
+NAME: minimum_object_size
+COMMENT: (bytes)
+TYPE: b_int64_t
+DEFAULT: 0 KB
+DEFAULT_DOC: no limit
+LOC: Config.Store.minObjectSize
+DOC_START
+	Objects smaller than this size will NOT be saved on disk.  The
+	value is specified in bytes, and the default is 0 KB, which
+	means all responses can be stored.
+DOC_END
+
+NAME: maximum_object_size
+COMMENT: (bytes)
+TYPE: b_int64_t
+DEFAULT: 4 MB
+LOC: Config.Store.maxObjectSize
+DOC_START
+	Set the default value for max-size parameter on any cache_dir.
+	The value is specified in bytes, and the default is 4 MB.
+	
+	If you wish to get a high BYTES hit ratio, you should probably
+	increase this (one 32 MB object hit counts for 3200 10KB
+	hits).
+	
+	If you wish to increase hit ratio more than you want to
+	save bandwidth you should leave this low.
+	
+	NOTE: if using the LFUDA replacement policy you should increase
+	this value to maximize the byte hit rate improvement of LFUDA!
+	See cache_replacement_policy for a discussion of this policy.
+DOC_END
+
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
@@ -3532,9 +3619,9 @@ DOC_START
 
 	max-size=n	the maximum object size in bytes this cache_dir
 			supports.
-			The value in maximum_object_size directive, sets
-			a default unless more specific details are available
-			about the cache_dir (ie a small store capacity).
+			The value in maximum_object_size directive sets
+			the default unless more specific details are
+			available (ie a small store capacity).
 
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
@@ -3605,40 +3692,6 @@ DOC_START
 	descriptors are open.
 
 	A value of 0 indicates no limit.
-DOC_END
-
-NAME: minimum_object_size
-COMMENT: (bytes)
-TYPE: b_int64_t
-DEFAULT: 0 KB
-DEFAULT_DOC: no limit
-LOC: Config.Store.minObjectSize
-DOC_START
-	Objects smaller than this size will NOT be saved on disk.  The
-	value is specified in bytes, and the default is 0 KB, which
-	means all responses can be stored.
-DOC_END
-
-NAME: maximum_object_size
-COMMENT: (bytes)
-TYPE: b_int64_t
-DEFAULT: 4 MB
-LOC: Config.Store.maxObjectSize
-DOC_START
-	The default limit on size of objects stored to disk.
-	This size is used for cache_dir where max-size is not set.
-	The value is specified in bytes, and the default is 4 MB.
-
-	If you wish to get a high BYTES hit ratio, you should probably
-	increase this (one 32 MB object hit counts for 3200 10KB
-	hits).
-
-	If you wish to increase hit ratio more than you want to
-	save bandwidth you should leave this low.
-
-	NOTE: if using the LFUDA replacement policy you should increase
-	this value to maximize the byte hit rate improvement of LFUDA!
-	See replacement_policy below for a discussion of this policy.
 DOC_END
 
 NAME: cache_swap_low
@@ -3729,10 +3782,22 @@ DOC_START
 		err_code    The ID of an error response served by Squid or
 				a similar internal error identifier.
 		err_detail  Additional err_code-dependent error information.
-		note	The meta header specified by the argument. Also
+		note	The annotation specified by the argument. Also
 			logs the adaptation meta headers set by the
 			adaptation_meta configuration parameter.
-			If no argument given all meta headers logged.
+			If no argument given all annotations logged.
+			The argument may include a separator to use with
+			annotation values:
+                            name[:separator]
+			By default, multiple note values are separated with ","
+			and multiple notes are separated with "\r\n".
+			When logging named notes with %{name}note, the
+			explicitly configured separator is used between note
+			values. When logging all notes with %note, the
+			explicitly configured separator is used between
+			individual notes. There is currently no way to
+			specify both value and notes separators when logging
+			all notes with %note.
 
 	Connection related format codes:
 
@@ -4486,9 +4551,9 @@ DOC_START
 DOC_END
 
 NAME: ftp_epsv
-TYPE: onoff
-DEFAULT: on
-LOC: Config.Ftp.epsv
+TYPE: ftp_epsv
+DEFAULT: none
+LOC: Config.accessList.ftp_epsv
 DOC_START
 	FTP Protocol extensions permit the use of a special "EPSV" command.
 
@@ -4497,10 +4562,18 @@ DOC_START
 	and therefore, translation of the data portion of the segments 
 	will never be needed.
 
-	Turning this OFF will prevent EPSV being attempted.
-	WARNING: Doing so will convert Squid back to the old behavior with all
-	the related problems with external NAT devices/layers.
+	EPSV is often required to interoperate with FTP servers on IPv6
+	networks. On the other hand, it may break some IPv4 servers.
 
+	By default, EPSV may try EPSV with any FTP server. To fine tune
+	that decision, you may restrict EPSV to certain clients or servers
+	using ACLs:
+
+		ftp_epsv allow|deny al1 acl2 ...
+
+	WARNING: Disabling EPSV may cause problems with external NAT and IPv6.
+
+	Only fast ACLs are supported.
 	Requires ftp_passive to be ON (default) for any effect.
 DOC_END
 
@@ -9015,7 +9088,7 @@ DOC_END
 NAME: high_memory_warning
 TYPE: b_size_t
 LOC: Config.warnings.high_memory
-IFDEF: HAVE_MSTATS && HAVE_GNUMALLOC_H
+IFDEF: HAVE_MSTATS&&HAVE_GNUMALLOC_H
 DEFAULT: 0 KB
 DEFAULT_DOC: disabled.
 DOC_START

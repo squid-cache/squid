@@ -67,18 +67,16 @@ ACLSslErrorData::match(const Ssl::CertErrors *toFind)
 // template cbdata_type Ssl::Errors::CBDATA_CbDataList;
 /** \endcond */
 
-wordlist *
-ACLSslErrorData::dump()
+SBufList
+ACLSslErrorData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
     Ssl::Errors *data = values;
-
     while (data != NULL) {
-        wordlistAdd(&W, Ssl::GetErrorName(data->element));
+        sl.push_back(SBuf(Ssl::GetErrorName(data->element)));
         data = data->next;
     }
-
-    return W;
+    return sl;
 }
 
 void

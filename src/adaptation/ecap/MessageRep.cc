@@ -158,8 +158,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
 #endif
     case AnyP::PROTO_CACHE_OBJECT:
         return protocolCacheObj;
-    case AnyP::PROTO_INTERNAL:
-        return protocolInternal;
     case AnyP::PROTO_ICY:
         return protocolIcy;
     case AnyP::PROTO_COAP:
@@ -254,7 +252,7 @@ Adaptation::Ecap::RequestLineRep::method() const
     case Http::METHOD_TRACE:
         return libecap::methodTrace;
     default:
-        return Name(theMessage.method.image());
+        return Name(theMessage.method.image().toStdString());
     }
 }
 

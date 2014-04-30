@@ -604,7 +604,6 @@ HttpReply::clone() const
     rep->pstate = pstate;
     rep->body_pipe = body_pipe;
 
-    rep->protocol = protocol;
     // keep_alive is handled in hdrCacheInit()
     return rep;
 }

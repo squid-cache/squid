@@ -59,18 +59,6 @@ typedef struct _CacheEntry {
     unsigned char key_arr[SQUID_MD5_DIGEST_LENGTH];
 } CacheEntry;
 
-/* copied from url.c */
-const char *RequestMethodStr[] = {
-    "NONE",
-    "GET",
-    "POST",
-    "PUT",
-    "HEAD",
-    "CONNECT",
-    "TRACE",
-    "PURGE"
-};
-
 static int cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file);
 
 static CacheEntry *

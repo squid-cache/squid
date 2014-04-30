@@ -206,7 +206,7 @@ AC_SUBST(CGIEXT)
 
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
                [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
-AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
+AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
 case "$squid_host_os" in
 mingw)
@@ -536,7 +536,7 @@ AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]
 AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 AH_TEMPLATE(USE_DISKIO_AIO, [Whether POSIX AIO support is needed. Automatic])
 AH_TEMPLATE(USE_DISKIO_DISKTHREADS, [Whether pthreads support is needed. Automatic])
-USE_AIOPS_WIN32=0
+ENABLE_WIN32_AIOPS=0
 squid_opt_use_aio=
 squid_opt_use_diskthreads=
 AIOLIB=
@@ -579,7 +579,7 @@ for module in $squid_disk_module_candidates none; do
       dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
         case "$squid_host_os" in
           mingw)
-            USE_AIOPS_WIN32=1
+            ENABLE_WIN32_AIOPS=1
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
@@ -691,7 +691,7 @@ for module in $squid_disk_module_candidates none; do
         DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
         case "$squid_host_os" in
           mingw)
-            USE_AIO_WIN32=1
+            ENABLE_WIN32_AIO=1
             AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
             ;;
           *)
@@ -750,8 +750,8 @@ AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
 AC_SUBST(DISK_LINKOBJS)
 AC_SUBST(DISK_OS_LIBS)
-AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = "1"])
-AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = "1"])
+AM_CONDITIONAL([ENABLE_WIN32_AIOPS], [test "$ENABLE_WIN32_AIOPS" = "1"])
+AM_CONDITIONAL([ENABLE_WIN32_AIO], [test "$ENABLE_WIN32_AIO" = "1"])
 
 
 dnl Check what Storage formats are wanted.
@@ -1204,6 +1204,64 @@ fi
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(NETTLELIB)
 
+dnl Check for libcrypt
+CRYPTLIB=
+dnl Some of our helpers use crypt(3) which may be in libc, or in
+dnl libcrypt (eg FreeBSD)
+AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
+dnl Solaris10 provides MD5 natively through libmd5
+AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
+AC_SUBST(CRYPTLIB)
+
+SSLLIB=""
+
+dnl User may want to disable GnuTLS
+AC_ARG_WITH(gnutls,
+  AS_HELP_STRING([--without-gnutls],
+                 [Do not use GnuTLS for SSL. Default: auto-detect]), [ 
+case "$with_gnutls" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-gnutls path does not point to a directory])
+    fi
+    LIBGNUTLS_PATH="-L$with_gnutls/lib"
+    CPPFLAGS="-I$with_gnutls/include $CPPFLAGS"
+  esac
+])
+AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
+if test "x$with_gnutls" != "xno"; then
+  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h)
+
+  # User may have provided a custom location for GnuTLS. Otherwise...
+  SQUID_STATE_SAVE(squid_gnutls_state)
+  LIBS="$LIBS $LIBGNUTLS_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.1.5],,[
+    ## find the package without pkg-config
+    ## check that the library is actually new enough.
+    ## by testing for a 3.1.5+ function which we use
+    AC_CHECK_LIB(gnutls,gnutls_certificate_verify_peers3,[LIBGNUTLS_LIBS="-lgnutls"])
+  ])
+
+  SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
+
+  if test "x$with_gnutls" = "xyes" -a "x$LIBGNUTLS_LIBS" = "x"; then
+    AC_MSG_ERROR([Required GnuTLS library not found])
+  fi
+  if test "x$LIBGNUTLS_LIBS" != "x" ; then
+    CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
+    SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
+    AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
+  else
+    with_gnutls=no
+  fi
+fi
+AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
+
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
   AS_HELP_STRING([--with-openssl=PATH],
@@ -1219,7 +1277,7 @@ case "$with_openssl" in
     if test ! -d "$withval" ; then
       AC_MSG_ERROR([--with-openssl path does not point to a directory])
     fi
-    LIBOPENSSL_LIBS="-L$with_openssl/lib"
+    LIBOPENSSL_PATH="-L$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
     with_openssl=yes
   esac
@@ -1238,38 +1296,39 @@ if test "x$with_openssl" = "xyes"; then
   )
 
   # User may have provided a custom location for OpenSSL. Otherwise...
-  if test "x$LIBOPENSSL_LIBS" = "x" ; then
-    # auto-detect using pkg-config
-    PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
-      ## For some OS pkg-config is broken or unavailable.
-      ## Detect libraries the hard way.
+  SQUID_STATE_SAVE(squid_openssl_state)
+  LIBS="$LIBS $LIBOPENSSL_PATH"
 
-      # Windows MinGW has some special libraries ...
-      if test "x$squid_host_os" = "xmingw" ; then
-        LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
-        AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
-      fi
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
+    ## For some OS pkg-config is broken or unavailable.
+    ## Detect libraries the hard way.
 
-      AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
-        AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
-      ])
-      AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
-        AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
-      ])
-
-    ])
-
-    # This is a workaround for RedHat 9 brain damage..
-    if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
-      AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-      LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
-      CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+    # Windows MinGW has some special libraries ...
+    if test "x$squid_host_os" = "xmingw" ; then
+      LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
+      AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
     fi
+
+    AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
+    ])
+    AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
+    ])
+  ])
+
+  # This is a workaround for RedHat 9 brain damage..
+  if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
+    AC_MSG_NOTICE([OpenSSL depends on Kerberos])
+    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
+    CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
   fi
+  SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
   if test "x$LIBOPENSSL_LIBS" != "x"; then
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
-    SSLLIB="$LIBOPENSSL_LIBS $SSLLIB"
+    SSLLIB="$LIBOPENSSL_PATH $LIBOPENSSL_LIBS $SSLLIB"
     AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
 
     # check for other specific broken implementations
@@ -1281,7 +1340,7 @@ if test "x$with_openssl" = "xyes"; then
     AC_MSG_ERROR([Required OpenSSL library not found])
   fi
 fi
-AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_LIBS}])
+AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} ${LIBOPENSSL_LIBS}])
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
@@ -2196,7 +2255,6 @@ AC_CHECK_HEADERS( \
   paths.h \
   poll.h \
   pwd.h \
-  shadow.h \
   regex.h \
   sched.h \
   siginfo.h \
@@ -2559,22 +2617,6 @@ if test "x$enable_ipv6" = "xyes" ; then
 fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
-
-
-dnl Check for libcrypt
-CRYPTLIB=
-dnl Some of our helpers use crypt(3) which may be in libc, or in
-dnl libcrypt (eg FreeBSD)
-AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
-dnl Solaris10 provides MD5 natively through libmd5
-AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
-AC_SUBST(CRYPTLIB)
-
-# check for crypt, may require -lcrypt
-SAVED_LIBS="$LIBS"
-LIBS="$LIBS $CRYPTLIB"
-AC_CHECK_FUNCS(crypt)
-LIBS="$SAVED_LIBS"
 
 
 dnl Check for libdl, used by auth_modules/PAM

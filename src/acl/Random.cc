@@ -135,10 +135,10 @@ ACLRandom::match(ACLChecklist *cl)
     return (data > random)?1:0;
 }
 
-wordlist *
+SBufList
 ACLRandom::dump() const
 {
-    wordlist *w = NULL;
-    wordlistAdd(&w, pattern);
-    return w;
+    SBufList sl;
+    sl.push_back(SBuf(pattern));
+    return sl;
 }

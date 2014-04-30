@@ -27,18 +27,7 @@ class TokenTableEntry;
 class Token
 {
 public:
-    Token() : type(LFT_NONE),
-            label(NULL),
-            widthMin(-1),
-            widthMax(-1),
-            quote(LOG_QUOTE_NONE),
-            left(false),
-            space(false),
-            zero(false),
-            divisor(1),
-            next(NULL)
-    { data.string = NULL; }
-
+    Token();
     ~Token();
 
     /// Initialize the format token registrations
@@ -52,7 +41,7 @@ public:
 
     ByteCode_t type;
     const char *label;
-    union {
+    struct {
         char *string;
 
         struct {

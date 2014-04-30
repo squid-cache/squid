@@ -68,9 +68,12 @@
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "Parsing.h"
+#include "pconn.h"
 #include "PeerDigest.h"
+#include "PeerPoolMgr.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
+#include "SBufList.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -241,6 +244,10 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
 #endif /* USE_OPENSSL */
+
+static void parse_ftp_epsv(acl_access **ftp_epsv);
+static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv);
+static void free_ftp_epsv(acl_access **ftp_epsv);
 
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
@@ -717,6 +724,7 @@ configDoConfigure(void)
 #endif
 
     storeConfigure();
+    update_maxobjsize(); // check for late maximum_object_size directive
 
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
              uniqueHostname(),
@@ -1282,15 +1290,13 @@ parseBytesUnits(const char *unit)
     return 0;
 }
 
-/*****************************************************************************
- * Max
- *****************************************************************************/
-
 static void
-dump_wordlist(StoreEntry * entry, wordlist *words)
+dump_SBufList(StoreEntry * entry, const SBufList &words)
 {
-    for (wordlist *word = words; word; word = word->next)
-        storeAppendPrintf(entry, "%s ", word->key);
+    for (SBufList::const_iterator i = words.begin(); i != words.end(); ++i) {
+        entry->append(i->rawContent(), i->length());
+        entry->append(" ",1);
+    }
 }
 
 static void
@@ -1303,11 +1309,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
                           ae->name,
                           ae->typeString(),
                           ae->flags.flagsStr());
-        wordlist *w = ae->dump();
-        dump_wordlist(entry, w);
-
-        storeAppendPrintf(entry, "\n");
-        wordlistDestroy(&w);
+        dump_SBufList(entry, ae->dump());
         ae = ae->next;
     }
 }
@@ -1327,19 +1329,14 @@ free_acl(ACL ** ae)
 void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
-    wordlist *values = head->dump();
-    dump_wordlist(entry, values);
-    wordlistDestroy(&values);
+    dump_SBufList(entry, head->dump());
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
-    if (head) {
-        wordlist *lines = head->treeDump(name, NULL);
-        dump_wordlist(entry, lines);
-        wordlistDestroy(&lines);
-    }
+    if (head)
+        dump_SBufList(entry, head->treeDump(name,NULL));
 }
 
 static void
@@ -2271,6 +2268,8 @@ parse_peer(CachePeer ** head)
             p->options.allow_miss = true;
         } else if (!strncmp(token, "max-conn=", 9)) {
             p->max_conn = xatoi(token + 9);
+        } else if (!strncmp(token, "standby=", 8)) {
+            p->standby.limit = xatoi(token + 8);
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
@@ -2344,6 +2343,9 @@ parse_peer(CachePeer ** head)
     if (peerFindByName(p->name))
         fatalf("ERROR: cache_peer %s specified twice\n", p->name);
 
+    if (p->max_conn > 0 && p->max_conn < p->standby.limit)
+        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+
     if (p->weight < 1)
         p->weight = 1;
 
@@ -2388,6 +2390,9 @@ free_peer(CachePeer ** P)
         cbdataReferenceDone(p->digest);
 #endif
 
+        // the mgr job will notice that its owner is gone and stop
+        PeerPoolMgr::Checkpoint(p->standby.mgr, "peer gone");
+        delete p->standby.pool;
         cbdataFree(p);
     }
 
@@ -4722,11 +4727,8 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
-    if (ssl_bump) {
-        wordlist *lines = ssl_bump->treeDump(name, Ssl::BumpModeStr);
-        dump_wordlist(entry, lines);
-        wordlistDestroy(&lines);
-    }
+    if (ssl_bump)
+        dump_SBufList(entry, ssl_bump->treeDump(name, Ssl::BumpModeStr));
 }
 
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump)
@@ -4816,6 +4818,73 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static bool FtpEspvDeprecated = false;
+static void parse_ftp_epsv(acl_access **ftp_epsv)
+{
+    allow_t ftpEpsvDeprecatedAction;
+    bool ftpEpsvIsDeprecatedRule = false;
+
+    char *t = ConfigParser::PeekAtToken();
+    if (!t){
+        self_destruct();
+        return;
+    }
+
+    if (!strcmp(t, "off")) {
+        (void)ConfigParser::NextToken();
+        ftpEpsvIsDeprecatedRule = true;
+        ftpEpsvDeprecatedAction = allow_t(ACCESS_DENIED);
+    } else if (!strcmp(t, "on")) {
+        (void)ConfigParser::NextToken();
+        ftpEpsvIsDeprecatedRule = true;
+        ftpEpsvDeprecatedAction = allow_t(ACCESS_ALLOWED);
+    }
+
+    // Check for mixing "ftp_epsv on|off" and "ftp_epsv allow|deny .." rules:
+    //   1) if this line is "ftp_epsv allow|deny ..." and already exist rules of "ftp_epsv on|off"
+    //   2) if this line is "ftp_epsv on|off" and already exist rules of "ftp_epsv allow|deny ..."
+    // then abort
+    if ((!ftpEpsvIsDeprecatedRule && FtpEspvDeprecated) ||
+        (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != NULL)) {
+        debugs(3, DBG_CRITICAL, "FATAL: do not mix \"ftp_epsv on|off\" cfg lines with \"ftp_epsv allow|deny ...\" cfg lines. Update your ftp_epsv rules.");
+        self_destruct();
+    }
+
+    if (ftpEpsvIsDeprecatedRule) {
+        // overwrite previous ftp_epsv lines
+        delete *ftp_epsv;
+        if (ftpEpsvDeprecatedAction == allow_t(ACCESS_DENIED)) {
+            Acl::AndNode *ftpEpsvRule = new Acl::AndNode;
+            ftpEpsvRule->context("(ftp_epsv rule)", config_input_line);
+            ACL *a = ACL::FindByName("all");
+            if (!a) {
+                self_destruct();
+                return;
+            }
+            ftpEpsvRule->add(a);
+            *ftp_epsv = new Acl::Tree;
+            (*ftp_epsv)->context("(ftp_epsv rules)", config_input_line);
+            (*ftp_epsv)->add(ftpEpsvRule, ftpEpsvDeprecatedAction);
+        } else
+            *ftp_epsv = NULL;
+        FtpEspvDeprecated = true;
+    } else {
+        aclParseAccessLine(cfg_directive, LegacyParser, ftp_epsv);
+    }
+}
+
+static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
+{
+    if (ftp_epsv)
+        dump_SBufList(entry, ftp_epsv->treeDump(name, NULL));
+}
+
+static void free_ftp_epsv(acl_access **ftp_epsv)
+{
+    free_acl_access(ftp_epsv);
+    FtpEspvDeprecated = false;
 }
 
 static void
