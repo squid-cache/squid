@@ -16,6 +16,8 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+class PconnPool;
+typedef RefCount<PconnPool> PconnPoolPointer;
 class ErrorState;
 class HttpRequest;
 
@@ -76,6 +78,9 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
+    /// Pops a connection from connection pool if available. If not
+    /// checks the peer stand-by connection pool for available connection.
+    Comm::ConnectionPointer pconnPop(const Comm::ConnectionPointer &dest, const char *domain);
     void pconnPush(Comm::ConnectionPointer & conn, const char *domain);
 
     bool dontRetry() { return flags.dont_retry; }
@@ -102,6 +107,9 @@ private:
     void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
 #endif
     static void RegisterWithCacheManager(void);
+
+    /// stops monitoring server connection for closure and updates pconn stats
+    void closeServerConnection(const char *reason);
 
 public:
     StoreEntry *entry;

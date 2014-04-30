@@ -3086,7 +3086,8 @@ DOC_START
 	
 	connect-fail-limit=N
 			How many times connecting to a peer must fail before
-			it is marked as down. Default is 10.
+			it is marked as down. Standby connection failures
+			count towards this limit. Default is 10.
 	
 	allow-miss	Disable Squid's use of only-if-cached when forwarding
 			requests to siblings. This is primarily useful when
@@ -3096,8 +3097,50 @@ DOC_START
 			For example to deny peer usage on requests from peer
 			by denying cache_peer_access if the source is a peer.
 	
-	max-conn=N	Limit the amount of connections Squid may open to this
-			peer. see also 
+	max-conn=N 	Limit the number of concurrent connections the Squid
+			may open to this peer, including already opened idle
+			and standby connections. There is no peer-specific
+			connection limit by default.
+	
+			A peer exceeding the limit is not used for new
+			requests unless a standby connection is available.
+	
+			max-conn currently works poorly with idle persistent
+			connections: When a peer reaches its max-conn limit,
+			and there are idle persistent connections to the peer,
+			the peer may not be selected because the limiting code
+			does not know whether Squid can reuse those idle
+			connections.
+	
+	standby=N	Maintain a pool of N "hot standby" connections to an
+			UP peer, available for requests when no idle
+			persistent connection is available (or safe) to use.
+			By default and with zero N, no such pool is maintained.
+			N must not exceed the max-conn limit (if any).
+	
+			At start or after reconfiguration, Squid opens new TCP
+			standby connections until there are N connections
+			available and then replenishes the standby pool as
+			opened connections are used up for requests. A used
+			connection never goes back to the standby pool, but
+			may go to the regular idle persistent connection pool
+			shared by all peers and origin servers.
+	
+			Squid never opens multiple new standby connections
+			concurrently.  This one-at-a-time approach minimizes
+			flooding-like effect on peers. Furthermore, just a few
+			standby connections should be sufficient in most cases
+			to supply most new requests with a ready-to-use
+			connection.
+	
+			Standby connections obey server_idle_pconn_timeout.
+			For the feature to work as intended, the peer must be
+			configured to accept and keep them open longer than
+			the idle timeout at the connecting Squid, to minimize
+			race conditions typical to idle used persistent
+			connections. Default request_timeout and
+			server_idle_pconn_timeout values ensure such a
+			configuration.
 	
 	name=xxx	Unique name for the peer.
 			Required if you have multiple peers on the same host
