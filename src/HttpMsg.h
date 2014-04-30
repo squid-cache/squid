@@ -67,7 +67,8 @@ public:
     bool persistent() const;
 
 public:
-    /// transport protocol version for this message
+    /// HTTP-Version field in the first line of the message.
+    /// see draft-ietf-httpbis-p1-messaging-26 section 3.1
     Http::ProtocolVersion http_ver;
 
     HttpHeader header;
@@ -80,9 +81,6 @@ public:
     int hdr_sz;
 
     int64_t content_length;
-
-    /// URL scheme protocol (if relevant)
-    AnyP::ProtocolType protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
 

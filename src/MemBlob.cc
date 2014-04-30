@@ -95,7 +95,7 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
-    recordMemBlobSizeAtDestruct(size);
+    recordMemBlobSizeAtDestruct(capacity);
 
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
            << static_cast<void*>(this) << " id=" << id

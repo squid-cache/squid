@@ -101,28 +101,28 @@ ACLRegexData::match(char const *word)
     return 0;
 }
 
-wordlist *
-ACLRegexData::dump()
+SBufList
+ACLRegexData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
     RegexList *temp = data;
     int flags = REG_EXTENDED | REG_NOSUB;
 
     while (temp != NULL) {
         if (temp->flags != flags) {
             if ((temp->flags&REG_ICASE) != 0) {
-                wordlistAdd(&W, "-i");
+                sl.push_back(SBuf("-i"));
             } else {
-                wordlistAdd(&W, "+i");
+                sl.push_back(SBuf("+i"));
             }
             flags = temp->flags;
         }
 
-        wordlistAdd(&W, temp->pattern);
+        sl.push_back(SBuf(temp->pattern));
         temp = temp->next;
     }
 
-    return W;
+    return sl;
 }
 
 static const char *

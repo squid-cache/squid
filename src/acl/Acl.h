@@ -38,6 +38,7 @@
 #include "defines.h"
 #include "dlink.h"
 #include "MemPool.h"
+#include "SBufList.h"
 
 #include <ostream>
 #include <string>
@@ -121,7 +122,7 @@ public:
     virtual void parse() = 0;
     virtual char const *typeString() const = 0;
     virtual bool isProxyAuth() const;
-    virtual wordlist *dump() const = 0;
+    virtual SBufList dump() const = 0;
     virtual bool empty() const = 0;
     virtual bool valid() const;
 

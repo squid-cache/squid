@@ -173,7 +173,7 @@ WIN32_SOURCE =
 WINSVC_SOURCE =
 endif
 
-if USE_IPC_WIN32
+if ENABLE_WIN32_IPC
 IPC_SOURCE = SquidIpc.h ipc_win32.cc
 else
 IPC_SOURCE = SquidIpc.h ipc.cc
@@ -182,13 +182,13 @@ endif
 AIO_WIN32_ALL_SOURCES = \
 	DiskIO/AIO/aio_win32.cc \
 	DiskIO/AIO/aio_win32.h
-if USE_AIO_WIN32
+if ENABLE_WIN32_AIO
 AIO_WIN32_SOURCES = $(AIO_WIN32_ALL_SOURCES)
 else
 AIO_WIN32_SOURCES =
 endif
 
-if USE_AIOPS_WIN32
+if ENABLE_WIN32_AIOPS
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
 	DiskIO/DiskThreads/CommIO.cc \
 	DiskIO/DiskThreads/CommIO.h
@@ -468,6 +468,8 @@ squid_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
@@ -1511,6 +1513,8 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	redirect.h \
 	tests/stub_redirect.cc \
 	refresh.h \
@@ -1736,6 +1740,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_stat.cc \
@@ -1889,6 +1894,8 @@ tests_testEvent_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2134,6 +2141,8 @@ tests_testEventLoop_SOURCES = \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2375,6 +2384,8 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2712,6 +2723,8 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	redirect.h \
 	tests/stub_libauth_acls.cc \
 	tests/stub_redirect.cc \
@@ -3061,6 +3074,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_UdsOp.cc \
@@ -3351,6 +3365,7 @@ tests_testRock_SOURCES = \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_Port.cc \
 	tests/stub_pconn.cc \
 	tests/stub_store_client.cc \
@@ -3489,6 +3504,8 @@ tests_testURL_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -3779,6 +3796,9 @@ tests_testStatHist_SOURCES = \
 	fatal.h \
 	tests/stub_fatal.cc \
 	tests/stub_MemBuf.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	StatHist.h \
 	String.cc \
@@ -3797,6 +3817,7 @@ tests_testStatHist_SOURCES = \
 	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
+	time.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/testMain.cc \

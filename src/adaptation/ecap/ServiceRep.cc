@@ -101,7 +101,7 @@ int
 Adaptation::Ecap::Engine::checkEvents(int)
 {
     // Start with the default I/O loop timeout, convert from milliseconds.
-    static const struct timeval maxTimeout {
+    static const struct timeval maxTimeout = {
         EVENT_LOOP_TIMEOUT/1000, // seconds
         (EVENT_LOOP_TIMEOUT % 1000)*1000
     }; // microseconds

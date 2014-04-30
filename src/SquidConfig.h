@@ -398,6 +398,8 @@ public:
         /// spoof_client_ip squid.conf acl.
         /// nil unless configured
         acl_access* spoof_client_ip;
+
+        acl_access *ftp_epsv;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
