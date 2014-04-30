@@ -145,7 +145,7 @@ public:
      * Returns a comma separated list of notes with key 'noteKey'.
      * Use findFirst instead when a unique kv-pair is needed.
      */
-    const char *find(const char *noteKey) const;
+    const char *find(const char *noteKey, const char *sep = ",") const;
 
     /**
      * Returns the first note value for this key or an empty string.
