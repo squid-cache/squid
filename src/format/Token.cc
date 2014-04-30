@@ -407,6 +407,8 @@ done:
 
     case LFT_REPLY_HEADER:
 
+    case LFT_NOTE:
+
         if (data.string) {
             char *header = data.string;
             char *cp = strchr(header, ':');
@@ -540,6 +542,25 @@ done:
 
     return (cur - def);
 }
+
+Format::Token::Token() : type(LFT_NONE),
+                         label(NULL),
+                         widthMin(-1),
+                         widthMax(-1),
+                         quote(LOG_QUOTE_NONE),
+                         left(false),
+                         space(false),
+                         zero(false),
+                         divisor(1),
+                         next(NULL)
+{
+    data.string = NULL;
+    data.header.header = NULL; 
+    data.header.element = NULL;
+    data.header.separator = ',';
+}
+
+
 
 Format::Token::~Token()
 {
