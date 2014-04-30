@@ -472,6 +472,8 @@ squid_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
@@ -1518,6 +1520,8 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	redirect.h \
 	tests/stub_redirect.cc \
 	refresh.h \
@@ -1744,6 +1748,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_stat.cc \
@@ -1899,6 +1904,8 @@ tests_testEvent_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2147,6 +2154,8 @@ tests_testEventLoop_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2391,6 +2400,8 @@ tests_test_http_range_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2731,6 +2742,8 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	redirect.h \
 	tests/stub_libauth_acls.cc \
 	tests/stub_redirect.cc \
@@ -3081,6 +3094,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_UdsOp.cc \
@@ -3373,6 +3387,7 @@ tests_testRock_SOURCES = \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_Port.cc \
 	tests/stub_pconn.cc \
 	tests/stub_store_client.cc \
@@ -3513,6 +3528,8 @@ tests_testURL_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \

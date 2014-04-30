@@ -81,6 +81,13 @@ void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, HttpRequest *);
 
+/// Whether we can open new connections to the peer (e.g., despite max-conn)
+bool peerCanOpenMore(const CachePeer *p);
+/// Whether the peer has idle or standby connections that can be used now
+bool peerHasConnAvailable(const CachePeer *p);
+/// Notifies peer of an associated connection closure.
+void peerConnClosed(CachePeer *p);
+
 CachePeer *whichPeer(const Ip::Address &from);
 
 #endif /* SQUID_NEIGHBORS_H_ */

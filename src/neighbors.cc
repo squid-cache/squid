@@ -54,7 +54,9 @@
 #include "multicast.h"
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
+#include "pconn.h"
 #include "PeerDigest.h"
+#include "PeerPoolMgr.h"
 #include "PeerSelectState.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
@@ -246,13 +248,46 @@ peerWouldBePinged(const CachePeer * p, HttpRequest * request)
     return 1;
 }
 
+bool
+peerCanOpenMore(const CachePeer *p)
+{
+    const int effectiveLimit = p->max_conn <= 0 ? Squid_MaxFD : p->max_conn;
+    const int remaining = effectiveLimit - p->stats.conn_open;
+    debugs(15, 7, remaining << '=' << effectiveLimit << '-' << p->stats.conn_open);
+    return remaining > 0;
+}
+
+bool
+peerHasConnAvailable(const CachePeer *p)
+{
+    // Standby connections can be used without opening new connections.
+    const int standbys = p->standby.pool ? p->standby.pool->count() : 0;
+
+    // XXX: Some idle pconns can be used without opening new connections.
+    // Complication: Idle pconns cannot be reused for some requests.
+    const int usableIdles = 0;
+
+    const int available = standbys + usableIdles;
+    debugs(15, 7, available << '=' << standbys << '+' << usableIdles);
+    return available > 0;
+}
+
+void
+peerConnClosed(CachePeer *p)
+{
+    --p->stats.conn_open;
+    if (p->standby.waitingForClose && peerCanOpenMore(p)) {
+        p->standby.waitingForClose = false;
+        PeerPoolMgr::Checkpoint(p->standby.mgr, "conn closed");
+    }
+}
+
 /* Return TRUE if it is okay to send an HTTP request to this CachePeer. */
 int
 peerHTTPOkay(const CachePeer * p, HttpRequest * request)
 {
-    if (p->max_conn)
-        if (p->stats.conn_open >= p->max_conn)
-            return 0;
+    if (!peerCanOpenMore(p) && !peerHasConnAvailable(p))
+        return 0;
 
     if (!peerAllowedToUse(p, request))
         return 0;
@@ -446,6 +481,8 @@ peerAlive(CachePeer *p)
         debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
+        if (p->standby.mgr.valid())
+            PeerPoolMgr::Checkpoint(p->standby.mgr, "revived peer");
     }
 
     p->stats.last_reply = squid_curtime;
@@ -1190,6 +1227,9 @@ peerNoteDigestGone(CachePeer * p)
 static void
 peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
 {
+    // TODO: connections to no-longer valid IP addresses should be
+    // closed when we can detect such IP addresses.
+
     CachePeer *p = (CachePeer *)data;
 
     int j;
@@ -1234,6 +1274,8 @@ peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
             eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 #endif
 
+    if (p->standby.mgr.valid())
+        PeerPoolMgr::Checkpoint(p->standby.mgr, "resolved peer");
 }
 
 static void
@@ -1565,6 +1607,8 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 
     if (p->max_conn > 0)
         storeAppendPrintf(sentry, " max-conn=%d", p->max_conn);
+    if (p->standby.limit > 0)
+        storeAppendPrintf(sentry, " standby=%d", p->standby.limit);
 
     if (p->options.originserver)
         storeAppendPrintf(sentry, " originserver");
