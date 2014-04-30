@@ -65,6 +65,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
+#include "PeerPoolMgr.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -93,7 +94,7 @@ static OBJH fwdStats;
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][Http::scInvalidHeader + 1];
 
-static PconnPool *fwdPconnPool = new PconnPool("server-side");
+static PconnPool *fwdPconnPool = new PconnPool("server-side", NULL);
 CBDATA_CLASS_INIT(FwdState);
 
 #if USE_OPENSSL
@@ -129,15 +130,21 @@ FwdState::abort(void* d)
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
     if (Comm::IsConnOpen(fwd->serverConnection())) {
-        comm_remove_close_handler(fwd->serverConnection()->fd, fwdServerClosedWrapper, fwd);
-        debugs(17, 3, HERE << "store entry aborted; closing " <<
-               fwd->serverConnection());
-        fwd->serverConnection()->close();
+        fwd->closeServerConnection("store entry aborted");
     } else {
         debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
     fwd->serverDestinations.clear();
     fwd->self = NULL;
+}
+
+void
+FwdState::closeServerConnection(const char *reason)
+{
+    debugs(17, 3, "because " << reason << "; " << serverConn);
+    comm_remove_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
+    fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
+    serverConn->close();
 }
 
 /**** PUBLIC INTERFACE ********************************************************/
@@ -295,11 +302,8 @@ FwdState::~FwdState()
         calls.connector = NULL;
     }
 
-    if (Comm::IsConnOpen(serverConn)) {
-        comm_remove_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
-        debugs(17, 3, HERE << "closing FD " << serverConnection()->fd);
-        serverConn->close();
-    }
+    if (Comm::IsConnOpen(serverConn))
+        closeServerConnection("~FwdState");
 
     serverDestinations.clear();
 
@@ -615,7 +619,10 @@ FwdState::checkRetriable()
 void
 FwdState::serverClosed(int fd)
 {
-    debugs(17, 2, HERE << "FD " << fd << " " << entry->url());
+    debugs(17, 2, "FD " << fd << " " << entry->url() << " after " <<
+           fd_table[fd].pconn.uses << " requests");
+    if (serverConnection()->fd == fd) // should be, but not critical to assert
+        fwdPconnPool->noteUses(fd_table[fd].pconn.uses);
     retryOrBail();
 }
 
@@ -833,7 +840,7 @@ FwdState::connectStart()
     // This does not increase the total number of connections because we just
     // closed the connection that failed the race. And re-pinning assumes this.
     if (pconnRace != raceHappened)
-        temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
+        temp = pconnPop(serverDestinations[0], host);
 
     const bool openedPconn = Comm::IsConnOpen(temp);
     pconnRace = openedPconn ? racePossible : raceImpossible;
@@ -895,7 +902,7 @@ FwdState::dispatch()
 
     fd_note(serverConnection()->fd, entry->url());
 
-    fd_table[serverConnection()->fd].noteUse(fwdPconnPool);
+    fd_table[serverConnection()->fd].noteUse();
 
     /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
     assert(entry->ping_status != PING_WAITING);
@@ -1126,6 +1133,22 @@ FwdState::pconnPush(Comm::ConnectionPointer &conn, const char *domain)
     } else {
         fwdPconnPool->push(conn, domain);
     }
+}
+
+Comm::ConnectionPointer
+FwdState::pconnPop(const Comm::ConnectionPointer &dest, const char *domain)
+{
+    // always call shared pool first because we need to close an idle
+    // connection there if we have to use a standby connection.
+    Comm::ConnectionPointer conn = fwdPconnPool->pop(dest, domain, checkRetriable());
+    if (!Comm::IsConnOpen(conn)) {
+        // either there was no pconn to pop or this is not a retriable xaction
+        if (CachePeer *peer = dest->getPeer()) {
+            if (peer->standby.pool)
+                conn = peer->standby.pool->pop(dest, domain, true);
+        }
+    }
+    return conn; // open, closed, or nil
 }
 
 void
