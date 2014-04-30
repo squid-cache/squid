@@ -102,9 +102,10 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
                   authenticateDigestNonceNonceb64(digest_request->nonce),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
+    SBuf sTmp = request->method.image();
     DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
-                       RequestMethodStr(request->method), digest_request->uri, HA2, Response);
+                       sTmp.c_str(), digest_request->uri, HA2, Response);
 
     debugs(29, 9, "\nResponse = '" << digest_request->response << "'\nsquid is = '" << Response << "'");
 
@@ -123,9 +124,10 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
              * widespread and such broken browsers no longer are commonly
              * used.
              */
+            sTmp = HttpRequestMethod(Http::METHOD_GET).image();
             DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
-                               RequestMethodStr(Http::METHOD_GET), digest_request->uri, HA2, Response);
+                               sTmp.c_str(), digest_request->uri, HA2, Response);
 
             if (strcasecmp(digest_request->response, Response)) {
                 auth_user->credentials(Auth::Failed);

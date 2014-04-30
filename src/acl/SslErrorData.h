@@ -18,7 +18,7 @@ public:
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData();
     bool match(const Ssl::CertErrors *);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual  ACLSslErrorData *clone() const;

@@ -15,8 +15,8 @@ namespace SBufDetailedStatsHistInitializer
 // run the post-instantiation initialization methods for StatHist objects
 struct Initializer {
     Initializer() {
-        sbufDestructTimeStats.logInit(300,30.0,128000.0);
-        memblobDestructTimeStats.logInit(300,30.0,128000.0);
+        sbufDestructTimeStats.logInit(100,30.0,128000.0);
+        memblobDestructTimeStats.logInit(100,30.0,128000.0);
     }
 };
 Initializer initializer;

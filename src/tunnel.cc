@@ -33,6 +33,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/CbcPointer.h"
 #include "CachePeer.h"
 #include "client_side.h"
 #include "client_side_request.h"
@@ -42,6 +43,7 @@
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "FwdState.h"
 #include "http.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
@@ -50,6 +52,9 @@
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
+#if USE_OPENSSL
+#include "ssl/PeerConnector.h"
+#endif
 #include "tools.h"
 #if USE_DELAY_POOLS
 #include "DelayId.h"
@@ -94,6 +99,7 @@ public:
 
     bool noConnections() const;
     char *url;
+    CbcPointer<ClientHttpRequest> http;
     HttpRequest::Pointer request;
     AccessLogEntryPointer al;
     Comm::ConnectionList serverDestinations;
@@ -157,7 +163,38 @@ public:
 
     void copyRead(Connection &from, IOCB *completion);
 
+    /// continue to set up connection to a peer, going async for SSL peers
+    void connectToPeer();
+
 private:
+#if USE_OPENSSL
+    /// Gives PeerConnector access to Answer in the TunnelStateData callback dialer.
+    class MyAnswerDialer: public CallDialer, public Ssl::PeerConnector::CbDialer
+    {
+    public:
+        typedef void (TunnelStateData::*Method)(Ssl::PeerConnectorAnswer &);
+
+        MyAnswerDialer(Method method, TunnelStateData *tunnel):
+                       method_(method), tunnel_(tunnel), answer_() {}
+
+        /* CallDialer API */
+        virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
+        void dial(AsyncCall &call) { ((&(*tunnel_))->*method_)(answer_); }
+        virtual void print(std::ostream &os) const {
+            os << '(' << tunnel_.get() << ", " << answer_ << ')'; }
+
+        /* Ssl::PeerConnector::CbDialer API */
+        virtual Ssl::PeerConnectorAnswer &answer() { return answer_; }
+
+    private:
+        Method method_;
+        CbcPointer<TunnelStateData> tunnel_;
+        Ssl::PeerConnectorAnswer answer_;
+    };
+
+    void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
+#endif
+
     CBDATA_CLASS2(TunnelStateData);
     bool keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
@@ -220,6 +257,7 @@ tunnelClientClosed(const CommCloseCbParams &params)
 
 TunnelStateData::TunnelStateData() :
         url(NULL),
+        http(),
         request(NULL),
         status_ptr(NULL),
         connectRespBuf(NULL),
@@ -670,11 +708,27 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     assert(!tunnelState->waitingForConnectExchange());
     *tunnelState->status_ptr = Http::scOkay;
     if (cbdataReferenceValid(tunnelState)) {
+
+        // Shovel any payload already pushed into reply buffer by the server response
         if (!tunnelState->server.len)
             tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
-        else
+        else {
+            debugs(26, DBG_DATA, "Tunnel server PUSH Payload: \n" << Raw("", tunnelState->server.buf, tunnelState->server.len) << "\n----------");
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
-        tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
+        }
+
+        // Bug 3371: shovel any payload already pushed into ConnStateData by the client request
+        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.buf.isEmpty()) {
+            struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
+            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << in->buf << "\n----------");
+
+            // We just need to ensure the bytes from ConnStateData are in client.buf already to deliver
+            memcpy(tunnelState->client.buf, in->buf.rawContent(), in->buf.length());
+            // NP: readClient() takes care of buffer length accounting.
+            tunnelState->readClient(tunnelState->client.buf, in->buf.length(), COMM_OK, 0);
+            in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
+        } else
+            tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
     }
 }
 
@@ -777,15 +831,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
         if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
-
-            if (Ip::Qos::TheConfig.isAclTosActive()) {
-                tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request.getRaw());
-            }
-
-#if SO_MARK && USE_LIBCAP
-            tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request.getRaw());
-#endif
-
+            GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
             Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
@@ -827,7 +873,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     }
 
     if (tunnelState->request->flags.proxying)
-        tunnelRelayConnectRequest(conn, tunnelState);
+        tunnelState->connectToPeer();
     else {
         tunnelConnected(conn, tunnelState);
     }
@@ -836,9 +882,6 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
-
-tos_t GetTosToServer(HttpRequest * request);
-nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 void
 tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const AccessLogEntryPointer &al)
@@ -873,7 +916,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
         }
     }
 
-    debugs(26, 3, HERE << "'" << RequestMethodStr(request->method) << " " << url << " " << request->http_ver << "'");
+    debugs(26, 3, request->method << ' ' << url << ' ' << request->http_ver);
     ++statCounter.server.all.requests;
     ++statCounter.server.other.requests;
 
@@ -886,6 +929,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = http->getConn()->clientConnection;
+    tunnelState->http = http;
     tunnelState->al = al;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
@@ -901,6 +945,45 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
                tunnelPeerSelectComplete,
                tunnelState);
 }
+
+void
+TunnelStateData::connectToPeer() {
+    const Comm::ConnectionPointer &srv = server.conn;
+
+#if USE_OPENSSL
+    if (CachePeer *p = srv->getPeer()) {
+        if (p->use_ssl) {
+            AsyncCall::Pointer callback = asyncCall(5,4,
+                "TunnelStateData::ConnectedToPeer",
+                MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
+            Ssl::PeerConnector *connector =
+                new Ssl::PeerConnector(request, srv, callback);
+            AsyncJob::Start(connector); // will call our callback
+            return;
+        }
+    }
+#endif
+
+    tunnelRelayConnectRequest(srv, this);
+}
+
+#if USE_OPENSSL
+/// Ssl::PeerConnector callback
+void
+TunnelStateData::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
+{
+    if (ErrorState *error = answer.error.get()) {
+        *status_ptr = error->httpStatus;
+        error->callback = tunnelErrorComplete;
+        error->callback_data = this;
+        errorSend(client.conn, error);
+        answer.error.clear(); // preserve error for errorSendComplete()
+        return;
+    }
+
+    tunnelRelayConnectRequest(server.conn, this);
+}
+#endif
 
 static void
 tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
@@ -926,6 +1009,9 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     hdr_out.clean();
     packerClean(&p);
     mb.append("\r\n", 2);
+
+    debugs(11, 2, "Tunnel Server REQUEST: " << tunnelState->server.conn << ":\n----------\n" <<
+           Raw("tunnelRelayConnectRequest", mb.content(), mb.contentSize()) << "\n----------");
 
     if (tunnelState->clientExpectsConnectResponse()) {
         // hack: blindly tunnel peer response (to our CONNECT request) to the client as ours.
@@ -974,13 +1060,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     }
     delete err;
 
-    if (Ip::Qos::TheConfig.isAclTosActive()) {
-        tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request.getRaw());
-    }
-
-#if SO_MARK && USE_LIBCAP
-    tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request.getRaw());
-#endif
+    GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
 
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");

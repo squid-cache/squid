@@ -80,7 +80,7 @@ public:
     /* when requiresRequest is made dynamic, review this too */
     //    virtual bool requiresReply() const {return true;}
     virtual bool isProxyAuth() const;
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
     virtual bool valid () const;
     virtual bool empty () const;
 
