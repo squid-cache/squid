@@ -1076,31 +1076,36 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
 
         case LFT_NOTE:
-            if (fmt->data.string) {
+            tmp[0] = fmt->data.header.separator;
+            tmp[1] = '\0';
+            if (fmt->data.header.header && *fmt->data.header.header) {
+                const char *separator = tmp;
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL) {
-                    if (const char *meta = ah->metaHeaders->find(fmt->data.string))
+                    if (const char *meta = ah->metaHeaders->find(fmt->data.header.header, separator))
                         sb.append(meta);
                 }
 #endif
                 if (al->notes != NULL) {
-                    if (const char *note = al->notes->find(fmt->data.string)) {
+                    if (const char *note = al->notes->find(fmt->data.header.header, separator)) {
                         if (sb.size())
-                            sb.append(", ");
+                            sb.append(separator);
                         sb.append(note);
                     }
                 }
                 out = sb.termedBuf();
                 quote = 1;
             } else {
+                // if no argument given use default "\r\n" as notes separator
+                const char *separator = fmt->data.string ? tmp : "\r\n";
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
-                    sb.append(ah->metaHeaders->toString());
+                    sb.append(ah->metaHeaders->toString(separator));
 #endif
                 if (al->notes != NULL && !al->notes->empty())
-                    sb.append(al->notes->toString());
+                    sb.append(al->notes->toString(separator));
 
                 out = sb.termedBuf();
                 quote = 1;
