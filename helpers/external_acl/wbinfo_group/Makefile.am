@@ -1,7 +1,7 @@
 include $(top_srcdir)/src/Common.am
 
 libexec_SCRIPTS = ext_wbinfo_group_acl
-EXTRA_DIST	= ext_wbinfo_group_acl.pl.in config.test
+EXTRA_DIST	= ext_wbinfo_group_acl.pl.in required.m4
 
 ext_wbinfo_group_acl: ext_wbinfo_group_acl.pl.in
 	$(subst_perlshell)

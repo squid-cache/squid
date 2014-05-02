@@ -1,16 +1,15 @@
-INCLUDES = -I$(top_srcdir)/include
+include $(top_srcdir)/src/Common.am
 
-AM_CFLAGS = $(TRIE_CFLAGS)
-AM_CXXFLAGS = $(TRIE_CXXFLAGS)
+INCLUDES += -I$(top_srcdir)/include
 
 # TESTS = trie trie-c
-TESTS = trie
+TESTS += trie
 
 # check_PROGRAMS = trie trie-c
-check_PROGRAMS = trie
+check_PROGRAMS += trie
 
 trie_SOURCES = trie.cc
-trie_LDADD = $(top_builddir)/src/libTrie.a
+trie_LDADD = $(top_builddir)/lib/libTrie/libTrie.a
 
 #trie_c_SOURCES = trie-c.c
-#trie_c_LDADD = $(top_builddir)/src/libTrie.a -lm
+#trie_c_LDADD = $(top_builddir)/lib/libTrie/libTrie.a -lm

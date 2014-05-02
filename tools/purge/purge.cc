@@ -90,25 +90,20 @@
 // Initial revision
 //
 //
-#if (defined(__GNUC__) || defined(__GNUG__)) && !defined(__clang__)
-#pragma implementation
-#endif
-
 #include "squid.h"
 #include "util.h"
 
-#include <stdarg.h>
-#include <stdio.h>
+#include <cerrno>
+#include <climits>
+#include <csignal>
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
 #include <dirent.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <signal.h>
-#include <errno.h>
 
 #if HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -119,12 +114,12 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "convert.hh"
-#include "socket.hh"
-#include "signal.hh"
-#include "squid-tlv.hh"
-#include "copyout.hh"
 #include "conffile.hh"
+#include "convert.hh"
+#include "copyout.hh"
+#include "signal.hh"
+#include "socket.hh"
+#include "squid-tlv.hh"
 
 #ifndef DEFAULTHOST
 #define DEFAULTHOST "localhost"

@@ -32,6 +32,12 @@
 #ifndef SQUID_DELAYPOOLS_H
 #define SQUID_DELAYPOOLS_H
 
+#include <vector>
+
+class DelayPool;
+class Updateable;
+class StoreEntry;
+
 /**
  \defgroup DelayPoolsAPI Delay Pools API
  \ingroup Components
@@ -46,14 +52,6 @@ public:
 
     virtual void update(int) = 0;
 };
-
-/* forward decls */
-class DelayPool;
-class Updateable;
-class StoreEntry;
-
-/* for Vector<> */
-#include "Array.h"
 
 /// \ingroup DelayPoolsAPI
 class DelayPools
@@ -77,7 +75,7 @@ private:
     static time_t LastUpdate;
     static unsigned short pools_;
     static void FreeDelayData ();
-    static Vector<Updateable *> toUpdate;
+    static std::vector<Updateable *> toUpdate;
     static void RegisterWithCacheManager(void);
 };
 

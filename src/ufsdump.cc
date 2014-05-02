@@ -31,25 +31,19 @@
  */
 
 #include "squid.h"
-#include "StoreMeta.h"
-#include "StoreMetaUnpacker.h"
-#include "Store.h"
-#include "store_key_md5.h"
 #include "Generic.h"
 #include "mgr/Registration.h"
+#include "Store.h"
+#include "store_key_md5.h"
+#include "StoreMeta.h"
+#include "StoreMetaUnpacker.h"
 
 #undef malloc
 #undef free
 
-#if HAVE_STDEXCEPT
-#include <stdexcept>
-#endif
-#if HAVE_IOSTREAM
-#include <iostream>
-#endif
-#if HAVE_CASSERT
 #include <cassert>
-#endif
+#include <iostream>
+#include <stdexcept>
 
 /* stub functions for parts of squid not factored to be dynamic yet */
 void

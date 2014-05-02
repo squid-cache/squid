@@ -12,4 +12,4 @@ LDADD = \
 
 man_MANS = ext_lm_group_acl.8
 
-EXTRA_DIST = config.test ext_lm_group_acl.8
+EXTRA_DIST = required.m4 ext_lm_group_acl.8

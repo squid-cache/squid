@@ -28,17 +28,13 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-#ifndef SQUID_ACLSOURCEASN_H
-#define SQUID_ACLSOURCEASN_H
-
-#if 0
-#include "acl/Asn.h"
-#endif
-
-class ACLChecklist;
+#ifndef SQUID_ACL_SOURCEASN_H
+#define SQUID_ACL_SOURCEASN_H
 
 #include "acl/Strategy.h"
 #include "ip/Address.h"
+
+class ACLChecklist;
 
 class ACLSourceASNStrategy : public ACLStrategy<Ip::Address>
 {
@@ -58,4 +54,4 @@ private:
     ACLSourceASNStrategy&operator=(ACLSourceASNStrategy const &);
 };
 
-#endif /* SQUID_ACLSOURCEASN_H */
+#endif /* SQUID_ACL_SOURCEASN_H */

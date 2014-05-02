@@ -33,7 +33,6 @@
 static char sccsid[] = "@(#)getopt.c	8.3 (Berkeley) 4/27/95";
 #endif /* LIBC_SCCS and not lint */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,7 +44,7 @@ char *optarg;			/* argument associated with option */
 
 #define	BADCH	(int)'?'
 #define	BADARG	(int)':'
-#define	EMSG	""
+#define	EMSG	(char*)""
 
 /*
  * getopt --

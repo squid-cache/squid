@@ -197,7 +197,11 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
            ", timeout=" << timeout);
 
     if (type & COMM_SELECT_READ) {
+        if (F->flags.read_pending)
+            kq_update_events(fd, EVFILT_WRITE, handler);
+
         kq_update_events(fd, EVFILT_READ, handler);
+
         F->read_handler = handler;
         F->read_data = client_data;
     }
@@ -290,31 +294,24 @@ Comm::DoSelect(int msec)
             continue;        /* XXX! */
         }
 
-        switch (ke[i].filter) {
-
-        case EVFILT_READ:
-
+        if (ke[i].filter == EVFILT_READ || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
                 F->read_handler = NULL;
                 F->flags.read_pending = 0;
                 hdl(fd, F->read_data);
             }
+        }
 
-            break;
-
-        case EVFILT_WRITE:
-
+        if (ke[i].filter == EVFILT_WRITE) {
             if ((hdl = F->write_handler) != NULL) {
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
             }
+        }
 
-            break;
-
-        default:
+        if (ke[i].filter != EVFILT_WRITE && ke[i].filter != EVFILT_READ) {
             /* Bad! -- adrian */
             debugs(5, DBG_IMPORTANT, "comm_select: kevent returned " << ke[i].filter << "!");
-            break;
         }
     }
 

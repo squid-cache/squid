@@ -33,33 +33,29 @@
 
 #include "squid.h"
 #include "cache_cf.h"
-#include "disk.h"
 #include "ConfigOption.h"
+#include "disk.h"
 #include "DiskIO/DiskIOModule.h"
-#include "FileMap.h"
+#include "DiskIO/DiskIOStrategy.h"
 #include "fde.h"
+#include "FileMap.h"
 #include "globals.h"
 #include "Parsing.h"
 #include "RebuildState.h"
+#include "SquidConfig.h"
 #include "SquidMath.h"
-#include "DiskIO/DiskIOStrategy.h"
+#include "SquidTime.h"
+#include "StatCounters.h"
 #include "store_key_md5.h"
 #include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
-#include "SquidConfig.h"
-#include "SquidTime.h"
-#include "StatCounters.h"
 #include "tools.h"
 #include "UFSSwapDir.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cerrno>
+#include <cmath>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
@@ -230,8 +226,10 @@ Fs::Ufs::UFSSwapDir::changeIO(DiskIOModule *module)
     IO->io = anIO;
     /* Change the IO Options */
 
-    if (currentIOOptions && currentIOOptions->options.size() > 2)
-        delete currentIOOptions->options.pop_back();
+    if (currentIOOptions && currentIOOptions->options.size() > 2) {
+        delete currentIOOptions->options.back();
+        currentIOOptions->options.pop_back();
+    }
 
     /* TODO: factor out these 4 lines */
     ConfigOption *ioOptions = IO->io->getOptionTree();
@@ -754,14 +752,12 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     e->swap_filen = file_number;
     e->swap_dirn = index;
     e->swap_file_sz = swap_file_sz;
-    e->lock_count = 0;
     e->lastref = lastref;
     e->timestamp = timestamp;
     e->expires = expires;
     e->lastmod = lastmod;
     e->refcount = refcount;
     e->flags = newFlags;
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;

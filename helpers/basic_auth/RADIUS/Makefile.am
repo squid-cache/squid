@@ -5,7 +5,7 @@ INCLUDES += -I$(srcdir)
 
 libexec_PROGRAMS 	= basic_radius_auth
 man_MANS 		= basic_radius_auth.8
-EXTRA_DIST		= basic_radius_auth.8 config.test
+EXTRA_DIST		= basic_radius_auth.8 required.m4
 basic_radius_auth_SOURCES = \
 			basic_radius_auth.cc \
 			radius.h \
@@ -15,5 +15,6 @@ basic_radius_auth_SOURCES = \
 basic_radius_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

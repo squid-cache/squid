@@ -9,6 +9,8 @@
 #include "globals.h"
 #include "ipc/Queue.h"
 
+#include <limits>
+
 /// constructs Metadata ID from parent queue ID
 static String
 MetadataId(String id)
@@ -121,6 +123,74 @@ Ipc::OneToOneUniQueues::operator [](const int index) const
     return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
 
+// BaseMultiQueue
+
+Ipc::BaseMultiQueue::BaseMultiQueue(const int aLocalProcessId):
+        theLocalProcessId(aLocalProcessId),
+        theLastPopProcessId(std::numeric_limits<int>::max() - 1)
+{
+}
+
+void
+Ipc::BaseMultiQueue::clearReaderSignal(const int remoteProcessId)
+{
+    QueueReader &reader = localReader();
+    debugs(54, 7, "reader: " << reader.id);
+
+    reader.clearSignal();
+
+    // we got a hint; we could reposition iteration to try popping from the
+    // remoteProcessId queue first; but it does not seem to help much and might
+    // introduce some bias so we do not do that for now:
+    // theLastPopProcessId = remoteProcessId;
+}
+
+const Ipc::QueueReader::Balance &
+Ipc::BaseMultiQueue::balance(const int remoteProcessId) const
+{
+    const QueueReader &r = remoteReader(remoteProcessId);
+    return r.balance;
+}
+
+const Ipc::QueueReader::Rate &
+Ipc::BaseMultiQueue::rateLimit(const int remoteProcessId) const
+{
+    const QueueReader &r = remoteReader(remoteProcessId);
+    return r.rateLimit;
+}
+
+Ipc::OneToOneUniQueue &
+Ipc::BaseMultiQueue::inQueue(const int remoteProcessId)
+{
+    const OneToOneUniQueue &queue =
+        const_cast<const BaseMultiQueue *>(this)->inQueue(remoteProcessId);
+    return const_cast<OneToOneUniQueue &>(queue);
+}
+
+Ipc::OneToOneUniQueue &
+Ipc::BaseMultiQueue::outQueue(const int remoteProcessId)
+{
+    const OneToOneUniQueue &queue =
+        const_cast<const BaseMultiQueue *>(this)->outQueue(remoteProcessId);
+    return const_cast<OneToOneUniQueue &>(queue);
+}
+
+Ipc::QueueReader &
+Ipc::BaseMultiQueue::localReader()
+{
+    const QueueReader &reader =
+        const_cast<const BaseMultiQueue *>(this)->localReader();
+    return const_cast<QueueReader &>(reader);
+}
+
+Ipc::QueueReader &
+Ipc::BaseMultiQueue::remoteReader(const int remoteProcessId)
+{
+    const QueueReader &reader =
+        const_cast<const BaseMultiQueue *>(this)->remoteReader(remoteProcessId);
+    return const_cast<QueueReader &>(reader);
+}
+
 // FewToFewBiQueue
 
 Ipc::FewToFewBiQueue::Owner *
@@ -130,17 +200,16 @@ Ipc::FewToFewBiQueue::Init(const String &id, const int groupASize, const int gro
 }
 
 Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId):
+        BaseMultiQueue(aLocalProcessId),
         metadata(shm_old(Metadata)(MetadataId(id).termedBuf())),
         queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf())),
         readers(shm_old(QueueReaders)(ReadersId(id).termedBuf())),
-        theLocalGroup(aLocalGroup), theLocalProcessId(aLocalProcessId),
-        theLastPopProcessId(readers->theCapacity)
+        theLocalGroup(aLocalGroup)
 {
     Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
     Must(readers->theCapacity == metadata->theGroupASize + metadata->theGroupBSize);
 
-    const QueueReader &localReader = reader(theLocalGroup, theLocalProcessId);
-    debugs(54, 7, HERE << "queue " << id << " reader: " << localReader.id);
+    debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }
 
 int
@@ -185,19 +254,12 @@ Ipc::FewToFewBiQueue::oneToOneQueueIndex(const Group fromGroup, const int fromPr
     return index;
 }
 
-Ipc::OneToOneUniQueue &
-Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId)
-{
-    return (*queues)[oneToOneQueueIndex(fromGroup, fromProcessId, toGroup, toProcessId)];
-}
-
 const Ipc::OneToOneUniQueue &
 Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const
 {
     return (*queues)[oneToOneQueueIndex(fromGroup, fromProcessId, toGroup, toProcessId)];
 }
 
-/// incoming queue from a given remote process
 const Ipc::OneToOneUniQueue &
 Ipc::FewToFewBiQueue::inQueue(const int remoteProcessId) const
 {
@@ -205,7 +267,6 @@ Ipc::FewToFewBiQueue::inQueue(const int remoteProcessId) const
                          theLocalGroup, theLocalProcessId);
 }
 
-/// outgoing queue to a given remote process
 const Ipc::OneToOneUniQueue &
 Ipc::FewToFewBiQueue::outQueue(const int remoteProcessId) const
 {
@@ -222,59 +283,30 @@ Ipc::FewToFewBiQueue::readerIndex(const Group group, const int processId) const
            metadata->theGroupASize + processId - metadata->theGroupBIdOffset;
 }
 
-Ipc::QueueReader &
-Ipc::FewToFewBiQueue::reader(const Group group, const int processId)
+const Ipc::QueueReader &
+Ipc::FewToFewBiQueue::localReader() const
 {
-    return readers->theReaders[readerIndex(group, processId)];
+    return readers->theReaders[readerIndex(theLocalGroup, theLocalProcessId)];
 }
 
 const Ipc::QueueReader &
-Ipc::FewToFewBiQueue::reader(const Group group, const int processId) const
+Ipc::FewToFewBiQueue::remoteReader(const int processId) const
 {
-    return readers->theReaders[readerIndex(group, processId)];
+    return readers->theReaders[readerIndex(remoteGroup(), processId)];
 }
 
-void
-Ipc::FewToFewBiQueue::clearReaderSignal(const int remoteProcessId)
+int
+Ipc::FewToFewBiQueue::remotesCount() const
 {
-    QueueReader &localReader = reader(theLocalGroup, theLocalProcessId);
-    debugs(54, 7, HERE << "reader: " << localReader.id);
-
-    Must(validProcessId(remoteGroup(), remoteProcessId));
-    localReader.clearSignal();
-
-    // we got a hint; we could reposition iteration to try popping from the
-    // remoteProcessId queue first; but it does not seem to help much and might
-    // introduce some bias so we do not do that for now:
-    // theLastPopProcessId = remoteProcessId;
+    return theLocalGroup == groupA ? metadata->theGroupBSize :
+           metadata->theGroupASize;
 }
 
-Ipc::QueueReader::Balance &
-Ipc::FewToFewBiQueue::localBalance()
+int
+Ipc::FewToFewBiQueue::remotesIdOffset() const
 {
-    QueueReader &r = reader(theLocalGroup, theLocalProcessId);
-    return r.balance;
-}
-
-const Ipc::QueueReader::Balance &
-Ipc::FewToFewBiQueue::balance(const int remoteProcessId) const
-{
-    const QueueReader &r = reader(remoteGroup(), remoteProcessId);
-    return r.balance;
-}
-
-Ipc::QueueReader::Rate &
-Ipc::FewToFewBiQueue::localRateLimit()
-{
-    QueueReader &r = reader(theLocalGroup, theLocalProcessId);
-    return r.rateLimit;
-}
-
-const Ipc::QueueReader::Rate &
-Ipc::FewToFewBiQueue::rateLimit(const int remoteProcessId) const
-{
-    const QueueReader &r = reader(remoteGroup(), remoteProcessId);
-    return r.rateLimit;
+    return theLocalGroup == groupA ? metadata->theGroupBIdOffset :
+           metadata->theGroupAIdOffset;
 }
 
 Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset):
@@ -293,6 +325,108 @@ Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const int groupASize, const
 }
 
 Ipc::FewToFewBiQueue::Owner::~Owner()
+{
+    delete metadataOwner;
+    delete queuesOwner;
+    delete readersOwner;
+}
+
+// MultiQueue
+
+Ipc::MultiQueue::Owner *
+Ipc::MultiQueue::Init(const String &id, const int processCount, const int processIdOffset, const unsigned int maxItemSize, const int capacity)
+{
+    return new Owner(id, processCount, processIdOffset, maxItemSize, capacity);
+}
+
+Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
+        BaseMultiQueue(localProcessId),
+        metadata(shm_old(Metadata)(MetadataId(id).termedBuf())),
+        queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf())),
+        readers(shm_old(QueueReaders)(ReadersId(id).termedBuf()))
+{
+    Must(queues->theCapacity == metadata->theProcessCount * metadata->theProcessCount);
+    Must(readers->theCapacity == metadata->theProcessCount);
+
+    debugs(54, 7, "queue " << id << " reader: " << localReader().id);
+}
+
+bool
+Ipc::MultiQueue::validProcessId(const int processId) const
+{
+    return metadata->theProcessIdOffset <= processId &&
+           processId < metadata->theProcessIdOffset + metadata->theProcessCount;
+}
+
+const Ipc::OneToOneUniQueue &
+Ipc::MultiQueue::oneToOneQueue(const int fromProcessId, const int toProcessId) const
+{
+    assert(validProcessId(fromProcessId));
+    assert(validProcessId(toProcessId));
+    const int fromIndex = fromProcessId - metadata->theProcessIdOffset;
+    const int toIndex = toProcessId - metadata->theProcessIdOffset;
+    const int index = fromIndex * metadata->theProcessCount + toIndex;
+    return (*queues)[index];
+}
+
+const Ipc::QueueReader &
+Ipc::MultiQueue::reader(const int processId) const
+{
+    assert(validProcessId(processId));
+    const int index = processId - metadata->theProcessIdOffset;
+    return readers->theReaders[index];
+}
+
+const Ipc::OneToOneUniQueue &
+Ipc::MultiQueue::inQueue(const int remoteProcessId) const
+{
+    return oneToOneQueue(remoteProcessId, theLocalProcessId);
+}
+
+const Ipc::OneToOneUniQueue &
+Ipc::MultiQueue::outQueue(const int remoteProcessId) const
+{
+    return oneToOneQueue(theLocalProcessId, remoteProcessId);
+}
+
+const Ipc::QueueReader &
+Ipc::MultiQueue::localReader() const
+{
+    return reader(theLocalProcessId);
+}
+
+const Ipc::QueueReader &
+Ipc::MultiQueue::remoteReader(const int processId) const
+{
+    return reader(processId);
+}
+
+int
+Ipc::MultiQueue::remotesCount() const
+{
+    return metadata->theProcessCount;
+}
+
+int
+Ipc::MultiQueue::remotesIdOffset() const
+{
+    return metadata->theProcessIdOffset;
+}
+
+Ipc::MultiQueue::Metadata::Metadata(const int aProcessCount, const int aProcessIdOffset):
+        theProcessCount(aProcessCount), theProcessIdOffset(aProcessIdOffset)
+{
+    Must(theProcessCount > 0);
+}
+
+Ipc::MultiQueue::Owner::Owner(const String &id, const int processCount, const int processIdOffset, const unsigned int maxItemSize, const int capacity):
+        metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), processCount, processIdOffset)),
+        queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), processCount*processCount, maxItemSize, capacity)),
+        readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), processCount))
+{
+}
+
+Ipc::MultiQueue::Owner::~Owner()
 {
     delete metadataOwner;
     delete queuesOwner;

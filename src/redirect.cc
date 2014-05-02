@@ -37,45 +37,68 @@
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "fde.h"
-#include "fqdncache.h"
+#include "format/Format.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "redirect.h"
 #include "rfc1738.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
 /// url maximum lengh + extra informations passed to redirector
 #define MAX_REDIRECTOR_REQUEST_STRLEN (MAX_URL + 1024)
 
-typedef struct {
-    void *data;
-    char *orig_url;
+class RedirectStateData
+{
+public:
+    explicit RedirectStateData(const char *url);
+    ~RedirectStateData();
 
-    Ip::Address client_addr;
-    const char *client_ident;
-    const char *method_s;
+    void *data;
+    SBuf orig_url;
+
     HLPCB *handler;
-} redirectStateData;
+
+private:
+    CBDATA_CLASS2(RedirectStateData);
+};
 
 static HLPCB redirectHandleReply;
-static void redirectStateFree(redirectStateData * r);
+static HLPCB storeIdHandleReply;
 static helper *redirectors = NULL;
+static helper *storeIds = NULL;
 static OBJH redirectStats;
-static int n_bypassed = 0;
-CBDATA_TYPE(redirectStateData);
+static OBJH storeIdStats;
+static int redirectorBypassed = 0;
+static int storeIdBypassed = 0;
+static Format::Format *redirectorExtrasFmt = NULL;
+static Format::Format *storeIdExtrasFmt = NULL;
+
+CBDATA_CLASS_INIT(RedirectStateData);
+
+RedirectStateData::RedirectStateData(const char *url) :
+        data(NULL),
+        orig_url(url),
+        handler(NULL)
+{
+}
+
+RedirectStateData::~RedirectStateData()
+{
+}
 
 static void
 redirectHandleReply(void *data, const HelperReply &reply)
 {
-    redirectStateData *r = static_cast<redirectStateData *>(data);
+    RedirectStateData *r = static_cast<RedirectStateData *>(data);
     debugs(61, 5, HERE << "reply=" << reply);
 
     // XXX: This function is now kept only to check for and display the garbage use-case
@@ -109,17 +132,21 @@ redirectHandleReply(void *data, const HelperReply &reply)
                  * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
                  */
                 const char * result = reply.other().content();
-                const http_status status = (http_status) atoi(result);
+                const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
 
                 HelperReply newReply;
-                newReply.result = reply.result;
-                newReply.notes = reply.notes;
+                // BACKWARD COMPATIBILITY 2012-06-15:
+                // We got HelperReply::Unknown reply result but new
+                // RedirectStateData handlers require HelperReply::Okay,
+                // else will drop the helper reply
+                newReply.result = HelperReply::Okay;
+                newReply.notes.append(&reply.notes);
 
-                if (status == HTTP_MOVED_PERMANENTLY
-                        || status == HTTP_MOVED_TEMPORARILY
-                        || status == HTTP_SEE_OTHER
-                        || status == HTTP_PERMANENT_REDIRECT
-                        || status == HTTP_TEMPORARY_REDIRECT) {
+                if (status == Http::scMovedPermanently
+                        || status == Http::scFound
+                        || status == Http::scSeeOther
+                        || status == Http::scPermanentRedirect
+                        || status == Http::scTemporaryRedirect) {
 
                     if (const char *t = strchr(result, ':')) {
                         char statusBuf[4];
@@ -142,7 +169,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 if (cbdataReferenceValidDone(r->data, &cbdata))
                     r->handler(cbdata, newReply);
 
-                redirectStateFree(r);
+                delete r;
                 return;
             }
         }
@@ -152,14 +179,23 @@ redirectHandleReply(void *data, const HelperReply &reply)
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata, reply);
 
-    redirectStateFree(r);
+    delete r;
 }
 
 static void
-redirectStateFree(redirectStateData * r)
+storeIdHandleReply(void *data, const HelperReply &reply)
 {
-    safe_free(r->orig_url);
-    cbdataFree(r);
+    RedirectStateData *r = static_cast<RedirectStateData *>(data);
+    debugs(61, 5,"StoreId helper: reply=" << reply);
+
+    // XXX: This function is now kept only to check for and display the garbage use-case
+    // and to map the old helper response format(s) into new format result code and key=value pairs
+    // it can be removed when the helpers are all updated to the normalized "OK/ERR kv-pairs" format
+    void *cbdata;
+    if (cbdataReferenceValidDone(r->data, &cbdata))
+        r->handler(cbdata, reply);
+
+    delete r;
 }
 
 static void
@@ -174,104 +210,62 @@ redirectStats(StoreEntry * sentry)
 
     if (Config.onoff.redirector_bypass)
         storeAppendPrintf(sentry, "\nNumber of requests bypassed "
-                          "because all redirectors were busy: %d\n", n_bypassed);
+                          "because all redirectors were busy: %d\n", redirectorBypassed);
 }
 
-/**** PUBLIC FUNCTIONS ****/
-
-void
-redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
+static void
+storeIdStats(StoreEntry * sentry)
 {
-    ConnStateData * conn = http->getConn();
-    redirectStateData *r = NULL;
-    const char *fqdn;
-    char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
-    int sz;
-    http_status status;
-    char claddr[MAX_IPSTRLEN];
-    char myaddr[MAX_IPSTRLEN];
-    assert(http);
-    assert(handler);
-    debugs(61, 5, "redirectStart: '" << http->uri << "'");
-
-    if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
-        /* Skip redirector if there is one request queued */
-        ++n_bypassed;
-        HelperReply bypassReply;
-        bypassReply.result = HelperReply::Okay;
-        bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
-        handler(data, bypassReply);
+    if (storeIds == NULL) {
+        storeAppendPrintf(sentry, "No StoreId helpers defined\n");
         return;
     }
 
-    r = cbdataAlloc(redirectStateData);
-    r->orig_url = xstrdup(http->uri);
-    if (conn != NULL)
-        r->client_addr = conn->log_addr;
-    else
-        r->client_addr.SetNoAddr();
-    r->client_ident = NULL;
-#if USE_AUTH
-    if (http->request->auth_user_request != NULL) {
-        r->client_ident = http->request->auth_user_request->username();
-        debugs(61, 5, HERE << "auth-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-#endif
+    helperStats(sentry, storeIds, "StoreId helper Statistics");
 
-    // HttpRequest initializes with null_string. So we must check both defined() and size()
-    if (!r->client_ident && http->request->extacl_user.defined() && http->request->extacl_user.size()) {
-        r->client_ident = http->request->extacl_user.termedBuf();
-        debugs(61, 5, HERE << "acl-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
+    if (Config.onoff.store_id_bypass)
+        storeAppendPrintf(sentry, "\nNumber of requests bypassed "
+                          "because all StoreId helpers were busy: %d\n", storeIdBypassed);
+}
 
-    if (!r->client_ident && conn != NULL && conn->clientConnection != NULL && conn->clientConnection->rfc931[0]) {
-        r->client_ident = conn->clientConnection->rfc931;
-        debugs(61, 5, HERE << "ident-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
+static void
+constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data, Format::Format *requestExtrasFmt)
+{
+    char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
+    int sz;
+    Http::StatusCode status;
 
-#if USE_SSL
-
-    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-        r->client_ident = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
-        debugs(61, 5, HERE << "ssl-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-#endif
-
-    if (!r->client_ident)
-        r->client_ident = dash_str;
-
-    r->method_s = RequestMethodStr(http->request->method);
-
+    /** TODO: create a standalone method to initialize
+     * the RedirectStateData for all the helpers.
+     */
+    RedirectStateData *r = new RedirectStateData(http->uri);
     r->handler = handler;
-
     r->data = cbdataReference(data);
 
-    if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
-        fqdn = dash_str;
+    static MemBuf requestExtras;
+    requestExtras.reset();
+    if (requestExtrasFmt)
+        requestExtrasFmt->assemble(requestExtras, http->al, 0);
 
-    sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s %s/%s %s %s myip=%s myport=%d\n",
-                  r->orig_url,
-                  r->client_addr.NtoA(claddr,MAX_IPSTRLEN),
-                  fqdn,
-                  r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
-                  r->method_s,
-                  http->request->my_addr.NtoA(myaddr,MAX_IPSTRLEN),
-                  http->request->my_addr.GetPort());
+    sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s%s%s\n",
+                  r->orig_url.c_str(),
+                  requestExtras.hasContent() ? " " : "",
+                  requestExtras.hasContent() ? requestExtras.content() : "");
 
     if ((sz<=0) || (sz>=MAX_REDIRECTOR_REQUEST_STRLEN)) {
         if (sz<=0) {
-            status = HTTP_INTERNAL_SERVER_ERROR;
-            debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to redirector. Request ABORTED.");
+            status = Http::scInternalServerError;
+            debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to " << name << ". Request ABORTED.");
         } else {
-            status = HTTP_REQUEST_URI_TOO_LARGE;
-            debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to redirector exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
+            status = Http::scUriTooLong;
+            debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to " << name << " exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
         }
 
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         Ip::Address tmpnoaddr;
-        tmpnoaddr.SetNoAddr();
+        tmpnoaddr.setNoAddr();
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
                                     http->request->method, NULL,
                                     http->getConn() != NULL && http->getConn()->clientConnection != NULL ?
@@ -279,8 +273,8 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
                                     http->request,
                                     NULL,
 #if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                    http->getConn()->auth_user_request : http->request->auth_user_request);
+                                    http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                    http->getConn()->getAuth() : http->request->auth_user_request);
 #else
                                     NULL);
 #endif
@@ -290,54 +284,137 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         return;
     }
 
-    debugs(61,6, HERE << "sending '" << buf << "' to the helper");
-    helperSubmit(redirectors, buf, redirectHandleReply, r);
+    debugs(61,6, HERE << "sending '" << buf << "' to the " << name << " helper");
+    helperSubmit(hlp, buf, replyHandler, r);
 }
 
-static void
-redirectRegisterWithCacheManager(void)
+/**** PUBLIC FUNCTIONS ****/
+
+void
+redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
 {
-    Mgr::RegisterAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
+    assert(http);
+    assert(handler);
+    debugs(61, 5, "redirectStart: '" << http->uri << "'");
+
+    if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
+        /* Skip redirector if there is one request queued */
+        ++redirectorBypassed;
+        HelperReply bypassReply;
+        bypassReply.result = HelperReply::Okay;
+        bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
+        handler(data, bypassReply);
+        return;
+    }
+
+    constructHelperQuery("redirector", redirectors, redirectHandleReply, http, handler, data, redirectorExtrasFmt);
+}
+
+/**
+ * Handles the StoreID feature helper starting.
+ * For now it cannot be done using the redirectStart method.
+ */
+void
+storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
+{
+    assert(http);
+    assert(handler);
+    debugs(61, 5, "storeIdStart: '" << http->uri << "'");
+
+    if (Config.onoff.store_id_bypass && storeIds->stats.queue_size) {
+        /* Skip StoreID Helper if there is one request queued */
+        ++storeIdBypassed;
+        HelperReply bypassReply;
+
+        bypassReply.result = HelperReply::Okay;
+
+        bypassReply.notes.add("message","StoreId helper queue too long. Bypassed.");
+        handler(data, bypassReply);
+        return;
+    }
+
+    constructHelperQuery("storeId helper", storeIds, storeIdHandleReply, http, handler, data, storeIdExtrasFmt);
 }
 
 void
 redirectInit(void)
 {
-    static int init = 0;
-
-    redirectRegisterWithCacheManager();
-
-    if (!Config.Program.redirect)
-        return;
-
-    if (redirectors == NULL)
-        redirectors = new helper("redirector");
-
-    redirectors->cmdline = Config.Program.redirect;
-
-    redirectors->childs.updateLimits(Config.redirectChildren);
-
-    redirectors->ipc_type = IPC_STREAM;
-
-    helperOpenServers(redirectors);
+    static bool init = false;
 
     if (!init) {
-        init = 1;
-        CBDATA_INIT_TYPE(redirectStateData);
+        Mgr::RegisterAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
+        Mgr::RegisterAction("store_id", "StoreId helper Stats", storeIdStats, 0, 1);
     }
+
+    if (Config.Program.redirect) {
+
+        if (redirectors == NULL)
+            redirectors = new helper("redirector");
+
+        redirectors->cmdline = Config.Program.redirect;
+
+        redirectors->childs.updateLimits(Config.redirectChildren);
+
+        redirectors->ipc_type = IPC_STREAM;
+
+        helperOpenServers(redirectors);
+    }
+
+    if (Config.Program.store_id) {
+
+        if (storeIds == NULL)
+            storeIds = new helper("store_id");
+
+        storeIds->cmdline = Config.Program.store_id;
+
+        storeIds->childs.updateLimits(Config.storeIdChildren);
+
+        storeIds->ipc_type = IPC_STREAM;
+
+        helperOpenServers(storeIds);
+    }
+
+    if (Config.redirector_extras) {
+        redirectorExtrasFmt = new ::Format::Format("url_rewrite_extras");
+        (void)redirectorExtrasFmt->parse(Config.redirector_extras);
+    }
+
+    if (Config.storeId_extras) {
+        storeIdExtrasFmt = new ::Format::Format("store_id_extras");
+        (void)storeIdExtrasFmt->parse(Config.storeId_extras);
+    }
+
+    init = true;
 }
 
 void
 redirectShutdown(void)
 {
-    if (!redirectors)
+    /** FIXME: Temporary unified helpers Shutdown
+     * When and if needed for more helpers a separated shutdown
+     * method will be added for each of them.
+     */
+    if (!storeIds && !redirectors)
         return;
 
-    helperShutdown(redirectors);
+    if (redirectors)
+        helperShutdown(redirectors);
+
+    if (storeIds)
+        helperShutdown(storeIds);
 
     if (!shutting_down)
         return;
 
     delete redirectors;
     redirectors = NULL;
+
+    delete storeIds;
+    storeIds = NULL;
+
+    delete redirectorExtrasFmt;
+    redirectorExtrasFmt = NULL;
+
+    delete storeIdExtrasFmt;
+    storeIdExtrasFmt = NULL;
 }

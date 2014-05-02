@@ -14,6 +14,7 @@ b_ssize_t
 cachedir		cache_replacement_policy
 cachemgrpasswd
 ConfigAclTos
+configuration_includes_quoted_values
 CpuAffinityMap
 debug
 delay_pool_access	acl	delay_class
@@ -51,8 +52,10 @@ obsolete
 onoff
 peer
 peer_access		cache_peer acl
+pipelinePrefetch
 PortCfg
 QosConfig
+TokenOrQuotedString
 refreshpattern
 removalpolicy
 size_t
@@ -72,3 +75,4 @@ wordlist
 sslproxy_ssl_bump	acl
 sslproxy_cert_sign	acl
 sslproxy_cert_adapt	acl
+ftp_epsv                acl

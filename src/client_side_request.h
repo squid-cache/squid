@@ -30,13 +30,12 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "HttpHeader.h"
-#include "clientStream.h"
-#include "client_side.h"
 #include "AccessLogEntry.h"
-#include "dlink.h"
-#include "base/AsyncJob.h"
+#include "acl/forward.h"
+#include "client_side.h"
+#include "clientStream.h"
 #include "HttpHeaderRange.h"
+#include "LogTags.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
@@ -44,8 +43,6 @@
 class HttpMsg;
 #endif
 
-class acl_access;
-class ACLFilledChecklist;
 class ClientRequestContext;
 class ConnStateData;
 class MemObject;
@@ -61,11 +58,6 @@ class ClientHttpRequest
 {
 
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
-#if USE_ADAPTATION
-    void *toCbdata() { return this; }
-#endif
     ClientHttpRequest(ConnStateData *csd);
     ~ClientHttpRequest();
     /* Not implemented - present to prevent synthetic operations */
@@ -98,6 +90,7 @@ public:
     HttpRequest *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;
+    String store_id; /* StoreID for transactions where the request member is nil */
 
     struct {
         int64_t offset;
@@ -107,9 +100,11 @@ public:
 
     HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
     size_t req_sz;		/* raw request size on input, not current request size */
-    log_type logType;
 
-    struct timeval start_time;
+    /// the processing tags associated with this request transaction.
+    // NP: still an enum so each stage altering it must take care when replacing it.
+    LogTags logType;
+
     AccessLogEntry::Pointer al; ///< access.log entry
 
     struct {
@@ -122,7 +117,7 @@ public:
     } flags;
 
     struct {
-        http_status status;
+        Http::StatusCode status;
         char *location;
     } redirect;
 
@@ -147,7 +142,7 @@ private:
     StoreEntry *loggingEntry_;
     ConnStateData * conn_;
 
-#if USE_SSL
+#if USE_OPENSSL
     /// whether (and how) the request needs to be bumped
     Ssl::BumpMode sslBumpNeed_;
 
@@ -195,7 +190,7 @@ private:
 #endif
 
 private:
-    CBDATA_CLASS(ClientHttpRequest);
+    CBDATA_CLASS2(ClientHttpRequest);
 };
 
 /* client http based routines */
@@ -206,11 +201,11 @@ int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-void tunnelStart(ClientHttpRequest *, int64_t *, int *);
+void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntry::Pointer &al);
 
 #if _USE_INLINE_
-#include "Store.h"
 #include "client_side_request.cci"
+#include "Store.h"
 #endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */

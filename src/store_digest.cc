@@ -56,9 +56,7 @@
 #include "Store.h"
 #include "StoreSearch.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 /*
  * local types
@@ -223,11 +221,6 @@ storeDigestAddable(const StoreEntry * e)
     debugs(71, 6, "storeDigestAddable: checking entry, key: " << e->getMD5Text());
 
     /* check various entry flags (mimics StoreEntry::checkCachable XXX) */
-
-    if (!EBIT_TEST(e->flags, ENTRY_CACHABLE)) {
-        debugs(71, 6, "storeDigestAddable: NO: not cachable");
-        return 0;
-    }
 
     if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
         debugs(71, 6, "storeDigestAddable: NO: private key");
@@ -398,7 +391,8 @@ storeDigestRewriteStart(void *datanotused)
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
-    e->mem_obj->request = HTTPMSGLOCK(req);
+    e->mem_obj->request = req;
+    HTTPMSGLOCK(e->mem_obj->request);
     /* wait for rebuild (if any) to finish */
 
     if (sd_state.rebuild_lock) {
@@ -423,7 +417,7 @@ storeDigestRewriteResume(void)
     e->setPublicKey();
     /* fake reply */
     HttpReply *rep = new HttpReply;
-    rep->setHeaders(HTTP_OK, "Cache Digest OK",
+    rep->setHeaders(Http::scOkay, "Cache Digest OK",
                     "application/cache-digest", (store_digest->mask_size + sizeof(sd_state.cblock)),
                     squid_curtime, (squid_curtime + Config.digest.rewrite_period) );
     debugs(71, 3, "storeDigestRewrite: entry expires on " << rep->expires <<
@@ -446,7 +440,7 @@ storeDigestRewriteFinish(StoreEntry * e)
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
-    e->unlock();
+    e->unlock("storeDigestRewriteFinish");
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)

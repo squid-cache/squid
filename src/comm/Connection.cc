@@ -19,6 +19,7 @@ Comm::Connection::Connection() :
         peerType(HIER_NONE),
         fd(-1),
         tos(0),
+        nfmark(0),
         flags(COMM_NONBLOCKING),
         peer_(NULL)
 {
@@ -29,8 +30,8 @@ static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, DBG_CRITICAL, "BUG #3329: Orphan Comm::Connection: " << *this);
-        debugs(5, DBG_CRITICAL, "NOTE: " << ++lost_conn << " Orphans since last started.");
+        debugs(5, 4, "BUG #3329: Orphan Comm::Connection: " << *this);
+        debugs(5, 4, "NOTE: " << ++lost_conn << " Orphans since last started.");
         close();
     }
 
@@ -46,6 +47,7 @@ Comm::Connection::copyDetails() const
     c->remote = remote;
     c->peerType = peerType;
     c->tos = tos;
+    c->nfmark = nfmark;
     c->flags = flags;
 
     // ensure FD is not open in the new copy.

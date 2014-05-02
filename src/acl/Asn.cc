@@ -39,7 +39,7 @@
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
 #include "cache_cf.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
@@ -50,7 +50,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "StoreClient.h"
-#include "wordlist.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -75,7 +74,7 @@ struct squid_radix_node_head *AS_tree_head;
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<int>::CBDATA_CbDataList;
 /// \endcond
 
@@ -89,16 +88,44 @@ struct as_info {
     time_t expires;		/* NOTUSED */
 };
 
-struct ASState {
+class ASState
+{
+public:
+    ASState();
+    ~ASState();
+
     StoreEntry *entry;
     store_client *sc;
-    HttpRequest *request;
+    HttpRequest::Pointer request;
     int as_number;
     int64_t offset;
     int reqofs;
     char reqbuf[AS_REQBUF_SZ];
     bool dataRead;
+private:
+    CBDATA_CLASS2(ASState);
 };
+
+CBDATA_CLASS_INIT(ASState);
+
+ASState::ASState() :
+        entry(NULL),
+        sc(NULL),
+        request(NULL),
+        as_number(0),
+        offset(0),
+        reqofs(0),
+        dataRead(false)
+{
+    memset(reqbuf, 0, AS_REQBUF_SZ);
+}
+
+ASState::~ASState()
+{
+    debugs(53, 3, entry->url());
+    storeUnregister(sc, entry, this);
+    entry->unlock("~ASState");
+}
 
 /** entry into the radix tree */
 struct rtentry_t {
@@ -127,8 +154,6 @@ extern "C" {
 
 void asnAclInitialize(ACL * acls);
 
-static void asStateFree(void *data);
-
 static void destroyRadixNodeInfo(as_info *);
 
 static OBJH asnStats;
@@ -149,10 +174,10 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
     if (AS_tree_head == NULL)
         return 0;
 
-    if (addr.IsNoAddr())
+    if (addr.isNoAddr())
         return 0;
 
-    if (addr.IsAnyAddr())
+    if (addr.isAnyAddr())
         return 0;
 
     m_addr.addr = addr;
@@ -197,13 +222,11 @@ asnRegisterWithCacheManager(void)
 
 SQUIDCEXTERN int squid_max_keylen;	/* yuck.. this is in lib/radix.c */
 
-CBDATA_TYPE(ASState);
 void
 asnInit(void)
 {
     static bool inited = false;
     squid_max_keylen = 40;
-    CBDATA_INIT_TYPE(ASState);
 
     if (!inited) {
         inited = true;
@@ -237,36 +260,25 @@ asnCacheStart(int as)
 {
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
-    HttpRequest *req;
-    ASState *asState;
-    asState = cbdataAlloc(ASState);
-    asState->dataRead = 0;
-    debugs(53, 3, "asnCacheStart: AS " << as);
+    ASState *asState = new ASState;
+    debugs(53, 3, "AS " << as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
-    req = HttpRequest::CreateFromUrl(asres);
-    assert(NULL != req);
-    asState->request = HTTPMSGLOCK(req);
+    asState->request = HttpRequest::CreateFromUrl(asres);
+    assert(asState->request != NULL);
 
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
-        FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request);
+        FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request.getRaw());
     } else {
-
-        e->lock();
+        e->lock("Asn");
         asState->sc = storeClientListAdd(e, asState);
     }
 
     asState->entry = e;
-    asState->offset = 0;
-    asState->reqofs = 0;
     StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
-    storeClientCopy(asState->sc,
-                    e,
-                    readBuffer,
-                    asHandleReply,
-                    asState);
+    storeClientCopy(asState->sc, e, readBuffer, asHandleReply, asState);
 }
 
 static void
@@ -285,21 +297,21 @@ asHandleReply(void *data, StoreIOBuffer result)
     /* First figure out whether we should abort the request */
 
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
-        asStateFree(asState);
+        delete asState;
         return;
     }
 
     if (result.length == 0 && asState->dataRead) {
-        debugs(53, 3, "asHandleReply: Done: " << e->url()  );
-        asStateFree(asState);
+        debugs(53, 3, "asHandleReply: Done: " << e->url());
+        delete asState;
         return;
     } else if (result.flags.error) {
         debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
-        asStateFree(asState);
+        delete asState;
         return;
-    } else if (HTTP_OK != e->getReply()->sline.status) {
+    } else if (e->getReply()->sline.status() != Http::scOkay) {
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
-        asStateFree(asState);
+        delete asState;
         return;
     }
 
@@ -327,7 +339,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         debugs(53, 3, "asHandleReply: AS# " << s << " (" << asState->as_number << ")");
         asnAddNet(s, asState->as_number);
         s = t + 1;
-        asState->dataRead = 1;
+        asState->dataRead = true;
     }
 
     /*
@@ -378,17 +390,6 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
 }
 
-static void
-asStateFree(void *data)
-{
-    ASState *asState = (ASState *)data;
-    debugs(53, 3, "asnStateFree: " << asState->entry->url()  );
-    storeUnregister(asState->sc, asState->entry, asState);
-    asState->entry->unlock();
-    HTTPMSGUNLOCK(asState->request);
-    cbdataFree(asState);
-}
-
 /**
  * add a network (addr, mask) to the radix tree, with matching AS number
  */
@@ -423,8 +424,8 @@ asnAddNet(char *as_string, int as_number)
     t = strchr(as_string, '.');
 
     // generate Netbits Format Mask
-    mask.SetNoAddr();
-    mask.ApplyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
+    mask.setNoAddr();
+    mask.applyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
@@ -523,8 +524,8 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     addr = e->e_addr.addr;
     mask = e->e_mask.addr;
     storeAppendPrintf(sentry, "%s/%d\t",
-                      addr.NtoA(buf, MAX_IPSTRLEN),
-                      mask.GetCIDR() );
+                      addr.toStr(buf, MAX_IPSTRLEN),
+                      mask.cidr() );
     asinfo = e->e_info;
     assert(asinfo->as_number);
 
@@ -549,20 +550,21 @@ ACLASN::match(Ip::Address toMatch)
     return asnMatchIp(data, toMatch);
 }
 
-wordlist *
-ACLASN::dump()
+SBufList
+ACLASN::dump() const
 {
-    wordlist *W = NULL;
-    char buf[32];
+    SBufList sl;
+
     CbDataList<int> *ldata = data;
 
     while (ldata != NULL) {
-        snprintf(buf, sizeof(buf), "%d", ldata->element);
-        wordlistAdd(&W, buf);
+        SBuf s;
+        s.Printf("%d", ldata->element);
+        sl.push_back(s);
         ldata = ldata->next;
     }
 
-    return W;
+    return sl;
 }
 
 bool
@@ -637,16 +639,14 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
 
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
-        /* XXX FIXME: allow accessing the acl name here */
-        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");
-        checklist->changeState (DestinationIPLookup::Instance());
-    } else {
-        Ip::Address noaddr;
-        noaddr.SetNoAddr();
-        return data->match(noaddr);
+        debugs(28, 3, "asnMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->request->GetHost() << "'");
+        if (checklist->goAsync(DestinationIPLookup::Instance()))
+            return -1;
+        // else fall through to noaddr match, hiding the lookup failure (XXX)
     }
-
-    return 0;
+    Ip::Address noaddr;
+    noaddr.setNoAddr();
+    return data->match(noaddr);
 }
 
 ACLDestinationASNStrategy *

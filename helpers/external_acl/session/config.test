@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ -f /usr/include/db.h ] && grep db_env_create /usr/include/db.h; then
-    exit 0
-fi
-exit 1

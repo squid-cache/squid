@@ -10,6 +10,12 @@
 #include "dlink.h"
 #include "typedefs.h"
 
+/* this non-standard-conformant include is needed in order to have stat(2) and struct stat
+   properly defined on some systems (e.g. OpenBSD 5.4) */
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
 #if AUFS_IO_THREADS
 #define NUMTHREADS AUFS_IO_THREADS
 #else

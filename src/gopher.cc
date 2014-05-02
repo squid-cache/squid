@@ -34,7 +34,7 @@
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fd.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "html_quote.h"
 #include "HttpReply.h"
@@ -173,7 +173,7 @@ gopherStateFree(const CommCloseCbParams &params)
         return;
 
     if (gopherState->entry) {
-        gopherState->entry->unlock();
+        gopherState->entry->unlock("gopherState");
     }
 
     HTTPMSGUNLOCK(gopherState->req);
@@ -257,7 +257,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 
     HttpReply *reply = new HttpReply;
     entry->buffer();
-    reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, -1, -1, -2);
+    reply->setHeaders(Http::scOkay, "Gatewaying", mime_type, -1, -1, -2);
     if (mime_enc)
         reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
 
@@ -726,7 +726,7 @@ gopherTimeout(const CommTimeoutCbParams &io)
     GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
     debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
 
-    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, gopherState->fwd->request));
+    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, gopherState->fwd->request));
 
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
@@ -804,13 +804,13 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
                                                  CommIoCbPtrFun(gopherReadReply, gopherState));
             comm_read(conn, buf, read_sz, call);
         } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, gopherState->fwd->request);
             err->xerrno = xerrno;
             gopherState->fwd->fail(err);
             gopherState->serverConn->close();
         }
     } else if (len == 0 && entry->isEmpty()) {
-        gopherState->fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request));
+        gopherState->fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, gopherState->fwd->request));
         gopherState->serverConn->close();
     } else if (len == 0) {
         /* Connection closed; retrieval done. */
@@ -854,7 +854,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
 
     if (errflag) {
         ErrorState *err;
-        err = new ErrorState(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request);
+        err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, gopherState->fwd->request);
         err->xerrno = xerrno;
         err->port = gopherState->fwd->request->port;
         err->url = xstrdup(entry->url());
@@ -945,8 +945,7 @@ gopherSendRequest(int fd, void *data)
                                          CommIoCbPtrFun(gopherSendComplete, gopherState));
     Comm::Write(gopherState->serverConn, buf, strlen(buf), call, NULL);
 
-    if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
-        gopherState->entry->setPublicKey();	/* Make it public */
+    gopherState->entry->makePublic();
 }
 
 /// \ingroup ServerProtocolGopherInternal
@@ -962,7 +961,7 @@ gopherStart(FwdState * fwd)
     gopherState = cbdataAlloc(GopherStateData);
     gopherState->buf = (char *)memAllocate(MEM_4K_BUF);
 
-    entry->lock();
+    entry->lock("gopherState");
     gopherState->entry = entry;
 
     gopherState->fwd = fwd;

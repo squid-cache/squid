@@ -33,7 +33,8 @@ Snmp::Request::Request(const Ipc::TypedMsgHdr& msg):
     session.unpack(msg);
     msg.getPod(address);
 
-    fd = msg.getFd();
+    // Requests from strands have FDs. Requests from Coordinator do not.
+    fd = msg.hasFd() ? msg.getFd() : -1;
 }
 
 void
@@ -46,7 +47,9 @@ Snmp::Request::pack(Ipc::TypedMsgHdr& msg) const
     session.pack(msg);
     msg.putPod(address);
 
-    msg.putFd(fd);
+    // Requests sent to Coordinator have FDs. Requests sent to strands do not.
+    if (fd >= 0)
+        msg.putFd(fd);
 }
 
 Ipc::Request::Pointer

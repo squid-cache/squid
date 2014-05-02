@@ -191,7 +191,7 @@ squid MODULE-IDENTITY
 
         cacheSysNumReads OBJECT-TYPE
                 SYNTAX Counter32
-                MAX-ACCESS not-accessible
+                MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
                         " HTTP I/O number of reads "
@@ -441,7 +441,7 @@ squid MODULE-IDENTITY
         CacheMedianSvcEntry ::= SEQUENCE {
 		cacheMedianTime		Integer32,
 		cacheHttpAllSvcTime 	Integer32,
-		cacheHttpMissSvcTime 	Integer32,	
+		cacheHttpMissSvcTime 	Integer32,
 		cacheHttpNmSvcTime 	Integer32,
 		cacheHttpHitSvcTime 	Integer32,
 		cacheIcpQuerySvcTime 	Integer32,
@@ -454,7 +454,7 @@ squid MODULE-IDENTITY
 
 	cacheMedianTime OBJECT-TYPE
                 SYNTAX Integer32 (1|5|60)
-                MAX-ACCESS read-only
+                MAX-ACCESS not-accessible
                 STATUS current
 		DESCRIPTION
                         " The value used to index the table 1/5/60"
@@ -712,7 +712,7 @@ squid MODULE-IDENTITY
 --
 
 	cachePeerTable OBJECT-TYPE
-		SYNTAX SEQUENCE OF CachePeerEntry
+		SYNTAX SEQUENCE OF CachePeerTableEntry
 		MAX-ACCESS not-accessible
 		STATUS current
 		DESCRIPTION
@@ -771,7 +771,7 @@ squid MODULE-IDENTITY
 
 
 	cachePeerIndex OBJECT-TYPE
-		SYNTAX CachePeerIndex
+		SYNTAX CachePeerTableIndex
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION
@@ -842,7 +842,7 @@ squid MODULE-IDENTITY
         ::= { cachePeerEntry 6 }
 
 	cachePeerType OBJECT-TYPE
-                SYNTAX INTEGER
+                SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
@@ -850,7 +850,7 @@ squid MODULE-IDENTITY
 	::= { cachePeerEntry 7 }
 
 	cachePeerState OBJECT-TYPE
-                SYNTAX INTEGER
+                SYNTAX Integer32
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION

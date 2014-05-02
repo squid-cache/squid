@@ -34,12 +34,11 @@
 #ifndef SQUID_ICAPCONFIG_H
 #define SQUID_ICAPCONFIG_H
 
-#include "event.h"
-#include "base/AsyncCall.h"
+#include "acl/forward.h"
 #include "adaptation/Config.h"
 #include "adaptation/icap/ServiceRep.h"
-
-class acl_access;
+#include "base/AsyncCall.h"
+#include "event.h"
 
 namespace Adaptation
 {

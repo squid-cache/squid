@@ -7,7 +7,7 @@
 class ClientInfo;
 
 void clientdbInit(void) STUB
-void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t) STUB
+void clientdbUpdate(const Ip::Address &, LogTags, AnyP::ProtocolType, size_t) STUB
 int clientdbCutoffDenied(const Ip::Address &) STUB_RETVAL(-1)
 void clientdbDump(StoreEntry *) STUB
 void clientdbFreeMemory(void) STUB

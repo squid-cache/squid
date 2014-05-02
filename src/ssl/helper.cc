@@ -1,13 +1,13 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "ssl/Config.h"
-#include "ssl/helper.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
-#include "SwapDir.h"
 #include "ssl/cert_validate_message.h"
+#include "ssl/Config.h"
+#include "ssl/helper.h"
+#include "SwapDir.h"
 #include "wordlist.h"
-#include "SquidConfig.h"
 
 LruMap<Ssl::CertValidationResponse> *Ssl::CertValidationHelper::HelperCache = NULL;
 
@@ -34,9 +34,9 @@ void Ssl::Helper::Init()
     // we need to start ssl_crtd only if some port(s) need to bump SSL
     bool found = false;
     for (AnyP::PortCfg *s = ::Config.Sockaddr.http; !found && s; s = s->next)
-        found = s->sslBump;
+        found = s->flags.tunnelSslBumping;
     for (AnyP::PortCfg *s = ::Config.Sockaddr.https; !found && s; s = s->next)
-        found = s->sslBump;
+        found = s->flags.tunnelSslBumping;
     if (!found)
         return;
 
@@ -135,9 +135,9 @@ void Ssl::CertValidationHelper::Init()
     // we need to start ssl_crtd only if some port(s) need to bump SSL
     bool found = false;
     for (AnyP::PortCfg *s = ::Config.Sockaddr.http; !found && s; s = s->next)
-        found = s->sslBump;
+        found = s->flags.tunnelSslBumping;
     for (AnyP::PortCfg *s = ::Config.Sockaddr.https; !found && s; s = s->next)
-        found = s->sslBump;
+        found = s->flags.tunnelSslBumping;
     if (!found)
         return;
 

@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "ErrorDetail.h"
-#include "errorpage.h"
 #include "ErrorDetailManager.h"
+#include "errorpage.h"
 #include "mime_header.h"
 
 void Ssl::errorDetailInitialize()
@@ -115,11 +115,11 @@ void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDeta
 }
 
 bool
-Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, HttpRequest *request, ErrorDetailEntry &entry)
+Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry)
 {
 #if USE_ERR_LOCALES
     String hdr;
-    if (request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr)) {
+    if (request != NULL && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr)) {
         ErrorDetailsList::Pointer errDetails = NULL;
         //Try to retrieve from cache
         size_t pos = 0;
@@ -132,7 +132,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, HttpRequest *re
             debugs(83, 8, HERE << "Creating new ErrDetailList to read from disk");
             errDetails = new ErrorDetailsList();
             ErrorDetailFile detailTmpl(errDetails);
-            if (detailTmpl.loadFor(request)) {
+            if (detailTmpl.loadFor(request.getRaw())) {
                 if (detailTmpl.language()) {
                     debugs(83, 8, HERE << "Found details on disk for language " << detailTmpl.language());
                     errDetails->errLanguage = detailTmpl.language();
@@ -218,32 +218,34 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
             }
 
             Ssl::ssl_error_t ssl_error = Ssl::GetErrorCode(errorName.termedBuf());
-            if (ssl_error == SSL_ERROR_NONE) {
+            if (ssl_error != SSL_ERROR_NONE) {
+
+                if (theDetails->getErrorDetail(ssl_error)) {
+                    debugs(83, DBG_IMPORTANT, HERE <<
+                           "WARNING! duplicate entry: " << errorName);
+                    return false;
+                }
+
+                ErrorDetailEntry &entry = theDetails->theList[ssl_error];
+                entry.error_no = ssl_error;
+                entry.name = errorName;
+                String tmp = parser.getByName("detail");
+                const int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
+                tmp = parser.getByName("descr");
+                const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
+
+                if (!detailsParseOk || !descrParseOk) {
+                    debugs(83, DBG_IMPORTANT, HERE <<
+                           "WARNING! missing important field for detail error: " <<  errorName);
+                    return false;
+                }
+
+            } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! invalid error detail name: " << errorName);
                 return false;
             }
 
-            if (theDetails->getErrorDetail(ssl_error)) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! duplicate entry: " << errorName);
-                return false;
-            }
-
-            ErrorDetailEntry &entry = theDetails->theList[ssl_error];
-            entry.error_no = ssl_error;
-            entry.name = errorName;
-            String tmp = parser.getByName("detail");
-            httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
-            tmp = parser.getByName("descr");
-            httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
-            bool parseOK = entry.descr.defined() && entry.detail.defined();
-
-            if (!parseOK) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! missing imporant field for detail error: " <<  errorName);
-                return false;
-            }
         }// else {only spaces and black lines; just ignore}
 
         buf.consume(size);

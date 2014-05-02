@@ -34,18 +34,14 @@
 // Initial revision
 //
 //
-#if (defined(__GNUC__) || defined(__GNUG__)) && !defined(__clang__)
-#pragma implementation
-#endif
-
 #include "conffile.hh"
-#include <sys/types.h>
-#include <errno.h>
-#include <memory.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <sys/types.h>
+#include <memory.h>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
@@ -143,7 +139,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.base = strdup( line+subs[offset].rm_so );
+            cd.base = xstrdup( line+subs[offset].rm_so );
             ++offset;
 
             // extract size information

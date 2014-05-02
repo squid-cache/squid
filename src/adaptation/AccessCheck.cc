@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "adaptation/AccessCheck.h"
 #include "adaptation/AccessRule.h"
@@ -13,19 +14,20 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 /** \endcond */
 
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,
-                               HttpRequest *req, HttpReply *rep, Adaptation::Initiator *initiator)
+                               HttpRequest *req, HttpReply *rep,
+                               AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator)
 {
 
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
         AsyncJob::Start(new AccessCheck( // we do not store so not a CbcPointer
-                            ServiceFilter(method, vp, req, rep), initiator));
+                            ServiceFilter(method, vp, req, rep, al), initiator));
         return true;
     }
 
@@ -100,7 +102,7 @@ Adaptation::AccessCheck::check()
         AccessRule *r = *i;
         if (isCandidate(*r)) {
             debugs(93, 5, HERE << "check: rule '" << r->id << "' is a candidate");
-            candidates += r->id;
+            candidates.push_back(r->id);
         }
     }
 
@@ -122,12 +124,14 @@ Adaptation::AccessCheck::checkCandidates()
             /* BUG 2526: what to do when r->acl is empty?? */
             // XXX: we do not have access to conn->rfc931 here.
             acl_checklist = new ACLFilledChecklist(r->acl, filter.request, dash_str);
-            acl_checklist->reply = filter.reply ? HTTPMSGLOCK(filter.reply) : NULL;
+            if ((acl_checklist->reply = filter.reply))
+                HTTPMSGLOCK(acl_checklist->reply);
+            acl_checklist->al = filter.al;
             acl_checklist->nonBlockingCheck(AccessCheckCallbackWrapper, this);
             return;
         }
 
-        candidates.shift(); // the rule apparently went away (reconfigure)
+        candidates.erase(candidates.begin()); // the rule apparently went away (reconfigure)
     }
 
     debugs(93, 4, HERE << "NO candidates left");
@@ -172,7 +176,7 @@ Adaptation::AccessCheck::noteAnswer(allow_t answer)
     }
 
     // no match or the group disappeared during reconfiguration
-    candidates.shift();
+    candidates.erase(candidates.begin());
     checkCandidates();
 }
 

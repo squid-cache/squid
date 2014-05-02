@@ -32,8 +32,8 @@
 #include "squid.h"
 
 #include "DiskIO/DiskIOStrategy.h"
-#include "UFSStrategy.h"
 #include "UFSStoreState.h"
+#include "UFSStrategy.h"
 #include "UFSSwapDir.h"
 
 bool

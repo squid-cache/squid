@@ -4,6 +4,7 @@
 #if USE_XPROF_STATS
 typedef enum {
     XPROF_PROF_UNACCOUNTED,
+    XPROF_ACL_matches,
     XPROF_HttpHeaderClean,
     XPROF_HttpHeaderParse,
     XPROF_HttpHeader_getCc,
@@ -27,7 +28,6 @@ typedef enum {
     XPROF_StringInitBuf,
     XPROF_StringReset,
     XPROF_aclCheckFast,
-    XPROF_aclMatchAclList,
     XPROF_calloc,
     XPROF_clientSocketRecipient,
     XPROF_commHandleWrite,
@@ -71,7 +71,6 @@ typedef enum {
     XPROF_storeGetMemSpace,
     XPROF_storeMaintainSwapSpace,
     XPROF_storeRelease,
-    XPROF_storeWriteComplete,
     XPROF_write,
     XPROF_xcalloc,
     XPROF_xmalloc,

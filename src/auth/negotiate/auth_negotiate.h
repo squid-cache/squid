@@ -31,7 +31,7 @@ public:
     Config();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth);
+    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, Auth::Config *);

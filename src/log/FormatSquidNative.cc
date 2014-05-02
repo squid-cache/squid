@@ -35,6 +35,7 @@
 #include "format/Quoting.h"
 #include "format/Token.h"
 #include "globals.h"
+#include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "SquidConfig.h"
@@ -45,12 +46,17 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     char hierHost[MAX_IPSTRLEN];
 
-    const char *user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
+    const char *user = NULL;
+
+#if USE_AUTH
+    if (al->request && al->request->auth_user_request != NULL)
+        user = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
+#endif
 
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif
@@ -64,21 +70,27 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
 
-    logfilePrintf(logfile, "%9ld.%03d %6d %s %s%s/%03d %" PRId64 " %s %s %s %s%s/%s %s%s",
+    static SBuf method;
+    if (al->_private.method_str)
+        method.assign(al->_private.method_str);
+    else
+        method = al->http.method.image();
+
+    logfilePrintf(logfile, "%9ld.%03d %6d %s %s%s/%03d %" PRId64 " " SQUIDSBUFPH " %s %s %s%s/%s %s%s",
                   (long int) current_time.tv_sec,
                   (int) current_time.tv_usec / 1000,
                   al->cache.msec,
                   clientip,
-                  ::Format::log_tags[al->cache.code],
+                  LogTags_str[al->cache.code],
                   al->http.statusSfx(),
                   al->http.code,
-                  al->cache.replySize,
-                  al->_private.method_str,
+                  al->http.clientReplySz.messageTotal(),
+                  SQUIDSBUFPRINT(method),
                   al->url,
                   user ? user : dash_str,
                   al->hier.ping.timedout ? "TIMEOUT_" : "",
                   hier_code_str[al->hier.code],
-                  al->hier.tcpServer != NULL ? al->hier.tcpServer->remote.NtoA(hierHost, sizeof(hierHost)) : "-",
+                  al->hier.tcpServer != NULL ? al->hier.tcpServer->remote.toStr(hierHost, sizeof(hierHost)) : "-",
                   al->http.content_type,
                   (Config.onoff.log_mime_hdrs?"":"\n"));
 

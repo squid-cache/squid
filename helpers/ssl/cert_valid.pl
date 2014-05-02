@@ -80,7 +80,7 @@ while (<>) {
     } else {
         my $readlen = length($body);
         my %certs = ();
-        my @errors = ();
+        my %errors = ();
         my @responseErrors = ();
 
         while($readlen < $bodylen) {
@@ -93,12 +93,12 @@ while (<>) {
 
         print(STDERR logPrefix()."GOT ". "Code=".$code." $bodylen \n") if ($debug); #.$body;
         my $hostname;
-        parseRequest($body, \$hostname, \@errors, \%certs);
+        parseRequest($body, \$hostname, \%errors, \%certs);
         print(STDERR logPrefix()."Parse result: \n") if ($debug);
         print(STDERR logPrefix()."\tFOUND host:".$hostname."\n") if ($debug);
         print(STDERR logPrefix()."\tFOUND ERRORS:") if ($debug);
-        foreach my $err (@errors) {
-            print(STDERR logPrefix()."$err ,")  if ($debug);
+        foreach my $err (keys %errors) {
+            print(STDERR logPrefix().$errors{$err}{"name"}."/".$errors{$err}{"cert"}." ,")  if ($debug);
         }
         print(STDERR "\n") if ($debug);
         foreach my $key (keys %certs) {
@@ -110,12 +110,12 @@ while (<>) {
         my $peerCertId = (keys %certs)[0];
 
         # Echo back the errors: fill the responseErrors array  with the errors we read.
-        foreach my $err (@errors) {
+        foreach my $err (keys %errors) {
             $haserror = 1;
             appendError (\@responseErrors, 
-                         $err, #The error name
+                         $errors{$err}{"name"}, #The error name
                          "Checked by Cert Validator", # An error reason
-                         $peerCertId # The cert ID. We are always filling with the peer certificate.
+                         $errors{$err}{"cert"} # The cert ID. We are always filling with the peer certificate.
                 );
         }
 
@@ -175,20 +175,26 @@ sub parseRequest
             my($vallen) = index($request, "\n");
             my $host = substr($request, 5, $vallen - 5);
             $$hostname = $host;
-            $request =~ s/^host=.*\n//;
+            $request =~ s/^host=.*$//m;
         }
-        if ($request =~ /^errors=/) {
-            my($vallen) = index($request, "\n");
-            my $listerrors = substr($request, 7, $vallen - 7);
-            @$errors = split /,/, $listerrors;
-            $request =~ s/^errors=.*\n//;
-        }
-        elsif ($request =~ /^cert_(\d+)=/) {
+        if ($request =~ /^cert_(\d+)=/) {
             my $certId = "cert_".$1;
             my($vallen) = index($request, "-----END CERTIFICATE-----") + length("-----END CERTIFICATE-----");
             my $x509 = Crypt::OpenSSL::X509->new_from_string(substr($request, index($request, "-----BEGIN")));
             $certs->{$certId} = $x509;
             $request = substr($request, $vallen);
+        }
+        elsif ($request =~ /^error_name_(\d+)=(.*)$/m) {
+            my $errorId = $1;
+            my $errorName = $2;
+            $request =~ s/^error_name_\d+=.*$//m;
+            $errors->{$errorId}{"name"} = $errorName;
+        }
+        elsif ($request =~ /^error_cert_(\d+)=(.*)$/m) {
+            my $errorId = $1;
+            my $certId = $2;
+            $request =~ s/^error_cert_\d+=.*$//m;
+            $errors->{$errorId}{"cert"} = $certId;
         }
         else {
             print(STDERR logPrefix()."ParseError on \"".$request."\"\n") if ($debug);

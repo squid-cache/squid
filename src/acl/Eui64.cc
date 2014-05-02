@@ -41,8 +41,8 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
+#include "globals.h"
 #include "ip/Address.h"
-#include "wordlist.h"
 
 static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);
 static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c);
@@ -135,7 +135,7 @@ ACLEui64::match(ACLChecklist *cl)
     ACLFilledChecklist *checklist = Filled(cl);
 
     /* IPv4 does not do EUI-64 (yet) */
-    if (!checklist->src_addr.IsIPv6()) {
+    if (!checklist->src_addr.isIPv6()) {
         debugs(14, 3, "ACLEui64::match: IPv6 Required for EUI-64 Lookups. Skipping " << checklist->src_addr );
         return 0;
     }
@@ -177,13 +177,13 @@ aclDumpEuiListWalkee(Eui::Eui64 * const &node, void *state)
 {
     static char buf[48];
     node->encode(buf, 48);
-    wordlistAdd((wordlist **)state, buf);
+    static_cast<SBufList *>(state)->push_back(SBuf(buf));
 }
 
-wordlist *
+SBufList
 ACLEui64::dump() const
 {
-    wordlist *w = NULL;
+    SBufList w;
     data->walk(aclDumpEuiListWalkee, &w);
     return w;
 }

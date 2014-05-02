@@ -35,6 +35,8 @@ typedef enum {
     LFT_CLIENT_LOCAL_IP,
     LFT_CLIENT_LOCAL_PORT,
     /*LFT_CLIENT_LOCAL_FQDN, (rDNS) */
+    LFT_CLIENT_LOCAL_TOS,
+    LFT_CLIENT_LOCAL_NFMARK,
 
     /* client connection local squid.conf details */
     LFT_LOCAL_LISTENING_IP,
@@ -50,10 +52,13 @@ typedef enum {
     LFT_SERVER_LOCAL_IP,
     LFT_SERVER_LOCAL_IP_OLD_27,
     LFT_SERVER_LOCAL_PORT,
+    LFT_SERVER_LOCAL_TOS,
+    LFT_SERVER_LOCAL_NFMARK,
 
     /* original Request-Line details recieved from client */
     LFT_CLIENT_REQ_METHOD,
     LFT_CLIENT_REQ_URI,
+    LFT_CLIENT_REQ_URLDOMAIN,
     LFT_CLIENT_REQ_URLPATH,
     /* LFT_CLIENT_REQ_QUERY, */
     LFT_CLIENT_REQ_VERSION,
@@ -84,9 +89,8 @@ typedef enum {
     LFT_SERVER_REQ_VERSION,
 
     /* request meta details */
-    LFT_REQUEST_SIZE_TOTAL,
-    /*LFT_REQUEST_SIZE_LINE, */
-    LFT_REQUEST_SIZE_HEADERS,
+    LFT_CLIENT_REQUEST_SIZE_TOTAL,
+    LFT_CLIENT_REQUEST_SIZE_HEADERS,
     /*LFT_REQUEST_SIZE_BODY, */
     /*LFT_REQUEST_SIZE_BODY_NO_TE, */
 
@@ -114,13 +118,14 @@ typedef enum {
     /* LFT_ADAPTED_REPLY_ALL_HEADERS, */
 
     /* response meta details */
-    LFT_REPLY_SIZE_TOTAL,
+    LFT_ADAPTED_REPLY_SIZE_TOTAL,
     LFT_REPLY_HIGHOFFSET,
     LFT_REPLY_OBJECTSIZE,
-    /*LFT_REPLY_SIZE_LINE, */
-    LFT_REPLY_SIZE_HEADERS,
+    LFT_ADAPTED_REPLY_SIZE_HEADERS,
     /*LFT_REPLY_SIZE_BODY, */
     /*LFT_REPLY_SIZE_BODY_NO_TE, */
+
+    LFT_CLIENT_IO_SIZE_TOTAL,
 
     /* client credentials */
     LFT_USER_NAME,   /* any source will do */
@@ -136,6 +141,7 @@ typedef enum {
     LFT_TIME_SUBSECOND,
     LFT_TIME_LOCALTIME,
     LFT_TIME_GMT,
+    LFT_TIME_START, // the time the master transaction started
 
     /* processing time details */
     LFT_TIME_TO_HANDLE_REQUEST,
@@ -151,7 +157,6 @@ typedef enum {
 
     LFT_MIME_TYPE,
     LFT_TAG,
-    LFT_IO_SIZE_TOTAL,
     LFT_EXT_LOG,
 
     LFT_SEQUENCE_NUMBER,
@@ -189,8 +194,9 @@ typedef enum {
     LFT_ICAP_OUTCOME,
     LFT_ICAP_STATUS_CODE,
 #endif
+    LFT_CREDENTIALS,
 
-#if USE_SSL
+#if USE_OPENSSL
     LFT_SSL_BUMP_MODE,
     LFT_SSL_USER_CERT_SUBJECT,
     LFT_SSL_USER_CERT_ISSUER,
@@ -208,8 +214,6 @@ enum Quoting {
     LOG_QUOTE_URL,
     LOG_QUOTE_RAW
 };
-
-extern const char *log_tags[];
 
 } // namespace Format
 

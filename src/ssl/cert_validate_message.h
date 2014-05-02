@@ -1,12 +1,10 @@
-/*
- */
-
 #ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 #define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 
 #include "HelperReply.h"
-#include "ssl/support.h"
 #include "ssl/crtd_message.h"
+#include "ssl/support.h"
+
 #include <vector>
 
 namespace Ssl
@@ -20,7 +18,7 @@ class CertValidationRequest
 {
 public:
     SSL *ssl;
-    Errors *errors; ///< The list of errors detected
+    CertErrors *errors; ///< The list of errors detected
     std::string domainName; ///< The server name
     CertValidationRequest() : ssl(NULL), errors(NULL) {}
 };
@@ -41,7 +39,7 @@ public:
     public:
         RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL) {}
         RecvdError(const RecvdError &);
-        RecvdError & operator = (const RecvdError &);
+        RecvdError & operator =(const RecvdError &);
         void setCert(X509 *);  ///< Sets cert to the given certificate
         int id; ///<  The id of the error
         ssl_error_t error_no; ///< The OpenSSL error code
@@ -62,9 +60,9 @@ public:
  * This class is responsible for composing or parsing messages destined to
  * or comming from a cert validator helper.
  * The messages format is:
- *   <response/request code> <whitespace> <body length> <whitespace> <key=value> ...\1
+ *   response/request-code SP body-length SP [key=value ...] \x01
  */
-class CertValidationMsg: public CrtdMessage
+class CertValidationMsg : public CrtdMessage
 {
 private:
     /**
@@ -78,7 +76,7 @@ private:
         X509_Pointer cert;       ///< A pointer to certificate
         CertItem(): cert(NULL) {}
         CertItem(const CertItem &);
-        CertItem & operator = (const CertItem &);
+        CertItem & operator =(const CertItem &);
         void setCert(X509 *); ///< Sets cert to the given certificate
     };
 
@@ -99,8 +97,6 @@ public:
     static const std::string code_cert_validate;
     /// Parameter name for passing intended domain name
     static const std::string param_domain;
-    /// Parameter name for passing SSL errors
-    static const std::string param_error;
     /// Parameter name for passing SSL certificates
     static const std::string param_cert;
     /// Parameter name for passing the major SSL error
@@ -112,4 +108,5 @@ public:
 };
 
 }//namespace Ssl
+
 #endif // SQUID_SSL_CERT_VALIDATE_MESSAGE_H

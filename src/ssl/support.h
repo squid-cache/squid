@@ -55,12 +55,21 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
+#define SQUID_X509_V_ERR_INFINITE_VALIDATION -4
 #define SQUID_X509_V_ERR_CERT_CHANGE -3
 #define SQUID_ERR_SSL_HANDSHAKE -2
 #define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
 // All SSL errors range: from smallest (negative) custom to largest SSL error
 #define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_CERT_CHANGE
 #define SQUID_SSL_ERROR_MAX INT_MAX
+
+// Maximum certificate validation callbacks. OpenSSL versions exceeding this
+// limit are deemed stuck in an infinite validation loop (OpenSSL bug #3090)
+// and will trigger the SQUID_X509_V_ERR_INFINITE_VALIDATION error.
+// Can be set to a number up to UINT32_MAX
+#ifndef SQUID_CERT_VALIDATION_ITERATION_MAX
+#define SQUID_CERT_VALIDATION_ITERATION_MAX 16384
+#endif
 
 namespace AnyP
 {
@@ -81,6 +90,23 @@ SSL *CreateClient(SSL_CTX *sslContext, const int fd, const char *squidCtx);
 /// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
 SSL *CreateServer(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+
+/// An SSL certificate-related error.
+/// Pairs an error code with the certificate experiencing the error.
+class CertError
+{
+public:
+    ssl_error_t code; ///< certificate error code
+    X509_Pointer cert; ///< certificate with the above error code
+    CertError(ssl_error_t anErr, X509 *aCert);
+    CertError(CertError const &err);
+    CertError & operator = (const CertError &old);
+    bool operator == (const CertError &ce) const;
+    bool operator != (const CertError &ce) const;
+};
+
+/// Holds a list of certificate SSL errors
+typedef CbDataList<Ssl::CertError> CertErrors;
 
 } //namespace Ssl
 
@@ -290,6 +316,18 @@ const SSL_METHOD *method(int version);
 #endif
 
 const SSL_METHOD *serverMethod(int version);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Initializes the shared session cache if configured
+*/
+void initialize_session_cache();
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Destroy the shared session cache if configured
+*/
+void destruct_session_cache();
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

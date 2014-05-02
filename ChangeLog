@@ -1,3 +1,281 @@
+Changes to squid-3.4.4.2 (23 Apr 2014):
+
+	- versino bump for packaging re-build with altered toolchain
+
+Changes to squid-3.4.4.1 (23 Apr 2014):
+
+	- Regression Bug 4019: Cache digest exchange segmentation fault
+	- Regression Bug 3982: EUI logging and helpers show blank MAC address
+	- Bug 4047: Support Android builds
+	- Bug 4043: Remove XMALLOC_TRACE and references to sbrk(2)
+	- Bug 4041: Missing files in compat/Makefile.am
+	- Bug 4014: Build failure with --disable-optimizations --disable-auth
+	- Bug 3986: (partial) assertion due to incorrect error page buffer size
+	- Bug 3955: Solaris EUI-48 lookup leaks FDs
+	- Bug 3371: CONNECT with data sent at once loses data
+	- C++11: Upgrade auto-detection to use the formal -std=c++11
+	- Crypto-NG: libnettle MD5 algorithm support
+	- SSL-Bump: Fix Basic auth caching on bumped connections
+	- Store-ID: Fix request URI when forwarding requests to peers
+	- ... and fix several other build errors
+	- ... and some documentation updates
+
+Changes to squid-3.4.4 (09 Mar 2014):
+
+	- Bug 4029: intercepted HTTPS requests bypass caching checks
+	- Bug 4001: remove use of strsep()
+	- Bug 3186 and 3628: Digest authentication always sending stale=false for nonce
+	- Fix stalled concurrent rock store reads
+	- Fix helper ID number assignment
+	- Fix build failures from CMSG related definitions
+	- Fix build failures from libcompat unsafe.h protections
+	- Copyright: Relicense helpers by Treehouse Networks Ltd.
+	- ... and all bug fixes from 3.3.12
+
+Changes to squid-3.4.3 (02 Feb 2014):
+
+	- Bug 4008: HttpHeader warnOnError should be an int not a bool
+	- Bug 4002: clang 3.4 unable to compile
+	- Bug 3996: Malformed DNS reply leads to crash
+	- Bug 3995: compile error on CentOS 5 with GCC 4.1.2
+	- Bug 3975: atomic detection cross-compilation failure
+	- Bug 3971: "cannot aggregate mgr:client_list: cmd->profile != NULL" in SMP mode
+	- Bug 3954: compile failure in CpuAffinity.cc
+	- Bug 3927: tests/testRock fatal.cc required
+	- Fix memory leak in peer Cache Digest exchange
+	- Fix external_acl_type async loop failures
+	- Fix destination IP address cycling
+	- ... and a few polishing changes
+
+Changes to squid-3.4.2 (30 Dec 2013):
+
+	- Regression Bug 3980: FATAL ERROR due to max_user_ip -s option
+	- Regression Fix: \-unescaping in quoted strings from helpers
+	- Regression Fix: URL helper API bypassing on URL containing '=' character
+	- Bug 3985: 60s limit introduced by balance_on_multiple_ip breaks bad IP recovery
+	- Bug 3806: Caching responses with Vary header
+	- Bug 3498: FTP PUT assertion
+	- WCCPv2: Fix assertion 'Cannot convert non-IPv4 to IPv4' on FreeBSD
+	- Enable concurrency by default for SSL certificate validator
+	- ... and fix several build errors
+
+Changes to squid-3.4.1 (09 Dec 2013):
+
+	- Bug 3935: Invalid pointer dereference when peeking at origin server certificate
+	- Bug 3589: intercepted and ICAP modified request using a cache_peer
+	- ... and several portability fixes
+	- ... and some documentation updates
+
+Changes to squid-3.4.0.3 (01 Dec 2013):
+
+	- Bug 3941: Release notes error
+	- Receive annotations from authentication and external ACL helpers
+	- basic_nis_auth: Improved portability
+	- ... and several documentation updates
+	- ... and all bug fixes from 3.3.9, 3.3.10, 3.3.11
+
+Changes to squid-3.4.0.2 (03 Oct 2013):
+
+	- Regression Bug 3891: squid.conf parser errors in 3.4.0.1
+	- Regression Fix: re-disable MinGW C++11 support
+	- Bug 3914: partial: make squidclient tool build cleanly with -Wconversion
+	- Fix memory leak in refresh_pattern parsing
+	- negotiate_kerberos_auth: upgrade to present group= keys
+	- Handle NTLM helper returning OK without user= value
+	- Add dns_multicast_local to control mDNS operation
+	- Add --disable-arch-native build option
+	- Display Build-Info in cache manager info report
+	- ... and all changes from squid 3.3.9
+	- ... and some code and debug output polishing
+
+Changes to squid-3.4.0.1 (29 Jul 2013):
+
+	- Port from 2.7: StoreURL (renamed Store-ID) support
+	- Bug 3795: fix several mistakes in the MIB file
+	- Bug 3793: configure: improved helper detection
+	- Bug 3722: Invalid markup in Armenian hy ERR_ONLY_IF_CACHED_MISS
+	- Bug 3676: Support GCC 4.7 with -Wshadow option
+	- Bug 3643: NTLM helpers stuck in reserved state by Safari
+	- Bug 3389: Auto-reconnect for tcp access_log
+	- Bug 2066: squid does not do chdir() after chroot()
+	- Fix uninitialized fields in IcapLogEntry
+	- Fix a number of minor issues detected by Coverity Scan
+	- Fix some potential memory leaks detected by Coverity Scan
+	- Fix 64-bit support for Intel compiler suite (ICC) and other similar compilers
+	- Fix ACL matching algorithm to avoid repeating tests
+	- basic_pam_auth: Add -r option to strip NTLM/Negotiate domain from username
+	- squidpurge: fix META TLV parsing issues
+	- squid.conf: enforce all the directive and option names are lower-case
+	- Support EUI on HTTPS and FTP data connections
+	- Support OK/ERR/BH response codes from any helper
+	- Support No-lookup flag (-n) on DNS ACLs
+	- Support -march=native compiler optimization by default
+	- Support forwarding intercepted but not bumped connections to cache_peers
+	- Support IPv6 NAT interception on Linux and some BSD
+	- Deprecate log_icap and log_access configuration directives
+	- HTTP/1.1: improved method invalidation and cacheability detection
+	- HTTP/1.1: support length configuration for pipeline_prefetch queue
+	- Improved TPROXY support for OpenBSD and FreeBSD
+	- Add storeid_file_rewrite helper to perform Store-ID rewrites from a rules file
+	- Add all-of and any-of ACL types for grouping sets of ACL tests
+	- Add note directive for transaction annotations
+	- Add %note log format for transaction annotation logging
+	- Add note ACL type for matching annotated transactions with by annotation name or value
+	- Add kv-pair support to URL-rewrite/redirector interface
+	- Add SSL server certificate validator interface, helper and result cache
+	- Add SSL server certificate fingerprint ACL type
+	- Add spoof_client_ip access control
+	- Add pt-bz (Belize Portuguese) dialect to translations
+	- ... and many Windows portability changes (still incomplete)
+	- ... and many documentation changes
+	- ... and much code cleanup and polishing
+
+Changes to squid-3.3.12 (09 Mar 2014):
+
+	- Regression Bug 3769: client_netmask not evaluated since Comm redesign
+	- Bug 4026: Fix SSL and adaptation_access handling of aborted connections
+	- Bug 3969: Fix credentials caching for Digest authentication
+	- Bug 3806: Caching responses with Vary header
+	- Fix umask default on crash report generated email
+	- Fix pthread library detection on FreeBSD 10
+	- Avoid assertions on Range requests that trigger Squid-generated errors.
+
+Changes to squid-3.3.11 (01 Dec 2013):
+
+	- Regression Bug 3936: error-details.txt parse error with OpenSSL since 3.3.9
+	- Bug 3972: Segfault when getting the deny_info page ID after a reconfigure
+	- Bug 3970: max_filedescriptors disabled due to missing setrlimit
+	- Bug 3967: ipc/Kid.cc compilation failure: 'time' was not declared in this scope
+	- Bug 3960: DEAD cache_peer are not revived
+	- Bug 3956: xstrndup: tried to dup a NULL pointer
+	- Bug 3906: Filedescriptor leaks in SNMP
+	- Bug 3782: Digest authentication not obeying nonce_max_count
+	- HTTP/1.1: Make header parser obey relaxed_header_parser
+	- HTTP/1.1: Re-compute Range response content offset after an FTP response was adapted
+	- SMP: Replace blocking sleep(3) and close UDS socket on failures
+	- Windows: fix several compile errors
+
+Changes to squid-3.3.10 (03 Nov 2013):
+
+	- Bug 3929: request_header_add not working for tunnel requests
+	- Bug 3923: cbdata and undefined behavior due to dynamic runtime enumeration
+	- Bug 3918: Self Test Failures on Mac OS X 10.8
+	- Bug 3887: tcp_outgoing_tos not working for IPv6
+	- Bug 3836: Fix issues with automake 1.13+ and make check
+	- Bug 3480: StoreEntry::kickProducer() segfaults in store_client::copy()
+	- Fix pinning hierarchy log information
+	- Fix close idle client connections associated with closed idle pinned connections.
+	- Fix cbdata 'error: expression result unused' errors
+	- Avoid "hot idle": A series of rapid select() calls with zero timeout.
+	- Append Connection:close to OPTIONS requests when icap_persistent_connections is off
+	- ntlm_fake_auth: pass DOMAIN data to Squid in original case
+	- kerberos_ldap_group: fix LDAP string duplication
+	- Use IPv6 localhost nameserver on DNS configuration errors
+	- Add cache_miss_revalidate
+	- ... and several portability improvements
+
+Changes to squid-3.3.9 (11 Sep 2013):
+
+	- Regression Bug 3077: off-by-one error in Digest header decoding
+	- Bug 3895: fix acl_uses_indirect_client and cache_peer_access
+	- Bug 3879: assertion failed ConnStateData::validatePinnedConnection
+	- Bug 3863: myportname acl causes segmentation fault
+	- Bug 3849: Duplicate certificate sent when using https_port
+	- Bug 2287: Better fix for unsupported HTTP version handling
+	- Bug 2112: Reload into If-None-Match
+	- Fix several assert with side effects in ICAP/eCAP response handling
+	- Fix myportname ACL on ICAP/eCAP transactions
+	- Fix external ACL user:pass detail logging after adaptation
+	- Fix SMP mgr:info report 'Largest file desc currently in use'
+	- Handle infinite certificate validation loops caused by OpenSSL Bug 3090.
+	- Improved compatibility with gcc 4.8, clang and icc
+	- Show number of available filedescriptors when reserved FD changes
+	- Sync with newest OpenSSL error codes
+	- Register Http2-Settings header
+	- ... and many Windows portability fixes
+
+Changes to squid-3.3.8 (13 Jul 2013):
+
+	- Bug 3869: assertion failed: MemBuf.cc:272: size < capacity
+	- Improved handling of port values in Host: header validation
+
+Changes to squid-3.3.7 (11 Jul 2013):
+
+	- Bug 3297: Fix openSSL related build failures
+	- Fix build on FreeBSD 9.x platform with clang
+	- Protect against buffer overrun in DNS query generation
+
+Changes to squid-3.3.6 (01 Jul 2013):
+
+	- Bug 3854: pt1: compile errors on AIX
+	- Bug 3802: Fix wrong check inside Format::Format::assemble
+	- Bug 3762: remove bogus WARNING in cache.log
+	- Bug 3717: assertion failed with dstdom_regex with IP based URL
+	- Bug 1991: kqueue causes SSL to hang
+	- Ask for SSL key password when started with -N but without sslpassword_program
+	- Make sure %<tt includes all [failed] connection attempts
+	- Support HTTP reply ACLs in icap_log and log_icap
+	- Fix incorrect external_acl_type codes
+	- Fix ICAP logging request headers and segmentation faults
+	- ... and some documentation polish
+
+Changes to squid-3.3.5 (20 May 2013):
+
+	- Bug 3851: Delay Pool class 5 tag:levels displayed incorrectly in cache manager
+	- Bug 3845: http_port tcpkeepalive= option fails parsing
+	- Bug 3840: assertion failed 'sde' in UFS cache loading
+	- Bug 3836: make check failures with automake-1.13
+	- Bug 3827: Remove AccessLogEntry::cache.authuser
+	- Bug 3816 pt2: SSL_get_certificate call inside Ssl::verifySslCertificate crashes
+	- Bug 3780: cachemgr.cgi: output problem in HTTP Header Statistics
+	- Bug 3759: OpenSSL compilation error on stock Fedora17, RHEL, CentOS 6 systems
+	- Bug 3744: squid terminated: FATAL: Bungled (null) line 3: sslproxy_cert_sign signTrusted all
+	- Port from 2.6: external acl %ACL and %DATA tags
+	- Update copyright on SN.png
+	- ... and several minor memory leaks
+	- ... and some documentation polish
+
+Changes to squid-3.3.4 (27 Apr 2013):
+
+	- Bug 3831: basic_ncsa_auth Blowfish and SHA support
+	- Bug 3816: SSL_get_certificate call inside Ssl::verifySslCertificate crashes
+	- Bug 3794: MacOS: workaround compiler errors and case-insensitivity
+	- Bug 3781: Proxy Authentication not sent to cache_peer
+	- Bug 3720 pt1: SourceLayout: shuffle fd_table definition into fde.h
+	- Bug 3720 pt2: Add missing include in /dev/poll I/O module
+	- Bug 3674: Improve compiler detection, better support warnings-as-errors on clang
+	- Add support for TPROXY on BSD
+	- Fix SSL Bump bypass for intercepted traffic
+	- Fix memory leaks in ConnStateData pinning
+	- Fix external_acl.cc "inBackground" assertion on queue overloads
+	- CacheMgr: fix missing column separator in helper stats
+	- OpenBSD: libpthreads requires OpenBSD 5.2 or later
+	- ... and lots of documentation updates
+	- ... and all changes from squid 3.2.10
+
+Changes to squid-3.3.3 (12 Mar 2013):
+
+	- Bug 3720: Add missing include in /dev/poll I/O module (pt2)
+	- ... and all changes from squid 3.2.9
+
+Changes to squid-3.3.2 (02 Mar 2013):
+
+	- Bug 3781: Proxy Authentication not sent to cache_peer
+	- Bug 3794: MacOS: workaround compiler errors
+	- Bug 3720: Compile error in Solaris /OpenIndiana
+	- ... and all changes from squid 3.2.8
+
+Changes to squid-3.3.1 (09 Feb 2013):
+
+	- Bug 3726: build errors with --disable-ssl
+	- Propigate pinned connection persistency and closures to the client.
+	- Mimic SSL certificate Key Usage and Basic Constraints
+	- Fix segmentation fault on missing squid.conf values
+	- ext_sql_session_acl: Fix hex decoding on UID
+	- ... and some code polish
+	- ... and a lot of documentation polish
+	- ... and all changes from squid 3.2.7
+
 Changes to squid-3.3.0.3 (09 Jan 2013):
 
 	- Bug 3729: 32-bit overflow in parsing 64-bit configuration values
@@ -31,6 +309,59 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.13 (13 Jul 2013):
+
+	- Bug 3869: assertion failed: MemBuf.cc:272: size < capacity
+	- Improved handling of port values in Host: header validation
+
+Changes to squid-3.2.12 (11 Jul 2013):
+
+	- Protect against buffer overrun in DNS query generation
+	- Avoid !closing assertions when helpers call comm_read during reconfigure.
+	- Fix several minor memory leaks during reconfigure
+	- Remove origin_tries limiter on forwarding and permit large max_forward_tries values
+
+Changes to squid-3.2.11 (30 Apr 2013):
+
+	- Regression Bug 3839: build error: src/tools.h: No such file or directory
+	- Update copyright on SN.png
+
+Changes to squid-3.2.10 (27 Apr 2013):
+
+	- Bug 3833: squidclient: Option '-k' is not present in man(1) page
+	- Bug 3825: basic_ncsa_auth: segfaulting with glibc-2.17
+	- Bug 3822: Locate LDAP and SASL headers for BSD support
+	- Bug 3817: Memory leak in SSL cert validate for alt_name peer certs
+	- Bug 3774: 'squid -k reconfigure' drops rock cache
+	- Bug 3565: Resuming postponed accept kills Squid
+	- HTTP/1.1: partial support for no-cache and private controls with parameters
+	- ssl_crtd: fix helpers dying during startup on ARM
+	- GNU Hurd: define MAP_NORESERVE as no-op when missing
+	- BSD: fix enter_suid/leave_suid build errors in ip/Intercept.cc
+
+Changes to squid-3.2.9 (12 Mar 2013):
+
+	- Regression fix: Accept-Language header parse
+	- Bug 3673: Silence 'Failed to select source' messages
+	- Fix authentication headers sent on peer digest requests
+	- Fix build error on Solaris, OpenIndiana, Omnios
+
+Changes to squid-3.2.8 (02 Mar 2013):
+
+	- Bug 3767: tcp_outgoing_tos/mark ACLs do not obey acl_uses_indirect_client
+	- Bug 3763: diskd Error: no filename in shm buffer
+	- Bug 3752: objects that cannot be cached in memory are not cached on disk
+	- Bug 3753: Removes the domain from the cache_peer server pconn key
+	- Bug 3749: IDENT lookup using wrong ports to identify the user
+	- Bug 3723: tcp_outgoing_tos/mark broken for CONNECT requests
+	- Bug 3686: cache_dir max-size default fails
+	- Bug 3515: crash in FtpStateData::ftpTimeout
+	- Bug 3329: Quieten orphan Comm::Connection messages
+	- Make squid -z for cache_dir rock preserve the rock DB
+	- Fixed several server connect problems
+	- ... and some build issues on Solaris, OpenIndiana, MacOS X
+	- ... and some documentation and debugs polishing
 
 Changes to squid-3.2.7 (01 Feb 2013):
 

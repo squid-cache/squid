@@ -16,7 +16,7 @@ m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_0x.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
 m4_include([acinclude/ax_cxx_0x_types.m4])
 
 PRESET_CFLAGS="$CFLAGS"
@@ -35,9 +35,33 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
-# might be cross-compiling
+# Clang 3.2 on some CPUs requires -march-native to detect correctly.
+# GCC 4.3+ can also produce faster executables when its used.
+# But building inside a virtual machine environment has been found to
+# cause random Illegal Instruction errors due to mis-detection of CPU.
+AC_ARG_ENABLE(arch-native,
+  AS_HELP_STRING([--disable-arch-native],[Some compilers offer CPU-specific
+                 optimizations with the -march=native parameter.
+                 This flag disables the optimization. The default is to
+                 auto-detect compiler support and use where available.]), [
+  SQUID_YESNO([$enableval],
+    [Unrecognized argument to --disable-arch-native: $enableval])
+])
+AC_MSG_NOTICE([CPU -march=native optimization enabled: ${enable_arch_native:=auto}])
+if test "x${enable_arch_native}" != "xno"; then
+  SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
+fi
+
+# might be cross-compiling.
 if test "x$HOSTCXX" = "x"; then
   HOSTCXX="$CXX"
+  if test "x$squid_cv_check_marchnative" = "xyes"; then
+    CXXFLAGS="$CXXFLAGS -march=native"
+  fi
+fi
+if test "x$squid_cv_check_marchnative" = "xyes"; then
+  # always valid for the Host compiler.
+  HOSTCXX="$HOSTCXX -march=native"
 fi
 AC_SUBST(HOSTCXX)
 
@@ -58,16 +82,15 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
-# Check for C++0x compiler support
-AX_CXX_COMPILE_STDCXX_0X
-if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
-  "x$squid_host_os" != "xmingw" ; then
+# Check for C++11 compiler support
+if test "x$squid_host_os" != "xmingw" ; then
     #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
     # in the system libraries, which makes some c99 methods unavailable
     # (e.g. strtoll), yet configure detects them as avilable.
     case "$CXX" in
       *clang++*) ;; #do nothing
-      *) CXXFLAGS="$CXXFLAGS -std=c++0x" ;;
+      *)
+      AX_CXX_COMPILE_STDCXX_11([noext],[optional])
     esac
 fi
 
@@ -127,7 +150,7 @@ AC_ARG_ENABLE(loadable-modules,
   SQUID_YESNO([$enableval],
     [Unrecognized argument to --disable-loadable-modules: $enableval])
 ])
-AM_CONDITIONAL(USE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
+AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
 AC_MSG_RESULT([$enable_loadable_modules])
 
 if test "x$enable_loadable_modules" = "xyes";
@@ -183,9 +206,10 @@ AC_SUBST(CGIEXT)
 
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
                [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
-AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
+AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
-if test "x$squid_host_os" = "xmingw"; then
+case "$squid_host_os" in
+mingw)
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
   CFLAGS="$CFLAGS -mthreads"
   CXXFLAGS="$CXXFLAGS -mthreads"
@@ -198,7 +222,16 @@ if test "x$squid_host_os" = "xmingw"; then
   fi
   MINGW_LIBS="-lmingwex"
   AC_SUBST(MINGW_LIBS)
-fi
+  ;;
+freebsd)
+    # FreeBSD places local libraries and packages in /usr/local
+    CFLAGS="$CFLAGS -I/usr/local/include"
+    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
+    ;;
+*)
+    ;;
+esac
 
 dnl Substitutions
 AC_DEFINE_UNQUOTED(CONFIG_HOST_TYPE, "$host",[Host type from configure])
@@ -259,7 +292,7 @@ case $withval in
 ])
 AC_SUBST(DEFAULT_SWAP_DIR)
 
-if test "x$GCC" = "xyes"; then
+if test "$squid_cv_compiler" = "gcc"; then
   GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
   GCCVER2=`echo $GCCVER | awk '{print $1 * 100}'`
   case "$host" in
@@ -276,7 +309,7 @@ fi
 
 dnl Set Default CFLAGS
 if test "x$PRESET_CFLAGS" = "x"; then
-  if test "x$GCC" = "xyes"; then
+  if test "$squid_cv_compiler" = "gcc"; then
     case "$host" in
       *-sun-sunos*)
         # sunos has too many warnings for this to be useful
@@ -310,7 +343,7 @@ if test "x$PRESET_CFLAGS" = "x"; then
 fi
 
 dnl set squid required flags
-if test "x$GCC" = "xyes"; then
+if test "$squid_cv_compiler" = "gcc"; then
   case "$squid_host_os" in
   mingw)
 dnl Guido Serassio (serassio@squid-cache.org) 20070811
@@ -318,12 +351,6 @@ dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
 dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
-    ;;
-  freebsd)
-    # FreeBSD places local libraries and packages in /usr/local
-    CFLAGS="$CFLAGS -I/usr/local/include"
-    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
-    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
     ;;
   *)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
@@ -403,8 +430,8 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     AC_MSG_RESULT(yes)
 ],[
     AC_MSG_RESULT(no)
+],[ AC_MSG_RESULT(cross-compiler cant tell)
 ])
-
 
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
@@ -420,28 +447,6 @@ AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
-
-dnl This is a developer only option.. developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(xmalloc-debug,
-dnl [  --enable-xmalloc-debug  Do some simple malloc debugging],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([malloc debugging enabled])
-dnl     AC_DEFINE(XMALLOC_DEBUG,1,[Define to do simple malloc debugging])
-dnl   fi
-dnl ])
-
-dnl This is a developer only option.. developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(xmalloc-debug-trace,
-dnl [  --enable-xmalloc-debug-trace
-dnl                           Detailed trace of memory allocations],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([malloc debug trace enabled])
-dnl     AC_DEFINE(XMALLOC_TRACE,1,[Define to have a detailed trace of memory allocations])
-dnl     AC_DEFINE(XMALLOC_DEBUG,1)
-dnl   fi
-dnl ])
 
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
@@ -531,7 +536,7 @@ AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]
 AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 AH_TEMPLATE(USE_DISKIO_AIO, [Whether POSIX AIO support is needed. Automatic])
 AH_TEMPLATE(USE_DISKIO_DISKTHREADS, [Whether pthreads support is needed. Automatic])
-USE_AIOPS_WIN32=0
+ENABLE_WIN32_AIOPS=0
 squid_opt_use_aio=
 squid_opt_use_diskthreads=
 AIOLIB=
@@ -574,11 +579,11 @@ for module in $squid_disk_module_candidates none; do
       dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
         case "$squid_host_os" in
           mingw)
-            USE_AIOPS_WIN32=1
+            ENABLE_WIN32_AIOPS=1
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
-            if test `echo "$squid_host_os_version" | cut -b1` -lt 7 ; then
+            if test `echo "$squid_host_os_version" | tr -d .` -lt 70 ; then
                 AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
                 squid_opt_use_diskthreads="no"
             else
@@ -587,6 +592,16 @@ for module in $squid_disk_module_candidates none; do
               if test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x" ; then
                 LDFLAGS="$LDFLAGS -pthread"
               fi
+            fi
+            ;;
+          openbsd)
+            if test `echo "$squid_host_os_version" | tr -d .` -lt 52 ; then
+                AC_MSG_NOTICE(pthread library requires OpenBSD 5.2 or later)
+                squid_opt_use_diskthreads="no"
+            else
+              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+              LDFLAGS="$LDFLAGS -lpthread"
             fi
             ;;
           solaris)
@@ -676,7 +691,7 @@ for module in $squid_disk_module_candidates none; do
         DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
         case "$squid_host_os" in
           mingw)
-            USE_AIO_WIN32=1
+            ENABLE_WIN32_AIO=1
             AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
             ;;
           *)
@@ -735,8 +750,8 @@ AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
 AC_SUBST(DISK_LINKOBJS)
 AC_SUBST(DISK_OS_LIBS)
-AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = "1"])
-AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = "1"])
+AM_CONDITIONAL([ENABLE_WIN32_AIOPS], [test "$ENABLE_WIN32_AIOPS" = "1"])
+AM_CONDITIONAL([ENABLE_WIN32_AIO], [test "$ENABLE_WIN32_AIO" = "1"])
 
 
 dnl Check what Storage formats are wanted.
@@ -769,8 +784,6 @@ if test "x$squid_opt_enable_storeio" = "xauto"; then
   squid_opt_enable_storeio=yes
   AC_MSG_CHECKING([for available StoreIO modules])
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-  # disable coss
-  squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/coss//'`
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
@@ -792,33 +805,26 @@ for fs in $squid_storeio_module_candidates none; do
         AC_MSG_ERROR([Storage module aufs requires DiskIO module: Blocking or DiskThreads])
       fi
       ;;
-    coss)
-      AC_MSG_WARN([COSS Support is not stable yet in Squid-3. Please do not use.])
-      if ! test "x$squid_disk_module_candidates_AIO" = "xyes"; then
-        AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
-      fi
-      # Automake on MinGW needs explicit exe extension
-      # for STORE_TESTS substition
-      STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
-      ;;
     rock)
 	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
 	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
 	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
 	fi
-	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
+	squid_do_build_rock=true
 	;;
     ufs)
-      STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
+	squid_do_build_ufs=true
+	;;
     esac
 done
-
+ 
+AM_CONDITIONAL(HAVE_FS_UFS,[test "x$squid_do_build_ufs" = "xtrue" ])
+AM_CONDITIONAL(HAVE_FS_ROCK,[test "x$squid_do_build_rock" = "xtrue" ])
 dnl hack: need to define those even if not used in the build system to
 dnl make sure that global FS objects are linked to the squid binary.
 AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
-AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
 AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
 
 
@@ -1011,10 +1017,10 @@ then
 
   if test -n "$PKG_CONFIG"; then
     dnl eCAP support requires libecap.
-    dnl This Squid supports libecap v0.2.x.
+    dnl This Squid supports libecap v1.0.x.
     dnl Use EXT_ prefix to distinguish external libecap (that we check for
     dnl here) from our own convenience ecap library in Makefiles.
-    PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 0.2.0 libecap < 0.3])
+    PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 1.0 libecap < 1.1])
   else
     AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
   fi
@@ -1045,18 +1051,6 @@ else
     ADAPTATION_LIBS=""
 fi
 AC_SUBST(ADAPTATION_LIBS)
-
-
-dnl This is a developer only option. Developers know how to set defines
-dnl
-dnl AC_ARG_ENABLE(mem-gen-trace,
-dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
-dnl [ if test "$enableval" = "yes" ; then
-dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
-dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
-dnl   fi
-dnl ])
-
 
 test "x$squid_host_os" = "xmingw" && enable_wccp=no
 AC_ARG_ENABLE(wccp,
@@ -1097,12 +1091,10 @@ SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
 AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
-    SNMPLIB='../snmplib/libsnmplib.a'
-    makesnmplib=snmplib
+    SNMPLIB='../lib/snmplib/libsnmplib.la'
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
 AC_SUBST(SNMPLIB)
-AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(cachemgr-hostname,
   AS_HELP_STRING([--enable-cachemgr-hostname=hostname],
@@ -1187,32 +1179,88 @@ SQUID_DEFINE_BOOL(USE_HTCP,${enable_htcp:=yes},
 AM_CONDITIONAL(ENABLE_HTCP, [test "x$enable_htcp" = "xyes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
-
-# SSL is not enabled by default.
-# Default is to use OpenSSL when available
-AC_ARG_ENABLE(ssl,
-  AS_HELP_STRING([--enable-ssl],
-                 [Enable ssl gatewaying support using OpenSSL]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-ssl: $enableval])
+# Cryptograhic libraries
+AC_ARG_WITH(nettle,
+  AS_HELP_STRING([--without-nettle],[Compile without the Nettle crypto library.]),[
+case "$with_nettle" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-nettle path does not point to a directory])
+    fi
+    NETTLELIBDIR="-L$with_nettle/lib"
+    CPPFLAGS="-I$with_nettle/include $CPPFLAGS"
+    with_nettle=yes
+  esac
 ])
-# USE_OPENSSL is AC_DEFINED later
-# default for ssl is set here
-if test "x${enable_ssl:=no}" = "xyes" ; then
-  if test "x$squid_host_os" = "xmingw" ; then
-    SSLLIB='-lssleay32 -leay32 -lgdi32'
+if test "x$with_nettle" != "xno" ; then
+  AC_CHECK_LIB(nettle, nettle_md5_init,[
+    NETTLELIB="$NETTLELIBDIR -lnettle"
+    AC_CHECK_HEADERS(nettle/md5.h)
+  ],[with_nettle=no])
+fi
+AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
+AC_SUBST(NETTLELIB)
+
+dnl Check for libcrypt
+CRYPTLIB=
+dnl Some of our helpers use crypt(3) which may be in libc, or in
+dnl libcrypt (eg FreeBSD)
+AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
+dnl Solaris10 provides MD5 natively through libmd5
+AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
+AC_SUBST(CRYPTLIB)
+
+SSLLIB=""
+
+dnl User may want to disable GnuTLS
+AC_ARG_WITH(gnutls,
+  AS_HELP_STRING([--without-gnutls],
+                 [Do not use GnuTLS for SSL. Default: auto-detect]), [ 
+case "$with_gnutls" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-gnutls path does not point to a directory])
+    fi
+    LIBGNUTLS_PATH="-L$with_gnutls/lib"
+    CPPFLAGS="-I$with_gnutls/include $CPPFLAGS"
+  esac
+])
+AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
+if test "x$with_gnutls" != "xno"; then
+  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h)
+
+  # User may have provided a custom location for GnuTLS. Otherwise...
+  SQUID_STATE_SAVE(squid_gnutls_state)
+  LIBS="$LIBS $LIBGNUTLS_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.1.5],,[
+    ## find the package without pkg-config
+    ## check that the library is actually new enough.
+    ## by testing for a 3.1.5+ function which we use
+    AC_CHECK_LIB(gnutls,gnutls_certificate_verify_peers3,[LIBGNUTLS_LIBS="-lgnutls"])
+  ])
+
+  SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
+
+  if test "x$with_gnutls" = "xyes" -a "x$LIBGNUTLS_LIBS" = "x"; then
+    AC_MSG_ERROR([Required GnuTLS library not found])
+  fi
+  if test "x$LIBGNUTLS_LIBS" != "x" ; then
+    CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
+    SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
+    AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
   else
-    SSLLIB='-lssl -lcrypto'
-  fi
-  if test "x$with_openssl" = "x"; then
-    with_openssl=yes
-  fi
-  if test "x$with_openssl" = "x"; then
-    with_openssl=yes
+    with_gnutls=no
   fi
 fi
-AM_CONDITIONAL(ENABLE_SSL,[ test "x$enable_ssl" = "xyes" ])
-AC_MSG_NOTICE([SSL gatewaying support enabled: $enable_ssl])
+AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
@@ -1229,32 +1277,72 @@ case "$with_openssl" in
     if test ! -d "$withval" ; then
       AC_MSG_ERROR([--with-openssl path does not point to a directory])
     fi
-    SSLLIBDIR="$with_openssl/lib"
+    LIBOPENSSL_PATH="-L$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
     with_openssl=yes
   esac
 ])
-SQUID_DEFINE_BOOL(USE_SSL,$enable_ssl,
-   [Define this to include code for SSL gatewaying support])
-AC_MSG_NOTICE([Using OpenSSL MD5 implementation: ${with_openssl:=no}])
-SQUID_DEFINE_BOOL(USE_OPENSSL,${with_openssl},
-   [Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid-supplied MD5 implementation or if building with SSL encryption])
-if test "x$enable_ssl" = "xyes"; then
-  if test "x$SSLLIB" = "x"; then
-    SSLLIB="-lcrypto" # for MD5 routines
-  fi
+AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
+## OpenSSL is default disable due to licensing issues on some OS
+if test "x$with_openssl" = "xyes"; then
+  AC_CHECK_HEADERS( \
+    openssl/err.h \
+    openssl/md5.h \
+    openssl/opensslv.h \
+    openssl/ssl.h \
+    openssl/x509v3.h \
+    openssl/engine.h \
+    openssl/txt_db.h \
+  )
+
+  # User may have provided a custom location for OpenSSL. Otherwise...
+  SQUID_STATE_SAVE(squid_openssl_state)
+  LIBS="$LIBS $LIBOPENSSL_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
+    ## For some OS pkg-config is broken or unavailable.
+    ## Detect libraries the hard way.
+
+    # Windows MinGW has some special libraries ...
+    if test "x$squid_host_os" = "xmingw" ; then
+      LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
+      AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
+    fi
+
+    AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
+    ])
+    AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
+    ])
+  ])
+
   # This is a workaround for RedHat 9 brain damage..
-  if test -d /usr/kerberos/include -a "x$SSLLIBDIR" = "x" -a -f /usr/include/openssl/kssl.h; then
+  if test -d /usr/kerberos/include -a -f /usr/include/openssl/kssl.h; then
     AC_MSG_NOTICE([OpenSSL depends on Kerberos])
-    SSLLIBDIR="/usr/kerberos/lib"
+    LIBOPENSSL_LIBS="-L/usr/kerberos/lib $LIBOPENSSL_LIBS"
     CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
   fi
-fi
-if test "x$SSLLIBDIR" != "x" ; then
-  SSLLIB="-L$SSLLIBDIR $SSLLIB"
-fi
-AC_SUBST(SSLLIB)
+  SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
+  if test "x$LIBOPENSSL_LIBS" != "x"; then
+    CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
+    SSLLIB="$LIBOPENSSL_PATH $LIBOPENSSL_LIBS $SSLLIB"
+    AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
+
+    # check for other specific broken implementations
+    SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+    SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
+    SQUID_CHECK_OPENSSL_TXTDB
+  fi
+  if test "x$SSLLIB" = "x"; then
+    AC_MSG_ERROR([Required OpenSSL library not found])
+  fi
+fi
+AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} ${LIBOPENSSL_LIBS}])
+AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
+AC_SUBST(SSLLIB)
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -1275,20 +1363,6 @@ SQUID_DEFINE_BOOL(USE_CACHE_DIGESTS,${enable_cache_digests:=no},
   [Use Cache Digests for locating objects in neighbor caches.])
 AC_MSG_NOTICE([Cache Digests enabled: $enable_cache_digests])
 
-
-dnl Size of COSS memory buffer
-squid_opt_coss_membuf_size=1048576
-AC_ARG_WITH(coss-membuf-size,
-  AS_HELP_STRING([--with-coss-membuf-size=size],
-             [COSS membuf size (default $squid_opt_coss_membuf_size bytes)]), [
-case $withval in
-  [[0-9]]*) squid_opt_coss_membuf_size=$withval ;;
-  *) AC_MSG_ERROR([--with-coss-membuf-size expects a numeric argument]) ;;
-esac
-])
-AC_MSG_NOTICE([Setting COSS membuf size to $squid_opt_coss_membuf_size bytes])
-AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $squid_opt_coss_membuf_size,
-   [Default COSS membuf size])
 
 ################################
 # check for netio plugin stuff #
@@ -1459,7 +1533,17 @@ AC_ARG_ENABLE(pf-transparent,
               [unrecognized argument to --enable-pf-transparent: $enableval])
 ])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
-AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=auto}])
+AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=no}])
+
+dnl Enable /dev/pf support for older PF Transparent Proxy systems (OpenBSD 4.x and older)
+AC_ARG_WITH(nat-devpf,
+  AS_HELP_STRING([--with-nat-devpf],
+    [Enable /dev/pf support for NAT on older OpenBSD and FreeBSD kernels.]), [
+  SQUID_YESNO([$enableval],
+              [unrecognized argument to --with-nat-devpf: $enableval])
+])
+#will be AC_DEFINEd later, after checking for appropriate infrastructure
+AC_MSG_NOTICE([NAT lookups via /dev/pf: ${with_nat_devpf:=no}])
 
 # Linux Netfilter Transparent Proxy
 AC_ARG_ENABLE(linux-netfilter,
@@ -1549,6 +1633,9 @@ case "$withval" in
 esac
 ])
 
+#hack. Let's early-detect sizeof(long)
+AC_CHECK_SIZEOF(long)
+
 if test "x$squid_opt_enable_large_files" = "xyes" -a "x$buildmodel" = "x"; then
   for model in POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG; do
     if test "`getconf _$model 2>/dev/null || true`" = 1 || test "`getconf $model 2>/dev/null || true`" ; then
@@ -1561,7 +1648,8 @@ if test "x$squid_opt_enable_large_files" = "xyes" -a "x$buildmodel" = "x"; then
   fi
 fi
 if test "x$buildmodel" = "xdefault" -o "x$buildmodel" = "x"; then
-  if test "x$squid_opt_enable_large_files" = "xyes" ; then
+  # define _FILE_OFFSET_BITS if requested and needed
+  if test "x$squid_opt_enable_large_files" = "xyes" -a $ac_cv_sizeof_long -le 4 ; then
     AC_MSG_NOTICE([Enabling -D_FILE_OFFSET_BITS=64])
     CFLAGS="-D_FILE_OFFSET_BITS=64 $CFLAGS"
     CXXFLAGS="-D_FILE_OFFSET_BITS=64 $CXXFLAGS"
@@ -1635,21 +1723,6 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-squid_opt_use_dnshelper="no"
-AC_ARG_ENABLE(internal-dns,
-  AS_HELP_STRING([--disable-internal-dns],
-           [Prevents Squid from directly sending and receiving DNS messages, 
-            and instead enables the old external 'dnsserver' processes.]), [
-  if test "x$enableval" = "xno" ; then
-    AC_MSG_WARN([Disabling Internal DNS queries])
-    squid_opt_use_dnshelper="yes"
-  fi
-])
-SQUID_DEFINE_BOOL(USE_DNSHELPER,$squid_opt_use_dnshelper,
-  [Use dnsserver processes instead of the internal DNS protocol support])
-AM_CONDITIONAL([ENABLE_DNSHELPER],[test "x$squid_opt_use_dnshelper" = "xyes" ])
-
-
 AM_CONDITIONAL(USE_SSL_CRTD, false)
 AC_ARG_ENABLE(ssl-crtd,
   AC_HELP_STRING([--enable-ssl-crtd],
@@ -1659,8 +1732,8 @@ AC_ARG_ENABLE(ssl-crtd,
   [unrecogized argument to --enable-ssl-crtd: $enableval])
 ])
 
-if test "x$enable_ssl_crtd" = "xyes" -a "x$enable_ssl" = "xno" ; then
-   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --enable-ssl. ])
+if test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno" ; then
+   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --with-openssl. ])
 fi
 SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
 AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
@@ -1706,45 +1779,7 @@ AC_ARG_ENABLE(auth-basic,
       To see available helpers, see the helpers/basic_auth directory. ]),[
 #nothing to do really
 ])
-#not specified. Inherit global
-if test "x$enable_auth_basic" = "x"; then
-    enable_auth_basic=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_basic" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([Basic auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_basic" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/basic_auth],[enable_auth_basic])
-fi
-#handle the "none" special case
-if test "x$enable_auth_basic" = "xnone" ; then
-    enable_auth_basic=""
-fi
-BASIC_AUTH_HELPERS=""
-#enable_auth_basic contains either "no" or the list of modules to be built
-enable_auth_basic="`echo $enable_auth_basic| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_basic" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES basic"
-    AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
-    for helper in $enable_auth_basic
-    do
-    dir="$srcdir/helpers/basic_auth/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-      BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
-      # special case
-      if test "x$helper" = "xSASL" ; then
-        squid_require_sasl=yes
-      fi
-    elif test -d "$srcdir/helpers/basic_auth/$helper" ; then
-      AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
-    fi
-    done
-fi
-AC_MSG_NOTICE([Basic auth helpers to be built: $BASIC_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_BASIC, test "x$enable_auth_basic" != "xno")
-AC_SUBST(BASIC_AUTH_HELPERS)
+m4_include([helpers/basic_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-ntlm,
   AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
@@ -1755,38 +1790,7 @@ AC_ARG_ENABLE(auth-ntlm,
       To enable but build no helpers, specify "none".
       To see available helpers, see the helpers/ntlm_auth directory. ]),[
 ])
-if test "x$enable_auth_ntlm" = "x"; then
-    enable_auth_ntlm=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_ntlm" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([NTLM auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_ntlm" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/ntlm_auth],[enable_auth_ntlm])
-fi
-#handle the "none" special case
-if test "x$enable_auth_ntlm" = "xnone" ; then
-    enable_auth_ntlm=""
-fi
-NTLM_AUTH_HELPERS=""
-enable_auth_ntlm="`echo $enable_auth_ntlm| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_ntlm" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES ntlm"
-    AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
-    for helper in $enable_auth_ntlm ; do
-        dir="$srcdir/helpers/ntlm_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-            NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
-        elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
-            AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
-        fi
-    done
-fi
-AC_MSG_NOTICE([NTLM auth helpers built: $NTLM_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_NTLM, test "x$enable_auth_ntlm" != "xno")
-AC_SUBST(NTLM_AUTH_HELPERS)
+m4_include([helpers/ntlm_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
@@ -1800,38 +1804,7 @@ AC_ARG_ENABLE(auth-negotiate,
       To see available helpers, see the helpers/negotiate_auth directory. ]),[
 #nothing to do, really
 ])
-if test "x$enable_auth_negotiate" = "x"; then
-    enable_auth_negotiate=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_negotiate" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([Negotiate auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_negotiate" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/negotiate_auth],[enable_auth_negotiate])
-fi
-#handle the "none" special case
-if test "x$enable_auth_negotiate" = "xnone" ; then
-    enable_auth_negotiate=""
-fi
-NEGOTIATE_AUTH_HELPERS=""
-enable_auth_negotiate="`echo $enable_auth_negotiate| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_negotiate" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES negotiate"
-    AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
-    for helper in $enable_auth_negotiate ; do
-        dir="$srcdir/helpers/negotiate_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-            NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
-        elif test -d "$srcdir/helpers/negotiate_auth/$helper" ; then
-            AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
-        fi
-    done
-fi
-AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_NEGOTIATE, test "x$enable_auth_negotiate" != "xno")
-AC_SUBST(NEGOTIATE_AUTH_HELPERS)
+m4_include([helpers/negotiate_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-digest,
   AS_HELP_STRING([--enable-auth-digest="list of helpers"],
@@ -1843,38 +1816,7 @@ AC_ARG_ENABLE(auth-digest,
       To see available helpers, see the helpers/digest_auth directory. ]),[
 #nothing to do, really
 ])
-if test "x$enable_auth_digest" = "x"; then
-    enable_auth_digest=$enable_auth
-fi
-#conflicts with global
-if test "x$enable_auth_digest" != "xno" -a "x$enable_auth" = "xno" ; then
-    AC_MSG_ERROR([Digest auth requested but auth disabled])
-fi
-#define list of modules to build
-if test "x$enable_auth_digest" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/digest_auth],[enable_auth_digest])
-fi
-#handle the "none" special case
-if test "x$enable_auth_digest" = "xnone" ; then
-    enable_auth_digest=""
-fi
-DIGEST_AUTH_HELPERS=""
-enable_auth_digest="`echo $enable_auth_digest| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_auth_digest" != "xno" ; then
-    AUTH_MODULES="$AUTH_MODULES digest"
-    AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
-    for helper in $enable_auth_digest ; do
-        dir="$srcdir/helpers/digest_auth/$helper"
-        if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-            DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
-        elif test -d "$srcdir/helpers/digest_auth/$helper" ; then
-            AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
-        fi
-    done
-fi
-AC_MSG_NOTICE([Digest auth helpers built: $DIGEST_AUTH_HELPERS])
-AM_CONDITIONAL(ENABLE_AUTH_DIGEST, test "x$enable_auth_digest" != "xno")
-AC_SUBST(DIGEST_AUTH_HELPERS)
+m4_include([helpers/digest_auth/modules.m4])
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
@@ -1887,33 +1829,15 @@ AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 
 dnl Select logging daemon helpers to build
-squid_opt_logdaemon_helpers="auto"
 AC_ARG_ENABLE(log-daemon-helpers,
   AS_HELP_STRING([--enable-log-daemon-helpers="list of helpers"],
                  [This option selects which logging daemon helpers to 
                   build and install as part of the normal build process
                   For a list of available helpers see the helpers/log_daemon
                   directory.]),[
-case "$enableval" in
-  yes) : ;;
-  no)  squid_opt_logdaemon_helpers="" ;;
-  *)   squid_opt_logdaemon_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
-  esac
+#nothing to do, really
 ])
-if test "x$squid_opt_logdaemon_helpers" = "xauto" ; then
-  squid_opt_logdaemon_helpers=""
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/log_daemon],[squid_opt_logdaemon_helpers])
-fi
-for helper in $squid_opt_logdaemon_helpers ; do
-  dir="$srcdir/helpers/log_daemon/$helper"
-  if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-    LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $helper"
-  elif test -d "$srcdir/helpers/log_daemon/$helper" ; then
-    AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
-  fi
-done
-AC_MSG_NOTICE([Log daemon helpers built: $LOG_DAEMON_HELPERS])
-AC_SUBST(LOG_DAEMON_HELPERS)
+m4_include([helpers/log_daemon/modules.m4])
 
 dnl
 dnl Check Kerberos/GSSAPI/SPNEGO
@@ -1965,7 +1889,7 @@ if test "x$ac_krb5_config" = "xyes" ; then
   CPPFLAGS="$CPPFLAGS $KRB5INCS"
   LIBS="$LIBS $KRB5LIBS"
   AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-  if test "x$ac_heimdal" == "x" ; then
+  if test "x$ac_heimdal" = "x" ; then
     AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(profile.h)
   fi
@@ -1985,9 +1909,9 @@ if test "x$ac_krb5_config" = "xyes" ; then
   AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
   ac_com_error_message=no
-  if test "x$ac_cv_header_com_err_h" == "xyes" ; then
+  if test "x$ac_cv_header_com_err_h" = "xyes" ; then
       AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)
-  elif test "x$ac_cv_header_et_com_err_h" == "xyes" ; then
+  elif test "x$ac_cv_header_et_com_err_h" = "xyes" ; then
       AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
   fi
 
@@ -1996,11 +1920,11 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT, 1, [Define to 1 if max_skew in struct krb5_context])
   fi
 
-  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" == "xyes" ; then
+  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
     AC_CHECK_LIB(com_err,error_message,
       AC_DEFINE(HAVE_ERROR_MESSAGE,1,
         [Define to 1 if you have error_message]),)
-  elif test  "x$ac_com_error_message" == "xyes" ; then
+  elif test  "x$ac_com_error_message" = "xyes" ; then
     AC_CHECK_LIB(krb5,error_message,
       AC_DEFINE(HAVE_ERROR_MESSAGE,1,
         [Define to 1 if you have error_message]),)
@@ -2012,6 +1936,10 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
       [Define to 1 if you have krb5_get_error_message]),)
   AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
+  AC_CHECK_TYPE(krb5_pac,
+    AC_DEFINE(HAVE_KRB5_PAC,1,
+      [Define to 1 if you have krb5_pac]),,
+      [#include <krb5.h>])
   AC_CHECK_LIB(krb5,krb5_kt_free_entry,
     AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
       [Define to 1 if you have krb5_kt_free_entry]),)
@@ -2030,6 +1958,33 @@ if test "x$ac_krb5_config" = "xyes" ; then
   AC_CHECK_LIB(krb5,profile_release,
     AC_DEFINE(HAVE_PROFILE_RELEASE,1,
       [Define to 1 if you have profile_release]),)
+  AC_CHECK_LIB(krb5,krb5_get_renewed_creds,
+    AC_DEFINE(HAVE_KRB5_GET_RENEWED_CREDS,1,
+      [Define to 1 if you have krb5_get_renewed_creds]),)
+  AC_CHECK_LIB(krb5,krb5_principal_get_realm,
+    AC_DEFINE(HAVE_KRB5_PRINCIPAL_GET_REALM,1,
+      [Define to 1 if you have krb5_principal_get_realm]),)
+  AC_CHECK_LIB(krb5, krb5_get_init_creds_opt_alloc,
+    AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
+      [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
+  AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	#include <krb5.h>
+    ]],[[krb5_context context;
+	 krb5_get_init_creds_opt *options;
+	 krb5_get_init_creds_opt_free(context, options)]])],[
+	AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,
+		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
+	AC_MSG_RESULT(yes)
+    ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
+
+
+  AC_CHECK_FUNCS(gss_map_name_to_any,
+    AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
+      [Define to 1 if you have gss_map_name_to_any]),)
+  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context,
+    AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
+      [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
@@ -2060,33 +2015,7 @@ AC_ARG_ENABLE(external-acl-helpers,
                   directory]), [
 #nothing to do, really
 ])
-if test "x${enable_external_acl_helpers:=yes}" = "xyes" ;then
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/external_acl],
-    [enable_external_acl_helpers])
-fi
-if test "x$enable_external_acl_helpers" = "xnone" ; then
-  enable_external_acl_helpers=""
-fi
-EXTERNAL_ACL_HELPERS=""
-enable_external_acl_helpers="`echo $enable_external_acl_helpers| sed -e 's/,/ /g;s/  */ /g'`"
-if test "x$enable_external_acl_helpers" != "xno" ; then
-  for helper in $enable_external_acl_helpers ; do
-    dir="$srcdir/helpers/external_acl/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-      EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
-      # special case
-      if test "x$helper" = "xkerberos_ldap_group" ; then
-        squid_require_sasl=yes
-      fi
-    else
-      AC_MSG_NOTICE([external acl helper $helper ... found but cannot be built])
-    fi
-  done
-fi
-AC_MSG_NOTICE([External acl helpers built: $EXTERNAL_ACL_HELPERS])
-AC_SUBST(EXTERNAL_ACL_HELPERS)
-
-
+m4_include([helpers/external_acl/modules.m4])
 
 dnl Select url_rewrite helpers to build
 AC_ARG_ENABLE(url-rewrite-helpers,
@@ -2098,28 +2027,19 @@ AC_ARG_ENABLE(url-rewrite-helpers,
                   For a list of available helpers see the
                   helpers/url_rewrite directory.]),[
 ])
-if test "x${enable_url_rewrite_helpers:=yes}" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/url_rewrite],
-                           [enable_url_rewrite_helpers])
-fi
-enable_url_rewrite_helpers="`echo $enable_url_rewrite_helpers| sed -e 's/,/ /g;s/  */ /g'`"
-AC_MSG_NOTICE([URL rewrite helper candidates: $enable_url_rewrite_helpers])
-URL_REWRITE_HELPERS=""
-if test "x$enable_url_rewrite_helpers" != "xno" ; then
-  for helper in $enable_url_rewrite_helpers; do
-    dir="$srcdir/helpers/url_rewrite/$helper"
-    if test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
-      URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
-    elif test -d "$srcdir/helpers/ntlm_auth/$helper" ; then
-      AC_MSG_NOTICE([URL rewrite helper $helper ... found but cannot be built])
-    else
-      AC_MSG_NOTICE([URL rewrite helper $helper ... not found])
-    fi
-  done
-fi
-AC_MSG_NOTICE([URL rewrite helpers built: $URL_REWRITE_HELPERS])
-AC_SUBST(URL_REWRITE_HELPERS)
+m4_include([helpers/url_rewrite/modules.m4])
 
+dnl Select storeid_rewrite helpers to build
+AC_ARG_ENABLE(storeid-rewrite-helpers,
+  AS_HELP_STRING([--enable-storeid-rewrite-helpers="list of helpers"],
+                 [This option selects which Store-ID rewrite helpers to
+                  build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-storeid-rewrite-helpers to build none.
+                  For a list of available helpers see the
+                  helpers/storeid_rewrite directory.]),[
+])
+m4_include([helpers/storeid_rewrite/modules.m4])
 
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
@@ -2163,27 +2083,6 @@ SQUID_DEFINE_BOOL(USE_WIN32_SERVICE,${enable_win32_service:=no},
    [Enable code supporting MS Windows service mode])
 AC_MSG_NOTICE([MS Windows service mode enabled: $enable_win32_service])
 
-
-# Check for Cyrus SASL
-if test "x$squid_require_sasl" = "xyes"; then
-  AC_CHECK_HEADERS(sasl/sasl.h sasl.h)
-  AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
-    AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
-      AC_MSG_ERROR(Neither SASL nor SASL2 found)
-    ])
-  ])
-  case "$squid_host_os" in
-    Darwin)
-      if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
-        AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
-        echo "checking for MAC Darwin without sasl.h ... yes"
-      else
-        echo "checking for MAC Darwin without sasl.h ... no"
-      fi
-      ;;
-  esac
-  AC_SUBST(LIBSASL)
-fi
 
 # Disable "unlinkd" code
 AC_ARG_ENABLE(unlinkd,
@@ -2318,17 +2217,11 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
-  algorithm \
   arpa/inet.h \
   arpa/nameser.h \
   assert.h \
   bstring.h \
-  cassert \
   crypt.h \
-  cstdarg \
-  cstdlib \
-  cstring \
-  list \
   ctype.h \
   errno.h \
   execinfo.h \
@@ -2338,11 +2231,6 @@ AC_CHECK_HEADERS( \
   glob.h \
   gnumalloc.h \
   grp.h \
-  iosfwd \
-  iomanip \
-  iostream \
-  fstream \
-  climits \
   ip_compat.h \
   ip_fil_compat.h \
   ip_fil.h \
@@ -2351,48 +2239,37 @@ AC_CHECK_HEADERS( \
   lber.h \
   ldap.h \
   libc.h \
-  limits \
   limits.h \
   linux/posix_types.h \
   linux/types.h \
   machine/byte_swap.h \
   malloc.h \
-  map \
   math.h \
   memory.h \
-  memory \
   mount.h \
   netdb.h \
   netinet/in.h \
   netinet/in_systm.h \
   netinet/ip_fil_compat.h \
+  netinet/tcp.h \
   openssl/bio.h \
   openssl/err.h \
   openssl/md5.h \
   openssl/opensslv.h \
   openssl/ssl.h \
   openssl/x509v3.h \
-  netinet/tcp.h \
-  openssl/engine.h \
-  openssl/txt_db.h \
-  ostream \
   paths.h \
   poll.h \
   pwd.h \
-  shadow.h \
   regex.h \
   sched.h \
-  security/pam_appl.h \
   siginfo.h \
   signal.h \
-  sstream \
   stdarg.h \
   stdbool.h \
   stddef.h \
-  stdexcept \
   stdio.h \
   stdlib.h \
-  string \
   string.h \
   strings.h \
   sys/bitypes.h \
@@ -2434,10 +2311,9 @@ AC_CHECK_HEADERS( \
   wchar.h
 )
 
-CHECK_STRUCT_PAM_CONV
-
-AC_CHECK_HEADERS(
-  linux/netfilter_ipv4.h
+AC_CHECK_HEADERS( \
+  linux/netfilter_ipv4.h \
+  linux/netfilter_ipv6/ip6_tables.h \
 ,,,
 SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
@@ -2484,8 +2360,6 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #include <time.h>
 #endif
 ])
-
-SQUID_HAVE_STRUCT_MALLINFO
 
 dnl Override rusage() detect on MinGW because is emulated in source code
 case "$squid_host_os" in
@@ -2661,7 +2535,6 @@ SQUID_DEFINE_BOOL(HAVE_UNIXSOCKET,$squid_cv_unixsocket,[System supports unix soc
 AC_CHECK_LIB(gnumalloc, malloc)
 if test "x$ac_cv_lib_gnumalloc_malloc" = "xyes"; then
   AC_MSG_NOTICE([Disabling extended malloc functions when using bundled gnumalloc])
-  ac_cv_func_mallinfo=no
   ac_cv_func_mallocblksize=no
   ac_cv_func_mallopt=no
 else
@@ -2692,7 +2565,6 @@ case "$squid_host_os" in
     ;;
 esac
 
-
 dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,
@@ -2700,6 +2572,7 @@ AC_ARG_WITH(maxfd,,
   case ${withval} in
     [[0-9]]*)
       squid_filedescriptors_num=$withval
+      AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
       ;;
     *)
       AC_MSG_ERROR(--with-maxfd expects a numeric argument)
@@ -2714,6 +2587,7 @@ AC_ARG_WITH(filedescriptors,
   case ${withval} in
     [[0-9]]*)
       squid_filedescriptors_num=$withval
+      AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
       ;;
     *)
       AC_MSG_ERROR(--with-filedescriptors expects a numeric argument)
@@ -2722,10 +2596,9 @@ AC_ARG_WITH(filedescriptors,
 ])
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
-if test "x$squid_filedescriptors_num" = "x"; then
-  SQUID_CHECK_MAXFD
-else
-  AC_MSG_NOTICE([forcing use of $squid_filedescriptors_num filedescriptors (user-forced)])
+SQUID_CHECK_MAXFD
+if test "x$squid_filedescriptors_num" != "x"; then
+  AC_MSG_NOTICE([Default number of fieldescriptors: $squid_filedescriptors_num])
 fi
 if test "$squid_filedescriptors_num" -lt 512 ; then
     AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
@@ -2750,22 +2623,6 @@ if test "x$enable_ipv6" = "xyes" ; then
 fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
-
-
-dnl Check for libcrypt
-CRYPTLIB=
-dnl Some of our helpers use crypt(3) which may be in libc, or in
-dnl libcrypt (eg FreeBSD)
-AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
-dnl Solaris10 provides MD5 natively through libmd5
-AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
-AC_SUBST(CRYPTLIB)
-
-# check for crypt, may require -lcrypt
-SAVED_LIBS="$LIBS"
-LIBS="$LIBS $CRYPTLIB"
-AC_CHECK_FUNCS(crypt)
-LIBS="$SAVED_LIBS"
 
 
 dnl Check for libdl, used by auth_modules/PAM
@@ -3046,6 +2903,7 @@ case "$host" in
       CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
     fi
   ;;
+
   *-sgi-irix*)
     AC_MSG_NOTICE([Removing -lsocket for IRIX...])
     LIBS=`echo $LIBS | sed -e s/-lsocket//`
@@ -3108,7 +2966,7 @@ assert(myBar != NULL);
 # Remove optimization for GCC 2.95.[123]
 # gcc -O[2] on *BSD and Linux (x86) causes pointers to magically become NULL
 if test "x$GCC" = "xyes"; then
-	GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
+	GCCVER=`$CC -v 2>&1 | awk '$2 == "version" {print $3}'`
 	case "$GCCVER" in
 	[2.95.[123]])
 		AC_MSG_NOTICE([Removing -O for gcc on $host with GCC $GCCVER])
@@ -3116,16 +2974,6 @@ if test "x$GCC" = "xyes"; then
 		;;
 	esac
 fi
-
-# Recommended by Balint Nagy Endre <bne@CareNet.hu>
-case "$host" in
-  *-univel-sysv4.2MP)
-    if test `uname -v` = "2.03"; then
-      AC_MSG_NOTICE([disabling mallinfo for $host])
-      ac_cv_func_mallinfo=no
-    fi
-    ;;
-esac
 
 dnl This has to be before AC_CHECK_FUNCS
 # Disable poll() on certain platforms. Override by setting ac_cv_func_poll
@@ -3174,6 +3022,7 @@ AC_CHECK_FUNCS(\
 	bswap_32 \
 	bswap16 \
 	bswap32 \
+	eui64_aton \
 	fchmod \
 	getdtablesize \
 	getpagesize \
@@ -3186,7 +3035,6 @@ AC_CHECK_FUNCS(\
 	htobe16 \
 	htole16 \
 	lrand48 \
-	mallinfo \
 	mallocblksize \
 	mallopt \
 	memcpy \
@@ -3209,7 +3057,6 @@ AC_CHECK_FUNCS(\
 	res_init \
 	__res_init \
 	rint \
-	sbrk \
 	sched_getaffinity \
 	sched_setaffinity \
 	select \
@@ -3231,7 +3078,6 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
-	eui64_aton \
 	inet_ntop \
 	inet_pton \
 	initgroups \
@@ -3239,7 +3085,6 @@ AC_REPLACE_FUNCS(\
 	getnameinfo \
 	psignal \
 	strerror \
-	strsep \
 	strtoll \
 	tempnam \
 )
@@ -3309,6 +3154,48 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
   AC_MSG_RESULT(no)
 ])
 
+AC_CHECK_TYPE(struct cmsghdr,AC_DEFINE(HAVE_CMSGHDR,1,[The system provides struct cmsghdr]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct iovec]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+  #if HAVE_SYS_UIO_H
+  #include <sys/uio.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
+AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provides sockaddr_un]),,[
+  #if HAVE_SYS_UN_H
+  #include <sys/un.h>
+  #endif
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+  #if HAVE_WINSOCK2_H
+  #include <winsock2.h>
+  #endif
+])
+
 SQUID_CHECK_FUNC_STRNSTR
 SQUID_CHECK_FUNC_VACOPY
 SQUID_CHECK_FUNC___VACOPY
@@ -3350,22 +3237,24 @@ dnl Solaris minor version (8, 9, 10, ...)
   CXXFLAGS="-DSOLARIS2=$solrev $CXXFLAGS" 
 fi
 
-dnl PF support requires a header file.
-if test "x$enable_pf_transparent" != "xno" ; then
+dnl PF /dev/pf support requires a header file.
+if test "x$with_nat_devpf" != "xno" ; then
   if test "x$ac_cv_header_net_pfvar_h" = "xyes" -o \
     "x$ac_cv_header_net_pf_pfvar_h" = "xyes"; then
-    if test "x$enable_pf_transparent" = "xauto" ; then
-      enable_pf_transparent="yes"
+    if test "x$with_nat_devpf" = "xauto" ; then
+      with_nat_devpf="no"
     fi
   else
-    if test "x$enable_pf_transparent" = "xyes" ; then
-      AC_MSG_ERROR([PF-based transparent proxy requested but needed header not found])
+    if test "x$with_nat_devpf" = "xyes" ; then
+      AC_MSG_ERROR([PF /dev/pf based NAT requested but needed header not found])
     fi
-    enable_pf_transparent="no"
+    with_nat_devpf="no"
   fi
 fi
-SQUID_DEFINE_BOOL(PF_TRANSPARENT,$enable_pf_transparent,
+SQUID_DEFINE_BOOL(PF_TRANSPARENT,${enable_pf_transparent:=no},
   [Enable support for PF-style transparent proxying])
+SQUID_DEFINE_BOOL(USE_NAT_DEVPF,${with_nat_devpf:=no},
+  [Enable support for /dev/pf NAT lookups])
 
 if test "x$enable_linux_netfilter" != "xno" ; then
   if test "x$ac_cv_header_linux_netfilter_ipv4_h" = "xyes"; then
@@ -3472,25 +3361,22 @@ SQUID_CHECK_RECV_ARG_TYPE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
-if test "x$squid_opt_use_dnshelper" = "xyes"; then
-  SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
-  SQUID_CHECK_RESOLVER_FIELDS
-fi
+SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
+SQUID_CHECK_RESOLVER_FIELDS
 
 if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
   SQUID_CHECK_WORKING_STATVFS
 fi
 
 
-dnl Squid will usually attempt to translate when packaging or building from VCS 
+dnl Squid will not usually attempt to translate templates when building
 AC_ARG_ENABLE(translation,
- AS_HELP_STRING([--disable-translation],[Prevent Squid generating localized error page templates and manuals.
-		 Which is usually tried, but may not be needed.]), [ 
-SQUID_YESNO([$enableval],
-     [unrecognized argument to --disable-translation: $enableval])
+ AS_HELP_STRING([--enable-translation],[Generate the localized error page templates and manuals.
+		 Which can also be downloaded from http://www.squid-cache.org/Versions/langpack/.]), [ 
+  SQUID_YESNO([$enableval],
+     [unrecognized argument to --enable-translation: $enableval])
 ])
-dnl Squid now has .po translation capability, given the right toolkit
-if test "x${enable_translation:=yes}" = "xyes" ; then
+if test "x${enable_translation:=no}" = "xyes" ; then
   AX_WITH_PROG([PO2HTML],[po2html])
   AX_WITH_PROG([PO2TEXT],[po2txt])
 else
@@ -3549,100 +3435,103 @@ AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
 
-AC_CONFIG_FILES([\
-	Makefile \
-	compat/Makefile \
-	lib/Makefile \
-	lib/ntlmauth/Makefile \
-	lib/profiler/Makefile \
-	lib/rfcnb/Makefile \
-	lib/smblib/Makefile \
-	scripts/Makefile \
-	src/Makefile \
-	src/anyp/Makefile \
-	src/base/Makefile \
-	src/acl/Makefile \
-	src/fs/Makefile \
-	src/repl/Makefile \
-	src/auth/Makefile \
-	src/auth/basic/Makefile \
-	src/auth/digest/Makefile \
-	src/auth/negotiate/Makefile \
-	src/auth/ntlm/Makefile \
-	src/adaptation/Makefile \
-	src/adaptation/icap/Makefile \
-	src/adaptation/ecap/Makefile \
-	src/comm/Makefile \
-	src/esi/Makefile \
-	src/eui/Makefile \
-	src/format/Makefile \
-	src/http/Makefile \
-	src/icmp/Makefile \
-	src/ident/Makefile \
-	src/ip/Makefile \
-	src/log/Makefile \
-	src/ipc/Makefile \
-	src/ssl/Makefile \
-	src/mgr/Makefile \
-	src/snmp/Makefile \
-	contrib/Makefile \
-	snmplib/Makefile \
-	icons/Makefile \
-	errors/Makefile \
-	test-suite/Makefile \
-	doc/Makefile \
-	doc/manuals/Makefile \
-	helpers/Makefile \
-	helpers/basic_auth/Makefile \
-	helpers/basic_auth/DB/Makefile \
-	helpers/basic_auth/fake/Makefile \
-	helpers/basic_auth/getpwnam/Makefile \
-	helpers/basic_auth/LDAP/Makefile \
-	helpers/basic_auth/MSNT/Makefile \
-	helpers/basic_auth/MSNT-multi-domain/Makefile \
-	helpers/basic_auth/NCSA/Makefile \
-	helpers/basic_auth/NIS/Makefile \
-	helpers/basic_auth/PAM/Makefile \
-	helpers/basic_auth/POP3/Makefile \
-	helpers/basic_auth/RADIUS/Makefile \
-	helpers/basic_auth/SASL/Makefile \
-	helpers/basic_auth/SMB/Makefile \
-	helpers/basic_auth/SSPI/Makefile \
-	helpers/digest_auth/Makefile \
-	helpers/digest_auth/eDirectory/Makefile \
-	helpers/digest_auth/file/Makefile \
-	helpers/digest_auth/LDAP/Makefile \
-	helpers/ntlm_auth/Makefile \
-	helpers/ntlm_auth/fake/Makefile \
-	helpers/ntlm_auth/smb_lm/Makefile \
-	helpers/ntlm_auth/SSPI/Makefile \
-	helpers/negotiate_auth/Makefile \
-	helpers/negotiate_auth/kerberos/Makefile \
-	helpers/negotiate_auth/SSPI/Makefile \
-	helpers/negotiate_auth/wrapper/Makefile \
-	helpers/external_acl/Makefile \
-	helpers/external_acl/AD_group/Makefile \
-	helpers/external_acl/eDirectory_userip/Makefile \
-	helpers/external_acl/file_userip/Makefile \
-	helpers/external_acl/kerberos_ldap_group/Makefile \
-	helpers/external_acl/LDAP_group/Makefile \
-	helpers/external_acl/LM_group/Makefile \
-	helpers/external_acl/session/Makefile \
-	helpers/external_acl/SQL_session/Makefile \
-	helpers/external_acl/unix_group/Makefile \
-	helpers/external_acl/wbinfo_group/Makefile \
-	helpers/external_acl/time_quota/Makefile \
-	helpers/log_daemon/Makefile \
-	helpers/log_daemon/DB/Makefile \
-	helpers/log_daemon/file/Makefile \
-	helpers/url_rewrite/Makefile \
-	helpers/url_rewrite/fake/Makefile \
-	helpers/ssl/Makefile \
+AC_CONFIG_FILES([
+	Makefile
+	compat/Makefile
+	lib/Makefile
+	lib/ntlmauth/Makefile
+	lib/libTrie/Makefile
+	lib/libTrie/test/Makefile
+	lib/profiler/Makefile
+	lib/rfcnb/Makefile
+	lib/smblib/Makefile
+	lib/snmplib/Makefile
+	scripts/Makefile
+	src/Makefile
+	src/anyp/Makefile
+	src/base/Makefile
+	src/acl/Makefile
+	src/fs/Makefile
+	src/repl/Makefile
+	src/auth/Makefile
+	src/auth/basic/Makefile
+	src/auth/digest/Makefile
+	src/auth/negotiate/Makefile
+	src/auth/ntlm/Makefile
+	src/adaptation/Makefile
+	src/adaptation/icap/Makefile
+	src/adaptation/ecap/Makefile
+	src/comm/Makefile
+	src/esi/Makefile
+	src/eui/Makefile
+	src/format/Makefile
+	src/http/Makefile
+	src/icmp/Makefile
+	src/ident/Makefile
+	src/ip/Makefile
+	src/log/Makefile
+	src/ipc/Makefile
+	src/ssl/Makefile
+	src/mgr/Makefile
+	src/snmp/Makefile
+	contrib/Makefile
+	icons/Makefile
+	errors/Makefile
+	test-suite/Makefile
+	doc/Makefile
+	doc/manuals/Makefile
+	helpers/Makefile
+	helpers/basic_auth/Makefile
+	helpers/basic_auth/DB/Makefile
+	helpers/basic_auth/fake/Makefile
+	helpers/basic_auth/getpwnam/Makefile
+	helpers/basic_auth/LDAP/Makefile
+	helpers/basic_auth/MSNT/Makefile
+	helpers/basic_auth/MSNT-multi-domain/Makefile
+	helpers/basic_auth/NCSA/Makefile
+	helpers/basic_auth/NIS/Makefile
+	helpers/basic_auth/PAM/Makefile
+	helpers/basic_auth/POP3/Makefile
+	helpers/basic_auth/RADIUS/Makefile
+	helpers/basic_auth/SASL/Makefile
+	helpers/basic_auth/SMB/Makefile
+	helpers/basic_auth/SSPI/Makefile
+	helpers/digest_auth/Makefile
+	helpers/digest_auth/eDirectory/Makefile
+	helpers/digest_auth/file/Makefile
+	helpers/digest_auth/LDAP/Makefile
+	helpers/ntlm_auth/Makefile
+	helpers/ntlm_auth/fake/Makefile
+	helpers/ntlm_auth/smb_lm/Makefile
+	helpers/ntlm_auth/SSPI/Makefile
+	helpers/negotiate_auth/Makefile
+	helpers/negotiate_auth/kerberos/Makefile
+	helpers/negotiate_auth/SSPI/Makefile
+	helpers/negotiate_auth/wrapper/Makefile
+	helpers/external_acl/Makefile
+	helpers/external_acl/AD_group/Makefile
+	helpers/external_acl/eDirectory_userip/Makefile
+	helpers/external_acl/file_userip/Makefile
+	helpers/external_acl/kerberos_ldap_group/Makefile
+	helpers/external_acl/LDAP_group/Makefile
+	helpers/external_acl/LM_group/Makefile
+	helpers/external_acl/session/Makefile
+	helpers/external_acl/SQL_session/Makefile
+	helpers/external_acl/unix_group/Makefile
+	helpers/external_acl/wbinfo_group/Makefile
+	helpers/external_acl/time_quota/Makefile
+	helpers/log_daemon/Makefile
+	helpers/log_daemon/DB/Makefile
+	helpers/log_daemon/file/Makefile
+	helpers/url_rewrite/Makefile
+	helpers/url_rewrite/fake/Makefile
+	helpers/ssl/Makefile
+	helpers/storeid_rewrite/Makefile
+	helpers/storeid_rewrite/file/Makefile
 	tools/Makefile
+	tools/squidclient/Makefile
 	tools/purge/Makefile
 ])
-
-AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 #AC_CONFIG_SUBDIRS(libltdl)

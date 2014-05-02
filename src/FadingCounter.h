@@ -1,7 +1,7 @@
 #ifndef SQUID_FADING_COUNTER_H
 #define SQUID_FADING_COUNTER_H
 
-#include "Array.h"
+#include <vector>
 
 /// Counts events, forgetting old ones. Usefull for "3 errors/minute" limits.
 class FadingCounter
@@ -25,7 +25,7 @@ private:
     double delta; ///< sub-interval duration = horizon/precision
 
     double lastTime; ///< time of the last update
-    Vector<int> counters; ///< events per delta (possibly stale)
+    std::vector<int> counters; ///< events per delta (possibly stale)
     int total; ///< number of remembered events (possibly stale)
 };
 

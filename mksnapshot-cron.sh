@@ -61,12 +61,11 @@ make_snapshot()
   set +e
     # cleanup old snapshots
     ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r*[0-9]${type} | \
-		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
+#		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
 		sort -r | tail +${save} | \
     while read f; do
-	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
+	rm -f ${f} ${f}.md5
     done
-
   set -e
 
     # update dynamic index pages Last-Modified info
@@ -97,27 +96,30 @@ make_snapshot()
 set +e
 
 # autotool derived files not kept in trunk, but still need to bootstrap for make dist
-../commit/bootstrap squid-3
-make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 3.HEAD 6
+#../commit/bootstrap squid-3
+#make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 3.HEAD 6
 
-rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-cp ../commit/squid-3/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-chmod 444 /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/content/CONTRIBUTORS.txt
+#rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+#cp ../commit/squid-3/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+#chmod 444 /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
+#mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/content/CONTRIBUTORS.txt
+#
+#rm -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+#cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+#chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
+#mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
 
-rm -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
+../commit/bootstrap squid-3.4
+make_snapshot ../commit/squid-3/mksnapshot.sh 3.4 v3 3.4 30
 
 ../commit/bootstrap squid-3.3
 make_snapshot ../commit/squid-3/mksnapshot.sh 3.3 v3 3.3 30
 
-../commit/bootstrap squid-3.2
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_2 v3 3.2 30
+#../commit/bootstrap squid-3.2
+#make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_2 v3 3.2 30
 
-../commit/bootstrap squid-3.1
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 30
+#../commit/bootstrap squid-3.1
+#make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 30
 
 #../commit/bootstrap squid-3.0
 #make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3

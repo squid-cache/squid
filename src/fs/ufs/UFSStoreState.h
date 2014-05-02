@@ -42,8 +42,6 @@ namespace Ufs
 class UFSStoreState : public StoreIOState, public IORequestor
 {
 public:
-    void * operator new (size_t);
-    void operator delete (void *);
     UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
     ~UFSStoreState();
     virtual void close(int how);
@@ -58,8 +56,9 @@ public:
     bool closing;
     bool reading;
     bool writing;
+    /* StoreIOState API */
     void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-    void write(char const *buf, size_t size, off_t offset, FREE * free_func);
+    virtual bool write(char const *buf, size_t size, off_t offset, FREE * free_func);
 
 protected:
     virtual void doCloseCallback (int errflag);
@@ -118,7 +117,7 @@ private:
     void openDone();
     void freePending();
     void doWrite();
-    CBDATA_CLASS(UFSStoreState);
+    CBDATA_CLASS2(UFSStoreState);
 };
 
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read);

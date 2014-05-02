@@ -34,6 +34,7 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "ConfigOption.h"
+#include "ConfigParser.h"
 #include "globals.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
@@ -42,8 +43,8 @@
 #include "tools.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
-        max_size(0),
-        path(NULL), index(-1), disker(-1), min_objsize(0), max_objsize (-1),
+        max_size(0), min_objsize(0), max_objsize (-1),
+        path(NULL), index(-1), disker(-1),
         repl(NULL), removals(0), scanned(0),
         cleanLog(NULL)
 {
@@ -112,6 +113,39 @@ uint64_t
 SwapDir::minSize() const
 {
     return ((maxSize() * Config.Swap.lowWaterMark) / 100);
+}
+
+int64_t
+SwapDir::maxObjectSize() const
+{
+    // per-store max-size=N value is authoritative
+    if (max_objsize > -1)
+        return max_objsize;
+
+    // store with no individual max limit is limited by configured maximum_object_size
+    // or the total store size, whichever is smaller
+    return min(static_cast<int64_t>(maxSize()), Config.Store.maxObjectSize);
+}
+
+void
+SwapDir::maxObjectSize(int64_t newMax)
+{
+    // negative values mean no limit (-1)
+    if (newMax < 0) {
+        max_objsize = -1; // set explicitly in case it had a non-default value previously
+        return;
+    }
+
+    // prohibit values greater than total storage area size
+    // but set max_objsize to the maximum allowed to override maximum_object_size global config
+    if (static_cast<uint64_t>(newMax) > maxSize()) {
+        debugs(47, DBG_PARSE_NOTE(2), "WARNING: Ignoring 'max-size' option for " << path <<
+               " which is larger than total cache_dir size of " << maxSize() << " bytes.");
+        max_objsize = maxSize();
+        return;
+    }
+
+    max_objsize = newMax;
 }
 
 void
@@ -243,7 +277,7 @@ SwapDir::parseOptions(int isaReconfig)
 
     ConfigOption *newOption = getOptionTree();
 
-    while ((name = strtok(NULL, w_space)) != NULL) {
+    while ((name = ConfigParser::NextToken()) != NULL) {
         value = strchr(name, '=');
 
         if (value) {
@@ -289,6 +323,10 @@ SwapDir::optionReadOnlyParse(char const *option, const char *value, int isaRecon
 {
     if (strcmp(option, "no-store") != 0 && strcmp(option, "read-only") != 0)
         return false;
+
+    if (strcmp(option, "read-only") == 0) {
+        debugs(3, DBG_PARSE_NOTE(3), "UPGRADE WARNING: Replace cache_dir option 'read-only' with 'no-store'.");
+    }
 
     bool read_only = 0;
 

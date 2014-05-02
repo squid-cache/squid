@@ -1,10 +1,10 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
-#include "testConfigParser.h"
-#include "SquidString.h"
-#include "Mem.h"
-#include "event.h"
 #include "ConfigParser.h"
+#include "event.h"
+#include "Mem.h"
+#include "SquidString.h"
+#include "testConfigParser.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
 
@@ -21,24 +21,15 @@ bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp
 {
     char cfgline[2048];
     char cfgparam[2048];
-    snprintf(cfgline, 2048, "Config %s", s);
-
-    // Points to the start of quoted string
-    const char *tmp = strchr(cfgline, ' ');
-
-    if (tmp == NULL) {
-        fprintf(stderr, "Invalid config line: %s\n", s);
-        return false;
-    }
+    snprintf(cfgline, 2048, "%s", s);
 
     // Keep the initial value on cfgparam. The ConfigParser  methods will write on cfgline
-    strncpy(cfgparam, tmp+1, sizeof(cfgparam)-1);
+    strncpy(cfgparam, cfgline, sizeof(cfgparam)-1);
     cfgparam[sizeof(cfgparam)-1] = '\0';
 
     // Initialize parser to point to the start of quoted string
-    strtok(cfgline, w_space);
-    String unEscaped;
-    ConfigParser::ParseQuotedString(&unEscaped);
+    ConfigParser::SetCfgLine(cfgline);
+    String unEscaped = ConfigParser::NextToken();
 
     const bool interpOk = (unEscaped.cmp(expectInterp) == 0);
     if (!interpOk) {
@@ -63,24 +54,24 @@ bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp
 void testConfigParser::testParseQuoted()
 {
     // SingleToken
-    CPPUNIT_ASSERT(doParseQuotedTest("SingleToken", "SingleToken"));
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("SingleToken", "SingleToken"));
 
     // This is a quoted "string" by me
-    CPPUNIT_ASSERT(doParseQuotedTest("\"This is a quoted \\\"string\\\" by me\"",
-                                     "This is a quoted \"string\" by me"));
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"This is a quoted \\\"string\\\" by me\"",
+                         "This is a quoted \"string\" by me"));
 
     // escape sequence test: \\"\"\\"
-    CPPUNIT_ASSERT(doParseQuotedTest("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\"",
-                                     "escape sequence test: \\\\\"\\\"\\\\\""));
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\"",
+                         "escape sequence test: \\\\\"\\\"\\\\\""));
 
     // \beginning and end test"
-    CPPUNIT_ASSERT(doParseQuotedTest("\"\\\\beginning and end test\\\"\"",
-                                     "\\beginning and end test\""));
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\beginning and end test\\\"\"",
+                         "\\beginning and end test\""));
 
     // "
-    CPPUNIT_ASSERT(doParseQuotedTest("\"\\\"\"", "\""));
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\"\"", "\""));
 
     /* \ */
-    CPPUNIT_ASSERT(doParseQuotedTest("\"\\\\\"", "\\"));
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\\"", "\\"));
 }
 

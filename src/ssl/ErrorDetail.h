@@ -2,10 +2,8 @@
 #define _SQUID_SSL_ERROR_DETAIL_H
 
 #include "err_detail_type.h"
-#include "HttpRequest.h"
 #include "ErrorDetailManager.h"
-#include "ssl/support.h"
-#include "ssl/gadgets.h"
+#include "HttpRequest.h"
 
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
@@ -39,6 +37,14 @@ const char *GetErrorName(ssl_error_t value);
  * A short description of the SSL error "value"
  */
 const char *GetErrorDescr(ssl_error_t value);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Return true if the SSL error is optional and may not supported
+   * by current squid version
+ */
+
+bool ErrorIsOptional(const char *name);
 
 /**
    \ingroup ServerProtocolSSLAPI

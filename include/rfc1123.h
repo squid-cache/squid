@@ -1,5 +1,5 @@
 #ifndef _SQUID_RFC1123_H
-#define _SQUID_RFC1123_
+#define _SQUID_RFC1123_H
 
 #ifdef __cplusplus
 extern "C" {

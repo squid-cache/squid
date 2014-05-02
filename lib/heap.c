@@ -47,9 +47,6 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 
 #include "util.h"
 

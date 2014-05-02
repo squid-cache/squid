@@ -32,11 +32,11 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "HttpHeaderRange.h"
 #include "client_side_request.h"
-#include "HttpReply.h"
+#include "HttpHeaderRange.h"
 #include "HttpHeaderTools.h"
+#include "HttpReply.h"
+#include "Store.h"
 #include "StrList.h"
 
 /*
@@ -224,7 +224,7 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
  * Range
  */
 
-HttpHdrRange::HttpHdrRange () : clen (HttpHdrRangeSpec::UnknownPosition)
+HttpHdrRange::HttpHdrRange() : clen(HttpHdrRangeSpec::UnknownPosition)
 {}
 
 HttpHdrRange *
@@ -266,8 +266,10 @@ HttpHdrRange::parseInit(const String * range_spec)
          * at least one syntactically invalid byte-range-specs.
          */
         if (!spec) {
-            while (!specs.empty())
-                delete specs.pop_back();
+            while (!specs.empty()) {
+                delete specs.back();
+                specs.pop_back();
+            }
             debugs(64, 2, "ignoring invalid range field: '" << range_spec << "'");
             break;
         }
@@ -281,11 +283,15 @@ HttpHdrRange::parseInit(const String * range_spec)
 
 HttpHdrRange::~HttpHdrRange()
 {
-    while (specs.size())
-        delete specs.pop_back();
+    while (!specs.empty()) {
+        delete specs.back();
+        specs.pop_back();
+    }
 }
 
-HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) : specs()
+HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) :
+        specs(),
+        clen(HttpHdrRangeSpec::UnknownPosition)
 {
     specs.reserve(old.specs.size());
 
@@ -336,10 +342,10 @@ HttpHdrRange::packInto(Packer * packer) const
 }
 
 void
-HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
+HttpHdrRange::merge (std::vector<HttpHdrRangeSpec *> &basis)
 {
     /* reset old array */
-    specs.clean();
+    specs.clear();
     /* merge specs:
      * take one spec from "goods" and merge it with specs from
      * "specs" (if any) until there is no overlap */
@@ -348,7 +354,8 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
     while (i != basis.end()) {
         if (specs.size() && (*i)->mergeWith(specs.back())) {
             /* merged with current so get rid of the prev one */
-            delete specs.pop_back();
+            delete specs.back();
+            specs.pop_back();
             continue;	/* re-iterate */
         }
 
@@ -361,7 +368,7 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
 }
 
 void
-HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)
+HttpHdrRange::getCanonizedSpecs(std::vector<HttpHdrRangeSpec *> &copy)
 {
     /* canonize each entry and destroy bad ones if any */
 
@@ -372,8 +379,7 @@ HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)
             delete (*pos);
     }
 
-    debugs(64, 3, "HttpHdrRange::getCanonizedSpecs: found " <<
-           specs.size() - copy.size() << " bad specs");
+    debugs(64, 3, "found " << specs.size() - copy.size() << " bad specs");
 }
 
 #include "HttpHdrContRange.h"
@@ -402,14 +408,14 @@ int
 HttpHdrRange::canonize (int64_t newClen)
 {
     clen = newClen;
-    debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.count <<
+    debugs(64, 3, "HttpHdrRange::canonize: started with " << specs.size() <<
            " specs, clen: " << clen);
-    Vector<HttpHdrRangeSpec*> goods;
+    std::vector<HttpHdrRangeSpec*> goods;
     getCanonizedSpecs(goods);
     merge (goods);
-    debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.count <<
+    debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.size() <<
            " specs");
-    return specs.count > 0;
+    return specs.size() > 0; // fixme, should return bool
 }
 
 /* hack: returns true if range specs are too "complex" for Squid to handle */
@@ -572,7 +578,7 @@ HttpHdrRange::contains(HttpHdrRangeSpec& r) const
 const HttpHdrRangeSpec *
 HttpHdrRangeIter::currentSpec() const
 {
-    if (pos.incrementable())
+    if (pos != end)
         return *pos;
 
     return NULL;
@@ -584,7 +590,7 @@ HttpHdrRangeIter::updateSpec()
     assert (debt_size == 0);
     assert (valid);
 
-    if (pos.incrementable()) {
+    if (pos != end) {
         debt(currentSpec()->length);
     }
 }

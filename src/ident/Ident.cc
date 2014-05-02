@@ -35,8 +35,8 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "CommCalls.h"
 #include "comm/Write.h"
+#include "CommCalls.h"
 #include "globals.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
@@ -238,8 +238,8 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     char key2[IDENT_KEY_SZ];
     char key[IDENT_KEY_SZ];
 
-    conn->local.ToURL(key1, IDENT_KEY_SZ);
-    conn->remote.ToURL(key2, IDENT_KEY_SZ);
+    conn->local.toUrl(key1, IDENT_KEY_SZ);
+    conn->remote.toUrl(key2, IDENT_KEY_SZ);
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
 
     if (!ident_hash) {
@@ -257,12 +257,12 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     // copy the conn details. We dont want the original FD to be re-used by IDENT.
     state->conn = conn->copyDetails();
     // NP: use random port for secure outbound to IDENT_PORT
-    state->conn->local.SetPort(0);
-    state->conn->remote.SetPort(IDENT_PORT);
+    state->conn->local.port(0);
+    state->conn->remote.port(IDENT_PORT);
 
     // build our query from the original connection details
     state->queryMsg.init();
-    state->queryMsg.Printf("%d, %d\r\n", conn->remote.GetPort(), conn->local.GetPort());
+    state->queryMsg.Printf("%d, %d\r\n", conn->remote.port(), conn->local.port());
 
     ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);

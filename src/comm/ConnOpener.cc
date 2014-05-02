@@ -4,16 +4,16 @@
 
 #include "squid.h"
 #include "CachePeer.h"
-#include "comm/ConnOpener.h"
-#include "comm/Connection.h"
-#include "comm/Loops.h"
 #include "comm.h"
+#include "comm/Connection.h"
+#include "comm/ConnOpener.h"
+#include "comm/Loops.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "icmp/net_db.h"
-#include "ipcache.h"
 #include "ip/tools.h"
+#include "ipcache.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
@@ -67,9 +67,11 @@ Comm::ConnOpener::swanSong()
         sendAnswer(COMM_ERR_CONNECT, 0, "Comm::ConnOpener::swanSong");
     }
 
+    // did we abort with a temporary FD assigned?
     if (temporaryFd_ >= 0)
         closeFd();
 
+    // did we abort while waiting between retries?
     if (calls_.sleep_)
         cancelSleep();
 
@@ -120,6 +122,7 @@ Comm::ConnOpener::sendAnswer(comm_err_t errFlag, int xerrno, const char *why)
         if (callback_->canceled()) {
             debugs(5, 4, conn_ << " not calling canceled " << *callback_ <<
                    " [" << callback_->id << ']' );
+            // TODO save the pconn to the pconnPool ?
         } else {
             typedef CommConnectCbParams Params;
             Params &params = GetCommParams<Params>(callback_);
@@ -222,8 +225,8 @@ Comm::ConnOpener::start()
     Must(conn_ != NULL);
 
     /* outbound sockets have no need to be protocol agnostic. */
-    if (!(Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING) && conn_->remote.IsIPv4()) {
-        conn_->local.SetIPv4();
+    if (!(Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING) && conn_->remote.isIPv4()) {
+        conn_->local.setIPv4();
     }
 
     if (createFd())
@@ -336,7 +339,7 @@ Comm::ConnOpener::connect()
 
         if (failRetries_ < Config.connect_retries) {
             debugs(5, 5, HERE << conn_ << ": * - try again");
-            sleep();
+            retrySleep();
             return;
         } else {
             // send ERROR back to the upper layer.
@@ -349,7 +352,7 @@ Comm::ConnOpener::connect()
 
 /// Close and wait a little before trying to open and connect again.
 void
-Comm::ConnOpener::sleep()
+Comm::ConnOpener::retrySleep()
 {
     Must(!calls_.sleep_);
     closeFd();
@@ -385,16 +388,16 @@ void
 Comm::ConnOpener::lookupLocalAddress()
 {
     struct addrinfo *addr = NULL;
-    conn_->local.InitAddrInfo(addr);
+    Ip::Address::InitAddrInfo(addr);
 
     if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerror());
-        conn_->local.FreeAddrInfo(addr);
+        Ip::Address::FreeAddrInfo(addr);
         return;
     }
 
     conn_->local = *addr;
-    conn_->local.FreeAddrInfo(addr);
+    Ip::Address::FreeAddrInfo(addr);
     debugs(5, 6, HERE << conn_);
 }
 

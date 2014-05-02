@@ -27,7 +27,7 @@ public:
     std::ostream &print(std::ostream &os) const;
 
 public:
-    HttpMsgPointerT<HttpMsg> message; ///< HTTP request or response to forward
+    HttpMsg::Pointer message; ///< HTTP request or response to forward
     String ruleId; ///< ACL (or similar rule) name that blocked forwarding
     bool final; ///< whether the error, if any, cannot be bypassed
     Kind kind; ///< the type of the answer

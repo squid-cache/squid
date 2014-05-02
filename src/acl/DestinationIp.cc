@@ -56,7 +56,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we will force DIRECT and only to the original client destination.
     // In which case, we also need this ACL to accurately match the destination
-    if (Config.onoff.client_dst_passthru && (checklist->request->flags.intercepted || checklist->request->flags.spoofClientIp)) {
+    if (Config.onoff.client_dst_passthru && (checklist->request->flags.intercepted || checklist->request->flags.interceptTproxy)) {
         assert(checklist->conn() && checklist->conn()->clientConnection != NULL);
         return ACLIP::match(checklist->conn()->clientConnection->local);
     }
@@ -86,11 +86,12 @@ ACLDestinationIP::match(ACLChecklist *cl)
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->GetHost() << "'");
-        checklist->changeState (DestinationIPLookup::Instance());
-        return 0;
-    } else {
-        return 0;
+        if (checklist->goAsync(DestinationIPLookup::Instance()))
+            return -1;
+        // else fall through to mismatch, hiding the lookup failure (XXX)
     }
+
+    return 0;
 }
 
 DestinationIPLookup DestinationIPLookup::instance_;
@@ -105,7 +106,6 @@ void
 DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    checklist->asyncInProgress(true);
     ipcache_nbgethostbyname(checklist->request->GetHost(), LookupDone, checklist);
 }
 
@@ -113,12 +113,9 @@ void
 DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
-    assert (checklist->asyncState() == DestinationIPLookup::Instance());
     checklist->request->flags.destinationIpLookedUp = true;
     checklist->request->recordLookup(details);
-    checklist->asyncInProgress(false);
-    checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->matchNonBlocking();
+    checklist->resumeNonBlockingCheck(DestinationIPLookup::Instance());
 }
 
 ACL *

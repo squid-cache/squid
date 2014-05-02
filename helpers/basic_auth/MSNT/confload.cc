@@ -13,14 +13,13 @@
 /* Squid provides a number of portability overrides */
 #include "squid.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #include <syslog.h>
-#include <errno.h>
 #include <sys/param.h>
 #include <netdb.h>
-#include <assert.h>
 
 #include "msntauth.h"
 #include "valid.h"
@@ -122,7 +121,7 @@ ProcessLine(char *Linebuf)
         return;
 
     /* Check for server line. Check for 3 parameters. */
-    if (strcasecmp(Directive, "server") == 0) {
+    if (strcmp(Directive, "server") == 0) {
         Param1 = strtok(NULL, " \t\n");
         if (NULL == Param1) {
             syslog(LOG_ERR, "ProcessLine: 'server' missing PDC parameter.");
@@ -142,7 +141,7 @@ ProcessLine(char *Linebuf)
         return;
     }
     /* Check for denyusers line */
-    if (strcasecmp(Directive, "denyusers") == 0) {
+    if (strcmp(Directive, "denyusers") == 0) {
         Param1 = strtok(NULL, " \t\n");
 
         if (NULL == Param1) {
@@ -154,7 +153,7 @@ ProcessLine(char *Linebuf)
         return;
     }
     /* Check for allowusers line */
-    if (strcasecmp(Directive, "allowusers") == 0) {
+    if (strcmp(Directive, "allowusers") == 0) {
         Param1 = strtok(NULL, " \t\n");
 
         if (NULL == Param1) {

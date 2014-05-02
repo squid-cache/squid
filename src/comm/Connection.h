@@ -37,7 +37,6 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "defines.h"
 #include "hier_code.h"
@@ -49,12 +48,8 @@
 #include "eui/Eui64.h"
 #endif
 
-#if HAVE_IOSFWD
 #include <iosfwd>
-#endif
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 class CachePeer;
 

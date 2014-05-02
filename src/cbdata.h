@@ -224,14 +224,12 @@
 
 /**
  *\ingroup CBDATAAPI
- * cbdata types. similar to the MEM_* types above, but managed
- * in cbdata.c. A big difference is that these types are dynamically
- * allocated. This list is only a list of predefined types. Other types
- * are added runtime
+ * cbdata types. Similar to the MEM_* types, but managed in cbdata.cc
+ * A big difference is that cbdata types are dynamically allocated.
+ * Initially only UNKNOWN type is predefined. Other types are added runtime.
  */
-typedef enum {
-    CBDATA_UNKNOWN = 0
-} cbdata_type;
+typedef int cbdata_type;
+static const cbdata_type CBDATA_UNKNOWN = 0;
 
 /// \ingroup CBDATAAPI
 void cbdataRegisterWithCacheManager(void);
@@ -287,7 +285,8 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 	public: \
 		void *operator new(size_t size) { \
 		  assert(size == sizeof(type)); \
-		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
+		  if (!CBDATA_##type) \
+                      CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
 		  return cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__); \
 		} \
   		void operator delete (void *address) { \
@@ -334,7 +333,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 /**
  * \ingroup CBDATAAPI
  *
- * This needs to be defined LAST in teh class definition. It plays with private/public states in C++.
+ * This needs to be defined LAST in the class definition. It plays with private/public states in C++.
  */
 #define CBDATA_CLASS2(type)	\
 	private: \
@@ -342,7 +341,8 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 	public: \
 		void *operator new(size_t size) { \
 		  assert(size == sizeof(type)); \
-		  (CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL))); \
+		  if (!CBDATA_##type) \
+                      CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
 		  return (type *)cbdataInternalAlloc(CBDATA_##type); \
 		} \
   		void operator delete (void *address) { \
@@ -373,9 +373,6 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  \param var	The reference variable. Will be automatically cleared to NULL.
  */
 #define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
-
-/// \ingroup CBDATAAPI
-#define CBDATA_CLASS(type)	static cbdata_type CBDATA_##type
 
 /// \ingroup CBDATAAPI
 #define CBDATA_CLASS_INIT(type) cbdata_type type::CBDATA_##type = CBDATA_UNKNOWN
@@ -415,11 +412,12 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
- * Alternative to CBDATA_INIT_TYPE_FREECB()
+ * Alternative to CBDATA_INIT_TYPE()
  *
  \param type		Type being initialized
+ \param free_func	The freehandler called when the last known reference to an allocated entry goes away.
  */
-#define CBDATA_INIT_TYPE(type)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL)))
+#define CBDATA_INIT_TYPE_FREECB(type, free_func) do { if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func); } while (false)
 
 /**
  \ingroup CBDATAAPI
@@ -427,12 +425,11 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
- * Alternative to CBDATA_INIT_TYPE()
+ * Alternative to CBDATA_INIT_TYPE_FREECB()
  *
  \param type		Type being initialized
- \param free_func	The freehandler called when the last known reference to an allocated entry goes away.
  */
-#define CBDATA_INIT_TYPE_FREECB(type, free_func)	(CBDATA_##type ?  CBDATA_UNKNOWN : (CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func)))
+#define CBDATA_INIT_TYPE(type)	CBDATA_INIT_TYPE_FREECB(type, NULL)
 
 /**
  \ingroup CBDATA

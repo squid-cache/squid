@@ -33,18 +33,19 @@
 #include "anyp/PortCfg.h"
 #include "base/RefCount.h"
 #include "comm/Connection.h"
-#include "HttpHeader.h"
-#include "HttpVersion.h"
-#include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
+#include "http/ProtocolVersion.h"
+#include "HttpHeader.h"
+#include "HttpRequestMethod.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
-#include "HttpRequestMethod.h"
+#include "LogTags.h"
+#include "MessageSizes.h"
+#include "Notes.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#include "Notes.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -84,12 +85,15 @@ public:
 
     public:
         HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
-                timedout(false), aborted(false) {}
+                timedout(false),
+                aborted(false),
+                clientRequestSz(),
+                clientReplySz() {}
 
         HttpRequestMethod method;
         int code;
         const char *content_type;
-        HttpVersion version;
+        Http::ProtocolVersion version;
         bool timedout; ///< terminated due to a lifetime or I/O timeout
         bool aborted; ///< other abnormal termination (e.g., I/O error)
 
@@ -97,6 +101,17 @@ public:
         const char *statusSfx() const {
             return timedout ? "_TIMEDOUT" : (aborted ? "_ABORTED" : "");
         }
+
+        /// counters for the original request received from client
+        // TODO calculate header and payload better (by parser)
+        // XXX payload encoding overheads not calculated at all yet.
+        MessageSizes clientRequestSz;
+
+        /// counters for the response sent to client
+        // TODO calculate header and payload better (by parser)
+        // XXX payload encoding overheads not calculated at all yet.
+        MessageSizes clientReplySz;
+
     } http;
 
     /** \brief This subclass holds log info for ICP protocol
@@ -122,7 +137,7 @@ public:
         const char *opcode;
     } htcp;
 
-#if USE_SSL
+#if USE_OPENSSL
     /// logging information specific to the SSL protocol
     class SslDetails
     {
@@ -144,37 +159,28 @@ public:
 
     public:
         CacheDetails() : caddr(),
-                requestSize(0),
-                replySize(0),
-                requestHeadersSize(0),
-                replyHeadersSize(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
                 msec(0),
                 rfc931 (NULL),
-                authuser (NULL),
                 extuser(NULL),
-#if USE_SSL
+#if USE_OPENSSL
                 ssluser(NULL),
 #endif
                 port(NULL) {
-            ;
+            caddr.setNoAddr();
         }
 
         Ip::Address caddr;
-        int64_t requestSize;
-        int64_t replySize;
-        int requestHeadersSize; ///< received, including request line
-        int replyHeadersSize; ///< sent, including status line
         int64_t highOffset;
         int64_t objectSize;
-        log_type code;
+        LogTags code;
+        struct timeval start_time; ///< The time the master transaction started
         int msec;
         const char *rfc931;
-        const char *authuser;
         const char *extuser;
-#if USE_SSL
+#if USE_OPENSSL
 
         const char *ssluser;
         Ssl::X509_Pointer sslClientCert; ///< cert received from the client
@@ -217,8 +223,7 @@ public:
 #endif
 
     // Why is this a sub-class and not a set of real "private:" fields?
-    // It looks like its duplicating HTTPRequestMethod anyway!
-    // TODO: shuffle this to the relevant protocol section OR replace with request->method
+    // TODO: shuffle this to the relevant ICP/HTCP protocol section
     class Private
     {
 
@@ -232,9 +237,9 @@ public:
     HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
 
-    /// key:value pairs set by note and adaptation_meta directives
-    /// plus key=value pairs returned from URL rewrite/redirect helper
-    NotePairs notes;
+    /// key:value pairs set by squid.conf note directive and
+    /// key=value pairs returned from URL rewrite/redirect helper
+    NotePairs::Pointer notes;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request
@@ -246,7 +251,7 @@ public:
         IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
                 bodyBytesRead(-1), request(NULL), reply(NULL),
                 outcome(Adaptation::Icap::xoUnknown), trTime(0),
-                ioTime(0), resStatus(HTTP_STATUS_NONE), processingTime(0) {}
+                ioTime(0), resStatus(Http::scNone), processingTime(0) {}
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -274,7 +279,7 @@ public:
          * ICAP response is received.
          */
         int ioTime;
-        http_status resStatus;   ///< ICAP response status code
+        Http::StatusCode resStatus;   ///< ICAP response status code
         int processingTime;      ///< total ICAP processing time in milliseconds
     }
     icap;

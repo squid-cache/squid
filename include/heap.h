@@ -158,7 +158,7 @@ SQUIDCEXTERN int heap_empty(heap *);
 SQUIDCEXTERN int heap_nodes(heap *);
 #else /* MACRO_DEBUG */
 #define	heap_nodes(heap)	((heap)->last)
-#define	heap_empty(heap)	(((heap)->last <= 0) ? 1 : 0)
+#define	heap_empty(heap)	((heap)->last <= 0 ? 1 : 0)
 #endif /* MACRO_DEBUG */
 
 /*

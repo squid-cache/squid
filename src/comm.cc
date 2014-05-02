@@ -33,17 +33,14 @@
  */
 
 #include "squid.h"
-#include "base/AsyncCall.h"
-#include "comm.h"
 #include "ClientInfo.h"
-#include "CommCalls.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
-#include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
+#include "comm/Write.h"
 #include "CommRead.h"
 #include "compat/cmsg.h"
 #include "DescriptorSet.h"
@@ -52,22 +49,23 @@
 #include "fde.h"
 #include "globals.h"
 #include "icmp/net_db.h"
-#include "ip/Address.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
-#include "MemBuf.h"
 #include "pconn.h"
 #include "profiler/Profiler.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"
-#if USE_SSL
+#include "tools.h"
+
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
-#include "cbdata.h"
+#include <cerrno>
+#include <cmath>
 #if _SQUID_CYGWIN_
 #include <sys/ioctl.h>
 #endif
@@ -76,12 +74,6 @@
 #endif
 #if HAVE_SYS_UN_H
 #include <sys/un.h>
-#endif
-#if HAVE_MATH_H
-#include <math.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 /*
@@ -139,8 +131,19 @@ commHandleRead(int fd, void *data)
     ++ statCounter.syscalls.sock.reads;
     errno = 0;
     int retval;
-    retval = FD_READ_METHOD(fd, ccb->buf, ccb->size);
-    debugs(5, 3, "comm_read_try: FD " << fd << ", size " << ccb->size << ", retval " << retval << ", errno " << errno);
+    if (ccb->buf) {
+        retval = FD_READ_METHOD(fd, ccb->buf, ccb->size);
+        debugs(5, 3, "char FD " << fd << ", size " << ccb->size << ", retval " << retval << ", errno " << errno);
+    } else {
+        assert(ccb->buf2 != NULL);
+        SBuf::size_type sz = ccb->buf2->spaceSize();
+        char *buf = ccb->buf2->rawSpace(sz);
+        retval = FD_READ_METHOD(fd, buf, sz-1); // blocking synchronous read(2)
+        if (retval > 0) {
+            ccb->buf2->append(buf, retval);
+        }
+        debugs(5, 3, "SBuf FD " << fd << ", size " << sz << ", retval " << retval << ", errno " << errno);
+    }
 
     if (retval < 0 && !ignoreErrno(errno)) {
         debugs(5, 3, "comm_read_try: scheduling COMM_ERROR");
@@ -188,6 +191,36 @@ comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCall::P
 
     /* Queue the read */
     ccb->setCallback(Comm::IOCB_READ, callback, (char *)buf, NULL, size);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
+}
+
+/**
+ * Queue a read. handler/handler_data are called when the read
+ * completes, on error, or on file descriptor close.
+ */
+void
+comm_read(const Comm::ConnectionPointer &conn, SBuf &buf, AsyncCall::Pointer &callback)
+{
+    debugs(5, 5, "comm_read, queueing read for " << conn << "; asynCall " << callback);
+
+    /* Make sure we are open and not closing */
+    assert(Comm::IsConnOpen(conn));
+    assert(!fd_table[conn->fd].closing());
+    Comm::IoCallback *ccb = COMMIO_FD_READCB(conn->fd);
+
+    // Make sure we are either not reading or just passively monitoring.
+    // Active/passive conflicts are OK and simply cancel passive monitoring.
+    if (ccb->active()) {
+        // if the assertion below fails, we have an active comm_read conflict
+        assert(fd_table[conn->fd].halfClosedReader != NULL);
+        commStopHalfClosedMonitor(conn->fd);
+        assert(!ccb->active());
+    }
+    ccb->conn = conn;
+    ccb->buf2 = &buf;
+
+    /* Queue the read */
+    ccb->setCallback(Comm::IOCB_READ, callback, NULL, NULL, buf.spaceSize());
     Comm::SetSelect(conn->fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
 }
 
@@ -328,21 +361,12 @@ int
 comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
 {
     ++ statCounter.syscalls.sock.recvfroms;
-    int x = 0;
-    struct addrinfo *AI = NULL;
-
     debugs(5,8, "comm_udp_recvfrom: FD " << fd << " from " << from);
-
-    assert( NULL == AI );
-
-    from.InitAddrInfo(AI);
-
-    x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
-
+    struct addrinfo *AI = NULL;
+    Ip::Address::InitAddrInfo(AI);
+    int x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     from = *AI;
-
-    from.FreeAddrInfo(AI);
-
+    Ip::Address::FreeAddrInfo(AI);
     return x;
 }
 
@@ -386,32 +410,32 @@ comm_local_port(int fd)
         return 0;
     }
 
-    if (F->local_addr.GetPort())
-        return F->local_addr.GetPort();
+    if (F->local_addr.port())
+        return F->local_addr.port();
 
     if (F->sock_family == AF_INET)
-        temp.SetIPv4();
+        temp.setIPv4();
 
-    temp.InitAddrInfo(addr);
+    Ip::Address::InitAddrInfo(addr);
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         debugs(50, DBG_IMPORTANT, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
-        temp.FreeAddrInfo(addr);
+        Ip::Address::FreeAddrInfo(addr);
         return 0;
     }
     temp = *addr;
 
-    temp.FreeAddrInfo(addr);
+    Ip::Address::FreeAddrInfo(addr);
 
-    if (F->local_addr.IsAnyAddr()) {
+    if (F->local_addr.isAnyAddr()) {
         /* save the whole local address, not just the port. */
         F->local_addr = temp;
     } else {
-        F->local_addr.SetPort(temp.GetPort());
+        F->local_addr.port(temp.port());
     }
 
-    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort() << "(family=" << F->sock_family << ")");
-    return F->local_addr.GetPort();
+    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.port() << "(family=" << F->sock_family << ")");
+    return F->local_addr.port();
 }
 
 static comm_err_t
@@ -493,22 +517,46 @@ comm_set_v6only(int fd, int tos)
 }
 
 /**
- * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support.
+ * Set the socket option required for TPROXY spoofing for:
+ * - Linux TPROXY v4 support,
+ * - OpenBSD divert-to support,
+ * - FreeBSD IPFW TPROXY v4 support.
  */
 void
 comm_set_transparent(int fd)
 {
-#if defined(IP_TRANSPARENT)
+#if _SQUID_LINUX_ && defined(IP_TRANSPARENT) // Linux
+# define soLevel SOL_IP
+# define soFlag  IP_TRANSPARENT
+    bool doneSuid = false;
+
+#elif defined(SO_BINDANY) // OpenBSD 4.7+ and NetBSD with PF
+# define soLevel SOL_SOCKET
+# define soFlag  SO_BINDANY
+    enter_suid();
+    bool doneSuid = true;
+
+#elif defined(IP_BINDANY) // FreeBSD with IPFW
+# define soLevel IPPROTO_IP
+# define soFlag  IP_BINDANY
+    enter_suid();
+    bool doneSuid = true;
+
+#else
+    debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(TPROXY) not supported on this platform");
+#endif /* sockopt */
+
+#if defined(soLevel) && defined(soFlag)
     int tos = 1;
-    if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
-        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
+    if (setsockopt(fd, soLevel, soFlag, (char *) &tos, sizeof(int)) < 0) {
+        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(TPROXY) on FD " << fd << ": " << xstrerror());
     } else {
         /* mark the socket as having transparent options */
         fd_table[fd].flags.transparent = true;
     }
-#else
-    debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
-#endif /* sockopt */
+    if (doneSuid)
+        leave_suid();
+#endif
 }
 
 /**
@@ -532,7 +580,7 @@ comm_openex(int sock_type,
     ++ statCounter.syscalls.sock.sockets;
 
     /* Setup the socket addrinfo details for use */
-    addr.GetAddrInfo(AI);
+    addr.getAddrInfo(AI);
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
 
@@ -542,11 +590,11 @@ comm_openex(int sock_type,
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
     /* try again as IPv4-native if possible */
-    if ( new_socket < 0 && Ip::EnableIpv6 && addr.IsIPv6() && addr.SetIPv4() ) {
+    if ( new_socket < 0 && Ip::EnableIpv6 && addr.isIPv6() && addr.setIPv4() ) {
         /* attempt to open this IPv4-only. */
-        addr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         /* Setup the socket addrinfo details for use */
-        addr.GetAddrInfo(AI);
+        addr.getAddrInfo(AI);
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
@@ -566,7 +614,7 @@ comm_openex(int sock_type,
             debugs(50, DBG_CRITICAL, "comm_open: socket failure: " << xstrerror());
         }
 
-        addr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
 
         PROF_stop(comm_open);
         return -1;
@@ -587,18 +635,18 @@ comm_openex(int sock_type,
     if (nfmark)
         Ip::Qos::setSockNfmark(conn, nfmark);
 
-    if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsIPv6() )
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.isIPv6() )
         comm_set_v6only(conn->fd, 1);
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
     /* Other OS may have this administratively disabled for general use. Same deal. */
-    if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.IsIPv6() )
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.isIPv6() )
         comm_set_v6only(conn->fd, 0);
 
     comm_init_opened(conn, tos, nfmark, note, AI);
     new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
-    addr.FreeAddrInfo(AI);
+    Ip::Address::FreeAddrInfo(AI);
 
     PROF_stop(comm_open);
 
@@ -654,7 +702,7 @@ comm_apply_flags(int new_socket,
     if ((flags & COMM_REUSEADDR))
         commSetReuseAddr(new_socket);
 
-    if (addr.GetPort() > (unsigned short) 0) {
+    if (addr.port() > (unsigned short) 0) {
 #if _SQUID_WINDOWS_
         if (sock_type != SOCK_DGRAM)
 #endif
@@ -669,10 +717,10 @@ comm_apply_flags(int new_socket,
         comm_set_transparent(new_socket);
     }
 
-    if ( (flags & COMM_DOBIND) || addr.GetPort() > 0 || !addr.IsAnyAddr() ) {
-        if ( !(flags & COMM_DOBIND) && addr.IsAnyAddr() )
+    if ( (flags & COMM_DOBIND) || addr.port() > 0 || !addr.isAnyAddr() ) {
+        if ( !(flags & COMM_DOBIND) && addr.isAnyAddr() )
             debugs(5, DBG_IMPORTANT,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
-        if ( addr.IsNoAddr() )
+        if ( addr.isNoAddr() )
             debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
 
         if (commBind(new_socket, *AI) != COMM_OK) {
@@ -713,7 +761,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     if (!(conn->flags & COMM_NOCLOEXEC))
         fd_table[conn->fd].flags.close_on_exec = true;
 
-    if (conn->local.GetPort() > (unsigned short) 0) {
+    if (conn->local.port() > (unsigned short) 0) {
 #if _SQUID_WINDOWS_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
@@ -797,16 +845,16 @@ comm_connect_addr(int sock, const Ip::Address &address)
     struct addrinfo *AI = NULL;
     PROF_start(comm_connect_addr);
 
-    assert(address.GetPort() != 0);
+    assert(address.port() != 0);
 
     debugs(5, 9, HERE << "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
     /* Handle IPv6 over IPv4-only socket case.
-     * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
+     * this case must presently be handled here since the getAddrInfo asserts on bad mappings.
      * NP: because commResetFD is private to ConnStateData we have to return an error and
      *     trust its handled properly.
      */
-    if (F->sock_family == AF_INET && !address.IsIPv4()) {
+    if (F->sock_family == AF_INET && !address.isIPv4()) {
         errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
@@ -818,12 +866,12 @@ comm_connect_addr(int sock, const Ip::Address &address)
      * but needs carefull cross-platform verification, and verifying the address
      * condition here is simple.
      */
-    if (!F->local_addr.IsIPv4() && address.IsIPv4()) {
+    if (!F->local_addr.isIPv4() && address.isIPv4()) {
         errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
 
-    address.GetAddrInfo(AI, F->sock_family);
+    address.getAddrInfo(AI, F->sock_family);
 
     /* Establish connection. */
     errno = 0;
@@ -890,24 +938,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     }
 
-    /* Squid seems to be working fine without this code. With this code,
-     * we leak memory on many connect requests because of EINPROGRESS.
-     * If you find that this code is needed, please file a bug report. */
-#if 0
-#if _SQUID_LINUX_
-    /* 2007-11-27:
-     * Linux Debian replaces our allocated AI pointer with garbage when
-     * connect() fails. This leads to segmentation faults deallocating
-     * the system-allocated memory when we go to clean up our pointer.
-     * HACK: is to leak the memory returned since we can't deallocate.
-     */
-    if (errno != 0) {
-        AI = NULL;
-    }
-#endif
-#endif
-
-    address.FreeAddrInfo(AI);
+    Ip::Address::FreeAddrInfo(AI);
 
     PROF_stop(comm_connect_addr);
 
@@ -920,9 +951,9 @@ comm_connect_addr(int sock, const Ip::Address &address)
     else
         return COMM_ERROR;
 
-    address.NtoA(F->ipaddr, MAX_IPSTRLEN);
+    address.toStr(F->ipaddr, MAX_IPSTRLEN);
 
-    F->remote_port = address.GetPort(); /* remote_port is HS */
+    F->remote_port = address.port(); /* remote_port is HS */
 
     if (status == COMM_OK) {
         debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connected to " << address);
@@ -978,7 +1009,7 @@ commLingerTimeout(const FdeCbParams &params)
 void
 comm_lingering_close(int fd)
 {
-#if USE_SSL
+#if USE_OPENSSL
     if (fd_table[fd].ssl)
         ssl_shutdown_method(fd_table[fd].ssl);
 #endif
@@ -1037,7 +1068,7 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 void
 commStartSslClose(const FdeCbParams &params)
 {
@@ -1049,7 +1080,7 @@ commStartSslClose(const FdeCbParams &params)
 void
 comm_close_complete(const FdeCbParams &params)
 {
-#if USE_SSL
+#if USE_OPENSSL
     fde *F = &fd_table[params.fd];
 
     if (F->ssl) {
@@ -1112,7 +1143,7 @@ _comm_close(int fd, char const *file, int line)
 
     F->flags.close_request = true;
 
-#if USE_SSL
+#if USE_OPENSSL
     if (F->ssl) {
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
                                                 FdeCbPtrFun(commStartSslClose, NULL));
@@ -1172,24 +1203,16 @@ comm_udp_sendto(int fd,
                 const void *buf,
                 int len)
 {
-    int x = 0;
-    struct addrinfo *AI = NULL;
-
     PROF_start(comm_udp_sendto);
     ++ statCounter.syscalls.sock.sendtos;
 
     debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
            " using FD " << fd << " using Port " << comm_local_port(fd) );
 
-    /* BUG: something in the above macro appears to occasionally be setting AI to garbage. */
-    /* AYJ: 2007-08-27 : or was it because I wasn't then setting 'fd_table[fd].sock_family' to fill properly. */
-    assert( NULL == AI );
-
-    to_addr.GetAddrInfo(AI, fd_table[fd].sock_family);
-
-    x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
-
-    to_addr.FreeAddrInfo(AI);
+    struct addrinfo *AI = NULL;
+    to_addr.getAddrInfo(AI, fd_table[fd].sock_family);
+    int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
+    Ip::Address::FreeAddrInfo(AI);
 
     PROF_stop(comm_udp_sendto);
 
@@ -1942,7 +1965,7 @@ DeferredReadManager::~DeferredReadManager()
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
 /// \endcond
 

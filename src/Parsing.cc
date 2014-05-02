@@ -33,9 +33,10 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "compat/strtoll.h"
-#include "Parsing.h"
-#include "globals.h"
+#include "ConfigParser.h"
 #include "Debug.h"
+#include "globals.h"
+#include "Parsing.h"
 
 /*
  * These functions is the same as atoi/l/f, except that they check for errors
@@ -75,9 +76,9 @@ xatoi(const char *token)
 }
 
 unsigned int
-xatoui(const char *token)
+xatoui(const char *token, char eov)
 {
-    int64_t input = xatoll(token, 10);
+    int64_t input = xatoll(token, 10, eov);
     if (input < 0) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The input value '" << token << "' cannot be less than 0.");
         self_destruct();
@@ -107,7 +108,7 @@ xatol(const char *token)
 }
 
 int64_t
-xatoll(const char *token, int base)
+xatoll(const char *token, int base, char eov)
 {
     char *end = NULL;
     int64_t ret = strtoll(token, &end, base);
@@ -117,7 +118,7 @@ xatoll(const char *token, int base)
         self_destruct();
     }
 
-    if (*end) {
+    if (*end != eov) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid value: '" << token << "' is supposed to be a number.");
         self_destruct();
     }
@@ -146,7 +147,7 @@ xatos(const char *token)
 int64_t
 GetInteger64(void)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
@@ -161,7 +162,7 @@ GetInteger64(void)
 int
 GetInteger(void)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
     int i;
 
     if (token == NULL)
@@ -188,8 +189,12 @@ GetInteger(void)
 int
 GetPercentage(void)
 {
-    int p;
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
+
+    if (!token) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: A percentage value is missing.");
+        self_destruct();
+    }
 
     //if there is a % in the end of the digits, we remove it and go on.
     char* end = &token[strlen(token)-1];
@@ -197,7 +202,7 @@ GetPercentage(void)
         *end = '\0';
     }
 
-    p = xatoi(token);
+    int p = xatoi(token);
 
     if (p < 0 || p > 100) {
         debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
@@ -210,7 +215,7 @@ GetPercentage(void)
 unsigned short
 GetShort(void)
 {
-    char *token = strtok(NULL, w_space);
+    char *token = ConfigParser::NextToken();
 
     if (token == NULL)
         self_destruct();
@@ -296,14 +301,14 @@ GetHostWithPort(char *token, Ip::Address *ipa)
     }
 
     if (NULL == host)
-        ipa->SetAnyAddr();
+        ipa->setAnyAddr();
     else if ( ipa->GetHostByName(host) ) /* dont use ipcache. Accept either FQDN or IPA. */
         (void) 0;
     else
         return false;
 
     /* port MUST be set after the IPA lookup/conversion is performed. */
-    ipa->SetPort(port);
+    ipa->port(port);
 
     return true;
 }

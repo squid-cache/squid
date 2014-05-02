@@ -1,11 +1,11 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "mgr/Action.h"
-#include "Mem.h"
-#include "testCacheManager.h"
 #include "CacheManager.h"
+#include "Mem.h"
+#include "mgr/Action.h"
 #include "Store.h"
+#include "testCacheManager.h"
 
 #include <cppunit/TestAssert.h>
 

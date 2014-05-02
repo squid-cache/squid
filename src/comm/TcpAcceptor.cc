@@ -33,18 +33,21 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "base/TextException.h"
 #include "client_db.h"
 #include "comm/AcceptLimiter.h"
-#include "CommCalls.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
+#include "CommCalls.h"
+#include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Intercept.h"
+#include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -132,7 +135,7 @@ Comm::TcpAcceptor::status() const
 
     static char ipbuf[MAX_IPSTRLEN] = {'\0'};
     if (ipbuf[0] == '\0')
-        conn->local.ToHostname(ipbuf, MAX_IPSTRLEN);
+        conn->local.toHostStr(ipbuf, MAX_IPSTRLEN);
 
     static MemBuf buf;
     buf.reset();
@@ -285,8 +288,10 @@ Comm::TcpAcceptor::notify(const comm_err_t flag, const Comm::ConnectionPointer &
     if (theCallSub != NULL) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
+        params.xaction = new MasterXaction;
+        params.xaction->squidPort = static_cast<AnyP::PortCfg*>(params.data);
         params.fd = conn->fd;
-        params.conn = newConnDetails;
+        params.conn = params.xaction->tcpClient = newConnDetails;
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(call);
@@ -309,13 +314,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
-    details->local.InitAddrInfo(gai);
+    Ip::Address::InitAddrInfo(gai);
 
     errcode = 0; // reset local errno copy.
     if ((sock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
         errcode = errno; // store last accept errno locally.
 
-        details->local.FreeAddrInfo(gai);
+        Ip::Address::FreeAddrInfo(gai);
 
         PROF_stop(comm_accept);
 
@@ -338,17 +343,21 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if ( Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            details->local.FreeAddrInfo(gai);
+            Ip::Address::FreeAddrInfo(gai);
             return COMM_ERROR;
         }
     }
 
     // lookup the local-end details of this new connection
-    details->local.InitAddrInfo(gai);
-    details->local.SetEmpty();
-    getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
+    Ip::Address::InitAddrInfo(gai);
+    details->local.setEmpty();
+    if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
+        debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
+        Ip::Address::FreeAddrInfo(gai);
+        return COMM_ERROR;
+    }
     details->local = *gai;
-    details->local.FreeAddrInfo(gai);
+    Ip::Address::FreeAddrInfo(gai);
 
     /* fdstat update */
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
@@ -359,10 +368,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     fdd_table[sock].close_line = 0;
 
     fde *F = &fd_table[sock];
-    details->remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
-    F->remote_port = details->remote.GetPort();
+    details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
+    F->remote_port = details->remote.port();
     F->local_addr = details->local;
-    F->sock_family = details->local.IsIPv6()?AF_INET6:AF_INET;
+    F->sock_family = details->local.isIPv6()?AF_INET6:AF_INET;
 
     // set socket flags
     commSetCloseOnExec(sock);
@@ -376,6 +385,16 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         // Failed.
         return COMM_ERROR;
     }
+
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (details->remote.isIPv4()) {
+            details->remoteEui48.lookup(details->remote);
+        } else if (details->remote.isIPv6()) {
+            details->remoteEui64.lookup(details->remote);
+        }
+    }
+#endif
 
     PROF_stop(comm_accept);
     return COMM_OK;

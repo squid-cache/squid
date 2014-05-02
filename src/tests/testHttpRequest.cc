@@ -3,11 +3,11 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "testHttpRequest.h"
 #include "HttpHeader.h"
 #include "HttpRequest.h"
 #include "Mem.h"
 #include "mime_header.h"
+#include "testHttpRequest.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 
@@ -15,7 +15,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 class PrivateHttpRequest : public HttpRequest
 {
 public:
-    bool doSanityCheckStartLine(MemBuf *b, const size_t h, http_status *e) { return sanityCheckStartLine(b,h,e); };
+    bool doSanityCheckStartLine(MemBuf *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
 /* init memory pools */
@@ -43,7 +43,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
     xfree(url);
 
@@ -55,7 +55,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_PUT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://foo/bar"), String(url));
     xfree(url);
 
@@ -73,7 +73,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String(""), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_NONE, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_NONE, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("foo:45"), String(url));
     xfree(url);
 }
@@ -93,7 +93,7 @@ testHttpRequest::testCreateFromUrl()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
     xfree(url);
 }
@@ -116,7 +116,7 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://[2000:800::45]/foo"), String(url));
     xfree(url);
 
@@ -128,7 +128,7 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://[2000:800::45]:90/foo"), String(url));
     xfree(url);
 
@@ -140,7 +140,7 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));
     CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
-    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, aRequest->protocol);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://2000:800::45/foo"), String(url));
     xfree(url);
 }
@@ -150,7 +150,7 @@ testHttpRequest::testSanityCheckStartLine()
 {
     MemBuf input;
     PrivateHttpRequest engine;
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     size_t hdr_len;
     input.init();
 
@@ -158,31 +158,31 @@ testHttpRequest::testSanityCheckStartLine()
     input.append("GET / HTTP/1.1\n\n", 16);
     hdr_len = headersEnd(input.content(), input.contentSize());
     CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
-    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
-    error = HTTP_STATUS_NONE;
+    error = Http::scNone;
 
     input.append("GET  /  HTTP/1.1\n\n", 18);
     hdr_len = headersEnd(input.content(), input.contentSize());
     CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
-    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
-    error = HTTP_STATUS_NONE;
+    error = Http::scNone;
 
     // strange but valid methods
     input.append(". / HTTP/1.1\n\n", 14);
     hdr_len = headersEnd(input.content(), input.contentSize());
     CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
-    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
-    error = HTTP_STATUS_NONE;
+    error = Http::scNone;
 
     input.append("OPTIONS * HTTP/1.1\n\n", 20);
     hdr_len = headersEnd(input.content(), input.contentSize());
     CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
-    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
-    error = HTTP_STATUS_NONE;
+    error = Http::scNone;
 
 // TODO no method
 
@@ -197,7 +197,7 @@ testHttpRequest::testSanityCheckStartLine()
     input.append("      \n\n", 8);
     hdr_len = headersEnd(input.content(), input.contentSize());
     CPPUNIT_ASSERT(!engine.doSanityCheckStartLine(&input, hdr_len, &error) );
-    CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
+    CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
-    error = HTTP_STATUS_NONE;
+    error = Http::scNone;
 }

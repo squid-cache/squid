@@ -1,43 +1,50 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "globals.h"
 #include "helper.h"
-#include "ssl/support.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
+#include "ssl/support.h"
 
 void
 Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
 {
     body.clear();
     body += Ssl::CertValidationMsg::param_host + "=" + vcert.domainName;
-    if (vcert.errors) {
-        body += "\n" + Ssl::CertValidationMsg::param_error + "=";
-        bool comma = false;
-        for (const Ssl::Errors *err = vcert.errors; err; err = err->next ) {
-            if (comma)
-                body += ",";
-            body += GetErrorName(err->element);
-            comma = true;
-        }
-    }
+    STACK_OF(X509) *peerCerts = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(vcert.ssl, ssl_ex_index_ssl_cert_chain));
 
-    STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
+    if (!peerCerts)
+        peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
+
     if (peerCerts) {
-        body +="\n";
         Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
         for (int i = 0; i < sk_X509_num(peerCerts); ++i) {
             X509 *cert = sk_X509_value(peerCerts, i);
             PEM_write_bio_X509(bio.get(), cert);
-            body = body + "cert_" + xitoa(i) + "=";
+            body = body + "\n" + param_cert + xitoa(i) + "=";
             char *ptr;
             long len = BIO_get_mem_data(bio.get(), &ptr);
-            body.append(ptr, len);
-            // Normally openssl toolkit terminates Certificate with a '\n'.
-            if (ptr[len-1] != '\n')
-                body +="\n";
+            body.append(ptr, (ptr[len-1] == '\n' ? len - 1 : len));
             if (!BIO_reset(bio.get())) {
                 // print an error?
             }
+        }
+    }
+
+    if (vcert.errors) {
+        int i = 0;
+        for (const Ssl::CertErrors *err = vcert.errors; err; err = err->next, ++i) {
+            body +="\n";
+            body = body + param_error_name + xitoa(i) + "=" + GetErrorName(err->element.code) + "\n";
+            int errorCertPos = -1;
+            if (err->element.cert.get())
+                errorCertPos = sk_X509_find(peerCerts, err->element.cert.get());
+            if (errorCertPos < 0) {
+                // assert this error ?
+                debugs(83, 4, "WARNING: wrong cert in cert validator request");
+            }
+            body += param_error_cert + xitoa(i) + "=";
+            body += param_cert + xitoa((errorCertPos >= 0 ? errorCertPos : 0));
         }
     }
 }
@@ -212,7 +219,6 @@ Ssl::CertValidationMsg::CertItem::setCert(X509 *aCert)
 
 const std::string Ssl::CertValidationMsg::code_cert_validate("cert_validate");
 const std::string Ssl::CertValidationMsg::param_domain("domain");
-const std::string Ssl::CertValidationMsg::param_error("errors");
 const std::string Ssl::CertValidationMsg::param_cert("cert_");
 const std::string Ssl::CertValidationMsg::param_error_name("error_name_");
 const std::string Ssl::CertValidationMsg::param_error_reason("error_reason_");

@@ -16,4 +16,4 @@ basic_nis_auth_LDADD = \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = config.test
+EXTRA_DIST = required.m4

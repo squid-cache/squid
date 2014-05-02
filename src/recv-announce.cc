@@ -31,15 +31,14 @@
  */
 #include "squid.h"
 
-#include <stdio.h>
+#include <csignal>
+#include <cstring>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <signal.h>
 
 #define RECV_BUF_SIZE 8192
 
@@ -121,7 +120,7 @@ main(int argc, char *argv[])
         ipa = R.sin_addr;
         printf("==============================================================================\n");
         printf("Received from %s [%s]\n",
-               ipa.NtoA(tmp,MAX_HOSTNAMELEN),
+               ipa.toStr(tmp,MAX_HOSTNAMELEN),
                (hp && hp->h_name) ? hp->h_name : "Unknown");
         fputs(buf, stdout);
         fflush(stdout);

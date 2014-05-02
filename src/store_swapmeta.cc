@@ -67,8 +67,15 @@ storeSwapMetaBuild(StoreEntry * e)
     assert(e->mem_obj != NULL);
     const int64_t objsize = e->mem_obj->expectedReplySize();
     assert(e->swap_status == SWAPOUT_WRITING);
-    url = e->url();
-    debugs(20, 3, "storeSwapMetaBuild: " << url  );
+
+    // e->mem_obj->request may be nil in this context
+    if (e->mem_obj->request)
+        url = e->mem_obj->request->storeId();
+    else
+        url = e->url();
+
+    debugs(20, 3, "storeSwapMetaBuild URL: " << url);
+
     tlv *t = StoreMeta::Factory (STORE_META_KEY,SQUID_MD5_DIGEST_LENGTH, e->key);
 
     if (!t) {

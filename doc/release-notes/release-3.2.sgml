@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.7 release notes</title>
+<title>Squid 3.2.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,19 +13,21 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.7 for 
-testing.
+The Squid Team are pleased to announce the release of Squid-3.2.13.
 
-This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the
+ <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+<p>A large number of the show-stopper bugs have been fixed along with general improvements to the IPv6 support.
+While this release is not fully bug-free we believe it is ready for use in production on many systems.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
 report with a stack trace.
 
 <sect1>Known issues
 <p>
-Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.2">.
+Although this release is deemed good enough for use in many setups, please note the existence of 
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.2" name="open bugs against Squid-3.2">.
 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.2 series are:
 
@@ -90,7 +92,7 @@ Most user-facing changes are reflected in squid.conf (see below).
   DNS lookups to locate alternative DIRECT destinations will not be done.
 
 <p>Known Issue: When non-strict validation fails Squid will relay the request, but can only do
-  so safely to the orginal destination IP the client was contacting. The client original
+  so safely to the original destination IP the client was contacting. The client original
   destination IP is lost when relaying to peers in a hierarchy. This means the upstream peers
   are still at risk of causing same-origin bypass CVE-2009-0801 vulnerability.
   Developer time is required to implement safe transit of these requests.
@@ -175,7 +177,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    path and parameters as its own command parameters. The <em>concurrency</em> setting already
    existing in Squid is used to configure how many child helpers it may run.
 
-<p>For example, a traditional configration is
+<p>For example, a traditional configuration is
    <verb>
 	url_rewrite_program /your/redirector.sh
 	url_rewrite_children 5
@@ -204,10 +206,10 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The on-demand helpers feature allows greater flexibility and resolves this problem by allowing
   maximum, initial and idle thresholds to be configured. Squid will start the initial set during
   start and reconfigure phases. However over the operational use new helpers up to the maxium will
-  be started as load demands. The idle threshold determins how many more helpers to start if the
+  be started as load demands. The idle threshold determines how many more helpers to start if the
   currently running set is not enough to handle current request loads.
 
-<p>For example, a traditional configration is
+<p>For example, a traditional configuration is
    <verb>
 	auth_param ntlm /usr/libexec/squid/ntlm_auth
 	auth_param ntlm children 200
@@ -258,7 +260,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <sect2>External ACL helpers
 <p><itemize>
 	<item>mswin_check_ad_group - ext_ad_group_acl - Check logged in users Group membership using Active Directory.
-	<item>ip_user_check - ext_file_userip_acl - Restrict users to cetain IP addresses, using a text file backend.
+	<item>ip_user_check - ext_file_userip_acl - Restrict users to certain IP addresses, using a text file backend.
 	<item>squid_kerb_ldap - ext_kerberos_ldap_group_acl - Check logged in Kerberos or NTLM users Group membership using LDAP.
 	<item>squid_ldap_group - ext_ldap_group_acl - Check logged in users Group membership using LDAP.
 	<item>mswin_check_lm_group - ext_lm_group_acl - Check logged in users Group membership using LanManager.
@@ -303,8 +305,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 <sect1>Solaris 10 pthreads Support (Experimental)
 <p>Automatic detection and use of the pthreads library available from Solaris 10
 
-<p>The result of this addition means that faster more efficient AUFS cache storage mechanisims
-  are now available in Solaris 10.
+<p>The result of this addition means that faster more efficient AUFS cache storage mechanism
+  is now available in Solaris 10.
 
 <p>Support is experimental at this stage due to lack of feedback on the results of enabling it.
   We recommend giving AUFS a try for faster disk storage and encourage feedback.
@@ -316,14 +318,14 @@ Most user-facing changes are reflected in squid.conf (see below).
   feature support in Squid. This release opens Surrogate support to all reverse proxies.
 
 <p>Reverse proxy requests sent on to the web server include the HTTP header <em>Surrogate-Capabilities:</em>
-  specifying the capabilities of the reverse proxy along with an ID which can be used to target reponses with
+  specifying the capabilities of the reverse proxy along with an ID which can be used to target responses with
   a <em>Surrogate-Control:</em> HTTP header used instead of the <em>Cache-Control:</em> header.
 
 <p>The default surrogate ID is generated automatically from the Squid site-unique hostname as found by the
   automatic detection or manual configuration of <em>visible_hostname</em> although can be configured
   separately with the <em>httpd_accel_surrogate_id</em> option.
 
-<p><em>Security Considerations:</em> Websites sould be careful of accepting any surrogate ID.
+<p><em>Security Considerations:</em> Websites should be careful of accepting any surrogate ID.
   Older releases of Squid leak the Surrogate-Control headers to external servers.
   This 3.2 series of Squid will now prevent this leakage of its own ID destined responses, however it is possible
   and for some uses desirable to receive external reverse-proxies <em>Surrogate-Capabilities:</em> headers.
@@ -429,7 +431,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <itemize>
    <item>should contain a complete HTML page, with optional client-side scripting.
    <item>must not contain server-side scripting. 
-   <item>will have macro substitution performed on it using the same macros as used by the error page tempates.
+   <item>will have macro substitution performed on it using the same macros as used by the error page templates.
 </itemize>
 
 <p>Version 3.2 of the CGI cache manager tool now presents XHR scripted probes to detect
@@ -458,32 +460,32 @@ This section gives a thorough account of those changes in three categories:
 	   headers or eCAP options to Squid ICAP requests or eCAP transactions.
 
 	<tag>adaptation_send_client_ip</tag>
-	<p>Same as depricated icap_send_client_ip
+	<p>Same as deprecated icap_send_client_ip
 	   but applies to both ICAP and eCAP.</p>
 
 	<tag>adaptation_send_username</tag>
-	<p>Same as depricated icap_send_client_username
+	<p>Same as deprecated icap_send_client_username
 	   but applies to both ICAP and eCAP.</p>
 
 	<tag>adaptation_uses_indirect_client</tag>
-	<p>Same as depricated icap_uses_indirect_client
+	<p>Same as deprecated icap_uses_indirect_client
 	   but applies to both ICAP and eCAP.</p>
 
 	<tag>client_delay_pools</tag>
-	<p>New setting for client bandwith limits to specifies the number 
+	<p>New setting for client bandwidth limits to specifies the number 
 	  of client delay pools used.
 
 	<tag>client_delay_initial_bucket_level</tag>
-	<p>New setting for client bandwith limits to determine the initial 
+	<p>New setting for client bandwidth limits to determine the initial 
 	  bucket size as a percentage of  max_bucket_size from 
 	  client_delay_parameters.
             
 	<tag>client_delay_parameters</tag>
-	<p>New setting for client bandwith limits to configures client-side 
+	<p>New setting for client bandwidth limits to configures client-side 
 	   bandwidth limits.
 
 	<tag>client_delay_access</tag>
-	<p>New setting for client bandwith limits to determines the 
+	<p>New setting for client bandwidth limits to determines the 
 	  client-side delay pool for the request.
 
 	<tag>client_dst_passthru</tag>
@@ -590,17 +592,12 @@ This section gives a thorough account of those changes in three categories:
 	New installs, or installs with no logs configured explicitly will use this module by default.
 	<p>New <em>tcp</em> module to send each log line as text data to a TCP receiver.
 	<p>New <em>udp</em> module to send each log line as text data to a UDP receiver.
-	<p>New format <em>referrer</em> to log with the format prevously used by referer_log directive.
-	<p>New format <em>useragent</em> to log with the format prevously used by useragent_log directive.
+	<p>New format <em>referrer</em> to log with the format previously used by referer_log directive.
+	<p>New format <em>useragent</em> to log with the format previously used by useragent_log directive.
 
-	<tag>acl : random, localip, localport</tag>
+	<tag>acl : random, urllogin</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
-	<p>Renamed <em>myip</em> to <em>localip</em>. It matches the IP which the client connected to.
-	<p>Renamed <em>myport</em> to <em>localport</em>. It matches the port which the client connected to.
 	<p>Ported <em>urllogin</em> option from Squid 2.7, to match a regex pattern on the URL login field (if any).
-	<p>The <em>localip</em>/<em>localport</em> differ from earlier releases where they matched a mix of
-	   of an invalid IP and port 0, the client destination IP/port or the Squid listening IP/port.
-	   This definition is now consistent across all modes of traffic received by Squid.
 	<p>The <em>manager</em> ACL requires adjustment to cover new cache manager access. So it has now been
 	  built-in as a predefined ACL name matching URLs equivalent to the following regular expression:
         <verb>
@@ -610,7 +607,7 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>auth_param</tag>
 	<p>New options for Basic, Digest, NTLM, Negotiate <em>children</em> settings.
-	   <em>startup=N</em> determins minimum number of helper processes used.
+	   <em>startup=N</em> determines minimum number of helper processes used.
 	   <em>idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
 	   <em>concurrency=N</em> previously called <em>auth_param ... concurrency</em> as a separate option.
 	<p>Removed Basic, Digest, NTLM, Negotiate <em>auth_param ... concurrency</em> setting option.
@@ -644,8 +641,8 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.
 	<p><em>%EXT_LOG</em> log= message returned by previous external ACL calls. An updated version may be returned.
 	<p><em>%EXT_TAG</em> tag= value returned by previous external ACL calls. Tag may not be altered once set.
-	<p><em>children-max=N</em> determins maximum number of helper processes used.
-	<p><em>children-startup=N</em> determins minimum number of helper processes used.
+	<p><em>children-max=N</em> determines maximum number of helper processes used.
+	<p><em>children-startup=N</em> determines minimum number of helper processes used.
 	<p><em>children-idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
@@ -871,16 +868,16 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by --enable-eui
 
 	<tag>--enable-auth-basic-helpers</tag>
-	<p>replaced by <em>--enable-auth-basic</em>.
+	<p>Replaced by <em>--enable-auth-basic</em>.
 
 	<tag>--enable-auth-digest-helpers</tag>
-	<p>replaced by <em>--enable-auth-digest</em>.
+	<p>Replaced by <em>--enable-auth-digest</em>.
 
 	<tag>--enable-auth-negotiate-helpers</tag>
-	<p>replaced by <em>--enable-auth-negotiate</em>.
+	<p>Replaced by <em>--enable-auth-negotiate</em>.
 
 	<tag>--enable-auth-ntlm-helpers</tag>
-	<p>replaced by <em>--enable-auth-ntlm</em>.
+	<p>Replaced by <em>--enable-auth-ntlm</em>.
 
 	<tag>--enable-referer-log</tag>
 	<p>Obsolete.
@@ -910,7 +907,7 @@ This section gives an account of those changes in three categories:
 	  An external_acl_type helper may be used to bypass authentication if that is suitable.
 
 	<tag>cache_peer</tag>
-	<p><em>http11</em> Obsolete.
+	<p>Option <em>http11</em> obsolete.
 
 	<tag>external_acl_type</tag>
 	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
@@ -920,9 +917,9 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
 
 	<tag>http_port</tag>
-	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
-	<p><em>transparent</em> option replaced by <em>intercept</em>
-	<p><em>http11</em> obsolete.
+	<p>Option <em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
+	<p>Option <em>transparent</em> option replaced by <em>intercept</em>
+	<p>Option <em>http11</em> obsolete.
 
 	<tag>http_access2</tag>
 	<p>Replaced by <em>adapted_http_access</em>
@@ -938,6 +935,12 @@ This section gives an account of those changes in three categories:
 
 	<tag>server_http11</tag>
 	<p>Obsolete.
+
+        <tag>update_headers</tag>
+	<p>Obsolete. The experimental actions enabled in 2.7 by this option have been integrated as default
+	   actions for the <em>rock</em> storage type and memory caches.
+	   The configuration option is no longer necessary and has been dropped.
+	   NOTE: It is not yet supported by <em>ufs</em>, <em>aufs</em>, or <em>diskd</em> storage.
 
 	<tag>upgrade_http0.9</tag>
 	<p>Obsolete.
@@ -1110,8 +1113,5 @@ This section gives an account of those changes in three categories:
 	<tag>storeurl_rewrite_program</tag>
 	<p>Not yet ported from 2.7
 	
-	<tag>update_headers</tag>
-	<p>Not yet fully ported from 2.7. Memory and rock storage caches support this natively. UFS caches do not support it.
-
 </descrip>
 </article>

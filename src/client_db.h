@@ -34,8 +34,10 @@
 #define SQUID_CLIENT_DB_H_
 
 #include "anyp/ProtocolType.h"
-#include "enums.h"
+//#include "enums.h"
 #include "ip/Address.h"
+#include "LogTags.h"
+
 namespace Ip
 {
 class Address;
@@ -44,8 +46,7 @@ class Address;
 class StoreEntry;
 class ClientInfo;
 
-void clientdbInit(void);
-void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
+void clientdbUpdate(const Ip::Address &, LogTags, AnyP::ProtocolType, size_t);
 int clientdbCutoffDenied(const Ip::Address &);
 void clientdbDump(StoreEntry *);
 void clientdbFreeMemory(void);

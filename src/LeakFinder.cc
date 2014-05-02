@@ -39,21 +39,26 @@
 #if USE_LEAKFINDER
 
 #include "LeakFinder.h"
-#include "Store.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 /* ========================================================================= */
 
 LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
-        file(f), line(l), when(squid_curtime)
+        file(f),
+        line(l),
+        when(squid_curtime)
 {
+    // XXX: these bits should be done by hash_link()
     key = p;
     next = NULL;
 }
 
 /* ========================================================================= */
 
-LeakFinder::LeakFinder()
+LeakFinder::LeakFinder() :
+        count(0),
+        last_dump(0)
 {
     debugs(45, 3, "LeakFinder constructed");
     table = hash_create(cmp, 1 << 8, hash);

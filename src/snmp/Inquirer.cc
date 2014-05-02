@@ -5,14 +5,14 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "CommCalls.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "CommCalls.h"
 #include "ipc/UdsOp.h"
-#include "snmp_core.h"
 #include "snmp/Inquirer.h"
-#include "snmp/Response.h"
 #include "snmp/Request.h"
+#include "snmp/Response.h"
+#include "snmp_core.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
 
@@ -28,6 +28,10 @@ Snmp::Inquirer::Inquirer(const Request& aRequest, const Ipc::StrandCoords& coord
     closer = asyncCall(49, 5, "Snmp::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
     comm_add_close_handler(conn->fd, closer);
+
+    // forget client FD to avoid sending it to strands that may forget to close
+    if (Request *snmpRequest = dynamic_cast<Request*>(request.getRaw()))
+        snmpRequest->fd = -1;
 }
 
 /// closes our copy of the client connection socket

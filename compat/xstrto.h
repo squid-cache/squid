@@ -1,6 +1,9 @@
 #ifndef _SQUID_XSTRTO_H
 #define _SQUID_XSTRTO_H
 
+// these functions are not used by the remaining Squid C code.
+#if defined(__cplusplus)
+
 #if HAVE_STDBOOL_H
 #include <stdbool.h>
 #endif
@@ -27,4 +30,5 @@ bool xstrtoul(const char *s, char **end, unsigned long *value,
 bool xstrtoui(const char *s, char **end, unsigned int *value,
               unsigned int min, unsigned int max);
 
+#endif /* __cplusplus */
 #endif /* _SQUID_XSTRTO_H */

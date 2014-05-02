@@ -31,15 +31,12 @@
 #ifndef SQUID_CLIENTSIDEREPLY_H
 #define SQUID_CLIENTSIDEREPLY_H
 
-#include "base/RefCount.h"
 #include "client_side_request.h"
-#include "clientStream.h"
-#include "HttpHeader.h"
+#include "ip/forward.h"
 #include "RequestFlags.h"
 #include "StoreClient.h"
 
 class ErrorState;
-#include "ip/forward.h"
 
 /* XXX make static method */
 
@@ -47,8 +44,6 @@ class clientReplyContext : public RefCountable, public StoreClient
 {
 
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
     static STCB CacheHit;
     static STCB HandleIMSReply;
     static STCB SendMoreData;
@@ -73,9 +68,9 @@ public:
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
     /// replaces current response store entry with the given one
-    void setReplyToStoreEntry(StoreEntry *e);
+    void setReplyToStoreEntry(StoreEntry *e, const char *reason);
     /// builds error using clientBuildError() and calls setReplyToError() below
-    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
+    void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
 #else
@@ -91,8 +86,9 @@ public:
     clientStream_status_t replyStatus();
     void processMiss();
     void traceReply(clientStreamNode * node);
+    const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
-    http_status purgeStatus;
+    Http::StatusCode purgeStatus;
 
     /* state variable - replace with class to handle storeentries at some point */
     int lookingforstore;
@@ -134,7 +130,7 @@ private:
     void processReplyAccessResult(const allow_t &accessAllowed);
     void cloneReply();
     void buildReplyHeader ();
-    bool alwaysAllowResponse(http_status sline) const;
+    bool alwaysAllowResponse(Http::StatusCode sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
     void processConditional(StoreIOBuffer &result);
@@ -144,6 +140,8 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void purgeAllCached();
+    void forgetHit();
+    bool blockedHit() const;
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();
@@ -154,7 +152,7 @@ private:
     store_client *old_sc;	/* ... for entry to be validated */
     bool deleting;
 
-    CBDATA_CLASS(clientReplyContext);
+    CBDATA_CLASS2(clientReplyContext);
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */

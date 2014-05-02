@@ -51,15 +51,14 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "Stack.h"
 #include "StatCounters.h"
 #include "stmem.h"
+#include "Store.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
-#include "Store.h"
 #include "StoreClient.h"
 #include "StoreIOState.h"
 #include "StoreMeta.h"
@@ -70,11 +69,9 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
 
-static STMCB storeWriteComplete;
+#include <climits>
+#include <stack>
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
@@ -127,7 +124,7 @@ static EVH storeLateRelease;
 /*
  * local variables
  */
-static Stack<StoreEntry*> LateReleaseStack;
+static std::stack<StoreEntry*> LateReleaseStack;
 MemAllocator *StoreEntry::pool = NULL;
 
 StorePointer Store::CurrentRoot = NULL;
@@ -193,7 +190,7 @@ StoreEntry::makePublic()
 {
     /* This object can be cached for a long time */
 
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
+    if (!EBIT_TEST(flags, RELEASE_REQUEST))
         setPublicKey();
 }
 
@@ -203,7 +200,6 @@ StoreEntry::makePrivate()
     /* This object should never be cached at all */
     expireNow();
     releaseRequest(); /* delete object when not used */
-    /* releaseRequest clears ENTRY_CACHABLE flag */
 }
 
 void
@@ -211,9 +207,7 @@ StoreEntry::cacheNegatively()
 {
     /* This object may be negatively cached */
     negativeCache();
-
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        setPublicKey();
+    makePublic();
 }
 
 size_t
@@ -314,6 +308,11 @@ StoreEntry::setNoDelay (bool const newValue)
         mem_obj->setNoDelay(newValue);
 }
 
+// XXX: Type names mislead. STORE_DISK_CLIENT actually means that we should
+//      open swapin file, aggressively trim memory, and ignore read-ahead gap.
+//      It does not mean we will read from disk exclusively (or at all!).
+// XXX: May create STORE_DISK_CLIENT with no disk caching configured.
+// XXX: Collapsed clients cannot predict their type.
 store_client_t
 StoreEntry::storeClientType() const
 {
@@ -322,11 +321,6 @@ StoreEntry::storeClientType() const
      * as the needed offset may *not* be 0, AND
      * offset 0 in the memory object is the HTTP headers.
      */
-
-    if (mem_status == IN_MEMORY && Config.memShared && IamWorkerProcess()) {
-        // clients of an object cached in shared memory are memory clients
-        return STORE_MEM_CLIENT;
-    }
 
     assert(mem_obj);
 
@@ -346,7 +340,7 @@ StoreEntry::storeClientType() const
             if (swap_status == SWAPOUT_DONE) {
                 debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
-                    /* hot object fully swapped in */
+                    /* hot object fully swapped in (XXX: or swapped out?) */
                     return STORE_MEM_CLIENT;
                 }
             } else {
@@ -382,7 +376,6 @@ StoreEntry::storeClientType() const
 
 StoreEntry::StoreEntry() :
         mem_obj(NULL),
-        hidden_mem_obj(NULL),
         timestamp(-1),
         lastref(-1),
         expires(-1),
@@ -392,44 +385,18 @@ StoreEntry::StoreEntry() :
         flags(0),
         swap_filen(-1),
         swap_dirn(-1),
-        lock_count(0),
         mem_status(NOT_IN_MEMORY),
         ping_status(PING_NONE),
         store_status(STORE_PENDING),
-        swap_status(SWAPOUT_NONE)
+        swap_status(SWAPOUT_NONE),
+        lock_count(0)
 {
-    debugs(20, 3, HERE << "new StoreEntry " << this);
-}
-
-StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl) :
-        mem_obj(NULL),
-        hidden_mem_obj(NULL),
-        timestamp(-1),
-        lastref(-1),
-        expires(-1),
-        lastmod(-1),
-        swap_file_sz(0),
-        refcount(0),
-        flags(0),
-        swap_filen(-1),
-        swap_dirn(-1),
-        lock_count(0),
-        mem_status(NOT_IN_MEMORY),
-        ping_status(PING_NONE),
-        store_status(STORE_PENDING),
-        swap_status(SWAPOUT_NONE)
-{
-    debugs(20, 3, HERE << "new StoreEntry " << this);
-    mem_obj = new MemObject(aUrl, aLogUrl);
+    debugs(20, 5, "StoreEntry constructed, this=" << this);
 }
 
 StoreEntry::~StoreEntry()
 {
-    if (swap_filen >= 0) {
-        SwapDir &sd = dynamic_cast<SwapDir&>(*store());
-        sd.disconnect(*this);
-    }
-    delete hidden_mem_obj;
+    debugs(20, 5, "StoreEntry destructed, this=" << this);
 }
 
 #if USE_ADAPTATION
@@ -457,22 +424,18 @@ void
 StoreEntry::destroyMemObject()
 {
     debugs(20, 3, HERE << "destroyMemObject " << mem_obj);
-    setMemStatus(NOT_IN_MEMORY);
-    MemObject *mem = mem_obj;
-    mem_obj = NULL;
-    delete mem;
-    delete hidden_mem_obj;
-    hidden_mem_obj = NULL;
-}
 
-void
-StoreEntry::hideMemObject()
-{
-    debugs(20, 3, HERE << "hiding " << mem_obj);
-    assert(mem_obj);
-    assert(!hidden_mem_obj);
-    hidden_mem_obj = mem_obj;
-    mem_obj = NULL;
+    if (MemObject *mem = mem_obj) {
+        // Store::Root() is FATALly missing during shutdown
+        if (mem->xitTable.index >= 0 && !shutting_down)
+            Store::Root().transientsDisconnect(*mem);
+        if (mem->memCache.index >= 0 && !shutting_down)
+            Store::Root().memoryDisconnect(*this);
+
+        setMemStatus(NOT_IN_MEMORY);
+        mem_obj = NULL;
+        delete mem;
+    }
 }
 
 void
@@ -484,6 +447,12 @@ destroyStoreEntry(void *data)
 
     if (e == NullStoreEntry::getInstance())
         return;
+
+    // Store::Root() is FATALly missing during shutdown
+    if (e->swap_filen >= 0 && !shutting_down) {
+        SwapDir &sd = dynamic_cast<SwapDir&>(*e->store());
+        sd.disconnect(*e);
+    }
 
     e->destroyMemObject();
 
@@ -499,7 +468,7 @@ destroyStoreEntry(void *data)
 void
 StoreEntry::hashInsert(const cache_key * someKey)
 {
-    debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << this << " key '" << storeKeyText(someKey) << "'");
+    debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << *this << " key '" << storeKeyText(someKey) << "'");
     key = storeKeyDup(someKey);
     hash_join(store_table, this);
 }
@@ -507,9 +476,11 @@ StoreEntry::hashInsert(const cache_key * someKey)
 void
 StoreEntry::hashDelete()
 {
-    hash_remove_link(store_table, this);
-    storeKeyFree((const cache_key *)key);
-    key = NULL;
+    if (key) { // some test cases do not create keys and do not hashInsert()
+        hash_remove_link(store_table, this);
+        storeKeyFree((const cache_key *)key);
+        key = NULL;
+    }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -523,26 +494,22 @@ StoreEntry::purgeMem()
 
     debugs(20, 3, "StoreEntry::purgeMem: Freeing memory-copy of " << getMD5Text());
 
-    destroyMemObject();
+    Store::Root().memoryUnlink(*this);
 
     if (swap_status != SWAPOUT_DONE)
         release();
 }
 
-/* RBC 20050104 this is wrong- memory ref counting
- * is not at all equivalent to the store 'usage' concept
- * which the replacement policies should be acting upon.
- * specifically, object iteration within stores needs
- * memory ref counting to prevent race conditions,
- * but this should not influence store replacement.
- */
 void
-
-StoreEntry::lock()
+StoreEntry::lock(const char *context)
 {
     ++lock_count;
-    debugs(20, 3, "StoreEntry::lock: key '" << getMD5Text() <<"' count=" <<
-           lock_count  );
+    debugs(20, 3, context << " locked key " << getMD5Text() << ' ' << *this);
+}
+
+void
+StoreEntry::touch()
+{
     lastref = squid_curtime;
     Store::Root().reference(*this);
 }
@@ -556,6 +523,8 @@ StoreEntry::setReleaseFlag()
     debugs(20, 3, "StoreEntry::setReleaseFlag: '" << getMD5Text() << "'");
 
     EBIT_SET(flags, RELEASE_REQUEST);
+
+    Store::Root().markForUnlink(*this);
 }
 
 void
@@ -564,25 +533,18 @@ StoreEntry::releaseRequest()
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    setReleaseFlag();
-
-    /*
-     * Clear cachable flag here because we might get called before
-     * anyone else even looks at the cachability flag.  Also, this
-     * prevents httpMakePublic from really setting a public key.
-     */
-    EBIT_CLR(flags, ENTRY_CACHABLE);
+    setReleaseFlag(); // makes validToSend() false, preventing future hits
 
     setPrivateKey();
 }
 
-/* unlock object, return -1 if object get released after unlock
- * otherwise lock_count */
 int
-StoreEntry::unlock()
+StoreEntry::unlock(const char *context)
 {
+    debugs(20, 3, (context ? context : "somebody") <<
+           " unlocking key " << getMD5Text() << ' ' << *this);
+    assert(lock_count > 0);
     --lock_count;
-    debugs(20, 3, "StoreEntry::unlock: key '" << getMD5Text() << "' count=" << lock_count);
 
     if (lock_count)
         return (int) lock_count;
@@ -693,15 +655,18 @@ StoreEntry::setPrivateKey()
         return;                 /* is already private */
 
     if (key) {
+        setReleaseFlag(); // will markForUnlink(); all caches/workers will know
+
+        // TODO: move into SwapDir::markForUnlink() already called by Root()
         if (swap_filen > -1)
             storeDirSwapLog(this, SWAP_LOG_DEL);
 
         hashDelete();
     }
 
-    if (mem_obj != NULL) {
+    if (mem_obj && mem_obj->hasUris()) {
         mem_obj->id = getKeyCounter();
-        newkey = storeKeyPrivate(mem_obj->url, mem_obj->method, mem_obj->id);
+        newkey = storeKeyPrivate(mem_obj->storeId(), mem_obj->method, mem_obj->id);
     } else {
         newkey = storeKeyPrivate("JUNK", Http::METHOD_NONE, getKeyCounter());
     }
@@ -714,7 +679,6 @@ StoreEntry::setPrivateKey()
 void
 StoreEntry::setPublicKey()
 {
-    StoreEntry *e2 = NULL;
     const cache_key *newkey;
 
     if (key && !EBIT_TEST(flags, KEY_PRIVATE))
@@ -729,8 +693,7 @@ StoreEntry::setPublicKey()
      * store clients won't be able to access object data which has
      * been freed from memory.
      *
-     * If RELEASE_REQUEST is set, then ENTRY_CACHABLE should not
-     * be set, and StoreEntry::setPublicKey() should not be called.
+     * If RELEASE_REQUEST is set, setPublicKey() should not be called.
      */
 #if MORE_DEBUG_OUTPUT
 
@@ -753,9 +716,7 @@ StoreEntry::setPublicKey()
                  * to record the new variance key
                  */
                 safe_free(request->vary_headers);       /* free old "bad" variance key */
-                StoreEntry *pe = storeGetPublic(mem_obj->url, mem_obj->method);
-
-                if (pe)
+                if (StoreEntry *pe = storeGetPublic(mem_obj->storeId(), mem_obj->method))
                     pe->release();
             }
 
@@ -770,13 +731,13 @@ StoreEntry::setPublicKey()
 
         // TODO: storeGetPublic() calls below may create unlocked entries.
         // We should add/use storeHas() API or lock/unlock those entries.
-        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->url, mem_obj->method)) {
+        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
-            StoreEntry *pe = storeCreateEntry(mem_obj->url, mem_obj->log_url, request->flags, request->method);
+            StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
-            rep->setHeaders(HTTP_OK, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
+            rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
             vary = mem_obj->getReply()->header.getList(HDR_VARY);
 
             if (vary.size()) {
@@ -788,37 +749,39 @@ StoreEntry::setPublicKey()
 #if X_ACCELERATOR_VARY
             vary = mem_obj->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
 
-            if (vary.defined()) {
+            if (vary.size() > 0) {
                 /* Again, we own this structure layout */
                 rep->header.putStr(HDR_X_ACCELERATOR_VARY, vary.termedBuf());
                 vary.clean();
             }
 
 #endif
-            pe->replaceHttpReply(rep);
+            pe->replaceHttpReply(rep, false); // no write until key is public
 
             pe->timestampsSet();
 
             pe->makePublic();
 
+            pe->startWriting(); // after makePublic()
+
             pe->complete();
 
-            pe->unlock();
+            pe->unlock("StoreEntry::setPublicKey+Vary");
         }
 
         newkey = storeKeyPublicByRequest(mem_obj->request);
     } else
-        newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
+        newkey = storeKeyPublic(mem_obj->storeId(), mem_obj->method);
 
-    if ((e2 = (StoreEntry *) hash_lookup(store_table, newkey))) {
-        debugs(20, 3, "StoreEntry::setPublicKey: Making old '" << mem_obj->url << "' private.");
+    if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
+        debugs(20, 3, "Making old " << *e2 << " private.");
         e2->setPrivateKey();
         e2->release();
 
         if (mem_obj->request)
             newkey = storeKeyPublicByRequest(mem_obj->request);
         else
-            newkey = storeKeyPublic(mem_obj->url, mem_obj->method);
+            newkey = storeKeyPublic(mem_obj->storeId(), mem_obj->method);
     }
 
     if (key)
@@ -833,37 +796,41 @@ StoreEntry::setPublicKey()
 }
 
 StoreEntry *
-storeCreateEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
+storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
-    MemObject *mem = NULL;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
 
-    e = new StoreEntry(url, log_url);
-    e->lock_count = 1;          /* Note lock here w/o calling storeLock() */
-    mem = e->mem_obj;
-    mem->method = method;
+    e = new StoreEntry();
+    e->makeMemObject();
+    e->mem_obj->setUris(url, log_url, method);
+
+    if (flags.cachable) {
+        EBIT_CLR(e->flags, RELEASE_REQUEST);
+    } else {
+        e->releaseRequest();
+    }
+
+    e->store_status = STORE_PENDING;
+    e->refcount = 0;
+    e->lastref = squid_curtime;
+    e->timestamp = -1;          /* set in StoreEntry::timestampsSet() */
+    e->ping_status = PING_NONE;
+    EBIT_SET(e->flags, ENTRY_VALIDATED);
+    return e;
+}
+
+StoreEntry *
+storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags, const HttpRequestMethod& method)
+{
+    StoreEntry *e = storeCreatePureEntry(url, logUrl, flags, method);
+    e->lock("storeCreateEntry");
 
     if (neighbors_do_private_keys || !flags.hierarchical)
         e->setPrivateKey();
     else
         e->setPublicKey();
 
-    if (flags.cachable) {
-        EBIT_SET(e->flags, ENTRY_CACHABLE);
-        EBIT_CLR(e->flags, RELEASE_REQUEST);
-    } else {
-        /* StoreEntry::releaseRequest() clears ENTRY_CACHABLE */
-        e->releaseRequest();
-    }
-
-    e->store_status = STORE_PENDING;
-    e->setMemStatus(NOT_IN_MEMORY);
-    e->refcount = 0;
-    e->lastref = squid_curtime;
-    e->timestamp = -1;          /* set in StoreEntry::timestampsSet() */
-    e->ping_status = PING_NONE;
-    EBIT_SET(e->flags, ENTRY_VALIDATED);
     return e;
 }
 
@@ -876,21 +843,6 @@ StoreEntry::expireNow()
 }
 
 void
-storeWriteComplete (void *data, StoreIOBuffer wroteBuffer)
-{
-    PROF_start(storeWriteComplete);
-    StoreEntry *e = (StoreEntry *)data;
-
-    if (EBIT_TEST(e->flags, DELAY_SENDING)) {
-        PROF_stop(storeWriteComplete);
-        return;
-    }
-
-    e->invokeHandlers();
-    PROF_stop(storeWriteComplete);
-}
-
-void
 StoreEntry::write (StoreIOBuffer writeBuffer)
 {
     assert(mem_obj != NULL);
@@ -898,10 +850,17 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);
 
+    // XXX: caller uses content offset, but we also store headers
+    if (const HttpReply *reply = mem_obj->getReply())
+        writeBuffer.offset += reply->hdr_sz;
+
     debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
     PROF_stop(StoreEntry_write);
     storeGetMemSpace(writeBuffer.length);
-    mem_obj->write (writeBuffer, storeWriteComplete, this);
+    mem_obj->write(writeBuffer);
+
+    if (!EBIT_TEST(flags, DELAY_SENDING))
+        invokeHandlers();
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -1005,17 +964,16 @@ StoreEntry::checkCachable()
         if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (!EBIT_TEST(flags, ENTRY_CACHABLE)) {
+        } else if (EBIT_TEST(flags, RELEASE_REQUEST)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
-            ++store_check_cachable_hist.no.not_entry_cachable;
+            ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
         } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
             return 0;           /* avoid release call below */
         } else if ((getReply()->content_length > 0 &&
-                    getReply()->content_length
-                    > Config.Store.maxObjectSize) ||
-                   mem_obj->endOffset() > Config.Store.maxObjectSize) {
+                    getReply()->content_length > store_maxobjsize) ||
+                   mem_obj->endOffset() > store_maxobjsize) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
@@ -1043,7 +1001,6 @@ StoreEntry::checkCachable()
         }
 
     releaseRequest();
-    /* StoreEntry::releaseRequest() cleared ENTRY_CACHABLE */
     return 0;
 }
 
@@ -1134,7 +1091,7 @@ StoreEntry::abort()
     assert(mem_obj != NULL);
     debugs(20, 6, "storeAbort: " << getMD5Text());
 
-    lock();         /* lock while aborting */
+    lock("StoreEntry::abort");         /* lock while aborting */
     negativeCache();
 
     releaseRequest();
@@ -1171,7 +1128,7 @@ StoreEntry::abort()
     // abort swap out, invalidating what was created so far (release follows)
     swapOutFileClose(StoreIOState::writerGone);
 
-    unlock();       /* unlock */
+    unlock("StoreEntry::abort");       /* unlock */
 }
 
 /**
@@ -1274,7 +1231,7 @@ void
 StoreEntry::release()
 {
     PROF_start(storeRelease);
-    debugs(20, 3, "storeRelease: Releasing: '" << getMD5Text() << "'");
+    debugs(20, 3, "releasing " << *this << ' ' << getMD5Text());
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
 
@@ -1286,20 +1243,16 @@ StoreEntry::release()
         return;
     }
 
+    Store::Root().memoryUnlink(*this);
+
     if (StoreController::store_dirs_rebuilding && swap_filen > -1) {
         setPrivateKey();
 
-        if (mem_obj)
-            destroyMemObject();
-
         if (swap_filen > -1) {
-            /*
-             * Fake a call to StoreEntry->lock()  When rebuilding is done,
-             * we'll just call StoreEntry->unlock() on these.
-             */
-            ++lock_count;
+            // lock the entry until rebuilding is done
+            lock("storeLateRelease");
             setReleaseFlag();
-            LateReleaseStack.push_back(this);
+            LateReleaseStack.push(this);
         } else {
             destroyStoreEntry(static_cast<hash_link *>(this));
             // "this" is no longer valid
@@ -1319,7 +1272,6 @@ StoreEntry::release()
         unlink();
     }
 
-    setMemStatus(NOT_IN_MEMORY);
     destroyStoreEntry(static_cast<hash_link *>(this));
     PROF_stop(storeRelease);
 }
@@ -1328,7 +1280,6 @@ static void
 storeLateRelease(void *unused)
 {
     StoreEntry *e;
-    int i;
     static int n = 0;
 
     if (StoreController::store_dirs_rebuilding) {
@@ -1336,16 +1287,17 @@ storeLateRelease(void *unused)
         return;
     }
 
-    for (i = 0; i < 10; ++i) {
-        e = LateReleaseStack.count ? LateReleaseStack.pop() : NULL;
-
-        if (e == NULL) {
-            /* done! */
+    // TODO: this works but looks unelegant.
+    for (int i = 0; i < 10; ++i) {
+        if (LateReleaseStack.empty()) {
             debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
             return;
+        } else {
+            e = LateReleaseStack.top();
+            LateReleaseStack.pop();
         }
 
-        e->unlock();
+        e->unlock("storeLateRelease");
         ++n;
     }
 
@@ -1359,14 +1311,9 @@ StoreEntry::locked() const
     if (lock_count)
         return 1;
 
-    if (swap_status == SWAPOUT_WRITING)
-        return 1;
-
-    if (store_status == STORE_PENDING)
-        return 1;
-
     /*
-     * SPECIAL, PUBLIC entries should be "locked"
+     * SPECIAL, PUBLIC entries should be "locked";
+     * XXX: Their owner should lock them then instead of relying on this hack.
      */
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
         if (!EBIT_TEST(flags, KEY_PRIVATE))
@@ -1403,10 +1350,10 @@ StoreEntry::validLength() const
         return 1;
     }
 
-    if (reply->sline.status == HTTP_NOT_MODIFIED)
+    if (reply->sline.status() == Http::scNotModified)
         return 1;
 
-    if (reply->sline.status == HTTP_NO_CONTENT)
+    if (reply->sline.status() == Http::scNoContent)
         return 1;
 
     diff = reply->hdr_sz + reply->content_length - objectLen();
@@ -1541,6 +1488,25 @@ StoreEntry::validToSend() const
     if (EBIT_TEST(flags, ENTRY_ABORTED))
         return 0;
 
+    // now check that the entry has a cache backing or is collapsed
+    if (swap_filen > -1) // backed by a disk cache
+        return 1;
+
+    if (swappingOut()) // will be backed by a disk cache
+        return 1;
+
+    if (!mem_obj) // not backed by a memory cache and not collapsed
+        return 0;
+
+    if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
+        return 0;
+
+    // StoreEntry::storeClientType() assumes DISK_CLIENT here, but there is no
+    // disk cache backing so we should not rely on the store cache at all. This
+    // is wrong for range requests that could feed off nibbled memory (XXX).
+    if (mem_obj->inmem_lo) // in local memory cache, but got nibbled at
+        return 0;
+
     return 1;
 }
 
@@ -1644,8 +1610,6 @@ StoreEntry::setMemStatus(mem_status_t new_status)
 
     // are we using a shared memory cache?
     if (Config.memShared && IamWorkerProcess()) {
-        // enumerate calling cases if shared memory is enabled
-        assert(new_status != IN_MEMORY || EBIT_TEST(flags, ENTRY_SPECIAL));
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
         // Shared memory cache does not have a policy that needs updates.
@@ -1659,19 +1623,19 @@ StoreEntry::setMemStatus(mem_status_t new_status)
         assert(mem_obj->inmem_lo == 0);
 
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-            debugs(20, 4, "StoreEntry::setMemStatus: not inserting special " << mem_obj->url << " into policy");
+            debugs(20, 4, "not inserting special " << *this << " into policy");
         } else {
             mem_policy->Add(mem_policy, this, &mem_obj->repl);
-            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url << " key: " << getMD5Text());
+            debugs(20, 4, "inserted " << *this << " key: " << getMD5Text());
         }
 
         ++hot_obj_count; // TODO: maintain for the shared hot cache as well
     } else {
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-            debugs(20, 4, "StoreEntry::setMemStatus: special entry " << mem_obj->url);
+            debugs(20, 4, "not removing special " << *this << " from policy");
         } else {
             mem_policy->Remove(mem_policy, this, &mem_obj->repl);
-            debugs(20, 4, "StoreEntry::setMemStatus: removed mem node " << mem_obj->url);
+            debugs(20, 4, "removed " << *this);
         }
 
         --hot_obj_count;
@@ -1688,24 +1652,22 @@ StoreEntry::url() const
     else if (mem_obj == NULL)
         return "[null_mem_obj]";
     else
-        return mem_obj->url;
+        return mem_obj->storeId();
+}
+
+MemObject *
+StoreEntry::makeMemObject()
+{
+    if (!mem_obj)
+        mem_obj = new MemObject();
+    return mem_obj;
 }
 
 void
-StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
+StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const HttpRequestMethod &aMethod)
 {
-    if (mem_obj)
-        return;
-
-    if (hidden_mem_obj) {
-        debugs(20, 3, HERE << "restoring " << hidden_mem_obj);
-        mem_obj = hidden_mem_obj;
-        hidden_mem_obj = NULL;
-        mem_obj->resetUrls(aUrl, aLogUrl);
-        return;
-    }
-
-    mem_obj = new MemObject(aUrl, aLogUrl);
+    makeMemObject();
+    mem_obj->setUris(aUrl, aLogUrl, aMethod);
 }
 
 /* this just sets DELAY_SENDING */
@@ -1878,6 +1840,7 @@ StoreEntry::startWriting()
 
     rep->packHeadersInto(&p);
     mem_obj->markEndOfReplyHeaders();
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(&p);
 
@@ -1910,21 +1873,12 @@ StoreEntry::trimMemory(const bool preserveSwappable)
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
         return; // cannot trim because we do not load them again
 
-    if (!preserveSwappable) {
-        if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
-            /* Nothing to do */
-            return;
-        }
-        /*
-         * Its not swap-able, and we're about to delete a chunk,
-         * so we must make it PRIVATE.  This is tricky/ugly because
-         * for the most part, we treat swapable == cachable here.
-         */
-        releaseRequest();
-        mem_obj->trimUnSwappable ();
-    } else {
-        mem_obj->trimSwappable ();
-    }
+    if (preserveSwappable)
+        mem_obj->trimSwappable();
+    else
+        mem_obj->trimUnSwappable();
+
+    debugs(88, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
 }
 
 bool
@@ -1965,6 +1919,17 @@ StoreEntry::modifiedSince(HttpRequest * request) const
         debugs(88, 3, "--> YES: same LMT, different length");
         return true;
     }
+}
+
+bool
+StoreEntry::hasEtag(ETag &etag) const
+{
+    if (const HttpReply *reply = getReply()) {
+        etag = reply->header.getETag(HDR_ETAG);
+        if (etag.str)
+            return true;
+    }
+    return false;
 }
 
 bool
@@ -2046,9 +2011,50 @@ StoreEntry::isAccepting() const
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
-    return os << e.swap_filen << '@' << e.swap_dirn << '=' <<
-           e.mem_status << '/' << e.ping_status << '/' << e.store_status << '/' <<
-           e.swap_status;
+    os << "e:";
+
+    if (e.mem_obj) {
+        if (e.mem_obj->xitTable.index > -1)
+            os << 't' << e.mem_obj->xitTable.index;
+        if (e.mem_obj->memCache.index > -1)
+            os << 'm' << e.mem_obj->memCache.index;
+    }
+    if (e.swap_filen > -1 || e.swap_dirn > -1)
+        os << 'd' << e.swap_filen << '@' << e.swap_dirn;
+
+    os << '=';
+
+    // print only non-default status values, using unique letters
+    if (e.mem_status != NOT_IN_MEMORY ||
+            e.store_status != STORE_PENDING ||
+            e.swap_status != SWAPOUT_NONE ||
+            e.ping_status != PING_NONE) {
+        if (e.mem_status != NOT_IN_MEMORY) os << 'm';
+        if (e.store_status != STORE_PENDING) os << 's';
+        if (e.swap_status != SWAPOUT_NONE) os << 'w' << e.swap_status;
+        if (e.ping_status != PING_NONE) os << 'p' << e.ping_status;
+    }
+
+    // print only set flags, using unique letters
+    if (e.flags) {
+        if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) os << 'S';
+        if (EBIT_TEST(e.flags, ENTRY_REVALIDATE)) os << 'R';
+        if (EBIT_TEST(e.flags, DELAY_SENDING)) os << 'P';
+        if (EBIT_TEST(e.flags, RELEASE_REQUEST)) os << 'X';
+        if (EBIT_TEST(e.flags, REFRESH_REQUEST)) os << 'F';
+        if (EBIT_TEST(e.flags, ENTRY_DISPATCHED)) os << 'D';
+        if (EBIT_TEST(e.flags, KEY_PRIVATE)) os << 'I';
+        if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) os << 'W';
+        if (EBIT_TEST(e.flags, ENTRY_NEGCACHED)) os << 'N';
+        if (EBIT_TEST(e.flags, ENTRY_VALIDATED)) os << 'V';
+        if (EBIT_TEST(e.flags, ENTRY_BAD_LENGTH)) os << 'L';
+        if (EBIT_TEST(e.flags, ENTRY_ABORTED)) os << 'A';
+    }
+
+    if (e.mem_obj && e.mem_obj->smpCollapsed)
+        os << 'O';
+
+    return os << '/' << &e << '*' << e.locks();
 }
 
 /* NullStoreEntry */
@@ -2078,7 +2084,3 @@ NullStoreEntry::getSerialisedMetaData()
 {
     return NULL;
 }
-
-#if !_USE_INLINE_
-#include "Store.cci"
-#endif

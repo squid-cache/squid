@@ -7,7 +7,7 @@
 #include "ssl/support.h"
 
 /* support.cc says this is needed */
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "comm.h"
 #include "ip/Address.h"

@@ -37,13 +37,13 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
-#include "client_side.h"
+#include "auth/AclProxyAuth.h"
 #include "auth/Config.h"
-#include "auth/Scheme.h"
 #include "auth/Gadgets.h"
+#include "auth/Scheme.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
-#include "auth/AclProxyAuth.h"
+#include "client_side.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -133,13 +133,13 @@ authenticateReset(void)
     authenticateRotate();
 
     /* free current global config details too. */
-    Auth::TheConfig.clean();
+    Auth::TheConfig.clear();
 }
 
 AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
         auth_user(anAuth_user)
 {
-    key = (void *)anAuth_user->username();
+    key = (void *)anAuth_user->userKey();
     next = NULL;
     hash_join(proxy_auth_username_cache, (hash_link *) this);
 }

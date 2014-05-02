@@ -33,33 +33,33 @@
  */
 
 #include "squid.h"
-#include "acl/HttpStatus.h"
 #include "acl/FilledChecklist.h"
+#include "acl/HttpStatus.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "HttpReply.h"
-#include "wordlist.h"
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
+#include <climits>
 
 static void aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);
-static int aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, http_status status);
+static int aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, Http::StatusCode status);
 
 acl_httpstatus_data::acl_httpstatus_data(int x) : status1(x), status2(x) { ; }
 
 acl_httpstatus_data::acl_httpstatus_data(int x, int y) : status1(x), status2(y) { ; }
 
-void acl_httpstatus_data::toStr(char* buf, int len) const
+SBuf
+acl_httpstatus_data::toStr() const
 {
+    SBuf rv;
     if (status2 == INT_MAX)
-        snprintf(buf, len, "%d-", status1);
+        rv.Printf("%d-", status1);
     else if (status1 == status2)
-        snprintf(buf, len, "%d", status1);
+        rv.Printf("%d", status1);
     else
-        snprintf(buf, len, "%d-%d", status1, status2);
+        rv.Printf("%d-%d", status1, status2);
+    return rv;
 }
 
 int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_data* const& b)
@@ -71,13 +71,11 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
         ret = aclHTTPStatusCompare(a, b);
 
     if (ret == 0) {
-        char bufa[8];
-        char bufb[8];
-        a->toStr(bufa, sizeof(bufa));
-        b->toStr(bufb, sizeof(bufb));
-        debugs(28, DBG_CRITICAL, "WARNING: '" << bufa << "' is a subrange of '" << bufb << "'");
-        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << bufa << "' is ignored to keep splay tree searching predictable");
-        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << bufb << "' from the ACL named '" << AclMatchedName << "'");
+        const SBuf sa = a->toStr();
+        const SBuf sb = b->toStr();
+        debugs(28, DBG_CRITICAL, "WARNING: '" << sa << "' is a subrange of '" << sb << "'");
+        debugs(28, DBG_CRITICAL, "WARNING: because of this '" << sa << "' is ignored to keep splay tree searching predictable");
+        debugs(28, DBG_CRITICAL, "WARNING: You should probably remove '" << sb << "' from the ACL named '" << AclMatchedName << "'");
     }
 
     return ret;
@@ -156,11 +154,11 @@ aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist)
 int
 ACLHTTPStatus::match(ACLChecklist *checklist)
 {
-    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status);
+    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status());
 }
 
 int
-aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, http_status status)
+aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, const Http::StatusCode status)
 {
 
     acl_httpstatus_data X(status);
@@ -186,15 +184,14 @@ aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const
 static void
 aclDumpHTTPStatusListWalkee(acl_httpstatus_data * const &node, void *state)
 {
-    static char buf[8];
-    node->toStr(buf, sizeof(buf));
-    wordlistAdd((wordlist **)state, buf);
+    // state is a SBufList*
+    static_cast<SBufList *>(state)->push_back(node->toStr());
 }
 
-wordlist *
+SBufList
 ACLHTTPStatus::dump() const
 {
-    wordlist *w = NULL;
+    SBufList w;
     data->walk(aclDumpHTTPStatusListWalkee, &w);
     return w;
 }

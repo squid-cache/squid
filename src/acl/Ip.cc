@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "acl/Ip.h"
 #include "acl/Checklist.h"
+#include "acl/Ip.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "ip/tools.h"
@@ -62,20 +62,7 @@ ACLIP::operator delete (void *address)
 void
 ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
 {
-    char tmpbuf[ ((MAX_IPSTRLEN*2)+6) ]; // space for 2 IPs and a CIDR mask(3) and seperators(3).
-    MemBuf mb;
-    wordlist **W = static_cast<wordlist **>(state);
-    tmpbuf[0] = '\0';
-
-    mb.init();
-    assert(mb.max_capacity > 0 && 1==1 );
-
-    ip->toStr(tmpbuf, sizeof(tmpbuf) );
-    assert(mb.max_capacity > 0 && 2==2 );
-    mb.append(tmpbuf, strlen(tmpbuf) );
-    assert(mb.max_capacity > 0 && 3==3);
-    wordlistAdd(W, mb.buf);
-    mb.clean();
+    static_cast<SBufList *>(state)->push_back(ip->toSBuf());
 }
 
 /**
@@ -92,28 +79,38 @@ acl_ip_data::toStr(char *buf, int len) const
     char *b3 = NULL;
     int rlen = 0;
 
-    addr1.NtoA(b1, len - rlen );
+    addr1.toStr(b1, len - rlen );
     rlen = strlen(buf);
     b2 = buf + rlen;
 
-    if (!addr2.IsAnyAddr()) {
+    if (!addr2.isAnyAddr()) {
         b2[0] = '-';
         ++rlen;
-        addr2.NtoA(&(b2[1]), len - rlen );
+        addr2.toStr(&(b2[1]), len - rlen );
         rlen = strlen(buf);
     } else
         b2[0] = '\0';
 
     b3 = buf + rlen;
 
-    if (!mask.IsNoAddr()) {
+    if (!mask.isNoAddr()) {
         b3[0] = '/';
         ++rlen;
-        int cidr =  mask.GetCIDR() - (addr1.IsIPv4()?96:0);
+        int cidr =  mask.cidr() - (addr1.isIPv4()?96:0);
         snprintf(&(b3[1]), (len-rlen), "%u", (unsigned int)(cidr<0?0:cidr) );
     } else
         b3[0] = '\0';
 }
+
+SBuf
+acl_ip_data::toSBuf() const
+{
+    const int bufsz = MAX_IPSTRLEN*2+6;
+    static char tmpbuf[ bufsz ];
+    toStr(tmpbuf,bufsz);
+    return SBuf(tmpbuf);
+}
+
 
 /*
  * aclIpAddrNetworkCompare - The guts of the comparison for IP ACLs
@@ -128,12 +125,12 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
     Ip::Address A = p->addr1;
 
     /* apply netmask */
-    A.ApplyMask(q->mask);
+    A.applyMask(q->mask);
 
     debugs(28,9, "aclIpAddrNetworkCompare: compare: " << p->addr1 << "/" << q->mask << " (" << A << ")  vs " <<
            q->addr1 << "-" << q->addr2 << "/" << q->mask);
 
-    if (q->addr2.IsAnyAddr()) {       /* single address check */
+    if (q->addr2.isAnyAddr()) {       /* single address check */
 
         return A.matchIPAddr( q->addr1 );
 
@@ -197,7 +194,7 @@ acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
     int a1 = 0;
 
     /* default is a mask that doesn't change any IP */
-    mask.SetNoAddr();
+    mask.setNoAddr();
 
     if (!asc || !*asc) {
         return true;
@@ -207,7 +204,7 @@ acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
     if ((sscanf(asc, "%d%c", &a1, &junk)==1) &&
             (a1 <= 128) && (a1  >= 0)
        ) {
-        return mask.ApplyMask(a1, ctype);
+        return mask.applyMask(a1, ctype);
     }
 
     /* dotted notation */
@@ -215,16 +212,16 @@ acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
     if ((mask = asc)) {
         /* HACK: IPv4 netmasks don't cleanly map to IPv6 masks. */
         debugs(28, DBG_CRITICAL, "WARNING: Netmasks are deprecated. Please use CIDR masks instead.");
-        if (mask.IsIPv4()) {
+        if (mask.isIPv4()) {
             /* locate what CIDR mask was _probably_ meant to be in its native protocol format. */
             /* this will completely crap out with a security fail-open if the admin is playing mask tricks */
             /* however, thats their fault, and we do warn. see bug 2601 for the effects if we don't do this. */
-            unsigned int m = mask.GetCIDR();
+            unsigned int m = mask.cidr();
             debugs(28, DBG_CRITICAL, "WARNING: IPv4 netmasks are particularly nasty when used to compare IPv6 to IPv4 ranges.");
             debugs(28, DBG_CRITICAL, "WARNING: For now we will assume you meant to write /" << m);
             /* reset the mask completely, and crop to the CIDR boundary back properly. */
-            mask.SetNoAddr();
-            return mask.ApplyMask(m,AF_INET);
+            mask.setNoAddr();
+            return mask.applyMask(m,AF_INET);
         }
         return true;
     }
@@ -260,38 +257,38 @@ acl_ip_data::FactoryParse(const char *t)
     debugs(28, 5, "aclIpParseIpData: " << t);
 
     /* Special ACL RHS "all" matches entire Internet */
-    if (strcasecmp(t, "all") == 0) {
+    if (strcmp(t, "all") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'all' found.");
-        q->addr1.SetAnyAddr();
-        q->addr2.SetEmpty();
-        q->mask.SetAnyAddr();
+        q->addr1.setAnyAddr();
+        q->addr2.setEmpty();
+        q->mask.setAnyAddr();
         return q;
     }
 
     /* Detect some old broken strings equivalent to 'all'.
      * treat them nicely. But be loud until its fixed.  */
-    if (strcasecmp(t, "0/0") == 0 || strcasecmp(t, "0.0.0.0/0") == 0 || strcasecmp(t, "0.0.0.0/0.0.0.0") == 0 ||
-            strcasecmp(t, "0.0.0.0-255.255.255.255") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
+    if (strcmp(t, "0/0") == 0 || strcmp(t, "0.0.0.0/0") == 0 || strcmp(t, "0.0.0.0/0.0.0.0") == 0 ||
+            strcmp(t, "0.0.0.0-255.255.255.255") == 0 || strcmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
 
         debugs(28,DBG_CRITICAL, "ERROR: '" << t << "' needs to be replaced by the term 'all'.");
         debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
-        q->addr1.SetAnyAddr();
-        q->addr2.SetEmpty();
-        q->mask.SetAnyAddr();
+        q->addr1.setAnyAddr();
+        q->addr2.setEmpty();
+        q->mask.setAnyAddr();
         return q;
     }
 
     /* Special ACL RHS "ipv4" matches IPv4 Internet
      * A nod to IANA; we include the entire class space in case
      * they manage to find a way to recover and use it */
-    if (strcasecmp(t, "ipv4") == 0) {
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(0, AF_INET);
+    if (strcmp(t, "ipv4") == 0) {
+        q->mask.setNoAddr();
+        q->mask.applyMask(0, AF_INET);
         return q;
     }
 
     /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
-    if (strcasecmp(t, "ipv6") == 0) {
+    if (strcmp(t, "ipv6") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
         r = q; // save head of the list for result.
 
@@ -299,43 +296,43 @@ acl_ip_data::FactoryParse(const char *t)
 
         /* Future global unicast space: 1000::/4 */
         q->addr1 = "1000::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(4, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(4, AF_INET6);
 
         /* Current global unicast space: 2000::/4 = (2000::/4 - 3000::/4) */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "2000::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(3, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(3, AF_INET6);
 
         /* Future global unicast space: 4000::/2 = (4000::/4 - 7000::/4) */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "4000::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(2, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(2, AF_INET6);
 
         /* Future global unicast space: 8000::/2 = (8000::/4 - B000::/4) */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "8000::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(2, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(2, AF_INET6);
 
         /* Future global unicast space: C000::/3 = (C000::/4 - D000::/4) */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "C000::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(3, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(3, AF_INET6);
 
         /* Future global unicast space: E000::/4 */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "E000::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(4, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(4, AF_INET6);
 
         /* F000::/4 is mostly reserved non-unicast. With some exceptions ... */
 
@@ -343,15 +340,15 @@ acl_ip_data::FactoryParse(const char *t)
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "FC00::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(7, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(7, AF_INET6);
 
         /* Link-Local unicast space: FE80::/10 */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "FE80::";
-        q->mask.SetNoAddr();
-        q->mask.ApplyMask(10, AF_INET6);
+        q->mask.setNoAddr();
+        q->mask.applyMask(10, AF_INET6);
 
         return r;
     }
@@ -438,8 +435,8 @@ acl_ip_data::FactoryParse(const char *t)
 
             debugs(28, 3, "aclIpParseIpData: Located host/IP: '" << r->addr1 << "'");
 
-            r->addr2.SetAnyAddr();
-            r->mask.SetNoAddr();
+            r->addr2.setAnyAddr();
+            r->mask.setNoAddr();
 
             Q = &r->next;
 
@@ -474,7 +471,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr2 */
     if (!*addr2)
-        q->addr2.SetAnyAddr();
+        q->addr2.setAnyAddr();
     else if (!(q->addr2=addr2) ) {
         debugs(28, DBG_CRITICAL, "aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
@@ -491,13 +488,13 @@ acl_ip_data::FactoryParse(const char *t)
     }
 
     changed = 0;
-    changed += q->addr1.ApplyMask(q->mask);
-    changed += q->addr2.ApplyMask(q->mask);
+    changed += q->addr1.applyMask(q->mask);
+    changed += q->addr2.applyMask(q->mask);
 
     if (changed)
         debugs(28, DBG_CRITICAL, "aclIpParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
 
-    debugs(28,9, HERE << "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.GetCIDR() <<")");
+    debugs(28,9, HERE << "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.cidr() <<")");
 
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
     /* Same as IPv6 (not so trivial to depict) */
@@ -507,14 +504,9 @@ acl_ip_data::FactoryParse(const char *t)
 void
 ACLIP::parse()
 {
-    char *t = NULL;
+    flags.parseFlags();
 
-    flags.parseFlags(t);
-
-    if (!t)
-        return;
-
-    do {
+    while (char *t = strtokFile()) {
         acl_ip_data *q = acl_ip_data::FactoryParse(t);
 
         while (q != NULL) {
@@ -524,7 +516,7 @@ ACLIP::parse()
             data = data->insert(q, acl_ip_data::NetworkCompare);
             q = next_node;
         }
-    } while ((t = strtokFile()));
+    }
 }
 
 ACLIP::~ACLIP()
@@ -533,16 +525,16 @@ ACLIP::~ACLIP()
         data->destroy(IPSplay::DefaultFree);
 }
 
-wordlist *
+SBufList
 ACLIP::dump() const
 {
-    wordlist *w = NULL;
-    data->walk (DumpIpListWalkee, &w);
-    return w;
+    SBufList sl;
+    data->walk(DumpIpListWalkee, &sl);
+    return sl;
 }
 
 bool
-ACLIP::empty () const
+ACLIP::empty() const
 {
     return data->empty();
 }
@@ -558,14 +550,14 @@ ACLIP::match(Ip::Address &clientip)
      * MUST be set to empty.
      */
     ClientAddress.addr1 = clientip;
-    ClientAddress.addr2.SetEmpty();
-    ClientAddress.mask.SetEmpty();
+    ClientAddress.addr2.setEmpty();
+    ClientAddress.mask.setEmpty();
 
     data = data->splay(&ClientAddress, aclIpAddrNetworkCompare);
     debugs(28, 3, "aclIpMatchIp: '" << clientip << "' " << (splayLastResult ? "NOT found" : "found"));
     return !splayLastResult;
 }
 
-acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
+acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+acl_ip_data::acl_ip_data(Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}

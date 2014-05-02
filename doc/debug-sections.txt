@@ -7,7 +7,6 @@ section --    Unlink Daemon
 section --    WWW Client
 section 00    Announcement Server
 section 00    Client Database
-section 00    DNS Resolver Daemon
 section 00    Debug Routines
 section 00    Hash Tables
 section 00    UFS Store Dump Tool
@@ -68,7 +67,6 @@ section 30    Ident (RFC 931)
 section 31    Hypertext Caching Protocol
 section 32    Asynchronous Disk I/O
 section 33    Client-side Routines
-section 34    Dnsserver interface
 section 35    FQDN Cache
 section 37    ICMP Routines
 section 38    Network Measurement Database
@@ -89,7 +87,6 @@ section 46    Access Log - Squid ICAP Logging
 section 46    Access Log - Squid format
 section 46    Access Log - Squid referer format
 section 46    Access Log - Squid useragent format
-section 47    Store COSS Directory Routines
 section 47    Store Directory Routines
 section 48    Persistent Connections
 section 49    SNMP Interface
@@ -128,7 +125,6 @@ section 78    DNS lookups; interacts with lib/rfc1035.c
 section 79    Disk IO Routines
 section 79    Squid-side DISKD I/O functions.
 section 79    Squid-side Disk I/O functions.
-section 79    Storage Manager COSS Interface
 section 79    Storage Manager UFS Interface
 section 79   Disk IO Routines
 section 80    WCCP Support

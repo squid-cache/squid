@@ -6,8 +6,8 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
-Auth::Digest::User::User(Auth::Config *aConfig) :
-        Auth::User(aConfig),
+Auth::Digest::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+        Auth::User(aConfig, aRequestRealm),
         HA1created(0)
 {
     memset(HA1, 0, sizeof(HA1));
@@ -49,4 +49,17 @@ Auth::Digest::User::ttl() const
     int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<Config*>(Auth::Config::Find("digest"))->noncemaxduration;
 
     return min(nonce_ttl, global_ttl);
+}
+
+digest_nonce_h *
+Auth::Digest::User::currentNonce()
+{
+    digest_nonce_h *nonce = NULL;
+    dlink_node *link = nonces.tail;
+    if (link) {
+        nonce = static_cast<digest_nonce_h *>(link->data);
+        if (authDigestNonceIsStale(nonce))
+            nonce = NULL;
+    }
+    return nonce;
 }

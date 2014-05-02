@@ -31,19 +31,17 @@
  */
 
 #include "squid.h"
-#include "base/StringArea.h"
+#include "HttpHdrCc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
-#include "HttpHdrCc.h"
+#include "SBuf.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
 
-#if HAVE_MAP
 #include <map>
-#endif
 
 /* a row in the table used for parsing cache control header and statistics */
 typedef struct {
@@ -71,7 +69,7 @@ static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
 };
 
 /// Map an header name to its type, to expedite parsing
-typedef std::map<const StringArea,http_hdr_cc_type> CcNameToIdMap_t;
+typedef std::map<const SBuf,http_hdr_cc_type> CcNameToIdMap_t;
 static CcNameToIdMap_t CcNameToIdMap;
 
 /// used to walk a table of http_header_cc_type structs
@@ -90,7 +88,7 @@ httpHdrCcInitModule(void)
     for (int32_t i = 0; i < CC_ENUM_END; ++i) {
         const HttpHeaderCcFields &f=CcAttrs[i];
         assert(i == f.id); /* verify assumption: the id is the key into the array */
-        const StringArea k(f.name,strlen(f.name));
+        const SBuf k(f.name);
         CcNameToIdMap[k]=f.id;
     }
 }
@@ -131,7 +129,7 @@ HttpHdrCc::parse(const String & str)
         }
 
         /* find type */
-        const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(StringArea(item,nlen));
+        const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(SBuf(item,nlen));
         if (i==CcNameToIdMap.end())
             type=CC_OTHER;
         else
@@ -194,14 +192,41 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
+        case CC_PRIVATE: {
+            String temp;
+            if (!p)  {
+                // Value parameter is optional.
+                private_.clean();
+            }            else if (/* p &&*/ httpHeaderParseQuotedString(p, (ilen-nlen-1), &temp)) {
+                private_.append(temp);
+            }            else {
+                debugs(65, 2, "cc: invalid private= specs near '" << item << "'");
+            }
+            // to be safe we ignore broken parameters, but always remember the 'private' part.
+            setMask(type,true);
+        }
+        break;
+
+        case CC_NO_CACHE: {
+            String temp;
+            if (!p) {
+                // On Requests, missing value parameter is expected syntax.
+                // On Responses, value parameter is optional.
+                setMask(type,true);
+                no_cache.clean();
+            } else if (/* p &&*/ httpHeaderParseQuotedString(p, (ilen-nlen-1), &temp)) {
+                // On Requests, a value parameter is invalid syntax.
+                // XXX: identify when parsing request header and dump err message here.
+                setMask(type,true);
+                no_cache.append(temp);
+            } else {
+                debugs(65, 2, "cc: invalid no-cache= specs near '" << item << "'");
+            }
+        }
+        break;
+
         case CC_PUBLIC:
             Public(true);
-            break;
-        case CC_PRIVATE:
-            Private(true);
-            break;
-        case CC_NO_CACHE:
-            noCache(true);
             break;
         case CC_NO_STORE:
             noStore(true);

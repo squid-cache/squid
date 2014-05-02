@@ -9,6 +9,7 @@ Ssl::Config::Config():
 #endif
         ssl_crt_validator(NULL)
 {
+    ssl_crt_validator_Children.concurrency = 1;
 }
 
 Ssl::Config::~Config()

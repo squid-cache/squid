@@ -14,9 +14,7 @@
 #if HAVE_OPENSSL_TXT_DB_H
 #include <openssl/txt_db.h>
 #endif
-#if HAVE_STRING
 #include <string>
-#endif
 
 namespace Ssl
 {
@@ -26,10 +24,10 @@ namespace Ssl
  because they are used by ssl_crtd.
  */
 
-#if OPENSSL_VERSION_NUMBER < 0x00909000L
-typedef SSL_METHOD * ContextMethod;
-#else
+#if SQUID_USE_CONST_SSL_METHOD
 typedef const SSL_METHOD * ContextMethod;
+#else
+typedef SSL_METHOD * ContextMethod;
 #endif
 
 /**

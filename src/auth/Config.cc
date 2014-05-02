@@ -32,9 +32,14 @@
 
 #include "squid.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
+#include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
+#include "format/Format.h"
 #include "globals.h"
+#include "Store.h"
 
 Auth::ConfigVector Auth::TheConfig;
 
@@ -46,7 +51,7 @@ Auth::ConfigVector Auth::TheConfig;
  * It may also be NULL reflecting that no user could be created.
  */
 Auth::UserRequest::Pointer
-Auth::Config::CreateAuthUser(const char *proxy_auth)
+Auth::Config::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
     assert(proxy_auth != NULL);
     debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
@@ -58,8 +63,17 @@ Auth::Config::CreateAuthUser(const char *proxy_auth)
                "Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
         return NULL;
     }
+    static MemBuf rmb;
+    rmb.reset();
+    if (config->keyExtras) {
+        // %credentials and %username, which normally included in
+        // request_format, are - at this time, but that is OK
+        // because user name is added to key explicitly, and we do
+        // not want to store authenticated credentials at all.
+        config->keyExtras->assemble(rmb, al, 0);
+    }
 
-    return config->decode(proxy_auth);
+    return config->decode(proxy_auth, rmb.hasContent() ? rmb.content() : NULL);
 }
 
 Auth::Config *
@@ -76,3 +90,62 @@ Auth::Config::Find(const char *proxy_auth)
 void
 Auth::Config::registerWithCacheManager(void)
 {}
+
+void
+Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
+{
+    if (strcmp(param_str, "key_extras") == 0) {
+        keyExtrasLine = ConfigParser::NextQuotedToken();
+        Format::Format *nlf =  new ::Format::Format(scheme->type());
+        if (!nlf->parse(keyExtrasLine.termedBuf())) {
+            debugs(29, DBG_CRITICAL, "FATAL: Failed parsing key_extras formatting value");
+            self_destruct();
+            return;
+        }
+        if (keyExtras)
+            delete keyExtras;
+
+        keyExtras = nlf;
+
+        if (char *t = strtok(NULL, w_space)) {
+            debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
+            self_destruct();
+        }
+    } else {
+        debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
+    }
+}
+
+void
+Auth::Config::dump(StoreEntry *entry, const char *name, Auth::Config *scheme)
+{
+    if (keyExtrasLine.size() > 0)
+        storeAppendPrintf(entry, "%s %s key_extras \"%s\"\n", name, scheme->type(), keyExtrasLine.termedBuf());
+}
+
+void
+Auth::Config::done()
+{
+    delete keyExtras;
+    keyExtras = NULL;
+    keyExtrasLine.clean();
+}
+
+Auth::User::Pointer
+Auth::Config::findUserInCache(const char *nameKey, Auth::Type authType)
+{
+    AuthUserHashPointer *usernamehash;
+    debugs(29, 9, "Looking for user '" << nameKey << "'");
+
+    if (nameKey && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, nameKey)))) {
+        while (usernamehash) {
+            if ((usernamehash->user()->auth_type == authType) &&
+                    !strcmp(nameKey, (char const *)usernamehash->key))
+                return usernamehash->user();
+
+            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
+        }
+    }
+
+    return NULL;
+}

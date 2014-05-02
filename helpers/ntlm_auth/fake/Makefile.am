@@ -7,6 +7,7 @@ ntlm_fake_auth_LDADD = \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
@@ -16,5 +17,5 @@ INCLUDES += -I$(top_srcdir)/lib
 ## ntlm_fake_auth.pl: ntlm_fake_auth.pl.in
 ##	$(subst_perlshell)
 
-EXTRA_DIST = config.test \
+EXTRA_DIST = required.m4 \
 	ntlm_fake_auth.pl.in
