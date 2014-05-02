@@ -34,7 +34,7 @@
 #include "defines.h"
 #include "ip/Address.h"
 
-#if USE_SSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
 
@@ -73,6 +73,10 @@ public:
     void noteUse(PconnPool *);
 
 public:
+
+    /// global table of FD and their state.
+    static fde* Table;
+
     unsigned int type;
     unsigned short remote_port;
 
@@ -128,7 +132,7 @@ public:
     CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
-#if USE_SSL
+#if USE_OPENSSL
     SSL *ssl;
     SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
 #endif
@@ -153,7 +157,7 @@ private:
     inline void clear() {
         type = 0;
         remote_port = 0;
-        local_addr.SetEmpty();
+        local_addr.setEmpty();
         tosToServer = '\0';
         nfmarkToServer = 0;
         sock_family = 0;
@@ -181,7 +185,7 @@ private:
         wstate = NULL;
         read_method = NULL;
         write_method = NULL;
-#if USE_SSL
+#if USE_OPENSSL
         ssl = NULL;
         dynamicSslContext = NULL;
 #endif
@@ -192,6 +196,8 @@ private:
         nfmarkFromServer = 0;
     }
 };
+
+#define fd_table fde::Table
 
 int fdNFree(void);
 

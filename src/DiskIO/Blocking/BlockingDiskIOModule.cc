@@ -49,7 +49,7 @@ BlockingDiskIOModule::init()
 {}
 
 void
-BlockingDiskIOModule::shutdown()
+BlockingDiskIOModule::gracefulShutdown()
 {}
 
 DiskIOStrategy*

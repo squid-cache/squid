@@ -90,8 +90,6 @@ init_syntax_once(void)
 
 #endif /* not SYNTAX_TABLE */
 
-#define SYNTAX(c) re_syntax_table[c]
-
 /* Get the interface, including the syntax bits.  */
 #include "compat/GnuRegex.h"
 
@@ -889,9 +887,6 @@ static reg_errcode_t compile_range(const char **p_ptr, const char *pend, char *t
 
 #define INIT_COMPILE_STACK_SIZE 32
 
-#define COMPILE_STACK_EMPTY  (compile_stack.avail == 0)
-#define COMPILE_STACK_FULL  (compile_stack.avail == compile_stack.size)
-
 /* The next available element.  */
 #define COMPILE_STACK_TOP (compile_stack.stack[compile_stack.avail])
 
@@ -1420,7 +1415,7 @@ handle_open:
                 bufp->re_nsub++;
                 regnum++;
 
-                if (COMPILE_STACK_FULL) {
+                if (compile_stack.avail == compile_stack.size) {
                     RETALLOC(compile_stack.stack, compile_stack.size << 1,
                              compile_stack_elt_t);
                     if (compile_stack.stack == NULL)
@@ -1461,7 +1456,7 @@ handle_open:
                 if (syntax & RE_NO_BK_PARENS)
                     goto normal_backslash;
 
-                if (COMPILE_STACK_EMPTY) {
+                if (compile_stack.avail == 0) {
                     if (syntax & RE_UNMATCHED_RIGHT_PAREN_ORD)
                         goto normal_backslash;
                     else
@@ -1479,7 +1474,7 @@ handle_close:
                     STORE_JUMP(jump_past_alt, fixup_alt_jump, b - 1);
                 }
                 /* See similar code for backslashed left paren above.  */
-                if (COMPILE_STACK_EMPTY) {
+                if (compile_stack.avail == 0) {
                     if (syntax & RE_UNMATCHED_RIGHT_PAREN_ORD)
                         goto normal_char;
                     else
@@ -1832,7 +1827,7 @@ normal_char:
     if (fixup_alt_jump)
         STORE_JUMP(jump_past_alt, fixup_alt_jump, b);
 
-    if (!COMPILE_STACK_EMPTY)
+    if (compile_stack.avail != 0)
         return REG_EPAREN;
 
     free(compile_stack.stack);
@@ -2374,13 +2369,13 @@ struct re_pattern_buffer *bufp;
 
         case wordchar:
             for (j = 0; j < (1 << BYTEWIDTH); j++)
-                if (SYNTAX(j) == Sword)
+                if (re_syntax_table[j] == Sword)
                     fastmap[j] = 1;
             break;
 
         case notwordchar:
             for (j = 0; j < (1 << BYTEWIDTH); j++)
-                if (SYNTAX(j) != Sword)
+                if (re_syntax_table[j] != Sword)
                     fastmap[j] = 1;
             break;
 
@@ -2732,21 +2727,31 @@ static boolean group_match_null_string_p(unsigned char **p, unsigned char *end, 
 /* Test if at very beginning or at very end of the virtual concatenation
  * of `string1' and `string2'.  If only one string, it's `string2'.  */
 #define AT_STRINGS_BEG(d) ((d) == (size1 ? string1 : string2) || !size2)
-#define AT_STRINGS_END(d) ((d) == end2)
+static int at_strings_end(const char *d, const char *end2)
+{
+    return d == end2;
+}
 
 /* Test if D points to a character which is word-constituent.  We have
  * two special cases to check for: if past the end of string1, look at
  * the first character in string2; and if before the beginning of
  * string2, look at the last character in string1.  */
 #define WORDCHAR_P(d)							\
-  (SYNTAX ((d) == end1 ? *string2					\
-           : (d) == string2 - 1 ? *(end1 - 1) : *(d))			\
+  (re_syntax_table[(d) == end1 ? *string2					\
+           : (d) == string2 - 1 ? *(end1 - 1) : *(d)]			\
    == Sword)
+static int
+wordchar_p(const char *d, const char *end1, const char *string2)
+{
+    return re_syntax_table[(d) == end1 ? *string2
+                           : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
+           == Sword;
+}
 
 /* Test if the character before D and the one at D differ with respect
  * to being word-constituent.  */
 #define AT_WORD_BOUNDARY(d)						\
-  (AT_STRINGS_BEG (d) || AT_STRINGS_END (d)				\
+  (AT_STRINGS_BEG (d) || at_strings_end(d,end2)				\
    || WORDCHAR_P (d - 1) != WORDCHAR_P (d))
 
 /* Free everything we malloc.  */
@@ -3440,7 +3445,7 @@ restore_best_regs:
         case endline:
             DEBUG_PRINT1("EXECUTING endline.\n");
 
-            if (AT_STRINGS_END(d)) {
+            if (at_strings_end(d,end2)) {
                 if (!bufp->not_eol)
                     break;
             }
@@ -3461,7 +3466,7 @@ restore_best_regs:
             /* Match at the very end of the data.  */
         case endbuf:
             DEBUG_PRINT1("EXECUTING endbuf.\n");
-            if (AT_STRINGS_END(d))
+            if (at_strings_end(d,end2))
                 break;
             goto fail;
 
@@ -3739,21 +3744,21 @@ unconditional_jump:
 
         case wordbeg:
             DEBUG_PRINT1("EXECUTING wordbeg.\n");
-            if (WORDCHAR_P(d) && (AT_STRINGS_BEG(d) || !WORDCHAR_P(d - 1)))
+            if (wordchar_p(d,end1,string2) && (AT_STRINGS_BEG(d) || !WORDCHAR_P(d - 1)))
                 break;
             goto fail;
 
         case wordend:
             DEBUG_PRINT1("EXECUTING wordend.\n");
             if (!AT_STRINGS_BEG(d) && WORDCHAR_P(d - 1)
-                    && (!WORDCHAR_P(d) || AT_STRINGS_END(d)))
+                    && (!wordchar_p(d,end1,string2) || at_strings_end(d,end2)))
                 break;
             goto fail;
 
         case wordchar:
             DEBUG_PRINT1("EXECUTING non-Emacs wordchar.\n");
             PREFETCH();
-            if (!WORDCHAR_P(d))
+            if (!wordchar_p(d,end1,string2))
                 goto fail;
             SET_REGS_MATCHED();
             d++;
@@ -3762,7 +3767,7 @@ unconditional_jump:
         case notwordchar:
             DEBUG_PRINT1("EXECUTING non-Emacs notwordchar.\n");
             PREFETCH();
-            if (WORDCHAR_P(d))
+            if (wordchar_p(d,end1,string2))
                 goto fail;
             SET_REGS_MATCHED();
             d++;

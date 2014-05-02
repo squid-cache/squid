@@ -32,9 +32,7 @@
 
 #include "dlink.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 template <class _Arg, class _Result>
 struct unary_function {
@@ -59,18 +57,6 @@ T& for_each(dlink_list const &collection, T& visitor)
 
     return visitor;
 }
-
-template <class S>
-class Stack;
-
-template <class E, class T>
-T& for_each(Stack<E> const &collection, T& visitor)
-{
-    for (size_t index = 0; index < collection.count; ++index)
-        visitor(*(typename T::argument_type const *)collection.items[index]);
-
-    return visitor;
-};
 
 /* RBC 20030718 - use this to provide instance expecting classes a pointer to a
  * singleton

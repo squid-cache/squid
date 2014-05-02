@@ -72,7 +72,7 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, LogTags, int, const char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
@@ -132,10 +132,12 @@ _icp_common_t::getOpCode() const
 
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
         header(aHeader),
-        request(HTTPMSGLOCK(aRequest)),
+        request(aRequest),
         fd(-1),
         url(NULL)
-{}
+{
+    HTTPMSGLOCK(request);
+}
 
 ICPState::~ICPState()
 {
@@ -199,7 +201,7 @@ ICP2State::created(StoreEntry *newEntry)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, int delay)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry();
 
@@ -220,7 +222,8 @@ icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, 
 
     al->cache.caddr = caddr;
 
-    al->cache.replySize = len;
+    // XXX: move to use icp.clientReply instead
+    al->http.clientReplySz.payloadData = len;
 
     al->cache.code = logcode;
 
@@ -296,7 +299,7 @@ int
 icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
-           log_type logcode,
+           LogTags logcode,
            int delay)
 {
     icpUdpData *queue;
@@ -380,7 +383,7 @@ icpGetCommonOpcode()
     return ICP_ERR;
 }
 
-log_type
+LogTags
 icpLogFromICPCode(icp_opcode opcode)
 {
     if (opcode == ICP_ERR)
@@ -429,13 +432,13 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
-    /* absent an explicit allow, we deny all */
+    /* absent any explicit rules, we deny all */
     if (!Config.accessList.icp)
-        return true;
+        return false;
 
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
     checklist.src_addr = from;
-    checklist.my_addr.SetNoAddr();
+    checklist.my_addr.setNoAddr();
     return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
@@ -498,21 +501,15 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 #endif /* USE_ICMP */
 
     /* The peer is allowed to use this cache */
-    ICP2State *state = new ICP2State (header, icp_request);
-
+    ICP2State *state = new ICP2State(header, icp_request);
     state->fd = fd;
-
     state->from = from;
-
-    state->url = xstrdup (url);
-
+    state->url = xstrdup(url);
     state->flags = flags;
-
     state->rtt = rtt;
-
     state->src_rtt = src_rtt;
 
-    StoreEntry::getPublic (state, url, Http::METHOD_GET);
+    StoreEntry::getPublic(state, url, Http::METHOD_GET);
 
     HTTPMSGUNLOCK(icp_request);
 }
@@ -682,15 +679,15 @@ icpOpenPorts(void)
 
     icpIncomingConn = new Comm::Connection;
     icpIncomingConn->local = Config.Addrs.udp_incoming;
-    icpIncomingConn->local.SetPort(port);
+    icpIncomingConn->local.port(port);
 
-    if (!Ip::EnableIpv6 && !icpIncomingConn->local.SetIPv4()) {
+    if (!Ip::EnableIpv6 && !icpIncomingConn->local.setIPv4()) {
         debugs(12, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << icpIncomingConn->local << " is not an IPv4 address.");
         fatal("ICP port cannot be opened.");
     }
     /* split-stack for now requires default IPv4-only ICP */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpIncomingConn->local.IsAnyAddr()) {
-        icpIncomingConn->local.SetIPv4();
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpIncomingConn->local.isAnyAddr()) {
+        icpIncomingConn->local.setIPv4();
     }
 
     AsyncCall::Pointer call = asyncCall(12, 2,
@@ -702,18 +699,18 @@ icpOpenPorts(void)
                         icpIncomingConn,
                         Ipc::fdnInIcpSocket, call);
 
-    if ( !Config.Addrs.udp_outgoing.IsNoAddr() ) {
+    if ( !Config.Addrs.udp_outgoing.isNoAddr() ) {
         icpOutgoingConn = new Comm::Connection;
         icpOutgoingConn->local = Config.Addrs.udp_outgoing;
-        icpOutgoingConn->local.SetPort(port);
+        icpOutgoingConn->local.port(port);
 
-        if (!Ip::EnableIpv6 && !icpOutgoingConn->local.SetIPv4()) {
+        if (!Ip::EnableIpv6 && !icpOutgoingConn->local.setIPv4()) {
             debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << icpOutgoingConn->local << " is not an IPv4 address.");
             fatal("ICP port cannot be opened.");
         }
         /* split-stack for now requires default IPv4-only ICP */
-        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpOutgoingConn->local.IsAnyAddr()) {
-            icpOutgoingConn->local.SetIPv4();
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpOutgoingConn->local.isAnyAddr()) {
+            icpOutgoingConn->local.setIPv4();
         }
 
         enter_suid();
@@ -745,7 +742,7 @@ icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo)
 
     fd_note(conn->fd, "Incoming ICP port");
 
-    if (Config.Addrs.udp_outgoing.IsNoAddr()) {
+    if (Config.Addrs.udp_outgoing.isNoAddr()) {
         icpOutgoingConn = conn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
     }

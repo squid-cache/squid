@@ -35,19 +35,6 @@
 
 #if _SQUID_WINDOWS_
 
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#if HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>
-#endif
-#if HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
 void WIN32_ExceptionHandlerInit(void);
 
 int Win32__WSAFDIsSet(int fd, fd_set* set);

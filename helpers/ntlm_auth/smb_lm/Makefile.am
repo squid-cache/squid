@@ -9,9 +9,10 @@ ntlm_smb_lm_auth_LDADD = \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
 INCLUDES += -I$(top_srcdir)/lib
 
-EXTRA_DIST = config.test
+EXTRA_DIST = required.m4

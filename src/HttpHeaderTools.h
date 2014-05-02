@@ -1,22 +1,19 @@
 #ifndef SQUID_HTTPHEADERTOOLS_H
 #define SQUID_HTTPHEADERTOOLS_H
 
+#include "acl/forward.h"
 #include "format/Format.h"
 #include "HttpHeader.h"
 #include "typedefs.h"
 
-#if HAVE_LIST
+#include <functional>
 #include <list>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
-#if HAVE_STRING
 #include <string>
+#if HAVE_STRINGS_H
+#include <strings.h>
 #endif
 
-class acl_access;
-class ACLList;
 class HeaderWithAcl;
 class HttpHeader;
 class HttpHeaderFieldInfo;
@@ -56,8 +53,18 @@ public:
     void dumpReplacement(StoreEntry *entry, const char *optionName) const;
 
 private:
+    /// Case-insensitive std::string "less than" comparison functor.
+    /// Fast version recommended by Meyers' "Effective STL" for ASCII c-strings.
+    class NoCaseLessThan: public std::binary_function<std::string, std::string, bool>
+    {
+    public:
+        bool operator()(const std::string &lhs, const std::string &rhs) const {
+            return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
+        }
+    };
+
     /// a name:mangler map; optimize: use unordered map or some such
-    typedef std::map<std::string, headerMangler> ManglersByName;
+    typedef std::map<std::string, headerMangler, NoCaseLessThan> ManglersByName;
 
     /// one mangler for each known header
     headerMangler known[HDR_ENUM_END];
@@ -77,7 +84,7 @@ private:
 class HeaderWithAcl
 {
 public:
-    HeaderWithAcl() :  aclList(NULL), fieldId (HDR_BAD_HDR), quoted(false) {}
+    HeaderWithAcl() : aclList(NULL), valueFormat(NULL), fieldId(HDR_BAD_HDR), quoted(false) {}
 
     /// HTTP header field name
     std::string fieldName;

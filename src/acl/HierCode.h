@@ -1,8 +1,8 @@
 #ifndef SQUID_ACLHIERCODE_H
 #define SQUID_ACLHIERCODE_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "hier_code.h"
 
 /// \ingroup ACLAPI

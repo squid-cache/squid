@@ -97,7 +97,7 @@ DelayId::DelayClient(ClientHttpRequest * http)
     assert(http);
     r = http->request;
 
-    if (r->client_addr.IsNoAddr()) {
+    if (r->client_addr.isNoAddr()) {
         debugs(77, 2, "delayClient: WARNING: Called with 'NO_ADDR' address, ignoring");
         return DelayId();
     }

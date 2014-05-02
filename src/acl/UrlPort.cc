@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "acl/UrlPort.h"
-#include "acl/IntRange.h"
 #include "acl/Checklist.h"
+#include "acl/IntRange.h"
+#include "acl/UrlPort.h"
 #include "HttpRequest.h"
 
 int

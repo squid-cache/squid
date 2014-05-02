@@ -59,8 +59,6 @@ class store_client
 {
 
 public:
-    void *operator new (size_t);
-    void operator delete (void *);
     store_client(StoreEntry *);
     ~store_client();
     bool memReaderHasLowerOffset(int64_t) const;
@@ -98,6 +96,8 @@ public:
     StoreIOBuffer copyInto;
 
 private:
+    bool moreToSend() const;
+
     void fileRead();
     void scheduleDiskRead();
     void scheduleMemRead();
@@ -122,7 +122,7 @@ public:
     } _callback;
 
 private:
-    CBDATA_CLASS(store_client);
+    CBDATA_CLASS2(store_client);
 };
 
 void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);

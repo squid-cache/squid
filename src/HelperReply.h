@@ -5,9 +5,7 @@
 #include "MemBuf.h"
 #include "Notes.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 class helper_stateful_server;
 
@@ -65,7 +63,7 @@ public:
     } result;
 
     // list of key=value pairs the helper produced
-    Notes notes;
+    NotePairs notes;
 
     /// for stateful replies the responding helper 'server' needs to be preserved across callbacks
     CbcPointer<helper_stateful_server> whichServer;

@@ -137,6 +137,7 @@ MemBuf::init(mb_size_t szInit, mb_size_t szMax)
     capacity = 0;
     stolen = 0;
     grow(szInit);
+    terminate();
 }
 
 /**

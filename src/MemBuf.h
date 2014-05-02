@@ -62,9 +62,14 @@ public:
      */
     bool hasContent() const { return size > 0; }
 
-    /// these space-related methods assume no growth and allow 0-termination
-    char *space() { return buf + size; } // space to add data
-    char *space(mb_size_t required) { if (size + required > capacity) grow(size + required); return buf + size; } // space to add data
+    /// returns buffer after data; does not check space existence
+    char *space() { return buf + size; } ///< space to add data
+
+    /// Returns buffer following data, after possibly growing the buffer to
+    /// accommodate addition of the required bytes PLUS a 0-terminator char.
+    /// The caller is not required to terminate the buffer, but MemBuf does
+    /// terminate internally, trading termination for size calculation bugs.
+    char *space(mb_size_t required) { if (size + required >= capacity) grow(size + required + 1); return buf + size; }
 
     mb_size_t spaceSize() const;
 

@@ -31,7 +31,8 @@
 #ifndef SQUID_ACLCHECKLIST_H
 #define SQUID_ACLCHECKLIST_H
 
-#include "acl/Acl.h"
+#include "acl/InnerNode.h"
+#include <stack>
 
 /// ACL checklist callback
 typedef void ACLCB(allow_t, void *);
@@ -67,9 +68,6 @@ public:
     public:
         virtual void checkForAsync(ACLChecklist *) const = 0;
         virtual ~AsyncState() {}
-
-    protected:
-        void changeState (ACLChecklist *, AsyncState *) const;
     };
 
     class NullState : public AsyncState
@@ -153,24 +151,28 @@ public:
      *
      * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
-    allow_t const & fastCheck(const ACLList * list);
+    allow_t const & fastCheck(const Acl::Tree *list);
 
-    // whether the last checked ACL of the current rule needs
-    // an async operation to determine whether there was a match
-    bool asyncNeeded() const;
-    bool asyncInProgress() const;
-    void asyncInProgress(bool const);
+    /// If slow lookups are allowed, switches into "async in progress" state.
+    /// Otherwise, returns false; the caller is expected to handle the failure.
+    bool goAsync(AsyncState *);
+
+    /// Matches (or resumes matching of) a child node while maintaning
+    /// resumption breadcrumbs if a [grand]child node goes async.
+    bool matchChild(const Acl::InnerNode *parent, Acl::Nodes::const_iterator pos, const ACL *child);
+
+    /// Whether we should continue to match tree nodes or stop/pause.
+    bool keepMatching() const { return !finished() && !asyncInProgress(); }
 
     /// whether markFinished() was called
-    bool finished() const;
+    bool finished() const { return finished_; }
+    /// async call has been started and has not finished (or failed) yet
+    bool asyncInProgress() const { return asyncStage_ != asyncNone; }
     /// called when no more ACLs should be checked; sets the final answer and
     /// prints a debugging message explaining the reason for that answer
     void markFinished(const allow_t &newAnswer, const char *reason);
 
     const allow_t &currentAnswer() const { return allow_; }
-
-    void changeState(AsyncState *);
-    AsyncState *asyncState() const;
 
     // XXX: ACLs that need request or reply have to use ACLFilledChecklist and
     // should do their own checks so that we do not have to povide these two
@@ -182,46 +184,61 @@ private:
     /// Calls non-blocking check callback with the answer and destroys self.
     void checkCallback(allow_t answer);
 
-    void checkAccessList();
-    void checkForAsync();
+    void matchAndFinish();
+
+    void changeState(AsyncState *);
+    AsyncState *asyncState() const;
 
 public:
-    const acl_access *accessList;
+    const Acl::Tree *accessList;
 
     ACLCB *callback;
     void *callback_data;
 
-    /**
-     * Performs non-blocking check starting with the current rule.
-     * Used by nonBlockingCheck() to initiate the checks and by
-     * async operation callbacks to resume checks after the async
-     * operation updates the current Squid state. See nonBlockingCheck()
-     * for details on final result determination.
-     */
-    void matchNonBlocking();
+    /// Resumes non-blocking check started by nonBlockingCheck() and
+    /// suspended until some async operation updated Squid state.
+    void resumeNonBlockingCheck(AsyncState *state);
 
 private: /* internal methods */
+    /// Position of a child node within an ACL tree.
+    class Breadcrumb
+    {
+    public:
+        Breadcrumb(): parent(NULL) {}
+        Breadcrumb(const Acl::InnerNode *aParent, Acl::Nodes::const_iterator aPos): parent(aParent), position(aPos) {}
+        bool operator ==(const Breadcrumb &b) const { return parent == b.parent && (!parent || position == b.position); }
+        bool operator !=(const Breadcrumb &b) const { return !this->operator ==(b); }
+        void clear() { parent = NULL; }
+        const Acl::InnerNode *parent; ///< intermediate node in the ACL tree
+        Acl::Nodes::const_iterator position; ///< child position inside parent
+    };
+
     /// possible outcomes when trying to match a single ACL node in a list
     typedef enum { nmrMatch, nmrMismatch, nmrFinished, nmrNeedsAsync }
     NodeMatchingResult;
 
     /// prepare for checking ACLs; called once per check
     void preCheck(const char *what);
-    bool matchAclList(const ACLList * list, bool const fast);
-    bool matchNodes(const ACLList * head, bool const fast);
-    NodeMatchingResult matchNode(const ACLList &node, bool const fast);
-    void calcImplicitAnswer(const allow_t &lastSeenAction);
+    bool prepNonBlocking();
+    void completeNonBlocking();
+    void calcImplicitAnswer();
 
-    bool async_;
+    bool asyncCaller_; ///< whether the caller supports async/slow ACLs
+    bool occupied_; ///< whether a check (fast or non-blocking) is in progress
     bool finished_;
     allow_t allow_;
-    AsyncState *state_;
 
-    bool checking_;
-    bool checking() const;
-    void checking (bool const);
+    enum AsyncStage { asyncNone, asyncStarting, asyncRunning, asyncFailed };
+    AsyncStage asyncStage_;
+    AsyncState *state_;
+    Breadcrumb matchLoc_; ///< location of the node running matches() now
+    Breadcrumb asyncLoc_; ///< currentNode_ that called goAsync()
+    unsigned asyncLoopDepth_; ///< how many times the current async state has resumed
 
     bool callerGone();
+
+    /// suspended (due to an async lookup) matches() in the ACL tree
+    std::stack<Breadcrumb> matchPath;
 };
 
 #endif /* SQUID_ACLCHECKLIST_H */

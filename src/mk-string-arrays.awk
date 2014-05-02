@@ -21,7 +21,7 @@ BEGIN {
 }
 
 # when namespace is encountered store it
-/^namespace [a-zA-Z]+/	{
+/^namespace *[a-zA-Z]+/	{
 	nspath = tolower($2) "/"		# nested folder
 	namespace = $2				# code namespace reconstruct
 	next
@@ -33,7 +33,8 @@ codeSkip == 1		{ next }
 
 /^[ \t]*[A-Z]/ {
 	split($1, t, ",")			# remove ,
-	Element[++e] = t[1]
+	if (sbuf) Element[++e] = "SBuf(\"" t[1] "\")"
+	else Element[++e] = "\"" t[1] "\""
 	next
 }
 
@@ -49,18 +50,20 @@ codeSkip == 1		{ next }
 	type = t[1]
         codeSkip = 1
 
+	if (sbuf) print "#include \"SBuf.h\""
 	print "#include \"" nspath type ".h\""
 
 	# if namesapce is not empty ??
 	if (namespace) print "namespace " namespace
 	if (namespace) print "{"
 
-	print "\nconst char *" type "_str[] = {"
+	if (sbuf) print "\nconst SBuf " type "_sb[] = {"
+	else print "\nconst char * " type "_str[] = {"
 	for ( i = 1; i < e; ++i)
 		if (Wrapper[i]) print Wrapper[i]
-		else print "\t\"" Element[i] "\","
+		else print "\t" Element[i] ","
 
-	print "\t\"" Element[i] "\""
+	print "\t" Element[i]
 	print "};"
 	if (namespace) print "}; // namespace " namespace
 	next

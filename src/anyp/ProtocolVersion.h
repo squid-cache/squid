@@ -3,13 +3,15 @@
 
 #include "anyp/ProtocolType.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 namespace AnyP
 {
 
+/**
+ * Stores a protocol version label.
+ * For example HTTP/1.1 or ICY/1.0 or FTP/2.0
+ */
 class ProtocolVersion
 {
 
@@ -26,9 +28,9 @@ public:
         minor = aMinor;
     }
 
-    ProtocolType protocol;
-    unsigned int major;
-    unsigned int minor;
+    ProtocolType protocol; ///< which protocol this version is for
+    unsigned int major;    ///< major version number
+    unsigned int minor;    ///< minor version number
 
     bool operator==(const ProtocolVersion& that) const {
         if (this->protocol != that.protocol)
@@ -83,7 +85,7 @@ public:
 inline std::ostream &
 operator << (std::ostream &os, const AnyP::ProtocolVersion &v)
 {
-    return (os << AnyP::ProtocolType_str[v.protocol] << v.major << '.' << v.minor);
+    return (os << AnyP::ProtocolType_str[v.protocol] << '/' << v.major << '.' << v.minor);
 }
 
 #endif /* SQUID_ANYP_PROTOCOLVERSION_H */

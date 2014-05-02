@@ -26,9 +26,9 @@
 #ifndef _SMBLIB_SMBLIB_H
 #define _SMBLIB_SMBLIB_H
 
-#include "std-defines.h"
 #include "smblib-common.h"
 #include "smblib/smbencrypt.h"
+#include "std-defines.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -32,17 +32,10 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
-
 #undef assert
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
-#if HAVE_IOMANIP
 #include <iomanip>
-#endif
 #if defined(assert)
 #undef assert
 #endif

@@ -37,38 +37,26 @@
 #endif
 
 /* These come first */
-#if 0
-#include "asn1.h"
-#endif
 #include "snmp_error.h"
-#if 0
-#include "mibii.h"
-#include "snmp_extra.h"
-#include "snmp_dump.h"
-#endif
 
 /* I didn't touch this */
 #include "snmp_session.h"
 
 /* The various modules */
-#include "snmp_vars.h"
-#include "snmp_pdu.h"
 #include "snmp_msg.h"
+#include "snmp_pdu.h"
+#include "snmp_vars.h"
 
 /* Other functions */
-#include "snmp_coexist.h"
-#include "version.h"
-#include "snmp_error.h"
 #include "snmp_api_error.h"
+#include "snmp_coexist.h"
+#include "snmp_error.h"
+#include "version.h"
 /* Other stuff I didn't touch */
-#include "snmp_impl.h"
-#include "snmp_api.h"
-#if 0
-#include "snmp_client.h"
-#include "mib.h"
-#endif
-#include "snmp-internal.h"
 #include "parse.h"
+#include "snmp-internal.h"
+#include "snmp_api.h"
 #include "snmp_debug.h"
+#include "snmp_impl.h"
 
 #endif /* SQUID_SNMP_H */

@@ -29,9 +29,9 @@ int SMBlib_errno;
 int SMBlib_SMB_Error;
 #define SMBLIB_ERRNO
 
-#include "smblib/smblib.h"
-#include "smblib/smblib-priv.h"
 #include "rfcnb/rfcnb.h"
+#include "smblib/smblib-priv.h"
+#include "smblib/smblib.h"
 
 #include <signal.h>
 #if HAVE_STRING_H
@@ -152,7 +152,7 @@ SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
 
     calling[strlen(con -> myname)] = 0;    /* Make it a string */
 
-    if (strcmp(con -> address, "") == 0)
+    if (strlen(con -> address) == 0)
         address = con -> desthost;
     else
         address = con -> address;
@@ -268,7 +268,7 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
 
     calling[strlen(con -> myname)] = 0;    /* Make it a string */
 
-    if (strcmp(con -> address, "") == 0)
+    if (strlen(con -> address) == 0)
         address = con -> desthost;
     else
         address = con -> address;

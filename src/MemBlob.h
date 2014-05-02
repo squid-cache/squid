@@ -1,6 +1,4 @@
 /*
- * MemBlob.h (C) 2009 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -46,6 +44,8 @@ public:
     /// dumps class-wide statistics
     std::ostream& dump(std::ostream& os) const;
 
+    MemBlobStats& operator += (const MemBlobStats&);
+
 public:
     uint64_t alloc;     ///< number of MemBlob instances created so far
     uint64_t live;      ///< number of MemBlob instances currently alive
@@ -66,7 +66,7 @@ class MemBlob: public RefCountable
 {
 public:
     typedef RefCount<MemBlob> Pointer;
-    typedef int32_t size_type;
+    typedef uint32_t size_type;
 
     MEMPROXY_CLASS(MemBlob);
 
@@ -94,6 +94,13 @@ public:
         // TODO: ignore offset (and adjust size) when the blob is not shared?
         return isAppendOffset(off) && willFit(n);
     }
+
+    /** adjusts internal object state as if exactly n bytes were append()ed
+     *
+     * \throw TextException if there was not enough space in the blob
+     * \param n the number of bytes that were appended
+     */
+    void appended(const size_type n);
 
     /** copies exactly n bytes from the source to the available space area,
      *  enlarging the used area by n bytes

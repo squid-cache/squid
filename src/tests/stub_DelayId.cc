@@ -38,7 +38,7 @@
 #define STUB_API "stub_DelayId.cc"
 #include "tests/STUB.h"
 
-DelayId::DelayId() {}
+DelayId::DelayId(): pool_(0), compositeId(NULL), markedAsNoDelay(false) {}
 DelayId::~DelayId() {}
 
 void DelayId::delayRead(DeferredRead const&) STUB_NOP

@@ -1,14 +1,17 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "auth/User.h"
 #include "client_side.h"
+#include "format/Format.h"
 #include "globals.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "MemBuf.h"
 #include "SquidTime.h"
 
 Auth::Negotiate::UserRequest::UserRequest()
@@ -52,6 +55,18 @@ Auth::Negotiate::UserRequest::authenticated() const
     return 0;
 }
 
+const char *
+Auth::Negotiate::UserRequest::credentialsStr()
+{
+    static char buf[MAX_AUTHTOKEN_LEN];
+    if (user()->credentials() == Auth::Pending) {
+        snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
+    } else {
+        snprintf(buf, sizeof(buf), "KK %s\n", client_blob);
+    }
+    return buf;
+}
+
 Auth::Direction
 Auth::Negotiate::UserRequest::module_direction()
 {
@@ -82,7 +97,7 @@ Auth::Negotiate::UserRequest::module_direction()
 }
 
 void
-Auth::Negotiate::UserRequest::module_start(AUTHCB * handler, void *data)
+Auth::Negotiate::UserRequest::module_start(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -100,10 +115,17 @@ Auth::Negotiate::UserRequest::module_start(AUTHCB * handler, void *data)
 
     debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
 
+    const char *keyExtras = helperRequestKeyExtras(request, al);
     if (user()->credentials() == Auth::Pending) {
-        snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
+        if (keyExtras)
+            snprintf(buf, sizeof(buf), "YR %s %s\n", client_blob, keyExtras);
+        else
+            snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
-        snprintf(buf, sizeof(buf), "KK %s\n", client_blob);
+        if (keyExtras)
+            snprintf(buf, sizeof(buf), "KK %s %s\n", client_blob, keyExtras);
+        else
+            snprintf(buf, sizeof(buf), "KK %s\n", client_blob);
     }
 
     waiting = 1;
@@ -127,27 +149,6 @@ Auth::Negotiate::UserRequest::releaseAuthServer()
         authserver = NULL;
     } else
         debugs(29, 6, HERE << "No Negotiate auth server to release.");
-}
-
-/* clear any connection related authentication details */
-void
-Auth::Negotiate::UserRequest::onConnectionClose(ConnStateData *conn)
-{
-    assert(conn != NULL);
-
-    debugs(29, 8, HERE << "closing connection '" << conn << "' (this is '" << this << "')");
-
-    if (conn->auth_user_request == NULL) {
-        debugs(29, 8, HERE << "no auth_user_request");
-        return;
-    }
-
-    releaseAuthServer();
-
-    /* unlock the connection based lock */
-    debugs(29, 9, HERE << "Unlocking auth_user from the connection '" << conn << "'.");
-
-    conn->auth_user_request = NULL;
 }
 
 void
@@ -199,8 +200,8 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        assert(conn->auth_user_request == NULL);
-        conn->auth_user_request = this;
+        assert(conn->getAuth() == NULL);
+        conn->setAuth(this, "new Negotiate handshake request");
         request = aRequest;
         HTTPMSGLOCK(request);
         break;
@@ -247,6 +248,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
 
+    // add new helper kv-pair notes to the credentials object
+    // so that any transaction using those credentials can access them
+    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+
     Auth::Negotiate::UserRequest *lm_request = dynamic_cast<Auth::Negotiate::UserRequest *>(auth_user_request.getRaw());
     assert(lm_request != NULL);
     assert(lm_request->waiting);
@@ -268,11 +273,11 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = true;
         if (lm_request->request->flags.proxyKeepalive) {
-            Note::Pointer tokenNote = reply.notes.find("token");
-            lm_request->server_blob = xstrdup(tokenNote->firstValue());
+            const char *tokenNote = reply.notes.findFirst("token");
+            lm_request->server_blob = xstrdup(tokenNote);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << tokenNote->firstValue() << "'");
+            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << tokenNote << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("Negotiate authentication requires a persistent connection");
@@ -280,8 +285,8 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         break;
 
     case HelperReply::Okay: {
-        Note::Pointer userNote = reply.notes.find("user");
-        Note::Pointer tokenNote = reply.notes.find("token");
+        const char *userNote = reply.notes.findFirst("user");
+        const char *tokenNote = reply.notes.findFirst("token");
         if (userNote == NULL || tokenNote == NULL) {
             // XXX: handle a success with no username better
             /* protocol error */
@@ -290,20 +295,20 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
 
         /* we're finished, release the helper */
-        auth_user_request->user()->username(userNote->firstValue());
+        auth_user_request->user()->username(userNote);
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(tokenNote->firstValue());
+        lm_request->server_blob = xstrdup(tokenNote);
         lm_request->releaseAuthServer();
 
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user with a different proxy_auth
          * string */
-        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
+        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->userKey()));
         Auth::User::Pointer local_auth_user = lm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NEGOTIATE ||
-                                strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
+                                strcmp(usernamehash->user()->userKey(), auth_user_request->user()->userKey()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the
@@ -327,21 +332,20 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     break;
 
     case HelperReply::Error: {
-        Note::Pointer messageNote = reply.notes.find("message");
-        Note::Pointer tokenNote = reply.notes.find("token");
-        if (tokenNote == NULL) {
-            /* protocol error */
-            fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
-            break;
-        }
+        const char *messageNote = reply.notes.find("message");
+        const char *tokenNote = reply.notes.findFirst("token");
 
         /* authentication failure (wrong password, etc.) */
-        auth_user_request->denyMessage(messageNote->firstValue());
+        if (messageNote != NULL)
+            auth_user_request->denyMessage(messageNote);
+        else
+            auth_user_request->denyMessage("Negotiate Authentication denied with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
-        lm_request->server_blob = xstrdup(tokenNote->firstValue());
+        if (tokenNote != NULL)
+            lm_request->server_blob = xstrdup(tokenNote);
         lm_request->releaseAuthServer();
-        debugs(29, 4, HERE << "Failed validating user via Negotiate. Error returned '" << reply << "'");
+        debugs(29, 4, "Failed validating user via Negotiate. Result: " << reply);
     }
     break;
 
@@ -355,17 +359,17 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
          * Authenticate Negotiate start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
-        Note::Pointer errNote = reply.notes.find("message");
+        const char *errNote = reply.notes.find("message");
         if (reply.result == HelperReply::Unknown)
             auth_user_request->denyMessage("Internal Error");
         else if (errNote != NULL)
-            auth_user_request->denyMessage(errNote->firstValue());
+            auth_user_request->denyMessage(errNote);
         else
             auth_user_request->denyMessage("Negotiate Authentication failed with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Error returned " << reply);
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Result: " << reply);
     } // break;
     }
 
@@ -386,8 +390,8 @@ Auth::Negotiate::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int a
         return;
 
     /* don't add to authentication error pages */
-    if ((!accel && rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
-            || (accel && rep->sline.status == HTTP_UNAUTHORIZED))
+    if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
+            || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;

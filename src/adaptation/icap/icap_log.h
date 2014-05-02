@@ -11,7 +11,7 @@ class ACLChecklist;
 void icapLogClose();
 void icapLogOpen();
 void icapLogRotate();
-void icapLogLog(AccessLogEntryPointer &al, ACLChecklist * checklist);
+void icapLogLog(AccessLogEntryPointer &al);
 
 extern int IcapLogfileStatus;
 

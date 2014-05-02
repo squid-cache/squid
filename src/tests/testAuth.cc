@@ -4,12 +4,13 @@
 
 #if USE_AUTH
 
-#include "testAuth.h"
-#include "auth/Gadgets.h"
-#include "auth/UserRequest.h"
-#include "auth/Scheme.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h"
+#include "auth/Scheme.h"
+#include "auth/UserRequest.h"
+#include "ConfigParser.h"
 #include "Mem.h"
+#include "testAuth.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthConfig );
@@ -92,6 +93,7 @@ setup_scheme(Auth::Config *scheme, char const **params, unsigned param_count)
     for (unsigned position=0; position < param_count; ++position) {
         char *param_str=xstrdup(params[position]);
         strtok(param_str, w_space);
+        ConfigParser::SetCfgLine(strtok(NULL, ""));
         scheme->parse(scheme, config.size(), param_str);
     }
 }
@@ -164,9 +166,7 @@ testAuthConfig::create()
     }
 }
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 /* AuthUserRequest::scheme returns the correct scheme for all
  * authentication types

@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.4.0.0 release notes</title>
+<title>Squid 3.4.4.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,21 +13,25 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.4.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-3.4.4.2 for testing.
 
-This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.HEAD/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.4/"> or the
+ <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
 While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d"> for how to submit a report with a stack trace.
+We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+ for how to submit a report with a stack trace.
 
 <sect1>Known issues
 <p>
-Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.4&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.4">.
+Although this release is deemed good enough for use in many setups, please note the existence of 
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.4" name="open bugs against Squid-3.4">.
 
 <sect1>Changes since earlier releases of Squid-3.4
 <p>
-The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.HEAD/changesets/" name="viewed here">.
+The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.4/changesets/" name="viewed here">.
+
 
 <sect>Major new features since Squid-3.3
 <p>Squid 3.4 represents a new feature release above 3.3.
@@ -36,6 +40,10 @@ The 3.4 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 <itemize>
 	<item>Helper protocol extensions
 	<item>SSL Server Certificate Validator
+	<item>Store-ID
+	<item>TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+
+	<item>Transaction Annotations
+	<item>Multicast DNS
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -55,7 +63,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Arbitrary key-value pairs can be returned from any helper.
    Allowing future helpers to be forward- and backward- compatible
-   with this and future version of Squid.
+   with this and future versions of Squid.
 
 
 <sect1>SSL Server Certificate Validator
@@ -89,9 +97,116 @@ Most user-facing changes are reflected in squid.conf (see below).
    <em>ssl_crtd</em> related options. 
 
 
+<sect1>Store-ID
+<p>Details at <url url="http://wiki.squid-cache.org/Features/StoreID">.
+
+<p>This feature is a redesigned equivalent to the Squid-2.7 feature known as StoreURL-rewrite.
+
+<p><em>Notice</em> that this is not a direct portage of the Squid-2.7 feature so behaviour
+  differences do exist. Although the new feature works in similar enough ways that the old
+  helper scripts used for Squid-2.7 are expected to work in this and later versions of Squid.
+
+<p>Squid traditionally uses the requested URL as an index key ID to locate objects in cache.
+   It is not the only key possible and the Store-ID feature exposes an API for external
+   helpers to provide Squid with an alternative key name for any URL.
+
+<p>When any client request is received which requires a cache lookup the URL is passed to
+   a helper specified with the <em>store_id_program</em> directive to check for an alternative
+   Store ID. This allows the helper to identify URLs which refer to duplicate resources and
+   de-duplicate the cache content. <em>store_id_access</em> is provided to allow ACL-based
+   tuning of which traffic gets sent to the helper and reduce overheads.
+
+<p>One subtle and noteworthy difference between Squid-2 and Squid-3 which is highlighted by
+   this feature is that <em>refresh_pattern</em> applies its regex argument against the Store
+   ID key and not the transaction URL. So using the Store-ID feature to alter the value
+   affects which <em>refresh_pattern</em> directive will be matched.
+
+<p>Store-ID helpers bundled with Squid can be built with the --enable-storeid-rewrite-helpers
+   option which is added in this version. Currently there is a <em>file</em> helper
+   provided.
+
+
+<sect1>TPROXY Support for OpenBSD 5.1+ and FreeBSD 9+
+<p>Details at <url url="http://wiki.squid-cache.org/ConfigExamples/Intercept/OpenBsdPf">.
+
+<p>The Packet Filter (PF) firewall in OpenBSD 4.4 and later offers traffic interception
+   using several very simple methods. One of which is the <em>divert-to</em> rule type
+   which acts as a simple routing diversion instead of performing NAT packet alterations.
+
+<p>The IP Firewall (IPFW) on FreeBSD 9+ contains a port of the Linux Netfilter TPROXY feature.
+
+<p>This version of Squid adds support for these features through the ./configure
+   options --enable-pf-transparent and --enable-ipfw-transparent when Squid is built on
+   systems with the required support. No special extras are required to enable
+   <em>http_port ... tproxy</em> configuration to work.
+
+<p>NOTE: To resolve NAT lookup issues on recent PF firewall versions the code behind
+   <em>./configure --enable-pf-transparent</em> has been altered and is expected to
+   break on the version of PF firewall shipped with BSD systems such as NetBSD and FreeBSD
+   which do not yet support the getsockname() API.
+   These systems require <em>--with-nat-devpf</em> to enable /dev/pf support when using PF firewall.
+
+
+<sect1>Transaction Annotations
+<p>Previously the only annotation methods available were ICAP/eCAP HTTP header insertions
+   or external ACL <em>tag=</em> result code. Each of which had only limited possibilities
+   for use and little or no correlation.
+
+<p>It is now possible to add annotations to a client transaction from several sources:
+<itemize>
+	<item>	Directly from squid.conf using the <em>note</em> directive with
+		ACL-based selection of which annotation is linked to any
+		particular transaction.
+
+	<item>	By configured helper processes returning a key=value pair.
+		The key name becomes the annotation name.
+</itemize>
+
+<p>Annotations on the transaction can be passed to ICAP services or eCAP modules using the
+   <em>adaptation_meta</em> directive to send them as headers.
+   They can also be logged using the <em>%note</em> log format code in custom logs. With
+   the new helper response syntax changes this means all helper response key=value details
+   such as URL-rewrite or store-id changes, external ACL tag etc. are now able to be logged.
+
+<p>Annotations which are already assigned to a transaction can be checked using an ACL test
+   of the new <em>note</em> ACL type. This can match a particular note by name and value,
+   of for any notes with a given name.
+
+<p>NOTE: not all helper interfaces are yet enabled to convert key=value into annotations
+	 and the external ACL interface does not yet send annotations to the helper.
+
+
+<sect1>Multicast DNS
+<p>The internal DNS component of Squid now supports multicast DNS (mDNS) resolution in
+    accordance with RFC 6762.
+
+<p>The <em>dns_multicast_local</em> directive must be set to <em>on</em> to enable this
+   feature.
+
+<p>The multicast DNS group IP addresses for IPv4 and IPv6 resolving are added to the set
+   of available DNS resolvers and used automatically for domain names ending in <em>.local</em>
+   and reverse-DNS lookups before attempting a secondary resolution on the configured
+   resolvers. Domains without <em>.local</em> are resolved using only the configured resolvers.
+
+<p>Statistics for multicast DNS resolution can be found on the <em>idns</em> cache manager
+   report.
+
+<p><em>NOTE</em> that the external DNS helper interface is now deprecated and has been
+  removed from future Squid versions. Any installations still using it for local hostname
+  resolution need to upgrade to mDNS resolution with this Squid version.
+
+
 <sect>Changes to squid.conf since Squid-3.3
 <p>
 There have been changes to Squid's configuration file since Squid-3.3.
+
+<p>Squid supports reading configuration option parameters from external
+   files using the syntax <em>parameters("/path/filename")</em>. For example:
+<verb>
+    acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+</verb>
+
+<p>There have also been changes to individual directives in the config file.
 
 This section gives a thorough account of those changes in three categories:
 
@@ -105,9 +220,21 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>configuration_includes_quoted_values</tag>
+	<p>Whether Squid supports directive parameters with spaces, quotes, and other
+	   special characters. Surround such parameters with "double quotes" and
+	   also set this directive on/off around the relevant squid.conf line(s)
+	   making use of such quoting.
+
+	<tag>dns_multicast_local</tag>
+	<p>Use multicast DNS for <em>.local</em> domains and reverse-DNS resolution.
+
 	<tag>note</tag>
 	<p>Use ACLs to annotate a transaction with customized annotations
 	   which can be logged in access.log
+
+	<tag>spoof_client_ip</tag>
+	<p>Access control to determine whether to disable the TPROXY spoofing on upstream traffic.
 
 	<tag>sslcrtvalidator_children</tag>
 	<p>Specifies the settings for how many SSL server certificate
@@ -116,14 +243,50 @@ This section gives a thorough account of those changes in three categories:
 	<tag>sslcrtvalidator_program</tag>
 	<p>Specifies the location of a SSL server certificate validator helper.
 
+	<tag>store_id_access</tag>
+	<p>Whether the URL for a given request is passed to the Store-ID helper process.
+	   Used to improve StoreID performance by quickly eliminating helper delays using ACL tests.
+	<p>Ported equivalent to <em>storeurl_access</em> from 2.7
+
+	<tag>store_id_bypass</tag>
+	<p>Whether the StoreID helper may be bypassed when overloaded.
+
+	<tag>store_id_children</tag>
+	<p>Controls the number of StoreID helper processes.
+        <p>Options <em>startup=N</em>, <em>idle=N</em>, <em>concurrency=N</em>
+        <itemize>
+                <item>startup=N allow finer tuning of how many helpers are started initially.
+                <item>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.
+                <item>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
+        </itemize>
+
+	<tag>store_id_rewrite_program</tag>
+	<p>A helper program to provide cache storage internal key ID value for a request.
+	<p>Ported equivalent to <em>storeurl_rewrite_program</em> from 2.7
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>access_log</tag>
+	<p>Configuration syntax extended to support name=value options.
+	  <em>New Syntax:</em> access_log module:place [option ...] [acl ...]
+	<p>New option <em>logformat=</em> to specify the logging format name.
+	<p>New option <em>buffer-size=</em> to specify how large the log buffer
+	   for this log is to be when <em>buffered_logs</em> is enabled.
+	<p>New option <em>on-error=</em> to specify what handling is to be done
+	   if the logging module encounters a non-recoverable error writing logs.
+	   With the value <em>die</em> (the default) Squid halts operation.
+	   With the value <em>drop</em> Squid drops log lines and continue running.
+
 	<tag>acl</tag>
 	<p>New test type <em>server_cert_fingerprint</em> to match against 
 	   server SSL certificate fingerprint.
+	<p>New test type <em>note</em> to match against transaction annotations
+	   by name and value, or just by name.
+	<p>New test type <em>any-of</em> to match if any one of a set of named ACLs.
+	<p>New test type <em>all-of</em> to match against all of a set of named ACLs.
 
 	<tag>auth_param</tag>
 	<p>New result code <em>BH</em> to signal helper internal errors
@@ -140,9 +303,31 @@ This section gives a thorough account of those changes in three categories:
 	<p>New result code <em>BH</em> to signal helper internal errors
 	<p>Details at <url url="http://wiki.squid-cache.org/Features/AddonHelpers">.
 
+	<tag>http_port</tag>
+	<p>Support IPv6 for <em>intercept</em> mode. Requires ip6tables support on Linux,
+	   PF support on OpenBSD and IPFW support on FreeBSD. Squid will no longer complain
+	   about misconfiguration if IPv6 support is missing, we now rely on the firewall
+	   tools reporting misconfiguration when the NAT rules are created.
+	<p>Support <em>tproxy</em> mode traffic on BSD systems with BINDANY support
+	   (OpenBSD 5+, FreeBSD 9+ so far).
+	<p>Changed build options behind <em>intercept</em> traffic mode handling on BSD.
+	   see <em>--enable-pf-transparent</em> for more details.
+
 	<tag>logformat</tag>
 	<p>New format code <em>%note</em> to log a transaction annotation linked to the
 	   transaction by ICAP, eCAP, a helper, or the <em>note</em> squid.conf directive.
+	<p>New format code <em>%&gt;qos</em> to log client connection TOS/DSCP value set by Squid.
+	<p>New format code <em>%&lt;qos</em> to log server connection TOS/DSCP value set by Squid.
+	<p>New format code <em>%&gt;nfmark</em> to log client connection netfilter mark set by Squid.
+	<p>New format code <em>%&lt;nfmark</em> to log server connection netfilter mark set by Squid.
+
+	<tag>pipeline_prefetch</tag>
+	<p>Updated to take a numeric count of prefetched pipeline requests instead of ON/OFF.
+
+	<tag>refresh_pattern</tag>
+	<p><em>NOTE:</em> the regular expression pattern operates on the cache Store-ID value.
+	   Which by default is identical to the requested URL, but may differ for some
+	   objects if the Store-ID feature is in use.
 
 	<tag>unlinkd_program</tag>
 	<p>New helper response format utilizing result codes <em>OK</em> and <em>BH</em>,
@@ -161,8 +346,18 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
-	<p><em>There are no removed squid.conf tags in Squid-3.4.</em>
+	<tag>storeurl_access</tag>
+	<p>Replaced by <em>store_id_access</em>.
 
+	<tag>storeurl_rewrite_children</tag>
+	<p>Replaced by <em>store_id_children</em>.
+
+	<tag>storeurl_rewrite_concurrency</tag>
+	<p>Replaced by <em>store_id_children</em> with <em>concurrency=N</em> option.
+
+	<tag>storeurl_rewrite_program</tag>
+	<p>Replaced by <em>store_id_program</em>.
+	
 </descrip>
 
 
@@ -182,14 +377,46 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p><em>There are no new ./configure options in Squid-3.4.</em>
+	<tag>--enable-storeid-rewrite-helpers</tag>
+	<p>New option to control which Store-ID helpers are built. As with other
+	   helper options use --disable-* to prevent any helpers building and
+	   omit to get all helper auto-detected.
+	<p>Currenly only a helper using <em>file</em> for backend is provided.
+
+	<tag>--disable-arch-native</tag>
+	<p>New option to disable use of -march=native compiler flag.
+	<p>The new flag auto-enables CPU-specific optimizations in GCC and is
+	  required by Clang++ v3.2 for correct 64-bit environment detection.
+	  It does not always work well however, so this build option is provided
+	  to remove it when necessary.
+
+	<tag>--with-nat-devpf</tag>
+	<p>New option to alter the behaviour of <em>http_port ... intercept</em> option
+	   in squid.conf.
+	<p>When this option is used Squid performs the /dev/pf lookups required to
+	   support PF <em>rdr-to</em> rules. Otherwise Squid will perform perform the
+	   getsockname() API calls to support PF <em>divert-to</em> rules.
+	<p>NOTE: systems such as NetBSD and FreeBSD which do not yet support
+	   the getsockname() API in recent PF versions require this option.
 
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p><em>There are no changed ./configure options in Squid-3.4.</em>
+	<tag>--enable-pf-transparent</tag>
+	<p>NAT table support updated to use the getsockname() API provided by the
+	   latest PF versions <em>divert-to</em>. This allows <em>http_port</em>
+	   in squid.conf to support both <em>intercept</em> and <em>tproxy</em> traffic
+	   and to silence NAT lookup failure messages on recent BSD.
+	<p>NOTE: systems such as NetBSD and FreeBSD which do not yet support
+	   the getsockname() API in recent PF versions require <em>--with-nat-devpf</em>
+	   to re-enable /dev/pf support when using PF firewall.
+
+	<tag>--disable-translation</tag>
+	<p>Default changed to prevent translating error page templates during build.
+	    Use --enable-translation to explicitly build and install the templates.
+	<p>The latest pre-translated templates can be downloaded from <url url="http://www.squid-cache.org/Versions/langpack/">
 
 </descrip>
 </p>
@@ -204,7 +431,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Regressions since Squid-2.7
 
-<p>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.3
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-3.4
 
 <p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
 
@@ -237,17 +464,7 @@ This section gives an account of those changes in three categories:
 	<tag>error_map</tag>
 	<p>Not yet ported from 2.6
 
-	<tag>external_acl_type</tag>
-	<p><em>%ACL</em> format tag not yet ported from 2.6
-	<p><em>%DATA</em> format tag not yet ported from 2.6
-
 	<tag>external_refresh_check</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>http_port</tag>
-	<p><em>act-as-origin</em> not yet ported from 2.7
-
-	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>location_rewrite_access</tag>
@@ -270,18 +487,6 @@ This section gives an account of those changes in three categories:
 	<tag>refresh_stale_hit</tag>
 	<p>Not yet ported from 2.7
 
-	<tag>storeurl_access</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>storeurl_rewrite_children</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>storeurl_rewrite_concurrency</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>storeurl_rewrite_program</tag>
-	<p>Not yet ported from 2.7
-	
 	<tag>update_headers</tag>
 	<p>Not yet ported from 2.7
 

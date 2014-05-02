@@ -10,4 +10,4 @@ LDADD	= \
 	-ladvapi32 \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt config.test
+EXTRA_DIST = readme.txt required.m4

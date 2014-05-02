@@ -33,9 +33,9 @@
 
 #ifndef SQUID_ACLUSERDATA_H
 #define SQUID_ACLUSERDATA_H
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "splay.h"
 
 class ACLUserData : public ACLData<char const *>
 {
@@ -45,7 +45,7 @@ public:
 
     virtual ~ACLUserData();
     bool match(char const *user);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;

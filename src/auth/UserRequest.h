@@ -32,13 +32,14 @@
 
 #if USE_AUTH
 
+#include "AccessLogEntry.h"
 #include "auth/AuthAclState.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "dlink.h"
-#include "ip/Address.h"
 #include "helper.h"
 #include "HttpHeader.h"
+#include "ip/Address.h"
 
 class ConnStateData;
 class HttpReply;
@@ -50,14 +51,24 @@ class HttpRequest;
 // AYJ: must match re-definition in helpers/negotiate_auth/kerberos/negotiate_kerb_auth.cc
 #define MAX_AUTHTOKEN_LEN   32768
 
-/// \ingroup AuthAPI
+/**
+ * Node used to link an IP address to some user credentials
+ * for the max_user_ip ACL feature.
+ *
+ * \ingroup AuthAPI
+ */
 class AuthUserIP
 {
 public:
     dlink_node node;
-    /* IP addr this user authenticated from */
 
+    /// IP address this user authenticated from
     Ip::Address ipaddr;
+
+    /** When this IP should be forgotten.
+     * Set to the time of last request made from this
+     * (user,IP) pair plus authenticate_ip_ttl seconds
+     */
     time_t ip_expiretime;
 };
 
@@ -145,7 +156,7 @@ public:
     /* add the [Proxy-]Authentication-Info trailer */
     virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
 
-    virtual void onConnectionClose(ConnStateData *);
+    virtual void releaseAuthServer();
 
     /**
      * Called when squid is ready to put the request on hold and wait for a callback from the auth module
@@ -154,7 +165,7 @@ public:
      * \param handler	Handler to process the callback when its run
      * \param data	CBDATA for handler
      */
-    virtual void module_start(AUTHCB *handler, void *data) = 0;
+    virtual void module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data) = 0;
 
     // User credentials object this UserRequest is managing
     virtual User::Pointer user() {return _auth_user;}
@@ -179,12 +190,12 @@ public:
      *
      * \return Some AUTH_ACL_* state
      */
-    static AuthAclState tryToAuthenticateAndSetAuthUser(UserRequest::Pointer *aUR, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
+    static AuthAclState tryToAuthenticateAndSetAuthUser(UserRequest::Pointer *aUR, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &);
 
     /// Add the appropriate [Proxy-]Authenticate header to the given reply
     static void addReplyAuthHeader(HttpReply * rep, UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
-    void start(AUTHCB *handler, void *data);
+    void start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data);
     char const * denyMessage(char const * const default_message = NULL);
 
     /** Possibly overrideable in future */
@@ -207,9 +218,15 @@ public:
 
     virtual const char * connLastHeader();
 
+    /**
+     * The string representation of the credentials send by client
+     */
+    virtual const char *credentialsStr() = 0;
+
+    const char *helperRequestKeyExtras(HttpRequest *, AccessLogEntry::Pointer &al);
 private:
 
-    static AuthAclState authenticate(UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr);
+    static AuthAclState authenticate(UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr, AccessLogEntry::Pointer &al);
 
     /** return a message on the 407 error pages */
     char *message;

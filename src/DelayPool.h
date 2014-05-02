@@ -38,13 +38,12 @@
 #define DELAYPOOL_H
 
 #if USE_DELAY_POOLS
+#include "acl/forward.h"
 #include "CompositePoolNode.h"
 
 class StoreEntry;
 
 class CommonPool;
-
-class acl_access;
 
 /// \ingroup DelayPoolsAPI
 class DelayPool

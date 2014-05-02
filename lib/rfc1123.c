@@ -37,9 +37,6 @@
  *  Adapted from HTSUtils.c in CERN httpd 3.0 (http://info.cern.ch/httpd/)
  *  by Darren Hardy <hardy@cs.colorado.edu>, November 1994.
  */
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif

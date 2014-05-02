@@ -32,11 +32,11 @@
 #ifndef SQUID_ESICONTEXT_H
 #define SQUID_ESICONTEXT_H
 
-#include "esi/Parser.h"
-#include "esi/Element.h"
 #include "clientStream.h"
 #include "err_type.h"
-#include "HttpStatusCode.h"
+#include "esi/Element.h"
+#include "esi/Parser.h"
+#include "http/StatusCode.h"
 
 class ESIVarState;
 class ClientHttpRequest;
@@ -48,13 +48,11 @@ class ESIContext : public esiTreeParent, public ESIParserClient
 
 public:
     typedef RefCount<ESIContext> Pointer;
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
     ESIContext() :
             thisNode(NULL),
             http(NULL),
             errorpage(ERR_NONE),
-            errorstatus(HTTP_STATUS_NONE),
+            errorstatus(Http::scNone),
             errormessage(NULL),
             rep(NULL),
             outbound_offset(0),
@@ -114,7 +112,7 @@ public:
     } flags;
 
     err_type errorpage; /* if we error what page to use */
-    http_status errorstatus; /* if we error, what code to return */
+    Http::StatusCode errorstatus; /* if we error, what code to return */
     char *errormessage; /* error to pass to error page */
     HttpReply *rep; /* buffered until we pass data downstream */
     ESISegment::Pointer buffered; /* unprocessed data - for whatever reason */
@@ -181,7 +179,7 @@ private:
     virtual void parserComment (const char *s);
     bool processing;
 
-    CBDATA_CLASS(ESIContext);
+    CBDATA_CLASS2(ESIContext);
 };
 
 #endif /* SQUID_ESICONTEXT_H */

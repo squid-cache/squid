@@ -31,10 +31,10 @@ int RFCNB_saved_errno = 0;
 
 #include "rfcnb/std-includes.h"
 #include <netinet/tcp.h>
-#include "rfcnb/rfcnb.h"
-#include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-io.h"
+#include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-util.h"
+#include "rfcnb/rfcnb.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -79,11 +79,12 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address, int port
     con->errn = 0;              /* no error yet */
     con->timeout = 0;           /* no timeout   */
     con->redirects = 0;
+    con->redirect_list = con->last_addr = NULL;
 
     /* Resolve that name into an IP address */
 
     Service_Address = Called_Name;
-    if (strcmp(Called_Address, "") != 0) {      /* If the Called Address = "" */
+    if (strlen(Called_Address) != 0) {      /* If the Called Address = "" */
         Service_Address = Called_Address;
     }
     if ((errno = RFCNB_Name_To_IP(Service_Address, &Dest_IP)) < 0) {    /* Error */
@@ -208,6 +209,7 @@ RFCNB_Send(struct RFCNB_Con *Con_Handle, struct RFCNB_Pkt *udata, int Length)
 
         /* No need to change RFCNB_errno as it was done by put_pkt ...     */
 
+        RFCNB_Free_Pkt(pkt);
         return (RFCNBE_Bad);    /* Should be able to write that lot ... */
 
     }
@@ -256,7 +258,7 @@ RFCNB_Recv(void *con_Handle, struct RFCNB_Pkt *Data, int Length)
 #ifdef RFCNB_DEBUG
         fprintf(stderr, "Bad packet return in RFCNB_Recv... \n");
 #endif
-
+        RFCNB_Free_Pkt(pkt);
         return (RFCNBE_Bad);
 
     }

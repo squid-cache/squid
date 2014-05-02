@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "Store.h"
 #include "MemObject.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 

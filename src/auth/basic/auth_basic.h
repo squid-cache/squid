@@ -6,23 +6,12 @@
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
 
+#include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "auth/Config.h"
 #include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
-
-/** queue of auth requests waiting for verification to occur */
-class BasicAuthQueueNode
-{
-
-public:
-    BasicAuthQueueNode *next;
-    Auth::UserRequest::Pointer auth_user_request;
-    AUTHCB *handler;
-    void *data;
-};
 
 namespace Auth
 {
@@ -37,7 +26,7 @@ public:
     ~Config();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth);
+    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, Auth::Config *);

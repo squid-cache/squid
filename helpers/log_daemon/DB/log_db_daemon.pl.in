@@ -41,6 +41,8 @@ Default "DBI:mysql:database=squid"
 
 Write debug messages to Squid stderr or cache.log
 
+=back
+
 =cut
 
 # the first argument to this script is the log file path describing the DSN
@@ -195,6 +197,8 @@ while (my $line = <>) {
 $dbh->disconnect();
 
 __END__
+
+=pod
 
 =head1 DESCRIPTION
 

@@ -35,30 +35,19 @@
 #define EDUI_PROGRAM_VERSION		"2.1"
 
 /* System includes */
-#ifdef HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 #ifndef __USE_GNU
 #define __USE_GNU
 #endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#ifdef HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
+#include <cctype>
+#include <cerrno>
+#include <csignal>
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
@@ -68,12 +57,6 @@
 #endif
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#endif
-#ifdef HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-#ifdef HAVE_TIME_H
-#include <time.h>
 #endif
 
 #ifdef HELPER_INPUT_BUFFER
@@ -977,7 +960,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
                     if (bufb[i] == ':')
                         ++j;
                 }
-                --j;								/* Preceeding "::" doesn't count */
+                --j;								/* Preceding "::" doesn't count */
                 t = 8 - (strlen(l->search_ip) / 4) - j;			/* Remainder */
                 if (t > 0) {
                     for (i = 0; i < t; ++i)

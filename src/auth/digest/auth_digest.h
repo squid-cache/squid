@@ -52,10 +52,13 @@ struct _digest_nonce_h : public hash_link {
 
 void authDigestNonceUnlink(digest_nonce_h * nonce);
 int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
+int authDigestNonceIsStale(digest_nonce_h * nonce);
 const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
 int authDigestNonceLastRequest(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
 void authDigestNoncePurge(digest_nonce_h * nonce);
+void authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce);
+digest_nonce_h *authenticateDigestNonceNew(void);
 
 namespace Auth
 {
@@ -69,7 +72,7 @@ public:
     Config();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth);
+    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, Auth::Config *);

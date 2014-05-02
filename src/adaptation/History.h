@@ -2,10 +2,10 @@
 #define SQUID_ADAPT_HISTORY_H
 
 #include "adaptation/DynamicGroupCfg.h"
-#include "Array.h"
 #include "base/RefCount.h"
 #include "HttpHeader.h"
 #include "Notes.h"
+#include "SBuf.h"
 #include "SquidString.h"
 
 namespace Adaptation
@@ -46,6 +46,7 @@ public:
     /// store the last meta header fields received from the adaptation service
     void recordMeta(const HttpHeader *lm);
 
+    void recordAdaptationService(SBuf &srvId);
 public:
     /// Last received meta header (REQMOD or RESPMOD, whichever comes last).
     HttpHeader lastMeta;
@@ -53,7 +54,10 @@ public:
     HttpHeader allMeta;
     /// key:value pairs set by adaptation_meta, to be added to
     /// AccessLogEntry::notes when ALE becomes available
-    NotePairs metaHeaders;
+    NotePairs::Pointer metaHeaders;
+
+    typedef std::vector<SBuf> AdaptationServices;
+    AdaptationServices theAdaptationServices; ///< The service groups used
 
     /// sets future services for the Adaptation::AccessCheck to notice
     void setFutureServices(const DynamicGroupCfg &services);
@@ -82,7 +86,7 @@ private:
         bool retried; ///< whether the xaction was replaced by another
     };
 
-    typedef Vector<Entry> Entries;
+    typedef std::vector<Entry> Entries;
     Entries theEntries; ///< historical record, in the order of xact starts
 
     // theXx* will become a map<string,string>, but we only support one record

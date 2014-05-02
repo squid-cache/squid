@@ -39,6 +39,7 @@
 #include "HttpRequestMethod.h"
 #include "Notes.h"
 #include "RequestFlags.h"
+#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -66,18 +67,13 @@ class HttpRequest: public HttpMsg
 {
 
 public:
-    typedef HttpMsgPointerT<HttpRequest> Pointer;
+    typedef RefCount<HttpRequest> Pointer;
 
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
-
-    // use HTTPMSGLOCK() instead of calling this directly
-    virtual HttpRequest *_lock() {
-        return static_cast<HttpRequest*>(HttpMsg::_lock());
-    };
 
     void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
 
@@ -98,13 +94,13 @@ public:
     /*      caused by HttpRequest being used in places it really shouldn't.        */
     /*      ideally they would be methods of URL instead. */
     inline void SetHost(const char *src) {
-        host_addr.SetEmpty();
+        host_addr.setEmpty();
         host_addr = src;
-        if ( host_addr.IsAnyAddr() ) {
+        if (host_addr.isAnyAddr()) {
             xstrncpy(host, src, SQUIDHOSTNAMELEN);
             host_is_numeric = 0;
         } else {
-            host_addr.ToHostname(host, SQUIDHOSTNAMELEN);
+            host_addr.toHostStr(host, SQUIDHOSTNAMELEN);
             debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
             host_is_numeric = 1;
         }
@@ -141,6 +137,9 @@ protected:
 public:
     HttpRequestMethod method;
 
+    // TODO expand to include all URI parts
+    URL url; ///< the request URI (scheme only)
+
     char login[MAX_LOGIN_SZ];
 
 private:
@@ -164,6 +163,14 @@ public:
     String urlpath;
 
     char *canonical;
+
+    /**
+     * If defined, store_id_program mapped the request URL to this ID.
+     * Store uses this ID (and not the URL) to find and store entries,
+     * avoiding caching duplicate entries when different URLs point to
+     * "essentially the same" cachable resource.
+     */
+    String store_id;
 
     RequestFlags flags;
 
@@ -200,7 +207,7 @@ public:
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
-    Notes *helperNotes;         ///< collection of meta notes associated with this request by helper lookups.
+    NotePairs::Pointer notes; ///< annotations added by the note directive and helpers
 
     String tag;			/* Internal tag for this request */
 
@@ -215,6 +222,9 @@ public:
 #if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
 #endif /* FOLLOW_X_FORWARDED_FOR */
+
+    /// A strong etag of the cached entry. Used for refreshing that entry.
+    String etag;
 
 public:
     bool multipartRangeRequest() const;
@@ -242,12 +252,22 @@ public:
     ConnStateData *pinnedConnection();
 
     /**
+     * Returns the current StoreID for the request as a nul-terminated char*.
+     * Always returns the current id for the request
+     * (either the request canonical url or modified ID by the helper).
+     * Does not return NULL.
+     */
+    const char *storeId();
+
+    /**
      * The client connection manager, if known;
      * Used for any response actions needed directly to the client.
      * ie 1xx forwarding or connection pinning state changes
      */
     CbcPointer<ConnStateData> clientConnectionManager;
 
+    /// forgets about the cached Range header (for a reason)
+    void ignoreRange(const char *reason);
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
 private:
@@ -258,7 +278,7 @@ private:
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;
 
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error);
+    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error);
 
     virtual void hdrCacheInit();
 

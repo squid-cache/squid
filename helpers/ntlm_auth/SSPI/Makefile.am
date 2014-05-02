@@ -14,4 +14,4 @@ LDADD = \
 	-ladvapi32 \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = ntlm_sspi_auth.8 config.test
+EXTRA_DIST = ntlm_sspi_auth.8 required.m4

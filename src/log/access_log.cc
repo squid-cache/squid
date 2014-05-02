@@ -37,8 +37,8 @@
 #include "adaptation/Config.h"
 #endif
 #include "CachePeer.h"
-#include "errorpage.h"
 #include "err_detail_type.h"
+#include "errorpage.h"
 #include "errorpage.h"
 #include "errorpage.h"
 #include "format/Token.h"
@@ -109,7 +109,7 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
     else if (al->htcp.opcode)
         al->_private.method_str = al->htcp.opcode;
     else
-        al->_private.method_str = RequestMethodStr(al->http.method);
+        al->_private.method_str = NULL;
 
     if (al->hier.host[0] == '\0')
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
@@ -253,7 +253,7 @@ HierarchyLogEntry::HierarchyLogEntry() :
         cd_lookup(LOOKUP_NONE),
         n_choices(0),
         n_ichoices(0),
-        peer_reply_status(HTTP_STATUS_NONE),
+        peer_reply_status(Http::scNone),
         peer_response_time(-1),
         total_response_time(-1),
         tcpServer(NULL),
@@ -320,7 +320,7 @@ accessLogInit(void)
         if (log->type == Log::Format::CLF_NONE)
             continue;
 
-        log->logfile = logfileOpen(log->filename, MAX_URL << 2, 1);
+        log->logfile = logfileOpen(log->filename, log->bufferSize, log->fatal);
 
         LogfileStatus = LOG_ENABLE;
 
@@ -531,7 +531,6 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     HttpRequest *req;
     unsigned short magic = 0;
     unsigned char M = (unsigned char) m;
-    unsigned short S;
     char *hmask;
     int ccmask = 0;
 
@@ -566,10 +565,9 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     magic = htons(magic);
     ccmask = htonl(ccmask);
 
+    unsigned short S = 0;
     if (0 == pq)
-        S = (unsigned short) rep->sline.status;
-    else
-        S = (unsigned short) HTTP_STATUS_NONE;
+        S = static_cast<unsigned short>(rep->sline.status());
 
     logfileWrite(headerslog, &magic, sizeof(magic));
     logfileWrite(headerslog, &M, sizeof(M));
@@ -579,32 +577,3 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
 }
 
 #endif
-
-int
-logTypeIsATcpHit(log_type code)
-{
-    /* this should be a bitmap for better optimization */
-
-    if (code == LOG_TCP_HIT)
-        return 1;
-
-    if (code == LOG_TCP_IMS_HIT)
-        return 1;
-
-    if (code == LOG_TCP_REFRESH_FAIL_OLD)
-        return 1;
-
-    if (code == LOG_TCP_REFRESH_UNMODIFIED)
-        return 1;
-
-    if (code == LOG_TCP_NEGATIVE_HIT)
-        return 1;
-
-    if (code == LOG_TCP_MEM_HIT)
-        return 1;
-
-    if (code == LOG_TCP_OFFLINE_HIT)
-        return 1;
-
-    return 0;
-}

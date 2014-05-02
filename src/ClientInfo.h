@@ -1,11 +1,12 @@
 #ifndef SQUID__SRC_CLIENTINFO_H
 #define SQUID__SRC_CLIENTINFO_H
 
-#include "ip/Address.h"
-#include "hash.h"
-#include "enums.h"
-#include "typedefs.h"
 #include "cbdata.h"
+#include "enums.h"
+#include "hash.h"
+#include "ip/Address.h"
+#include "LogTags.h"
+#include "typedefs.h"
 #include <deque>
 
 #if USE_DELAY_POOLS

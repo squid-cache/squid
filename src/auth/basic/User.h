@@ -4,12 +4,11 @@
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 
-class BasicAuthQueueNode;
-
 namespace Auth
 {
 
 class Config;
+class QueueNode;
 
 namespace Basic
 {
@@ -20,7 +19,7 @@ class User : public Auth::User
 public:
     MEMPROXY_CLASS(Auth::Basic::User);
 
-    User(Auth::Config *);
+    User(Auth::Config *, const char *requestRealm);
     ~User();
     bool authenticated() const;
     bool valid() const;
@@ -31,7 +30,7 @@ public:
 
     char *passwd;
 
-    BasicAuthQueueNode *auth_queue;
+    QueueNode *queue;
 
 private:
     Auth::UserRequest::Pointer currentRequest;

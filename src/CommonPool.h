@@ -37,8 +37,8 @@
 #define COMMONPOOL_H
 
 #if USE_DELAY_POOLS
-#include "SquidString.h"
 #include "CompositePoolNode.h"
+#include "SquidString.h"
 
 /*
  \ingroup DelayPoolsAPI

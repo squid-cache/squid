@@ -1,5 +1,5 @@
 #ifndef _SQUID_UUDECODE_H
-#define _SQUID_UUDECODE_
+#define _SQUID_UUDECODE_H
 
 #ifdef __cplusplus
 extern "C"

@@ -1,11 +1,15 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
+#include "format/Format.h"
 #include "globals.h"
+#include "HttpMsg.h"
 #include "HttpRequest.h"
+#include "MemBuf.h"
 #include "SquidTime.h"
 
 Auth::Ntlm::UserRequest::UserRequest()
@@ -49,6 +53,18 @@ Auth::Ntlm::UserRequest::authenticated() const
     return 0;
 }
 
+const char *
+Auth::Ntlm::UserRequest::credentialsStr()
+{
+    static char buf[MAX_AUTHTOKEN_LEN];
+    if (user()->credentials() == Auth::Pending) {
+        snprintf(buf, sizeof(buf), "YR %s\n", client_blob);
+    } else {
+        snprintf(buf, sizeof(buf), "KK %s\n", client_blob);
+    }
+    return buf;
+}
+
 Auth::Direction
 Auth::Ntlm::UserRequest::module_direction()
 {
@@ -79,7 +95,7 @@ Auth::Ntlm::UserRequest::module_direction()
 }
 
 void
-Auth::Ntlm::UserRequest::module_start(AUTHCB * handler, void *data)
+Auth::Ntlm::UserRequest::module_start(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -94,12 +110,18 @@ Auth::Ntlm::UserRequest::module_start(AUTHCB * handler, void *data)
 
     debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
 
+    const char *keyExtras = helperRequestKeyExtras(request, al);
     if (user()->credentials() == Auth::Pending) {
-        snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
+        if (keyExtras)
+            snprintf(buf, sizeof(buf), "YR %s %s\n", client_blob, keyExtras);
+        else
+            snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
-        snprintf(buf, sizeof(buf), "KK %s\n", client_blob);
+        if (keyExtras)
+            snprintf(buf, sizeof(buf), "KK %s %s\n", client_blob, keyExtras);
+        else
+            snprintf(buf, sizeof(buf), "KK %s\n", client_blob);
     }
-
     waiting = 1;
 
     safe_free(client_blob);
@@ -120,26 +142,6 @@ Auth::Ntlm::UserRequest::releaseAuthServer()
         authserver = NULL;
     } else
         debugs(29, 6, HERE << "No NTLM auth server to release.");
-}
-
-void
-Auth::Ntlm::UserRequest::onConnectionClose(ConnStateData *conn)
-{
-    assert(conn != NULL);
-
-    debugs(29, 8, HERE << "closing connection '" << conn << "' (this is '" << this << "')");
-
-    if (conn->auth_user_request == NULL) {
-        debugs(29, 8, HERE << "no auth_user_request");
-        return;
-    }
-
-    releaseAuthServer();
-
-    /* unlock the connection based lock */
-    debugs(29, 9, HERE << "Unlocking auth_user from the connection '" << conn << "'.");
-
-    conn->auth_user_request = NULL;
 }
 
 void
@@ -192,8 +194,8 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        assert(conn->auth_user_request == NULL);
-        conn->auth_user_request = this;
+        assert(conn->getAuth() == NULL);
+        conn->setAuth(this, "new NTLM handshake request");
         request = aRequest;
         HTTPMSGLOCK(request);
         break;
@@ -240,6 +242,10 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
 
+    // add new helper kv-pair notes to the credentials object
+    // so that any transaction using those credentials can access them
+    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+
     Auth::Ntlm::UserRequest *lm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
     assert(lm_request != NULL);
     assert(lm_request->waiting);
@@ -261,11 +267,11 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = true;
         if (lm_request->request->flags.proxyKeepalive) {
-            Note::Pointer serverBlob = reply.notes.find("token");
-            lm_request->server_blob = xstrdup(serverBlob->firstValue());
+            const char *serverBlob = reply.notes.findFirst("token");
+            lm_request->server_blob = xstrdup(serverBlob);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << serverBlob->firstValue() << "'");
+            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << serverBlob << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
@@ -274,21 +280,28 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     case HelperReply::Okay: {
         /* we're finished, release the helper */
-        Note::Pointer userLabel = reply.notes.find("user");
-        auth_user_request->user()->username(userLabel->firstValue());
+        const char *userLabel = reply.notes.findFirst("user");
+        if (!userLabel) {
+            auth_user_request->user()->credentials(Auth::Failed);
+            safe_free(lm_request->server_blob);
+            lm_request->releaseAuthServer();
+            debugs(29, DBG_CRITICAL, "ERROR: NTLM Authentication helper returned no username. Result: " << reply);
+            break;
+        }
+        auth_user_request->user()->username(userLabel);
         auth_user_request->denyMessage("Login successful");
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
 
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << userLabel->firstValue() << "'");
+        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << userLabel << "'");
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user with a different proxy_auth
          * string */
-        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
+        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->userKey()));
         Auth::User::Pointer local_auth_user = lm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NTLM ||
-                                strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
+                                strcmp(usernamehash->user()->userKey(), auth_user_request->user()->userKey()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the
@@ -313,15 +326,15 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     case HelperReply::Error: {
         /* authentication failure (wrong password, etc.) */
-        Note::Pointer errNote = reply.notes.find("message");
+        const char *errNote = reply.notes.find("message");
         if (errNote != NULL)
-            auth_user_request->denyMessage(errNote->firstValue());
+            auth_user_request->denyMessage(errNote);
         else
             auth_user_request->denyMessage("NTLM Authentication denied with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
-        debugs(29, 4, HERE << "Failed validating user via NTLM. Error returned '" << errNote->firstValue() << "'");
+        debugs(29, 4, "Failed validating user via NTLM. Result: " << reply);
     }
     break;
 
@@ -335,17 +348,17 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
          * Authenticate NTLM start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
-        Note::Pointer errNote = reply.notes.find("message");
+        const char *errNote = reply.notes.find("message");
         if (reply.result == HelperReply::Unknown)
             auth_user_request->denyMessage("Internal Error");
         else if (errNote != NULL)
-            auth_user_request->denyMessage(errNote->firstValue());
+            auth_user_request->denyMessage(errNote);
         else
             auth_user_request->denyMessage("NTLM Authentication failed with no reason given");
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
-        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication validating user. Error returned '" << reply << "'");
+        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication validating user. Result: " << reply);
     }
     break;
     }

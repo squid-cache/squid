@@ -35,15 +35,15 @@
 #if USE_AUTH
 
 #include "acl/Acl.h"
-#include "acl/Data.h"
 #include "acl/Checklist.h"
+#include "acl/Data.h"
 
 class ProxyAuthLookup : public ACLChecklist::AsyncState
 {
 
 public:
     static ProxyAuthLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
+    virtual void checkForAsync(ACLChecklist *) const;
 
 private:
     static ProxyAuthLookup instance_;
@@ -52,23 +52,22 @@ private:
 
 class ACLProxyAuth : public ACL
 {
-
 public:
     MEMPROXY_CLASS(ACLProxyAuth);
 
     ~ACLProxyAuth();
     ACLProxyAuth(ACLData<char const *> *, char const *);
-    ACLProxyAuth (ACLProxyAuth const &);
-    ACLProxyAuth &operator= (ACLProxyAuth const &);
+    ACLProxyAuth(ACLProxyAuth const &);
+    ACLProxyAuth &operator =(ACLProxyAuth const &);
 
     virtual char const *typeString() const;
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
 
     virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool valid () const;
-    virtual bool empty () const;
+    virtual SBufList dump() const;
+    virtual bool valid() const;
+    virtual bool empty() const;
     virtual bool requiresRequest() const {return true;}
 
     virtual ACL *clone() const;

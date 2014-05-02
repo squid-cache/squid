@@ -32,11 +32,13 @@
  */
 
 #include "squid.h"
-#include "Array.h"
-#include "esi/CustomParser.h"
 #include "Debug.h"
-#include "Trie.h"
-#include "TrieCharTransform.h"
+#include "esi/CustomParser.h"
+#include "fatal.h"
+#include "libTrie/Trie.h"
+#include "libTrie/TrieCharTransform.h"
+
+#include <vector>
 
 Trie *ESICustomParser::SearchTrie=NULL;
 
@@ -147,7 +149,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
 
             *tagEnd = '\0';
 
-            Vector<char *>attributes;
+            std::vector<char *>attributes;
 
             char *attribute = const_cast<char *>(endofName + 1);
 
@@ -205,7 +207,8 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
                 attribute = end + 1;
             }
 
-            theClient->start (tag + 1, (const char **)attributes.items, attributes.size() >> 1);
+            // TODO: after c++11, replace &attributes.front() with attributes.data()
+            theClient->start (tag + 1, const_cast<const char **>(&attributes.front()), attributes.size() >> 1);
             /* TODO: attributes */
 
             if (*(tagEnd - 1) == '/')

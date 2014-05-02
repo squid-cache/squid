@@ -1,11 +1,14 @@
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie
+DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
 
 if USE_ESI
 SUBDIRS += libTrie
+endif
+if ENABLE_SNMP
+SUBDIRS += snmplib
 endif
 if ENABLE_XPROF_STATS
 SUBDIRS += profiler
@@ -55,7 +58,6 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	malloc_trace.cc \
 	MemPool.cc \
 	MemPoolChunked.cc \
 	MemPoolMalloc.cc \
@@ -78,8 +80,6 @@ TESTS += tests/testAll
 check_PROGRAMS += tests/testAll
 
 tests_testAll_SOURCES= \
-	tests/testArray.h \
-	tests/testArray.cc \
 	tests/testRFC1035.h \
 	tests/testRFC1035.cc \
 	tests/testRFC1738.h \

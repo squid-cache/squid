@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
 #include "disk.h"
@@ -40,16 +41,15 @@
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
+#include "ipcache.h"
 #include "MemBuf.h"
-#include "anyp/PortCfg.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ipc/Kids.h"
-#include "ipc/Coordinator.h"
-#include "ipcache.h"
-#include "tools.h"
 #include "SwapDir.h"
+#include "tools.h"
 #include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H
@@ -82,10 +82,6 @@ and report the trace back to squid-bugs@squid-cache.org.\n\
 Thanks!\n"
 
 static void mail_warranty(void);
-#if MEM_GEN_TRACE
-void log_trace_done();
-void log_trace_init(char *);
-#endif
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
 
@@ -130,28 +126,34 @@ mail_warranty(void)
 {
     FILE *fp = NULL;
     static char command[256];
-#if HAVE_MKSTEMP
 
+    /*
+     * NP: umask() takes the mask of bits we DONT want set.
+     *
+     * We want the current user to have read/write access
+     * and since this file will be passed to mailsystem,
+     * the group and other must have read access.
+     */
+    const mode_t prev_umask=umask(S_IXUSR|S_IXGRP|S_IWGRP|S_IWOTH|S_IXOTH);
+
+#if HAVE_MKSTEMP
     char filename[] = "/tmp/squid-XXXXXX";
     int tfd = mkstemp(filename);
-
-    if (tfd < 0)
+    if (tfd < 0 || (fp = fdopen(tfd, "w")) == NULL) {
+        umask(prev_umask);
         return;
-
-    if ((fp = fdopen(tfd, "w")) == NULL)
-        return;
-
+    }
 #else
-
     char *filename;
-
-    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL)
+    // XXX tempnam is obsolete since POSIX.2008-1
+    // tmpfile is not an option, we want the created files to stick around
+    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL ||
+            (fp = fopen(filename, "w")) == NULL) {
+        umask(prev_umask);
         return;
-
-    if ((fp = fopen(filename, "w")) == NULL)
-        return;
-
+    }
 #endif
+    umask(prev_umask);
 
     if (Config.EmailFrom)
         fprintf(fp, "From: %s\n", Config.EmailFrom);
@@ -159,16 +161,15 @@ mail_warranty(void)
         fprintf(fp, "From: %s@%s\n", APP_SHORTNAME, uniqueHostname());
 
     fprintf(fp, "To: %s\n", Config.adminEmail);
-
     fprintf(fp, "Subject: %s\n", dead_msg());
-
     fclose(fp);
 
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
-
     if (system(command)) {}		/* XXX should avoid system(3) */
-
     unlink(filename);
+#if !HAVE_MKSTEMP
+    xfree(filename); // tempnam() requires us to free its allocation
+#endif
 }
 
 void
@@ -182,68 +183,7 @@ dumpMallocStats(void)
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
             (int) (ms.bytes_free >> 10),
             Math::intPercent(ms.bytes_free, ms.bytes_total));
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    struct mallinfo mp;
-    int t;
-
-    if (!do_mallinfo)
-        return;
-
-    mp = mallinfo();
-
-    fprintf(debug_log, "Memory usage for " APP_SHORTNAME " via mallinfo():\n");
-
-    fprintf(debug_log, "\ttotal space in arena:  %6ld KB\n",
-            (long)mp.arena >> 10);
-
-    fprintf(debug_log, "\tOrdinary blocks:       %6ld KB %6ld blks\n",
-            (long)mp.uordblks >> 10, (long)mp.ordblks);
-
-    fprintf(debug_log, "\tSmall blocks:          %6ld KB %6ld blks\n",
-            (long)mp.usmblks >> 10, (long)mp.smblks);
-
-    fprintf(debug_log, "\tHolding blocks:        %6ld KB %6ld blks\n",
-            (long)mp.hblkhd >> 10, (long)mp.hblks);
-
-    fprintf(debug_log, "\tFree Small blocks:     %6ld KB\n",
-            (long)mp.fsmblks >> 10);
-
-    fprintf(debug_log, "\tFree Ordinary blocks:  %6ld KB\n",
-            (long)mp.fordblks >> 10);
-
-    t = mp.uordblks + mp.usmblks + mp.hblkhd;
-
-    fprintf(debug_log, "\tTotal in use:          %6d KB %d%%\n",
-            t >> 10, Math::intPercent(t, mp.arena));
-
-    t = mp.fsmblks + mp.fordblks;
-
-    fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
-            t >> 10, Math::intPercent(t, mp.arena));
-
-#if HAVE_STRUCT_MALLINFO_MXFAST
-
-    fprintf(debug_log, "\tmax size of small blocks:\t%d\n",
-            mp.mxfast);
-
-    fprintf(debug_log, "\tnumber of small blocks in a holding block:\t%d\n",
-            mp.nlblks);
-
-    fprintf(debug_log, "\tsmall block rounding factor:\t%d\n",
-            mp.grain);
-
-    fprintf(debug_log, "\tspace (including overhead) allocated in ord. blks:\t%d\n",
-            mp.uordbytes);
-
-    fprintf(debug_log, "\tnumber of ordinary blocks allocated:\t%d\n",
-            mp.allocated);
-
-    fprintf(debug_log, "\tbytes used in maintaining the free tree:\t%d\n",
-            mp.treeoverhead);
-
-#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
-#endif /* HAVE_MALLINFO */
+#endif
 }
 
 void
@@ -458,22 +398,10 @@ sigusr2_handle(int sig)
     DebugSignal = sig;
 
     if (state == 0) {
-#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
-#else
-
-        log_trace_done();
-#endif
-
         state = 1;
     } else {
-#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
-#else
-
-        log_trace_init("/tmp/squid.alloc");
-#endif
-
         state = 0;
     }
 
@@ -551,12 +479,12 @@ getMyHostname(void)
 
     host[0] = '\0';
 
-    if (Config.Sockaddr.http && sa.IsAnyAddr())
+    if (Config.Sockaddr.http && sa.isAnyAddr())
         sa = Config.Sockaddr.http->s;
 
-#if USE_SSL
+#if USE_OPENSSL
 
-    if (Config.Sockaddr.https && sa.IsAnyAddr())
+    if (Config.Sockaddr.https && sa.isAnyAddr())
         sa = Config.Sockaddr.https->s;
 
 #endif
@@ -565,9 +493,9 @@ getMyHostname(void)
      * If the first http_port address has a specific address, try a
      * reverse DNS lookup on it.
      */
-    if ( !sa.IsAnyAddr() ) {
+    if ( !sa.isAnyAddr() ) {
 
-        sa.GetAddrInfo(AI);
+        sa.getAddrInfo(AI);
         /* we are looking for a name. */
         if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
@@ -576,13 +504,13 @@ getMyHostname(void)
 
             present = 1;
 
-            sa.FreeAddrInfo(AI);
+            Ip::Address::FreeAddrInfo(AI);
 
             if (strchr(host, '.'))
                 return host;
         }
 
-        sa.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         debugs(50, 2, "WARNING: failed to resolve " << sa << " to a fully qualified hostname");
     }
 
@@ -602,15 +530,14 @@ getMyHostname(void)
             present = 1;
 
             /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
-            if (AI) {
+            if (AI)
                 freeaddrinfo(AI);
-                AI = NULL;
-            }
 
             return host;
         }
 
-        if (AI) freeaddrinfo(AI);
+        if (AI)
+            freeaddrinfo(AI);
         debugs(50, DBG_IMPORTANT, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
     }
 
@@ -1209,19 +1136,19 @@ getMyPort(void)
     AnyP::PortCfg *p = NULL;
     if ((p = Config.Sockaddr.http)) {
         // skip any special interception ports
-        while (p && (p->intercepted || p->spoof_client_ip))
+        while (p && p->flags.isIntercepted())
             p = p->next;
         if (p)
-            return p->s.GetPort();
+            return p->s.port();
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if ((p = Config.Sockaddr.https)) {
         // skip any special interception ports
-        while (p && (p->intercepted || p->spoof_client_ip))
+        while (p && p->flags.isIntercepted())
             p = p->next;
         if (p)
-            return p->s.GetPort();
+            return p->s.port();
     }
 #endif
 

@@ -33,10 +33,10 @@
  */
 
 #include "squid.h"
-#include "acl/DestinationDomain.h"
 #include "acl/Checklist.h"
-#include "acl/RegexData.h"
+#include "acl/DestinationDomain.h"
 #include "acl/DomainData.h"
+#include "acl/RegexData.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
@@ -53,7 +53,6 @@ void
 DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    checklist->asyncInProgress(true);
     fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
 }
 
@@ -61,13 +60,9 @@ void
 DestinationDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
-    assert (checklist->asyncState() == DestinationDomainLookup::Instance());
-
-    checklist->asyncInProgress(false);
-    checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markDestinationDomainChecked();
     checklist->request->recordLookup(details);
-    checklist->matchNonBlocking();
+    checklist->resumeNonBlockingCheck(DestinationDomainLookup::Instance());
 }
 
 int
@@ -112,8 +107,9 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
     } else if (!checklist->destinationDomainChecked()) {
         /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->request->GetHost() << "'");
-        checklist->changeState(DestinationDomainLookup::Instance());
-        return 0;
+        if (checklist->goAsync(DestinationDomainLookup::Instance()))
+            return -1;
+        // else fall through to "none" match, hiding the lookup failure (XXX)
     }
 
     return data->match("none");

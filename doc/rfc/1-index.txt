@@ -161,3 +161,8 @@ rfc6585.txt
 	429 (Too Many Requests),
 	431 (Request Header Fields Too Large),
 	511 (Network Authentication Required)
+
+rfc6762.txt
+	Multicast DNS
+	Details the DNS requirements on the Squid internal DNS client
+	for resolving URLs in the .local domain.

@@ -1,6 +1,6 @@
 #include "squid.h"
-#include "rfc2671.h"
 #include "rfc1035.h"
+#include "rfc2671.h"
 
 int
 rfc2671RROptPack(char *buf, size_t sz, ssize_t edns_sz)

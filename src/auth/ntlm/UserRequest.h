@@ -1,8 +1,8 @@
 #ifndef _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 #define _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 
-#include "auth/UserRequest.h"
 #include "auth/ntlm/auth_ntlm.h"
+#include "auth/UserRequest.h"
 #include "MemPool.h"
 
 class ConnStateData;
@@ -26,14 +26,14 @@ public:
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
     virtual Auth::Direction module_direction();
-    virtual void onConnectionClose(ConnStateData *);
-    virtual void module_start(AUTHCB *, void *);
+    virtual void module_start(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB *, void *);
+    virtual const char *credentialsStr();
 
     virtual const char * connLastHeader();
 
     /* we need to store the helper server between requests */
     helper_stateful_server *authserver;
-    void releaseAuthServer(void); ///< Release authserver NTLM helpers properly when finished or abandoning.
+    virtual void releaseAuthServer(); ///< Release authserver NTLM helpers properly when finished or abandoning.
 
     /* our current blob to pass to the client */
     char *server_blob;

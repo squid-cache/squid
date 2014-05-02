@@ -1,4 +1,3 @@
-
 /*
  * DEBUG: section 25    MIME Parsing and Internal Icons
  * AUTHOR: Harvest Derived
@@ -41,8 +40,8 @@
 #include "internal.h"
 #include "Mem.h"
 #include "MemBuf.h"
-#include "mime.h"
 #include "MemObject.h"
+#include "mime.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -60,61 +59,51 @@ static char const *mimeGetIcon(const char *fn);
 
 class MimeIcon : public StoreClient
 {
-
 public:
-    MimeIcon ();
-    ~MimeIcon ();
-    void setName (char const *);
-    char const * getName () const;
-    void _free();
+    explicit MimeIcon(const char *aName);
+    ~MimeIcon();
+    void setName(char const *);
+    char const * getName() const;
     void load();
-    void created (StoreEntry *newEntry);
+    void created(StoreEntry *newEntry);
+    MEMPROXY_CLASS(MimeIcon);
 
 private:
-    char *icon;
-    char *url;
+    const char *icon_;
+    char *url_;
 };
+MEMPROXY_CLASS_INLINE(MimeIcon);
 
-class mimeEntry
+class MimeEntry
 {
-
 public:
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
+    explicit MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+                       const char *aContentType,
+                       const char *aContentEncoding, const char *aTransferMode,
+                       bool optionViewEnable, bool optionDownloadEnable,
+                       const char *anIconName);
+    ~MimeEntry();
+    MEMPROXY_CLASS(MimeEntry);
 
-    char *pattern;
+    const char *pattern;
     regex_t compiled_pattern;
-    char *icon;
-    char *content_type;
-    char *content_encoding;
+    const char *content_type;
+    const char *content_encoding;
     char transfer_mode;
-
-    unsigned int view_option:1;
-    unsigned int download_option:1;
-
-    mimeEntry *next;
+    bool view_option;
+    bool download_option;
     MimeIcon theIcon;
+    MimeEntry *next;
 };
+MEMPROXY_CLASS_INLINE(MimeEntry);
 
-static mimeEntry *MimeTable = NULL;
-static mimeEntry **MimeTableTail = &MimeTable;
+static MimeEntry *MimeTable = NULL;
+static MimeEntry **MimeTableTail = &MimeTable;
 
-void *
-mimeEntry::operator new (size_t byteCount)
-{
-    return xcalloc(1, byteCount);
-}
-
-void
-mimeEntry::operator delete (void *address)
-{
-    safe_free (address);
-}
-
-static mimeEntry *
+static MimeEntry *
 mimeGetEntry(const char *fn, int skip_encodings)
 {
-    mimeEntry *m;
+    MimeEntry *m;
     char *t;
     char *name = xstrdup(fn);
 
@@ -149,40 +138,37 @@ mimeGetEntry(const char *fn, int skip_encodings)
     return m;
 }
 
-MimeIcon::MimeIcon () : icon (NULL), url (NULL)
-{}
-
-MimeIcon::~MimeIcon ()
+MimeIcon::MimeIcon(const char *aName) :
+        icon_(xstrdup(aName))
 {
-    _free();
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
+}
+
+MimeIcon::~MimeIcon()
+{
+    xfree(icon_);
+    xfree(url_);
 }
 
 void
-MimeIcon::setName (char const *aString)
+MimeIcon::setName(char const *aString)
 {
-    safe_free (icon);
-    safe_free (url);
-    icon = xstrdup (aString);
-    url = xstrdup (internalLocalUri("/squid-internal-static/icons/", icon));
+    xfree(icon_);
+    xfree(url_);
+    icon_ = xstrdup(aString);
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
 
 char const *
-MimeIcon::getName () const
+MimeIcon::getName() const
 {
-    return icon;
-}
-
-void
-MimeIcon::_free()
-{
-    safe_free (icon);
-    safe_free (url);
+    return icon_;
 }
 
 char const *
 mimeGetIcon(const char *fn)
 {
-    mimeEntry *m = mimeGetEntry(fn, 1);
+    MimeEntry *m = mimeGetEntry(fn, 1);
 
     if (m == NULL)
         return NULL;
@@ -211,10 +197,10 @@ mimeGetIconURL(const char *fn)
     }
 }
 
-char *
+const char *
 mimeGetContentType(const char *fn)
 {
-    mimeEntry *m = mimeGetEntry(fn, 1);
+    MimeEntry *m = mimeGetEntry(fn, 1);
 
     if (m == NULL)
         return NULL;
@@ -225,10 +211,10 @@ mimeGetContentType(const char *fn)
     return m->content_type;
 }
 
-char *
+const char *
 mimeGetContentEncoding(const char *fn)
 {
-    mimeEntry *m = mimeGetEntry(fn, 0);
+    MimeEntry *m = mimeGetEntry(fn, 0);
 
     if (m == NULL)
         return NULL;
@@ -242,22 +228,22 @@ mimeGetContentEncoding(const char *fn)
 char
 mimeGetTransferMode(const char *fn)
 {
-    mimeEntry *m = mimeGetEntry(fn, 0);
+    MimeEntry *m = mimeGetEntry(fn, 0);
     return m ? m->transfer_mode : 'I';
 }
 
-int
+bool
 mimeGetDownloadOption(const char *fn)
 {
-    mimeEntry *m = mimeGetEntry(fn, 1);
+    MimeEntry *m = mimeGetEntry(fn, 1);
     return m ? m->download_option : 0;
 }
 
-int
+bool
 mimeGetViewOption(const char *fn)
 {
-    mimeEntry *m = mimeGetEntry(fn, 0);
-    return m ? m->view_option : 0;
+    MimeEntry *m = mimeGetEntry(fn, 0);
+    return m != 0 ? m->view_option : false;
 }
 
 /* Initializes/reloads the mime table
@@ -281,7 +267,7 @@ mimeInit(char *filename)
     int view_option;
     int download_option;
     regex_t re;
-    mimeEntry *m;
+    MimeEntry *m;
     int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
 
     if (filename == NULL)
@@ -355,23 +341,8 @@ mimeInit(char *filename)
             continue;
         }
 
-        m = new mimeEntry;
-        m->pattern = xstrdup(pattern);
-        m->content_type = xstrdup(type);
-        m->theIcon.setName(icon);
-        m->content_encoding = xstrdup(encoding);
-        m->compiled_pattern = re;
-
-        if (!strcasecmp(mode, "ascii"))
-            m->transfer_mode = 'A';
-        else if (!strcasecmp(mode, "text"))
-            m->transfer_mode = 'A';
-        else
-            m->transfer_mode = 'I';
-
-        m->view_option = view_option;
-
-        m->download_option = download_option;
+        m = new MimeEntry(pattern,re,type,encoding,mode,view_option,
+                          download_option,icon);
 
         *MimeTableTail = m;
 
@@ -381,28 +352,19 @@ mimeInit(char *filename)
     }
 
     fclose(fp);
-    /*
-     * Create Icon StoreEntry's
-     */
 
     for (m = MimeTable; m != NULL; m = m->next)
         m->theIcon.load();
-
-    debugs(25, DBG_IMPORTANT, "Loaded Icons.");
+    debugs(25, DBG_IMPORTANT, "Finished loading MIME types and icons.");
 }
 
 void
 mimeFreeMemory(void)
 {
-    mimeEntry *m;
+    MimeEntry *m;
 
     while ((m = MimeTable)) {
         MimeTable = m->next;
-        safe_free(m->pattern);
-        safe_free(m->content_type);
-        safe_free(m->icon);
-        safe_free(m->content_encoding);
-        regfree(&m->compiled_pattern);
         delete m;
     }
 
@@ -412,91 +374,101 @@ mimeFreeMemory(void)
 void
 MimeIcon::load()
 {
-    const char *type = mimeGetContentType(icon);
+    const char *type = mimeGetContentType(icon_);
 
     if (type == NULL)
         fatal("Unknown icon format while reading mime.conf\n");
 
-    StoreEntry::getPublic(this, url, Http::METHOD_GET);
+    StoreEntry::getPublic(this, url_, Http::METHOD_GET);
 }
 
 void
 MimeIcon::created (StoreEntry *newEntry)
 {
-    /* is already in the store, do nothing */
-
+    /* if the icon is already in the store, do nothing */
     if (!newEntry->isNull())
         return;
 
     int fd;
-
     int n;
-
     RequestFlags flags;
-
     struct stat sb;
-
     LOCAL_ARRAY(char, path, MAXPATHLEN);
-
     char *buf;
 
-    snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon);
+    snprintf(path, MAXPATHLEN, "%s/%s", Config.icons.directory, icon_);
 
     fd = file_open(path, O_RDONLY | O_BINARY);
-
     if (fd < 0) {
-        debugs(25, DBG_CRITICAL, "mimeLoadIconFile: " << path << ": " << xstrerror());
+        debugs(25, DBG_CRITICAL, "Problem opening icon file " << path << ": " << xstrerror());
         return;
     }
-
     if (fstat(fd, &sb) < 0) {
-        debugs(25, DBG_CRITICAL, "mimeLoadIconFile: FD " << fd << ": fstat: " << xstrerror());
+        debugs(25, DBG_CRITICAL, "Problem opening icon file. Fd: " << fd << ", fstat error " << xstrerror());
         file_close(fd);
         return;
     }
 
     flags.cachable = true;
-    StoreEntry *e = storeCreateEntry(url,url,flags,Http::METHOD_GET);
+    StoreEntry *e = storeCreateEntry(url_,url_,flags,Http::METHOD_GET);
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     e->setPublicKey();
     e->buffer();
-    HttpRequest *r = HttpRequest::CreateFromUrl(url);
+    HttpRequest *r = HttpRequest::CreateFromUrl(url_);
 
     if (NULL == r)
         fatal("mimeLoadIcon: cannot parse internal URL");
 
-    e->mem_obj->request = HTTPMSGLOCK(r);
+    e->mem_obj->request = r;
+    HTTPMSGLOCK(e->mem_obj->request);
 
     HttpReply *reply = new HttpReply;
 
-    reply->setHeaders(HTTP_OK, NULL, mimeGetContentType(icon), sb.st_size, sb.st_mtime, -1);
-
+    reply->setHeaders(Http::scOkay, NULL, mimeGetContentType(icon_), sb.st_size, sb.st_mtime, -1);
     reply->cache_control = new HttpHdrCc();
-
     reply->cache_control->maxAge(86400);
-
     reply->header.putCc(reply->cache_control);
-
     e->replaceHttpReply(reply);
 
     /* read the file into the buffer and append it to store */
     buf = (char *)memAllocate(MEM_4K_BUF);
-
     while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
         e->append(buf, n);
 
     file_close(fd);
-
     e->flush();
-
     e->complete();
-
     e->timestampsSet();
-
-    debugs(25, 3, "Loaded icon " << url);
-
-    e->unlock();
-
+    e->unlock("MimeIcon::created");
     memFree(buf, MEM_4K_BUF);
+    debugs(25, 3, "Loaded icon " << url_);
+}
+
+MimeEntry::~MimeEntry()
+{
+    xfree(pattern);
+    xfree(content_type);
+    xfree(content_encoding);
+    regfree(&compiled_pattern);
+}
+
+MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+                     const char *aContentType, const char *aContentEncoding,
+                     const char *aTransferMode, bool optionViewEnable,
+                     bool optionDownloadEnable, const char *anIconName) :
+        pattern(xstrdup(aPattern)),
+        compiled_pattern(compiledPattern),
+        content_type(xstrdup(aContentType)),
+        content_encoding(xstrdup(aContentEncoding)),
+        view_option(optionViewEnable),
+        download_option(optionViewEnable),
+        theIcon(anIconName), next(NULL)
+{
+    if (!strcasecmp(aTransferMode, "ascii"))
+        transfer_mode = 'A';
+    else if (!strcasecmp(aTransferMode, "text"))
+        transfer_mode = 'A';
+    else
+        transfer_mode = 'I';
 }

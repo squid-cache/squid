@@ -35,11 +35,11 @@
 
 #if USE_ICMP
 
-#include "leakcheck.h"
-#include "SquidTime.h"
+#include "Debug.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "Debug.h"
+#include "leakcheck.h"
+#include "SquidTime.h"
 
 const char *icmpPktStr[] = {
     "Echo Reply",
@@ -137,7 +137,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     icmp->icmp_cksum = CheckSum((unsigned short *) icmp, icmp_pktsize);
 
-    to.GetAddrInfo(S);
+    to.getAddrInfo(S);
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);
 
@@ -155,7 +155,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     }
 
     Log(to, ' ', NULL, 0, 0);
-    to.FreeAddrInfo(S);
+    Ip::Address::FreeAddrInfo(S);
 }
 
 void
@@ -179,7 +179,7 @@ Icmp4::Recv(void)
     if (pkt == NULL)
         pkt = (char *)xmalloc(MAX_PKT4_SZ);
 
-    preply.from.InitAddrInfo(from);
+    Ip::Address::InitAddrInfo(from);
     n = recvfrom(icmp_sock,
                  (void *)pkt,
                  MAX_PKT4_SZ,
@@ -222,12 +222,12 @@ Icmp4::Recv(void)
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
 
     if (icmp->icmp_type != ICMP_ECHOREPLY) {
-        preply.from.FreeAddrInfo(from);
+        Ip::Address::FreeAddrInfo(from);
         return;
     }
 
     if (icmp->icmp_id != icmp_ident) {
-        preply.from.FreeAddrInfo(from);
+        Ip::Address::FreeAddrInfo(from);
         return;
     }
 
@@ -246,7 +246,7 @@ Icmp4::Recv(void)
     control.SendResult(preply, (sizeof(pingerReplyData) - MAX_PKT4_SZ + preply.psize) );
 
     Log(preply.from, icmp->icmp_type, icmpPktStr[icmp->icmp_type], preply.rtt, preply.hops);
-    preply.from.FreeAddrInfo(from);
+    Ip::Address::FreeAddrInfo(from);
 }
 
 #endif /* USE_ICMP */

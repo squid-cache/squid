@@ -30,7 +30,7 @@ ClientDelayConfig::finalize()
 
 void ClientDelayConfig::freePoolCount()
 {
-    pools.clean();
+    pools.clear();
 }
 
 void ClientDelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) const
@@ -83,7 +83,7 @@ void ClientDelayConfig::parsePoolAccess(ConfigParser &parser)
     }
 
     --pool;
-    aclParseAccessLine(parser, &pools[pool].access);
+    aclParseAccessLine("client_delay_access", parser, &pools[pool].access);
 }
 
 void ClientDelayConfig::clean()

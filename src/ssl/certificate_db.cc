@@ -1,14 +1,9 @@
 #include "squid.h"
 #include "ssl/certificate_db.h"
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_FSTREAM
+
+#include <cerrno>
 #include <fstream>
-#endif
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -165,9 +160,13 @@ void Ssl::CertificateDb::sq_TXT_DB_delete(TXT_DB *db, const char **row)
     if (!db)
         return;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db->data), i));
+#else
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, i));
+#endif
 #else
     for (int i = 0; i < sk_num(db->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db->data, i));
@@ -180,10 +179,9 @@ void Ssl::CertificateDb::sq_TXT_DB_delete(TXT_DB *db, const char **row)
 }
 
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
-void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx)
-{
+void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
     char **rrow;
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     rrow = (char **)sk_OPENSSL_PSTRING_delete(db->data, idx);
 #else
     rrow = (char **)sk_delete(db->data, idx);
@@ -197,7 +195,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx)
     const Columns db_indexes[]={cnlSerial, cnlName};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
         void *data = NULL;
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
         if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db->index[db_indexes[i]])
             data = lh_OPENSSL_STRING_delete(fieldIndex, rrow);
 #else
@@ -209,29 +207,25 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx)
     }
 }
 
-unsigned long Ssl::CertificateDb::index_serial_hash(const char **a)
-{
+unsigned long Ssl::CertificateDb::index_serial_hash(const char **a) {
     const char *n = a[Ssl::CertificateDb::cnlSerial];
     while (*n == '0')
         ++n;
     return lh_strhash(n);
 }
 
-int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b)
-{
+int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b) {
     const char *aa, *bb;
     for (aa = a[Ssl::CertificateDb::cnlSerial]; *aa == '0'; ++aa);
     for (bb = b[Ssl::CertificateDb::cnlSerial]; *bb == '0'; ++bb);
     return strcmp(aa, bb);
 }
 
-unsigned long Ssl::CertificateDb::index_name_hash(const char **a)
-{
+unsigned long Ssl::CertificateDb::index_name_hash(const char **a) {
     return(lh_strhash(a[Ssl::CertificateDb::cnlName]));
 }
 
-int Ssl::CertificateDb::index_name_cmp(const char **a, const char **b)
-{
+int Ssl::CertificateDb::index_name_cmp(const char **a, const char **b) {
     return(strcmp(a[Ssl::CertificateDb::cnlName], b[CertificateDb::cnlName]));
 }
 
@@ -248,23 +242,20 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
         max_db_size(aMax_db_size),
         fs_block_size(aFs_block_size),
         dbLock(db_full),
-        enabled_disk_store(true)
-{
+        enabled_disk_store(true) {
     if (db_path.empty() && !max_db_size)
         enabled_disk_store = false;
     else if ((db_path.empty() && max_db_size) || (!db_path.empty() && !max_db_size))
         throw std::runtime_error("ssl_crtd is missing the required parameter. There should be -s and -M parameters together.");
 }
 
-bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
-{
+bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
     const Locker locker(dbLock, Here);
     load();
     return pure_find(host_name, cert, pkey);
 }
 
-bool Ssl::CertificateDb::purgeCert(std::string const & key)
-{
+bool Ssl::CertificateDb::purgeCert(std::string const & key) {
     const Locker locker(dbLock, Here);
     load();
     if (!db)
@@ -277,8 +268,7 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key)
     return true;
 }
 
-bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName)
-{
+bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName) {
     const Locker locker(dbLock, Here);
     load();
     if (!db || !cert || !pkey)
@@ -363,8 +353,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     return true;
 }
 
-void Ssl::CertificateDb::create(std::string const & db_path)
-{
+void Ssl::CertificateDb::create(std::string const & db_path) {
     if (db_path == "")
         throw std::runtime_error("Path to db is empty");
     std::string db_full(db_path + "/" + db_file);
@@ -387,14 +376,12 @@ void Ssl::CertificateDb::create(std::string const & db_path)
         throw std::runtime_error("Cannot open " + db_full + " to open");
 }
 
-void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size)
-{
+void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size) {
     CertificateDb db(db_path, max_db_size, 0);
     db.load();
 }
 
-bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
-{
+bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
     if (!db)
         return false;
 
@@ -416,23 +403,19 @@ bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Poin
     return true;
 }
 
-size_t Ssl::CertificateDb::size() const
-{
+size_t Ssl::CertificateDb::size() const {
     return readSize();
 }
 
-void Ssl::CertificateDb::addSize(std::string const & filename)
-{
+void Ssl::CertificateDb::addSize(std::string const & filename) {
     writeSize(readSize() + getFileSize(filename));
 }
 
-void Ssl::CertificateDb::subSize(std::string const & filename)
-{
+void Ssl::CertificateDb::subSize(std::string const & filename) {
     writeSize(readSize() - getFileSize(filename));
 }
 
-size_t Ssl::CertificateDb::readSize() const
-{
+size_t Ssl::CertificateDb::readSize() const {
     std::ifstream ifstr(size_full.c_str());
     if (!ifstr && enabled_disk_store)
         throw std::runtime_error("cannot open for reading: " + size_full);
@@ -442,24 +425,21 @@ size_t Ssl::CertificateDb::readSize() const
     return db_size;
 }
 
-void Ssl::CertificateDb::writeSize(size_t db_size)
-{
+void Ssl::CertificateDb::writeSize(size_t db_size) {
     std::ofstream ofstr(size_full.c_str());
     if (!ofstr && enabled_disk_store)
         throw std::runtime_error("cannot write \"" + size_full + "\" file");
     ofstr << db_size;
 }
 
-size_t Ssl::CertificateDb::getFileSize(std::string const & filename)
-{
+size_t Ssl::CertificateDb::getFileSize(std::string const & filename) {
     std::ifstream file(filename.c_str(), std::ios::binary);
     file.seekg(0, std::ios_base::end);
     size_t file_size = file.tellg();
     return ((file_size + fs_block_size - 1) / fs_block_size) * fs_block_size;
 }
 
-void Ssl::CertificateDb::load()
-{
+void Ssl::CertificateDb::load() {
     // Load db from file.
     Ssl::BIO_Pointer in(BIO_new(BIO_s_file()));
     if (!in || BIO_read_filename(in.get(), db_full.c_str()) <= 0)
@@ -471,19 +451,11 @@ void Ssl::CertificateDb::load()
         corrupt = true;
 
     // Create indexes in db.
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial), LHASH_COMP_FN(index_serial)))
-        corrupt = true;
-
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name), LHASH_COMP_FN(index_name)))
-        corrupt = true;
-#else
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
         corrupt = true;
 
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
         corrupt = true;
-#endif
 
     if (corrupt)
         throw std::runtime_error("The SSL certificate database " + db_path + " is corrupted. Please rebuild");
@@ -491,8 +463,7 @@ void Ssl::CertificateDb::load()
     db.reset(temp_db.release());
 }
 
-void Ssl::CertificateDb::save()
-{
+void Ssl::CertificateDb::save() {
     if (!db)
         throw std::runtime_error("The certificates database is not loaded");;
 
@@ -506,8 +477,7 @@ void Ssl::CertificateDb::save()
 }
 
 // Normally defined in defines.h file
-void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
-{
+void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex) {
     const std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
     sq_TXT_DB_delete_row(db.get(), rowIndex);
 
@@ -517,15 +487,18 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
         throw std::runtime_error("Failed to remove certficate file " + filename + " from db");
 }
 
-bool Ssl::CertificateDb::deleteInvalidCertificate()
-{
+bool Ssl::CertificateDb::deleteInvalidCertificate() {
     if (!db)
         return false;
 
     bool removed_one = false;
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), i));
+#else
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#endif
 #else
     for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
@@ -543,20 +516,23 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
     return true;
 }
 
-bool Ssl::CertificateDb::deleteOldestCertificate()
-{
+bool Ssl::CertificateDb::deleteOldestCertificate() {
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
 #else
     if (sk_num(db.get()->data) == 0)
 #endif
         return false;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+    const char **row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), 0));
+#else
     const char **row = (const char **)sk_OPENSSL_PSTRING_value(db.get()->data, 0);
+#endif
 #else
     const char **row = (const char **)sk_value(db.get()->data, 0);
 #endif
@@ -566,14 +542,17 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     return true;
 }
 
-bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
-{
+bool Ssl::CertificateDb::deleteByHostname(std::string const & host) {
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+#if SQUID_SSLTXTDB_PSTRINGDATA
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), i));
+#else
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#endif
 #else
     for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
@@ -586,7 +565,6 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
     return false;
 }
 
-bool Ssl::CertificateDb::IsEnabledDiskStore() const
-{
+bool Ssl::CertificateDb::IsEnabledDiskStore() const {
     return enabled_disk_store;
 }

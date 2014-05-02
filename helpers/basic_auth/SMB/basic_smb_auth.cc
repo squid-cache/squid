@@ -45,12 +45,7 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 #define NMB_UNICAST		1
 #define NMB_BROADCAST	2

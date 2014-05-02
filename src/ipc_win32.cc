@@ -203,26 +203,30 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 // AYJ: these flags should be neutral, but if not IPv6 version needs adding
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
 
-        tmp_addr.InitAddrInfo(aiPS);
+        Ip::Address::InitAddrInfo(aiPS);
 
         if (getsockname(pwfd, aiPS->ai_addr, &(aiPS->ai_addrlen) ) < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
+            Ip::Address::FreeAddrInfo(aiPS);
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
         tmp_addr = *aiPS;
+        Ip::Address::FreeAddrInfo(aiPS);
 
         debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << tmp_addr );
 
-        tmp_addr.InitAddrInfo(aiCS);
+        Ip::Address::InitAddrInfo(aiCS);
 
         if (getsockname(crfd, aiCS->ai_addr, &(aiCS->ai_addrlen) ) < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
+            Ip::Address::FreeAddrInfo(aiCS);
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        tmp_addr.SetEmpty();
+        tmp_addr.setEmpty();
         tmp_addr = *aiCS;
+        Ip::Address::FreeAddrInfo(aiCS);
 
         debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << tmp_addr );
     }
@@ -482,27 +486,31 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        PS_ipc.InitAddrInfo(aiPS_ipc);
+        Ip::Address::InitAddrInfo(aiPS_ipc);
 
         if (getsockname(pwfd_ipc, aiPS_ipc->ai_addr, &(aiPS_ipc->ai_addrlen)) < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             ipcSend(cwfd, err_string, strlen(err_string));
+            Ip::Address::FreeAddrInfo(aiPS_ipc);
             goto cleanup;
         }
 
         PS_ipc = *aiPS_ipc;
+        Ip::Address::FreeAddrInfo(aiPS_ipc);
 
         debugs(54, 3, "ipcCreate: FD " << pwfd_ipc << " sockaddr " << PS_ipc);
 
-        CS_ipc.InitAddrInfo(aiCS_ipc);
+        Ip::Address::InitAddrInfo(aiCS_ipc);
 
         if (getsockname(crfd_ipc, aiCS_ipc->ai_addr, &(aiCS_ipc->ai_addrlen)) < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             ipcSend(cwfd, err_string, strlen(err_string));
+            Ip::Address::FreeAddrInfo(aiCS_ipc);
             goto cleanup;
         }
 
         CS_ipc = *aiCS_ipc;
+        Ip::Address::FreeAddrInfo(aiCS_ipc);
 
         debugs(54, 3, "ipcCreate: FD " << crfd_ipc << " sockaddr " << CS_ipc);
 

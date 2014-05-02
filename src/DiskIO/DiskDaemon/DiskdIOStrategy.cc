@@ -34,16 +34,16 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "ConfigOption.h"
+#include "diomsg.h"
+#include "DiskdFile.h"
 #include "DiskdIOStrategy.h"
 #include "DiskIO/DiskFile.h"
-#include "DiskdFile.h"
-#include "diomsg.h"
 #include "fd.h"
-#include "Store.h"
-#include "StatCounters.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
+#include "Store.h"
 #include "unlinkd.h"
 
 #if HAVE_SYS_IPC_H
@@ -195,7 +195,7 @@ DiskdIOStrategy::init()
     args[2] = skey2;
     args[3] = skey3;
     args[4] = NULL;
-    localhost.SetLocalhost();
+    localhost.setLocalhost();
     pid = ipcCreate(IPC_STREAM,
                     Config.Program.diskd,
                     args,

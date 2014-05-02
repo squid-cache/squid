@@ -38,9 +38,9 @@
 
 double xatof(const char *token);
 int xatoi(const char *token);
-unsigned int xatoui(const char *token);
+unsigned int xatoui(const char *token, char eov = '\0');
 long xatol(const char *token);
-int64_t xatoll(const char *token, int base);
+int64_t xatoll(const char *token, int base, char eov = '\0');
 unsigned short xatos(const char *token);
 
 /**

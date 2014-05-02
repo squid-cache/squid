@@ -40,9 +40,7 @@
 #include "SquidConfig.h"
 #include "Store.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
@@ -183,7 +181,7 @@ peerSourceHashSelectParent(HttpRequest * request)
     if (n_sourcehash_peers == 0)
         return NULL;
 
-    key = request->client_addr.NtoA(ntoabuf, sizeof(ntoabuf));
+    key = request->client_addr.toStr(ntoabuf, sizeof(ntoabuf));
 
     /* calculate hash key */
     debugs(39, 2, "peerSourceHashSelectParent: Calculating hash for " << key);

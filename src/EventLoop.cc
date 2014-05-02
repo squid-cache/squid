@@ -32,13 +32,18 @@
 
 #include "squid.h"
 #include "AsyncEngine.h"
+#include "base/AsyncCallQueue.h"
 #include "Debug.h"
 #include "EventLoop.h"
-#include "base/AsyncCallQueue.h"
 #include "SquidTime.h"
 
+EventLoop *EventLoop::Running = NULL;
+
 EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
-        primaryEngine(NULL)
+        primaryEngine(NULL),
+        loop_delay(EVENT_LOOP_TIMEOUT),
+        error(false),
+        runOnceResult(false)
 {}
 
 void
@@ -93,7 +98,12 @@ EventLoop::run()
 {
     prepareToRun();
 
+    assert(!Running);
+    Running = this;
+
     while (!runOnce());
+
+    Running = NULL;
 }
 
 bool

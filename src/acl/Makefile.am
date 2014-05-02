@@ -7,8 +7,15 @@ noinst_LTLIBRARIES = libapi.la libstate.la libacls.la
 libapi_la_SOURCES = \
 	Acl.cc \
 	Acl.h \
+	BoolOps.cc \
+	BoolOps.h \
 	Checklist.cc \
-	Checklist.h
+	Checklist.h \
+	forward.h \
+	InnerNode.cc \
+	InnerNode.h \
+	Tree.cc \
+	Tree.h
 
 ## Data-dependent Squid/transaction state used by specific ACLs.
 ## Does not refer to specific ACLs to avoid circular dependencies.
@@ -34,6 +41,10 @@ libacls_la_SOURCES = \
 	Time.h \
 	TimeData.cc \
 	TimeData.h \
+	AllOf.cc \
+	AllOf.h \
+	AnyOf.cc \
+	AnyOf.h \
 	Asn.cc \
 	Asn.h \
 	Browser.cc \
@@ -73,6 +84,10 @@ libacls_la_SOURCES = \
 	Method.h \
 	MyPortName.cc \
 	MyPortName.h \
+	Note.h \
+	Note.cc \
+	NoteData.h \
+	NoteData.cc \
 	PeerName.cc \
 	PeerName.h \
 	Protocol.cc \
@@ -132,6 +147,14 @@ SSL_ACLS = \
 if ENABLE_SSL
 libacls_la_SOURCES += $(SSL_ACLS)
 endif
+
+if USE_ADAPTATION
+libacls_la_SOURCES += AdaptationService.h \
+	AdaptationService.cc \
+	AdaptationServiceData.h \
+	AdaptationServiceData.cc
+endif
+
 
 EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 

@@ -39,15 +39,11 @@
 #define _CONFFILE_HH
 
 #if !defined(__cplusplus)
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma interface
-#else
 #ifndef HAVE_BOOL
 #define HAVE_BOOL
 typedef int bool;
 #define false 0
 #define true  1
-#endif
 #endif
 #endif /* __cplusplus */
 
@@ -56,7 +52,6 @@ typedef int bool;
 #define DEFAULT_SQUID_CONF "/usr/local/squid/etc/squid.conf"
 #endif
 
-#include <stdio.h>
 #include <vector>
 
 struct CacheDir {

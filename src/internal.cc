@@ -35,20 +35,20 @@
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
-#include "icmp/net_db.h"
-#include "Store.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
+#include "icmp/net_db.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "tools.h"
 #include "URL.h"
 #include "wordlist.h"
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects,
- * return HTTP_NOT_FOUND for others
+ * return Http::scNotFound for others
  */
 void
 internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry)
@@ -68,16 +68,17 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
 #endif
 
         HttpReply *reply = new HttpReply;
-        reply->setHeaders(HTTP_NOT_FOUND, "Not Found", "text/plain", strlen(msgbuf), squid_curtime, -2);
+        reply->setHeaders(Http::scNotFound, "Not Found", "text/plain", strlen(msgbuf), squid_curtime, -2);
         entry->replaceHttpReply(reply);
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
     } else if (0 == strncmp(upath, "/squid-internal-mgr/", 20)) {
+        debugs(17, 2, "calling CacheManager due to URL-path /squid-internal-mgr/");
         CacheManager::GetInstance()->Start(clientConn, request, entry);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = new ErrorState(ERR_INVALID_REQ, HTTP_NOT_FOUND, request);
+        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request);
         errorAppendEntry(entry, err);
     }
 }
@@ -108,8 +109,8 @@ internalRemoteUri(const char *host, unsigned short port, const char *dir, const 
 
     /* check for an IP address and format appropriately if found */
     Ip::Address test = lc_host;
-    if ( !test.IsAnyAddr() ) {
-        test.ToHostname(lc_host,SQUIDHOSTNAMELEN);
+    if ( !test.isAnyAddr() ) {
+        test.toHostStr(lc_host,SQUIDHOSTNAMELEN);
     }
 
     /*

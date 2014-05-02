@@ -2,16 +2,12 @@
 #define _SQUID_SSL_ERRORDETAILMANAGER_H
 
 #include "base/RefCount.h"
-#include "ssl/gadgets.h"
-#include "ssl/support.h"
+#include "HttpRequest.h"
 #include "SquidString.h"
+#include "ssl/support.h"
 
-#if HAVE_MAP
 #include <map>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
 
 class HttpRequest;
 
@@ -69,7 +65,7 @@ public:
      * \param entry where to store error details
      * \return true on success, false otherwise
      */
-    bool getErrorDetail(Ssl::ssl_error_t value, HttpRequest *request, ErrorDetailEntry &entry);
+    bool getErrorDetail(Ssl::ssl_error_t value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry);
     const char *getDefaultErrorDescr(Ssl::ssl_error_t value); ///< the default error description for a given error
     const char *getDefaultErrorDetail(Ssl::ssl_error_t value); ///< the default error details for a given error
 

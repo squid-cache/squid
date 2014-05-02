@@ -4,7 +4,7 @@ libexec_PROGRAMS 		= ext_ldap_group_acl
 ext_ldap_group_acl_SOURCES	= ext_ldap_group_acl.cc
 
 man_MANS 			= ext_ldap_group_acl.8
-EXTRA_DIST			= ext_ldap_group_acl.8 config.test
+EXTRA_DIST			= ext_ldap_group_acl.8 required.m4
 
 LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \

@@ -36,13 +36,14 @@
 #include "CacheDigest.h"
 #include "ClientInfo.h"
 #include "disk.h"
+#include "dlink.h"
 #include "event.h"
+#include "icmp/net_db.h"
 #include "md5.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
-#include "icmp/net_db.h"
 #include "RegexList.h"
 #include "SquidConfig.h"
 #include "SquidList.h"
@@ -50,12 +51,8 @@
 #include "Store.h"
 #include "StoreEntryStream.h"
 
-#if HAVE_IOMANIP
 #include <iomanip>
-#endif
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 /* forward declarations */
 static void memFree2K(void *);
@@ -634,9 +631,7 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     MemPoolMeter *pm = mp_st->meter;
     const char *delim = "\t ";
 
-#if HAVE_IOMANIP
     stream.setf(std::ios_base::fixed);
-#endif
     stream << std::setw(20) << std::left << mp_st->label << delim;
     stream << std::setw(4) << std::right << mp_st->obj_size << delim;
 

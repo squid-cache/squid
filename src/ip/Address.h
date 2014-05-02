@@ -1,41 +1,11 @@
 /*
  * DEBUG: section 14    IP Storage and Handling
- * AUTHOR: Amos Jeffries
- *
- * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from the
- *  Internet community.  Development is led by Duane Wessels of the
- *  National Laboratory for Applied Network Research and funded by the
- *  National Science Foundation.  Squid is Copyrighted (C) 1998 by
- *  the Regents of the University of California.  Please see the
- *  COPYRIGHT file for full details.  Squid incorporates software
- *  developed and/or copyrighted by other sources.  Please see the
- *  CREDITS file for full details.
- *
- *  This Ip::Address code is copyright (C) 2007 by Treehouse Networks Ltd
- *  of New Zealand. It is published and Lisenced as an extension of
- *  squid under the same conditions as the main squid application.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
-#ifndef _SQUID_IP_IPADDRESS_H
-#define _SQUID_IP_IPADDRESS_H
+#ifndef _SQUID_SRC_IP_ADDRESS_H
+#define _SQUID_SRC_IP_ADDRESS_H
 
+#include <iosfwd>
+#include <ostream>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -50,13 +20,6 @@
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
-#endif
-
-#if HAVE_IOSFWD
-#include <iosfwd>
-#endif
-#if HAVE_OSTREAM
-#include <ostream>
 #endif
 
 namespace Ip
@@ -75,18 +38,8 @@ class Address
 public:
     /** @name Constructors and Destructor */
     /*@{*/
-    Address() { SetEmpty(); }
-    Address(const Address &);
-
-    /**
-     * This constructor takes its own copy of the object pointed to for memory-safe usage later.
-     * The caller must itself perform and ptr memory-management needed.
-     *
-     \deprecated Use of pointers can be nasty. Consider this a last-resort.
-     *           Prefer the by-reference (&) version instead.
-     */
-    Address(Address *);
-
+    Address() { setEmpty(); }
+    Address(const Ip::Address &);
     Address(const struct in_addr &);
     Address(const struct sockaddr_in &);
     Address(const struct in6_addr &);
@@ -126,20 +79,20 @@ public:
      \retval true  if content was received as an IPv4-Mapped address
      \retval false if content was received as a non-mapped IPv6 native address.
      */
-    bool IsIPv4() const;
+    bool isIPv4() const;
 
     /** Test whether content can be used as an IPv6 address.
      \retval true  if content is a non IPv4-mapped address.
      \retval false if content is IPv4-mapped.
      */
-    bool IsIPv6() const;
+    bool isIPv6() const;
 
     /** Test whether content can be used as a Socket address.
      \retval true  if address AND port are both set
      \retval true  if content was received as a Socket address with port
      \retval false if port in unset (zero)
      */
-    bool IsSockAddr() const;
+    bool isSockAddr() const;
 
     /** Content-neutral test for whether the specific IP case ANY_ADDR is stored.
      *  This is the default content of a new undefined Ip::Address object.
@@ -147,14 +100,14 @@ public:
      \retval true IPv6 ::
      \retval false anything else.
      */
-    bool IsAnyAddr() const;
+    bool isAnyAddr() const;
 
     /** Content-neutral test for whether the specific IP case NO_ADDR is stored.
      \retval true IPv4 255.255.255.255
      \retval true IPv6 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
      \retval false anything else.
      */
-    bool IsNoAddr() const;
+    bool isNoAddr() const;
 
     /** Content-neutral test for whether the specific IP case LOCALHOST is stored.
      *  This is the default content of a new undefined Ip::Address object.
@@ -162,21 +115,21 @@ public:
      \retval true IPv6 ::1
      \retval false anything else.
      */
-    bool IsLocalhost() const;
+    bool isLocalhost() const;
 
     /** Test whether content is an IPv6 Site-Local address.
      \retval true  if address begins with fd00::/8.
      \retval false if --disable-ipv6 has been compiled.
      \retval false if address does not match fd00::/8
      */
-    bool IsSiteLocal6() const;
+    bool isSiteLocal6() const;
 
     /** Test whether content is an IPv6 address with SLAAC EUI-64 embeded.
      \retval true  if address matches ::ff:fe00:0
      \retval false if --disable-ipv6 has been compiled.
      \retval false if address does not match ::ff:fe00:0
      */
-    bool IsSlaac() const;
+    bool isSiteLocalAuto() const;
 
     /*@}*/
 
@@ -184,7 +137,7 @@ public:
      \retval 0 Port is unset or an error occured.
      \retval n Port associated with this address in host native -endian.
      */
-    unsigned short GetPort() const;
+    unsigned short port() const;
 
     /** Set the Port value for an address.
      *  Replaces any previously existing Port value.
@@ -192,47 +145,47 @@ public:
      \retval 0 Port is unset or an error occured.
      \retval n Port associated with this address in host native -endian.
      */
-    unsigned short SetPort(unsigned short port);
+    unsigned short port(unsigned short port);
 
     /// Set object to contain the specific IP case ANY_ADDR (format-neutral).
-    /// see IsAnyAddr() for more detail.
-    void SetAnyAddr();
+    /// see isAnyAddr() for more detail.
+    void setAnyAddr();
 
     /// Set object to contain the specific IP case NO_ADDR (format-neutral).
-    /// see IsNoAddr() for more detail.
-    void SetNoAddr();
+    /// see isNoAddr() for more detail.
+    void setNoAddr();
 
     /// Set object to contain the specific IP case LOCALHOST (format-neutral).
-    /// see IsLocalhost() for more detail.
-    void SetLocalhost();
+    /// see isLocalhost() for more detail.
+    void setLocalhost();
 
     /// Fast reset of the stored content to what would be after default constructor.
-    void SetEmpty();
+    void setEmpty();
 
     /** Require an IPv4-only address for this usage.
      *  Converts the object to prefer only IPv4 output.
      \retval true	Content can be IPv4
      \retval false	Content CANNOT be IPv4
      */
-    bool SetIPv4();
+    bool setIPv4();
 
     /**
      *  Valid results IF and only IF the stored IP address is actually a network bitmask
      \retval N number of bits which are set in the bitmask stored.
      */
-    int GetCIDR() const;
+    int cidr() const;
 
     /** Apply a mask to the stored address.
      \param mask Netmask format to be bit-mask-AND'd over the stored address.
      */
-    int ApplyMask(const Address &mask);
+    int applyMask(const Address &mask);
 
     /** Apply a mask to the stored address.
      *  CIDR will be converted appropriate to map the stored content.
      \param cidr   CIDR Mask being applied. As an integer in host format.
      \param mtype  Type of CIDR mask being applied (AF_INET or AF_INET6)
      */
-    bool ApplyMask(const unsigned int cidr, int mtype);
+    bool applyMask(const unsigned int cidr, int mtype);
 
     /** Return the ASCII equivalent of the address
      *  Semantically equivalent to the IPv4 inet_ntoa()
@@ -245,7 +198,7 @@ public:
      \param force (optional) require the IPA in a specific format.
      \return pointer to buffer received.
      */
-    char* NtoA(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
+    char* toStr(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
 
     /** Return the ASCII equivalent of the address:port combination
      *  Provides a URL formatted version of the content.
@@ -255,7 +208,7 @@ public:
      \param len byte length of buffer available for writing.
      \return pointer to buffer received.
      */
-    char* ToURL(char *buf, unsigned int len) const;
+    char* toUrl(char *buf, unsigned int len) const;
 
     /** Return a properly hostname formatted copy of the address
      *  Provides a URL formatted version of the content.
@@ -265,7 +218,7 @@ public:
      \param len byte length of buffer available for writing.
      \return amount of buffer filled.
      */
-    unsigned int ToHostname(char *buf, const unsigned int len) const;
+    unsigned int toHostStr(char *buf, const unsigned int len) const;
 
     /**
      *  Convert the content into a Reverse-DNS string.
@@ -276,7 +229,7 @@ public:
      *                 AF_UNSPEC the default displays the IP in its most advanced native form.
      \param buf        buffer to receive the text string output.
      */
-    bool GetReverseString(char buf[MAX_IPSTRLEN], int show_type = AF_UNSPEC) const;
+    bool getReverseString(char buf[MAX_IPSTRLEN], int show_type = AF_UNSPEC) const;
 
     /** Test how two IP relate to each other.
      \retval  0  IP are equal
@@ -308,7 +261,7 @@ public:
      \param ai structure to be filled out.
      \param force a specific sockaddr type is needed. default: don't care.
      */
-    void GetAddrInfo(struct addrinfo *&ai, int force = AF_UNSPEC) const;
+    void getAddrInfo(struct addrinfo *&ai, int force = AF_UNSPEC) const;
 
     /**
      *  Equivalent to the sysem call freeaddrinfo() but for Ip::Address allocated data
@@ -338,32 +291,32 @@ public:
      * when moving from converted code to unconverted
      * these functions can be used to convert this object
      * and pull out the data needed by the unconverted code
-     * they are intentionaly hard to use, use GetAddrInfo() instead.
+     * they are intentionaly hard to use, use getAddrInfo() instead.
      * these functiosn WILL NOT be in the final public API after transition.
      */
 
-    void GetSockAddr(struct sockaddr_storage &addr, const int family) const;
-    void GetSockAddr(struct sockaddr_in &) const;
-    bool GetInAddr(struct in_addr &) const; /* false if could not convert IPv6 down to IPv4 */
-    void GetSockAddr(struct sockaddr_in6 &) const;
-    void GetInAddr(struct in6_addr &) const;
+    void getSockAddr(struct sockaddr_storage &addr, const int family) const;
+    void getSockAddr(struct sockaddr_in &) const;
+    bool getInAddr(struct in_addr &) const; /* false if could not convert IPv6 down to IPv4 */
+    void getSockAddr(struct sockaddr_in6 &) const;
+    void getInAddr(struct in6_addr &) const;
 
 private:
     /* Conversion for dual-type internals */
 
-    bool GetReverseString4(char buf[MAX_IPSTRLEN], const struct in_addr &dat) const;
+    bool getReverseString4(char buf[MAX_IPSTRLEN], const struct in_addr &dat) const;
 
-    bool GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &dat) const;
+    bool getReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &dat) const;
 
-    void Map4to6(const struct in_addr &src, struct in6_addr &dest) const;
+    void map4to6(const struct in_addr &src, struct in6_addr &dest) const;
 
-    void Map6to4(const struct in6_addr &src, struct in_addr &dest) const;
+    void map6to4(const struct in6_addr &src, struct in_addr &dest) const;
 
     // Worker behind GetHostName and char* converters
-    bool LookupHostIP(const char *s, bool nodns);
+    bool lookupHostIP(const char *s, bool nodns);
 
     /* variables */
-    struct sockaddr_in6 m_SocketAddr;
+    struct sockaddr_in6 mSocketAddr_;
 
 private:
     /* Internally used constants */
@@ -385,7 +338,7 @@ inline std::ostream &
 operator << (std::ostream &os, const Address &ipa)
 {
     char buf[MAX_IPSTRLEN];
-    os << ipa.ToURL(buf,MAX_IPSTRLEN);
+    os << ipa.toUrl(buf,MAX_IPSTRLEN);
     return os;
 }
 
@@ -404,4 +357,4 @@ public:
 
 void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
-#endif /* _SQUID_IP_IPADDRESS_H */
+#endif /* _SQUID_SRC_IP_ADDRESS_H */
