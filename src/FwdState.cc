@@ -703,7 +703,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
                 "FwdState::ConnectedToPeer",
                 FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(requestPointer, serverConnection(), callback);
+                new Ssl::PeerConnector(requestPointer, serverConnection(), clientConn, callback);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
