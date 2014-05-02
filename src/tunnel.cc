@@ -43,6 +43,7 @@
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "globals.h"
 #include "FwdState.h"
 #include "http.h"
 #include "HttpRequest.h"
@@ -53,6 +54,7 @@
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #if USE_OPENSSL
+#include "ssl/bio.h"
 #include "ssl/PeerConnector.h"
 #endif
 #include "tools.h"
@@ -949,6 +951,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
 void
 TunnelStateData::connectToPeer() {
     const Comm::ConnectionPointer &srv = server.conn;
+    const Comm::ConnectionPointer &cln = client.conn;
 
 #if USE_OPENSSL
     if (CachePeer *p = srv->getPeer()) {
@@ -957,7 +960,7 @@ TunnelStateData::connectToPeer() {
                 "TunnelStateData::ConnectedToPeer",
                 MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(request, srv, callback);
+                new Ssl::PeerConnector(request, srv, cln, callback);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -1087,3 +1090,76 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 }
 
 #endif
+
+int default_read_method(int, char *, int);
+int default_write_method(int, const char *, int);
+void
+switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
+{
+    debugs(26, 3, HERE);
+    /* Create state structure. */
+    TunnelStateData *tunnelState = NULL;
+    const char *url = urlCanonical(request);
+
+    debugs(26, 3, HERE << "'" << request->method << " " << url << " " << request->http_ver << "'");
+    ++statCounter.server.all.requests;
+    ++statCounter.server.other.requests;
+
+    tunnelState = new TunnelStateData;
+#if USE_DELAY_POOLS
+    //tunnelState->server.setDelayId(DelayId::DelayClient(http));
+#endif
+    tunnelState->url = xstrdup(url);
+    tunnelState->request = request;
+    tunnelState->server.size_ptr = NULL;//????
+    tunnelState->status_ptr = status_ptr;
+    tunnelState->client.conn = clientConn;
+
+    comm_add_close_handler(tunnelState->client.conn->fd,
+                           tunnelClientClosed,
+                           tunnelState);
+
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
+    fd_table[clientConn->fd].read_method = &default_read_method;
+    fd_table[clientConn->fd].write_method = &default_write_method;
+
+//Server connection
+#if USE_DELAY_POOLS
+    /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
+//    if (conn->getPeer() && conn->getPeer()->options.no_delay)
+//        tunnelState->server.setDelayId(DelayId());
+#endif
+
+    tunnelState->request->hier.note(srvConn, tunnelState->getHost());
+
+    tunnelState->server.conn = srvConn;
+    tunnelState->request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : NULL;
+    comm_add_close_handler(srvConn->fd, tunnelServerClosed, tunnelState);
+
+    debugs(26, 4, HERE << "determine post-connect handling pathway.");
+    if (srvConn->getPeer()) {
+        tunnelState->request->peer_login = srvConn->getPeer()->login;
+        tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
+    } else {
+        tunnelState->request->peer_login = NULL;
+        tunnelState->request->flags.proxying = false;
+    }
+
+    timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
+    fd_table[srvConn->fd].read_method = &default_read_method;
+    fd_table[srvConn->fd].write_method = &default_write_method;
+
+    SSL *ssl = fd_table[srvConn->fd].ssl;
+    assert(ssl);
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    const MemBuf &buf = srvBio->rBufData();
+
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
+}

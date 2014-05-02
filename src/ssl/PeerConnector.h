@@ -97,6 +97,7 @@ public:
 public:
     PeerConnector(HttpRequestPointer &aRequest,
                   const Comm::ConnectionPointer &aServerConn,
+                  const Comm::ConnectionPointer &aClientConn,
                   AsyncCall::Pointer &aCallback);
     virtual ~PeerConnector();
 
@@ -159,6 +160,7 @@ private:
 
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
+    Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
 
