@@ -58,15 +58,13 @@
 #endif
 
 HttpRequest::HttpRequest() :
-        HttpMsg(hoRequest),
-        helperNotes(NULL)
+        HttpMsg(hoRequest)
 {
     init();
 }
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
-        HttpMsg(hoRequest),
-        helperNotes(NULL)
+        HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -84,7 +82,7 @@ void
 HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
 {
     method = aMethod;
-    protocol = aProtocol;
+    url.setScheme(aProtocol);
     urlpath = aUrlpath;
 }
 
@@ -92,7 +90,7 @@ void
 HttpRequest::init()
 {
     method = Http::METHOD_NONE;
-    protocol = AnyP::PROTO_NONE;
+    url.clear();
     urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
@@ -107,8 +105,8 @@ HttpRequest::init()
     ims = -1;
     imslen = 0;
     lastmod = -1;
-    client_addr.SetEmpty();
-    my_addr.SetEmpty();
+    client_addr.setEmpty();
+    my_addr.setEmpty();
     body_pipe = NULL;
     // hier
     dnsWait = -1;
@@ -116,6 +114,7 @@ HttpRequest::init()
     errDetail = ERR_DETAIL_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
     peer_domain = NULL;		// not allocated/deallocated by this class
+    peer_host = NULL;
     vary_headers = NULL;
     myportname = null_string;
     tag = null_string;
@@ -127,7 +126,7 @@ HttpRequest::init()
     extacl_message = null_string;
     pstate = psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
-    indirect_client_addr.SetEmpty();
+    indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -151,6 +150,7 @@ HttpRequest::clean()
 
     safe_free(vary_headers);
 
+    url.clear();
     urlpath.clean();
 
     header.clean();
@@ -167,10 +167,7 @@ HttpRequest::clean()
 
     myportname.clean();
 
-    if (helperNotes) {
-        delete helperNotes;
-        helperNotes = NULL;
-    }
+    notes = NULL;
 
     tag.clean();
 #if USE_AUTH
@@ -180,6 +177,8 @@ HttpRequest::clean()
     extacl_log.clean();
 
     extacl_message.clean();
+
+    etag.clean();
 
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -199,7 +198,7 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(method, protocol, urlpath.termedBuf());
+    HttpRequest *copy = new HttpRequest(method, url.getScheme(), urlpath.termedBuf());
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
     copy->hdrCacheInit();
@@ -226,23 +225,16 @@ HttpRequest::clone() const
     // XXX: what to do with copy->peer_login?
 
     copy->lastmod = lastmod;
+    copy->etag = etag;
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
-    copy->myportname = myportname;
-    if (helperNotes) {
-        copy->helperNotes = new Notes;
-        copy->helperNotes->notes = helperNotes->notes;
-    }
     copy->tag = tag;
-#if USE_AUTH
-    copy->extacl_user = extacl_user;
-    copy->extacl_passwd = extacl_passwd;
-#endif
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
-    assert(copy->inheritProperties(this));
+    const bool inheritWorked = copy->inheritProperties(this);
+    assert(inheritWorked);
 
     return copy;
 }
@@ -277,11 +269,16 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     errDetail = aReq->errDetail;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
+    extacl_user = aReq->extacl_user;
+    extacl_passwd = aReq->extacl_passwd;
 #endif
+
+    myportname = aReq->myportname;
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
 
+    notes = aReq->notes;
     return true;
 }
 
@@ -292,7 +289,7 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
+HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
@@ -300,7 +297,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
         // this is ony a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
-            *error = HTTP_INVALID_HEADER;
+            *error = Http::scInvalidHeader;
         }
         return false;
     }
@@ -308,7 +305,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
     /* See if the request buffer starts with a known HTTP request method. */
     if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
-        *error = HTTP_INVALID_HEADER;
+        *error = Http::scInvalidHeader;
         return false;
     }
 
@@ -395,8 +392,8 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath),
+    packerPrintf(p, SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+                 SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
                  http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
@@ -418,7 +415,7 @@ httpRequestPack(void *obj, Packer *p)
 int
 HttpRequest::prefixLen()
 {
-    return strlen(RequestMethodStr(method)) + 1 +
+    return method.image().length() + 1 +
            urlpath.size() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
@@ -483,7 +480,7 @@ HttpRequest::adaptHistoryImport(const HttpRequest &them)
 bool
 HttpRequest::multipartRangeRequest() const
 {
-    return (range && range->specs.count > 1);
+    return (range && range->specs.size() > 1);
 }
 
 bool
@@ -528,8 +525,8 @@ const char *HttpRequest::packableURI(bool full_uri) const
 void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
 {
     // form HTTP request-line
-    packerPrintf(p, "%s %s HTTP/%d.%d\r\n",
-                 RequestMethodStr(method),
+    packerPrintf(p, SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
+                 SQUIDSBUFPRINT(method.image()),
                  packableURI(full_uri),
                  http_ver.major, http_ver.minor);
 }
@@ -595,11 +592,12 @@ HttpRequest::maybeCacheable()
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the reponse for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.spoofClientIp))
+    if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
-    switch (protocol) {
+    switch (url.getScheme()) {
     case AnyP::PROTO_HTTP:
+    case AnyP::PROTO_HTTPS:
         if (!method.respMaybeCacheable())
             return false;
 
@@ -669,12 +667,26 @@ HttpRequest::getRangeOffsetLimit()
     return rangeOffsetLimit;
 }
 
+void
+HttpRequest::ignoreRange(const char *reason)
+{
+    if (range) {
+        debugs(73, 3, static_cast<void*>(range) << " for " << reason);
+        delete range;
+        range = NULL;
+    }
+    // Some callers also reset isRanged but it may not be safe for all callers:
+    // isRanged is used to determine whether a weak ETag comparison is allowed,
+    // and that check should not ignore the Range header if it was present.
+    // TODO: Some callers also delete HDR_RANGE, HDR_REQUEST_RANGE. Should we?
+}
+
 bool
 HttpRequest::canHandle1xx() const
 {
     // old clients do not support 1xx unless they sent Expect: 100-continue
     // (we reject all other HDR_EXPECT values so just check for HDR_EXPECT)
-    if (http_ver <= HttpVersion(1,0) && !header.has(HDR_EXPECT))
+    if (http_ver <= Http::ProtocolVersion(1,0) && !header.has(HDR_EXPECT))
         return false;
 
     // others must support 1xx control messages
@@ -687,4 +699,17 @@ HttpRequest::pinnedConnection()
     if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
         return clientConnectionManager.get();
     return NULL;
+}
+
+const char *
+HttpRequest::storeId()
+{
+    if (store_id.size() != 0) {
+        debugs(73, 3, "sent back store_id:" << store_id);
+
+        return store_id.termedBuf();
+    }
+    debugs(73, 3, "sent back canonicalUrl:" << urlCanonical(this) );
+
+    return urlCanonical(this);
 }

@@ -49,22 +49,8 @@
 
 CBDATA_CLASS_INIT(ExternalACLEntry);
 
-void *
-ExternalACLEntry::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ExternalACLEntry));
-    CBDATA_INIT_TYPE(ExternalACLEntry);
-    return cbdataAlloc(ExternalACLEntry);
-}
-
-void
-ExternalACLEntry::operator delete (void *address)
-{
-    cbdataFree (address);
-}
-
-ExternalACLEntry::ExternalACLEntry()
+ExternalACLEntry::ExternalACLEntry() :
+        notes()
 {
     lru.next = lru.prev = NULL;
     result = ACCESS_DENIED;
@@ -82,6 +68,11 @@ ExternalACLEntry::update(ExternalACLEntryData const &someData)
 {
     date = squid_curtime;
     result = someData.result;
+
+    // replace all notes. not combine
+    notes.entries.clear();
+    notes.append(&someData.notes);
+
 #if USE_AUTH
     user = someData.user;
     password = someData.password;

@@ -4,8 +4,9 @@
  */
 #include "squid.h"
 #include "ConfigParser.h"
-#include "HelperReply.h"
+#include "Debug.h"
 #include "helper.h"
+#include "HelperReply.h"
 #include "rfc1738.h"
 #include "SquidString.h"
 
@@ -19,29 +20,38 @@ HelperReply::HelperReply(char *buf, size_t len) :
 void
 HelperReply::parse(char *buf, size_t len)
 {
+    debugs(84, 3, "Parsing helper buffer");
     // check we have something to parse
     if (!buf || len < 1) {
+        // empty line response was the old URL-rewriter interface ERR response.
+        result = HelperReply::Error;
         // for now ensure that legacy handlers are not presented with NULL strings.
+        debugs(84, 3, "Reply length is smaller than 1 or none at all ");
         other_.init(1,1);
         other_.terminate();
         return;
     }
 
     char *p = buf;
+    bool sawNA = false;
 
     // optimization: do not consider parsing result code if the response is short.
     // URL-rewriter may return relative URLs or empty response for a large portion
     // of its replies.
     if (len >= 2) {
+        debugs(84, 3, "Buff length is larger than 2");
         // some helper formats (digest auth, URL-rewriter) just send a data string
         // we must also check for the ' ' character after the response token (if anything)
         if (!strncmp(p,"OK",2) && (len == 2 || p[2] == ' ')) {
+            debugs(84, 3, "helper Result = OK");
             result = HelperReply::Okay;
             p+=2;
         } else if (!strncmp(p,"ERR",3) && (len == 3 || p[3] == ' ')) {
+            debugs(84, 3, "helper Result = ERR");
             result = HelperReply::Error;
             p+=3;
         } else if (!strncmp(p,"BH",2) && (len == 2 || p[2] == ' ')) {
+            debugs(84, 3, "helper Result = BH");
             result = HelperReply::BrokenHelper;
             p+=2;
         } else if (!strncmp(p,"TT ",3)) {
@@ -93,6 +103,7 @@ HelperReply::parse(char *buf, size_t len)
             // NTLM fail-closed ERR response
             result = HelperReply::Error;
             p+=3;
+            sawNA=true;
         }
 
         for (; xisspace(*p); ++p); // skip whitespace
@@ -105,13 +116,35 @@ HelperReply::parse(char *buf, size_t len)
     // NULL-terminate so the helper callback handlers do not buffer-overrun
     other_.terminate();
 
-    parseResponseKeys();
+    // Hack for backward-compatibility: Do not parse for kv-pairs on NA response
+    if (!sawNA)
+        parseResponseKeys();
 
-    // Hack for backward-compatibility: BH used to be a text message...
-    if (other().hasContent() && result == HelperReply::BrokenHelper) {
+    // Hack for backward-compatibility: BH and NA used to be a text message...
+    if (other().hasContent() && (sawNA || result == HelperReply::BrokenHelper)) {
         notes.add("message",other().content());
         modifiableOther().clean();
     }
+}
+
+/// restrict key names to alphanumeric, hyphen, underscore characters
+static bool
+isKeyNameChar(char c)
+{
+    if (c >= 'a' && c <= 'z')
+        return true;
+
+    if (c >= 'A' && c <= 'Z')
+        return true;
+
+    if (c >= '0' && c <= '9')
+        return true;
+
+    if (c == '-' || c == '_')
+        return true;
+
+    // prevent other characters matching the key=value
+    return false;
 }
 
 void
@@ -120,7 +153,7 @@ HelperReply::parseResponseKeys()
     // parse a "key=value" pair off the 'other()' buffer.
     while (other().hasContent()) {
         char *p = modifiableOther().content();
-        while (*p && *p != '=' && *p != ' ') ++p;
+        while (*p && isKeyNameChar(*p)) ++p;
         if (*p != '=')
             return; // done. Not a key.
 
@@ -132,16 +165,15 @@ HelperReply::parseResponseKeys()
         *p = '\0';
         ++p;
 
-        const String key(other().content());
+        const char *key = other().content();
 
         // the value may be a quoted string or a token
         const bool urlDecode = (*p != '"'); // check before moving p.
         char *v = strwordtok(NULL, &p);
         if (v != NULL && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
-        const String value(v?v:""); // value can be empty, but must not be NULL
 
-        notes.add(key, value);
+        notes.add(key, v ? v : ""); // value can be empty, but must not be NULL
 
         modifiableOther().consume(p - other().content());
         modifiableOther().consumeWhitespacePrefix();
@@ -171,13 +203,9 @@ operator <<(std::ostream &os, const HelperReply &r)
     }
 
     // dump the helper key=pair "notes" list
-    if (r.notes.notes.size() > 0) {
+    if (!r.notes.empty()) {
         os << ", notes={";
-        for (Notes::NotesList::const_iterator m = r.notes.notes.begin(); m != r.notes.notes.end(); ++m) {
-            for (Note::Values::iterator v = (*m)->values.begin(); v != (*m)->values.end(); ++v) {
-                os << ',' << (*m)->key << '=' << ConfigParser::QuoteString((*v)->value);
-            }
-        }
+        os << r.notes.toString("; ");
         os << "}";
     }
 

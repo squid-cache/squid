@@ -6,12 +6,9 @@
 #define SQUID_LRUMAP_H
 
 #include "SquidTime.h"
-#if HAVE_LIST
+
 #include <list>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
 
 template <class EntryValue, size_t EntryCost = sizeof(EntryValue)> class LruMap
 {
@@ -50,7 +47,7 @@ public:
     /// The available size for the map
     size_t memLimit() const {return memLimit_;}
     /// The free space of the map
-    size_t freeMem() const { return (memLimit() - size());}
+    size_t freeMem() const { return (memLimit() > size() ? memLimit() - size() : 0);}
     /// The current size of the map
     size_t size() const {return (entries_ * EntryCost);}
     /// The number of stored entries
@@ -59,7 +56,7 @@ private:
     LruMap(LruMap const &);
     LruMap & operator = (LruMap const &);
 
-    bool expired(Entry &e);
+    bool expired(const Entry &e) const;
     void trim();
     void touch(const MapIterator &i);
     bool del(const MapIterator &i);
@@ -110,12 +107,14 @@ LruMap<EntryValue, EntryCost>::findEntry(const char *key, LruMap::MapIterator &i
     index.erase(i->second);
     i->second = index.begin();
 
-    Entry *e = *i->second;
-
-    if (e && expired(*e)) {
-        del(i);
-        e = NULL;
+    if (const Entry *e = *i->second) {
+        if (!expired(*e))
+            return;
+        // else fall through to cleanup
     }
+
+    del(i);
+    i = storage.end();
 }
 
 template <class EntryValue, size_t EntryCost>
@@ -124,9 +123,9 @@ LruMap<EntryValue, EntryCost>::get(const char *key)
 {
     MapIterator i;
     findEntry(key, i);
-    Entry *e = *i->second;
     if (i != storage.end()) {
         touch(i);
+        Entry *e = *i->second;
         return e->value;
     }
     return NULL;
@@ -150,7 +149,7 @@ LruMap<EntryValue, EntryCost>::add(const char *key, EntryValue *t)
 
 template <class EntryValue, size_t EntryCost>
 bool
-LruMap<EntryValue, EntryCost>::expired(LruMap::Entry &entry)
+LruMap<EntryValue, EntryCost>::expired(const LruMap::Entry &entry) const
 {
     if (ttl < 0)
         return false;
@@ -163,9 +162,10 @@ bool
 LruMap<EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
 {
     if (i != storage.end()) {
-        delete *(i->second);
+        Entry *e = *i->second;
         index.erase(i->second);
         storage.erase(i);
+        delete e;
         --entries_;
         return true;
     }

@@ -34,9 +34,8 @@
 #include "squid.h"
 #include "StatHist.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
+
 /* Local functions */
 static StatHistBinDumper statHistBinDumper;
 
@@ -203,6 +202,26 @@ StatHist::dump(StoreEntry * sentry, StatHistBinDumper * bd) const
         bd(sentry, i, left_border, right_border - left_border, bins[i]);
         left_border = right_border;
     }
+}
+
+StatHist &
+StatHist::operator += (const StatHist &B)
+{
+    Must(capacity_ == B.capacity_);
+    Must(min_ == B.min_);
+    Must(max_ == B.max_);
+
+    if (B.bins == NULL) { // B was not yet initializted
+        return *this;
+    }
+    if (bins == NULL) { // this histogram was not yet initialized
+        *this = B;
+        return *this;
+    }
+    for (unsigned int i = 0; i < capacity_; ++i) {
+        bins[i] += B.bins[i];
+    }
+    return *this;
 }
 
 /* log based histogram */

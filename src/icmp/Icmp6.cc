@@ -35,11 +35,11 @@
 
 #if USE_ICMP
 
-#include "leakcheck.h"
-#include "SquidTime.h"
 #include "Debug.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
+#include "leakcheck.h"
+#include "SquidTime.h"
 
 // Some system headers are only neeed internally here.
 // They should not be included via the header.
@@ -180,7 +180,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     icmp->icmp6_cksum = CheckSum((unsigned short *) icmp, icmp6_pktsize);
 
-    to.GetAddrInfo(S);
+    to.getAddrInfo(S);
     ((sockaddr_in6*)S->ai_addr)->sin6_port = 0;
 
     assert(icmp6_pktsize <= MAX_PKT6_SZ);
@@ -200,7 +200,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     debugs(42,9, HERE << "x=" << x);
 
     Log(to, 0, NULL, 0, 0);
-    to.FreeAddrInfo(S);
+    Ip::Address::FreeAddrInfo(S);
 }
 
 /**
@@ -227,7 +227,7 @@ Icmp6::Recv(void)
         pkt = (char *)xmalloc(MAX_PKT6_SZ);
     }
 
-    preply.from.InitAddrInfo(from);
+    Ip::Address::InitAddrInfo(from);
 
     n = recvfrom(icmp_sock,
                  (void *)pkt,
@@ -294,13 +294,13 @@ Icmp6::Recv(void)
                    ( icmp6header->icmp6_type&0x80 ? icmp6HighPktStr[(int)(icmp6header->icmp6_type&0x7f)] : icmp6LowPktStr[(int)(icmp6header->icmp6_type&0x7f)] )
                   );
         }
-        preply.from.FreeAddrInfo(from);
+        Ip::Address::FreeAddrInfo(from);
         return;
     }
 
     if (icmp6header->icmp6_id != icmp_ident) {
         debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
-        preply.from.FreeAddrInfo(from);
+        Ip::Address::FreeAddrInfo(from);
         return;
     }
 
@@ -337,7 +337,7 @@ Icmp6::Recv(void)
 
     /* send results of the lookup back to squid.*/
     control.SendResult(preply, (sizeof(pingerReplyData) - PINGER_PAYLOAD_SZ + preply.psize) );
-    preply.from.FreeAddrInfo(from);
+    Ip::Address::FreeAddrInfo(from);
 }
 
 #endif /* USE_ICMP */

@@ -13,4 +13,4 @@ ext_edirectory_userip_acl_LDADD = \
 
 man_MANS = ext_edirectory_userip_acl.8
 
-EXTRA_DIST = config.test ext_edirectory_userip_acl.8
+EXTRA_DIST = required.m4 ext_edirectory_userip_acl.8

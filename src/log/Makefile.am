@@ -24,10 +24,10 @@ liblog_la_SOURCES = \
 	ModStdio.h \
 	ModSyslog.cc \
 	ModSyslog.h \
-	ModTcp.cc \
-	ModTcp.h \
 	ModUdp.cc \
 	ModUdp.h \
 	CustomLog.h \
-	CustomLog.cc
+	CustomLog.cc \
+	TcpLogger.cc \
+	TcpLogger.h
 

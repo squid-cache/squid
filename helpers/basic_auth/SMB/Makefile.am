@@ -11,4 +11,4 @@ basic_smb_auth_LDADD = \
 		$(COMPAT_LIB) \
 		$(XTRA_LIBS)
 
-EXTRA_DIST = basic_smb_auth.sh COPYING-2.0 config.test
+EXTRA_DIST = basic_smb_auth.sh COPYING-2.0 required.m4

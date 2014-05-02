@@ -5,11 +5,11 @@
 #include "squid.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
 #include "fd.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
@@ -114,7 +114,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         ann.strand.tag = dbName;
         Ipc::TypedMsgHdr message;
         ann.pack(message);
-        SendMessage(Ipc::coordinatorAddr, message);
+        SendMessage(Ipc::Port::CoordinatorAddr(), message);
 
         ioRequestor->ioCompletedNotification();
         return;
@@ -126,7 +126,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
     Ipc::TypedMsgHdr msg;
     request.pack(msg);
-    Ipc::SendMessage(Ipc::coordinatorAddr, msg);
+    Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), msg);
 
     WaitingForOpen.push_back(this);
 
@@ -184,13 +184,13 @@ IpcIoFile::close()
 bool
 IpcIoFile::canRead() const
 {
-    return diskId >= 0 && canWait();
+    return diskId >= 0 && !error_ && canWait();
 }
 
 bool
 IpcIoFile::canWrite() const
 {
-    return diskId >= 0 && canWait();
+    return diskId >= 0 && !error_ && canWait();
 }
 
 bool
@@ -270,13 +270,19 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
 {
     bool ioError = false;
     if (!response) {
-        debugs(79, 3, HERE << "error: timeout");
+        debugs(79, 3, "disker " << diskId << " timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
     } else if (response->xerrno) {
-        debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(response->xerrno));
+        debugs(79, DBG_IMPORTANT, "ERROR: disker " << diskId <<
+               " error writing " << writeRequest->len << " bytes at " <<
+               writeRequest->offset << ": " << xstrerr(response->xerrno) <<
+               "; this worker will stop using " << dbName);
         ioError = error_ = true;
     } else if (response->len != writeRequest->len) {
-        debugs(79, DBG_IMPORTANT, HERE << "problem: " << response->len << " < " << writeRequest->len);
+        debugs(79, DBG_IMPORTANT, "ERROR: disker " << diskId << " wrote " <<
+               response->len << " instead of " << writeRequest->len <<
+               " bytes (offset " << writeRequest->offset << "); " <<
+               "this worker will stop using " << dbName);
         error_ = true;
     }
 
@@ -301,9 +307,11 @@ IpcIoFile::ioInProgress() const
 
 /// track a new pending request
 void
-IpcIoFile::trackPendingRequest(IpcIoPendingRequest *const pending)
+IpcIoFile::trackPendingRequest(const unsigned int id, IpcIoPendingRequest *const pending)
 {
-    newerRequests->insert(std::make_pair(lastRequestId, pending));
+    const std::pair<RequestMap::iterator,bool> result =
+        newerRequests->insert(std::make_pair(id, pending));
+    Must(result.second); // failures means that id was not unique
     if (!timeoutCheckScheduled)
         scheduleTimeoutCheck();
 }
@@ -313,6 +321,7 @@ void
 IpcIoFile::push(IpcIoPendingRequest *const pending)
 {
     // prevent queue overflows: check for responses to earlier requests
+    // warning: this call may result in indirect push() recursion
     HandleResponses("before push");
 
     debugs(47, 7, HERE);
@@ -322,6 +331,8 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 
     IpcIoMsg ipcIo;
     try {
+        if (++lastRequestId == 0) // don't use zero value as requestId
+            ++lastRequestId;
         ipcIo.requestId = lastRequestId;
         ipcIo.start = current_time;
         if (pending->readRequest) {
@@ -345,7 +356,7 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 
         if (queue->push(diskId, ipcIo))
             Notify(diskId); // must notify disker
-        trackPendingRequest(pending);
+        trackPendingRequest(ipcIo.requestId, pending);
     } catch (const Queue::Full &) {
         debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
@@ -454,7 +465,7 @@ IpcIoFile::Notify(const int peerId)
     Ipc::TypedMsgHdr msg;
     msg.setType(Ipc::mtIpcIoNotification); // TODO: add proper message type?
     msg.putInt(KidIdentifier);
-    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrPfx, peerId);
+    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrLabel, peerId);
     Ipc::SendMessage(addr, msg);
 }
 
@@ -603,9 +614,6 @@ IpcIoMsg::IpcIoMsg():
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
         file(aFile), readRequest(NULL), writeRequest(NULL)
 {
-    Must(file != NULL);
-    if (++file->lastRequestId == 0) // don't use zero value as requestId
-        ++file->lastRequestId;
 }
 
 void
@@ -653,27 +661,68 @@ diskerRead(IpcIoMsg &ipcIo)
     }
 }
 
+/// Tries to write buffer to disk (a few times if needed);
+/// sets ipcIo results, but does no cleanup. The caller must cleanup.
+static void
+diskerWriteAttempts(IpcIoMsg &ipcIo)
+{
+    const char *buf = Ipc::Mem::PagePointer(ipcIo.page);
+    size_t toWrite = min(ipcIo.len, Ipc::Mem::PageSize());
+    size_t wroteSoFar = 0;
+    off_t offset = ipcIo.offset;
+    // Partial writes to disk do happen. It is unlikely that the caller can
+    // handle partial writes by doing something other than writing leftovers
+    // again, so we try to write them ourselves to minimize overheads.
+    const int attemptLimit = 10;
+    for (int attempts = 1; attempts <= attemptLimit; ++attempts) {
+        const ssize_t result = pwrite(TheFile, buf, toWrite, offset);
+        ++statCounter.syscalls.disk.writes;
+        fd_bytes(TheFile, result, FD_WRITE);
+
+        if (result < 0) {
+            ipcIo.xerrno = errno;
+            assert(ipcIo.xerrno);
+            debugs(47, DBG_IMPORTANT,  "disker" << KidIdentifier <<
+                   " error writing " << toWrite << '/' << ipcIo.len <<
+                   " at " << ipcIo.offset << '+' << wroteSoFar <<
+                   " on " << attempts << " try: " << xstrerr(ipcIo.xerrno));
+            ipcIo.len = wroteSoFar;
+            return; // bail on error
+        }
+
+        const size_t wroteNow = static_cast<size_t>(result); // result >= 0
+        ipcIo.xerrno = 0;
+
+        debugs(47,3, "disker" << KidIdentifier << " wrote " <<
+               (wroteNow >= toWrite ? "all " : "just ") << wroteNow <<
+               " out of " << toWrite << '/' << ipcIo.len << " at " <<
+               ipcIo.offset << '+' << wroteSoFar << " on " << attempts <<
+               " try");
+
+        wroteSoFar += wroteNow;
+
+        if (wroteNow >= toWrite) {
+            ipcIo.xerrno = 0;
+            ipcIo.len = wroteSoFar;
+            return; // wrote everything there was to write
+        }
+
+        buf += wroteNow;
+        offset += wroteNow;
+        toWrite -= wroteNow;
+    }
+
+    debugs(47, DBG_IMPORTANT,  "disker" << KidIdentifier <<
+           " exhausted all " << attemptLimit << " attempts while writing " <<
+           toWrite << '/' << ipcIo.len << " at " << ipcIo.offset << '+' <<
+           wroteSoFar);
+    return; // not a fatal I/O error, unless the caller treats it as such
+}
+
 static void
 diskerWrite(IpcIoMsg &ipcIo)
 {
-    const char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
-    const ssize_t wrote = pwrite(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
-    ++statCounter.syscalls.disk.writes;
-    fd_bytes(TheFile, wrote, FD_WRITE);
-
-    if (wrote >= 0) {
-        ipcIo.xerrno = 0;
-        const size_t len = static_cast<size_t>(wrote); // safe because wrote > 0
-        debugs(47,8, HERE << "disker" << KidIdentifier << " wrote " <<
-               (len == ipcIo.len ? "all " : "just ") << wrote);
-        ipcIo.len = len;
-    } else {
-        ipcIo.xerrno = errno;
-        ipcIo.len = 0;
-        debugs(47,5, HERE << "disker" << KidIdentifier << " write error: " <<
-               ipcIo.xerrno);
-    }
-
+    diskerWriteAttempts(ipcIo); // may fail
     Ipc::Mem::PutPage(ipcIo.page);
 }
 
@@ -858,17 +907,27 @@ DiskerClose(const String &path)
 }
 
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
-class IpcIoClaimMemoryNeedsRr: public RegisteredRunner
+/// and initializes shared memory segments used by IpcIoFile
+class IpcIoRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &r);
+    IpcIoRr(): owner(NULL) {}
+    virtual ~IpcIoRr();
+    virtual void claimMemoryNeeds();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create();
+
+private:
+    Ipc::FewToFewBiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(rrClaimMemoryNeeds, IpcIoClaimMemoryNeedsRr);
+RunnerRegistrationEntry(IpcIoRr);
 
 void
-IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
+IpcIoRr::claimMemoryNeeds()
 {
     const int itemsCount = Ipc::FewToFewBiQueue::MaxItemsCount(
                                ::Config.workers, ::Config.cacheSwap.n_strands, QueueCapacity);
@@ -880,24 +939,8 @@ IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
                            static_cast<int>(itemsCount * 1.1));
 }
 
-/// initializes shared memory segments used by IpcIoFile
-class IpcIoRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    IpcIoRr(): owner(NULL) {}
-    virtual ~IpcIoRr();
-
-protected:
-    virtual void create(const RunnerRegistry &);
-
-private:
-    Ipc::FewToFewBiQueue::Owner *owner;
-};
-
-RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
-
-void IpcIoRr::create(const RunnerRegistry &)
+void
+IpcIoRr::create()
 {
     if (Config.cacheSwap.n_strands <= 0)
         return;

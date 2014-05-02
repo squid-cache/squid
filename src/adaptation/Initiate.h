@@ -1,9 +1,9 @@
 #ifndef SQUID_ADAPTATION__INITIATE_H
 #define SQUID_ADAPTATION__INITIATE_H
 
+#include "adaptation/forward.h"
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
-#include "adaptation/forward.h"
 
 namespace Adaptation
 {

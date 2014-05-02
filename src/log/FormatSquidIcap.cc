@@ -50,21 +50,24 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
     const char *user = NULL;
     char tmp[MAX_IPSTRLEN], clientbuf[MAX_IPSTRLEN];
 
-    if (al->cache.caddr.IsAnyAddr()) { // ICAP OPTIONS xactions lack client
+    if (al->cache.caddr.isAnyAddr()) { // ICAP OPTIONS xactions lack client
         client = "-";
     } else {
         if (Config.onoff.log_fqdn)
             client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
         if (!client)
-            client = al->cache.caddr.NtoA(clientbuf, MAX_IPSTRLEN);
+            client = al->cache.caddr.toStr(clientbuf, MAX_IPSTRLEN);
     }
 
-    user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
+#if USE_AUTH
+    if (al->request != NULL && al->request->auth_user_request != NULL)
+        user = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
+#endif
 
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif
@@ -86,7 +89,7 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   Adaptation::Icap::ICAP::methodStr(al->icap.reqMethod),
                   al->icap.reqUri.termedBuf(),
                   user ? user : "-",
-                  al->icap.hostAddr.NtoA(tmp, MAX_IPSTRLEN));
+                  al->icap.hostAddr.toStr(tmp, MAX_IPSTRLEN));
     safe_free(user);
 }
 #endif

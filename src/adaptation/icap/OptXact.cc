@@ -51,12 +51,16 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
     buf.Printf("OPTIONS " SQUIDSTRINGPH " ICAP/1.0\r\n", SQUIDSTRINGPRINT(uri));
     const String host = s.cfg().host;
     buf.Printf("Host: " SQUIDSTRINGPH ":%d\r\n", SQUIDSTRINGPRINT(host), s.cfg().port);
+
+    if (!TheConfig.reuse_connections)
+        buf.Printf("Connection: close\r\n");
+
     if (TheConfig.allow206_enable)
         buf.Printf("Allow: 206\r\n");
     buf.append(ICAP::crlf, 2);
 
     // XXX: HttpRequest cannot fully parse ICAP Request-Line
-    http_status reqStatus;
+    Http::StatusCode reqStatus;
     Must(icapRequest->parse(&buf, true, &reqStatus) > 0);
 }
 
@@ -79,7 +83,7 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
         debugs(93, 7, HERE << "readAll=" << readAll);
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
-        sendAnswer(Answer::Forward(icapReply));
+        sendAnswer(Answer::Forward(icapReply.getRaw()));
         Must(done()); // there should be nothing else to do
         return;
     }
@@ -96,7 +100,7 @@ bool Adaptation::Icap::OptXact::parseResponse()
     HttpReply::Pointer r(new HttpReply);
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
-    if (!parseHttpMsg(r)) // throws on errors
+    if (!parseHttpMsg(r.getRaw())) // throws on errors
         return false;
 
     if (httpHeaderHasConnDir(&r->header, "close"))
@@ -116,7 +120,7 @@ void Adaptation::Icap::OptXact::finalizeLogInfo()
     //    al.cache.caddr = 0;
     al.icap.reqMethod = Adaptation::methodOptions;
 
-    if (icapReply && al.icap.bytesRead > icapReply->hdr_sz)
+    if (icapReply != NULL && al.icap.bytesRead > icapReply->hdr_sz)
         al.icap.bodyBytesRead = al.icap.bytesRead - icapReply->hdr_sz;
 
     Adaptation::Icap::Xaction::finalizeLogInfo();

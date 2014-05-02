@@ -7,4 +7,4 @@ url_fake_rewrite_LDADD = $(COMPAT_LIB)
 
 libexec_SCRIPTS = url_fake_rewrite.sh
 
-EXTRA_DIST = url_fake_rewrite.sh config.test
+EXTRA_DIST = url_fake_rewrite.sh required.m4

@@ -14,8 +14,9 @@ LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = digest_file_auth.8 config.test
+EXTRA_DIST = digest_file_auth.8 required.m4

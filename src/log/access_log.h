@@ -33,7 +33,8 @@
 #ifndef SQUID_LOG_ACCESS_LOG_H_
 #define SQUID_LOG_ACCESS_LOG_H_
 
-int logTypeIsATcpHit(log_type);
+#include "LogTags.h"
+
 void fvdbCountVia(const char *key);
 void fvdbCountForw(const char *key);
 

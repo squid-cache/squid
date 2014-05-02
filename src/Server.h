@@ -32,11 +32,11 @@
 #ifndef SQUID_SERVER_H
 #define SQUID_SERVER_H
 
-#include "StoreIOBuffer.h"
-#include "forward.h"
-#include "BodyPipe.h"
 #include "base/AsyncJob.h"
+#include "BodyPipe.h"
 #include "CommCalls.h"
+#include "FwdState.h"
+#include "StoreIOBuffer.h"
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
@@ -130,6 +130,8 @@ protected:
 
     /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
+
+    bool blockCaching();
 
 #if USE_ADAPTATION
     void startAdaptation(const Adaptation::ServiceGroupPointer &group, HttpRequest *cause);

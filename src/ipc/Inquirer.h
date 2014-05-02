@@ -6,8 +6,8 @@
 #ifndef SQUID_IPC_INQUIRER_H
 #define SQUID_IPC_INQUIRER_H
 
-#include "base/AsyncJobCalls.h"
 #include "base/AsyncJob.h"
+#include "base/AsyncJobCalls.h"
 #include "ipc/forward.h"
 #include "ipc/Request.h"
 #include "ipc/Response.h"

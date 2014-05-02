@@ -44,7 +44,7 @@ Adaptation::Icap::ModXact::State::State()
 }
 
 Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
-                                   HttpRequest *virginCause, Adaptation::Icap::ServiceRep::Pointer &aService):
+                                   HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob("Adaptation::Icap::ModXact"),
         Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
         virginConsumed(0),
@@ -53,7 +53,8 @@ Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
         protectGroupBypass(true),
         replyHttpHeaderSize(-1),
         replyHttpBodySize(-1),
-        adaptHistoryId(-1)
+        adaptHistoryId(-1),
+        alMaster(alp)
 {
     assert(virginHeader);
 
@@ -771,7 +772,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 {
     Must(state.sending == State::sendingUndecided);
 
-    if (!parseHead(icapReply))
+    if (!parseHead(icapReply.getRaw()))
         return;
 
     if (httpHeaderHasConnDir(&icapReply->header, "close")) {
@@ -779,14 +780,14 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         reuseConnection = false;
     }
 
-    switch (icapReply->sline.status) {
+    switch (icapReply->sline.status()) {
 
-    case 100:
+    case Http::scContinue:
         handle100Continue();
         break;
 
-    case 200:
-    case 201: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
+    case Http::scOkay:
+    case Http::scCreated: // Symantec Scan Engine 5.0 and later when modifying HTTP msg
 
         if (!validate200Ok()) {
             throw TexcHere("Invalid ICAP Response");
@@ -796,16 +797,16 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 
         break;
 
-    case 204:
+    case Http::scNoContent:
         handle204NoContent();
         break;
 
-    case 206:
+    case Http::scPartialContent:
         handle206PartialContent();
         break;
 
     default:
-        debugs(93, 5, HERE << "ICAP status " << icapReply->sline.status);
+        debugs(93, 5, "ICAP status " << icapReply->sline.status());
         handleUnknownScode();
         break;
     }
@@ -946,8 +947,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     {
         HttpMsg::Pointer newHead;
         if (dynamic_cast<const HttpRequest*>(oldHead)) {
-            HttpRequest::Pointer newR(new HttpRequest);
-            newHead = newR;
+            newHead = new HttpRequest;
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
             newHead = new HttpReply;
         }
@@ -955,11 +955,11 @@ void Adaptation::Icap::ModXact::prepEchoing()
 
         newHead->inheritProperties(oldHead);
 
-        adapted.setHeader(newHead);
+        adapted.setHeader(newHead.getRaw());
     }
 
     // parse the buffer back
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
 
     Must(adapted.header->parse(&httpBuf, true, &error));
 
@@ -1072,7 +1072,7 @@ bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse" <<
            "; state: " << state.parsing);
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     const bool parsed = head->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
@@ -1254,13 +1254,15 @@ void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
     HttpRequest * request_ = NULL;
+    HttpRequest * adapted_request_ = NULL;
     HttpReply * reply_ = NULL;
-    if (!(request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
-        request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
+    request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
+    if (!(adapted_request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
+        adapted_request_ = request_;
         reply_ = dynamic_cast<HttpReply*>(adapted.header);
     }
 
-    Adaptation::Icap::History::Pointer h = request_->icapHistory();
+    Adaptation::Icap::History::Pointer h = (request_ ? request_->icapHistory() : NULL);
     Must(h != NULL); // ICAPXaction::maybeLog calls only if there is a log
     al.icp.opcode = ICP_INVALID;
     al.url = h->log_uri.termedBuf();
@@ -1269,21 +1271,27 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 
     al.cache.caddr = request_->client_addr;
 
-    al.request = HTTPMSGLOCK(request_);
-    if (reply_)
-        al.reply = HTTPMSGLOCK(reply_);
-    else
+    al.request = request_;
+    HTTPMSGLOCK(al.request);
+    al.adapted_request = adapted_request_;
+    HTTPMSGLOCK(al.adapted_request);
+
+    if (reply_) {
+        al.reply = reply_;
+        HTTPMSGLOCK(al.reply);
+    } else
         al.reply = NULL;
 
     if (h->rfc931.size())
         al.cache.rfc931 = h->rfc931.termedBuf();
 
-#if USE_SSL
+#if USE_OPENSSL
     if (h->ssluser.size())
         al.cache.ssluser = h->ssluser.termedBuf();
 #endif
     al.cache.code = h->logType;
-    al.cache.requestSize = h->req_sz;
+    // XXX: should use icap-specific counters instead ?
+    al.http.clientRequestSz.payloadData = h->req_sz;
 
     // leave al.icap.bodyBytesRead negative if no body
     if (replyHttpHeaderSize >= 0 || replyHttpBodySize >= 0) {
@@ -1293,10 +1301,12 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     }
 
     if (reply_) {
-        al.http.code = reply_->sline.status;
+        al.http.code = reply_->sline.status();
         al.http.content_type = reply_->content_type.termedBuf();
         if (replyHttpBodySize >= 0) {
-            al.cache.replySize = replyHttpBodySize + reply_->hdr_sz;
+            // XXX: should use icap-specific counters instead ?
+            al.http.clientReplySz.payloadData = replyHttpBodySize;
+            al.http.clientReplySz.header =  reply_->hdr_sz;
             al.cache.highOffset = replyHttpBodySize;
         }
         //don't set al.cache.objectSize because it hasn't exist yet
@@ -1313,7 +1323,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         packerClean(&p);
         mb.clean();
     }
-    prepareLogWithRequestDetails(request_, alep);
+    prepareLogWithRequestDetails(adapted_request_, alep);
     Xaction::finalizeLogInfo();
 }
 
@@ -1343,7 +1353,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     if (virgin.header->header.has(HDR_PROXY_AUTHORIZATION)) {
         String vh=virgin.header->header.getByName("Proxy-Authorization");
         buf.Printf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
-    } else if (request->extacl_user.defined() && request->extacl_user.size() && request->extacl_passwd.defined() && request->extacl_passwd.size()) {
+    } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
         char loginbuf[256];
         snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->extacl_user),
@@ -1412,8 +1422,8 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         } else
 #endif
             client_addr = request->client_addr;
-        if (!client_addr.IsAnyAddr() && !client_addr.IsNoAddr())
-            buf.Printf("X-Client-IP: %s\r\n", client_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
+        if (!client_addr.isAnyAddr() && !client_addr.isNoAddr())
+            buf.Printf("X-Client-IP: %s\r\n", client_addr.toStr(ntoabuf,MAX_IPSTRLEN));
     }
 
     if (TheConfig.send_username && request)
@@ -1428,11 +1438,15 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
         HttpReply *reply = dynamic_cast<HttpReply*>(virgin.header);
 
-        if (const char *value = (*i)->match(r, reply)) {
+        if (const char *value = (*i)->match(r, reply, alMaster)) {
             buf.Printf("%s: %s\r\n", (*i)->key.termedBuf(), value);
             Adaptation::History::Pointer ah = request->adaptHistory(false);
-            if (ah != NULL && !ah->metaHeaders.hasByNameListMember((*i)->key.termedBuf(), value, ','))
-                ah->metaHeaders.addEntry(new HttpHeaderEntry(HDR_OTHER, (*i)->key.termedBuf(), value));
+            if (ah != NULL) {
+                if (ah->metaHeaders == NULL)
+                    ah->metaHeaders = new NotePairs;
+                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), value))
+                    ah->metaHeaders->add((*i)->key.termedBuf(), value);
+            }
         }
     }
 
@@ -1496,7 +1510,7 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
             const char *value = TheConfig.client_username_encode ? old_base64_encode(name) : name;
             buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
         }
-    } else if (request->extacl_user.defined() && request->extacl_user.size()) {
+    } else if (request->extacl_user.size() > 0) {
         const char *value = TheConfig.client_username_encode ? old_base64_encode(request->extacl_user.termedBuf()) : request->extacl_user.termedBuf();
         buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
     }
@@ -1514,13 +1528,13 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest::Pointer new_request(new HttpRequest);
         Must(old_request->canonical);
-        urlParse(old_request->method, old_request->canonical, new_request);
+        urlParse(old_request->method, old_request->canonical, new_request.getRaw());
         new_request->http_ver = old_request->http_ver;
-        headClone = new_request;
+        headClone = new_request.getRaw();
     } else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {
         HttpReply::Pointer new_reply(new HttpReply);
         new_reply->sline = old_reply->sline;
-        headClone = new_reply;
+        headClone = new_reply.getRaw();
     }
     Must(headClone != NULL);
     headClone->inheritProperties(head);
@@ -1537,7 +1551,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     headClone->header.removeHopByHopEntries();
 
     // pack polished HTTP header
-    packHead(httpBuf, headClone);
+    packHead(httpBuf, headClone.getRaw());
 
     // headClone unlocks and, hence, deletes the message we packed
 }
@@ -1934,9 +1948,10 @@ void Adaptation::Icap::ModXact::clearError()
 
 /* Adaptation::Icap::ModXactLauncher */
 
-Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer aService):
+Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer aService):
         AsyncJob("Adaptation::Icap::ModXactLauncher"),
-        Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService)
+        Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService),
+        al(alp)
 {
     virgin.setHeader(virginHeader);
     virgin.setCause(virginCause);
@@ -1948,7 +1963,7 @@ Adaptation::Icap::Xaction *Adaptation::Icap::ModXactLauncher::createXaction()
     Adaptation::Icap::ServiceRep::Pointer s =
         dynamic_cast<Adaptation::Icap::ServiceRep*>(theService.getRaw());
     Must(s != NULL);
-    return new Adaptation::Icap::ModXact(virgin.header, virgin.cause, s);
+    return new Adaptation::Icap::ModXact(virgin.header, virgin.cause, al, s);
 }
 
 void Adaptation::Icap::ModXactLauncher::swanSong()

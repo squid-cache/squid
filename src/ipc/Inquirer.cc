@@ -72,7 +72,7 @@ Ipc::Inquirer::inquire()
     TheRequestsMap[request->requestId] = callback;
     TypedMsgHdr message;
     request->pack(message);
-    SendMessage(Port::MakeAddr(strandAddrPfx, kidId), message);
+    SendMessage(Port::MakeAddr(strandAddrLabel, kidId), message);
     eventAdd("Ipc::Inquirer::requestTimedOut", &Inquirer::RequestTimedOut,
              this, timeout, 0, false);
 }

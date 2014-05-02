@@ -41,8 +41,8 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui48.h"
+#include "globals.h"
 #include "ip/Address.h"
-#include "wordlist.h"
 
 static void aclParseArpList(SplayNode<Eui::Eui48 *> **curlist);
 static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c);
@@ -161,7 +161,7 @@ ACLARP::match(ACLChecklist *cl)
     ACLFilledChecklist *checklist = Filled(cl);
 
     /* IPv6 does not do ARP */
-    if (!checklist->src_addr.IsIPv4()) {
+    if (!checklist->src_addr.isIPv4()) {
         debugs(14, 3, "ACLARP::match: IPv4 Required for ARP Lookups. Skipping " << checklist->src_addr );
         return 0;
     }
@@ -203,15 +203,15 @@ aclDumpArpListWalkee(Eui::Eui48 * const &node, void *state)
 {
     static char buf[48];
     node->encode(buf, 48);
-    wordlistAdd((wordlist **)state, buf);
+    static_cast<SBufList *>(state)->push_back(SBuf(buf));
 }
 
-wordlist *
+SBufList
 ACLARP::dump() const
 {
-    wordlist *w = NULL;
-    data->walk(aclDumpArpListWalkee, &w);
-    return w;
+    SBufList sl;
+    data->walk(aclDumpArpListWalkee, &sl);
+    return sl;
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */

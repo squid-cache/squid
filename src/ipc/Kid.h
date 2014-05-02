@@ -90,6 +90,7 @@ typedef enum {
     pkCoordinator = 1, ///< manages all other kids
     pkWorker = 2, ///< general-purpose worker bee
     pkDisker = 4, ///< cache_dir manager
+    pkHelper = 8  ///< general-purpose helper child
 } ProcessKind;
 
 /// ProcessKind for the current process

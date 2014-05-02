@@ -35,16 +35,16 @@
 #include "squid.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
+#include "fd.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 
-#include <stdio.h>
+#include <csignal>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
-#include <signal.h>
 
 #define RIDICULOUS_LENGTH	4096
 
@@ -209,7 +209,7 @@ squidaio_xfree(void *p, int size)
     MemAllocator *pool;
 
     if ((pool = squidaio_get_pool(size)) != NULL) {
-        pool->free(p);
+        pool->freeOne(p);
     } else
         xfree(p);
 }
@@ -221,7 +221,7 @@ squidaio_xstrfree(char *str)
     int len = strlen(str) + 1;
 
     if ((pool = squidaio_get_pool(len)) != NULL) {
-        pool->free(str);
+        pool->freeOne(str);
     } else
         xfree(str);
 }
@@ -295,7 +295,9 @@ squidaio_init(void)
 
     done_queue.blocked = 0;
 
-    CommIO::NotifyIOCompleted();
+    // Initialize the thread I/O pipes before creating any threads
+    // see bug 3189 comment 5 about race conditions.
+    CommIO::Initialize();
 
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
@@ -715,7 +717,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
         resultp->aio_errno = requestp->err;
     }
 
-    squidaio_request_pool->free(requestp);
+    squidaio_request_pool->freeOne(requestp);
 }				/* squidaio_cleanup_request */
 
 int

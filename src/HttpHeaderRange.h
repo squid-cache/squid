@@ -1,4 +1,3 @@
-
 /*
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -32,11 +31,12 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
-#include "Array.h"
 #include "MemPool.h"
 #include "Packer.h"
 #include "Range.h"
 #include "SquidString.h"
+
+#include <vector>
 
 class HttpReply;
 /* http byte-range-spec */
@@ -83,8 +83,8 @@ public:
     ~HttpHdrRange();
     HttpHdrRange &operator= (HttpHdrRange const &);
 
-    typedef Vector<HttpHdrRangeSpec *>::iterator iterator;
-    typedef Vector<HttpHdrRangeSpec *>::const_iterator const_iterator;
+    typedef std::vector<HttpHdrRangeSpec *>::iterator iterator;
+    typedef std::vector<HttpHdrRangeSpec *>::const_iterator const_iterator;
     iterator begin();
     const_iterator begin () const;
     iterator end();
@@ -103,11 +103,11 @@ public:
     int64_t lowestOffset(int64_t) const;
     bool offsetLimitExceeded(const int64_t limit) const;
     bool contains(HttpHdrRangeSpec& r) const;
-    Vector<HttpHdrRangeSpec *> specs;
+    std::vector<HttpHdrRangeSpec *> specs;
 
 private:
-    void getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy);
-    void merge (Vector<HttpHdrRangeSpec *> &basis);
+    void getCanonizedSpecs (std::vector<HttpHdrRangeSpec *> &copy);
+    void merge (std::vector<HttpHdrRangeSpec *> &basis);
     int64_t clen;
 };
 
@@ -121,6 +121,7 @@ class HttpHdrRangeIter
 
 public:
     HttpHdrRange::iterator pos;
+    HttpHdrRange::iterator end;
     const HttpHdrRangeSpec *currentSpec() const;
     void updateSpec();
     int64_t debt() const;

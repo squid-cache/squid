@@ -33,9 +33,9 @@
 
 #ifndef SQUID_ACLTIMEDATA_H
 #define SQUID_ACLTIMEDATA_H
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "splay.h"
 
 class ACLTimeData : public ACLData<time_t>
 {
@@ -48,7 +48,7 @@ public:
     ACLTimeData&operator=(ACLTimeData const &);
     virtual ~ACLTimeData();
     bool match(time_t);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<time_t> *clone() const;

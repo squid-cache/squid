@@ -31,14 +31,13 @@
  */
 
 #include "squid.h"
-#include "ConfigParser.h"
-#include "Store.h"
-#include "Array.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ServiceRep.h"
-#include "HttpRequest.h"
+#include "ConfigParser.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "SquidConfig.h"
+#include "Store.h"
 #include "wordlist.h"
 
 Adaptation::Icap::Config Adaptation::Icap::TheConfig;

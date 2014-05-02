@@ -43,14 +43,14 @@
 #include "auth/State.h"
 #include "cache_cf.h"
 #include "charset.h"
-#include "mgr/Registration.h"
-#include "Store.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
+#include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "SquidTime.h"
+#include "Store.h"
 #include "uudecode.h"
 #include "wordlist.h"
-#include "SquidTime.h"
 
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
@@ -116,6 +116,8 @@ Auth::Basic::Config::rotateHelpers()
 void
 Auth::Basic::Config::done()
 {
+    Auth::Config::done();
+
     authbasic_initialised = 0;
 
     if (basicauthenticators) {
@@ -149,6 +151,7 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * s
     storeAppendPrintf(entry, "%s basic children %d startup=%d idle=%d concurrency=%d\n", name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
+    Auth::Config::dump(entry, name, scheme);
 }
 
 Auth::Basic::Config::Config() :
@@ -167,51 +170,31 @@ Auth::Basic::Config::~Config()
 void
 Auth::Basic::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
-    if (strcasecmp(param_str, "program") == 0) {
+    if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
             wordlistDestroy(&authenticateProgram);
 
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param basic program", authenticateProgram->key);
-    } else if (strcasecmp(param_str, "children") == 0) {
+    } else if (strcmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
-    } else if (strcasecmp(param_str, "realm") == 0) {
+    } else if (strcmp(param_str, "realm") == 0) {
         parse_eol(&basicAuthRealm);
-    } else if (strcasecmp(param_str, "credentialsttl") == 0) {
+    } else if (strcmp(param_str, "credentialsttl") == 0) {
         parse_time_t(&credentialsTTL);
-    } else if (strcasecmp(param_str, "casesensitive") == 0) {
+    } else if (strcmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
-    } else if (strcasecmp(param_str, "utf8") == 0) {
+    } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
-    } else {
-        debugs(29, DBG_CRITICAL, HERE << "unrecognised basic auth scheme parameter '" << param_str << "'");
-    }
+    } else
+        Auth::Config::parse(scheme, n_configured, param_str);
 }
 
 static void
 authenticateBasicStats(StoreEntry * sentry)
 {
     helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
-}
-
-static Auth::User::Pointer
-authBasicAuthUserFindUsername(const char *username)
-{
-    AuthUserHashPointer *usernamehash;
-    debugs(29, 9, HERE << "Looking for user '" << username << "'");
-
-    if (username && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
-        while (usernamehash) {
-            if ((usernamehash->user()->auth_type == Auth::AUTH_BASIC) &&
-                    !strcmp(username, (char const *)usernamehash->key))
-                return usernamehash->user();
-
-            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
-        }
-    }
-
-    return NULL;
 }
 
 char *
@@ -257,7 +240,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
  * descriptive message to the user.
  */
 Auth::UserRequest::Pointer
-Auth::Basic::Config::decode(char const *proxy_auth)
+Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 {
     Auth::UserRequest::Pointer auth_user_request = dynamic_cast<Auth::UserRequest*>(new Auth::Basic::UserRequest);
     /* decode the username */
@@ -275,18 +258,17 @@ Auth::Basic::Config::decode(char const *proxy_auth)
 
     char *seperator = strchr(cleartext, ':');
 
-    lb = local_basic = new Auth::Basic::User(this);
-    if (seperator == NULL) {
-        local_basic->username(cleartext);
-    } else {
+    lb = local_basic = new Auth::Basic::User(this, aRequestRealm);
+
+    if (seperator) {
         /* terminate the username */
         *seperator = '\0';
-        local_basic->username(cleartext);
         local_basic->passwd = xstrdup(seperator+1);
     }
 
     if (!casesensitive)
-        Tolower((char *)local_basic->username());
+        Tolower(cleartext);
+    local_basic->username(cleartext);
 
     if (local_basic->passwd == NULL) {
         debugs(29, 4, HERE << "no password in proxy authorization header '" << proxy_auth << "'");
@@ -310,7 +292,7 @@ Auth::Basic::Config::decode(char const *proxy_auth)
     /* now lookup and see if we have a matching auth_user structure in memory. */
     Auth::User::Pointer auth_user;
 
-    if ((auth_user = authBasicAuthUserFindUsername(lb->username())) == NULL) {
+    if ((auth_user = findUserInCache(lb->userKey(), Auth::AUTH_BASIC)) == NULL) {
         /* the user doesn't exist in the username cache yet */
         /* save the credentials */
         debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");

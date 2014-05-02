@@ -10,7 +10,7 @@ public:
     static MmappedDiskIOModule &GetInstance();
     MmappedDiskIOModule();
     virtual void init();
-    virtual void shutdown();
+    virtual void gracefulShutdown();
     virtual char const *type () const;
     virtual DiskIOStrategy* createStrategy();
 

@@ -1,5 +1,17 @@
-## Process this file with automake to produce Makefile.in
+include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
-AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5
-DIST_SUBDIRS = include src test
-SUBDIRS = src test
+DIST_SUBDIRS = test
+SUBDIRS = test
+
+noinst_LIBRARIES = libTrie.a
+
+noinst_HEADERS = Trie.h TrieNode.h TrieCharTransform.h
+
+libTrie_a_SOURCES = Trie.cc \
+	Trie.cci \
+	Trie.h \
+	TrieNode.cc \
+	TrieNode.cci \
+	TrieNode.h \
+	TrieCharTransform.h

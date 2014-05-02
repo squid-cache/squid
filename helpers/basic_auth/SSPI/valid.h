@@ -61,7 +61,6 @@ extern const char * errormsg;
 
 /* Debugging stuff */
 #if defined(__GNUC__)			/* this is really a gcc-ism */
-#include <stdio.h>
 #include <unistd.h>
 static char *__foo;
 #define debug(X...) if (debug_enabled) { \

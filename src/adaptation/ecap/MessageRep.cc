@@ -2,16 +2,16 @@
  * DEBUG: section 93    eCAP Interface
  */
 #include "squid.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
 #include "BodyPipe.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
 #include <libecap/common/named_values.h>
+#include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
-#include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "base/TextException.h"
 #include "URL.h"
 
@@ -39,7 +39,7 @@ Adaptation::Ecap::HeaderRep::value(const Name &name) const
     const String value = squidId == HDR_OTHER ?
                          theHeader.getByName(name.image().c_str()) :
                          theHeader.getStrOrList(squidId);
-    return value.defined() ?
+    return value.size() > 0 ?
            Value::FromTempString(value.termedBuf()) : Value();
 }
 
@@ -99,7 +99,7 @@ Adaptation::Ecap::HeaderRep::parse(const Area &buf)
     MemBuf mb;
     mb.init();
     mb.append(buf.start, buf.size);
-    http_status error;
+    Http::StatusCode error;
     Must(theMessage.parse(&mb, true, &error));
 }
 
@@ -158,8 +158,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
 #endif
     case AnyP::PROTO_CACHE_OBJECT:
         return protocolCacheObj;
-    case AnyP::PROTO_INTERNAL:
-        return protocolInternal;
     case AnyP::PROTO_ICY:
         return protocolIcy;
     case AnyP::PROTO_COAP:
@@ -254,7 +252,7 @@ Adaptation::Ecap::RequestLineRep::method() const
     case Http::METHOD_TRACE:
         return libecap::methodTrace;
     default:
-        return Name(theMessage.method.image());
+        return Name(theMessage.method.image().toStdString());
     }
 }
 
@@ -292,29 +290,26 @@ Adaptation::Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
 void
 Adaptation::Ecap::StatusLineRep::statusCode(int code)
 {
-    // TODO: why is .status a enum? Do we not support unknown statuses?
-    theMessage.sline.status = static_cast<http_status>(code);
+    theMessage.sline.set(theMessage.sline.version, static_cast<Http::StatusCode>(code), theMessage.sline.reason());
 }
 
 int
 Adaptation::Ecap::StatusLineRep::statusCode() const
 {
-    // TODO: see statusCode(code) TODO above
-    return static_cast<int>(theMessage.sline.status);
+    // TODO: remove cast when possible
+    return static_cast<int>(theMessage.sline.status());
 }
 
 void
-Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &)
+Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &str)
 {
-    // Squid does not support custom reason phrases
-    theMessage.sline.reason = NULL;
+    theMessage.sline.set(theMessage.sline.version, theMessage.sline.status(), str.toString().c_str());
 }
 
 Adaptation::Ecap::StatusLineRep::Area
 Adaptation::Ecap::StatusLineRep::reasonPhrase() const
 {
-    return theMessage.sline.reason ?
-           Area::FromTempString(std::string(theMessage.sline.reason)) : Area();
+    return Area::FromTempString(std::string(theMessage.sline.reason()));
 }
 
 libecap::Version

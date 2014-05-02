@@ -20,4 +20,4 @@ basic_sspi_auth_LDADD = \
 	$(XTRA_LIBS)
 
 man_MANS = basic_sspi_auth.8
-EXTRA_DIST = basic_sspi_auth.8 config.test
+EXTRA_DIST = basic_sspi_auth.8 required.m4

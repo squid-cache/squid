@@ -40,9 +40,9 @@
 #include "comm/UdpOpenDialer.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "snmp/Forwarder.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
-#include "snmp/Forwarder.h"
 #include "SnmpRequest.h"
 #include "SquidConfig.h"
 #include "tools.h"
@@ -59,7 +59,7 @@ static mib_tree_entry * snmpAddNodeStr(const char *base_str, int o, oid_ParseFn 
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, AggrType aggrType, int children,...);
 static oid *snmpCreateOid(int length,...);
 mib_tree_entry * snmpLookupNodeStr(mib_tree_entry *entry, const char *str);
-int snmpCreateOidFromStr(const char *str, oid **name, int *nl);
+bool snmpCreateOidFromStr(const char *str, oid **name, int *nl);
 SQUIDCEXTERN void (*snmplib_debug_hook) (int, char *);
 static oid *static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
@@ -282,33 +282,33 @@ snmpOpenPorts(void)
 
     snmpIncomingConn = new Comm::Connection;
     snmpIncomingConn->local = Config.Addrs.snmp_incoming;
-    snmpIncomingConn->local.SetPort(Config.Port.snmp);
+    snmpIncomingConn->local.port(Config.Port.snmp);
 
-    if (!Ip::EnableIpv6 && !snmpIncomingConn->local.SetIPv4()) {
+    if (!Ip::EnableIpv6 && !snmpIncomingConn->local.setIPv4()) {
         debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << snmpIncomingConn->local << " is not an IPv4 address.");
         fatal("SNMP port cannot be opened.");
     }
     /* split-stack for now requires IPv4-only SNMP */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpIncomingConn->local.IsAnyAddr()) {
-        snmpIncomingConn->local.SetIPv4();
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpIncomingConn->local.isAnyAddr()) {
+        snmpIncomingConn->local.setIPv4();
     }
 
     AsyncCall::Pointer call = asyncCall(49, 2, "snmpIncomingConnectionOpened",
                                         Comm::UdpOpenDialer(&snmpPortOpened));
     Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
-    if (!Config.Addrs.snmp_outgoing.IsNoAddr()) {
+    if (!Config.Addrs.snmp_outgoing.isNoAddr()) {
         snmpOutgoingConn = new Comm::Connection;
         snmpOutgoingConn->local = Config.Addrs.snmp_outgoing;
-        snmpOutgoingConn->local.SetPort(Config.Port.snmp);
+        snmpOutgoingConn->local.port(Config.Port.snmp);
 
-        if (!Ip::EnableIpv6 && !snmpOutgoingConn->local.SetIPv4()) {
+        if (!Ip::EnableIpv6 && !snmpOutgoingConn->local.setIPv4()) {
             debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << snmpOutgoingConn->local << " is not an IPv4 address.");
             fatal("SNMP port cannot be opened.");
         }
         /* split-stack for now requires IPv4-only SNMP */
-        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.IsAnyAddr()) {
-            snmpOutgoingConn->local.SetIPv4();
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.isAnyAddr()) {
+            snmpOutgoingConn->local.setIPv4();
         }
         AsyncCall::Pointer c = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
                                          Comm::UdpOpenDialer(&snmpPortOpened));
@@ -332,7 +332,7 @@ snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo)
     else if (conn->fd == snmpOutgoingConn->fd)
         debugs(1, DBG_IMPORTANT, "Sending SNMP messages from " << snmpOutgoingConn->local);
     else
-        fatalf("Lost SNMP port (%d) on FD %d", (int)conn->local.GetPort(), conn->fd);
+        fatalf("Lost SNMP port (%d) on FD %d", (int)conn->local.port(), conn->fd);
 }
 
 void
@@ -705,8 +705,8 @@ static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 {
     oid *instance = NULL;
     if (*len <= current->len) {
-        instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = 0;
         *len += 1;
     }
@@ -722,8 +722,8 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     int index[TIME_INDEX_LEN] = {TIME_INDEX};
 
     if (*len <= current->len) {
-        instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = *index;
         *len += 1;
     } else {
@@ -733,8 +733,8 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             ++loop;
 
         if (loop < (TIME_INDEX_LEN - 1)) {
-            instance = (oid *)xmalloc(sizeof(name) * (*len));
-            memcpy(instance, name, (sizeof(name) * *len));
+            instance = (oid *)xmalloc(sizeof(*name) * (*len));
+            memcpy(instance, name, sizeof(*name) * (*len));
             instance[*len - 1] = index[++loop];
         }
     }
@@ -761,8 +761,8 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         instance = client_Inst(current->name, len, current, Fn);
     } else if (*len <= current->len) {
         debugs(49, 6, "snmp peer_Inst: *len <= current->len ???");
-        instance = (oid *)xmalloc(sizeof(name) * ( *len + 1));
-        memcpy(instance, name, (sizeof(name) * *len));
+        instance = (oid *)xmalloc(sizeof(*name) * ( *len + 1));
+        memcpy(instance, name, sizeof(*name) * (*len));
         instance[*len] = 1 ;
         *len += 1;
     } else {
@@ -773,8 +773,8 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 
         if (peers) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
-            instance = (oid *)xmalloc(sizeof(name) * (current->len + 1 ));
-            memcpy(instance, name, (sizeof(name) * current->len ));
+            instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
+            memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
@@ -799,19 +799,19 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
         if (aux)
             laddr = *aux;
         else
-            laddr.SetAnyAddr();
+            laddr.setAnyAddr();
 
-        if (laddr.IsIPv4())
+        if (laddr.isIPv4())
             size = sizeof(in_addr);
         else
             size = sizeof(in6_addr);
 
         debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
 
-        instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
-        memcpy(instance, name, (sizeof(name) * (*len)));
+        instance = (oid *)xmalloc(sizeof(*name) * (*len + size ));
+        memcpy(instance, name, (sizeof(*name) * (*len)));
 
-        if ( !laddr.IsAnyAddr() ) {
+        if ( !laddr.isAnyAddr() ) {
             addr2oid(laddr, &instance[ *len]);  // the addr
             *len += size ;
         }
@@ -822,18 +822,18 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
         if (aux)
             laddr = *aux;
         else
-            laddr.SetAnyAddr();
+            laddr.setAnyAddr();
 
-        if (!laddr.IsAnyAddr()) {
-            if (laddr.IsIPv4())
+        if (!laddr.isAnyAddr()) {
+            if (laddr.isIPv4())
                 newshift = sizeof(in_addr);
             else
                 newshift = sizeof(in6_addr);
 
             debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
 
-            instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
-            memcpy(instance, name, (sizeof(name) * (current->len)));
+            instance = (oid *)xmalloc(sizeof(*name) * (current->len +  newshift));
+            memcpy(instance, name, (sizeof(*name) * (current->len)));
             addr2oid(laddr, &instance[current->len]);  // the addr.
             *len = current->len + newshift ;
         }
@@ -951,26 +951,29 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
     return e;
 }
 
-int
+bool
 snmpCreateOidFromStr(const char *str, oid **name, int *nl)
 {
     char const *delim = ".";
-    char *p;
 
     *name = NULL;
     *nl = 0;
-    char *s = xstrdup(str);
-    char *s_ = s;
+    const char *s = str;
 
     /* Parse the OID string into oid bits */
-    while ( (p = strsep(&s_, delim)) != NULL) {
+    while (size_t len = strcspn(s, delim)) {
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
-        (*name)[*nl] = atoi(p);
+        (*name)[*nl] = atoi(s); // stops at the '.' delimiter
         ++(*nl);
+        // exit with true when the last octet has been parsed
+        if (s[len] == '\0')
+            return true;
+        s += len+1;
     }
 
-    xfree(s);
-    return 1;
+    // if we aborted before the lst octet was found, return false.
+    safe_free(name);
+    return false;
 }
 
 /*
@@ -1104,14 +1107,14 @@ addr2oid(Ip::Address &addr, oid * Dest)
     u_char *cp = NULL;
     struct in_addr i4addr;
     struct in6_addr i6addr;
-    oid code = addr.IsIPv6()? INETADDRESSTYPE_IPV6  : INETADDRESSTYPE_IPV4 ;
+    oid code = addr.isIPv6()? INETADDRESSTYPE_IPV6  : INETADDRESSTYPE_IPV4 ;
     u_int size = (code == INETADDRESSTYPE_IPV4) ? sizeof(struct in_addr):sizeof(struct in6_addr);
     //  Dest[0] = code ;
     if ( code == INETADDRESSTYPE_IPV4 ) {
-        addr.GetInAddr(i4addr);
+        addr.getInAddr(i4addr);
         cp = (u_char *) &(i4addr.s_addr);
     } else {
-        addr.GetInAddr(i6addr);
+        addr.getInAddr(i6addr);
         cp = (u_char *) &i6addr;
     }
     for ( i=0 ; i < size ; ++i) {
@@ -1152,8 +1155,8 @@ oid2addr(oid * id, Ip::Address &addr, u_int size)
 }
 
 /* SNMP checklists */
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "acl/StringData.h"
 
 class ACLSNMPCommunityStrategy : public ACLStrategy<char const *>

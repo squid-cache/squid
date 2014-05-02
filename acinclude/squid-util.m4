@@ -216,10 +216,8 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
       ;;
   esac
   ])
-  if test "x${squid_build_info:=no}" != "xno"; then
-    AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
-       [Squid extended build info field for "squid -v" output])
-  fi
+  AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
+     [Squid extended build info field for "squid -v" output])
 ])
 
 dnl like AC_SEARCH_LIBS, with an extra argument which is
@@ -248,4 +246,33 @@ AS_IF([test "$ac_res" != no],
   $3],
       [$4])
 AS_VAR_POPDEF([ac_Search])dnl
+])
+
+dnl Check for Cyrus SASL
+AC_DEFUN([SQUID_CHECK_SASL],[
+  squid_cv_check_sasl="auto"
+  AC_CHECK_HEADERS([sasl/sasl.h sasl.h])
+  AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
+    AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
+      squid_cv_check_sasl="no"
+    ])
+  ])
+  case "$squid_host_os" in
+    Darwin)
+      if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
+        AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
+        echo "checking for MAC Darwin without sasl.h ... yes"
+        squid_cv_check_sasl="yes"
+      else
+        echo "checking for MAC Darwin without sasl.h ... no"
+        squid_cv_check_sasl="no"
+      fi
+      ;;
+  esac
+  if test "x$squid_cv_check_sasl" = "xno"; then
+    AC_MSG_WARN([Neither SASL nor SASL2 found])
+  else
+    squid_cv_check_sasl="yes"
+  fi
+  AC_SUBST(LIBSASL)
 ])

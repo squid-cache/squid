@@ -20,7 +20,7 @@ Adaptation::AccessRule::~AccessRule()
 void
 Adaptation::AccessRule::parse(ConfigParser &parser)
 {
-    aclParseAccessLine(parser, &acl);
+    aclParseAccessLine("adaptation_access", parser, &acl);
 }
 
 void

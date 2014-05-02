@@ -68,7 +68,7 @@ Active mode. In this mode sessions are started by evaluating an
 acl with the argument
 .B LOGIN
 , or terminated by the argument
-.B LOGOUT .
+.B LOGOUT \.
 Without this flag the helper automatically starts the session after
 the first request.
 .SH CONFIGURATION
@@ -79,7 +79,7 @@ helper is a concurrent helper; therefore, the concurrency= option
 .B must
 be specified in the configuration.
 .PP
-Configuration example using the default automatic mode
+Passive session configuration example using the default automatic mode
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/ext_session_acl
 .if !'po4a'hide' .br

@@ -23,7 +23,7 @@ Adaptation::ServiceGroup::~ServiceGroup()
 void
 Adaptation::ServiceGroup::parse()
 {
-    ConfigParser::ParseString(&id);
+    id = ConfigParser::NextToken();
 
     wordlist *names = NULL;
     ConfigParser::ParseWordList(&names);
@@ -48,7 +48,7 @@ Adaptation::ServiceGroup::finalize()
         }
         s.cut(s.size() - 1);
         debugs(93, DBG_IMPORTANT, "Adaptation group '" << id << "' contains disabled member(s) after reconfiguration: " << s);
-        removedServices.clean();
+        removedServices.clear();
     }
 
     String baselineKey;

@@ -31,17 +31,20 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
-#include "fd.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fd.h"
+#include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Server.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -53,7 +56,6 @@
 #include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
 #include "base/AsyncCall.h"
-#include "SquidConfig.h"
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent
@@ -73,9 +75,10 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
     fwd = theFwdState;
     entry = fwd->entry;
 
-    entry->lock();
+    entry->lock("ServerStateData");
 
-    request = HTTPMSGLOCK(fwd->request);
+    request = fwd->request;
+    HTTPMSGLOCK(request);
 }
 
 ServerStateData::~ServerStateData()
@@ -87,7 +90,7 @@ ServerStateData::~ServerStateData()
     assert(!adaptedBodySource);
 #endif
 
-    entry->unlock();
+    entry->unlock("ServerStateData");
 
     HTTPMSGUNLOCK(request);
     HTTPMSGUNLOCK(theVirginReply);
@@ -147,7 +150,8 @@ ServerStateData::setVirginReply(HttpReply *rep)
     debugs(11,5, HERE << this << " setting virgin reply to " << rep);
     assert(!theVirginReply);
     assert(rep);
-    theVirginReply = HTTPMSGLOCK(rep);
+    theVirginReply = rep;
+    HTTPMSGLOCK(theVirginReply);
     return theVirginReply;
 }
 
@@ -165,11 +169,14 @@ ServerStateData::setFinalReply(HttpReply *rep)
 
     assert(!theFinalReply);
     assert(rep);
-    theFinalReply = HTTPMSGLOCK(rep);
+    theFinalReply = rep;
+    HTTPMSGLOCK(theFinalReply);
 
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
     haveParsedReplyHeaders(); // update the entry/reply (e.g., set timestamps)
+    if (!EBIT_TEST(entry->flags, RELEASE_REQUEST) && blockCaching())
+        entry->release();
     entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
@@ -380,7 +387,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
     if (io.flag) {
         debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
-        err = new ErrorState(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+        err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
         abortTransaction("I/O error while sending request body");
@@ -505,12 +512,12 @@ ServerStateData::maybePurgeOthers()
         return;
 
     // and probably only if the response was successful
-    if (theFinalReply->sline.status >= 400)
+    if (theFinalReply->sline.status() >= 400)
         return;
 
     // XXX: should we use originalRequest() here?
     const char *reqUrl = urlCanonical(request);
-    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
+    debugs(88, 5, "maybe purging due to " << request->method << ' ' << reqUrl);
     purgeEntriesByUrl(request, reqUrl);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
@@ -522,6 +529,29 @@ ServerStateData::haveParsedReplyHeaders()
 {
     Must(theFinalReply);
     maybePurgeOthers();
+
+    // adaptation may overwrite old offset computed using the virgin response
+    const bool partial = theFinalReply->content_range &&
+                         theFinalReply->sline.status() == Http::scPartialContent;
+    currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
+}
+
+/// whether to prevent caching of an otherwise cachable response
+bool
+ServerStateData::blockCaching()
+{
+    if (const Acl::Tree *acl = Config.accessList.storeMiss) {
+        // This relatively expensive check is not in StoreEntry::checkCachable:
+        // That method lacks HttpRequest and may be called too many times.
+        ACLFilledChecklist ch(acl, originalRequest(), NULL);
+        ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
+        HTTPMSGLOCK(ch.reply);
+        if (ch.fastCheck() != ACCESS_ALLOWED) { // when in doubt, block
+            debugs(20, 3, "store_miss prohibits caching");
+            return true;
+        }
+    }
+    return false;
 }
 
 HttpRequest *
@@ -552,7 +582,7 @@ ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, H
     }
 
     adaptedHeadSource = initiateAdaptation(
-                            new Adaptation::Iterator(vrep, cause, group));
+                            new Adaptation::Iterator(vrep, cause, fwd->al, group));
     startedAdaptation = initiated(adaptedHeadSource);
     Must(startedAdaptation);
 }
@@ -658,7 +688,7 @@ ServerStateData::noteAdaptationAnswer(const Adaptation::Answer &answer)
 
     switch (answer.kind) {
     case Adaptation::Answer::akForward:
-        handleAdaptedHeader(answer.message);
+        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
         break;
 
     case Adaptation::Answer::akBlock:
@@ -696,7 +726,8 @@ ServerStateData::handleAdaptedHeader(HttpMsg *msg)
         // subscribe to receive adapted body
         adaptedBodySource = rep->body_pipe;
         // assume that ICAP does not auto-consume on failures
-        assert(adaptedBodySource->setConsumerIfNotLate(this));
+        const bool result = adaptedBodySource->setConsumerIfNotLate(this);
+        assert(result);
     } else {
         // no body
         if (doneWithAdaptation()) // we may still be sending virgin response
@@ -825,7 +856,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
 
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
-        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
+        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request);
         err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
@@ -859,7 +890,7 @@ ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
-    ErrorState *err = new ErrorState(page_id, HTTP_FORBIDDEN, request);
+    ErrorState *err = new ErrorState(page_id, Http::scForbidden, request);
     err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
@@ -898,7 +929,7 @@ ServerStateData::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer grou
 void
 ServerStateData::sendBodyIsTooLargeError()
 {
-    ErrorState *err = new ErrorState(ERR_TOO_BIG, HTTP_FORBIDDEN, request);
+    ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request);
     fwd->fail(err);
     fwd->dontRetry(true);
     abortTransaction("Virgin body too large.");
@@ -914,7 +945,7 @@ ServerStateData::adaptOrFinalizeReply()
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
-                                       originalRequest(), virginReply(), this);
+                                       originalRequest(), virginReply(), fwd->al, this);
     debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;

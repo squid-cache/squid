@@ -35,20 +35,20 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
-#include "auth/negotiate/auth_negotiate.h"
 #include "auth/Gadgets.h"
+#include "auth/negotiate/auth_negotiate.h"
+#include "auth/negotiate/Scheme.h"
+#include "auth/negotiate/User.h"
+#include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "cache_cf.h"
-#include "mgr/Registration.h"
-#include "Store.h"
 #include "client_side.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
-#include "auth/negotiate/Scheme.h"
-#include "auth/negotiate/User.h"
-#include "auth/negotiate/UserRequest.h"
+#include "Store.h"
 #include "wordlist.h"
 
 /**
@@ -88,6 +88,8 @@ Auth::Negotiate::Config::rotateHelpers()
 void
 Auth::Negotiate::Config::done()
 {
+    Auth::Config::done();
+
     authnegotiate_initialised = 0;
 
     if (negotiateauthenticators) {
@@ -120,7 +122,7 @@ Auth::Negotiate::Config::dump(StoreEntry * entry, const char *name, Auth::Config
     storeAppendPrintf(entry, "\n%s negotiate children %d startup=%d idle=%d concurrency=%d\n",
                       name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s %s keep_alive %s\n", name, "negotiate", keep_alive ? "on" : "off");
-
+    Auth::Config::dump(entry, name, scheme);
 }
 
 Auth::Negotiate::Config::Config() : keep_alive(1)
@@ -129,20 +131,19 @@ Auth::Negotiate::Config::Config() : keep_alive(1)
 void
 Auth::Negotiate::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
-    if (strcasecmp(param_str, "program") == 0) {
+    if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
             wordlistDestroy(&authenticateProgram);
 
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param negotiate program", authenticateProgram->key);
-    } else if (strcasecmp(param_str, "children") == 0) {
+    } else if (strcmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
-    } else if (strcasecmp(param_str, "keep_alive") == 0) {
+    } else if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
-    } else {
-        debugs(29, DBG_CRITICAL, "ERROR: unrecognised Negotiate auth scheme parameter '" << param_str << "'");
-    }
+    } else
+        Auth::Config::parse(scheme, n_configured, param_str);
 }
 
 const char *
@@ -287,9 +288,9 @@ authenticateNegotiateStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Negotiate::Config::decode(char const *proxy_auth)
+Auth::Negotiate::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 {
-    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::Config::Find("negotiate"));
+    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::Config::Find("negotiate"), aRequestRealm);
     Auth::UserRequest *auth_user_request = new Auth::Negotiate::UserRequest();
     assert(auth_user_request->user() == NULL);
 

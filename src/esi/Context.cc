@@ -38,9 +38,9 @@
  */
 #if (USE_SQUID_ESI == 1)
 
+#include "client_side_request.h"
 #include "esi/Context.h"
 #include "Store.h"
-#include "client_side_request.h"
 
 void
 ESIContext::updateCachedAST()
@@ -108,7 +108,7 @@ void
 ESIContext::setErrorMessage(char const *anError)
 {
     if (!errormessage)
-        errormessage = xstrdup (anError);
+        errormessage = xstrdup(anError);
 }
 
 #endif /* USE_SQUID_ESI == 1 */

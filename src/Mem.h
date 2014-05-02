@@ -37,9 +37,7 @@
 /* for FREE */
 #include "typedefs.h"
 
-#if HAVE_IOSFWD
 #include <iosfwd>
-#endif
 
 class StoreEntry;
 class MemPoolStats;

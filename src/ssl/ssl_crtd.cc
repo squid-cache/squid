@@ -1,24 +1,13 @@
 #include "squid.h"
 #include "helpers/defines.h"
-#include "ssl/gadgets.h"
-#include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
+#include "ssl/crtd_message.h"
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
-#if HAVE_SSTREAM
-#include <sstream>
-#endif
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
-#if HAVE_STDEXCEPT
+#include <sstream>
 #include <stdexcept>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
@@ -251,7 +240,7 @@ int main(int argc, char *argv[])
     try {
         size_t max_db_size = 0;
         size_t fs_block_size = 2048;
-        char c;
+        int8_t c;
         bool create_new_db = false;
         std::string db_path;
         // proccess options.

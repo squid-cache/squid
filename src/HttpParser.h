@@ -1,7 +1,7 @@
 #ifndef _SQUID_SRC_HTTPPARSER_H
 #define _SQUID_SRC_HTTPPARSER_H
 
-#include "HttpStatusCode.h"
+#include "http/StatusCode.h"
 
 // Parser states
 #define HTTP_PARSE_NONE   0 // nothing. completely unset state.
@@ -11,9 +11,8 @@
  *
  * Works on a raw character I/O buffer and tokenizes the content into
  * either an error state or, an HTTP procotol request major segments:
- *
- * \item Request Line (method, URL, protocol, version)
- * \item Mime header block
+ *  1. Request Line (method, URL, protocol, version)
+ *  2. Mime header block
  */
 class HttpParser
 {
@@ -72,9 +71,9 @@ public:
     // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
 
     /** HTTP status code to be used on the invalid-request error page
-     * HTTP_STATUS_NONE indicates incomplete parse, HTTP_OK indicates no error.
+     * Http::scNone indicates incomplete parse, Http::scOkay indicates no error.
      */
-    http_status request_parse_status;
+    Http::StatusCode request_parse_status;
 };
 
 // Legacy functions

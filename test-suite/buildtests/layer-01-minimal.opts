@@ -20,7 +20,6 @@ MAKETEST="distcheck"
 #
 #   --without-default-user \
 #   --without-aufs-threads \
-#   --without-coss-membuf-size \
 #   --without-filedescriptors \
 #   --without-cppunit-basedir \
 #   --without-build-environment \
@@ -55,7 +54,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-cachemgr-hostname \
 	--disable-eui \
 	--disable-htcp \
-	--disable-ssl \
+	--disable-ssl-crtd \
 	--disable-forw-via-db \
 	--disable-cache-digests \
 	--disable-poll \
@@ -71,7 +70,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-leakfinder \
 	--disable-follow-x-forwarded-for \
 	--disable-ident-lookups \
-	--disable-internal-dns \
 	--disable-default-hostsfile \
 	--disable-auth \
 	--disable-basic-auth-helpers \
@@ -99,6 +97,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
 	--without-dns-cname \
+	--without-openssl \
 	--without-po2html \
 	"
 

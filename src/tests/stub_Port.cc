@@ -4,7 +4,7 @@
 #define STUB_API "ipc/Port.cc"
 #include "tests/STUB.h"
 
-const char Ipc::coordinatorAddr[] = "";
-const char Ipc::strandAddrPfx[] = "";
+const char Ipc::strandAddrLabel[] = "-kid";
 
 String Ipc::Port::MakeAddr(char const*, int) STUB_RETVAL("")
+String Ipc::Port::CoordinatorAddr() STUB_RETVAL("")

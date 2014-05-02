@@ -6,12 +6,12 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
-#include "CommCalls.h"
 #include "comm/Write.h"
+#include "CommCalls.h"
 #include "ipc/FdNotes.h"
 #include "mgr/StoreToCommWriter.h"
-#include "StoreClient.h"
 #include "Store.h"
+#include "StoreClient.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
@@ -138,7 +138,7 @@ Mgr::StoreToCommWriter::swanSong()
             sc = NULL;
         }
         entry->unregisterAbort();
-        entry->unlock();
+        entry->unlock("Mgr::StoreToCommWriter::swanSong");
         entry = NULL;
     }
     close();

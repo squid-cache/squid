@@ -53,6 +53,7 @@
 #if USE_DEVPOLL
 
 #include "comm/Loops.h"
+#include "fd.h"
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
@@ -61,17 +62,16 @@
 #include "StatHist.h"
 #include "Store.h"
 
+#include <cerrno>
+#include <climits>
 #if HAVE_SYS_DEVPOLL_H
 /* Solaris /dev/poll support, see "man -s 7D poll" */
 #include <sys/devpoll.h>
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
 
 #define DEBUG_DEVPOLL 0
 
-/* OPEN_MAX is defined in <limits.h>, presumably included by sys/devpoll.h */
+// OPEN_MAX is defined in <climits>
 #define	DEVPOLL_UPDATESIZE	OPEN_MAX
 #define	DEVPOLL_QUERYSIZE	OPEN_MAX
 

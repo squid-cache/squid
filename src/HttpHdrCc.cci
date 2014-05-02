@@ -30,8 +30,8 @@
  *
  */
 
-#include "defines.h"
 #include "Debug.h"
+#include "defines.h"
 
 bool
 HttpHdrCc::isSet(http_hdr_cc_type id) const

@@ -3,16 +3,16 @@
  */
 
 #include "squid.h"
-#include "comm.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "globals.h"
-#include "ipc/Port.h"
-#include "ipc/Messages.h"
 #include "ipc/Kids.h"
-#include "ipc/TypedMsgHdr.h"
-#include "ipc/StartListening.h"
+#include "ipc/Messages.h"
+#include "ipc/Port.h"
 #include "ipc/SharedListen.h"
+#include "ipc/StartListening.h"
+#include "ipc/TypedMsgHdr.h"
 #include "tools.h"
 
 #include <map>
@@ -117,7 +117,7 @@ void Ipc::JoinSharedListen(const OpenListenerParams &params,
 
     TypedMsgHdr message;
     request.pack(message);
-    SendMessage(coordinatorAddr, message);
+    SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }
 
 void Ipc::SharedListenJoined(const SharedListenResponse &response)
@@ -142,11 +142,11 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
         cbd->conn->flags = p.flags;
         // XXX: leave the comm AI stuff to comm_import_opened()?
         struct addrinfo *AI = NULL;
-        p.addr.GetAddrInfo(AI);
+        p.addr.getAddrInfo(AI);
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
         comm_import_opened(cbd->conn, FdNote(p.fdNote), AI);
-        p.addr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
     }
 
     cbd->errNo = response.errNo;

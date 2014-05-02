@@ -33,11 +33,10 @@
  */
 
 #include "squid.h"
-#include "acl/MethodData.h"
 #include "acl/Checklist.h"
+#include "acl/MethodData.h"
 #include "cache_cf.h"
 #include "HttpRequestMethod.h"
-#include "wordlist.h"
 
 int ACLMethodData::ThePurgeCount = 0;
 
@@ -64,22 +63,22 @@ ACLMethodData::match(HttpRequestMethod toFind)
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<HttpRequestMethod>::CBDATA_CbDataList;
 /// \endcond
 
-wordlist *
-ACLMethodData::dump()
+SBufList
+ACLMethodData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
     CbDataList<HttpRequestMethod> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, RequestMethodStr(data->element));
+        sl.push_back(data->element.image());
         data = data->next;
     }
 
-    return W;
+    return sl;
 }
 
 void

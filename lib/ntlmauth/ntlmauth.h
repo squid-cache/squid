@@ -139,7 +139,7 @@ extern "C" {
                              int *payload_length,
                              strhdr * hdr,
                              const char *toadd,
-                             const int toadd_length);
+                             const uint16_t toadd_length);
 
     /* ************************************************************************* */
     /* Negotiate Packet structures and functions */
@@ -197,7 +197,9 @@ extern "C" {
     /** Generate a challenge request nonce. */
     void ntlm_make_nonce(char *nonce);
 
-    /** Generate a challenge request Blob to be sent to the client. */
+    /** Generate a challenge request Blob to be sent to the client.
+     * Will silently truncate the domain value at 2^16-1 bytes if larger.
+     */
     void ntlm_make_challenge(ntlm_challenge *ch,
                              const char *domain,
                              const char *domain_controller,

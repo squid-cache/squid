@@ -38,8 +38,8 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
@@ -276,27 +276,11 @@ ESIStreamContext::ESIStreamContext() : finished(false), include (NULL), localbuf
 /* ESIContext */
 static ESIContext *ESIContextNew(HttpReply *, clientStreamNode *, ClientHttpRequest *);
 
-void *
-ESIContext::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (ESIContext));
-    CBDATA_INIT_TYPE(ESIContext);
-    ESIContext *result = cbdataAlloc(ESIContext);
-    return result;
-}
-
-void
-ESIContext::operator delete (void *address)
-{
-    ESIContext *t = static_cast<ESIContext *>(address);
-    cbdataFree(t);
-}
-
 void
 ESIContext::setError()
 {
     errorpage = ERR_ESI;
-    errorstatus = HTTP_INTERNAL_SERVER_ERROR;
+    errorstatus = Http::scInternalServerError;
     flags.error = 1;
 }
 
@@ -541,21 +525,21 @@ esiStreamStatus (clientStreamNode *thisNode, ClientHttpRequest *http)
 }
 
 static int
-esiAlwaysPassthrough(http_status sline)
+esiAlwaysPassthrough(Http::StatusCode sline)
 {
     int result;
 
     switch (sline) {
 
-    case HTTP_CONTINUE: /* Should never reach us... but squid needs to alter to accomodate this */
+    case Http::scContinue: /* Should never reach us... but squid needs to alter to accomodate this */
 
-    case HTTP_SWITCHING_PROTOCOLS: /* Ditto */
+    case Http::scSwitchingProtocols: /* Ditto */
 
-    case HTTP_PROCESSING: /* Unknown - some extension */
+    case Http::scProcessing: /* Unknown - some extension */
 
-    case HTTP_NO_CONTENT: /* no body, no esi */
+    case Http::scNoContent: /* no body, no esi */
 
-    case HTTP_NOT_MODIFIED: /* ESI does not affect assembled page headers, so 304s are valid */
+    case Http::scNotModified: /* ESI does not affect assembled page headers, so 304s are valid */
         result = 1;
         /* unreached */
         break;
@@ -888,7 +872,7 @@ ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, ClientHttpRequest *ht
     rv->rep = rep;
     rv->cbdataLocker = rv;
 
-    if (esiAlwaysPassthrough(rep->sline.status)) {
+    if (esiAlwaysPassthrough(rep->sline.status())) {
         rv->flags.passthrough = 1;
     } else {
         /* remove specific headers for ESI to prevent
@@ -1323,7 +1307,7 @@ ESIContext::process ()
     /* parsing:
      * read through buffered, skipping plain text, and skipping any
      * <...> entry that is not an <esi: entry.
-     * when it's found, hand an esiLiteral of the preceeding data to our current
+     * when it's found, hand an esiLiteral of the preceding data to our current
      * context
      */
 
@@ -1451,7 +1435,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError (err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void

@@ -6,32 +6,6 @@
 #include "SquidConfig.h"
 #include "Store.h"
 
-const char *Format::log_tags[] = {
-    "NONE",
-    "TCP_HIT",
-    "TCP_MISS",
-    "TCP_REFRESH_UNMODIFIED",
-    "TCP_REFRESH_FAIL", // same tag logged for LOG_TCP_REFRESH_FAIL_OLD and
-    "TCP_REFRESH_FAIL", // LOG_TCP_REFRESH_FAIL_ERR for backward-compatibility
-    "TCP_REFRESH_MODIFIED",
-    "TCP_CLIENT_REFRESH_MISS",
-    "TCP_IMS_HIT",
-    "TCP_SWAPFAIL_MISS",
-    "TCP_NEGATIVE_HIT",
-    "TCP_MEM_HIT",
-    "TCP_DENIED",
-    "TCP_DENIED_REPLY",
-    "TCP_OFFLINE_HIT",
-    "TCP_REDIRECT",
-    "UDP_HIT",
-    "UDP_MISS",
-    "UDP_DENIED",
-    "UDP_INVALID",
-    "UDP_MISS_NOFETCH",
-    "ICP_QUERY",
-    "LOG_TYPE_MAX"
-};
-
 // Due to token overlaps between 1 and 2 letter tokens (Bug 3310)
 // We split the token table into sets determined by the token length
 namespace Format
@@ -72,12 +46,12 @@ static TokenTableEntry TokenTable2C[] = {
     {"<la", LFT_SERVER_LOCAL_IP},
     {"oa", LFT_SERVER_LOCAL_IP_OLD_27},
     {"<lp", LFT_SERVER_LOCAL_PORT},
-    /* {"ot", LFT_PEER_OUTGOING_TOS}, */
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
     {"tl", LFT_TIME_LOCALTIME},
     {"tg", LFT_TIME_GMT},
+    {"tS", LFT_TIME_START},
     {"tr", LFT_TIME_TO_HANDLE_REQUEST},
 
     {"<pt", LFT_PEER_RESPONSE_TIME},
@@ -107,6 +81,7 @@ static TokenTableEntry TokenTable2C[] = {
 
     {">rm", LFT_CLIENT_REQ_METHOD},
     {">ru", LFT_CLIENT_REQ_URI},
+    {">rd", LFT_CLIENT_REQ_URLDOMAIN},
     {">rp", LFT_CLIENT_REQ_URLPATH},
     /*{">rq", LFT_CLIENT_REQ_QUERY},*/
     {">rv", LFT_CLIENT_REQ_VERSION},
@@ -123,22 +98,22 @@ static TokenTableEntry TokenTable2C[] = {
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
 
-    {">st", LFT_REQUEST_SIZE_TOTAL },
-    /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
-    {">sh", LFT_REQUEST_SIZE_HEADERS },
+    {">st", LFT_CLIENT_REQUEST_SIZE_TOTAL },
+    {">sh", LFT_CLIENT_REQUEST_SIZE_HEADERS },
     /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
     /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
-    {"<st", LFT_REPLY_SIZE_TOTAL},
+    {"<st", LFT_ADAPTED_REPLY_SIZE_TOTAL}, // XXX: adapted should be code: <sta
     {"<sH", LFT_REPLY_HIGHOFFSET},
     {"<sS", LFT_REPLY_OBJECTSIZE},
-    /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
-    {"<sh", LFT_REPLY_SIZE_HEADERS },
+    {"<sh", LFT_ADAPTED_REPLY_SIZE_HEADERS }, // XXX: adapted should be code: <sha
     /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
     /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
+    {"st", LFT_CLIENT_IO_SIZE_TOTAL}, // XXX: total from client should be stC ??
+    /*{"stP", LFT_SERVER_IO_SIZE_TOTAL},*/
+
     {"et", LFT_TAG},
-    {"st", LFT_IO_SIZE_TOTAL},
     {"ea", LFT_EXT_LOG},
     {"sn", LFT_SEQUENCE_NUMBER},
 
@@ -148,9 +123,14 @@ static TokenTableEntry TokenTable2C[] = {
 /// Miscellaneous >2 byte tokens
 static TokenTableEntry TokenTableMisc[] = {
     {">eui", LFT_CLIENT_EUI},
+    {">qos", LFT_CLIENT_LOCAL_TOS},
+    {"<qos", LFT_SERVER_LOCAL_TOS},
+    {">nfmark", LFT_CLIENT_LOCAL_NFMARK},
+    {"<nfmark", LFT_SERVER_LOCAL_NFMARK},
     {"err_code", LFT_SQUID_ERROR },
     {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {"note", LFT_NOTE },
+    {"credentials", LFT_CREDENTIALS},
     {NULL, LFT_NONE}		/* this must be last */
 };
 
@@ -189,7 +169,7 @@ static TokenTableEntry TokenTableIcap[] = {
 };
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
 // SSL (ssl::) tokens
 static TokenTableEntry TokenTableSsl[] = {
     {"bump_mode", LFT_SSL_BUMP_MODE},
@@ -213,7 +193,7 @@ Format::Token::Init()
 #if ICAP_CLIENT
     TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
 #endif
 }
@@ -327,7 +307,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
     }
 
     if (*cur == '0') {
-        zero = false;
+        zero = true;
         ++cur;
     }
 
@@ -513,18 +493,18 @@ done:
         Config.onoff.log_fqdn = 1;
         break;
 
+    case LFT_TIME_START:
     case LFT_TIME_SUBSECOND:
         divisor = 1000;
 
         if (widthMax > 0) {
-            int i;
             divisor = 1000000;
 
-            for (i = widthMax; i > 1; --i)
+            for (int i = widthMax; i > 0; --i)
                 divisor /= 10;
 
             if (!divisor)
-                divisor = 0;
+                divisor = 1;
         }
         break;
 

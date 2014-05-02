@@ -13,4 +13,4 @@ EXTRA_DIST = \
 	basic_sasl_auth.8 \
 	basic_sasl_auth.conf \
 	basic_sasl_auth.pam \
-	config.test
+	required.m4

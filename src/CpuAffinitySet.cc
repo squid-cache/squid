@@ -9,12 +9,8 @@
 #include "Debug.h"
 #include "util.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cerrno>
+#include <cstring>
 
 CpuAffinitySet::CpuAffinitySet()
 {

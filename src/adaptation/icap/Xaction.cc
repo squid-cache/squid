@@ -3,7 +3,6 @@
  */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
@@ -15,8 +14,7 @@
 #include "CommCalls.h"
 #include "err_detail_type.h"
 #include "fde.h"
-#include "forward.h"
-#include "globals.h"
+#include "FwdState.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -50,7 +48,8 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
-    icapRequest = HTTPMSGLOCK(new HttpRequest);
+    icapRequest = new HttpRequest;
+    HTTPMSGLOCK(icapRequest);
     icap_tr_start = current_time;
 }
 
@@ -165,7 +164,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 
     connection = new Comm::Connection;
     connection->remote = ia->in_addrs[ia->cur];
-    connection->remote.SetPort(s.cfg().port);
+    connection->remote.port(s.cfg().port);
     getOutgoingAddress(NULL, connection);
 
     // TODO: service bypass status may differ from that of a transaction
@@ -438,7 +437,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse");
 
-    http_status error = HTTP_STATUS_NONE;
+    Http::StatusCode error = Http::scNone;
     const bool parsed = msg->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
@@ -536,7 +535,7 @@ void Adaptation::Icap::Xaction::swanSong()
 void Adaptation::Icap::Xaction::tellQueryAborted()
 {
     if (theInitiator.set()) {
-        Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply,
+        Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply.getRaw(),
                 retriable(), repeatable());
         Launcher *launcher = dynamic_cast<Launcher*>(theInitiator.get());
         // launcher may be nil if initiator is invalid
@@ -549,12 +548,8 @@ void Adaptation::Icap::Xaction::tellQueryAborted()
 void Adaptation::Icap::Xaction::maybeLog()
 {
     if (IcapLogfileStatus == LOG_ENABLE) {
-        ACLChecklist *checklist = new ACLFilledChecklist(::Config.accessList.icap, al.request, dash_str);
-        if (!::Config.accessList.icap || checklist->fastCheck() == ACCESS_ALLOWED) {
-            finalizeLogInfo();
-            icapLogLog(alep, checklist);
-        }
-        delete checklist;
+        finalizeLogInfo();
+        icapLogLog(alep);
     }
 }
 
@@ -571,10 +566,12 @@ void Adaptation::Icap::Xaction::finalizeLogInfo()
     al.icap.ioTime = tvSubMsec(icap_tio_start, icap_tio_finish);
     al.icap.trTime = tvSubMsec(icap_tr_start, current_time);
 
-    al.icap.request = HTTPMSGLOCK(icapRequest);
-    if (icapReply) {
-        al.icap.reply = HTTPMSGLOCK(icapReply);
-        al.icap.resStatus = icapReply->sline.status;
+    al.icap.request = icapRequest;
+    HTTPMSGLOCK(al.icap.request);
+    if (icapReply != NULL) {
+        al.icap.reply = icapReply.getRaw();
+        HTTPMSGLOCK(al.icap.reply);
+        al.icap.resStatus = icapReply->sline.status();
     }
 }
 

@@ -11,20 +11,11 @@
 #ifndef SQUID_DIGEST_COMMON_H_
 #define SQUID_DIGEST_COMMON_H_
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -36,9 +27,9 @@
 #include <crypt.h>
 #endif
 
-#include "util.h"
 #include "hash.h"
 #include "rfc2617.h"
+#include "util.h"
 
 typedef struct _request_data {
     char *user;

@@ -6,7 +6,7 @@
 #include "squid.h"
 
 #include "client_side.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "ssl/ServerBump.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -20,10 +20,10 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMo
         mode(md)
 {
     debugs(33, 4, HERE << "will peek at " << request->GetHost() << ':' << request->port);
-    const char *uri = urlCanonical(request);
+    const char *uri = urlCanonical(request.getRaw());
     if (e) {
         entry = e;
-        entry->lock();
+        entry->lock("Ssl::ServerBump");
     } else
         entry = storeCreateEntry(uri, uri, request->flags, request->method);
     // We do not need to be a client because the error contents will be used
@@ -37,7 +37,7 @@ Ssl::ServerBump::~ServerBump()
     if (entry) {
         debugs(33, 4, HERE << *entry);
         storeUnregister(sc, entry, this);
-        entry->unlock();
+        entry->unlock("Ssl::ServerBump");
     }
     cbdataReferenceDone(sslErrors);
 }

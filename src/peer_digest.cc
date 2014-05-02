@@ -36,14 +36,14 @@
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "event.h"
-#include "forward.h"
+#include "FwdState.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
 #include "MemObject.h"
-#include "neighbors.h"
 #include "mime_header.h"
+#include "neighbors.h"
 #include "PeerDigest.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -120,21 +120,6 @@ peerDigestClean(PeerDigest * pd)
 }
 
 CBDATA_CLASS_INIT(PeerDigest);
-
-void *
-PeerDigest::operator new (size_t)
-{
-    CBDATA_INIT_TYPE(PeerDigest);
-    PeerDigest *result = cbdataAlloc(PeerDigest);
-    return result;
-}
-
-void
-PeerDigest::operator delete (void *address)
-{
-    PeerDigest *t = static_cast<PeerDigest *>(address);
-    cbdataFree(t);
-}
 
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *
@@ -315,7 +300,7 @@ peerDigestRequest(PeerDigest * pd)
 {
     CachePeer *p = pd->peer;
     StoreEntry *e, *old_e;
-    char *url;
+    char *url = NULL;
     const cache_key *key;
     HttpRequest *req;
     DigestFetchState *fetch = NULL;
@@ -329,8 +314,7 @@ peerDigestRequest(PeerDigest * pd)
     if (p->digest_url)
         url = xstrdup(p->digest_url);
     else
-        url = internalRemoteUri(p->host, p->http_port,
-                                "/squid-internal-periodic/", StoreDigestFileName);
+        url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestFileName));
 
     req = HttpRequest::CreateFromUrl(url);
 
@@ -347,15 +331,21 @@ peerDigestRequest(PeerDigest * pd)
 
     req->header.putStr(HDR_ACCEPT, "text/html");
 
-    if (p->login)
+    if (p->login &&
+            p->login[0] != '*' &&
+            strcmp(p->login, "PASS") != 0 &&
+            strcmp(p->login, "PASSTHRU") != 0 &&
+            strcmp(p->login, "NEGOTIATE") != 0 &&
+            strcmp(p->login, "PROXYPASS") != 0) {
         xstrncpy(req->login, p->login, MAX_LOGIN_SZ);
-
+    }
     /* create fetch state structure */
     CBDATA_INIT_TYPE(DigestFetchState);
 
     fetch = cbdataAlloc(DigestFetchState);
 
-    fetch->request = HTTPMSGLOCK(req);
+    fetch->request = req;
+    HTTPMSGLOCK(fetch->request);
 
     fetch->pd = cbdataReference(pd);
 
@@ -380,8 +370,8 @@ peerDigestRequest(PeerDigest * pd)
     if (old_e) {
         debugs(72, 5, "peerDigestRequest: found old entry");
 
-        old_e->lock();
-        old_e->createMemObject(url, url);
+        old_e->lock("peerDigestRequest");
+        old_e->createMemObject(url, url, req->method);
 
         fetch->old_sc = storeClientListAdd(old_e, fetch);
     }
@@ -407,6 +397,8 @@ peerDigestRequest(PeerDigest * pd)
 
     storeClientCopy(fetch->sc, e, tempBuffer,
                     peerDigestHandleReply, fetch);
+
+    safe_free(url);
 }
 
 /* Handle the data copying .. */
@@ -540,23 +532,24 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         return -1;
 
     if ((hdr_size = headersEnd(buf, size))) {
-        http_status status;
         HttpReply const *reply = fetch->entry->getReply();
         assert(reply);
-        assert (reply->sline.status != 0);
-        status = reply->sline.status;
+        assert(reply->sline.status() != Http::scNone);
+        const Http::StatusCode status = reply->sline.status();
         debugs(72, 3, "peerDigestFetchReply: " << pd->host << " status: " << status <<
                ", expires: " << (long int) reply->expires << " (" << std::showpos <<
                (int) (reply->expires - squid_curtime) << ")");
 
         /* this "if" is based on clientHandleIMSReply() */
 
-        if (status == HTTP_NOT_MODIFIED) {
+        if (status == Http::scNotModified) {
             /* our old entry is fine */
             assert(fetch->old_entry);
 
-            if (!fetch->old_entry->mem_obj->request)
-                fetch->old_entry->mem_obj->request = HTTPMSGLOCK(fetch->entry->mem_obj->request);
+            if (!fetch->old_entry->mem_obj->request) {
+                fetch->old_entry->mem_obj->request = fetch->entry->mem_obj->request;
+                HTTPMSGLOCK(fetch->old_entry->mem_obj->request);
+            }
 
             assert(fetch->old_entry->mem_obj->request);
 
@@ -569,7 +562,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);
 
-            fetch->entry->unlock();
+            fetch->entry->unlock("peerDigestFetchReply 304");
 
             fetch->entry = fetch->old_entry;
 
@@ -578,25 +571,25 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
             /* fetch->entry->mem_obj->request = NULL; */
-        } else if (status == HTTP_OK) {
+        } else if (status == Http::scOkay) {
             /* get rid of old entry if any */
 
             if (fetch->old_entry) {
                 debugs(72, 3, "peerDigestFetchReply: got new digest, releasing old one");
                 storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
                 fetch->old_entry->releaseRequest();
-                fetch->old_entry->unlock();
+                fetch->old_entry->unlock("peerDigestFetchReply 200");
                 fetch->old_entry = NULL;
             }
         } else {
             /* some kind of a bug */
-            peerDigestFetchAbort(fetch, buf, httpStatusLineReason(&reply->sline));
+            peerDigestFetchAbort(fetch, buf, reply->sline.reason());
             return -1;		/* XXX -1 will abort stuff in ReadReply! */
         }
 
         /* must have a ready-to-use store entry if we got here */
         /* can we stay with the old in-memory digest? */
-        if (status == HTTP_NOT_MODIFIED && fetch->pd->cd) {
+        if (status == Http::scNotModified && fetch->pd->cd) {
             peerDigestFetchStop(fetch, buf, "Not modified");
             fetch->state = DIGEST_READ_DONE;
         } else {
@@ -630,11 +623,11 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 
     if ((hdr_size = headersEnd(buf, size))) {
         assert(fetch->entry->getReply());
-        assert (fetch->entry->getReply()->sline.status != 0);
+        assert(fetch->entry->getReply()->sline.status() != Http::scNone);
 
-        if (fetch->entry->getReply()->sline.status != HTTP_OK) {
+        if (fetch->entry->getReply()->sline.status() != Http::scOkay) {
             debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
-                   " status " << fetch->entry->getReply()->sline.status <<
+                   " status " << fetch->entry->getReply()->sline.status() <<
                    " got cached!");
 
             peerDigestFetchAbort(fetch, buf, "internal status error");
@@ -918,7 +911,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
         debugs(72, 3, "peerDigestFetchFinish: deleting old entry");
         storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
         fetch->old_entry->releaseRequest();
-        fetch->old_entry->unlock();
+        fetch->old_entry->unlock("peerDigestFetchFinish old");
         fetch->old_entry = NULL;
     }
 
@@ -934,7 +927,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     /* unlock everything */
     storeUnregister(fetch->sc, fetch->entry, fetch);
 
-    fetch->entry->unlock();
+    fetch->entry->unlock("peerDigestFetchFinish new");
 
     HTTPMSGUNLOCK(fetch->request);
 

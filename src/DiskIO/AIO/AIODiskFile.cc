@@ -47,10 +47,10 @@
 #include "squid.h"
 #include "AIODiskFile.h"
 #include "AIODiskIOStrategy.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
 #include "globals.h"
 
 #if HAVE_ERRNO_H
@@ -58,18 +58,6 @@
 #endif
 
 CBDATA_CLASS_INIT(AIODiskFile);
-void *
-AIODiskFile::operator new(size_t unused)
-{
-    CBDATA_INIT_TYPE(AIODiskFile);
-    return cbdataAlloc(AIODiskFile);
-}
-
-void
-AIODiskFile::operator delete(void *address)
-{
-    cbdataFree(address);
-}
 
 AIODiskFile::AIODiskFile(char const *aPath, AIODiskIOStrategy *aStrategy) : fd(-1), closed(true), error_(false)
 {

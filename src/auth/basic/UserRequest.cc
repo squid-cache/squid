@@ -2,10 +2,15 @@
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
+#include "auth/QueueNode.h"
 #include "auth/State.h"
 #include "charset.h"
 #include "Debug.h"
+#include "format/Format.h"
 #include "HelperReply.h"
+#include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 
@@ -22,6 +27,15 @@ Auth::Basic::UserRequest::authenticated() const
         return 1;
 
     return 0;
+}
+
+const char *
+Auth::Basic::UserRequest::credentialsStr()
+{
+    Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
+    if (basic_auth)
+        return basic_auth->passwd;
+    return NULL;
 }
 
 /* log a basic user in
@@ -79,7 +93,7 @@ Auth::Basic::UserRequest::module_direction()
 
 /* send the initial data to a basic authenticator module */
 void
-Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
+Auth::Basic::UserRequest::module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     assert(user()->auth_type == Auth::AUTH_BASIC);
     Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
@@ -96,15 +110,11 @@ Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
     if (user()->credentials() == Auth::Pending) {
         /* there is a request with the same credentials already being verified */
 
-        BasicAuthQueueNode *node = static_cast<BasicAuthQueueNode *>(xcalloc(1, sizeof(BasicAuthQueueNode)));
-        assert(node);
-        node->auth_user_request = this;
-        node->handler = handler;
-        node->data = cbdataReference(data);
+        Auth::QueueNode *node = new Auth::QueueNode(this, handler, data);
 
         /* queue this validation request to be infored of the pending lookup results */
-        node->next = basic_auth->auth_queue;
-        basic_auth->auth_queue = node;
+        node->next = basic_auth->queue;
+        basic_auth->queue = node;
         return;
     }
     // otherwise submit this request to the auth helper(s) for validation
@@ -123,7 +133,12 @@ Auth::Basic::UserRequest::module_start(AUTHCB * handler, void *data)
         xstrncpy(usern, rfc1738_escape(user()->username()), sizeof(usern));
         xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));
     }
-    int sz = snprintf(buf, sizeof(buf), "%s %s\n", usern, pass);
+    int sz = 0;
+    if (const char *keyExtras = helperRequestKeyExtras(request, al))
+        sz = snprintf(buf, sizeof(buf), "%s %s %s\n", usern, pass, keyExtras);
+    else
+        sz = snprintf(buf, sizeof(buf), "%s %s\n", usern, pass);
+
     if (sz<=0) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. Can not build helper validation request.");
         handler(data);
@@ -139,12 +154,15 @@ void
 Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
-    BasicAuthQueueNode *tmpnode;
     void *cbdata;
     debugs(29, 5, HERE << "reply=" << reply);
 
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);
+
+    // add new helper kv-pair notes to the credentials object
+    // so that any transaction using those credentials can access them
+    r->auth_user_request->user()->notes.appendNewOnly(&reply.notes);
 
     /* this is okay since we only play with the Auth::Basic::User child fields below
      * and dont pass the pointer itself anywhere */
@@ -168,15 +186,15 @@ Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     cbdataReferenceDone(r->data);
 
-    while (basic_auth->auth_queue) {
-        tmpnode = basic_auth->auth_queue->next;
+    while (basic_auth->queue) {
+        if (cbdataReferenceValidDone(basic_auth->queue->data, &cbdata))
+            basic_auth->queue->handler(cbdata);
 
-        if (cbdataReferenceValidDone(basic_auth->auth_queue->data, &cbdata))
-            basic_auth->auth_queue->handler(cbdata);
+        Auth::QueueNode *tmpnode = basic_auth->queue->next;
+        basic_auth->queue->next = NULL;
+        delete basic_auth->queue;
 
-        xfree(basic_auth->auth_queue);
-
-        basic_auth->auth_queue = tmpnode;
+        basic_auth->queue = tmpnode;
     }
 
     delete r;

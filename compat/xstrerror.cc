@@ -1,9 +1,7 @@
 #include "squid.h"
 #include "compat/xstrerror.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 #if _SQUID_WINDOWS_
 static struct _wsaerrtext {

@@ -2,17 +2,7 @@ In addition to the numerous volunteer developers (see CONTRIBUTORS),
 the following organizations have provided non-financial support for
 the Squid Project:
 
-@Squid-3.2:
-iiNet Ltd - http://www.iinet.net.au/
-
-	iiNet Ltd contributed significant development resources to
-	Squid during its early stages and was instrumental in its
-	early adoption in the local internet community.
-	In Squid-2.6 and 3.0 iiNet supplied equipment to help develop
-	and test the WCCPv2 implementation.
-	In Squid-3.2 iiNet sponsored development time to resolve
-	authentication problems.
-
+@Squid-3.4:
 LaunchPad - http://launchpad.net/
 
 	Provide Bazaar mirroring services and host the Squid-3 developer
@@ -23,9 +13,11 @@ Messagenet - http://messagenet.it/
 	Messagenet donated hardware and bandwidth for the wiki server
 	and most continuous integration testing.
 
-Palisade Systems - http://www.palisadesys.com/
+RackSpace - http://www.rackspace.com/
 
-	Palisade Systems funded SSL Bump feature development in Squid3.
+	RackSpace donated a number of virtual machines from their cloud
+	infrastructure to support and extend the continuous integration
+	testing infrastructure.
 
 The Measurement Factory - http://www.measurement-factory.com/
 
@@ -37,6 +29,33 @@ Treehouse Networks, NZ - http://treenet.co.nz/
 	Treehouse Networks has contributed significant resources
 	toward Squid-3 development and maintenance for their customer
 	gateways and CDN.
+
+@Squid-3.3:
+iCelero - http://icelero.com/
+
+	iCelero.com contributed development resources towards
+	testing and stabilization of Squid-3.3 on Windows.
+
+Netbox Blue Pty - http://netboxblue.com/
+
+	Netbox Blue Pty. contributed development resources towards
+	testing and stabilizing of authentication systems in Squid-3.2
+	and Squid-3.3.
+
+@Squid-3.2:
+iiNet Ltd - http://www.iinet.net.au/
+
+	iiNet Ltd contributed significant development resources to
+	Squid during its early stages and was instrumental in its
+	early adoption in the local internet community.
+	In Squid-2.6 and 3.0 iiNet supplied equipment to help develop
+	and test the WCCPv2 implementation.
+	In Squid-3.2 iiNet sponsored development time to resolve
+	authentication problems.
+
+Palisade Systems - http://www.palisadesys.com/
+
+	Palisade Systems funded SSL Bump feature development in Squid3.
 
 @Squid-3.1:
 Barefruit - http://www.barefruit.com/

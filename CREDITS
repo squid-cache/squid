@@ -115,7 +115,7 @@ Modified to work with strings instead of files.
 
 ==============================================================================
 
-snmplib/*:
+lib/snmplib/*:
 include/{asn1.h,parse.h,snmp*}:
 
 The SNMP library code is developed by Carnegie Mellon University.
@@ -440,10 +440,42 @@ lib/libTrie/*:
 
 ==============================================================================
 
-include/IPAddress.h lib/IPAddress.cc:
+helpers/ defines.h:
+helpers/basic_auth/fake/ fake.cc:
+helpers/url_rewrite/fake/ fake.cc, url_fake_rewrite.sh:
+
+/*
+ * Copyright (c) 2009-2014, Treehouse Networks Ltd. New Zealand
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+==============================================================================
+
 include/rfc3596.h lib/rfc3596.cc:
-src/ICMPv6.h src/ICMPv6.cc:
-helpers/url_rewrite/fake/ fake.h, fake.cc, url_fake_rewrite.sh:
 
  This code is copyright (C) 2007-2009 by Treehouse Networks Ltd
  of New Zealand. It is published and Licensed as an extension of
@@ -484,28 +516,6 @@ helpers/negotiate_auth/kerberos/ *
 
 ==============================================================================
 
-compat/strsep.h, lib/strsep.c
-
- * Copyright (C) 2004 Free Software Foundation, Inc.
- * Written by Yoann Vandoorselaere <yoann@prelude-ids.org>
- * 
- * The file is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This file is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this file; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
-
-==============================================================================
-
 helpers/external_acl/kerberos_ldap_group/support_ldap.cc
 
 /* get_attributes is partly from OpenLDAP Software <http://www.openldap.org/>.
@@ -540,9 +550,8 @@ icons/SN.png:
   Squid NOW icon - copyright Squid Project
 
   This work is licensed under the
-  Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported Liscence
-  (CC BY-NC-SA 3.0)
-  [ http://creativecommons.org/licenses/by-nc-sa/3.0/ ]
+  Creative Commons Attribution-ShareAlike 3.0 Unported Liscence (CC BY-SA 3.0)
+  [ http://creativecommons.org/licenses/by-sa/3.0/ ]
 
 ==============================================================================
 

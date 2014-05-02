@@ -32,9 +32,13 @@ typedef unsigned short uint16;
 
 #define GLOBAL extern
 
-#include "rfcnb/rfcnb-error.h"
-#include "rfcnb/rfcnb-common.h"
 #include "rfcnb/byteorder.h"
+#include "rfcnb/rfcnb-common.h"
+#include "rfcnb/rfcnb-error.h"
+
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 
 #ifdef RFCNB_PORT
 #define RFCNB_Default_Port RFCNB_PORT

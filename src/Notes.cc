@@ -28,14 +28,16 @@
  */
 
 #include "squid.h"
-#include "globals.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
-#include "HttpRequest.h"
+#include "globals.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "StrList.h"
 
 #include <algorithm>
 #include <string>
@@ -54,88 +56,65 @@ Note::addValue(const String &value)
 }
 
 const char *
-Note::match(HttpRequest *request, HttpReply *reply)
+Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al)
 {
 
     typedef Values::iterator VLI;
     ACLFilledChecklist ch(NULL, request, NULL);
+    ch.reply = reply;
     if (reply)
-        ch.reply = HTTPMSGLOCK(reply);
+        HTTPMSGLOCK(ch.reply);
 
     for (VLI i = values.begin(); i != values.end(); ++i ) {
         const int ret= ch.fastCheck((*i)->aclList);
         debugs(93, 5, HERE << "Check for header name: " << key << ": " << (*i)->value
                <<", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
-        if (ret == ACCESS_ALLOWED)
-            return (*i)->value.termedBuf();
+        if (ret == ACCESS_ALLOWED) {
+            if (al != NULL && (*i)->valueFormat != NULL) {
+                static MemBuf mb;
+                mb.reset();
+                (*i)->valueFormat->assemble(mb, al, 0);
+                return mb.content();
+            } else
+                return (*i)->value.termedBuf();
+        }
     }
     return NULL;
 }
 
 Note::Pointer
-Notes::find(const String &noteKey) const
+Notes::add(const String &noteKey)
 {
-    typedef Notes::NotesList::const_iterator AMLI;
+    typedef Notes::NotesList::iterator AMLI;
     for (AMLI i = notes.begin(); i != notes.end(); ++i) {
         if ((*i)->key == noteKey)
             return (*i);
     }
 
-    return Note::Pointer();
-}
-
-void
-Notes::add(const String &noteKey, const String &noteValue)
-{
-    Note::Pointer key = add(noteKey);
-    key->addValue(noteValue);
-}
-
-Note::Pointer
-Notes::add(const String &noteKey)
-{
-    Note::Pointer note = find(noteKey);
-    if (note == NULL) {
-        note = new Note(noteKey);
-        notes.push_back(note);
-    }
+    Note::Pointer note = new Note(noteKey);
+    notes.push_back(note);
     return note;
-}
-
-void
-Notes::add(const Notes &src)
-{
-    typedef Notes::NotesList::const_iterator AMLI;
-    typedef Note::Values::iterator VLI;
-
-    for (AMLI i = src.notes.begin(); i != src.notes.end(); ++i) {
-
-        // ensure we have a key by that name to fill out values for...
-        // NP: not sharing pointers at the key level since merging other helpers
-        // details later would affect this src objects keys, which is a bad idea.
-        Note::Pointer ourKey = add((*i)->key);
-
-        // known key names, merge the values lists...
-        for (VLI v = (*i)->values.begin(); v != (*i)->values.end(); ++v ) {
-            // 2012-11-29: values are read-only and Pointer can safely be shared
-            // for now we share pointers to save memory and gain speed.
-            // If that ever ceases to be true, convert this to a full copy.
-            ourKey->values.push_back(*v);
-            // TODO: prune/skip duplicates ?
-        }
-    }
 }
 
 Note::Pointer
 Notes::parse(ConfigParser &parser)
 {
-    String key, value;
-    ConfigParser::ParseString(&key);
-    ConfigParser::ParseQuotedString(&value);
+    String key = ConfigParser::NextToken();
+    ConfigParser::EnableMacros();
+    String value = ConfigParser::NextQuotedToken();
+    ConfigParser::DisableMacros();
+    bool valueWasQuoted = ConfigParser::LastTokenWasQuoted();
     Note::Pointer note = add(key);
     Note::Value::Pointer noteValue = note->addValue(value);
-    aclParseAclList(parser, &noteValue->aclList);
 
+    String label(key);
+    label.append('=');
+    label.append(value);
+    aclParseAclList(parser, &noteValue->aclList, label.termedBuf());
+    if (formattedValues && valueWasQuoted) {
+        noteValue->valueFormat =  new Format::Format(descr ? descr : "Notes");
+        noteValue->valueFormat->parse(value.termedBuf());
+    }
     if (blacklisted) {
         for (int i = 0; blacklisted[i] != NULL; ++i) {
             if (note->key.caseCmp(blacklisted[i]) == 0) {
@@ -167,5 +146,115 @@ Notes::dump(StoreEntry *entry, const char *key)
 void
 Notes::clean()
 {
-    notes.clean();
+    notes.clear();
+}
+
+NotePairs::~NotePairs()
+{
+    while (!entries.empty()) {
+        delete entries.back();
+        entries.pop_back();
+    }
+}
+
+const char *
+NotePairs::find(const char *noteKey) const
+{
+    static String value;
+    value.clean();
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        if ((*i)->name.cmp(noteKey) == 0) {
+            if (value.size())
+                value.append(", ");
+            value.append(ConfigParser::QuoteString((*i)->value));
+        }
+    }
+    return value.size() ? value.termedBuf() : NULL;
+}
+
+const char *
+NotePairs::toString(const char *sep) const
+{
+    static String value;
+    value.clean();
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        value.append((*i)->name);
+        value.append(": ");
+        value.append(ConfigParser::QuoteString((*i)->value));
+        value.append(sep);
+    }
+    return value.size() ? value.termedBuf() : NULL;
+}
+
+const char *
+NotePairs::findFirst(const char *noteKey) const
+{
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        if ((*i)->name.cmp(noteKey) == 0)
+            return (*i)->value.termedBuf();
+    }
+    return NULL;
+}
+
+void
+NotePairs::add(const char *key, const char *note)
+{
+    entries.push_back(new NotePairs::Entry(key, note));
+}
+
+void
+NotePairs::addStrList(const char *key, const char *values)
+{
+    String strValues(values);
+    const char *item;
+    const char *pos = NULL;
+    int ilen = 0;
+    while (strListGetItem(&strValues, ',', &item, &ilen, &pos)) {
+        String v;
+        v.append(item, ilen);
+        entries.push_back(new NotePairs::Entry(key, v.termedBuf()));
+    }
+}
+
+bool
+NotePairs::hasPair(const char *key, const char *value) const
+{
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+        if ((*i)->name.cmp(key) == 0 && (*i)->value.cmp(value) == 0)
+            return true;
+    }
+    return false;
+}
+
+void
+NotePairs::append(const NotePairs *src)
+{
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+        entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
+    }
+}
+
+void
+NotePairs::appendNewOnly(const NotePairs *src)
+{
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+        if (!hasPair((*i)->name.termedBuf(), (*i)->value.termedBuf()))
+            entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
+    }
+}
+
+NotePairs &
+SyncNotes(AccessLogEntry &ale, HttpRequest &request)
+{
+    // XXX: auth code only has access to HttpRequest being authenticated
+    // so we must handle the case where HttpRequest is set without ALE being set.
+
+    if (!ale.notes) {
+        if (!request.notes)
+            request.notes = new NotePairs;
+        ale.notes = request.notes;
+    } else {
+        assert(ale.notes == request.notes);
+    }
+    return *ale.notes;
 }

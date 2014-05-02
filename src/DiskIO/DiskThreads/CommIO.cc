@@ -37,6 +37,7 @@
 #include "DiskIO/DiskThreads/CommIO.h"
 #include "fd.h"
 #include "globals.h"
+#include "win32.h"
 
 void
 CommIO::Initialize()

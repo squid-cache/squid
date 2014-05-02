@@ -29,8 +29,8 @@
  *
  */
 
-#if USE_SSL
-class ACLList;
+#if USE_OPENSSL
+#include "acl/forward.h"
 
 class sslproxy_cert_sign
 {

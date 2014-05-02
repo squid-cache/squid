@@ -5,4 +5,4 @@ basic_fake_auth_SOURCES = fake.cc
 
 LDADD = $(COMPAT_LIB)
 
-EXTRA_DIST = config.test
+EXTRA_DIST = required.m4

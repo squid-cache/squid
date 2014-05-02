@@ -42,14 +42,10 @@
 #include "tools.h"
 #include "UFSSwapLogParser.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cerrno>
+#include <cmath>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
@@ -191,15 +187,25 @@ Fs::Ufs::RebuildState::rebuildFromDirectory()
     if (!storeRebuildLoadEntry(fd, sd->index, buf, counts))
         return;
 
+    const uint64_t expectedSize = sb.st_size > 0 ?
+                                  static_cast<uint64_t>(sb.st_size) : 0;
+
     StoreEntry tmpe;
-    const bool loaded = storeRebuildParseEntry(buf, tmpe, key, counts,
-                        (int64_t)sb.st_size);
+    const bool parsed = storeRebuildParseEntry(buf, tmpe, key, counts,
+                        expectedSize);
 
     file_close(fd);
     --store_open_disk_fd;
     fd = -1;
 
-    if (!loaded) {
+    bool accepted = parsed && tmpe.swap_file_sz > 0;
+    if (parsed && !accepted) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring ufs cache entry with " <<
+               "unknown size: " << tmpe);
+        accepted = false;
+    }
+
+    if (!accepted) {
         // XXX: shouldn't this be a call to commonUfsUnlink?
         sd->unlinkFile(filn); // should we unlink in all failure cases?
         return;
@@ -420,9 +426,14 @@ Fs::Ufs::RebuildState::undoAdd()
     added->releaseRequest();
 
     if (added->swap_filen > -1) {
-        UFSSwapDir *sde = dynamic_cast<UFSSwapDir *>(INDEXSD(added->swap_dirn));
-        assert(sde);
-        sde->undoAddDiskRestore(added);
+        SwapDir *someDir = INDEXSD(added->swap_dirn);
+        assert(someDir);
+        if (UFSSwapDir *ufsDir = dynamic_cast<UFSSwapDir*>(someDir))
+            ufsDir->undoAddDiskRestore(added);
+        // else the entry was loaded from and/or is currently in a non-UFS dir
+        // Thus, there is no use in preserving its disk file (the only purpose
+        // of undoAddDiskRestore!), even if we could. Instead, we release the
+        // the entry and [eventually] unlink its disk file or free its slot.
     }
 
     added->release();

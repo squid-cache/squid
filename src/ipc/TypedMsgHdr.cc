@@ -8,7 +8,7 @@
 #include "ipc/TypedMsgHdr.h"
 #include "tools.h"
 
-#include <string.h>
+#include <cstring>
 
 Ipc::TypedMsgHdr::TypedMsgHdr()
 {
@@ -167,10 +167,20 @@ Ipc::TypedMsgHdr::putRaw(const void *rawBuf, size_t rawSize)
     }
 }
 
+bool
+Ipc::TypedMsgHdr::hasFd() const
+{
+    struct cmsghdr *cmsg = CMSG_FIRSTHDR(this);
+    return cmsg &&
+           cmsg->cmsg_level == SOL_SOCKET &&
+           cmsg->cmsg_type == SCM_RIGHTS;
+}
+
 void
 Ipc::TypedMsgHdr::putFd(int fd)
 {
     Must(fd >= 0);
+    Must(!hasFd());
     allocControl();
 
     const int fdCount = 1;
@@ -183,12 +193,15 @@ Ipc::TypedMsgHdr::putFd(int fd)
     int *fdStore = reinterpret_cast<int*>(CMSG_DATA(cmsg));
     memcpy(fdStore, &fd, fdCount * sizeof(int));
     msg_controllen = cmsg->cmsg_len;
+
+    Must(hasFd());
 }
 
 int
 Ipc::TypedMsgHdr::getFd() const
 {
     Must(msg_control && msg_controllen);
+    Must(hasFd());
 
     struct cmsghdr *cmsg = CMSG_FIRSTHDR(this);
     Must(cmsg->cmsg_level == SOL_SOCKET);

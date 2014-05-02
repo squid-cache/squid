@@ -33,27 +33,24 @@
 #ifndef SQUID_ACL_H
 #define SQUID_ACL_H
 
-#include "Array.h"
+#include "acl/forward.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
 #include "MemPool.h"
+#include "SBufList.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
+#include <vector>
 
 class ConfigParser;
-class ACLChecklist;
-class ACLList;
 
 typedef char ACLFlag;
 // ACLData Flags
 #define ACL_F_REGEX_CASE 'i'
 #define ACL_F_NO_LOOKUP 'n'
+#define ACL_F_STRICT 's'
 #define ACL_F_END '\0'
 
 /**
@@ -70,8 +67,8 @@ public:
     void makeSet(const ACLFlag f) { flags_ |= flagToInt(f); } ///< Set the given flag
     /// Return true if the given flag is set
     bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
-    /// Parse a flags given in the form -[A..Z|a..z]
-    void parseFlags(char * &nextToken);
+    /// Parse optional flags given in the form -[A..Z|a..z]
+    void parseFlags();
     const char *flagsStr() const; ///< Convert the flags to a string representation
 
 private:
@@ -90,6 +87,9 @@ public:
     static const ACLFlag NoFlags[1]; ///< An empty flags list
 };
 
+/// A configurable condition. A node in the ACL expression tree.
+/// Can evaluate itself in FilledChecklist context.
+/// Does not change during evaluation.
 /// \ingroup ACLAPI
 class ACL
 {
@@ -98,25 +98,33 @@ public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    static ACL *Factory (char const *);
+    static ACL *Factory(char const *);
     static void ParseAclLine(ConfigParser &parser, ACL ** head);
     static void Initialize();
-    static ACL* FindByName(const char *name);
+    static ACL *FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), flags(flgs) {}
+    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs) { memset(name, '\0', sizeof(name)); }
     virtual ~ACL();
-    virtual ACL *clone()const = 0;
+
+    /// sets user-specified ACL name and squid.conf context
+    void context(const char *name, const char *configuration);
+
+    /// Orchestrates matching checklist against the ACL using match(),
+    /// after checking preconditions and while providing debugging.
+    /// Returns true if and only if there was a successful match.
+    /// Updates the checklist state on match, async, and failure.
+    bool matches(ACLChecklist *checklist) const;
+
+    virtual ACL *clone() const = 0;
+
+    /// parses node represenation in squid.conf; dies on failures
     virtual void parse() = 0;
     virtual char const *typeString() const = 0;
     virtual bool isProxyAuth() const;
-    virtual bool requiresRequest() const;
-    virtual bool requiresReply() const;
-    virtual int match(ACLChecklist * checklist) = 0;
-    virtual wordlist *dump() const = 0;
-    virtual bool empty () const = 0;
-    virtual bool valid () const;
-    int checklistMatches(ACLChecklist *);
+    virtual SBufList dump() const = 0;
+    virtual bool empty() const = 0;
+    virtual bool valid() const;
 
     int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
@@ -125,8 +133,9 @@ public:
 
     char name[ACL_NAME_SZ];
     char *cfgline;
-    ACL *next;
+    ACL *next; // XXX: remove or at least use refcounting
     ACLFlags flags; ///< The list of given ACL flags
+    bool registered; ///< added to the global list of ACLs via aclRegister()
 
 public:
 
@@ -134,23 +143,32 @@ public:
     {
 
     public:
-        Prototype ();
-        Prototype (ACL const *, char const *);
+        Prototype();
+        Prototype(ACL const *, char const *);
         ~Prototype();
         static bool Registered(char const *);
-        static ACL *Factory (char const *);
+        static ACL *Factory(char const *);
 
     private:
-        ACL const*prototype;
+        ACL const *prototype;
         char const *typeString;
 
     private:
-        static Vector<Prototype const *> * Registry;
+        static std::vector<Prototype const *> * Registry;
         static void *Initialized;
-        typedef Vector<Prototype const*>::iterator iterator;
-        typedef Vector<Prototype const*>::const_iterator const_iterator;
+        typedef std::vector<Prototype const*>::iterator iterator;
+        typedef std::vector<Prototype const*>::const_iterator const_iterator;
         void registerMe();
     };
+
+private:
+    /// Matches the actual data in checklist against this ACL.
+    virtual int match(ACLChecklist *checklist) = 0; // XXX: missing const
+
+    /// whether our (i.e. shallow) match() requires checklist to have a request
+    virtual bool requiresRequest() const;
+    /// whether our (i.e. shallow) match() requires checklist to have a reply
+    virtual bool requiresReply() const;
 };
 
 /// \ingroup ACLAPI
@@ -211,39 +229,6 @@ operator <<(std::ostream &o, const allow_t a)
 }
 
 /// \ingroup ACLAPI
-class acl_access
-{
-
-public:
-    void *operator new(size_t);
-    void operator delete(void *);
-    allow_t allow;
-    ACLList *aclList;
-    char *cfgline;
-    acl_access *next;
-
-private:
-    CBDATA_CLASS(acl_access);
-};
-
-/// \ingroup ACLAPI
-class ACLList
-{
-
-public:
-    MEMPROXY_CLASS(ACLList);
-
-    ACLList();
-    void negated(bool isNegated);
-    bool matches (ACLChecklist *)const;
-    int op;
-    ACL *_acl;
-    ACLList *next;
-};
-
-MEMPROXY_CLASS_INLINE(ACLList);
-
-/// \ingroup ACLAPI
 class acl_proxy_auth_match_cache
 {
 
@@ -257,6 +242,7 @@ public:
 MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
 
 /// \ingroup ACLAPI
+/// XXX: find a way to remove or at least use a refcounted ACL pointer
 extern const char *AclMatchedName;	/* NULL */
 
 #endif /* SQUID_ACL_H */

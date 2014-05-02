@@ -254,8 +254,8 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
     assert(size_);
 
     // small optimization: do the constant bool tests only once.
-    const bool keyCheckAddr = !key->local.IsAnyAddr();
-    const bool keyCheckPort = key->local.GetPort() > 0;
+    const bool keyCheckAddr = !key->local.isAnyAddr();
+    const bool keyCheckPort = key->local.port() > 0;
 
     for (int i=size_-1; i>=0; --i) {
 
@@ -263,7 +263,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
             continue;
 
         // local end port is required, but dont match.
-        if (keyCheckPort && key->local.GetPort() != theList_[i]->local.GetPort())
+        if (keyCheckPort && key->local.port() != theList_[i]->local.port())
             continue;
 
         // local address is required, but does not match.
@@ -331,7 +331,7 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 3 + 10);
 
-    destLink->remote.ToURL(buf, SQUIDHOSTNAMELEN * 3 + 10);
+    destLink->remote.toUrl(buf, SQUIDHOSTNAMELEN * 3 + 10);
     if (domain) {
         const int used = strlen(buf);
         snprintf(buf+used, SQUIDHOSTNAMELEN * 3 + 10-used, "/%s", domain);
@@ -347,16 +347,15 @@ PconnPool::dumpHist(StoreEntry * e) const
     storeAppendPrintf(e,
                       "%s persistent connection counts:\n"
                       "\n"
-                      "\treq/\n"
-                      "\tconn      count\n"
-                      "\t----  ---------\n",
+                      "\t Requests\t Connection Count\n"
+                      "\t --------\t ----------------\n",
                       descr);
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
             continue;
 
-        storeAppendPrintf(e, "\t%4d  %9d\n", i, hist[i]);
+        storeAppendPrintf(e, "\t%d\t%d\n", i, hist[i]);
     }
 }
 
@@ -368,7 +367,7 @@ PconnPool::dumpHash(StoreEntry *e) const
 
     int i = 0;
     for (hash_link *walker = hid->next; walker; walker = hash_next(hid)) {
-        storeAppendPrintf(e, "\t item %5d: %s\n", i, (char *)(walker->key));
+        storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
         ++i;
     }
 }

@@ -39,6 +39,8 @@
 #include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
+#include "Notes.h"
+#include "SBuf.h"
 
 class AuthUserHashPointer;
 class StoreEntry;
@@ -75,14 +77,20 @@ public:
     size_t ipcount;
     long expiretime;
 
+    /// list of key=value pairs the helper produced
+    NotePairs notes;
+
 public:
     static void cacheInit();
     static void CachedACLsReset();
+    static SBuf BuildUserKey(const char *username, const char *realm);
 
     void absorb(Auth::User::Pointer from);
     virtual ~User();
-    _SQUID_INLINE_ char const *username() const;
-    _SQUID_INLINE_ void username(char const *);
+    char const *username() const { return username_; }
+    void username(char const *);
+
+    const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : username_;}
 
     /**
      * How long these credentials are still valid for.
@@ -113,7 +121,7 @@ private:
     CredentialState credentials_state;
 
 protected:
-    User(Auth::Config *);
+    User(Auth::Config *, const char *requestRealm);
 
 private:
     /**
@@ -129,15 +137,22 @@ private:
      */
     const char *username_;
 
+    /**
+     * A realm for the user depending on request, designed to identify users,
+     * with the same username and different authentication domains.
+     */
+    SBuf requestRealm_;
+
+    /**
+     * A Unique key for the user, consist by username and requestRealm_
+     */
+    SBuf userKey_;
+
     /** what ip addresses has this user been seen at?, plus a list length cache */
     dlink_list ip_list;
 };
 
 } // namespace Auth
-
-#if _USE_INLINE_
-#include "auth/User.cci"
-#endif
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_USER_H */

@@ -13,6 +13,8 @@ libipc_la_SOURCES = \
 	Kids.cc \
 	Kids.h \
 	Messages.h \
+	MemMap.cc \
+	MemMap.h \
 	Queue.cc \
 	Queue.h \
 	ReadWriteLock.cc \

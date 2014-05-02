@@ -34,11 +34,11 @@
 #define SQUID_MIME_H_
 
 void mimeInit(char *filename);
-char *mimeGetContentEncoding(const char *fn);
-char *mimeGetContentType(const char *fn);
+const char *mimeGetContentEncoding(const char *fn);
+const char *mimeGetContentType(const char *fn);
 const char *mimeGetIconURL(const char *fn);
 char mimeGetTransferMode(const char *fn);
-int mimeGetDownloadOption(const char *fn);
-int mimeGetViewOption(const char *fn);
+bool mimeGetDownloadOption(const char *fn);
+bool mimeGetViewOption(const char *fn);
 
 #endif /* SQUID_MIME_H_ */

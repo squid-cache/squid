@@ -32,14 +32,14 @@
 #ifndef SQUID_ICAPXACTION_H
 #define SQUID_ICAPXACTION_H
 
-#include "comm/forward.h"
-#include "CommCalls.h"
-#include "MemBuf.h"
+#include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
-#include "AccessLogEntry.h"
+#include "comm/forward.h"
+#include "CommCalls.h"
 #include "HttpReply.h"
 #include "ipcache.h"
+#include "MemBuf.h"
 
 class CommConnectCbParams;
 namespace Comm

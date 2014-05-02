@@ -1,22 +1,18 @@
 #ifndef SQUID_QOSCONFIG_H
 #define SQUID_QOSCONFIG_H
 
+#include "acl/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
 #endif
-
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_TCP_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
 #endif
-
-#if HAVE_LIMITS
 #include <limits>
-#endif
 
-class ACLList;
 class fde;
 
 // TODO: move to new ACL framework
@@ -142,7 +138,7 @@ class Config
 public:
 
     Config();
-    ~Config() {};
+    ~Config() {}
 
     void parseConfigLine();
 

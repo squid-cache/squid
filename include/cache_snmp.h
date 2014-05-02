@@ -10,13 +10,8 @@ typedef int64_t snint;
 #endif
 
 #include "snmp.h"
-#include "snmp_impl.h"
-#if 0
-#include "asn1.h"
-#endif
 #include "snmp_api.h"
-
-#include "snmp_vars.h"
+#include "snmp_impl.h"
 
 /* MIB definitions
  * SQUID-MIB

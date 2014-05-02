@@ -33,10 +33,10 @@
  */
 
 #include "squid.h"
-#include "acl/SourceDomain.h"
 #include "acl/Checklist.h"
-#include "acl/RegexData.h"
 #include "acl/DomainData.h"
+#include "acl/RegexData.h"
+#include "acl/SourceDomain.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
 
@@ -51,7 +51,6 @@ SourceDomainLookup::Instance()
 void
 SourceDomainLookup::checkForAsync(ACLChecklist *checklist) const
 {
-    checklist->asyncInProgress(true);
     fqdncache_nbgethostbyaddr(Filled(checklist)->src_addr, LookupDone, checklist);
 }
 
@@ -59,13 +58,9 @@ void
 SourceDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
-    assert (checklist->asyncState() == SourceDomainLookup::Instance());
-
-    checklist->asyncInProgress(false);
-    checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markSourceDomainChecked();
     checklist->request->recordLookup(details);
-    checklist->matchNonBlocking();
+    checklist->resumeNonBlockingCheck(SourceDomainLookup::Instance());
 }
 
 int
@@ -79,8 +74,9 @@ ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *
     } else if (!checklist->sourceDomainChecked()) {
         /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->src_addr << "'");
-        checklist->changeState(SourceDomainLookup::Instance());
-        return 0;
+        if (checklist->goAsync(SourceDomainLookup::Instance()))
+            return -1;
+        // else fall through to "none" match, hiding the lookup failure (XXX)
     }
 
     return data->match("none");

@@ -37,6 +37,9 @@
 /* forward decls */
 class RemovalPolicy;
 class MemStore;
+class Transients;
+class RequestFlags;
+class HttpRequestMethod;
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
@@ -58,8 +61,17 @@ public:
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
     /* Store parent API */
+    virtual void markForUnlink(StoreEntry &e);
     virtual void handleIdleEntry(StoreEntry &e);
-    virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable);
+    virtual void transientsCompleteWriting(StoreEntry &e);
+    virtual void transientsAbandon(StoreEntry &e);
+    virtual int transientReaders(const StoreEntry &e) const;
+    virtual void transientsDisconnect(MemObject &mem_obj);
+    virtual void memoryOut(StoreEntry &e, const bool preserveSwappable);
+    virtual void memoryUnlink(StoreEntry &e);
+    virtual void memoryDisconnect(StoreEntry &e);
+    virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
+    virtual void syncCollapsed(const sfileno xitIndex);
 
     virtual void init();
 
@@ -91,10 +103,18 @@ public:
 
 private:
     void createOneStore(Store &aStore);
+    StoreEntry *find(const cache_key *key);
     bool keepForLocalMemoryCache(const StoreEntry &e) const;
+    bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
+    bool anchorCollapsedOnDisk(StoreEntry &collapsed, bool &inSync);
 
     StorePointer swapDir; ///< summary view of all disk caches
     MemStore *memStore; ///< memory cache
+
+    /// A shared table of public store entries that do not know whether they
+    /// will belong to a memory cache, a disk cache, or will be uncachable
+    /// when the response header comes. Used for SMP collapsed forwarding.
+    Transients *transients;
 };
 
 /* migrating from the Config based list of swapdirs */
@@ -148,7 +168,13 @@ public:
 
     virtual uint64_t minSize() const;
 
-    virtual int64_t maxObjectSize() const { return max_objsize; }
+    /// The maximum size of object which may be stored here.
+    /// Larger objects will not be added and may be purged.
+    virtual int64_t maxObjectSize() const;
+
+    /// configure the maximum object size for this storage area.
+    /// May be any size up to the total storage area.
+    void maxObjectSize(int64_t newMax);
 
     virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat (StoreEntry &anEntry) const;
@@ -180,13 +206,13 @@ private:
 
 protected:
     uint64_t max_size;        ///< maximum allocatable size of the storage area
+    int64_t min_objsize;      ///< minimum size of any object stored here (-1 for no limit)
+    int64_t max_objsize;      ///< maximum size of any object stored here (-1 for no limit)
 
 public:
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int disker; ///< disker kid id dedicated to this SwapDir or -1
-    int64_t min_objsize;
-    int64_t max_objsize;
     RemovalPolicy *repl;
     int removals;
     int scanned;
