@@ -723,6 +723,7 @@ configDoConfigure(void)
 #endif
 
     storeConfigure();
+    update_maxobjsize(); // check for late maximum_object_size directive
 
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
              uniqueHostname(),
