@@ -1,3 +1,11 @@
+Changes to squid-3.4.5 (02 May 2014):
+
+	- Regression Bug 4051: inverted test on CONNECT payload existence
+	- Regression Fix: order dependency between cache_dir and maximum_object_size
+	- Fix logformat %note display
+	- Resolve 'dying from an unhandled exception: c'
+	- Copyright: Update CONTRIBUTORS list of copyright holders
+
 Changes to squid-3.4.4.2 (23 Apr 2014):
 
 	- version bump for packaging re-build with altered toolchain
