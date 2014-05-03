@@ -135,7 +135,7 @@ libecap::Name
 Adaptation::Ecap::FirstLineRep::protocol() const
 {
     // TODO: optimize?
-    switch (theMessage.protocol) {
+    switch (theMessage.http_ver.protocol) {
     case AnyP::PROTO_HTTP:
         return libecap::protocolHttp;
     case AnyP::PROTO_HTTPS:
@@ -179,7 +179,7 @@ void
 Adaptation::Ecap::FirstLineRep::protocol(const Name &p)
 {
     // TODO: what happens if we fail to translate some protocol?
-    theMessage.protocol = TranslateProtocolId(p);
+    theMessage.http_ver.protocol = TranslateProtocolId(p);
 }
 
 AnyP::ProtocolType
