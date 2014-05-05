@@ -5,7 +5,7 @@
 .if !'po4a'hide' \-
 File based digest authentication helper for Squid.
 .PP
-Version 1.0
+Version 1.1
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B digest_file_auth
@@ -16,6 +16,9 @@ file
 .B digest_file_auth
 is an installed binary authentication program for Squid. It handles digest 
 authentication protocol and authenticates against a text file backend.
+.
+This program will automatically detect the existence of a concurrecy channel-ID and adjust appropriately.
+It may be used with any value 0 or above for the auth_param children concurrency= parameter.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP 12
