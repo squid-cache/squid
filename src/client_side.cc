@@ -2542,10 +2542,10 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
             break;
         case Http::scHttpVersionNotSupported:
             repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
-                                        conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         default:
-            repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri,
+            repContext->setReplyToError(ERR_INVALID_REQ, hp.request_parse_status, method, http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
         }
         assert(context->http->out.offset == 0);
@@ -2713,10 +2713,6 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
     if (http->request->method == Http::METHOD_CONNECT) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
-
-        // consume header early so that tunnel gets just the body
-        connNoteUseOfBuffer(conn, http->req_sz);
-        notedUseOfBuffer = true;
     }
 
 #if USE_OPENSSL
