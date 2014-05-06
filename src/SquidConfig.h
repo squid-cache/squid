@@ -390,6 +390,7 @@ public:
 
 #if USE_OPENSSL
         acl_access *ssl_bump;
+        acl_access *ssl_bump_peeked;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
         acl_access *followXFF;

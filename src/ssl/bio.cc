@@ -193,7 +193,7 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     if (headerState < 2) {
 
         if (rbuf.isNull())
-            rbuf.init(1024, 4096);
+            rbuf.init(1024, 16384);
 
         size = rbuf.spaceSize() > size ? size : rbuf.spaceSize();
 
@@ -221,10 +221,12 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
             debugs(83, 7, "SSL version 3 handshake message");
             headerBytes = (head[3] << 8) + head[4];
             debugs(83, 7, "SSL Header Size: " << headerBytes);
+            headerBytes +=5;
 #ifdef DO_SSLV23
         } else if ((head[0] & 0x80) && head[2] == 0x01 && head[3] == 0x03) { 
             debugs(83, 7, "SSL version 2 handshake message with v3 support");
             headerBytes = head[1];
+            headerBytes +=5;
 #endif
         }else {
             debugs(83, 7, "Not an SSL acceptable handshake message (SSLv2 message?)");
@@ -273,10 +275,19 @@ Ssl::ServerBio::stateChanged(const SSL *ssl, int where, int ret)
 }
 
 void
-Ssl::ServerBio::setClientRandom(const unsigned char *r)
+Ssl::ServerBio::setClientFeatures(const Ssl::Bio::sslFeatures &features)
 {
-    memcpy(clientRandom, r, SSL3_RANDOM_SIZE);
-    randomSet = true;
+    clientFeatures.sslVersion = features.sslVersion;
+    clientFeatures.compressMethod = features.compressMethod;
+    clientFeatures.serverName = features.serverName;
+    clientFeatures.clientRequestedCiphers = features.clientRequestedCiphers;
+    clientFeatures.unknownCiphers = features.unknownCiphers;
+    memcpy(clientFeatures.client_random, features.client_random, SSL3_RANDOM_SIZE);
+    clientFeatures.helloMessage.init(features.helloMessage.contentSize(), features.helloMessage.contentSize());
+    clientFeatures.helloMessage.append(features.helloMessage.content(), features.helloMessage.contentSize());
+    clientFeatures.doHeartBeats = features.doHeartBeats;
+    clientFeatures.extensions = features.extensions;
+    featuresSet = true;
 };
 
 int
@@ -286,10 +297,122 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 
     if (bytes > 0 && record_) {
         if (rbuf.isNull())
-            rbuf.init(1024, 8196);
+            rbuf.init(1024, 16384);
         rbuf.append(buf, bytes);
+        debugs(83, 5, "Record is enabled store " << bytes << " bytes");
     }
+    debugs(83, 5, "Read " << bytes << " from " << size << " bytes");
     return bytes;
+}
+
+bool
+adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
+{
+    // If the client supports compression but our context does not support
+    // we can not adjust.
+    if (features.compressMethod && ssl->ctx->comp_methods == NULL) {
+        debugs(83, 5, "Client Hello Data supports compression, but we do not!");
+        return false;
+    }
+
+    //Check ciphers list
+    size_t token = 0;
+    size_t end = 0;
+    while (token != std::string::npos) {
+      end = features.clientRequestedCiphers.find(':',token);
+      std::string cipher;
+      cipher.assign(features.clientRequestedCiphers, token, end - token);
+      token = (end != std::string::npos ? end + 1 : std::string::npos);
+      bool found = false;
+      STACK_OF(SSL_CIPHER) *cipher_stack = SSL_get_ciphers(ssl);
+      for (int i = 0; i < sk_SSL_CIPHER_num(cipher_stack); i++) {
+          SSL_CIPHER *c = sk_SSL_CIPHER_value(cipher_stack, i);
+          const char *cname = SSL_CIPHER_get_name(c);
+          if (cipher.compare(cname)) {
+              found = true;
+              break;
+          }
+      }
+      if (!found) {
+          debugs(83, 5, "Client Hello Data supports cipher '"<< cipher <<"' but we do not support it!");
+          return false;
+      }
+    }
+
+#if !defined(SSL_TLSEXT_HB_ENABLED)
+    if (features.doHeartBeats) {
+        debugs(83, 5, "Client Hello Data supports HeartBeats but we do not support!");
+        return false;
+    }
+#endif
+
+    for (std::list<int>::iterator it = features.extensions.begin(); it != features.extensions.end(); ++it) {
+        static int supportedExtensions[] = {
+            TLSEXT_TYPE_server_name,
+#ifdef TLSEXT_TYPE_opaque_prf_input
+            TLSEXT_TYPE_opaque_prf_input,
+#endif
+#ifdef TLSEXT_TYPE_heartbeat
+            TLSEXT_TYPE_heartbeat,
+#endif
+#ifdef TLSEXT_TYPE_renegotiate
+            TLSEXT_TYPE_renegotiate,
+#endif
+#ifdef TLSEXT_TYPE_ec_point_formats
+            TLSEXT_TYPE_ec_point_formats,
+#endif
+#ifdef TLSEXT_TYPE_elliptic_curves
+            TLSEXT_TYPE_elliptic_curves,
+#endif
+#ifdef TLSEXT_TYPE_session_ticket
+            TLSEXT_TYPE_session_ticket,
+#endif
+#ifdef TLSEXT_TYPE_status_request
+            TLSEXT_TYPE_status_request,
+#endif
+#ifdef TLSEXT_TYPE_use_srtp
+            TLSEXT_TYPE_use_srtp,
+#endif
+#if 1 //Allow 13172 Firefox supported extension for testing purposes
+            13172,
+#endif
+            -1
+        };
+        bool found = false;
+        for (int i = 0; supportedExtensions[i] != -1; i++) {
+            if (*it == supportedExtensions[i]) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            debugs(83, 5, "Extension " << *it <<  " does not supported!");
+            return false;
+        }
+    }
+
+
+    debugs(83, 5, "Hello Data are OK and can be mimicked!");
+
+    //Adjust ssl structure data.
+
+    // We need to fix the random in SSL struct:
+    memcpy(ssl->s3->client_random, features.client_random, SSL3_RANDOM_SIZE);
+
+    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
+    assert(wb->len > (size_t)features.helloMessage.contentSize());
+    memcpy(wb->buf, features.helloMessage.content(), features.helloMessage.contentSize());
+    wb->left = features.helloMessage.contentSize();
+
+    size_t mainHelloSize = features.helloMessage.contentSize() - 5;
+    const char *mainHello = features.helloMessage.content() + 5;
+    assert(ssl->init_buf->max > mainHelloSize);
+    memcpy(ssl->init_buf->data, mainHello, mainHelloSize);
+    debugs(83, 5, "Hello Data init and adjustd sizes :" << ssl->init_num << " = "<< mainHelloSize);
+    ssl->init_num = mainHelloSize;
+    ssl->s3->wpend_ret = mainHelloSize;
+    ssl->s3->wpend_tot = mainHelloSize;
+    return true;
 }
 
 int
@@ -297,45 +420,44 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
 {
 
     if (holdWrite_) {
-        debugs(83, 7,  "Hold write, for SSL connection on " << fd_);
+        debugs(83, 7,  "Hold write, for SSL connection on " << fd_ << "will not write bytes of size " << size);
         BIO_set_retry_write(table);
         return -1;
     }
 
     if (!helloBuild) {
+        if (helloMsg.isNull())
+            helloMsg.init(1024, 16384);
+
         if (
             buf[1] >= 3  //it is an SSL Version3 message
             && buf[0] == 0x16 // and it is a Handshake/Hello message
             ) {
-            if (helloMsg.isNull())
-                helloMsg.init(1024, 4096);
 
             //Hello message is the first message we write to server
             assert(!helloMsg.hasContent());
 
             SSL *ssl = fd_table[fd_].ssl;
-            if (randomSet && ssl && ssl->s3) {
-                assert(size > 11 + SSL3_RANDOM_SIZE);
-                helloMsg.append(buf, 11);
-                //The random number is stored in the 11 position of the 
-                // message we are going to sent
-                helloMsg.append((char *)clientRandom, SSL3_RANDOM_SIZE);
-                size_t len = size - 11 - SSL3_RANDOM_SIZE;
-                helloMsg.append(buf + 11 + SSL3_RANDOM_SIZE, len);
-
-                // We need to fix the random in SSL struct:
-                memcpy(ssl->s3->client_random, clientRandom, SSL3_RANDOM_SIZE);
-                // We also need to fix the raw message in SSL struct
-                // stored in SSL->init_buf. Looks that it is used to get
-                // digest of the previous sent SSL message, to compute keys
-                // for encryption/decryption:
-                memcpy(ssl->init_buf->data + 6, clientRandom, SSL3_RANDOM_SIZE);
-
-                debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted");
+            if (featuresSet && ssl && ssl->s3) {
+                if (adjustSSL(ssl, clientFeatures)) {
+                    allowSplice = true;
+                    helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
+                    debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted");
+                }
             }
         }
+        // If we do not build any hello message, copy the current
+        if (!helloMsg.hasContent())
+            helloMsg.append(buf, size);
+
         helloBuild = true;
         helloMsgSize = helloMsg.contentSize();
+
+        if (allowSplice) {
+        // Do not write yet.....
+            BIO_set_retry_write(table);
+            return -1;
+        }
     }
 
     if (helloMsg.hasContent()) {
@@ -350,9 +472,10 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         }
 
         // Sending hello message complete. Do not send more data for now...
-        holdWrite_ = true; 
+        holdWrite_ = true;
+
         // The size should be less than the size of the hello message
-        assert(size >= helloMsgSize);
+        //assert(size >= helloMsgSize);
         return helloMsgSize;
     } else
         return Ssl::Bio::write(buf, size, table);
@@ -486,7 +609,7 @@ squid_ssl_info(const SSL *ssl, int where, int ret)
     }
 }
 
-Ssl::Bio::sslFeatures::sslFeatures(): sslVersion(-1), compressMethod(-1)
+Ssl::Bio::sslFeatures::sslFeatures(): sslVersion(-1), compressMethod(-1), unknownCiphers(false), doHeartBeats(true)
 {
     memset(client_random, 0, SSL3_RANDOM_SIZE);
 }
@@ -621,6 +744,8 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
     // The following hello message size exist in 4th and 5th bytes
     int helloSize = (hello[3] << 8) | hello[4];
     helloSize += 5; //Include the 5 header bytes.
+    helloMessage.init(helloSize, helloSize);
+    helloMessage.append((const char *)hello, helloSize);
 
     //For SSLv3 or TLSv1.* protocols we can get some more informations
     if (hello[1] == 0x3 && hello[5] == 0x1 /*HELLO A message*/) {
@@ -648,7 +773,8 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
                     if(!clientRequestedCiphers.empty())
                         clientRequestedCiphers.append(":");
                     clientRequestedCiphers.append(c->name);
-                }
+                } else
+                    unknownCiphers = true;
             }
         }
         debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);
@@ -662,11 +788,11 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
             compressMethod = 0;
         debugs(83, 7, "SSL compression methods number: " << (int)compression[0]);
 
-        const unsigned char *extensions = compression + 1 + (int)compression[0];
-        if (extensions <  hello + helloSize) { 
-            int extensionsLen = (extensions[0] << 8) | extensions[1];
-            const unsigned char *ext = extensions + 2;
-            while (ext < extensions+extensionsLen){
+        const unsigned char *pToExtensions = compression + 1 + (int)compression[0];
+        if (pToExtensions <  hello + helloSize) { 
+            int extensionsLen = (pToExtensions[0] << 8) | pToExtensions[1];
+            const unsigned char *ext = pToExtensions + 2;
+            while (ext < pToExtensions + extensionsLen){
                 short extType = (ext[0] << 8) | ext[1];
                 ext += 2;
                 short extLen = (ext[0] << 8) | ext[1];
@@ -680,7 +806,12 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
                     int hostLen = (ext[3] << 8) | ext[4];
                     serverName.assign((const char *)(ext+5), hostLen);
                     debugs(83, 7, "Found server name: " << serverName);
-                }
+                } else if (extType == 15 && ext[0] != 0) {
+                    // The heartBeats are the type 15
+                    doHeartBeats = true;
+                } else
+                    extensions.push_back(extType);
+                    
                 ext += extLen;
             }
         }
@@ -699,6 +830,8 @@ Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello)
     // The following hello message size exist in 2nd byte
     int helloSize = hello[1];
     helloSize += 2; //Include the 2 header bytes.
+    helloMessage.init(helloSize, helloSize);
+    helloMessage.append((char *)hello, helloSize);
 
     //Ciphers list. It is stored after the Session ID.
 

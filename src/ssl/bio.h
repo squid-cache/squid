@@ -3,6 +3,7 @@
 
 #include "MemBuf.h"
 #include <iosfwd>
+#include <list>
 #if HAVE_OPENSSL_BIO_H
 #include <openssl/bio.h>
 #endif
@@ -37,11 +38,15 @@ public:
         int compressMethod; ///< The requested/used compressed  method
         std::string serverName; ///< The SNI hostname, if any
         std::string clientRequestedCiphers; ///< The client requested ciphers
+        bool unknownCiphers; ///< True if one or more ciphers are unknown
         std::string ecPointFormatList;///< tlsExtension ecPointFormatList
         std::string ellipticCurves; ///< tlsExtension ellipticCurveList
         std::string opaquePrf; ///< tlsExtension opaquePrf
+        bool doHeartBeats;
         /// The client random number
         unsigned char client_random[SSL3_RANDOM_SIZE];
+        std::list<int> extensions;
+        MemBuf helloMessage;
     };
     explicit Bio(const int anFd);
     ~Bio();
@@ -109,7 +114,7 @@ private:
 /// BIO node to handle socket IO for squid server side
 class ServerBio: public Bio {
 public:
-    explicit ServerBio(const int anFd): Bio(anFd), randomSet(false), helloMsgSize(0), helloBuild(false), holdWrite_(false), record_(false) {}
+    explicit ServerBio(const int anFd): Bio(anFd), featuresSet(false), helloMsgSize(0), helloBuild(false), allowSplice(false), holdWrite_(false), record_(false) {}
     /// The ServerBio version of the Ssl::Bio::stateChanged method
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ServerBio version of the Ssl::Bio::write method
@@ -124,19 +129,21 @@ public:
     /// Flushes any buffered data
     virtual void flush(BIO *table);
     /// Sets the random number to use in client SSL HELLO message
-    void setClientRandom(const unsigned char *r);
+    void setClientFeatures(const sslFeatures &features);
 
     bool holdWrite() const {return holdWrite_;}
     void holdWrite(bool h) {holdWrite_ = h;}
     void recordInput(bool r) {record_ = r;}
     const MemBuf &rBufData() {return rbuf;}
+    bool canSplice() {return allowSplice;}
 private:
     /// A random number to use as "client random" in client hello message
-    unsigned char clientRandom[SSL3_RANDOM_SIZE];
-    bool randomSet; ///< True if the clientRandom member is set and can be used
+    sslFeatures clientFeatures;
+    bool featuresSet; ///< True if the clientFeatures member is set and can be used
     MemBuf helloMsg; ///< Used to buffer output data.
     int helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
+    bool allowSplice;
     bool holdWrite_;  ///< The write hold state of the bio.
     bool record_;
     MemBuf rbuf;  ///< Used to buffer input data.

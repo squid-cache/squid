@@ -242,6 +242,10 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
+
+static void parse_sslproxy_ssl_bump_peeked(acl_access **ssl_bump);
+static void dump_sslproxy_ssl_bump_peeked(StoreEntry *entry, const char *name, acl_access *ssl_bump);
+static void free_sslproxy_ssl_bump_peeked(acl_access **ssl_bump);
 #endif /* USE_OPENSSL */
 
 static void parse_ftp_epsv(acl_access **ftp_epsv);
@@ -4727,6 +4731,53 @@ static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_acce
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump)
 {
     free_acl_access(ssl_bump);
+}
+
+static void
+parse_sslproxy_ssl_bump_peeked(acl_access **ssl_bump_peeked)
+{
+    char *bm;
+    if ((bm = ConfigParser::NextToken()) == NULL) {
+        self_destruct();
+        return;
+    }
+
+    allow_t action = allow_t(ACCESS_ALLOWED);
+
+    if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpServerFirst]) == 0) {
+        action.kind = Ssl::bumpServerFirst;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpSplice]) == 0) {
+        action.kind = Ssl::bumpSplice;
+    } else {
+        debugs(3, DBG_CRITICAL, "FATAL: unknown ssl_bump_peeked mode: " << bm);
+        self_destruct();
+        return;
+    }
+
+    Acl::AndNode *rule = new Acl::AndNode;
+    rule->context("(ssl_bump_peeked rule)", config_input_line);
+    rule->lineParse();
+
+    assert(ssl_bump_peeked);
+    if (!*ssl_bump_peeked) {
+        *ssl_bump_peeked = new Acl::Tree;
+        (*ssl_bump_peeked)->context("(ssl_bump_peeked rules)", config_input_line);
+    }
+
+    (*ssl_bump_peeked)->add(rule, action);
+}
+
+static void
+dump_sslproxy_ssl_bump_peeked(StoreEntry *entry, const char *name, acl_access *ssl_bump_peeked)
+{
+    if (ssl_bump_peeked)
+        dump_SBufList(entry, ssl_bump_peeked->treeDump(name, Ssl::BumpModeStr));
+}
+
+static void
+free_sslproxy_ssl_bump_peeked(acl_access **ssl_bump_peeked)
+{
+    free_acl_access(ssl_bump_peeked);
 }
 
 #endif

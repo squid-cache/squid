@@ -158,7 +158,7 @@ GETX509ATTRIBUTE GetX509Fingerprint;
   \ingroup ServerProtocolSSLAPI
  * Supported ssl-bump modes
  */
-enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpPeekAndSplice, bumpEnd};
+enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpPeekAndSplice, bumpSplice, bumpEnd};
 
 /**
  \ingroup  ServerProtocolSSLAPI
