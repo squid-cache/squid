@@ -29,10 +29,12 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 Ssl::PeerConnector::PeerConnector(
     HttpRequestPointer &aRequest,
     const Comm::ConnectionPointer &aServerConn,
+    const Comm::ConnectionPointer &aClientConn,
     AsyncCall::Pointer &aCallback):
     AsyncJob("Ssl::PeerConnector"),
     request(aRequest),
     serverConn(aServerConn),
+    clientConn(aClientConn),
     callback(aCallback)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
@@ -262,6 +264,7 @@ Ssl::PeerConnector::negotiateSsl()
     callBack();
 }
 
+void switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
 void
 Ssl::PeerConnector::checkForPeekAndSplice()
 {
@@ -269,13 +272,17 @@ Ssl::PeerConnector::checkForPeekAndSplice()
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     debugs(83,5, "Will check for peek and splice on fd " << serverConn->fd);
-    const bool splice = false;
+    const bool splice = true;
     if (!splice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
         Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
         debugs(83,5, "Retry the fwdNegotiateSSL on fd " << serverConn->fd);
+    } else {
+        static int status_code = 0;
+        debugs(83,5, "Revert to tunnel fd " << clientConn->fd << " with fd " << serverConn->fd);
+        switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
     }
 }
 
