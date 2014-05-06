@@ -360,8 +360,8 @@ DOC_START
 
 	"program" cmdline
 	Specify the command for the external authenticator.  Such a program
-	reads a request_format line ("username password" by default) and
-	replies with one of three results:
+	reads a request line ("username password" by default) and replies
+	with one of three results:
 
 	  OK
 		the user exists.
