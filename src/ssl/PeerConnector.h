@@ -125,7 +125,7 @@ protected:
     /// It is called multiple times untill the negotiation finish or aborted.
     void negotiateSsl();
 
-    void checkForPeekAndSplice();
+    bool checkForPeekAndSplice(bool, Ssl::BumpMode);
 
     /// Called when the SSL negotiation step aborted because data needs to
     /// be transferred to/from SSL server or on error. In the first case
@@ -157,6 +157,9 @@ private:
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
+
+    /// A wrapper function for checkForPeekAndSplice for use with acl
+    static void cbCheckForPeekAndSplice(allow_t answer, void *data);
 
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer

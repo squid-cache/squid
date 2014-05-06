@@ -2491,6 +2491,29 @@ DOC_START
 	ssl_bump server-first all
 DOC_END
 
+NAME: ssl_bump_peeked
+IFDEF: USE_OPENSSL
+TYPE: sslproxy_ssl_bump_peeked
+LOC: Config.accessList.ssl_bump_peeked
+DEFAULT: none
+DOC_START
+	This option used to control splicing decision after we peek at the
+	certificates
+
+	ssl_bump_peeked <mode> [!]acl ...
+
+	The following peeked modes are supported:
+
+	server-first
+		Allow bumping the connection
+
+	splice
+		Do not bump the connection if possible.
+
+	ssl_bump_peeked server-first safeToBump
+	ssl_bump_peeked splice all
+DOC_END
+
 NAME: sslproxy_flags
 IFDEF: USE_OPENSSL
 DEFAULT: none
