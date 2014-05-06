@@ -14,6 +14,7 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
+#include "SquidConfig.h"
 #include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
@@ -153,7 +154,7 @@ Ssl::PeerConnector::initializeSsl()
             if (features.sslVersion >= 3) {
                 b = SSL_get_rbio(ssl);
                 Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-                srvBio->setClientRandom(features.client_random);
+                srvBio->setClientFeatures(features);
                 srvBio->recordInput(true);
             }
         }
@@ -265,24 +266,45 @@ Ssl::PeerConnector::negotiateSsl()
 }
 
 void switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
+
 void
-Ssl::PeerConnector::checkForPeekAndSplice()
+Ssl::PeerConnector::cbCheckForPeekAndSplice(allow_t answer, void *data)
+{
+    Ssl::PeerConnector *peerConnect = (Ssl::PeerConnector *) data;
+    peerConnect->checkForPeekAndSplice(true, (Ssl::BumpMode)answer.kind);
+}
+
+bool
+Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode)
 {
     SSL *ssl = fd_table[serverConn->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     debugs(83,5, "Will check for peek and splice on fd " << serverConn->fd);
-    const bool splice = true;
+    bool splice;
+    if (!srvBio->canSplice())
+        splice = false;
+    else if (!checkDone) {
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
+                           ::Config.accessList.ssl_bump_peeked,
+                           request.getRaw(), NULL);
+        acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSplice, this);
+        return false;
+    } else
+        splice = (peekMode == Ssl::bumpSplice);
+
     if (!splice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
         Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
         debugs(83,5, "Retry the fwdNegotiateSSL on fd " << serverConn->fd);
+        return true;
     } else {
         static int status_code = 0;
         debugs(83,5, "Revert to tunnel fd " << clientConn->fd << " with fd " << serverConn->fd);
         switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
+        return false;
     }
 }
 
@@ -435,7 +457,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         case SSL_ERROR_WANT_WRITE:
             if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice && srvBio->holdWrite()) {
                 debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
-                checkForPeekAndSplice();
+                checkForPeekAndSplice(false, Ssl::bumpNone);
                 return;
             }
             Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
@@ -444,6 +466,19 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         case SSL_ERROR_SSL:
         case SSL_ERROR_SYSCALL:
             ssl_lib_error = ERR_get_error();
+
+            // If we are in peek-and-splice mode and still we did not write to
+            // server yet, try to see if we should splice.
+            // In this case the connection can be saved.
+            // If the checklist decision is do not splice a new error will
+            // occure in the next SSL_connect call, and we will fail again.
+#if 1
+            if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice && srvBio->holdWrite()) {
+                debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error but, hold write on SSL connection on FD " << fd);
+                checkForPeekAndSplice(false, Ssl::bumpNone);
+                return;
+            }
+#endif
 
             // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
             if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
