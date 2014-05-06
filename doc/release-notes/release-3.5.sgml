@@ -40,6 +40,9 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 <itemize>
 	<item>Support libecap v1.0
 	<item>Authentication helper query extensions
+	<item>Support named services
+	<item>Upgraded squidclient tool
+	<item>Helper support for concurrency channels
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -71,6 +74,93 @@ Most user-facing changes are reflected in squid.conf (see below).
   will send any meaningful detail.
 
 
+<sect1>Support named services
+<p>Details at <url url="http://wiki.squid-cache.org/MultipleInstances">.
+<p>Terminology details at <url url="http://wiki.squid-cache.org/Features/SmpScale#Terminology">.
+
+<p>The command line option <em>-n</em> assigns a name to the Squid service
+   instance to be used as a unique identifier for all SMP processes run as
+   part of that instance. This allows multiple instances of Squid service to
+   be run on a single machine without background SMP systems such as shared
+   memory and inter-process communication becoming confused or requiring
+   additional configuration.
+
+<p>A service name is always used. When the <em>-n</em> option is missing
+   from the command line the default service name is <em>squid</em>.
+
+<p>When multiple instances are being run the <em>-n</em> service name is
+   required to target all other options such as <em>-z</em> or <em>-k</em>
+   commands at the correct service.
+
+<p>The squid.conf macro ${service_name} is added to provide the service name
+   of the process parsing the config.
+
+
+<sect1>Upgraded squidclient tool
+<p>The <em>squidclient</em> has begun the process of upgrading to support
+   protocols other than HTTP.
+
+<sect2>Debug levels
+<p>The tool displays the server response message on STDOUT unless the <em>-q</em>
+   command line option is used. Error messages will be output to STDERR.
+   All other possible output is considered debug and output to STDERR using
+   a range of debug verbosity levels (currently 1, 2 and 3).
+
+<p>When the <em>-v</em> command line option is used debugging is enabled.
+   The level of debug display is raised for each repetition of the option.
+
+<sect2>PING
+<p>When <em>--ping</em> is given the tool will send its message repeatedly
+   using whichever protocol that message has been formatted for.
+   Optional parameters to limit the number of pings and their frequency are
+   available.
+
+<p>Older tool versions also provide this feature but require the loop count
+   parameter to be set to enable use of the feature.
+
+<sect2>HTTPS
+<p>When Squid is built with the GnuTLS encryption library the tool is able
+   to open TLS (or SSL/3.0) connections to servers.
+
+<p>The <em>--https</em> option enables TLS using default values.
+
+<p>The <em>--cert</em> option specifies a file containing X.509 client
+   certificate and private key in PEM format to be loaded for use. Multiple
+   certificates are supported and the option may be used multiple times to
+   load certificates.
+   The default is not to use a client certificate.
+
+<p>The <em>--params</em> option specifies a library specific set of parameters
+   to be sent to the library for configuring the security context.
+   See <url url="http://gnutls.org/manual/html_node/Priority-Strings.html"> for
+   available GnuTLS parameters.
+
+<p>The <em>--trusted-ca</em> option specifies a file in PEM format containing
+   one or more Certificate Authority (CA) certificates used to verify the
+   remote server. This option may be used multiple times to load additional
+   CA certificate lists.
+   The default is not to use any CA, nor trust any server.
+
+<p>Anonymous TLS (using non-authenticated Diffi-Hellman or Elliptic Curve
+   encryption) is available with the <em>--anonymous-tls</em> option.
+   The default is to use X.509 certificate encryption instead.
+
+<p>When performing TLS/SSL server certificates are always verified, the
+   results shown at debug level 3. The encrypted type is displayed at debug
+   level 2 and the connection is used to send and receive the messages
+   regardless of verification results.
+
+
+<sect1>Helper support for concurrency channels
+<p>Helper concurrency greatly reduces the communication lag between Squid
+   and its helpers allowing faster transaction speeds even on sequential
+   helpers.
+
+<p>The <em>storeid_file_rewrite</em> helper has been updated to support
+   concurrency channels. It will auto-detect the <em>channel-ID</em> field
+   on its input line and will produce the appropriate response format.
+
+
 <sect>Changes to squid.conf since Squid-3.4
 <p>
 There have been changes to Squid's configuration file since Squid-3.4.
@@ -80,6 +170,9 @@ There have been changes to Squid's configuration file since Squid-3.4.
 <verb>
     acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
 </verb>
+
+<p>The squid.conf macro ${service_name} is added to provide the service name
+   of the process parsing the config.
 
 <p>There have also been changes to individual directives in the config file.
 
@@ -104,9 +197,34 @@ This section gives a thorough account of those changes in three categories:
 	   based on ACL selection. ACL can be based on client request or cached
 	   response details.
 
+	<tag>sslproxy_session_cache_size</tag>
+	<p>New directive which sets the cache size to use for TLS/SSL sessions cache.
+
+	<tag>sslproxy_session_ttl</tag>
+	<p>New directive to specify the time in seconds the TLS/SSL session is valid.
+
+	<tag>store_id_extras</tag>
+	<p>New directive to send additional lookup parameters to the configured
+	   Store-ID helper program. It takes a string which may contain logformat %macros.
+	<p>The Store-ID helper input format is now:
+	<verb>
+         [channel-ID] url [extras]
+	</verb>
+	<p>The default value for extras is: "%&gt;a/%>A %un %>rm myip=%la myport=%lp"
+
 	<tag>store_miss</tag>
 	<p>New configuration directive to enable/disable caching of MISS responses.
 	   ACL can be based on any request or response details.
+
+	<tag>url_rewrite_extras</tag>
+	<p>New directive to send additional lookup parameters to the configured
+	   URL-rewriter/redirector helper program. It takes a string which may
+	   contain logformat %macros.
+	<p>The url rewrite and redirector helper input format is now:
+	<verb>
+         [channel-ID] url [extras]
+	</verb>
+	<p>The default value for extras is: "%>a/%>A %un %>rm myip=%la myport=%lp"
 
 </descrip>
 
@@ -123,12 +241,41 @@ This section gives a thorough account of those changes in three categories:
 	<p>New parameter <em>key_extras</em> to send additional parameters to
 	   the authentication helper.
 
+	<tag>cache_dir</tag>
+	<p>New support for larger than 32KB objects in both <em>rock</em> type
+	   cache and shared memory cache.
+	<p>New <em>slot-size=N</em> option for rock cache to specify the database
+	   slot/page size when small slot sizes are desired. The default and
+	   maximum slot size is 32KB.
+	<p>Removal of old rock cache dir followed by <em>squid -z</em> is required
+	   when upgrading from earlier versions of Squid.
+
+	<tag>cache_peer</tag>
+	<p>New <em>standby=N</em> option to retain a set of N open and unused
+	   connections to the peer at virtually all times to reduce TCP handshake
+	   delays.
+	<p>These connections differ from HTTP persistent connections in that they
+	   have not been used for HTTP messaging (and may never be). They may be
+	   turned into persistent connections after their first use subject to the
+	   same keep-alive critera any HTTP connection is checked for.
+
 	<tag>forward_max_tries</tag>
-	<p>Default value increased to <em>25 destinations/em> to allow better
+	<p>Default value increased to <em>25 destinations</em> to allow better
 	   contact and IPv4 failover with domains using long lists of IPv6
 	   addresses.
 
+	<tag>ftp_epsv</tag>
+	<p>Converted into an Access List with allow/deny value driven by ACLs
+	   using Squid standard first line wins matching basis.
+	<p>The old values of <em>on</em> and <em>off</em> imply <em>allow all</em>
+	    and <em>deny all</em> respectively and are now deprecated.
+	   Do not combine use of on/off values with ACL configuration.
+
 	<tag>http_port</tag>
+	<p><em>protocol=</em> option altered to accept protocol version details.
+	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
+
+	<tag>https_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
 
@@ -146,12 +293,18 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 	<tag>cache_dir</tag>
-	<p><em>COSS</em> storage type is formally replaced by Rosk storage type.
+	<p><em>COSS</em> storage type is formally replaced by Rock storage type.
 
 	<tag>cache_dns_program</tag>
 	<p>DNS external helper interface has been removed. It was no longer
 	   able to provide high performance service and the internal DNS
 	   client library with multicast DNS cover all modern use-cases.
+
+	<tag>cache_peer</tag>
+	<p><em>idle=</em> replaced by <em>standby=</em>.
+	<p>NOTE that standby connections are started earlier and available in
+	   more circumstances than squid-2 idle connections were. They are
+	   also spread over all IPs of the peer.
 
 	<tag>dns_children</tag>
 	<p>DNS external helper interface has been removed.
@@ -177,6 +330,11 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<p><em>There are no new ./configure options in Squid-3.5.</em>
 
+	<tag>--without-gnutls</tag>
+	<p>New option to explicitly disable use of GnuTLS encryption library.
+	   Use of this library is auto-enabled if v3.1.5 or later is available.
+	<p>It is currently only used by the squidclient tool.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -198,6 +356,10 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-ssl</tag>
 	<p>Removed. Use <em>--with-openssl</em> to enable OpenSSL library support.
 
+	<tag>--with-coss-membuf-size</tag>
+	<p>The COSS cache type has been removed.
+	   It has been replaced by <em>rock</em> cache type.
+
 </descrip>
 
 
@@ -214,7 +376,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.6
 
 	<tag>cache_peer</tag>
-	<p><em>idle=</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6
 	<p><em>monitorsize=</em> not yet ported from 2.6
 	<p><em>monitortimeout=</em> not yet ported from 2.6

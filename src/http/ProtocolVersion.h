@@ -8,12 +8,15 @@ namespace Http
 
 /**
  * Stores HTTP version label information.
- * For example HTTP/1.0
+ *
+ * Squid being conditionally compliant with RFC 2616
+ * on both client and server connections the default
+ * value is HTTP/1.1.
  */
 class ProtocolVersion : public AnyP::ProtocolVersion
 {
 public:
-    ProtocolVersion() : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0) {}
+    ProtocolVersion() : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1) {}
 
     ProtocolVersion(unsigned int aMajor, unsigned int aMinor) : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,aMajor,aMinor) {}
 };
