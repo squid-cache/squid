@@ -81,7 +81,9 @@ static TokenTableEntry TokenTable2C[] = {
 
     {">rm", LFT_CLIENT_REQ_METHOD},
     {">ru", LFT_CLIENT_REQ_URI},
+    {">rs", LFT_CLIENT_REQ_URLSCHEME},
     {">rd", LFT_CLIENT_REQ_URLDOMAIN},
+    {">rP", LFT_CLIENT_REQ_URLPORT},
     {">rp", LFT_CLIENT_REQ_URLPATH},
     /*{">rq", LFT_CLIENT_REQ_QUERY},*/
     {">rv", LFT_CLIENT_REQ_VERSION},
@@ -94,6 +96,9 @@ static TokenTableEntry TokenTable2C[] = {
 
     {"<rm", LFT_SERVER_REQ_METHOD},
     {"<ru", LFT_SERVER_REQ_URI},
+    {"<rs", LFT_SERVER_REQ_URLSCHEME},
+    {"<rd", LFT_SERVER_REQ_URLDOMAIN},
+    {"<rP", LFT_SERVER_REQ_URLPORT},
     {"<rp", LFT_SERVER_REQ_URLPATH},
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
