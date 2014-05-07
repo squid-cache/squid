@@ -573,7 +573,7 @@ ErrorState::NewForwarding(err_type type, HttpRequest *request)
 {
     assert(request);
     const Http::StatusCode status = request->flags.needValidation ?
-        Http::scGatewayTimeout : Http::scServiceUnavailable;
+                                    Http::scGatewayTimeout : Http::scServiceUnavailable;
     return new ErrorState(type, status, request);
 }
 
@@ -950,8 +950,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'M':
         if (request) {
-           const SBuf &m = request->method.image();
-           mb.append(m.rawContent(), m.length());
+            const SBuf &m = request->method.image();
+            mb.append(m.rawContent(), m.length());
         } else if (!building_deny_info_url)
             p = "[unknown method]";
         break;

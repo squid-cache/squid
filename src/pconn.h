@@ -120,7 +120,7 @@ public:
      * A caller with a non-retriable transaction should set keepOpen to false
      * and call pop() anyway, even though the caller does not want a pconn.
      * This forces us to close an available persistent connection, avoiding
-     * creating a growing number of open connections when many transactions 
+     * creating a growing number of open connections when many transactions
      * create (and push) persistent connections but are not retriable and,
      * hence, do not need to pop a connection.
      */

@@ -9,8 +9,9 @@ class CachePeer;
 class CommConnectCbParams;
 
 #if USE_OPENSSL
-namespace Ssl {
-    class PeerConnectorAnswer;
+namespace Ssl
+{
+class PeerConnectorAnswer;
 }
 #endif
 

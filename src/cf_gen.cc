@@ -874,11 +874,11 @@ gen_quote_escape(const std::string &var)
 
     for (int i = 0; i < var.length(); ++i) {
         switch (var[i]) {
-            case '"':
-            case '\\':
-                esc += '\\';
-            default:
-                esc += var[i];
+        case '"':
+        case '\\':
+            esc += '\\';
+        default:
+            esc += var[i];
         }
     }
 

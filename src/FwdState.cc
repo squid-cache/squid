@@ -64,8 +64,8 @@
 #include "mgr/Registration.h"
 #include "neighbors.h"
 #include "pconn.h"
-#include "PeerSelectState.h"
 #include "PeerPoolMgr.h"
+#include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -104,13 +104,14 @@ public:
     typedef void (FwdState::*Method)(Ssl::PeerConnectorAnswer &);
 
     FwdStatePeerAnswerDialer(Method method, FwdState *fwd):
-        method_(method), fwd_(fwd), answer_() {}
+            method_(method), fwd_(fwd), answer_() {}
 
     /* CallDialer API */
     virtual bool canDial(AsyncCall &call) { return fwd_.valid(); }
     void dial(AsyncCall &call) { ((&(*fwd_))->*method_)(answer_); }
     virtual void print(std::ostream &os) const {
-        os << '(' << fwd_.get() << ", " << answer_ << ')'; }
+        os << '(' << fwd_.get() << ", " << answer_ << ')';
+    }
 
     /* Ssl::PeerConnector::CbDialer API */
     virtual Ssl::PeerConnectorAnswer &answer() { return answer_; }
@@ -121,7 +122,6 @@ private:
     Ssl::PeerConnectorAnswer answer_;
 };
 #endif
-
 
 void
 FwdState::abort(void* d)
@@ -707,8 +707,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
             HttpRequest::Pointer requestPointer = request;
             AsyncCall::Pointer callback = asyncCall(17,4,
-                "FwdState::ConnectedToPeer",
-                FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+                                                    "FwdState::ConnectedToPeer",
+                                                    FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
             Ssl::PeerConnector *connector =
                 new Ssl::PeerConnector(requestPointer, serverConnection(), callback);
             AsyncJob::Start(connector); // will call our callback

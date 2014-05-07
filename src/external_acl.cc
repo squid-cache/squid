@@ -990,13 +990,12 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             str = request->urlpath.termedBuf();
             break;
 
-        case Format::LFT_CLIENT_REQ_METHOD:
-            {
-                const SBuf &s = request->method.image();
-                sb.append(s.rawContent(), s.length());
-            }
-            str = sb.termedBuf();
-            break;
+        case Format::LFT_CLIENT_REQ_METHOD: {
+            const SBuf &s = request->method.image();
+            sb.append(s.rawContent(), s.length());
+        }
+        str = sb.termedBuf();
+        break;
 
         case Format::LFT_ADAPTED_REQUEST_HEADER:
             if (format->header_id == -1)
