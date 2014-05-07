@@ -1536,14 +1536,19 @@ StoreEntry::validToSend() const
     if (!mem_obj) // not backed by a memory cache and not collapsed
         return 0;
 
-    if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
-        return 1;
-
     // StoreEntry::storeClientType() assumes DISK_CLIENT here, but there is no
-    // disk cache backing so we should not rely on the store cache at all. This
-    // is wrong for range requests that could feed off nibbled memory (XXX).
-    if (mem_obj->inmem_lo) // in local memory cache, but got nibbled at
+    // disk cache backing that store_client constructor will assert. XXX: This
+    // is wrong for range requests (that could feed off nibbled memory) and for
+    // entries backed by the shared memory cache (that could, in theory, get
+    // nibbled bytes from that cache, but there is no such "memoryIn" code).
+    if (mem_obj->inmem_lo) // in memory cache, but got nibbled at
         return 0;
+
+    // The following check is correct but useless at this position. TODO: Move
+    // it up when the shared memory cache can either replenish locally nibbled
+    // bytes or, better, does not use local RAM copy at all.
+    // if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
+    //    return 1;
 
     return 1;
 }
