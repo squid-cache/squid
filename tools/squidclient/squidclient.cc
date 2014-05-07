@@ -122,13 +122,13 @@ usage(const char *progname)
               << "Usage: " << progname << " [Basic Options] [HTTP Options]" << std::endl
               << std::endl;
     std::cerr
-              << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
-              << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
-              << "                    Levels:" << std::endl
-              << "                      1 - Print outgoing request message to stderr." << std::endl
-              << "                      2 - Print action trace to stderr." << std::endl
-              << "    --help          Display this help text." << std::endl
-              << std::endl;
+        << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
+        << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
+        << "                    Levels:" << std::endl
+        << "                      1 - Print outgoing request message to stderr." << std::endl
+        << "                      2 - Print action trace to stderr." << std::endl
+        << "    --help          Display this help text." << std::endl
+        << std::endl;
     Transport::Config.usage();
     Ping::Config.usage();
     std::cerr

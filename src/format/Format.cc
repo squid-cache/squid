@@ -1185,10 +1185,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "%";
             break;
 
-        // XXX: external_acl_type format tokens which are not output by logformat.
-        // They are listed here because the switch requires
-        // every ByteCode_t to be explicitly enumerated.
-        // But do not output due to lack of access to the values.
+            // XXX: external_acl_type format tokens which are not output by logformat.
+            // They are listed here because the switch requires
+            // every ByteCode_t to be explicitly enumerated.
+            // But do not output due to lack of access to the values.
         case LFT_EXT_ACL_USER_CERT_RAW:
         case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
         case LFT_EXT_ACL_USER_CERT:
