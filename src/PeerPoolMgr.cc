@@ -26,7 +26,7 @@ class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer,
 {
 public:
     MyAnswerDialer(const JobPointer &aJob, Method aMethod):
-                   UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>(aJob, aMethod, Ssl::PeerConnectorAnswer()) {}
+            UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>(aJob, aMethod, Ssl::PeerConnectorAnswer()) {}
 
     /* Ssl::PeerConnector::CbDialer API */
     virtual Ssl::PeerConnectorAnswer &answer() { return arg1; }
@@ -68,7 +68,8 @@ PeerPoolMgr::swanSong()
 }
 
 bool
-PeerPoolMgr::validPeer() const {
+PeerPoolMgr::validPeer() const
+{
     return peer && cbdataReferenceValid(peer) && peer->standby.pool;
 }
 

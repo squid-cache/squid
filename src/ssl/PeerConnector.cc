@@ -14,6 +14,7 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
+#include "SquidConfig.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
@@ -21,7 +22,6 @@
 #include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
-#include "SquidConfig.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 
@@ -29,10 +29,10 @@ Ssl::PeerConnector::PeerConnector(
     HttpRequestPointer &aRequest,
     const Comm::ConnectionPointer &aServerConn,
     AsyncCall::Pointer &aCallback):
-    AsyncJob("Ssl::PeerConnector"),
-    request(aRequest),
-    serverConn(aServerConn),
-    callback(aCallback)
+        AsyncJob("Ssl::PeerConnector"),
+        request(aRequest),
+        serverConn(aServerConn),
+        callback(aCallback)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -378,38 +378,38 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     int ssl_error = SSL_get_error(ssl, ret);
 
 #ifdef EPROTO
-        int sysErrNo = EPROTO;
+    int sysErrNo = EPROTO;
 #else
-        int sysErrNo = EACCES;
+    int sysErrNo = EACCES;
 #endif
 
-        switch (ssl_error) {
+    switch (ssl_error) {
 
-        case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
-            return;
+    case SSL_ERROR_WANT_READ:
+        Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
+        return;
 
-        case SSL_ERROR_WANT_WRITE:
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
-            return;
+    case SSL_ERROR_WANT_WRITE:
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
+        return;
 
-        case SSL_ERROR_SSL:
-        case SSL_ERROR_SYSCALL:
-            ssl_lib_error = ERR_get_error();
+    case SSL_ERROR_SSL:
+    case SSL_ERROR_SYSCALL:
+        ssl_lib_error = ERR_get_error();
 
-            // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
-            if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
-                sysErrNo = errno;
+        // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
+        if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
+            sysErrNo = errno;
 
-            debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
-                   ": " << ERR_error_string(ssl_lib_error, NULL) << " (" <<
-                   ssl_error << "/" << ret << "/" << errno << ")");
+        debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
+               ": " << ERR_error_string(ssl_lib_error, NULL) << " (" <<
+               ssl_error << "/" << ret << "/" << errno << ")");
 
-            break; // proceed to the general error handling code
+        break; // proceed to the general error handling code
 
-        default:
-            break; // no special error handling for all other errors
-        }
+    default:
+        break; // no special error handling for all other errors
+    }
 
     ErrorState *const anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request.getRaw());
     anErr->xerrno = sysErrNo;
@@ -500,7 +500,6 @@ Ssl::PeerConnector::callBack()
     dialer->answer().conn = serverConnection();
     ScheduleCallHere(cb);
 }
-
 
 void
 Ssl::PeerConnector::swanSong()
