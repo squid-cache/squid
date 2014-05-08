@@ -131,8 +131,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                  * At this point altering the helper buffer in that way is not harmful, but annoying.
                  * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
                  */
-                const char * result = reply.other().content();
-                const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
+                char * result = reply.modifiableOther().content();
 
                 HelperReply newReply;
                 // BACKWARD COMPATIBILITY 2012-06-15:
@@ -141,6 +140,20 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 // else will drop the helper reply
                 newReply.result = HelperReply::Okay;
                 newReply.notes.append(&reply.notes);
+
+                // check and parse for obsoleted Squid-2 urlgroup feature
+                if (*result == '!') {
+                   static int urlgroupWarning = 0;
+                   if (!urlgroupWarning++)
+                       debugs(85, DBG_IMPORTANT, "UPGRADE WARNING: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
+                   if (char *t = strchr(result+1, '!')) {
+                       *t = '\0';
+                       newReply.notes.add("urlgroup", result+1);
+                       result = t + 1;
+                   }
+                }
+
+                const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
 
                 if (status == Http::scMovedPermanently
                         || status == Http::scFound
@@ -162,7 +175,8 @@ redirectHandleReply(void *data, const HelperReply &reply)
                     // status code is not a redirect code (or does not exist)
                     // treat as a re-write URL request
                     // TODO: validate the URL produced here is RFC 2616 compliant URI
-                    newReply.notes.add("rewrite-url", reply.other().content());
+                    if (*result)
+                        newReply.notes.add("rewrite-url", result);
                 }
 
                 void *cbdata;
