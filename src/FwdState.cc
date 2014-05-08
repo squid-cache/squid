@@ -621,7 +621,7 @@ FwdState::serverClosed(int fd)
 {
     debugs(17, 2, "FD " << fd << " " << entry->url() << " after " <<
            fd_table[fd].pconn.uses << " requests");
-    if (serverConnection()->fd == fd) // should be, but not critical to assert
+    if (fd >= 0 && serverConnection()->fd == fd) // XXX: fd is often -1 here
         fwdPconnPool->noteUses(fd_table[fd].pconn.uses);
     retryOrBail();
 }
