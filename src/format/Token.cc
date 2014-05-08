@@ -93,6 +93,7 @@ static TokenTableEntry TokenTable2C[] = {
     {"rp", LFT_REQUEST_URLPATH_OLD_31},
     /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
     {"rv", LFT_REQUEST_VERSION},
+    {"rG", LFT_REQUEST_URLGROUP_OLD_2X},
 
     {"<rm", LFT_SERVER_REQ_METHOD},
     {"<ru", LFT_SERVER_REQ_URI},
@@ -540,6 +541,12 @@ done:
         debugs(46, DBG_CRITICAL, "WARNING: The \">eui\" formatting code requires EUI features which are disabled in this Squid.");
         break;
 #endif
+
+    case LFT_REQUEST_URLGROUP_OLD_2X:
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"rG\" formatting code is deprecated. Use \"note{urlgroup}\" instead.");
+        type = LFT_NOTE;
+        data.header.header = xstrdup("urlgroup");
+        break;
 
     default:
         break;
