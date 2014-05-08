@@ -72,6 +72,7 @@ typedef enum {
     /*LFT_REQUEST_QUERY, */
     LFT_REQUEST_VERSION_OLD_2X,
     LFT_REQUEST_VERSION,
+    LFT_REQUEST_URLGROUP_OLD_2X,
 
     /* request header details pre-adaptation */
     LFT_REQUEST_HEADER,

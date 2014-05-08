@@ -1136,6 +1136,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 #endif
 
+        case LFT_REQUEST_URLGROUP_OLD_2X:
+            assert(LFT_REQUEST_URLGROUP_OLD_2X == 0); // should never happen.
+
         case LFT_NOTE:
             tmp[0] = fmt->data.header.separator;
             tmp[1] = '\0';
