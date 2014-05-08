@@ -123,8 +123,8 @@ clientdbInit(void)
 
 class ClientDbRr: public RegisteredRunner
 {
-    public:
-        virtual void run(const RunnerRegistry &);
+public:
+    virtual void run(const RunnerRegistry &);
 };
 RunnerRegistrationEntry(rrAfterConfig, ClientDbRr);
 

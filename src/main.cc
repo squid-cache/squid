@@ -501,7 +501,7 @@ mainParseOptions(int argc, char *argv[])
                 fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
 
-            } 
+            }
             break;
 
 #if USE_WIN32_SERVICE
