@@ -143,14 +143,14 @@ redirectHandleReply(void *data, const HelperReply &reply)
 
                 // check and parse for obsoleted Squid-2 urlgroup feature
                 if (*result == '!') {
-                   static int urlgroupWarning = 0;
-                   if (!urlgroupWarning++)
-                       debugs(85, DBG_IMPORTANT, "UPGRADE WARNING: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
-                   if (char *t = strchr(result+1, '!')) {
-                       *t = '\0';
-                       newReply.notes.add("urlgroup", result+1);
-                       result = t + 1;
-                   }
+                    static int urlgroupWarning = 0;
+                    if (!urlgroupWarning++)
+                        debugs(85, DBG_IMPORTANT, "UPGRADE WARNING: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
+                    if (char *t = strchr(result+1, '!')) {
+                        *t = '\0';
+                        newReply.notes.add("urlgroup", result+1);
+                        result = t + 1;
+                    }
                 }
 
                 const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
