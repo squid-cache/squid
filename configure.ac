@@ -3504,6 +3504,7 @@ AC_CONFIG_FILES([
 	helpers/negotiate_auth/wrapper/Makefile
 	helpers/external_acl/Makefile
 	helpers/external_acl/AD_group/Makefile
+	helpers/external_acl/delayer/Makefile
 	helpers/external_acl/eDirectory_userip/Makefile
 	helpers/external_acl/file_userip/Makefile
 	helpers/external_acl/kerberos_ldap_group/Makefile
