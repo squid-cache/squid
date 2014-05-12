@@ -46,4 +46,4 @@ endif
 COMPAT_LIB = $(top_builddir)/compat/libcompat-squid.la $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
-subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
+subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$< >$@ || ($(RM) -f $@ ; exit 1)
