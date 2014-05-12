@@ -1,12 +1,12 @@
 include $(top_srcdir)/src/Common.am
 
-libexec_SCRIPTS = delayer
-CLEANFILES += delayer delayer.8
-man_MANS = delayer.8
-EXTRA_DIST = delayer.pl.in delayer.8 required.m4
+libexec_SCRIPTS = ext_delayer_acl
+CLEANFILES += ext_delayer_acl ext_delayer_acl.8
+man_MANS = ext_delayer_acl.8
+EXTRA_DIST = delayer.pl.in ext_delayer_acl.8 required.m4
 
-delayer.8: delayer
-	pod2man delayer delayer.8
+ext_delayer_acl.8: ext_delayer_acl
+	pod2man ext_delayer_acl ext_delayer_acl.8
 
-delayer: delayer.pl.in
+ext_delayer_acl: delayer.pl.in
 	$(subst_perlshell)
