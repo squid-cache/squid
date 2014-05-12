@@ -1,5 +1,6 @@
 DIST_SUBDIRS= \
 	AD_group \
+	delayer \
 	eDirectory_userip \
 	file_userip \
 	kerberos_ldap_group \
