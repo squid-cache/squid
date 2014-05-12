@@ -106,20 +106,20 @@ int aioQueueSize(void);
 class DiskThreadsIOStrategy;
 
 struct AIOCounts {
-    int open_start;
-    int open_finish;
-    int close_start;
-    int close_finish;
-    int cancel;
-    int write_start;
-    int write_finish;
-    int read_start;
-    int read_finish;
-    int stat_start;
-    int stat_finish;
-    int unlink_start;
-    int unlink_finish;
-    int check_callback;
+    uint64_t open_start;
+    uint64_t open_finish;
+    uint64_t close_start;
+    uint64_t close_finish;
+    uint64_t cancel;
+    uint64_t write_start;
+    uint64_t write_finish;
+    uint64_t read_start;
+    uint64_t read_finish;
+    uint64_t stat_start;
+    uint64_t stat_finish;
+    uint64_t unlink_start;
+    uint64_t unlink_finish;
+    uint64_t check_callback;
 };
 
 extern AIOCounts squidaio_counts;
