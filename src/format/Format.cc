@@ -475,7 +475,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             const char *spec;
 
             struct tm *t;
-            spec = fmt->data.timespec;
+            spec = fmt->data.string;
 
             if (fmt->type == LFT_TIME_LOCALTIME) {
                 if (!spec)
