@@ -32,15 +32,60 @@ testHttp1Parser::globalSetup()
     Config.maxRequestHeaderSize = 1024; // XXX: unit test the RequestParser handling of this limit
 }
 
+struct resultSet {
+    bool parsed;
+    bool done;
+    Http1::ParseState parserState;
+    Http::StatusCode status;
+    int msgStart;
+    int msgEnd;
+    SBuf::size_type suffixSz;
+    int methodStart;
+    int methodEnd;
+    HttpRequestMethod method;
+    int uriStart;
+    int uriEnd;
+    const char *uri;
+    int versionStart;
+    int versionEnd;
+    AnyP::ProtocolVersion version;
+};
+
+static void
+testResults(int line, const SBuf &input, Http1::RequestParser &output, struct resultSet &expect)
+{
+#if WHEN_TEST_DEBUG_IS_NEEDED
+    printf("TEST @%d, in=%u: " SQUIDSBUFPH "\n", line, input.length(), SQUIDSBUFPRINT(input));
+#endif
+
+    CPPUNIT_ASSERT_EQUAL(expect.parsed, output.parse());
+    CPPUNIT_ASSERT_EQUAL(expect.done, output.isDone());
+    if (!output.isDone())
+        CPPUNIT_ASSERT_EQUAL(expect.parserState, output.parsingStage_);
+    CPPUNIT_ASSERT_EQUAL(expect.status, output.request_parse_status);
+    CPPUNIT_ASSERT_EQUAL(expect.msgStart, output.req.start);
+    CPPUNIT_ASSERT_EQUAL(expect.msgEnd, output.req.end);
+    CPPUNIT_ASSERT_EQUAL(expect.suffixSz, output.buf.length());
+    CPPUNIT_ASSERT_EQUAL(expect.methodStart, output.req.m_start);
+    CPPUNIT_ASSERT_EQUAL(expect.methodEnd, output.req.m_end);
+    CPPUNIT_ASSERT_EQUAL(expect.method, output.method_);
+    CPPUNIT_ASSERT_EQUAL(expect.uriStart, output.req.u_start);
+    CPPUNIT_ASSERT_EQUAL(expect.uriEnd, output.req.u_end);
+    if (expect.uri != NULL)
+        CPPUNIT_ASSERT_EQUAL(0, output.uri_.cmp(expect.uri));
+    CPPUNIT_ASSERT_EQUAL(expect.versionStart, output.req.v_start);
+    CPPUNIT_ASSERT_EQUAL(expect.versionEnd, output.req.v_end);
+    CPPUNIT_ASSERT_EQUAL(expect.version, output.msgProtocol_);
+}
+
 void
 testHttp1Parser::testParseRequestLineProtocols()
 {
     // ensure MemPools etc exist
     globalSetup();
 
-    MemBuf input;
+    SBuf input;
     Http1::RequestParser output;
-    input.init();
 
     // TEST: Do we comply with RFC 1945 section 5.1 ?
     // TEST: Do we comply with RFC 2616 section 5.1 ?
@@ -48,125 +93,132 @@ testHttp1Parser::testParseRequestLineProtocols()
     // RFC 1945 : HTTP/0.9 simple-request
     {
         input.append("GET /\r\n", 7);
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0,memcmp("GET /\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start], (output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start], (output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // RFC 1945 : invalid HTTP/0.9 simple-request (only GET is valid)
-#if 0
+#if WHEN_RFC_COMPLIANT
     {
         input.append("POST /\r\n", 7);
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0,memcmp("POST /\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(3, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("POST", &output.buf[output.req.m_start], (output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_POST), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start], (output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 3,
+            .method = HttpRequestMethod(Http::METHOD_POST),
+            .uriStart = 5,
+            .uriEnd = 5,
+            .uri = "/",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 #endif
-
     // RFC 1945 and 2616 : HTTP/1.0 request
     {
         input.append("GET / HTTP/1.0\r\n", 16);
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.0\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.0", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // RFC 2616 : HTTP/1.1 request
     {
         input.append("GET / HTTP/1.1\r\n", 16);
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.1\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // RFC 2616 : future version full-request
     {
         input.append("GET / HTTP/1.2\r\n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.2\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.2", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,2), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,2)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // RFC 2616 : future version full-request
@@ -174,211 +226,212 @@ testHttp1Parser::testParseRequestLineProtocols()
         // IETF HTTPbis WG has made this two-digits format invalid.
         // it gets treated same as HTTP/0.9 for now
         input.append("GET / HTTP/10.12\r\n", 18);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/10.12\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(15, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/10.12", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,10,12), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 15,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,10,12)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
-    // This stage of the parser does not yet accept non-HTTP protocol names.
+    // unknown non-HTTP protocol names
     {
-        // violations mode treats them as HTTP/0.9 requests!
+        // XXX: violations mode treats them as HTTP/0.9 requests! which is wrong.
+#if !USE_HTTP_VIOLATIONS
         input.append("GET / FOO/1.0\n", 14);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-#if USE_HTTP_VIOLATIONS
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(12, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/ FOO/1.0", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9), output.msgProtocol_);
-#else
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 12,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
 #endif
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / FOO/1.0\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(12, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("FOO/1.0", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        input.reset();
     }
 
     // no version
     {
         input.append("GET / HTTP/\n", 12);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(10, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 10,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // no major version
     {
         input.append("GET / HTTP/.1\n", 14);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(12, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 12,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // no version dot
     {
         input.append("GET / HTTP/11\n", 14);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/11\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(12, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/11", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 12,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // negative major version (bug 3062)
     {
         input.append("GET / HTTP/-999999.1\n", 21);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/-999999.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(19, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/-999999.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 19,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // no minor version
     {
         input.append("GET / HTTP/1.\n", 14);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(12, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 12,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // negative major version (bug 3062 corollary)
     {
         input.append("GET / HTTP/1.-999999\n", 21);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scHttpVersionNotSupported, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.-999999\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(19, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.-999999", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,0), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scHttpVersionNotSupported,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 19,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,0)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 }
 
@@ -388,86 +441,86 @@ testHttp1Parser::testParseRequestLineStrange()
     // ensure MemPools etc exist
     globalSetup();
 
-    MemBuf input;
+    SBuf input;
     Http1::RequestParser output;
-    input.init();
 
     // space padded URL
     {
         input.append("GET  /     HTTP/1.1\r\n", 21);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET  /     HTTP/1.1\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(11, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(18, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 5,
+            .uriEnd = 5,
+            .uri = "/",
+            .versionStart = 11,
+            .versionEnd = 18,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // whitespace inside URI. (nasty but happens)
+    // XXX: depends on tolerant parser...
     {
         input.append("GET /fo o/ HTTP/1.1\n", 20);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0,memcmp("GET /fo o/ HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(9, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/fo o/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(11, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(18, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 9,
+            .uri = "/fo o/",
+            .versionStart = 11,
+            .versionEnd = 18,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // additional data in buffer
     {
         input.append("GET /     HTTP/1.1\nboo!", 23);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-5, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET /     HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end); // strangeness generated by following RFC
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(10, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(17, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-5,
+            .suffixSz = 4, // strlen("boo!")
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 10,
+            .versionEnd = 17,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 }
 
@@ -477,110 +530,110 @@ testHttp1Parser::testParseRequestLineTerminators()
     // ensure MemPools etc exist
     globalSetup();
 
-    MemBuf input;
+    SBuf input;
     Http1::RequestParser output;
-    input.init();
 
     // alternative EOL sequence: NL-only
     {
         input.append("GET / HTTP/1.1\n", 15);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // alternative EOL sequence: double-NL-only
     {
         input.append("GET / HTTP/1.1\n\n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-2, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-2,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
-    // RELAXED alternative EOL sequence: multi-CR-NL
+    // alternative EOL sequence: multi-CR-NL
     {
         input.append("GET / HTTP/1.1\r\r\r\n", 18);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        Config.onoff.relaxed_header_parser = 1;
         // Being tolerant we can ignore and elide these apparently benign CR
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.1\r\r\r\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(6, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
-        Config.onoff.relaxed_header_parser = 0;
-    }
+        Config.onoff.relaxed_header_parser = 1;
+        struct resultSet expectRelaxed = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expectRelaxed);
 
-    // STRICT alternative EOL sequence: multi-CR-NL
-    {
-        input.append("GET / HTTP/1.1\r\r\r\n", 18);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
         // strict mode treats these as several bare-CR in the request line which is explicitly invalid.
         Config.onoff.relaxed_header_parser = 0;
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expectStrict = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = -1,
+            .suffixSz = input.length(),
+            .methodStart =-1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expectStrict);
+        input.clear();
     }
 
     // space padded version
@@ -588,104 +641,27 @@ testHttp1Parser::testParseRequestLineTerminators()
         // RFC 1945 and 2616 specify version is followed by CRLF. No intermediary bytes.
         // NP: the terminal whitespace is a special case: invalid for even HTTP/0.9 with no version tag
         input.append("GET / HTTP/1.1 \n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.1 \n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(13, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/ HTTP/1.1", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
-    }
-
-    // incomplete line at various positions
-    {
-        input.append("GET", 3);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
-
-        input.append("GET ", 4);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
-
-        input.append("GET / HT", 8);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
-
-        input.append("GET / HTTP/1.1", 14);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 13,
+            .uri = "/ HTTP/1.1",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 }
 
@@ -695,207 +671,264 @@ testHttp1Parser::testParseRequestLineMethods()
     // ensure MemPools etc exist
     globalSetup();
 
-    MemBuf input;
+    SBuf input;
     Http1::RequestParser output;
-    input.init();
 
     // RFC 2616 : . method
     {
         input.append(". / HTTP/1.1\n", 13);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp(". / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp(".", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(".", NULL), output.method_);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(4, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(11, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 0,
+            .method = HttpRequestMethod("."),
+            .uriStart = 2,
+            .uriEnd = 2,
+            .uri = "/",
+            .versionStart = 4,
+            .versionEnd = 11,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // OPTIONS with * URL
     {
         input.append("OPTIONS * HTTP/1.1\n", 19);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("OPTIONS * HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(6, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("OPTIONS", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_OPTIONS), output.method_);
-        CPPUNIT_ASSERT_EQUAL(8, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(8, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("*", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(10, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(17, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 6,
+            .method = HttpRequestMethod(Http::METHOD_OPTIONS),
+            .uriStart = 8,
+            .uriEnd = 8,
+            .uri = "*",
+            .versionStart = 10,
+            .versionEnd = 17,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // unknown method
     {
         input.append("HELLOWORLD / HTTP/1.1\n", 22);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HELLOWORLD / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(9, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HELLOWORLD", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod("HELLOWORLD",NULL), output.method_);
-        CPPUNIT_ASSERT_EQUAL(11, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(11, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(13, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(20, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 9,
+            .method = HttpRequestMethod("HELLOWORLD"),
+            .uriStart = 11,
+            .uriEnd = 11,
+            .uri = "/",
+            .versionStart = 13,
+            .versionEnd = 20,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // method-only
     {
         input.append("A\n", 2);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("A\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
-    input.append("GET\n", 4);
     {
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        input.append("GET\n", 4);
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
-    // RELAXED space padded method (in strict mode SP is reserved so invalid as a method byte)
+    // space padded method (in strict mode SP is reserved so invalid as a method byte)
     {
         input.append(" GET / HTTP/1.1\n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
+        // RELAXED mode Squid custom tolerance ignores SP
+#if USE_HTTP_VIOLATIONS
         Config.onoff.relaxed_header_parser = 1;
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(1, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(3, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(7, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(14, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+        struct resultSet expectRelaxed = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0, // garbage collection consumes the SP
+            .msgEnd = (int)input.length()-2,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expectRelaxed);
+#endif
+
+        // STRICT mode obeys RFC syntax
         Config.onoff.relaxed_header_parser = 0;
+        struct resultSet expectStrict = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expectStrict);
+        input.clear();
     }
 
-    // STRICT space padded method (in strict mode SP is reserved so invalid as a method byte)
+    // RFC 2616 defined tolerance: ignore empty line(s) prefix on messages
+#if WHEN_RFC_COMPLIANT
     {
-        input.append(" GET / HTTP/1.1\n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        Config.onoff.relaxed_header_parser = 0;
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp(" GET / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_NONE,0,0), output.msgProtocol_);
-        input.reset();
+        input.append("\r\n\r\n\nGET / HTTP/1.1\r\n", 21);
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 5,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 5,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 4,
+            .uri = "/",
+            .versionStart = 6,
+            .versionEnd = 13,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
+#endif
 
     // tab padded method (NP: tab is not SP so treated as any other binary)
-    // XXX: binary codes are non-compliant
     {
         input.append("\tGET / HTTP/1.1\n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("\tGET / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(3, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("\tGET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(&output.buf[output.req.m_start],&output.buf[output.req.m_end+1]), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(7, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(14, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+#if WHEN_RFC_COMPLIANT
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = -1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+#else // XXX: currently broken
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0, // garbage collection consumes the SP
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 3,
+            .method = HttpRequestMethod(SBuf("\tGET")),
+            .uriStart = 5,
+            .uriEnd = 5,
+            .uri = "/",
+            .versionStart = 7,
+            .versionEnd = 14,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+#endif
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 }
 
@@ -905,229 +938,307 @@ testHttp1Parser::testParseRequestLineInvalid()
     // ensure MemPools etc exist
     globalSetup();
 
-    MemBuf input;
+    SBuf input;
     Http1::RequestParser output;
-    input.init();
 
     // no method (but in a form which is ambiguous with HTTP/0.9 simple-request)
     {
-        // XXX: Bug: HTTP/0.9 requires method to be "GET"
+        // XXX: HTTP/0.9 requires method to be "GET"
         input.append("/ HTTP/1.0\n", 11);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/ HTTP/1.0\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod("/",NULL), output.method_);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(9, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.0", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 0,
+            .method = HttpRequestMethod("/"),
+            .uriStart = 2,
+            .uriEnd = 9,
+            .uri = "HTTP/1.0",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
-    // RELAXED no method (an invalid format)
+    // no method (an invalid format)
     {
         input.append(" / HTTP/1.0\n", 12);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        // BUG: When tolerantly ignoring SP prefix this case becomes ambiguous with HTTP/0.9 simple-request)
+
+        // XXX: squid custom tolerance consumes initial SP.
         Config.onoff.relaxed_header_parser = 1;
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-//        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_DONE, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(1, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/ HTTP/1.0\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod("/",NULL), output.method_);
-        CPPUNIT_ASSERT_EQUAL(3, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(10, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.0", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9), output.msgProtocol_);
-        input.reset();
+        struct resultSet expectRelaxed = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-2,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 0,
+            .method = HttpRequestMethod("/"),
+            .uriStart = 2,
+            .uriEnd = 9,
+            .uri = "HTTP/1.0",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expectRelaxed);
+
+        // STRICT detect as invalid
         Config.onoff.relaxed_header_parser = 0;
+#if WHEN_RFC_COMPLIANT
+        // XXX: except Squid does not
+        struct resultSet expectStrict = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+#else
+        struct resultSet expectStrict = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+#endif
+        output.reset(input);
+        testResults(__LINE__, input, output, expectStrict);
+        input.clear();
     }
 
-    // STRICT no method (an invalid format)
-    {
-        input.append(" / HTTP/1.0\n", 12);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        // When tolerantly ignoring SP prefix this case becomes ambiguous with HTTP/0.9 simple-request)
-        Config.onoff.relaxed_header_parser = 0;
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp(" / HTTP/1.0\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_NONE,0,0), output.msgProtocol_);
-        input.reset();
-    }
-
-    // binary code in method (strange but ...)
+    // binary code in method (invalid)
     {
         input.append("GET\x0B / HTTP/1.1\n", 16);
-        //printf("TEST: %d-%d/%d '%.*s'\n", output.req.start, output.req.end, input.contentSize(), 16, input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET\x0B / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(3, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET\x0B", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-//        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod("GET\0x0B",NULL), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(7, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(14, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+#if WHEN_RFC_COMPLIANT
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = -1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+#else
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0, // garbage collection consumes the SP
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 3,
+            .method = HttpRequestMethod(SBuf("GET\x0B")),
+            .uriStart = 5,
+            .uriEnd = 5,
+            .uri = "/",
+            .versionStart = 7,
+            .versionEnd = 14,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+#endif
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // CR in method
     {
         // RFC 2616 sec 5.1 prohibits CR other than in terminator.
         input.append("GET\r / HTTP/1.1\r\n", 16);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = -1, // halt at the first \r
+            .suffixSz = input.length(),
+            .methodStart = -1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // binary code NUL! in method (strange but ...)
     {
         input.append("GET\0 / HTTP/1.1\n", 16);
-        //printf("TEST: %d-%d/%d '%.*s'\n", output.req.start, output.req.end, input.contentSize(), 16, input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(false, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET\0 / HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(3, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET\0", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-//        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod("GET\0",NULL), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("/", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(7, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(14, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.v_start],(output.req.v_end-output.req.v_start+1)));
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1), output.msgProtocol_);
-        input.reset();
+#if WHEN_RFC_COMPLIANT
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = -1, // halt at the \0
+            .suffixSz = input.length(),
+            .methodStart = -1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+#else
+        struct resultSet expect = {
+            .parsed = false,
+            .done = false,
+            .parserState = Http1::HTTP_PARSE_MIME,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 3,
+            .method = HttpRequestMethod(SBuf("GET\0",4)),
+            .uriStart = 5,
+            .uriEnd = 5,
+            .uri = "/",
+            .versionStart = 7,
+            .versionEnd = 14,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
+        };
+#endif
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
-    // no URL (grammer otherwise correct)
+    // no URL (grammer invalid, ambiguous with RFC 1945 HTTP/0.9 simple-request)
     {
         input.append("GET  HTTP/1.1\n", 14);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET  HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(5, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(12, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 5,
+            .uriEnd = 12,
+            .uri = "HTTP/1.1",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // no URL (grammer invalid, ambiguous with RFC 1945 HTTP/0.9 simple-request)
     {
         input.append("GET HTTP/1.1\n", 13);
-        //printf("TEST: '%s'\n",input.content());
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(true, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scOkay, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET HTTP/1.1\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(2, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("GET", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_GET), output.method_);
-        CPPUNIT_ASSERT_EQUAL(4, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(11, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("HTTP/1.1", &output.buf[output.req.u_start],(output.req.u_end-output.req.u_start+1)));
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = true,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 2,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uriStart = 4,
+            .uriEnd = 11,
+            .uri = "HTTP/1.1",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9)
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // binary line
     {
         input.append("\xB\xC\xE\xF\n", 5);
-        //printf("TEST: binary-line\n");
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("\xB\xC\xE\xF\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // mixed whitespace line
@@ -1135,24 +1246,27 @@ testHttp1Parser::testParseRequestLineInvalid()
         // We accept non-space binary bytes for method so first \t shows up as that
         // but remaining space and tabs are skipped searching for URI-start
         input.append("\t \t \t\n", 6);
-        //printf("TEST: mixed whitespace\n");
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("\t \t \t\n", &output.buf[output.req.start],(output.req.end-output.req.start+1)));
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(0, memcmp("\t", &output.buf[output.req.m_start],(output.req.m_end-output.req.m_start+1)));
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(&output.buf[output.req.m_start],&output.buf[output.req.m_end+1]), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-1,
+            .suffixSz = input.length(),
+            .methodStart = 0,
+            .methodEnd = 0,
+            .method = HttpRequestMethod(SBuf("\t")),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 
     // mixed whitespace line with CR middle
@@ -1160,22 +1274,27 @@ testHttp1Parser::testParseRequestLineInvalid()
         // CR aborts on sight, so even initial \t method is not marked as above
         // (not when parsing clean with whole line available anyway)
         input.append("\t  \r \n", 6);
-        //printf("TEST: mixed whitespace with CR\n");
-        output.reset(input.content(), input.contentSize());
-        CPPUNIT_ASSERT_EQUAL(false, output.parse());
-        CPPUNIT_ASSERT_EQUAL(true, output.isDone());
-        CPPUNIT_ASSERT_EQUAL(Http::scBadRequest, output.request_parse_status);
-        CPPUNIT_ASSERT_EQUAL(0, output.req.start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
-        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(), output.method_);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
-        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
-        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
-        input.reset();
+        struct resultSet expect = {
+            .parsed = false,
+            .done = true,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scBadRequest,
+            .msgStart = 0,
+            .msgEnd = -1, // halt on the \r
+            .suffixSz = input.length(),
+            .methodStart = -1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
+            .uriStart = -1,
+            .uriEnd = -1,
+            .uri = NULL,
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion()
+        };
+        output.reset(input);
+        testResults(__LINE__, input, output, expect);
+        input.clear();
     }
 }
 
@@ -1186,60 +1305,94 @@ testHttp1Parser::testDripFeed()
     // extend the size of the buffer from 0 bytes to full request length
     // calling the parser repeatedly as visible data grows.
 
-    MemBuf mb;
-    mb.init(1024, 1024);
-    mb.append("            ", 12);
-    int garbageEnd = mb.contentSize();
-    mb.append("GET http://example.com/ HTTP/1.1\r\n", 34);
-    int reqLineEnd = mb.contentSize();
-    mb.append("Host: example.com\r\n\r\n", 21);
-    int mimeEnd = mb.contentSize();
-    mb.append("...", 3); // trailer to catch mime EOS errors.
+    SBuf data;
+    data.append("            ", 12);
+    SBuf::size_type garbageEnd = data.length();
+    data.append("GET http://example.com/ HTTP/1.1\r\n", 34);
+    SBuf::size_type reqLineEnd = data.length() - 1;
+    data.append("Host: example.com\r\n\r\n", 21);
+    SBuf::size_type mimeEnd = data.length() - 1;
+    data.append("...", 3); // trailer to catch mime EOS errors.
 
-    Http1::RequestParser hp(mb.content(), 0);
+    SBuf ioBuf; // begins empty
+    Http1::RequestParser hp(ioBuf);
 
     // only relaxed parser accepts the garbage whitespace
     Config.onoff.relaxed_header_parser = 1;
 
-    for (; hp.bufsiz <= mb.contentSize(); ++hp.bufsiz) {
-        bool parseResult = hp.parse();
+    // state of things we expect right now
+    struct resultSet expect = {
+        .parsed = false,
+        .done = false,
+        .parserState = Http1::HTTP_PARSE_NEW,
+        .status = Http::scBadRequest,
+        .msgStart = 0,
+        .msgEnd = -1,
+        .suffixSz = 0,
+        .methodStart = -1,
+        .methodEnd = -1,
+        .method = HttpRequestMethod(),
+        .uriStart = -1,
+        .uriEnd = -1,
+        .uri = NULL,
+        .versionStart = -1,
+        .versionEnd = -1,
+        .version = AnyP::ProtocolVersion()
+    };
 
-#if WHEN_TEST_DEBUG_IS_NEEDED
-        printf("%d/%d :: %d, %d, %d '%c'\n", hp.bufsiz, mb.contentSize(),
-               garbageEnd, reqLineEnd, parseResult,
-               mb.content()[hp.bufsiz]);
-#endif
+    Config.maxRequestHeaderSize = 1024; // large enough to hold the test data.
 
-	// before end of garbage found its a moving offset.
-	if (hp.bufsiz <= garbageEnd) {
-            CPPUNIT_ASSERT_EQUAL(hp.bufsiz, (int)hp.parseOffset_);
-            CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
-            CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NEW, hp.parsingStage_);
-            continue;
+    for (SBuf::size_type pos = 0; pos <= data.length(); ++pos) {
+
+        // simulate reading one more byte
+        ioBuf.append(data.substr(pos,1));
+
+        // sync the buffers like Squid does
+        hp.buf = ioBuf;
+
+        // when the garbage is passed we expect to start seeing first-line bytes
+        if (pos == garbageEnd) {
+            expect.parserState = Http1::HTTP_PARSE_FIRST;
+            expect.msgStart = 0;
         }
 
-	// before request line found, parse announces incomplete
-        if (hp.bufsiz < reqLineEnd) {
-            CPPUNIT_ASSERT_EQUAL(garbageEnd, (int)hp.parseOffset_);
-            CPPUNIT_ASSERT_EQUAL(false, parseResult);
-            CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
-            CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_FIRST, hp.parsingStage_);
-            continue;
+        // all points after garbage start to see accumulated bytes looking for end of current section
+        if (pos >= garbageEnd)
+            expect.suffixSz = ioBuf.length();
+
+        // at end of request line expect to see method, URI, version details
+        // and switch to seeking Mime header section
+        if (pos == reqLineEnd) {
+            expect.parserState = Http1::HTTP_PARSE_MIME;
+            expect.suffixSz = 0;
+            expect.msgEnd = reqLineEnd-garbageEnd;
+            expect.status = Http::scOkay;
+            expect.methodStart = 0;
+            expect.methodEnd = 2;
+            expect.method = HttpRequestMethod(Http::METHOD_GET);
+            expect.uriStart = 4;
+            expect.uriEnd = 22;
+            expect.uri = "http://example.com/";
+            expect.versionStart = 24;
+            expect.versionEnd = 31;
+            expect.version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
         }
 
-	// before request headers entirely found, parse announces incomplete
-        if (hp.bufsiz < mimeEnd) {
-            CPPUNIT_ASSERT_EQUAL(reqLineEnd, (int)hp.parseOffset_);
-            CPPUNIT_ASSERT_EQUAL(false, parseResult);
-            CPPUNIT_ASSERT_EQUAL(false, hp.isDone());
-            // TODO: add all the other usual tests for request-line details
-            CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_MIME, hp.parsingStage_);
-            continue;
+        // one mime header is done we are expectign a new request
+        // parse results say true and initial data is all gone from the buffer
+        if (pos == mimeEnd) {
+            expect.parsed = true;
+            expect.done = true;
+            expect.suffixSz = 0;
         }
 
-        // once request line is found (AND the following \n) current parser announces success
-        CPPUNIT_ASSERT_EQUAL(mimeEnd, (int)hp.parseOffset_);
-        CPPUNIT_ASSERT_EQUAL(true, parseResult);
-        CPPUNIT_ASSERT_EQUAL(true, hp.isDone());
+        testResults(__LINE__, ioBuf, hp, expect);
+
+        // sync the buffers like Squid does
+        ioBuf = hp.buf;
+
+        // Squid stops using the parser once it reports done.
+        if (hp.isDone())
+            break;
     }
 }
