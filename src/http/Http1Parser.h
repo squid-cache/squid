@@ -13,11 +13,11 @@ namespace One {
 
 // Parser states
 enum ParseState {
-    HTTP_PARSE_NONE =0,  ///< nothing. completely unset state.
-    HTTP_PARSE_NEW =1,   ///< initialized, but nothing usefully parsed yet
+    HTTP_PARSE_NONE,     ///< nothing. completely unset state.
+    HTTP_PARSE_NEW,      ///< initialized, but nothing usefully parsed yet
     HTTP_PARSE_FIRST,    ///< HTTP/1 message first line
-    HTTP_PARSE_MIME,     ///< mime header block
-    HTTP_PARSE_DONE      ///< completed with parsing a full request header
+    HTTP_PARSE_MIME,     ///< HTTP/1 mime header block
+    HTTP_PARSE_DONE      ///< parsed a message header, or reached a terminal syntax error
 };
 
 /** HTTP protocol parser.
@@ -38,21 +38,14 @@ public:
      * NOTE: This is *not* the buffer size, just the parse-able data length.
      * The parse routines may be called again later with more data.
      */
-    Parser(const char *aBuf, int len) { reset(aBuf,len); }
+    Parser(const SBuf &aBuf) { reset(aBuf); }
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
     virtual void clear();
 
     /// Reset the parser for use on a new buffer.
-    void reset(const char *aBuf, int len);
-
-    /** Adjust parser state to account for a buffer shift of n bytes.
-     *
-     * The leftmost n bytes bytes have been dropped and all other
-     * bytes shifted left n positions.
-     */
-    virtual void noteBufferShift(const int64_t n) = 0;
+    void reset(const SBuf &aBuf);
 
     /** Whether the parser is already done processing the buffer.
      * Use to determine between incomplete data and errors results
@@ -61,7 +54,7 @@ public:
     bool isDone() const {return parsingStage_==HTTP_PARSE_DONE;}
 
     /// number of bytes at the start of the buffer which are no longer needed
-    int64_t doneBytes() const {return (int64_t)parseOffset_;}
+    int64_t doneBytes() const {return (int64_t)parsedCount_;}
 
     /// size in bytes of the first line including CRLF terminator
     virtual int64_t firstLineSize() const = 0;
@@ -92,20 +85,19 @@ public:
     char *getHeaderField(const char *name);
 
 public:
-    const char *buf;
-    int bufsiz;
+    SBuf buf;
 
 protected:
     /// what stage the parser is currently up to
     ParseState parsingStage_;
 
-    /// what protocol label has been found in the first line
+    /// total count of bytes parsed and consumed by the parser so far
+    size_t parsedCount_;
+
+    /// what protocol label has been found in the first line (if any)
     AnyP::ProtocolVersion msgProtocol_;
 
-    /// byte offset for non-parsed region of the buffer
-    size_t parseOffset_;
-
-    /// buffer holding the mime headers
+    /// buffer holding the mime headers (if any)
     SBuf mimeHeaderBlock_;
 };
 
@@ -122,9 +114,8 @@ class RequestParser : public Http1::Parser
 public:
     /* Http::One::Parser API */
     RequestParser() : Parser() {}
-    RequestParser(const char *aBuf, int len) : Parser(aBuf, len) {}
+    RequestParser(const SBuf &aBuf) : Parser(aBuf) {}
     virtual void clear();
-    virtual void noteBufferShift(const int64_t n);
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse();
 
@@ -134,8 +125,9 @@ public:
     /// the request-line URI if this is a request message, or an empty string.
     const SBuf &requestUri() const {return uri_;}
 
-    /** HTTP status code to be used on the invalid-request error page
-     * Http::scNone indicates incomplete parse, Http::scOkay indicates no error.
+    /** HTTP status code to be used on the invalid-request error page.
+     * Http::scNone indicates incomplete parse,
+     * Http::scOkay indicates no error.
      */
     Http::StatusCode request_parse_status;
 

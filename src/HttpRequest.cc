@@ -304,7 +304,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
     }
 
     /* See if the request buffer starts with a known HTTP request method. */
-    if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
+    if (HttpRequestMethod(buf->content()) == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = Http::scInvalidHeader;
         return false;
@@ -317,7 +317,8 @@ bool
 HttpRequest::parseFirstLine(const char *start, const char *end)
 {
     const char *t = start + strcspn(start, w_space);
-    method = HttpRequestMethod(start, t);
+    SBuf m(start, start-t);
+    method = HttpRequestMethod(m);
 
     if (method == Http::METHOD_NONE)
         return false;

@@ -20,14 +20,8 @@ class HttpRequestMethod : public RefCountable
 public:
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
     HttpRequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
-
-    /**
-     \param begin    string to convert to request method.
-     \param end      end of the method string (relative to begin). Use NULL if this is unknown.
-     *
-     \note DO NOT give end a default (ie NULL). That will cause silent char* conversion clashes.
-     */
-    HttpRequestMethod(char const * begin, char const * end);
+    explicit HttpRequestMethod(char const *);
+    explicit HttpRequestMethod(const SBuf &);
 
     HttpRequestMethod & operator = (const HttpRequestMethod& aMethod) {
         theMethod = aMethod.theMethod;

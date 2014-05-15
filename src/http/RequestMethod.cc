@@ -16,22 +16,17 @@ operator++ (Http::MethodType &aMethod)
 }
 
 /**
- * Construct a HttpRequestMethod from a NULL terminated string such as "GET"
- * or from a range of chars, * such as "GET" from "GETFOOBARBAZ"
- * (pass in pointer to G and pointer to F.)
+ * Construct a HttpRequestMethod from a C-string such as "GET"
+ * Assumes the string is either nul-terminated or contains whitespace
+ *
+ * \deprecated use SBuf constructor instead
  */
-HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod(Http::METHOD_NONE)
+HttpRequestMethod::HttpRequestMethod(char const *begin) : theMethod(Http::METHOD_NONE)
 {
     if (begin == NULL)
         return;
 
-    /*
-     * if e is NULL, b must be NULL terminated and we
-     * make e point to the first whitespace character
-     * after b.
-     */
-    if (NULL == end)
-        end = begin + strcspn(begin, w_space);
+    char const *end = begin + strcspn(begin, w_space);
 
     if (end == begin)
         return;
@@ -54,6 +49,39 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
     // if method not found and method string is not null then it is other method
     theMethod = Http::METHOD_OTHER;
     theImage.assign(begin, end-begin);
+}
+
+/**
+ * Construct a HttpRequestMethod from an SBuf string such as "GET"
+ * or from a range of chars such as "GET" from "GETFOOBARBAZ"
+ *
+ * Assumes the s parameter contains only the method string
+ */
+HttpRequestMethod::HttpRequestMethod(const SBuf &s) : theMethod(Http::METHOD_NONE)
+{
+    if (s.isEmpty())
+        return;
+
+    // XXX: still check for missing method name?
+
+    // TODO: Optimize this linear search.
+    for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
+        // RFC 2616 section 5.1.1 - Method names are case-sensitive
+        // NP: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
+        if (0 == image().caseCmp(s)) {
+
+            // relaxed parser allows mixed-case and corrects them on output
+            if (Config.onoff.relaxed_header_parser)
+                return;
+
+            if (0 == image().cmp(s))
+                return;
+        }
+    }
+
+    // if method not found and method string is not null then it is other method
+    theMethod = Http::METHOD_OTHER;
+    theImage = s;
 }
 
 const SBuf &

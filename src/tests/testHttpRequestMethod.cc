@@ -19,10 +19,10 @@ void
 testHttpRequestMethod::testConstructCharStart()
 {
     /* parse an empty string -> Http::METHOD_NONE */
-    CPPUNIT_ASSERT(HttpRequestMethod(NULL,NULL) == Http::METHOD_NONE);
+    CPPUNIT_ASSERT(HttpRequestMethod(NULL) == Http::METHOD_NONE);
     /* parsing a literal should work */
-    CPPUNIT_ASSERT(HttpRequestMethod("GET", NULL) == Http::METHOD_GET);
-    CPPUNIT_ASSERT(HttpRequestMethod("QWERTY", NULL) == Http::METHOD_OTHER);
+    CPPUNIT_ASSERT(HttpRequestMethod("GET") == Http::METHOD_GET);
+    CPPUNIT_ASSERT(HttpRequestMethod("QWERTY") == Http::METHOD_OTHER);
 }
 
 /*
@@ -33,12 +33,12 @@ testHttpRequestMethod::testConstructCharStartEnd()
 {
     char const * buffer;
     /* parse an empty string -> Http::METHOD_NONE */
-    CPPUNIT_ASSERT(HttpRequestMethod(NULL, NULL) == Http::METHOD_NONE);
+    CPPUNIT_ASSERT(HttpRequestMethod(NULL) == Http::METHOD_NONE);
     /* parsing a literal should work */
-    CPPUNIT_ASSERT(HttpRequestMethod("GET", NULL) == Http::METHOD_GET);
+    CPPUNIT_ASSERT(HttpRequestMethod("GET") == Http::METHOD_GET);
     /* parsing with an explicit end should work */
     buffer = "POSTPLUS";
-    CPPUNIT_ASSERT(HttpRequestMethod(buffer, buffer + 4) == Http::METHOD_POST);
+    CPPUNIT_ASSERT(HttpRequestMethod(SBuf(buffer, 4)) == Http::METHOD_POST);
 }
 
 /*
@@ -84,15 +84,15 @@ testHttpRequestMethod::testImage()
 {
     // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
     Config.onoff.relaxed_header_parser = 1;
-    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("POST",NULL).image());
-    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("pOsT",NULL).image());
-    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("post",NULL).image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("POST").image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("pOsT").image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("post").image());
 
     // strict RFC-compliance parse HTTP methods are case sensitive
     Config.onoff.relaxed_header_parser = 0;
-    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("POST",NULL).image());
-    CPPUNIT_ASSERT_EQUAL(SBuf("pOsT"), HttpRequestMethod("pOsT",NULL).image());
-    CPPUNIT_ASSERT_EQUAL(SBuf("post"), HttpRequestMethod("post",NULL).image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("POST").image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("pOsT"), HttpRequestMethod("pOsT").image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("post"), HttpRequestMethod("post").image());
 }
 
 /*
@@ -129,12 +129,12 @@ testHttpRequestMethod::testStream()
     // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
     Config.onoff.relaxed_header_parser = 1;
     std::ostringstream buffer;
-    buffer << HttpRequestMethod("get", NULL);
+    buffer << HttpRequestMethod("get");
     CPPUNIT_ASSERT_EQUAL(String("GET"), String(buffer.str().c_str()));
 
     // strict RFC-compliance parse HTTP methods are case sensitive
     Config.onoff.relaxed_header_parser = 0;
     std::ostringstream buffer2;
-    buffer2 << HttpRequestMethod("get", NULL);
+    buffer2 << HttpRequestMethod("get");
     CPPUNIT_ASSERT_EQUAL(String("get"), String(buffer2.str().c_str()));
 }
