@@ -18,7 +18,7 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
 
     String method;
     msg.getString(method);
-    httpMethod = HttpRequestMethod(method.termedBuf(), NULL);
+    httpMethod = HttpRequestMethod(method.termedBuf());
 
     msg.getPod(httpFlags);
     msg.getString(httpOrigin);

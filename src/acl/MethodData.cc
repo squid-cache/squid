@@ -91,7 +91,7 @@ ACLMethodData::parse()
     while ((t = strtokFile())) {
         if (strcmp(t, "PURGE") == 0)
             ++ThePurgeCount; // configuration code wants to know
-        CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t, NULL));
+        CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t));
         *(Tail) = q;
         Tail = &q->next;
     }
