@@ -1529,14 +1529,16 @@ ExternalACLLookup::LookupDone(void *data, void *result)
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
 
     // attach the helper kv-pair to the transaction
-    if (HttpRequest * req = checklist->request) {
-        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
-        // workaround by using anything already set in HttpRequest
-        // OR use new and rely on a later Sync copying these to AccessLogEntry
-        if (!req->notes)
-            req->notes = new NotePairs;
+    if (checklist->extacl_entry) {
+        if (HttpRequest * req = checklist->request) {
+            // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+            // workaround by using anything already set in HttpRequest
+            // OR use new and rely on a later Sync copying these to AccessLogEntry
+            if (!req->notes)
+                req->notes = new NotePairs;
 
-        req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+            req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+        }
     }
 
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
