@@ -7,12 +7,12 @@ Http::StatusCodeString(const Http::StatusCode status)
 {
     switch (status) {
 
-    // 000
+        // 000
     case Http::scNone:
         return "Init";		/* we init .status with code 0 */
         break;
 
-    // 100-199
+        // 100-199
     case Http::scContinue:
         return "Continue";
         break;
@@ -25,7 +25,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Processing";
         break;
 
-    // 200-299
+        // 200-299
     case Http::scOkay:
         return "OK";
         break;
@@ -66,7 +66,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "IM Used";
         break;
 
-    // 300-399
+        // 300-399
     case Http::scMultipleChoices:
         return "Multiple Choices";
         break;
@@ -99,7 +99,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Permanent Redirect";
         break;
 
-    // 400-499
+        // 400-499
     case Http::scBadRequest:
         return "Bad Request";
         break;
@@ -200,7 +200,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Request Header Fields Too Large";
         break;
 
-    // 500-599
+        // 500-599
     case Http::scInternalServerError:
         return "Internal Server Error";
         break;
@@ -245,7 +245,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Network Authentication Required";
         break;
 
-    // 600+
+        // 600+
     case Http::scInvalidHeader:
     case Http::scHeaderTooLarge:
         // fall through to default.

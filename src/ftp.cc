@@ -2590,7 +2590,7 @@ ftpSendPassive(FtpStateData * ftpState)
             }
         }
     }
-        break;
+    break;
     }
 
     ftpState->writeCommand(cbuf);

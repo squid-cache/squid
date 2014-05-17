@@ -156,9 +156,11 @@ Most user-facing changes are reflected in squid.conf (see below).
    and its helpers allowing faster transaction speeds even on sequential
    helpers.
 
-<p>The <em>storeid_file_rewrite</em> helper has been updated to support
-   concurrency channels. It will auto-detect the <em>channel-ID</em> field
-   on its input line and will produce the appropriate response format.
+<p>The Digest authentication, Store-ID, and URL-rewrite helpers packaged
+   with Squid have been updated to support concurrency channels. They will
+   auto-detect the <em>channel-ID</em> field and will produce the appropriate
+   response format.
+   With these helpers concurrency may now be set to 0 or any higher number as desired.
 
 
 <sect>Changes to squid.conf since Squid-3.4

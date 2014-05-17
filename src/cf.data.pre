@@ -3867,15 +3867,20 @@ DOC_START
 		[http::]ru	Request URL from client (historic, filtered for logging)
 		[http::]>ru	Request URL from client
 		[http::]<ru	Request URL sent to server or peer
+		[http::]>rs	Request URL scheme from client
+		[http::]<rs	Request URL scheme sent to server or peer
 		[http::]>rd	Request URL domain from client
-		[http::]rp	Request URL-Path excluding hostname
-		[http::]>rp	Request URL-Path excluding hostname from client
-		[http::]<rp	Request URL-Path excluding hostname sent to server or peer
+		[http::]>rd	Request URL domain sent to server or peer
+		[http::]>rP	Request URL port from client
+		[http::]<rP	Request URL port sent to server or peer
+		[http::]rp	Request URL path excluding hostname
+		[http::]>rp	Request URL path excluding hostname from client
+		[http::]<rp	Request URL path excluding hostname sent to server or peer
 		[http::]rv	Request protocol version
 		[http::]>rv	Request protocol version from client
 		[http::]<rv	Request protocol version sent to server or peer
 
-		[http::]>h	Original received request header. 
+		[http::]>h	Original received request header.
 				Usually differs from the request header sent by
 				Squid, although most fields are often preserved.
 				Accepts optional header field name/value filter

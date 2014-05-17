@@ -58,7 +58,9 @@ typedef enum {
     /* original Request-Line details recieved from client */
     LFT_CLIENT_REQ_METHOD,
     LFT_CLIENT_REQ_URI,
+    LFT_CLIENT_REQ_URLSCHEME,
     LFT_CLIENT_REQ_URLDOMAIN,
+    LFT_CLIENT_REQ_URLPORT,
     LFT_CLIENT_REQ_URLPATH,
     /* LFT_CLIENT_REQ_QUERY, */
     LFT_CLIENT_REQ_VERSION,
@@ -70,6 +72,7 @@ typedef enum {
     /*LFT_REQUEST_QUERY, */
     LFT_REQUEST_VERSION_OLD_2X,
     LFT_REQUEST_VERSION,
+    LFT_REQUEST_URLGROUP_OLD_2X,
 
     /* request header details pre-adaptation */
     LFT_REQUEST_HEADER,
@@ -84,6 +87,9 @@ typedef enum {
     /* Request-Line details sent to the server/peer */
     LFT_SERVER_REQ_METHOD,
     LFT_SERVER_REQ_URI,
+    LFT_SERVER_REQ_URLSCHEME,
+    LFT_SERVER_REQ_URLDOMAIN,
+    LFT_SERVER_REQ_URLPORT,
     LFT_SERVER_REQ_URLPATH,
     /*LFT_SERVER_REQ_QUERY, */
     LFT_SERVER_REQ_VERSION,
@@ -203,7 +209,18 @@ typedef enum {
 #endif
 
     LFT_NOTE,
-    LFT_PERCENT			/* special string cases for escaped chars */
+    LFT_PERCENT,			/* special string cases for escaped chars */
+
+    // TODO assign better bytecode names and Token strings for these
+    LFT_EXT_ACL_USER_CERT_RAW,
+    LFT_EXT_ACL_USER_CERTCHAIN_RAW,
+    LFT_EXT_ACL_USER_CERT,
+    LFT_EXT_ACL_USER_CA_CERT,
+    LFT_EXT_ACL_CLIENT_EUI48,
+    LFT_EXT_ACL_CLIENT_EUI64,
+    LFT_EXT_ACL_NAME,
+    LFT_EXT_ACL_DATA
+
 } ByteCode_t;
 
 /// Quoting style for a format output.
