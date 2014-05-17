@@ -89,9 +89,9 @@ ACLMethodData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        if (strcmp(t, "PURGE") == 0)
-            ++ThePurgeCount; // configuration code wants to know
         CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t));
+        if (q->element == Http::METHOD_PURGE)
+            ++ThePurgeCount; // configuration code wants to know
         *(Tail) = q;
         Tail = &q->next;
     }

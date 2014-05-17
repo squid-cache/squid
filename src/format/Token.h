@@ -49,7 +49,6 @@ public:
             char *element;
             char separator;
         } header;
-        char *timespec;
     } data;
     int widthMin; ///< minimum field width
     int widthMax; ///< maximum field width
