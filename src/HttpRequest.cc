@@ -364,8 +364,10 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
 bool
 HttpRequest::parseHeader(Http1::RequestParser &hp)
 {
+    // HTTP/1 message contains "zero or more header fields"
+    // zero does not need parsing
     if (!hp.headerBlockSize())
-        return false;
+        return true;
 
     bool result = header.parse(hp.rawHeaderBuf(), hp.headerBlockSize());
 
