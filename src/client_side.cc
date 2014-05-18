@@ -2856,6 +2856,8 @@ ConnStateData::clientParseRequests()
                 break;
             }
         }
+        else // incomplete parse, wait for more data
+            break;
     }
 
     /* XXX where to 'finish' the parsing pass? */
