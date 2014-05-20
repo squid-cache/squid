@@ -13,48 +13,43 @@ namespace One {
 
 // Parser states
 enum ParseState {
-    HTTP_PARSE_NONE,     ///< nothing. completely unset state.
-    HTTP_PARSE_NEW,      ///< initialized, but nothing usefully parsed yet
-    HTTP_PARSE_FIRST,    ///< HTTP/1 message first line
-    HTTP_PARSE_MIME,     ///< HTTP/1 mime header block
+    HTTP_PARSE_NONE,     ///< initialized, but nothing usefully parsed yet
+    HTTP_PARSE_FIRST,    ///< HTTP/1 message first-line
+    HTTP_PARSE_MIME,     ///< HTTP/1 mime-header block
     HTTP_PARSE_DONE      ///< parsed a message header, or reached a terminal syntax error
 };
 
-/** HTTP protocol parser.
+/** HTTP/1.x protocol parser
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * either an error state or HTTP procotol major sections:
+ * the major CRLF delimited segments of an HTTP/1 procotol message:
  *
  * \item first-line (request-line / simple-request / status-line)
- * \item mime-header block
+ * \item mime-header 0*( header-name ':' SP field-value CRLF)
  */
 class Parser : public RefCountable
 {
+    Parser(const Parser&); // do not implement
+    Parser& operator =(const Parser&); // do not implement
+
 public:
     Parser() { clear(); }
-
-    /** Initialize a new parser.
-     * Presenting it a buffer to work on and the current length of available data.
-     * NOTE: This is *not* the buffer size, just the parse-able data length.
-     * The parse routines may be called again later with more data.
-     */
-    Parser(const SBuf &aBuf) { reset(aBuf); }
+    virtual ~Parser() {}
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
     virtual void clear();
 
-    /// Reset the parser for use on a new buffer.
-    void reset(const SBuf &aBuf);
+    /// attempt to parse a message from the buffer
+    /// \retval true if a full message was found and parsed
+    /// \retval false if incomplete, invalid or no message was found
+    virtual bool parse(const SBuf &aBuf) = 0;
 
-    /** Whether the parser is already done processing the buffer.
-     * Use to determine between incomplete data and errors results
-     * from the parse.
+    /** Whether the parser is waiting on more data to complete parsing a message.
+     * Use to distinguish between incomplete data and error results
+     * when parse() returns false.
      */
-    bool isDone() const {return parsingStage_==HTTP_PARSE_DONE;}
-
-    /// number of bytes at the start of the buffer which are no longer needed
-    int64_t doneBytes() const {return (int64_t)parsedCount_;}
+    bool needsMoreData() const {return parsingStage_!=HTTP_PARSE_DONE;}
 
     /// size in bytes of the first line including CRLF terminator
     virtual int64_t firstLineSize() const = 0;
@@ -69,15 +64,7 @@ public:
     int64_t messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
     /// buffer containing HTTP mime headers, excluding message first-line.
-    const SBuf mimeHeader() const {return mimeHeaderBlock_;}
-
-    /// char* version of mimeHeader()
-    const char *rawHeaderBuf() {return mimeHeaderBlock_.c_str();}
-
-    /// attempt to parse a message from the buffer
-    /// \retval true if a full message was found and parsed
-    /// \retval false if incomplete, invalid or no message was found
-    virtual bool parse() = 0;
+    SBuf mimeHeader() const {return mimeHeaderBlock_;}
 
     /// the protocol label for this message
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
@@ -104,23 +91,26 @@ protected:
     SBuf mimeHeaderBlock_;
 };
 
-/** HTTP protocol request parser.
+/** HTTP/1.x protocol request parser
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * either an error state or, an HTTP procotol request major segments:
+ * the major CRLF delimited segments of an HTTP/1 request message:
  *
- * \item Request Line (method, URL, protocol, version)
- * \item Mime header block
+ * \item request-line (method, URL, protocol, version)
+ * \item mime-header (set of RFC2616 syntax header fields)
  */
 class RequestParser : public Http1::Parser
 {
+    RequestParser(const RequestParser&); // do not implement
+    RequestParser& operator =(const RequestParser&); // do not implement
+
 public:
     /* Http::One::Parser API */
     RequestParser() : Parser() {}
-    RequestParser(const SBuf &aBuf) : Parser(aBuf) {}
+    virtual ~RequestParser() {}
     virtual void clear();
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
-    virtual bool parse();
+    virtual bool parse(const SBuf &aBuf);
 
     /// the HTTP method if this is a request message
     const HttpRequestMethod & method() const {return method_;}

@@ -29,16 +29,6 @@ Http::One::RequestParser::clear()
     method_ = HttpRequestMethod();
 }
 
-void
-Http::One::Parser::reset(const SBuf &aBuf)
-{
-    clear(); // empty the state.
-    parsingStage_ = HTTP_PARSE_NEW;
-    parsedCount_ = 0;
-    buf = aBuf;
-    debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");
-}
-
 /**
  * Attempt to parse the first line of a new request message.
  *
@@ -341,10 +331,14 @@ Http::One::RequestParser::parseRequestFirstLine()
 }
 
 bool
-Http::One::RequestParser::parse()
+Http::One::RequestParser::parse(const SBuf &aBuf)
 {
+    parsedCount_ = 0;
+    buf = aBuf;
+    debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");
+
     // stage 1: locate the request-line
-    if (parsingStage_ == HTTP_PARSE_NEW) {
+    if (parsingStage_ == HTTP_PARSE_NONE) {
         skipGarbageLines();
 
         // if we hit something before EOS treat it as a message
@@ -416,7 +410,7 @@ Http::One::RequestParser::parse()
         }
     }
 
-    return isDone();
+    return !needsMoreData();
 }
 
 // arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
@@ -436,7 +430,7 @@ Http::One::Parser::getHeaderField(const char *name)
 
     debugs(25, 5, "looking for '" << name << "'");
 
-    for (p = rawHeaderBuf(); *p; p += strcspn(p, "\n\r")) {
+    for (p = mimeHeader().c_str(); *p; p += strcspn(p, "\n\r")) {
         if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
             return NULL;
 
