@@ -19,9 +19,9 @@ Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
 }
 
 bool
-Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars)
+Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
-    SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
+    SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     returnedToken = buf_.consume(prefixLen);

@@ -26,8 +26,8 @@ public:
     */
    bool token(SBuf &returnedToken, const CharacterSet &whitespace);
 
-   /// Accumulates all sequential permitted characters (a token).
-   bool prefix(SBuf &returnedToken, const CharacterSet &tokenChars);
+   /// Accumulates all sequential permitted characters (a token) up to an optional length limit.
+   bool prefix(SBuf &returnedToken, const CharacterSet &tokenChars, SBuf::size_type limit = SBuf::npos);
 
    /// Skips all sequential permitted characters (a token).
    bool skip(const CharacterSet &tokenChars);
