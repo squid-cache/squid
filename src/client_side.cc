@@ -2241,7 +2241,7 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
            "prefix_sz = " << hp.messageHeaderSize() <<
            ", request-line-size=" << hp.firstLineSize() <<
            ", mime-header-size=" << hp.headerBlockSize() <<
-           "mime header block:\n" << hp.mimeHeader() << "\n----------");
+           ", mime header block:\n" << hp.mimeHeader() << "\n----------");
 
     /* Ok, all headers are received */
     ClientHttpRequest *http = new ClientHttpRequest(csd);
