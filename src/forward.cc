@@ -726,7 +726,8 @@ FwdState::negotiateSSL(int fd)
             // For intercepted connections, set the host name to the server
             // certificate CN. Otherwise, we just hope that CONNECT is using
             // a user-entered address (a host name or a user-entered IP).
-            const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
+            const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                          !request->clientConnectionManager->port->spoof_client_ip &&
                                           !request->clientConnectionManager->port->intercepted;
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = errDetails->peerCert()) {
@@ -823,7 +824,8 @@ FwdState::initiateSSL()
         // unless it was the CONNECT request with a user-typed address.
         const char *hostname = request->GetHost();
         const bool hostnameIsIp = request->GetHostIsNumeric();
-        const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
+        const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                      !request->clientConnectionManager->port->spoof_client_ip &&
                                       !request->clientConnectionManager->port->intercepted;
         if (!request->flags.sslPeek || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
