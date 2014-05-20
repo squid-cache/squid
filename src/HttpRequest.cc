@@ -369,7 +369,7 @@ HttpRequest::parseHeader(Http1::RequestParser &hp)
     if (!hp.headerBlockSize())
         return true;
 
-    bool result = header.parse(hp.rawHeaderBuf(), hp.headerBlockSize());
+    bool result = header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize());
 
     if (result)
         hdrCacheInit();
