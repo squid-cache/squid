@@ -2197,14 +2197,12 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
 {
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
-        const bool parsedOk = hp.parse();
+        const bool parsedOk = hp.parse(csd->in.buf);
 
-        if (hp.doneBytes()) {
-            // we are done with some of the buffer. update the ConnStateData copy now.
-            csd->in.buf = hp.buf;
-        }
+        // sync the buffers after parsing.
+        csd->in.buf = hp.buf;
 
-        if (!hp.isDone()) {
+        if (hp.needsMoreData()) {
             debugs(33, 5, "Incomplete request, waiting for end of request line");
             return NULL;
         }
@@ -2822,10 +2820,8 @@ ConnStateData::clientParseRequests()
         // parser is incremental. Generate new parser state if we,
         // a) dont have one already
         // b) have completed the previous request parsing already
-        if (!parser_ || parser_->isDone())
-            parser_ = new Http1::RequestParser(in.buf);
-        else // update the buffer space being parsed
-            parser_->buf = in.buf;
+        if (!parser_ || !parser_->needsMoreData())
+            parser_ = new Http1::RequestParser();
 
         /* Process request */
         ClientSocketContext *context = parseHttpRequest(this, *parser_);
