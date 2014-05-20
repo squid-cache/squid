@@ -1,5 +1,5 @@
-#ifndef _SQUID_SRC_HTTP_ONEREQUESTPARSER_H
-#define _SQUID_SRC_HTTP_ONEREQUESTPARSER_H
+#ifndef _SQUID_SRC_HTTP_ONE_PARSER_H
+#define _SQUID_SRC_HTTP_ONE_PARSER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
@@ -91,4 +91,4 @@ protected:
 } // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_HTTP1PARSER_H */
+#endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
