@@ -50,7 +50,6 @@ Http::One::RequestParser::skipGarbageLines()
         // ie any series of either \n or \r\n with no other characters and no repeated \r
         while (!buf.isEmpty() && (buf[0] == '\n' || (buf[0] == '\r' && buf[1] == '\n'))) {
             buf.consume(1);
-            ++parsedCount_;
         }
     }
 #endif
@@ -70,7 +69,6 @@ Http::One::RequestParser::skipGarbageLines()
         // Be tolerant of prefix spaces (other bytes are valid method values)
         while (!buf.isEmpty() && buf[0] == ' ') {
             buf.consume(1);
-            ++parsedCount_;
         }
     }
 #endif
@@ -98,7 +96,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
     int line_end = -1; // tracks the last byte BEFORE terminal \r\n or \n sequence
 
-    debugs(74, 5, "parsing possible request: buf.length=" << buf.length() << ", offset=" << parsedCount_);
+    debugs(74, 5, "parsing possible request: buf.length=" << buf.length());
     debugs(74, DBG_DATA, buf);
 
     // Single-pass parse: (provided we have the whole line anyways)
@@ -323,7 +321,6 @@ Http::One::RequestParser::parseRequestFirstLine()
 bool
 Http::One::RequestParser::parse(const SBuf &aBuf)
 {
-    parsedCount_ = 0;
     buf = aBuf;
     debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");
 
@@ -347,7 +344,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
         debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << method_ << ")");
         debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
         debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
-        debugs(74, 5, "Parser: bytes processed=" << parsedCount_);
+        debugs(74, 5, "Parser: bytes processed=" << (aBuf.length()-buf.length()));
         PROF_stop(HttpParserParseReqLine);
 
         // syntax errors already
@@ -358,8 +355,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
 
         // first-line (or a look-alike) found successfully.
         if (retcode > 0) {
-            buf.consume(firstLineSize());// first line bytes including CRLF terminator are now done.
-            parsedCount_ += firstLineSize();
+            buf.consume(firstLineSize()); // first line bytes including CRLF terminator are now done.
             parsingStage_ = HTTP_PARSE_MIME;
         }
     }
@@ -384,7 +380,6 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
             }
             mimeHeaderBlock_ = buf.substr(req.end+1, mimeHeaderBytes);
             buf.consume(mimeHeaderBytes); // done with these bytes now.
-            parsedCount_ += mimeHeaderBytes;
 
         } else
             debugs(33, 3, "Missing HTTP/1.x identifier");
