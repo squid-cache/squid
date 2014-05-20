@@ -1,5 +1,5 @@
 #include "squid.h"
-#include "Tokenizer.h"
+#include "parser/Tokenizer.h"
 
 bool
 Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
