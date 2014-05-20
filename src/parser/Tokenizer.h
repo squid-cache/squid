@@ -4,9 +4,7 @@
 #include "base/CharacterSet.h"
 #include "SBuf.h"
 
-/**
- * Generic protocol-agnostic parsing tools
- */
+/// Generic protocol-agnostic parsing tools
 namespace Parser {
 
 /**
