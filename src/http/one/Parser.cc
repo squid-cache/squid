@@ -7,7 +7,6 @@ Http::One::Parser::clear()
 {
     parsingStage_ = HTTP_PARSE_NONE;
     buf = NULL;
-    parsedCount_ = 0;
     msgProtocol_ = AnyP::ProtocolVersion();
     mimeHeaderBlock_.clear();
 }
