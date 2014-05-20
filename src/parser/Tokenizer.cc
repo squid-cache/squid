@@ -1,15 +1,13 @@
 #include "squid.h"
 #include "Tokenizer.h"
 
-namespace Parser {
-
 bool
-Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
+Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
     SBuf savebuf(buf_);
     SBuf saveRetVal(returnedToken);
     skip(delimiters);
-    if (!(prefix(returnedToken,delimiters))) {
+    if (!prefix(returnedToken,delimiters)) {
         buf_=savebuf;
         returnedToken=saveRetVal;
         return false;
@@ -19,7 +17,7 @@ Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 }
 
 bool
-Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
+Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
     SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
     if (prefixLen == 0)
@@ -29,7 +27,7 @@ Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBu
 }
 
 bool
-Tokenizer::skip(const CharacterSet &tokenChars)
+Parser::Tokenizer::skip(const CharacterSet &tokenChars)
 {
     SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
     if (prefixLen == 0)
@@ -39,7 +37,7 @@ Tokenizer::skip(const CharacterSet &tokenChars)
 }
 
 bool
-Tokenizer::skip(const SBuf &tokenToSkip)
+Parser::Tokenizer::skip(const SBuf &tokenToSkip)
 {
     if (buf_.startsWith(tokenToSkip)) {
         buf_.consume(tokenToSkip.length());
@@ -49,7 +47,7 @@ Tokenizer::skip(const SBuf &tokenToSkip)
 }
 
 bool
-Tokenizer::skip(const char tokenChar)
+Parser::Tokenizer::skip(const char tokenChar)
 {
     if (buf_[0] == tokenChar) {
         buf_.consume(1);
@@ -57,4 +55,3 @@ Tokenizer::skip(const char tokenChar)
     }
     return false;
 }
-} /* namespace Parser */
