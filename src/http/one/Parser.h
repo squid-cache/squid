@@ -78,9 +78,6 @@ protected:
     /// what stage the parser is currently up to
     ParseState parsingStage_;
 
-    /// total count of bytes parsed and consumed by the parser so far
-    size_t parsedCount_;
-
     /// what protocol label has been found in the first line (if any)
     AnyP::ProtocolVersion msgProtocol_;
 
