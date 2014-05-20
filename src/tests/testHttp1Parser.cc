@@ -7,7 +7,7 @@
 #define protected public
 
 #include "testHttp1Parser.h"
-#include "http/Http1Parser.h"
+#include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "Mem.h"
 #include "MemBuf.h"
