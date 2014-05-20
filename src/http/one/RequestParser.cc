@@ -339,8 +339,15 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
     if (parsingStage_ == HTTP_PARSE_FIRST) {
         PROF_start(HttpParserParseReqLine);
         const int retcode = parseRequestFirstLine();
+
+        // first-line (or a look-alike) found successfully.
+        if (retcode > 0) {
+            buf.consume(firstLineSize()); // first line bytes including CRLF terminator are now done.
+            parsingStage_ = HTTP_PARSE_MIME;
+        }
+
         debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end <<
-               " line={" << buf.length() << ", data='" << buf << "'}");
+               " line={" << aBuf.length() << ", data='" << aBuf << "'}");
         debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << method_ << ")");
         debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
         debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
@@ -351,12 +358,6 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
         if (retcode < 0) {
             parsingStage_ = HTTP_PARSE_DONE;
             return false;
-        }
-
-        // first-line (or a look-alike) found successfully.
-        if (retcode > 0) {
-            buf.consume(firstLineSize()); // first line bytes including CRLF terminator are now done.
-            parsingStage_ = HTTP_PARSE_MIME;
         }
     }
 
