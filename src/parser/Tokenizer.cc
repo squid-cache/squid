@@ -4,17 +4,17 @@
 namespace Parser {
 
 bool
-Tokenizer::token(SBuf &returnedToken, const CharacterSet &whitespace)
+Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
     SBuf savebuf(buf_);
     SBuf saveRetVal(returnedToken);
-    skip(whitespace);
-    if (!(prefix(returnedToken,whitespace))) {
+    skip(delimiters);
+    if (!(prefix(returnedToken,delimiters))) {
         buf_=savebuf;
         returnedToken=saveRetVal;
         return false;
     }
-    skip(whitespace);
+    skip(delimiters);
     return true;
 }
 
