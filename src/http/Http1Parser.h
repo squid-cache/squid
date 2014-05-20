@@ -69,6 +69,9 @@ public:
     int64_t messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
     /// buffer containing HTTP mime headers, excluding message first-line.
+    const SBuf mimeHeader() const {return mimeHeaderBlock_;}
+
+    /// char* version of mimeHeader()
     const char *rawHeaderBuf() {return mimeHeaderBlock_.c_str();}
 
     /// attempt to parse a message from the buffer
