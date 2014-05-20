@@ -2217,32 +2217,33 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
         }
     }
 
-    /* We know the whole request is in hp.buf now */
+    /* We know the whole request is in parser now */
+    debugs(11, 2, "HTTP Client " << csd->clientConnection);
+    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
+           hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol() << "\n" <<
+           hp.mimeHeader() <<
+           "\n----------");
 
     /* deny CONNECT via accelerated ports */
     if (hp.method() == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->transport.protocol << " Accelerator port " << csd->port->s.port());
-        /* XXX need a way to say "this many character length string" */
-        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp.buf);
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol());
         hp.request_parse_status = Http::scMethodNotAllowed;
         return parseHttpRequestAbort(csd, "error:method-not-allowed");
     }
 
     if (hp.method() == Http::METHOD_NONE) {
-        /* XXX need a way to say "this many character length string" */
-        debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp.buf << "'");
+        debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol());
         hp.request_parse_status = Http::scMethodNotAllowed;
         return parseHttpRequestAbort(csd, "error:unsupported-request-method");
     }
 
-    /*
-     * Process headers after request line
-     * TODO: Use httpRequestParse here.
-     */
-    debugs(33, 3, Raw("req_hdr", hp.rawHeaderBuf(), hp.headerBlockSize()));
-    debugs(33, 3, "prefix_sz = " << hp.messageHeaderSize() <<
+    // Process headers after request line
+    debugs(33, 3, "complete request received. " <<
+           "prefix_sz = " << hp.messageHeaderSize() <<
            ", request-line-size=" << hp.firstLineSize() <<
-           ", mime-header-size=" << hp.headerBlockSize());
+           ", mime-header-size=" << hp.headerBlockSize() <<
+           "mime header block:\n" << hp.mimeHeader() << "\n----------");
 
     /* Ok, all headers are received */
     ClientHttpRequest *http = new ClientHttpRequest(csd);
@@ -2259,8 +2260,6 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
-
-    debugs(33, 5, "parseHttpRequest: Request Header is\n" << hp.rawHeaderBuf());
 
     /* set url */
     const char *url = SBuf(hp.requestUri()).c_str();
@@ -2302,15 +2301,6 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
         http->uri = (char *)xcalloc(url_sz, 1);
         strcpy(http->uri, url);
     }
-
-    debugs(33, 5, "parseHttpRequest: Complete request received");
-
-    // XXX: crop this dump at the end of headers. No need for extras
-    debugs(11, 2, "HTTP Client " << csd->clientConnection);
-    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
-           hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol() << "\n" <<
-           hp.rawHeaderBuf() <<
-           "\n----------");
 
     result->flags.parsed_ok = 1;
     return result;
@@ -2576,7 +2566,7 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
     /* compile headers */
     if (http_ver.major >= 1 && !request->parseHeader(hp)) {
         clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Failed to parse request headers:\n" << hp.rawHeaderBuf());
+        debugs(33, 5, "Failed to parse request headers:\n" << hp.mimeHeader());
         conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
