@@ -41,7 +41,7 @@
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
-#include "http/Http1Parser.h"
+#include "http/one/RequestParser.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
