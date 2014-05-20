@@ -1,20 +1,10 @@
 #include "squid.h"
 #include "Debug.h"
-#include "http/Http1Parser.h"
-#include "http/RequestMethod.h"
+#include "http/one/RequestParser.h"
+#include "http/ProtocolVersion.h"
 #include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
-
-void
-Http::One::Parser::clear()
-{
-    parsingStage_ = HTTP_PARSE_NONE;
-    buf = NULL;
-    parsedCount_ = 0;
-    msgProtocol_ = AnyP::ProtocolVersion();
-    mimeHeaderBlock_.clear();
-}
 
 void
 Http::One::RequestParser::clear()
@@ -411,66 +401,4 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
     }
 
     return !needsMoreData();
-}
-
-// arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
-#define GET_HDR_SZ	1024
-
-char *
-Http::One::Parser::getHeaderField(const char *name)
-{
-    LOCAL_ARRAY(char, header, GET_HDR_SZ);
-    const char *p = NULL;
-    char *q = NULL;
-    char got = 0;
-    const int namelen = name ? strlen(name) : 0;
-
-    if (!headerBlockSize() || !name)
-        return NULL;
-
-    debugs(25, 5, "looking for '" << name << "'");
-
-    for (p = mimeHeader().c_str(); *p; p += strcspn(p, "\n\r")) {
-        if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
-            return NULL;
-
-        while (xisspace(*p))
-            ++p;
-
-        if (strncasecmp(p, name, namelen))
-            continue;
-
-        if (!xisspace(p[namelen]) && p[namelen] != ':')
-            continue;
-
-        int l = strcspn(p, "\n\r") + 1;
-
-        if (l > GET_HDR_SZ)
-            l = GET_HDR_SZ;
-
-        xstrncpy(header, p, l);
-
-        debugs(25, 5, "checking '" << header << "'");
-
-        q = header;
-
-        q += namelen;
-
-        if (*q == ':') {
-            ++q;
-            got = 1;
-        }
-
-        while (xisspace(*q)) {
-            ++q;
-            got = 1;
-        }
-
-        if (got) {
-            debugs(25, 5, "returning '" << q << "'");
-            return q;
-        }
-    }
-
-    return NULL;
 }
