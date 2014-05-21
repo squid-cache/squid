@@ -10,7 +10,12 @@ namespace Parser {
 /**
  * Lexical processor to tokenize a buffer.
  *
- * Allows arbitrary delimiters and token character sets to be provided by callers.
+ * Allows arbitrary delimiters and token character sets to
+ * be provided by callers.
+ *
+ * All methods start from the beginning of the input buffer.
+ * Methods returning true consume bytes from the buffer.
+ * Methods returning false have no side-effects.
  */
 class Tokenizer {
 public:
@@ -24,12 +29,6 @@ public:
 
    /// reinitialize processing for a new buffer
    void reset(const SBuf &newBuf) { buf_ = newBuf; }
-
-   /*
-    * The following methods start from the beginning of the input buffer.
-    * They return true and consume parsed chars if a non-empty token is found.
-    * Otherwise, they return false without any side-effects.
-    */
 
    /** Basic strtok(3):
     *  Skips all leading delimiters (if any),
