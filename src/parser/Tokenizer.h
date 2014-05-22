@@ -64,6 +64,22 @@ public:
     */
    bool skip(const char tokenChar);
 
+   /** parse an unsigned int64_t at the beginning of the buffer
+    *
+    * strtoull(3)-alike function: tries to parse unsigned 64-bit integer
+    * at the beginning of the parse buffer, in the base specified by the user
+    * or guesstimated; consumes the parsed characters.
+    *
+    * \param result output value. Not touched if parseing is unsuccessful
+    * \param base specify base to do the parsing in. Admitted values are
+    *   8, 10, 16 and 0, the latter specifying to use C syntax for guessing
+    *   the base
+    * \return true if the parsing was successful
+    */
+   bool uint64 (uint64_t & result, int base);
+
+   bool int64 (int64_t &result, int base);
+
 private:
    SBuf buf_; ///< yet unparsed input
 };
