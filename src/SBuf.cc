@@ -498,6 +498,7 @@ SBuf::consume(size_type n)
         n = length();
     else
         n = min(n, length());
+    debugs(24, 8, "consume " << n);
     SBuf rv(substr(0, n));
     chop(n);
     return rv;

@@ -508,21 +508,20 @@ urlCanonical(HttpRequest * request)
             snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
             break;
 
-        default:
-            {
-                portbuf[0] = '\0';
+        default: {
+            portbuf[0] = '\0';
 
-                if (request->port != urlDefaultPort(request->url.getScheme()))
-                    snprintf(portbuf, 32, ":%d", request->port);
+            if (request->port != urlDefaultPort(request->url.getScheme()))
+                snprintf(portbuf, 32, ":%d", request->port);
 
-                snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
-                         request->url.getScheme().c_str(),
-                         request->login,
-                         *request->login ? "@" : null_string,
-                         request->GetHost(),
-                         portbuf,
-                         SQUIDSTRINGPRINT(request->urlpath));
-            }
+            snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
+                     request->url.getScheme().c_str(),
+                     request->login,
+                     *request->login ? "@" : null_string,
+                     request->GetHost(),
+                     portbuf,
+                     SQUIDSTRINGPRINT(request->urlpath));
+        }
         }
     }
 
@@ -551,36 +550,35 @@ urlCanonicalClean(const HttpRequest * request)
             snprintf(buf, MAX_URL, "%s:%d", request->GetHost(), request->port);
             break;
 
-        default:
-            {
-                portbuf[0] = '\0';
+        default: {
+            portbuf[0] = '\0';
 
-                if (request->port != urlDefaultPort(request->url.getScheme()))
-                    snprintf(portbuf, 32, ":%d", request->port);
+            if (request->port != urlDefaultPort(request->url.getScheme()))
+                snprintf(portbuf, 32, ":%d", request->port);
 
-                loginbuf[0] = '\0';
+            loginbuf[0] = '\0';
 
-                if ((int) strlen(request->login) > 0) {
-                    strcpy(loginbuf, request->login);
+            if ((int) strlen(request->login) > 0) {
+                strcpy(loginbuf, request->login);
 
-                    if ((t = strchr(loginbuf, ':')))
-                        *t = '\0';
+                if ((t = strchr(loginbuf, ':')))
+                    *t = '\0';
 
-                    strcat(loginbuf, "@");
-                }
-
-                snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
-                         request->url.getScheme().c_str(),
-                         loginbuf,
-                         request->GetHost(),
-                         portbuf,
-                         SQUIDSTRINGPRINT(request->urlpath));
-
-                // strip arguments AFTER a question-mark
-                if (Config.onoff.strip_query_terms)
-                    if ((t = strchr(buf, '?')))
-                        *(++t) = '\0';
+                strcat(loginbuf, "@");
             }
+
+            snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
+                     request->url.getScheme().c_str(),
+                     loginbuf,
+                     request->GetHost(),
+                     portbuf,
+                     SQUIDSTRINGPRINT(request->urlpath));
+
+            // strip arguments AFTER a question-mark
+            if (Config.onoff.strip_query_terms)
+                if ((t = strchr(buf, '?')))
+                    *(++t) = '\0';
+        }
         }
     }
 
