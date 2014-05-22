@@ -1149,7 +1149,7 @@ IF USE_OPENSSL
 	  # The SHA1 digest algorithm is the default and is currently
 	  # the only algorithm supported (-sha1).
 
-	acl aclname atstep step
+	acl aclname at_step step
 	  # match against the current step during ssl_bump evaluation [fast]
 	  # Never matches and should not be used outside the ssl_bump context.
 	  #
@@ -2507,12 +2507,12 @@ DOC_START
 	steps.  Rules with actions that are impossible at the current step are
 	ignored. The first matching ssl_bump action wins and is applied at the
 	end of the current step. If no rules match, the splice action is used.
-	See atstep ACL for a list of the supported SslBump steps.
+	See the at_step ACL for a list of the supported SslBump steps.
 
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-	See also: http_port ssl-bump, https_port ssl-bump, and atstep ACL.
+	See also: http_port ssl-bump, https_port ssl-bump, and acl at_step.
 
 
 	# Example: Bump all requests except those originating from
