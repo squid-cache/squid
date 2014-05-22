@@ -136,7 +136,7 @@ Ssl::PeerConnector::initializeSsl()
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
 
-    } else if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice) {
+    } else if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) {
         SSL *clientSsl = fd_table[request->clientConnectionManager->clientConnection->fd].ssl;
         BIO *b = SSL_get_rbio(clientSsl);
         Ssl::ClientBio *clnBio = static_cast<Ssl::ClientBio *>(b->ptr);
@@ -151,11 +151,13 @@ Ssl::PeerConnector::initializeSsl()
             if (features.compressMethod == 0)
                 SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
 #endif
+            // Should we allow it for all protocols?
             if (features.sslVersion >= 3) {
                 b = SSL_get_rbio(ssl);
                 Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
                 srvBio->setClientFeatures(features);
                 srvBio->recordInput(true);
+                srvBio->mode(request->clientConnectionManager->sslBumpMode);
             }
         }
     } else {
@@ -277,23 +279,41 @@ Ssl::PeerConnector::cbCheckForPeekAndSplice(allow_t answer, void *data)
 bool
 Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode)
 {
+    // Mark Step3 of bumping
+    if (request->clientConnectionManager.valid()) {
+        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+            serverBump->step = Ssl::bumpStep3;
+        }
+    }
+
+    if (!checkDone) {
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
+            ::Config.accessList.ssl_bump,
+            request.getRaw(), NULL);
+        acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSplice, this);
+        return false;
+    }
+    
     SSL *ssl = fd_table[serverConn->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     debugs(83,5, "Will check for peek and splice on fd " << serverConn->fd);
-    bool splice;
-    if (!srvBio->canSplice())
-        splice = false;
-    else if (!checkDone) {
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
-                           ::Config.accessList.ssl_bump_peeked,
-                           request.getRaw(), NULL);
-        acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSplice, this);
-        return false;
-    } else
-        splice = (peekMode == Ssl::bumpSplice);
 
-    if (!splice) {
+    // bump, peek, stare, server-first,client-first are all mean bump the connection
+    if (peekMode < Ssl::bumpSplice)
+        peekMode = Ssl::bumpBump;
+
+#if 1 || SSL_BUMP_FORCE_PEEK_OR_SPLICE 
+    if (peekMode == Ssl::bumpSplice && !srvBio->canSplice())
+        peekMode = Ssl::bumpPeek;
+    else if (peekMode == Ssl::bumpBump && !srvBio->canBump())
+        peekMode = Ssl::bumpSplice;
+#endif
+
+    if (peekMode == Ssl::bumpTerminate || peekMode == Ssl::bumpErr) {
+        comm_close(serverConn->fd);
+        comm_close(clientConn->fd);
+    } else if (peekMode != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
@@ -306,6 +326,7 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
         switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
         return false;
     }
+    return false;
 }
 
 void
@@ -455,7 +476,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
             return;
 
         case SSL_ERROR_WANT_WRITE:
-            if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice && srvBio->holdWrite()) {
+            if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
                 debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
                 checkForPeekAndSplice(false, Ssl::bumpNone);
                 return;
@@ -473,7 +494,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
             // If the checklist decision is do not splice a new error will
             // occure in the next SSL_connect call, and we will fail again.
 #if 1
-            if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeekAndSplice && srvBio->holdWrite()) {
+            if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
                 debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error but, hold write on SSL connection on FD " << fd);
                 checkForPeekAndSplice(false, Ssl::bumpNone);
                 return;

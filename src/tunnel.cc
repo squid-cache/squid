@@ -56,6 +56,7 @@
 #if USE_OPENSSL
 #include "ssl/bio.h"
 #include "ssl/PeerConnector.h"
+#include "ssl/ServerBump.h"
 #endif
 #include "tools.h"
 #if USE_DELAY_POOLS
@@ -119,6 +120,11 @@ public:
 
     /// Whether the client sent a CONNECT request to us.
     bool clientExpectsConnectResponse() const {
+#if USE_OPENSSL
+        // We are bumping and we had already send "OK CONNECTED"
+        if (http.valid() && http->getConn() && http->getConn()->serverBump() && http->getConn()->serverBump()->step > Ssl::bumpStep1)
+            return false;
+#endif
         return !(request != NULL &&
                  (request->flags.interceptTproxy || request->flags.intercepted));
     }
@@ -1153,13 +1159,26 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     fd_table[srvConn->fd].read_method = &default_read_method;
     fd_table[srvConn->fd].write_method = &default_write_method;
 
-    SSL *ssl = fd_table[srvConn->fd].ssl;
-    assert(ssl);
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    const MemBuf &buf = srvBio->rBufData();
+    ConnStateData *conn;
+    if ((conn = request->pinnedConnection()) && conn->serverBump() && conn->serverBump()->step == Ssl::bumpStep2) {
+        SSL *ssl = fd_table[clientConn->fd].ssl;
+        assert(ssl);
+        BIO *b = SSL_get_rbio(ssl);
+        Ssl::ClientBio *srvBio = static_cast<Ssl::ClientBio *>(b->ptr);
+        const MemBuf &buf = srvBio->rBufData();
 
-    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
-    Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
+        AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                             CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+        Comm::Write(tunnelState->server.conn, buf.content(), buf.contentSize(), call, NULL);
+    } else {
+        SSL *ssl = fd_table[srvConn->fd].ssl;
+        assert(ssl);
+        BIO *b = SSL_get_rbio(ssl);
+        Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+        const MemBuf &buf = srvBio->rBufData();
+
+        AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                             CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+        Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
+    }
 }

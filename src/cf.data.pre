@@ -1148,6 +1148,12 @@ IF USE_OPENSSL
 	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
 	  # the only algorithm supported (-sha1).
+
+	acl aclname atstep step
+	  # match against SSL bumping step. Valid SSL bumping step values:
+	  # step1: Get TCP-level and CONNECT info.
+	  # step2: Get SSL Client Hello info.
+	  # step3: Get SSL Server Hello info.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -2445,6 +2451,30 @@ DOC_START
 	ssl_bump <mode> [!]acl ...
 
 	The following bumping modes are supported:
+	    splice
+		Become a TCP tunnel without decoding the connection.
+
+	    bump
+		Establish a secure connection with the server and, using a
+		mimicked server certificate, with the client.
+
+	    peek
+		Receive client (step1) or server (step2) certificate while
+		preserving the possibility of splicing the connection. Peeking
+		at the server certificate usually precludes future bumping of
+		the connection. This action is the focus of this project.
+
+	    stare
+		Receive client (step1) or server (step2) certificate while
+		preserving the possibility of bumping the connection. Staring
+		at the server certificate usually precludes future splicing of
+		the connection. Currently, we are not aware of any work being
+		done to support this action.
+
+	    terminate
+		Close client and server connections.
+
+	Compatibility modes:
 
 	    client-first
 		Allow bumping of the connection. Establish a secure connection
@@ -2489,29 +2519,6 @@ DOC_START
 	ssl_bump none localhost
 	ssl_bump none broken_sites
 	ssl_bump server-first all
-DOC_END
-
-NAME: ssl_bump_peeked
-IFDEF: USE_OPENSSL
-TYPE: sslproxy_ssl_bump_peeked
-LOC: Config.accessList.ssl_bump_peeked
-DEFAULT: none
-DOC_START
-	This option used to control splicing decision after we peek at the
-	certificates
-
-	ssl_bump_peeked <mode> [!]acl ...
-
-	The following peeked modes are supported:
-
-	server-first
-		Allow bumping the connection
-
-	splice
-		Do not bump the connection if possible.
-
-	ssl_bump_peeked server-first safeToBump
-	ssl_bump_peeked splice all
 DOC_END
 
 NAME: sslproxy_flags

@@ -306,13 +306,14 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 }
 
 bool
-adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
+adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
 {
+    bool fail = false;
     // If the client supports compression but our context does not support
     // we can not adjust.
     if (features.compressMethod && ssl->ctx->comp_methods == NULL) {
         debugs(83, 5, "Client Hello Data supports compression, but we do not!");
-        return false;
+        fail = true;
     }
 
     //Check ciphers list
@@ -335,14 +336,14 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
       }
       if (!found) {
           debugs(83, 5, "Client Hello Data supports cipher '"<< cipher <<"' but we do not support it!");
-          return false;
+          fail = true;
       }
     }
 
 #if !defined(SSL_TLSEXT_HB_ENABLED)
     if (features.doHeartBeats) {
         debugs(83, 5, "Client Hello Data supports HeartBeats but we do not support!");
-        return false;
+        fail = true;
     }
 #endif
 
@@ -387,12 +388,18 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
         }
         if (!found) {
             debugs(83, 5, "Extension " << *it <<  " does not supported!");
-            return false;
+            fail = true ;
         }
     }
 
+    if (fail && !force)
+        return false;
 
-    debugs(83, 5, "Hello Data are OK and can be mimicked!");
+    if (fail) {
+        debugs(83, 5, "Hello Data are OK but can not be bumped any more!");
+    }
+        
+    debugs(83, 5, "Hello Data will be mimicked!");
 
     //Adjust ssl structure data.
 
@@ -412,7 +419,7 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
     ssl->init_num = mainHelloSize;
     ssl->s3->wpend_ret = mainHelloSize;
     ssl->s3->wpend_tot = mainHelloSize;
-    return true;
+    return !fail;
 }
 
 int
@@ -425,7 +432,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         return -1;
     }
 
-    if (!helloBuild) {
+    if (!helloBuild && (bumpMode_ == Ssl::bumpPeek || bumpMode_ == Ssl::bumpStare)) {
         if (helloMsg.isNull())
             helloMsg.init(1024, 16384);
 
@@ -439,11 +446,17 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
 
             SSL *ssl = fd_table[fd_].ssl;
             if (featuresSet && ssl && ssl->s3) {
-                if (adjustSSL(ssl, clientFeatures)) {
+                if (bumpMode_ == Ssl::bumpPeek) {
+                    if (adjustSSL(ssl, clientFeatures, true))
+                        allowBump = true;
                     allowSplice = true;
-                    helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
-                    debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted");
+                } else { /*Ssl::bumpStare*/
+                    allowBump = true;
+                    if (adjustSSL(ssl, clientFeatures, false))
+                        allowSplice = true;
                 }
+                helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
+                debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted");
             }
         }
         // If we do not build any hello message, copy the current
@@ -452,6 +465,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
 
         helloBuild = true;
         helloMsgSize = helloMsg.contentSize();
+        //allowBump = true;
 
         if (allowSplice) {
         // Do not write yet.....
