@@ -1150,10 +1150,15 @@ IF USE_OPENSSL
 	  # the only algorithm supported (-sha1).
 
 	acl aclname atstep step
-	  # match against SSL bumping step. Valid SSL bumping step values:
-	  # SslBump1: Get TCP-level and CONNECT info.
-	  # SslBump2: Get SSL Client Hello info.
-	  # SslBump3: Get SSL Server Hello info.
+	  # match against the current step during ssl_bump evaluation [fast]
+	  # Never matches and should not be used outside the ssl_bump context.
+	  #
+	  # At each SslBump step, Squid evaluates ssl_bump directives to find
+	  # the next bumping action (e.g., peek or splice). Valid SslBump step
+	  # values and the corresponding ssl_bump evaluation moments are:
+	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
+	  #   SslBump2: After getting SSL Client Hello info.
+	  #   SslBump3: After getting SSL Server Hello info.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -2438,7 +2443,7 @@ NAME: ssl_bump
 IFDEF: USE_OPENSSL
 TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
-DEFAULT_DOC: Does not bump unless rules are present in squid.conf
+DEFAULT_DOC: Become a TCP tunnel without decrypting proxied traffic.
 DEFAULT: none
 DOC_START
 	This option is consulted when a CONNECT request is received on
@@ -2446,79 +2451,77 @@ DOC_START
 	https_port), provided that port was configured with an ssl-bump
 	flag. The subsequent data on the connection is either treated as
 	HTTPS and decrypted OR tunneled at TCP level without decryption,
-	depending on the first bumping "mode" which ACLs match.
+	depending on the first matching bumping "action".
 
-	ssl_bump <mode> [!]acl ...
+	ssl_bump <action> [!]acl ...
 
-	The following bumping modes are supported:
+	The following bumping actions are currently supported:
+
 	    splice
-		Become a TCP tunnel without decoding the connection.
+		Become a TCP tunnel without decrypting proxied traffic.
+		This is the default action.
 
 	    bump
 		Establish a secure connection with the server and, using a
 		mimicked server certificate, with the client.
 
 	    peek
-		Receive client (step1) or server (step2) certificate while
-		preserving the possibility of splicing the connection. Peeking
-		at the server certificate usually precludes future bumping of
-		the connection. This action is the focus of this project.
+		Receive client (step SslBump1) or server (step SslBump2)
+		certificate while preserving the possibility of splicing the
+		connection. Peeking at the server certificate (during step 2)
+		usually precludes bumping of the connection at step 3.
 
 	    stare
-		Receive client (step1) or server (step2) certificate while
-		preserving the possibility of bumping the connection. Staring
-		at the server certificate usually precludes future splicing of
-		the connection. Currently, we are not aware of any work being
-		done to support this action.
+		Receive client (step SslBump1) or server (step SslBump2)
+		certificate while preserving the possibility of bumping the
+		connection. Staring at the server certificate (during step 2)
+		usually precludes splicing of the connection at step 3.
 
 	    terminate
 		Close client and server connections.
 
-	Compatibility modes:
+	Backward compatibility actions available at step SslBump1:
 
 	    client-first
-		Allow bumping of the connection. Establish a secure connection
-		with the client first, then connect to the server. This old mode
-		does not allow Squid to mimic server SSL certificate and does
-		not work with intercepted SSL connections.
+		Bump the connection. Establish a secure connection with the
+		client first, then connect to the server. This old mode does
+		not allow Squid to mimic server SSL certificate and does not
+		work with intercepted SSL connections.
 
 	    server-first
-		Allow bumping of the connection. Establish a secure connection
-		with the server first, then establish a secure connection with
-		the client, using a mimicked server certificate. Works with both
-		CONNECT requests and intercepted SSL connections.
+		Bump the connection. Establish a secure connection with the
+		server first, then establish a secure connection with the
+		client, using a mimicked server certificate. Works with both
+		CONNECT requests and intercepted SSL connections, but does
+		not allow to make decisions based on SSL handshake info.
 
-	   peek-and-splice
-		Decides if the connection should bumped or not based on 
+	    peek-and-splice
+		Decide whether to bump or splice the connection based on 
 		client-to-squid and server-to-squid SSL hello messages.
+		XXX: Remove.
 
 	    none
-		Become a TCP tunnel without decoding the connection.
-		Works with both CONNECT requests and intercepted SSL
-		connections. This is the default behavior when no
-		ssl_bump option is given or no ssl_bump ACLs match.
+		Same as the "splice" action.
 
-	By default, no connections are bumped.
-
-	The first matching ssl_bump option wins. If no ACLs match, the
-	connection is not bumped. Unlike most allow/deny ACL lists, ssl_bump
-	does not have an implicit "negate the last given option" rule. You
-	must make that rule explicit if you convert old ssl_bump allow/deny
-	rules that rely on such an implicit rule.
+	All ssl_bump rules are evaluated at each of the supported bumping
+	steps.  Rules with actions that are impossible at the current step are
+	ignored. The first matching ssl_bump action wins and is applied at the
+	end of the current step. If no rules match, the splice action is used.
+	See atstep ACL for a list of the supported SslBump steps.
 
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-	See also: http_port ssl-bump, https_port ssl-bump
+	See also: http_port ssl-bump, https_port ssl-bump, and atstep ACL.
 
 
 	# Example: Bump all requests except those originating from
 	# localhost or those going to example.com.
 
 	acl broken_sites dstdomain .example.com
-	ssl_bump none localhost
-	ssl_bump none broken_sites
-	ssl_bump server-first all
+	ssl_bump splice localhost
+	ssl_bump splice broken_sites
+	ssl_bump bump all
 DOC_END
 
 NAME: sslproxy_flags
