@@ -48,9 +48,9 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "Generic.h"
 #include "mgr/Registration.h"
 #include "Store.h"
-#include "Generic.h"
 
 #include <climits>
 #if USE_CBDATA_DEBUG

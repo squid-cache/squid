@@ -183,13 +183,14 @@ private:
         typedef void (TunnelStateData::*Method)(Ssl::PeerConnectorAnswer &);
 
         MyAnswerDialer(Method method, TunnelStateData *tunnel):
-                       method_(method), tunnel_(tunnel), answer_() {}
+                method_(method), tunnel_(tunnel), answer_() {}
 
         /* CallDialer API */
         virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
         void dial(AsyncCall &call) { ((&(*tunnel_))->*method_)(answer_); }
         virtual void print(std::ostream &os) const {
-            os << '(' << tunnel_.get() << ", " << answer_ << ')'; }
+            os << '(' << tunnel_.get() << ", " << answer_ << ')';
+        }
 
         /* Ssl::PeerConnector::CbDialer API */
         virtual Ssl::PeerConnectorAnswer &answer() { return answer_; }
@@ -955,7 +956,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
 }
 
 void
-TunnelStateData::connectToPeer() {
+TunnelStateData::connectToPeer()
+{
     const Comm::ConnectionPointer &srv = server.conn;
     const Comm::ConnectionPointer &cln = client.conn;
 
@@ -963,8 +965,8 @@ TunnelStateData::connectToPeer() {
     if (CachePeer *p = srv->getPeer()) {
         if (p->use_ssl) {
             AsyncCall::Pointer callback = asyncCall(5,4,
-                "TunnelStateData::ConnectedToPeer",
-                MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
+                                                    "TunnelStateData::ConnectedToPeer",
+                                                    MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
             Ssl::PeerConnector *connector =
                 new Ssl::PeerConnector(request, srv, cln, callback);
             AsyncJob::Start(connector); // will call our callback

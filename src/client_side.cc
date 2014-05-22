@@ -3632,9 +3632,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         connState->clientConnection->local.toUrl(ip, sizeof(ip));
-        SBuf reqStr;
-        reqStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
-        bool ret = connState->handleReadData(&reqStr);
+        connState->in.buf.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        bool ret = connState->handleReadData(&connState->in.buf);
         if (ret)
             ret = connState->clientParseRequests();
 

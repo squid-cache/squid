@@ -54,6 +54,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_mem.cc \
 	tests/stub_mem_node.cc \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_redirect.cc \
 	tests/stub_stat.cc \
