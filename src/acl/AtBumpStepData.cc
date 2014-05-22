@@ -32,9 +32,9 @@ ACLAtStepData::dump() const
 {
     SBufList sl;
     for (std::list<Ssl::BumpStep>::const_iterator it = values.begin(); it != values.end(); ++it) {
-        sl.push_back(SBuf(*it == Ssl::bumpStep1 ? "step1" : 
-                          *it == Ssl::bumpStep2 ? "step2" : 
-                          *it == Ssl::bumpStep3 ? "step3" : "???"));
+        sl.push_back(SBuf(*it == Ssl::bumpStep1 ? "SslBump1" : 
+                          *it == Ssl::bumpStep2 ? "SslBump2" : 
+                          *it == Ssl::bumpStep3 ? "SslBump3" : "???"));
     }
     return sl;
 }
@@ -43,11 +43,11 @@ void
 ACLAtStepData::parse()
 {
     while (const char *t = strtokFile()) {
-        if (strcasecmp(t, "step1") == 0) {
+        if (strcasecmp(t, "SslBump1") == 0) {
             values.push_back(Ssl::bumpStep1);
-        } else if (strcasecmp(t, "step2") == 0) {
+        } else if (strcasecmp(t, "SslBump2") == 0) {
             values.push_back(Ssl::bumpStep2);
-        } else if (strcasecmp(t, "step3") == 0) {
+        } else if (strcasecmp(t, "SslBump3") == 0) {
             values.push_back(Ssl::bumpStep3);
         } else {
             debugs(28, DBG_CRITICAL, "FATAL: invalid AtStep step: " << t);
