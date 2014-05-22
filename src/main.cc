@@ -292,7 +292,11 @@ usage(void)
 #if USE_WIN32_SERVICE
             "       -i        Installs as a Windows Service (see -n option).\n"
 #endif
-            "       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check|parse\n"
+            "       -k reconfigure|rotate|shutdown|"
+#ifdef SIGTTIN
+            "restart|"
+#endif
+            "interrupt|kill|debug|check|parse\n"
             "                 Parse configuration file, then send signal to \n"
             "                 running copy (except -k parse) and exit.\n"
             "       -n name   Specify service name to use for service operations\n"
@@ -497,7 +501,7 @@ mainParseOptions(int argc, char *argv[])
                 fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
 
-            } 
+            }
             break;
 
         case 'n':

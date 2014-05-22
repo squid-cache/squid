@@ -69,7 +69,9 @@
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "Parsing.h"
+#include "pconn.h"
 #include "PeerDigest.h"
+#include "PeerPoolMgr.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SBufList.h"
@@ -724,6 +726,7 @@ configDoConfigure(void)
 #endif
 
     storeConfigure();
+    update_maxobjsize(); // check for late maximum_object_size directive
 
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
              uniqueHostname(),
@@ -2267,6 +2270,8 @@ parse_peer(CachePeer ** head)
             p->options.allow_miss = true;
         } else if (!strncmp(token, "max-conn=", 9)) {
             p->max_conn = xatoi(token + 9);
+        } else if (!strncmp(token, "standby=", 8)) {
+            p->standby.limit = xatoi(token + 8);
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
@@ -2340,6 +2345,9 @@ parse_peer(CachePeer ** head)
     if (peerFindByName(p->name))
         fatalf("ERROR: cache_peer %s specified twice\n", p->name);
 
+    if (p->max_conn > 0 && p->max_conn < p->standby.limit)
+        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+
     if (p->weight < 1)
         p->weight = 1;
 
@@ -2384,6 +2392,9 @@ free_peer(CachePeer ** P)
         cbdataReferenceDone(p->digest);
 #endif
 
+        // the mgr job will notice that its owner is gone and stop
+        PeerPoolMgr::Checkpoint(p->standby.mgr, "peer gone");
+        delete p->standby.pool;
         cbdataFree(p);
     }
 
@@ -4836,7 +4847,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
     bool ftpEpsvIsDeprecatedRule = false;
 
     char *t = ConfigParser::PeekAtToken();
-    if (!t){
+    if (!t) {
         self_destruct();
         return;
     }
@@ -4856,7 +4867,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
     //   2) if this line is "ftp_epsv on|off" and already exist rules of "ftp_epsv allow|deny ..."
     // then abort
     if ((!ftpEpsvIsDeprecatedRule && FtpEspvDeprecated) ||
-        (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != NULL)) {
+            (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != NULL)) {
         debugs(3, DBG_CRITICAL, "FATAL: do not mix \"ftp_epsv on|off\" cfg lines with \"ftp_epsv allow|deny ...\" cfg lines. Update your ftp_epsv rules.");
         self_destruct();
     }

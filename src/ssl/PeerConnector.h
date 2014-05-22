@@ -29,22 +29,25 @@
 #ifndef SQUID_SSL_PEER_CONNECTOR_H
 #define SQUID_SSL_PEER_CONNECTOR_H
 
-#include "base/AsyncJob.h"
+#include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/AsyncJob.h"
 #include "ssl/support.h"
 #include <iosfwd>
 
 class HttpRequest;
 class ErrorState;
 
-namespace Ssl {
+namespace Ssl
+{
 
 class ErrorDetail;
 class CertValidationResponse;
 
 /// PeerConnector results (supplied via a callback).
 /// The connection to peer was secured if and only if the error member is nil.
-class PeerConnectorAnswer {
+class PeerConnectorAnswer
+{
 public:
     ~PeerConnectorAnswer(); ///< deletes error if it is still set
     Comm::ConnectionPointer conn; ///< peer connection (secured on success)
@@ -80,12 +83,13 @@ public:
  \par
  * This job never closes the connection, even on errors. If a 3rd-party
  * closes the connection, this job simply quits without informing the caller.
-*/ 
+*/
 class PeerConnector: virtual public AsyncJob
 {
 public:
     /// Callback dialier API to allow PeerConnector to set the answer.
-    class CbDialer {
+    class CbDialer
+    {
     public:
         virtual ~CbDialer() {}
         /// gives PeerConnector access to the in-dialer answer
@@ -140,7 +144,7 @@ private:
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
 
-    void bail(ErrorState *error); ///< Return an error to the PeerConnector caller 
+    void bail(ErrorState *error); ///< Return an error to the PeerConnector caller
 
     /// Callback the caller class, and pass the ready to communicate secure
     /// connection or an error if PeerConnector failed.
@@ -170,8 +174,8 @@ private:
     CBDATA_CLASS2(PeerConnector);
 };
 
-} // namespace Ssl
-
 std::ostream &operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &a);
+
+} // namespace Ssl
 
 #endif /* SQUID_PEER_CONNECTOR_H */

@@ -65,8 +65,8 @@ Auth::UserRequest::start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTH
 {
     assert(handler);
     assert(data);
-    debugs(29, 9, HERE << "auth_user_request '" << this << "'");
-    module_start(request, al, handler, data);
+    debugs(29, 9, this);
+    startHelperLookup(request, al, handler, data);
 }
 
 bool

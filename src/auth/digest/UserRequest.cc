@@ -272,7 +272,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
 
 /* send the initial data to a digest authenticator module */
 void
-Auth::Digest::UserRequest::module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
+Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     char buf[8192];
 

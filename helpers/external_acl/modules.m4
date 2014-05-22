@@ -27,6 +27,9 @@ if test "x$enable_external_acl_helpers" != "xno" ; then
       elif test "x$helper" = "xLM_group" ; then
         m4_include([helpers/external_acl/LM_group/required.m4])
 
+      elif test "x$helper" = "xdelayer" ; then
+        m4_include([helpers/external_acl/delayer/required.m4])
+
       elif test "x$helper" = "xSQL_session" ; then
         m4_include([helpers/external_acl/SQL_session/required.m4])
 

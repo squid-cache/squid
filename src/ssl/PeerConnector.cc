@@ -23,7 +23,6 @@
 #include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
-#include "SquidConfig.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 
@@ -32,11 +31,11 @@ Ssl::PeerConnector::PeerConnector(
     const Comm::ConnectionPointer &aServerConn,
     const Comm::ConnectionPointer &aClientConn,
     AsyncCall::Pointer &aCallback):
-    AsyncJob("Ssl::PeerConnector"),
-    request(aRequest),
-    serverConn(aServerConn),
-    clientConn(aClientConn),
-    callback(aCallback)
+        AsyncJob("Ssl::PeerConnector"),
+        request(aRequest),
+        serverConn(aServerConn),
+        clientConn(aClientConn),
+        callback(aCallback)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -137,6 +136,9 @@ Ssl::PeerConnector::initializeSsl()
             SSL_set_session(ssl, peer->sslSession);
 
     } else if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) {
+        // client connection is required for Peek or Stare mode in the case we need to splice
+        // or terminate client and server connections
+        assert(clientConn != NULL);
         SSL *clientSsl = fd_table[request->clientConnectionManager->clientConnection->fd].ssl;
         BIO *b = SSL_get_rbio(clientSsl);
         Ssl::ClientBio *clnBio = static_cast<Ssl::ClientBio *>(b->ptr);
@@ -464,56 +466,56 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
 #ifdef EPROTO
-        int sysErrNo = EPROTO;
+    int sysErrNo = EPROTO;
 #else
-        int sysErrNo = EACCES;
+    int sysErrNo = EACCES;
 #endif
 
-        switch (ssl_error) {
+    switch (ssl_error) {
 
-        case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
+    case SSL_ERROR_WANT_READ:
+        Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
+        return;
+
+    case SSL_ERROR_WANT_WRITE:
+        if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
+            debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
+            checkForPeekAndSplice(false, Ssl::bumpNone);
             return;
-
-        case SSL_ERROR_WANT_WRITE:
-            if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
-                debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
-                checkForPeekAndSplice(false, Ssl::bumpNone);
-                return;
-            }
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
-            return;
-
-        case SSL_ERROR_SSL:
-        case SSL_ERROR_SYSCALL:
-            ssl_lib_error = ERR_get_error();
-
-            // If we are in peek-and-splice mode and still we did not write to
-            // server yet, try to see if we should splice.
-            // In this case the connection can be saved.
-            // If the checklist decision is do not splice a new error will
-            // occure in the next SSL_connect call, and we will fail again.
-#if 1
-            if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
-                debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error but, hold write on SSL connection on FD " << fd);
-                checkForPeekAndSplice(false, Ssl::bumpNone);
-                return;
-            }
-#endif
-
-            // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
-            if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
-                sysErrNo = errno;
-
-            debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
-                   ": " << ERR_error_string(ssl_lib_error, NULL) << " (" <<
-                   ssl_error << "/" << ret << "/" << errno << ")");
-
-            break; // proceed to the general error handling code
-
-        default:
-            break; // no special error handling for all other errors
         }
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
+        return;
+
+    case SSL_ERROR_SSL:
+    case SSL_ERROR_SYSCALL:
+        ssl_lib_error = ERR_get_error();
+
+        // If we are in peek-and-splice mode and still we did not write to
+        // server yet, try to see if we should splice.
+        // In this case the connection can be saved.
+        // If the checklist decision is do not splice a new error will
+        // occure in the next SSL_connect call, and we will fail again.
+#if 1
+        if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
+            debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error but, hold write on SSL connection on FD " << fd);
+            checkForPeekAndSplice(false, Ssl::bumpNone);
+            return;
+        }
+#endif
+
+        // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
+        if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
+            sysErrNo = errno;
+
+        debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
+               ": " << ERR_error_string(ssl_lib_error, NULL) << " (" <<
+               ssl_error << "/" << ret << "/" << errno << ")");
+
+        break; // proceed to the general error handling code
+
+    default:
+        break; // no special error handling for all other errors
+    }
 
     ErrorState *const anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request.getRaw());
     anErr->xerrno = sysErrNo;
@@ -605,7 +607,6 @@ Ssl::PeerConnector::callBack()
     ScheduleCallHere(cb);
 }
 
-
 void
 Ssl::PeerConnector::swanSong()
 {
@@ -643,7 +644,7 @@ Ssl::PeerConnectorAnswer::~PeerConnectorAnswer()
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &answer)
+Ssl::operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &answer)
 {
     return os << answer.conn << ", " << answer.error;
 }

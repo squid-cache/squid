@@ -475,7 +475,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             const char *spec;
 
             struct tm *t;
-            spec = fmt->data.timespec;
+            spec = fmt->data.string;
 
             if (fmt->type == LFT_TIME_LOCALTIME) {
                 if (!spec)
@@ -931,10 +931,24 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
+        case LFT_CLIENT_REQ_URLSCHEME:
+            if (al->request) {
+                out = al->request->url.getScheme().c_str();
+                quote = 1;
+            }
+            break;
+
         case LFT_CLIENT_REQ_URLDOMAIN:
             if (al->request) {
                 out = al->request->GetHost();
                 quote = 1;
+            }
+            break;
+
+        case LFT_CLIENT_REQ_URLPORT:
+            if (al->request) {
+                outint = al->request->port;
+                doint = 1;
             }
             break;
 
@@ -988,6 +1002,27 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->adapted_request) {
                 out = urlCanonical(al->adapted_request);
                 quote = 1;
+            }
+            break;
+
+        case LFT_SERVER_REQ_URLSCHEME:
+            if (al->adapted_request) {
+                out = al->adapted_request->url.getScheme().c_str();
+                quote = 1;
+            }
+            break;
+
+        case LFT_SERVER_REQ_URLDOMAIN:
+            if (al->adapted_request) {
+                out = al->adapted_request->GetHost();
+                quote = 1;
+            }
+            break;
+
+        case LFT_SERVER_REQ_URLPORT:
+            if (al->adapted_request) {
+                outint = al->adapted_request->port;
+                doint = 1;
             }
             break;
 
@@ -1101,32 +1136,40 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 #endif
 
+        case LFT_REQUEST_URLGROUP_OLD_2X:
+            assert(LFT_REQUEST_URLGROUP_OLD_2X == 0); // should never happen.
+
         case LFT_NOTE:
-            if (fmt->data.string) {
+            tmp[0] = fmt->data.header.separator;
+            tmp[1] = '\0';
+            if (fmt->data.header.header && *fmt->data.header.header) {
+                const char *separator = tmp;
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL) {
-                    if (const char *meta = ah->metaHeaders->find(fmt->data.string))
+                    if (const char *meta = ah->metaHeaders->find(fmt->data.header.header, separator))
                         sb.append(meta);
                 }
 #endif
                 if (al->notes != NULL) {
-                    if (const char *note = al->notes->find(fmt->data.string)) {
+                    if (const char *note = al->notes->find(fmt->data.header.header, separator)) {
                         if (sb.size())
-                            sb.append(", ");
+                            sb.append(separator);
                         sb.append(note);
                     }
                 }
                 out = sb.termedBuf();
                 quote = 1;
             } else {
+                // if no argument given use default "\r\n" as notes separator
+                const char *separator = fmt->data.string ? tmp : "\r\n";
 #if USE_ADAPTATION
                 Adaptation::History::Pointer ah = al->request ? al->request->adaptHistory() : Adaptation::History::Pointer();
                 if (ah != NULL && ah->metaHeaders != NULL && !ah->metaHeaders->empty())
-                    sb.append(ah->metaHeaders->toString());
+                    sb.append(ah->metaHeaders->toString(separator));
 #endif
                 if (al->notes != NULL && !al->notes->empty())
-                    sb.append(al->notes->toString());
+                    sb.append(al->notes->toString(separator));
 
                 out = sb.termedBuf();
                 quote = 1;
@@ -1143,7 +1186,20 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_PERCENT:
             out = "%";
+            break;
 
+            // XXX: external_acl_type format tokens which are not output by logformat.
+            // They are listed here because the switch requires
+            // every ByteCode_t to be explicitly enumerated.
+            // But do not output due to lack of access to the values.
+        case LFT_EXT_ACL_USER_CERT_RAW:
+        case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
+        case LFT_EXT_ACL_USER_CERT:
+        case LFT_EXT_ACL_USER_CA_CERT:
+        case LFT_EXT_ACL_CLIENT_EUI48:
+        case LFT_EXT_ACL_CLIENT_EUI64:
+        case LFT_EXT_ACL_NAME:
+        case LFT_EXT_ACL_DATA:
             break;
         }
 
