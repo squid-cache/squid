@@ -1151,9 +1151,9 @@ IF USE_OPENSSL
 
 	acl aclname atstep step
 	  # match against SSL bumping step. Valid SSL bumping step values:
-	  # step1: Get TCP-level and CONNECT info.
-	  # step2: Get SSL Client Hello info.
-	  # step3: Get SSL Server Hello info.
+	  # SslBump1: Get TCP-level and CONNECT info.
+	  # SslBump2: Get SSL Client Hello info.
+	  # SslBump3: Get SSL Server Hello info.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
