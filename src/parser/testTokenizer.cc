@@ -95,10 +95,6 @@ testTokenizer::testTokenizerToken()
     CPPUNIT_ASSERT(t.token(s,whitespace));
     CPPUNIT_ASSERT_EQUAL(SBuf("Host:"),s);
 
-    SBuf s2(s);
-    //no separator found
-    CPPUNIT_ASSERT(!t.token(s,tab));
-    CPPUNIT_ASSERT_EQUAL(s2,s); // check that the output parameter was untouched
 }
 
 void

@@ -5,14 +5,14 @@ bool
 Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
     SBuf savebuf(buf_);
-    SBuf saveRetVal(returnedToken);
+    SBuf retval;
+    SBuf::size_type tokenLen = 0;
     skip(delimiters);
-    if (!prefix(returnedToken,delimiters)) {
-        buf_=savebuf;
-        returnedToken=saveRetVal;
-        return false;
-    }
+    // can't use prefix as we're looking for the first char not in delimiters
+    tokenLen = buf_.findFirstOf(delimiters); // not found = npos => consume to end
+    retval = buf_.consume(tokenLen);
     skip(delimiters);
+    returnedToken = retval;
     return true;
 }
 
