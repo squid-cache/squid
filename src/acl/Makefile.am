@@ -31,6 +31,10 @@ libstate_la_SOURCES = \
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
+	AtBumpStep.cc \
+	AtBumpStep.h \
+	AtBumpStepData.cc \
+	AtBumpStepData.h \
 	IntRange.cc \
 	IntRange.h \
 	RegexData.cc \

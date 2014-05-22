@@ -65,8 +65,12 @@ const char *Ssl::BumpModeStr[] = {
     "none",
     "client-first",
     "server-first",
-    "peek-and-splice",
+    "peek",
+    "stare",
+    "bump",
     "splice",
+    "terminate",
+    "err",
     NULL
 };
 
