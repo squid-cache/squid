@@ -49,7 +49,7 @@ public:
         MemBuf helloMessage;
     };
     explicit Bio(const int anFd);
-    ~Bio();
+    virtual ~Bio();
 
     /// Writes the given data to socket
     virtual int write(const char *buf, int size, BIO *table);
@@ -73,8 +73,10 @@ public:
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
+    const MemBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
+    MemBuf rbuf;  ///< Used to buffer input data.
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -106,7 +108,6 @@ private:
     Bio::sslFeatures features;
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
-    MemBuf rbuf;  ///< Used to buffer input data.
     int headerState;
     int headerBytes;
 };
@@ -114,7 +115,7 @@ private:
 /// BIO node to handle socket IO for squid server side
 class ServerBio: public Bio {
 public:
-    explicit ServerBio(const int anFd): Bio(anFd), featuresSet(false), helloMsgSize(0), helloBuild(false), allowSplice(false), holdWrite_(false), record_(false) {}
+    explicit ServerBio(const int anFd): Bio(anFd), featuresSet(false), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false) {}
     /// The ServerBio version of the Ssl::Bio::stateChanged method
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ServerBio version of the Ssl::Bio::write method
@@ -134,8 +135,9 @@ public:
     bool holdWrite() const {return holdWrite_;}
     void holdWrite(bool h) {holdWrite_ = h;}
     void recordInput(bool r) {record_ = r;}
-    const MemBuf &rBufData() {return rbuf;}
     bool canSplice() {return allowSplice;}
+    bool canBump() {return allowBump;}
+    void mode(Ssl::BumpMode m) {bumpMode_ = m;}
 private:
     /// A random number to use as "client random" in client hello message
     sslFeatures clientFeatures;
@@ -144,9 +146,10 @@ private:
     int helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
     bool allowSplice;
+    bool allowBump;
     bool holdWrite_;  ///< The write hold state of the bio.
     bool record_;
-    MemBuf rbuf;  ///< Used to buffer input data.
+    Ssl::BumpMode bumpMode_;
 };
 
 inline
