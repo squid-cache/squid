@@ -349,7 +349,9 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
 
     for (std::list<int>::iterator it = features.extensions.begin(); it != features.extensions.end(); ++it) {
         static int supportedExtensions[] = {
+#ifdef TLSEXT_TYPE_server_name
             TLSEXT_TYPE_server_name,
+#endif
 #ifdef TLSEXT_TYPE_opaque_prf_input
             TLSEXT_TYPE_opaque_prf_input,
 #endif
@@ -413,7 +415,7 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
 
     size_t mainHelloSize = features.helloMessage.contentSize() - 5;
     const char *mainHello = features.helloMessage.content() + 5;
-    assert(ssl->init_buf->max > mainHelloSize);
+    assert((size_t)ssl->init_buf->max > mainHelloSize);
     memcpy(ssl->init_buf->data, mainHello, mainHelloSize);
     debugs(83, 5, "Hello Data init and adjustd sizes :" << ssl->init_num << " = "<< mainHelloSize);
     ssl->init_num = mainHelloSize;
@@ -652,9 +654,11 @@ Ssl::Bio::sslFeatures::get(const SSL *ssl)
     sslVersion = SSL_version(ssl);
     debugs(83, 7, "SSL version: " << SSL_get_version(ssl) << " (" << sslVersion << ")");
 
+#if defined(TLSEXT_NAMETYPE_host_name) 
     if(const char *server = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name))
         serverName = server;
     debugs(83, 7, "SNI server name: " << serverName);
+#endif
 
     if (ssl->session->compress_meth)
             compressMethod = ssl->session->compress_meth;
