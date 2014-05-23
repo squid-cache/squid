@@ -88,8 +88,10 @@ FtpChannel::close()
 void
 FtpChannel::forget()
 {
-    if (Comm::IsConnOpen(conn))
+    if (Comm::IsConnOpen(conn)) {
+        commUnsetConnTimeout(conn);
         comm_remove_close_handler(conn->fd, closer);
+    }
     clear();
 }
 
@@ -335,6 +337,8 @@ ServerStateData::readControlReply(const CommIoCbParams &io)
     unsigned int len =io.size + ctrl.offset;
     ctrl.offset = len;
     assert(len <= ctrl.size);
+    if (Comm::IsConnOpen(ctrl.conn))
+        commUnsetConnTimeout(ctrl.conn); // we are done waiting for ctrl reply
     handleControlReply();
 }
 
@@ -899,12 +903,6 @@ ServerStateData::dataRead(const CommIoCbParams &io)
                HERE << "read error: " << xstrerr(io.xerrno));
 
         if (ignoreErrno(io.xerrno)) {
-            typedef CommCbMemFunT<ServerStateData, CommTimeoutCbParams> TimeoutDialer;
-            AsyncCall::Pointer timeoutCall =
-                JobCallback(9, 5, TimeoutDialer, this,
-                            ServerStateData::timeout);
-            commSetConnTimeout(io.conn, Config.Timeout.read, timeoutCall);
-
             maybeReadVirginBody();
         } else {
             failed(ERR_READ_ERROR, 0);
