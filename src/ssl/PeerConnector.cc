@@ -145,8 +145,10 @@ Ssl::PeerConnector::initializeSsl()
         const Ssl::Bio::sslFeatures &features = clnBio->getFeatures();
         if (features.sslVersion != -1) {
             SSL_set_ssl_method(ssl, Ssl::method(features.toSquidSSLVersion()));
+#ifdef TLSEXT_NAMETYPE_host_name
             if (!features.serverName.empty())
                 SSL_set_tlsext_host_name(ssl, features.serverName.c_str());
+#endif
             if (!features.clientRequestedCiphers.empty())
                 SSL_set_cipher_list(ssl, features.clientRequestedCiphers.c_str());
 #ifdef SSL_OP_NO_COMPRESSION /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
