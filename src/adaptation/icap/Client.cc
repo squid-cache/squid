@@ -1,6 +1,6 @@
 #include "squid.h"
-#include "Debug.h"
 #include "adaptation/icap/Client.h"
+#include "Debug.h"
 
 void Adaptation::Icap::InitModule()
 {

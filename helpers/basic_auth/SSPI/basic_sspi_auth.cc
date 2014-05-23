@@ -30,9 +30,6 @@
 #include "util.h"
 #include "valid.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if GETOPT_H
 #include <getopt.h>
 #endif

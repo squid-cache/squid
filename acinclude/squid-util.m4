@@ -216,10 +216,8 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
       ;;
   esac
   ])
-  if test "x${squid_build_info:=no}" != "xno"; then
-    AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
-       [Squid extended build info field for "squid -v" output])
-  fi
+  AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
+     [Squid extended build info field for "squid -v" output])
 ])
 
 dnl like AC_SEARCH_LIBS, with an extra argument which is

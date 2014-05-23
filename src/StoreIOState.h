@@ -81,7 +81,11 @@ public:
     off_t offset() const;
 
     virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data) = 0;
-    virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func) = 0;
+    /** write the given buffer and free it when it is no longer needed
+     *  \param offset zero for the very first write and -1 for all other writes
+     *  \retval false if write failed (callback has been or will be called)
+     */
+    virtual bool write(char const *buf, size_t size, off_t offset, FREE * free_func) = 0;
 
     typedef enum {
         wroteAll, ///< success: caller supplied all data it wanted to swap out

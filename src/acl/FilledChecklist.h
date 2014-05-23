@@ -1,13 +1,14 @@
 #ifndef SQUID_ACLFILLED_CHECKLIST_H
 #define SQUID_ACLFILLED_CHECKLIST_H
 
+#include "AccessLogEntry.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -68,12 +69,14 @@ public:
     char *snmp_community;
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
     /// SSL [certificate validation] errors, in undefined order
     Ssl::CertErrors *sslErrors;
     /// The peer certificate
     Ssl::X509_Pointer serverCert;
 #endif
+
+    AccessLogEntry::Pointer al; ///< info for the future access.log entry
 
     ExternalACLEntry *extacl_entry;
 

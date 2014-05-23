@@ -3,15 +3,11 @@
 
 #include "base/RefCount.h"
 #include "HttpRequest.h"
-#include "ssl/support.h"
 #include "SquidString.h"
+#include "ssl/support.h"
 
-#if HAVE_MAP
 #include <map>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
 
 class HttpRequest;
 

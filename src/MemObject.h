@@ -57,13 +57,16 @@ public:
     MEMPROXY_CLASS(MemObject);
 
     void dump() const;
-    MemObject(char const *, char const *);
+    MemObject();
     ~MemObject();
 
-    /// replaces construction-time URLs with correct ones; see hidden_mem_obj
-    void resetUrls(char const *aUrl, char const *aLog_url);
+    /// sets store ID, log URI, and request method; TODO: find a better name
+    void setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod);
 
-    void write(StoreIOBuffer, STMCB *, void *);
+    /// whether setUris() has been called
+    bool hasUris() const;
+
+    void write(const StoreIOBuffer &buf);
     void unlinkRequest();
     HttpReply const *getReply() const;
     void replaceHttpReply(HttpReply *newrep);
@@ -98,8 +101,19 @@ public:
     void checkUrlChecksum() const;
 #endif
 
+    /// Before StoreID, code assumed that MemObject stores Request URI.
+    /// After StoreID, some old code still incorrectly assumes that.
+    /// Use this method to mark that incorrect assumption.
+    const char *urlXXX() const { return storeId(); }
+
+    /// Entry StoreID (usually just Request URI); if a buggy code requests this
+    /// before the information is available, returns an "[unknown_URI]" string.
+    const char *storeId() const;
+
+    /// client request URI used for logging; storeId() by default
+    const char *logUri() const;
+
     HttpRequestMethod method;
-    char *url;
     mem_hdr data_hdr;
     int64_t inmem_lo;
     dlink_list clients;
@@ -119,11 +133,40 @@ public:
         StoreIOState::Pointer sio;
 
         /// Decision states for StoreEntry::swapoutPossible() and related code.
-        typedef enum { swNeedsCheck = 0, swImpossible = -1, swPossible = +1 } Decision;
+        typedef enum { swNeedsCheck = 0, swImpossible = -1, swPossible = +1, swStarted } Decision;
         Decision decision; ///< current decision state
     };
 
     SwapOut swapout;
+
+    /// cache "I/O" direction and status
+    typedef enum { ioUndecided, ioWriting, ioReading, ioDone } Io;
+
+    /// State of an entry with regards to the [shared] in-transit table.
+    class XitTable
+    {
+    public:
+        XitTable(): index(-1), io(ioUndecided) {}
+
+        int32_t index; ///< entry position inside the in-transit table
+        Io io; ///< current I/O state
+    };
+    XitTable xitTable; ///< current [shared] memory caching state for the entry
+
+    /// State of an entry with regards to the [shared] memory caching.
+    class MemCache
+    {
+    public:
+        MemCache(): index(-1), offset(0), io(ioUndecided) {}
+
+        int32_t index; ///< entry position inside the memory cache
+        int64_t offset; ///< bytes written/read to/from the memory cache so far
+
+        Io io; ///< current I/O state
+    };
+    MemCache memCache; ///< current [shared] memory caching state for the entry
+
+    bool smpCollapsed; ///< whether this entry gets data from another worker
 
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
@@ -137,7 +180,6 @@ public:
         STABH *callback;
         void *data;
     } abort;
-    char *log_url;
     RemovalPolicyNode repl;
     int id;
     int64_t object_sz;
@@ -154,6 +196,9 @@ public:
 
 private:
     HttpReply *_reply;
+
+    mutable String storeId_; ///< StoreId for our entry (usually request URI)
+    mutable String logUri_;  ///< URI used for logging (usually request URI)
 
     DeferredReadManager deferredReads;
 };

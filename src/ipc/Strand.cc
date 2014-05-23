@@ -6,19 +6,20 @@
 #include "squid.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#include "CacheManager.h"
+#include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "globals.h"
-#include "ipc/Strand.h"
-#include "ipc/StrandCoord.h"
+#include "ipc/Kids.h"
 #include "ipc/Messages.h"
 #include "ipc/SharedListen.h"
+#include "ipc/Strand.h"
+#include "ipc/StrandCoord.h"
 #include "ipc/StrandSearch.h"
-#include "ipc/Kids.h"
+#include "mgr/Forwarder.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "mgr/Forwarder.h"
 #include "SwapDir.h" /* XXX: scope boundary violation */
-#include "CacheManager.h"
 #if USE_DISKIO_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
 #endif
@@ -31,7 +32,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
 Ipc::Strand::Strand():
-        Port(MakeAddr(strandAddrPfx, KidIdentifier)),
+        Port(MakeAddr(strandAddrLabel, KidIdentifier)),
         isRegistered(false)
 {
 }
@@ -50,7 +51,7 @@ void Ipc::Strand::registerSelf()
     HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
     TypedMsgHdr message;
     ann.pack(message);
-    SendMessage(coordinatorAddr, message);
+    SendMessage(Port::CoordinatorAddr(), message);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 
@@ -88,6 +89,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         handleCacheMgrResponse(resp);
     }
     break;
+
+    case mtCollapsedForwardingNotification:
+        CollapsedForwarding::HandleNotification(message);
+        break;
 
 #if SQUID_SNMP
     case mtSnmpRequest: {

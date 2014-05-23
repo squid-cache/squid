@@ -45,8 +45,8 @@
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ipcache.h"
 #include "ip/tools.h"
+#include "ipcache.h"
 #include "Mem.h"
 #include "neighbors.h"
 #include "peer_sourcehash.h"
@@ -90,6 +90,13 @@ CBDATA_CLASS_INIT(ps_state);
 
 ps_state::~ps_state()
 {
+    while (servers) {
+        FwdServer *next = servers->next;
+        cbdataReferenceDone(servers->_peer);
+        memFree(servers, MEM_FWD_SERVER);
+        servers = next;
+    }
+
     if (entry) {
         debugs(44, 3, entry->url());
 
@@ -108,7 +115,7 @@ ps_state::~ps_state()
 
     if (entry) {
         assert(entry->ping_status != PING_WAITING);
-        entry->unlock();
+        entry->unlock("peerSelect");
         entry = NULL;
     }
 
@@ -141,6 +148,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
 void
 peerSelect(Comm::ConnectionList * paths,
            HttpRequest * request,
+           AccessLogEntry::Pointer const &al,
            StoreEntry * entry,
            PSC * callback,
            void *callback_data)
@@ -156,6 +164,7 @@ peerSelect(Comm::ConnectionList * paths,
 
     psstate->request = request;
     HTTPMSGLOCK(psstate->request);
+    psstate->al = al;
 
     psstate->entry = entry;
     psstate->paths = paths;
@@ -171,7 +180,7 @@ peerSelect(Comm::ConnectionList * paths,
 #endif
 
     if (psstate->entry)
-        psstate->entry->lock();
+        psstate->entry->lock("peerSelect");
 
     peerSelectFoo(psstate);
 }
@@ -226,6 +235,12 @@ void
 peerSelectDnsPaths(ps_state *psstate)
 {
     FwdServer *fs = psstate->servers;
+
+    if (!cbdataReferenceValid(psstate->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete psstate;
+        return;
+    }
 
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
@@ -317,6 +332,12 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 {
     ps_state *psstate = (ps_state *)data;
 
+    if (!cbdataReferenceValid(psstate->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete psstate;
+        return;
+    }
+
     psstate->request->recordLookup(details);
 
     FwdServer *fs = psstate->servers;
@@ -337,14 +358,14 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             // for TPROXY spoofing we must skip unusable addresses.
             if (psstate->request->flags.spoofClientIp && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
-                if (ia->in_addrs[n].isIPv4() != psstate->request->client_addr.isIPv4()) {
+                if (ia->in_addrs[ip].isIPv4() != psstate->request->client_addr.isIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
                 }
             }
 
             p = new Comm::Connection();
-            p->remote = ia->in_addrs[n];
+            p->remote = ia->in_addrs[ip];
 
             // when IPv6 is disabled we cannot use it
             if (!Ip::EnableIpv6 && p->remote.isIPv6()) {
@@ -430,6 +451,12 @@ peerCheckNetdbDirect(ps_state * psstate)
 static void
 peerSelectFoo(ps_state * ps)
 {
+    if (!cbdataReferenceValid(ps->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete ps;
+        return;
+    }
+
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
@@ -439,13 +466,17 @@ peerSelectFoo(ps_state * ps)
         if (ps->always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            ps->acl_checklist = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
+            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
+            ch->al = ps->al;
+            ps->acl_checklist = ch;
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
         } else if (ps->never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
+            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
+            ch->al = ps->al;
+            ps->acl_checklist = ch;
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
         } else if (request->flags.noDirect) {

@@ -32,16 +32,16 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "Generic.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "Generic.h"
 #include "SquidList.h"
+#include "Store.h"
 #include "SwapDir.h"
-#include "UFSStrategy.h"
 #include "UFSStoreState.h"
+#include "UFSStrategy.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,UFSStoreState);
 
@@ -177,7 +177,7 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
  * writes and just do the write directly.  But for now we'll keep the
  * code simpler and always go through the pending_writes queue.
  */
-void
+bool
 Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
     debugs(79, 3, "UFSStoreState::write: dirn " << swap_dirn  << ", fileno "<<
@@ -187,11 +187,12 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
         debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
         debugs(79, DBG_IMPORTANT,HERE << "calling free_func for " << (void*) buf);
         free_func((void*)buf);
-        return;
+        return false;
     }
 
     queueWrite(buf, size, aOffset, free_func);
     drainWriteQueue();
+    return true;
 }
 
 /*

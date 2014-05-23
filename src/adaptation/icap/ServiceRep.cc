@@ -375,7 +375,8 @@ void Adaptation::Icap::ServiceRep::noteTimeToNotify()
     Pointer us = NULL;
 
     while (!theClients.empty()) {
-        Client i = theClients.pop_back();
+        Client i = theClients.back();
+        theClients.pop_back();
         ScheduleCallHere(i.callback);
         i.callback = 0;
     }
@@ -469,7 +470,7 @@ void Adaptation::Icap::ServiceRep::checkOptions()
     if (!theOptions->methods.empty()) {
         bool method_found = false;
         String method_list;
-        Vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
+        std::vector <ICAP::Method>::iterator iter = theOptions->methods.begin();
 
         while (iter != theOptions->methods.end()) {
 
@@ -653,9 +654,9 @@ Adaptation::Icap::ServiceRep::optionsFetchTime() const
 
 Adaptation::Initiate *
 Adaptation::Icap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
-        HttpRequest *cause)
+        HttpRequest *cause, AccessLogEntry::Pointer &alp)
 {
-    return new Adaptation::Icap::ModXactLauncher(virgin, cause, this);
+    return new Adaptation::Icap::ModXactLauncher(virgin, cause, alp, this);
 }
 
 // returns a temporary string depicting service status, for debugging
@@ -711,7 +712,7 @@ bool Adaptation::Icap::ServiceRep::detached() const
     return isDetached;
 }
 
-Adaptation::Icap::ConnWaiterDialer::ConnWaiterDialer(const CbcPointer<ModXact> &xact,
+Adaptation::Icap::ConnWaiterDialer::ConnWaiterDialer(const CbcPointer<Adaptation::Icap::ModXact> &xact,
         Adaptation::Icap::ConnWaiterDialer::Parent::Method aHandler):
         Parent(xact, aHandler)
 {

@@ -66,20 +66,13 @@
 int _wcsicmp(const wchar_t *, const wchar_t *);
 #endif
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#undef assert
+#include <cassert>
+#include <cctype>
+#include <cstring>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#undef assert
-#include <assert.h>
 #include <windows.h>
 #include <objbase.h>
 #include <initguid.h>
@@ -187,7 +180,7 @@ Get_primaryGroup(IADs * pUser)
         CoTaskMemFree(pByte);
 
         *(strrchr(szSID, '-') + 1) = '\0';
-        sprintf(tmpSID, "%s%u", szSID, User_primaryGroupID);
+        snprintf(tmpSID, sizeof(tmpSID)-1, "%s%u", szSID, User_primaryGroupID);
 
         wcsize = MultiByteToWideChar(CP_ACP, 0, tmpSID, -1, wc, 0);
         wc = (wchar_t *) xmalloc(wcsize * sizeof(wchar_t));

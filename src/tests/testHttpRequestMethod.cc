@@ -3,13 +3,12 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
-#include "Mem.h"
-#include "testHttpRequestMethod.h"
 #include "HttpRequestMethod.h"
+#include "Mem.h"
+#include "SquidConfig.h"
+#include "testHttpRequestMethod.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequestMethod );
 
@@ -83,7 +82,17 @@ testHttpRequestMethod::testConstructmethod_t()
 void
 testHttpRequestMethod::testImage()
 {
+    // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
+    Config.onoff.relaxed_header_parser = 1;
+    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("POST",NULL).image()));
+    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("pOsT",NULL).image()));
     CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("post",NULL).image()));
+
+    // strict RFC-compliance parse HTTP methods are case sensitive
+    Config.onoff.relaxed_header_parser = 0;
+    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("POST",NULL).image()));
+    CPPUNIT_ASSERT_EQUAL(String("pOsT"), String(HttpRequestMethod("pOsT",NULL).image()));
+    CPPUNIT_ASSERT_EQUAL(String("post"), String(HttpRequestMethod("post",NULL).image()));
 }
 
 /*
@@ -117,7 +126,15 @@ testHttpRequestMethod::testNotEqualmethod_t()
 void
 testHttpRequestMethod::testStream()
 {
+    // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
+    Config.onoff.relaxed_header_parser = 1;
     std::ostringstream buffer;
-    buffer << HttpRequestMethod("get",NULL);
+    buffer << HttpRequestMethod("get", NULL);
     CPPUNIT_ASSERT_EQUAL(String("GET"), String(buffer.str().c_str()));
+
+    // strict RFC-compliance parse HTTP methods are case sensitive
+    Config.onoff.relaxed_header_parser = 0;
+    std::ostringstream buffer2;
+    buffer2 << HttpRequestMethod("get", NULL);
+    CPPUNIT_ASSERT_EQUAL(String("get"), String(buffer2.str().c_str()));
 }

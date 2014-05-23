@@ -23,7 +23,7 @@ private:
     virtual char const *typeString() const;
     virtual ACL *clone() const;
     virtual void parse();
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
 
     /* Acl::InnerNode API */
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;

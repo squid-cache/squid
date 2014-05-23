@@ -33,7 +33,10 @@
 
 #include "squid.h"
 #include "comm.h"
-#include "aio_win32.h"
+#include "DiskIO/AIO/aio_win32.h"
+#include "fd.h"
+#include "StatCounters.h"
+#include "win32.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

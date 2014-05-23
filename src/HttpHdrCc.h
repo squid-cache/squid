@@ -78,7 +78,7 @@ public:
     void Private(const String &v = "") {
         setMask(CC_PRIVATE,true);
         // uses append for multi-line headers
-        if (private_.defined())
+        if (private_.size() > 0)
             private_.append(",");
         private_.append(v);
     }
@@ -90,7 +90,7 @@ public:
     void noCache(String &v) {
         setMask(CC_NO_CACHE,true);
         // uses append for multi-line headers
-        if (no_cache.defined())
+        if (no_cache.size() > 0)
             no_cache.append(",");
         no_cache.append(v);
     }

@@ -56,7 +56,7 @@ echo "TMPDIR: ${tmpdir}"
 
 ## Ignore extra build layers. General features building is sufficient for snapshot release.
 ./test-builds.sh --cleanup layer-00-default layer-01-minimal layer-02-maximus || exit 1
-./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}"
+./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}" --enable-translation
 make -s dist-all
 
 webbase=/server/httpd/htdocs/squid-cache.org/content/
@@ -116,7 +116,7 @@ if (groff --help >/dev/null); then
 	if [ ! -d ${tmpdir}/doc/manuals ] ; then
 		mkdir -p ${tmpdir}/doc/manuals
 	fi
-	for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/src/*.8 ${tmpdir}/src/*/*.8 ${tmpdir}/tools/*.1 ${tmpdir}/tools/*.8 ./helpers/*/*/*.8 2>/dev/null` ; do
+	for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/src/*.8 ${tmpdir}/src/*/*.8 ${tmpdir}/tools/squidclient/*.1 ${tmpdir}/tools/*.8 ./helpers/*/*/*.8 2>/dev/null` ; do
 		cp $f ${tmpdir}/doc/manuals/
 	done
 	for f in `ls -1 ${tmpdir}/doc/manuals/*.1  ${tmpdir}/doc/manuals/*.8 2>/dev/null` ; do

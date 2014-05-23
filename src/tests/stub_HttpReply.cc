@@ -6,7 +6,7 @@
 
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
         expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
-        protoPrefix("HTTP/"), bodySizeMax(-2)
+        protoPrefix("HTTP/"), do_clean(false), bodySizeMax(-2)
         STUB_NOP
         HttpReply::~HttpReply() STUB
         void HttpReply::setHeaders(Http::StatusCode status, const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires_) STUB

@@ -122,7 +122,7 @@ enum {
     DELAY_SENDING,
     RELEASE_REQUEST,
     REFRESH_REQUEST,
-    ENTRY_CACHABLE,
+    ENTRY_CACHABLE_RESERVED_FOR_FUTURE_USE,
     ENTRY_DISPATCHED,
     KEY_PRIVATE,
     ENTRY_FWD_HDR_WAIT,
@@ -194,9 +194,7 @@ typedef enum {
     // following pools are initialized late by their component if needed (or never)
     MEM_FQDNCACHE_ENTRY,
     MEM_FWD_SERVER,
-#if !USE_DNSHELPER
     MEM_IDNS_QUERY,
-#endif
     MEM_IPCACHE_ENTRY,
     MEM_MAX
 } mem_type;

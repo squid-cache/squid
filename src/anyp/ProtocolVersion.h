@@ -3,9 +3,7 @@
 
 #include "anyp/ProtocolType.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 namespace AnyP
 {
@@ -87,7 +85,7 @@ public:
 inline std::ostream &
 operator << (std::ostream &os, const AnyP::ProtocolVersion &v)
 {
-    return (os << AnyP::ProtocolType_str[v.protocol] << v.major << '.' << v.minor);
+    return (os << AnyP::ProtocolType_str[v.protocol] << '/' << v.major << '.' << v.minor);
 }
 
 #endif /* SQUID_ANYP_PROTOCOLVERSION_H */

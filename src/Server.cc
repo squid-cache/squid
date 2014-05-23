@@ -31,17 +31,20 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
-#include "fd.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fd.h"
+#include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Server.h"
+#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -53,7 +56,6 @@
 #include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
 #include "base/AsyncCall.h"
-#include "SquidConfig.h"
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent
@@ -73,7 +75,7 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
     fwd = theFwdState;
     entry = fwd->entry;
 
-    entry->lock();
+    entry->lock("ServerStateData");
 
     request = fwd->request;
     HTTPMSGLOCK(request);
@@ -88,7 +90,7 @@ ServerStateData::~ServerStateData()
     assert(!adaptedBodySource);
 #endif
 
-    entry->unlock();
+    entry->unlock("ServerStateData");
 
     HTTPMSGUNLOCK(request);
     HTTPMSGUNLOCK(theVirginReply);
@@ -173,6 +175,8 @@ ServerStateData::setFinalReply(HttpReply *rep)
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
     haveParsedReplyHeaders(); // update the entry/reply (e.g., set timestamps)
+    if (!EBIT_TEST(entry->flags, RELEASE_REQUEST) && blockCaching())
+        entry->release();
     entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
@@ -525,6 +529,29 @@ ServerStateData::haveParsedReplyHeaders()
 {
     Must(theFinalReply);
     maybePurgeOthers();
+
+    // adaptation may overwrite old offset computed using the virgin response
+    const bool partial = theFinalReply->content_range &&
+                         theFinalReply->sline.status() == Http::scPartialContent;
+    currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
+}
+
+/// whether to prevent caching of an otherwise cachable response
+bool
+ServerStateData::blockCaching()
+{
+    if (const Acl::Tree *acl = Config.accessList.storeMiss) {
+        // This relatively expensive check is not in StoreEntry::checkCachable:
+        // That method lacks HttpRequest and may be called too many times.
+        ACLFilledChecklist ch(acl, originalRequest(), NULL);
+        ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
+        HTTPMSGLOCK(ch.reply);
+        if (ch.fastCheck() != ACCESS_ALLOWED) { // when in doubt, block
+            debugs(20, 3, "store_miss prohibits caching");
+            return true;
+        }
+    }
+    return false;
 }
 
 HttpRequest *
@@ -555,7 +582,7 @@ ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, H
     }
 
     adaptedHeadSource = initiateAdaptation(
-                            new Adaptation::Iterator(vrep, cause, group));
+                            new Adaptation::Iterator(vrep, cause, fwd->al, group));
     startedAdaptation = initiated(adaptedHeadSource);
     Must(startedAdaptation);
 }
@@ -699,7 +726,8 @@ ServerStateData::handleAdaptedHeader(HttpMsg *msg)
         // subscribe to receive adapted body
         adaptedBodySource = rep->body_pipe;
         // assume that ICAP does not auto-consume on failures
-        assert(adaptedBodySource->setConsumerIfNotLate(this));
+        const bool result = adaptedBodySource->setConsumerIfNotLate(this);
+        assert(result);
     } else {
         // no body
         if (doneWithAdaptation()) // we may still be sending virgin response
@@ -918,7 +946,7 @@ ServerStateData::adaptOrFinalizeReply()
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
-                                       originalRequest(), virginReply(), this);
+                                       originalRequest(), virginReply(), fwd->al, this);
     debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;

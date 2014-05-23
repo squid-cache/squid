@@ -36,10 +36,11 @@
 #include "comm.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
+#include "SBuf.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -83,7 +84,7 @@ class ClientSocketContext : public RefCountable
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
-    ClientSocketContext();
+    ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
     ~ClientSocketContext();
     bool startOfOutput() const;
     void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
@@ -162,7 +163,7 @@ private:
 };
 
 class ConnectionDetail;
-#if USE_SSL
+#if USE_OPENSSL
 namespace Ssl
 {
 class ServerBump;
@@ -191,14 +192,12 @@ public:
 
     void readSomeData();
     void readSomeFtpData();
-    int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
-    bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
@@ -214,12 +213,10 @@ public:
     struct In {
         In();
         ~In();
-        char *addressToReadInto() const;
+        bool maybeMakeSpaceAvailable();
 
         ChunkedCodingParser *bodyParser; ///< parses chunked request body
-        char *buf;
-        size_t notYetUsed;
-        size_t allocatedSize;
+        SBuf buf;
     } in;
 
     /** number of body bytes we need to comm_read for the "current" request
@@ -270,6 +267,7 @@ public:
         bool reading;   ///< we are monitoring for server connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
         CachePeer *peer;             /* CachePeer the connection goes via */
+        AsyncCall::Pointer readHandler; ///< detects serverConnection closure
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
@@ -295,12 +293,12 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    bool handleReadData(char *buf, size_t size);
+    bool handleReadData(SBuf *buf);
     bool handleRequestBodyData();
 
     /// forward future client requests using the given server connection
-    /// monitor pinned server connection for server-side closures
-    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth);
+    /// optionally, monitor pinned server connection for server-side closures
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true);
     /// undo pinConnection() and, optionally, close the pinned connection
     void unpinConnection(const bool andClose);
     /// returns validated pinnned server connection (and stops its monitoring)
@@ -335,6 +333,9 @@ public:
     /// Changes state so that we close the connection and quit after serving
     /// the client-side-detected error response instead of getting stuck.
     void quitAfterError(HttpRequest *request); // meant to be private
+
+    /// The caller assumes responsibility for connection closure detection.
+    void stopPinnedConnectionMonitoring();
 
     const bool isFtp;
     enum FtpState {
@@ -372,7 +373,7 @@ public:
     const char *ftpBuildUri(const char *file = NULL);
     void ftpSetWorkingDir(const char *dir);
 
-#if USE_SSL
+#if USE_OPENSSL
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
@@ -422,6 +423,9 @@ protected:
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody(size_t &putSize);
 
+    void startPinnedConnectionMonitoring();
+    void clientPinnedConnectionRead(const CommIoCbParams &io);
+
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
@@ -432,10 +436,6 @@ private:
     bool concurrentRequestQueueFilled() const;
 
     void pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth);
-    void startMonitoringPinnedConnection();
-    void stopMonitoringPinnedConnection();
-    static void ReadPinnedConnection(int fd, void *data);
-    void readPinnedConnection();
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection
@@ -446,7 +446,7 @@ private:
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
-#if USE_SSL
+#if USE_OPENSSL
     bool switchedToHttps_;
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request

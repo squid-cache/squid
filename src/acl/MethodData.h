@@ -50,7 +50,7 @@ public:
     ACLMethodData &operator= (ACLMethodData const &);
     virtual ~ACLMethodData();
     bool match(HttpRequestMethod);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<HttpRequestMethod> *clone() const;

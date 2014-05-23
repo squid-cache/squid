@@ -8,25 +8,34 @@
 #include "auth/Acl.h"
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
-#include "Debug.h"
-#include "wordlist.h"
 #include "ConfigParser.h"
+#include "Debug.h"
 #include "Parsing.h"
+#include "wordlist.h"
+
+ACLFlag ACLMaxUserIP::SupportedFlags[] = {ACL_F_STRICT, ACL_F_END};
+
+ACLMaxUserIP::ACLMaxUserIP(char const *theClass) :
+        ACL(SupportedFlags),
+        class_(theClass),
+        maximum(0)
+{}
+
+ACLMaxUserIP::ACLMaxUserIP(ACLMaxUserIP const &old) :
+        class_(old.class_),
+        maximum(old.maximum)
+{
+    flags = old.flags;
+}
+
+ACLMaxUserIP::~ACLMaxUserIP()
+{}
 
 ACL *
 ACLMaxUserIP::clone() const
 {
     return new ACLMaxUserIP(*this);
 }
-
-ACLMaxUserIP::ACLMaxUserIP (char const *theClass) : class_ (theClass), maximum(0)
-{}
-
-ACLMaxUserIP::ACLMaxUserIP (ACLMaxUserIP const & old) :class_ (old.class_), maximum (old.maximum), flags (old.flags)
-{}
-
-ACLMaxUserIP::~ACLMaxUserIP()
-{}
 
 char const *
 ACLMaxUserIP::typeString() const
@@ -35,13 +44,13 @@ ACLMaxUserIP::typeString() const
 }
 
 bool
-ACLMaxUserIP::empty () const
+ACLMaxUserIP::empty() const
 {
     return false;
 }
 
 bool
-ACLMaxUserIP::valid () const
+ACLMaxUserIP::valid() const
 {
     return maximum > 0;
 }
@@ -60,15 +69,6 @@ ACLMaxUserIP::parse()
         return;
 
     debugs(28, 5, "aclParseUserMaxIP: First token is " << t);
-
-    if (strcmp("-s", t) == 0) {
-        debugs(28, 5, "aclParseUserMaxIP: Going strict");
-        flags.strict = true;
-        t = ConfigParser::strtokFile();
-    }
-
-    if (!t)
-        return;
 
     maximum = xatoi(t);
 
@@ -97,7 +97,7 @@ ACLMaxUserIP::match(Auth::UserRequest::Pointer auth_user_request, Ip::Address co
     debugs(28, DBG_IMPORTANT, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
 
     /* this is a match */
-    if (flags.strict) {
+    if (flags.isSet(ACL_F_STRICT)) {
         /*
          * simply deny access - the user name is already associated with
          * the request
@@ -146,22 +146,14 @@ ACLMaxUserIP::match(ACLChecklist *cl)
     }
 }
 
-wordlist *
+SBufList
 ACLMaxUserIP::dump() const
 {
+    SBufList sl;
     if (!maximum)
-        return NULL;
-
-    wordlist *W = NULL;
-
-    if (flags.strict)
-        wordlistAdd(&W, "-s");
-
-    char buf[128];
-
-    snprintf(buf, sizeof(buf), "%lu", (unsigned long int) maximum);
-
-    wordlistAdd(&W, buf);
-
-    return W;
+        return sl;
+    SBuf s;
+    s.Printf("%d", maximum);
+    sl.push_back(s);
+    return sl;
 }

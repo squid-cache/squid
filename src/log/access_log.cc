@@ -37,8 +37,8 @@
 #include "adaptation/Config.h"
 #endif
 #include "CachePeer.h"
-#include "errorpage.h"
 #include "err_detail_type.h"
+#include "errorpage.h"
 #include "errorpage.h"
 #include "errorpage.h"
 #include "format/Token.h"

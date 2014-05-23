@@ -36,14 +36,14 @@
 #endif
 
 #include "squid.h"
-#include "mgr/Registration.h"
 #include "HttpHdrCc.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "MemObject.h"
+#include "mgr/Registration.h"
 #include "RefreshPattern.h"
-#include "SquidTime.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"
 
@@ -60,11 +60,14 @@ typedef enum {
     rcCount
 } refreshCountsEnum;
 
+/**
+ * Flags indicating which staleness algorithm has been applied.
+ */
 typedef struct {
-    bool expires;
-    bool min;
-    bool lmfactor;
-    bool max;
+    bool expires;  ///< Expires: header absolute timestamp limit
+    bool min;      ///< Heuristic minimum age limited
+    bool lmfactor; ///< Last-Modified with heuristic determines limit
+    bool max;      ///< Configured maximum age limit
 } stale_flags;
 
 /*
@@ -96,9 +99,7 @@ static struct RefreshCounts {
     const char *proto;
     int total;
     int status[STALE_DEFAULT + 1];
-}
-
-refreshCounts[rcCount];
+} refreshCounts[rcCount];
 
 /*
  * Defaults:
@@ -116,6 +117,12 @@ static int refreshStaleness(const StoreEntry * entry, time_t check_time, const t
 
 static RefreshPattern DefaultRefresh;
 
+/** Locate the first refresh_pattern rule that matches the given URL by regex.
+ *
+ * \note regexec() returns 0 if matched, and REG_NOMATCH otherwise
+ *
+ * \return A pointer to the refresh_pattern parameters to use, or NULL if there is no match.
+ */
 const RefreshPattern *
 refreshLimits(const char *url)
 {
@@ -129,6 +136,14 @@ refreshLimits(const char *url)
     return NULL;
 }
 
+/** Locate the first refresh_pattern rule that has the given uncompiled regex.
+ *
+ * \note There is only one reference to this function, below. It always passes "." as the pattern.
+ * This function is only ever called if there is no URI. Because a regex match is impossible, Squid
+ * forces the "." rule to apply (if it exists)
+ *
+ * \return A pointer to the refresh_pattern parameters to use, or NULL if there is no match.
+ */
 static const RefreshPattern *
 refreshUncompiledPattern(const char *pat)
 {
@@ -144,25 +159,30 @@ refreshUncompiledPattern(const char *pat)
 
 /**
  * Calculate how stale the response is (or will be at the check_time).
- * Staleness calculation is based on the following: (1) response
- * expiration time, (2) age greater than configured maximum, (3)
- * last-modified factor, and (4) age less than configured minimum.
+ *
+ * We try the following ways until one gives a result:
+ *
+ * 1. response expiration time, if one was set
+ * 2. age greater than configured maximum
+ * 3. last-modified factor algorithm
+ * 4. age less than configured minimum
+ * 5. default (stale)
+ *
+ * \param entry       the StoreEntry being examined
+ * \param check_time  the time (maybe future) at which we want to know whether $
+ * \param age         the age of the entry at check_time
+ * \param R           the refresh_pattern rule that matched this entry
+ * \param sf          small struct to indicate reason for stale/fresh decision
  *
  * \retval -1  If the response is fresh.
- * \retval >0  Otherwise return it's staleness.
+ * \retval >0  The amount of staleness.
  * \retval 0   NOTE return value of 0 means the response is stale.
- *
- * The 'stale_flags' structure is used to tell the calling function
- * _why_ this response is fresh or stale.  Its used, for example,
- * when the admin wants to override expiration and last-modified
- * times.
  */
 static int
 refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf)
 {
-    /** \par
-     * Check for an explicit expiration time (Expires: header).
-     */
+    // 1. If the cached object has an explicit expiration time, then we rely on this and
+    //    completely ignore the Min, Percent and Max values in the refresh_pattern.
     if (entry->expires > -1) {
         sf->expires = true;
 
@@ -179,25 +199,31 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
         }
     }
 
-    /** \par
-     * Use local heuristics to determine staleness.  Start with the
-     * max age from the refresh_pattern rule.
-     */
+    debugs(22, 3, "No explicit expiry given, using heuristics to determine freshness");
+
+    // 2. If the entry is older than the maximum age in the refresh_pattern, it is STALE.
     if (age > R->max) {
         debugs(22, 3, "STALE: age " << age << " > max " << R->max << " ");
         sf->max = true;
         return (age - R->max);
     }
 
-    /** \par
-     * Try the last-modified factor algorithm:  refresh_pattern n% percentage of Last-Modified: age.
-     */
+    // 3. If there is a Last-Modified header, try the last-modified factor algorithm.
     if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
-        /*
-         * stale_age is the Age of the response when it became/becomes
-         * stale according to the last-modified factor algorithm.
+
+        /* lastmod_delta is the difference between the last-modified date of the response
+         * and the time we cached it. It's how "old" the response was when we got it.
          */
-        time_t stale_age = static_cast<time_t>((entry->timestamp - entry->lastmod) * R->pct);
+        time_t lastmod_delta = entry->timestamp - entry->lastmod;
+
+        /* stale_age is the age of the response when it became/becomes stale according to
+         * the last-modified factor algorithm. It's how long we can consider the response
+         * fresh from the time we cached it.
+         */
+        time_t stale_age = static_cast<time_t>(lastmod_delta * R->pct);
+
+        debugs(22,3, "Last modified " << lastmod_delta << " sec before we cached it, L-M factor " <<
+               (100.0 * R->pct) << "% = " << stale_age << " sec freshness lifetime");
         sf->lmfactor = true;
 
         if (age >= stale_age) {
@@ -209,55 +235,107 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
         }
     }
 
-    /** \par
-     * Finally, if all else fails;  staleness is determined by the refresh_pattern
-     * configured minimum age.
-     */
+    // 4. If the entry is not as old as the minimum age in the refresh_pattern, it is FRESH.
     if (age < R->min) {
-        debugs(22, 3, "FRESH: age " << age << " < min " << R->min);
+        debugs(22, 3, "FRESH: age (" << age << " sec) is less than configured minimum (" << R->min << " sec)");
         sf->min = true;
         return -1;
     }
 
-    debugs(22, 3, "STALE: age " << age << " >= min " << R->min);
+    // 5. default is stale, by the amount we missed the minimum by
+    debugs(22, 3, "STALE: No explicit expiry, no last modified, and older than configured minimum.");
     return (age - R->min);
 }
 
-/**
- * \retval 1 if the entry must be revalidated within delta seconds
- * \retval 0 otherwise
+/** Checks whether a store entry is fresh or stale, and why.
  *
- *  note: request maybe null (e.g. for cache digests build)
+ * This is where all aspects of request, response and squid configuration
+ * meet to decide whether a response is cacheable or not:
+ *
+ * 1. Client request headers that affect cacheability, e.g.
+ *  - Cache-Control: no-cache
+ *  - Cache-Control: max-age=N
+ *  - Cache-Control: max-stale[=N]
+ *  - Pragma: no-cache
+ *
+ * 2. Server response headers that affect cacheability, e.g.
+ *  - Age:
+ *  - Cache-Control: proxy-revalidate
+ *  - Cache-Control: must-revalidate
+ *  - Cache-Control: no-cache
+ *  - Cache-Control: max-age=N
+ *  - Cache-Control: s-maxage=N
+ *  - Date:
+ *  - Expires:
+ *  - Last-Modified:
+ *
+ * 3. Configuration options, e.g.
+ *  - reload-into-ims (refresh_pattern)
+ *  - ignore-reload (refresh_pattern)
+ *  - refresh-ims (refresh_pattern)
+ *  - override-lastmod (refresh_pattern)
+ *  - override-expire (refresh_pattern)
+ *  - reload_into_ims (global option)
+ *  - refresh_all_ims (global option)
+ *
+ * \returns a status code (from enum above):
+ *  - FRESH_REQUEST_MAX_STALE_ALL
+ *  - FRESH_REQUEST_MAX_STALE_VALUE
+ *  - FRESH_EXPIRES
+ *  - FRESH_LMFACTOR_RULE
+ *  - FRESH_MIN_RULE
+ *  - FRESH_OVERRIDE_EXPIRES
+ *  - FRESH_OVERRIDE_LASTMOD
+ *  - STALE_MUST_REVALIDATE
+ *  - STALE_RELOAD_INTO_IMS
+ *  - STALE_FORCED_RELOAD
+ *  - STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE
+ *  - STALE_EXPIRES
+ *  - STALE_MAX_RULE
+ *  - STALE_LMFACTOR_RULE
+ *  - STALE_MAX_STALE
+ *  - STALE_DEFAULT
+ *
+ * \note request may be NULL (e.g. for cache digests build)
+ *
+ * \note the store entry being examined is not necessarily cached (e.g. if
+ *       this response is being evaluated for the first time)
  */
 static int
 refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 {
-    const RefreshPattern *R;
     const char *uri = NULL;
     time_t age = 0;
     time_t check_time = squid_curtime + delta;
     int staleness;
     stale_flags sf;
 
+    // get the URL of this entry, if there is one
     if (entry->mem_obj)
-        uri = entry->mem_obj->url;
+        uri = entry->mem_obj->storeId();
     else if (request)
         uri = urlCanonical(request);
 
-    debugs(22, 3, "refreshCheck: '" << (uri ? uri : "<none>") << "'");
+    debugs(22, 3, "checking freshness of '" << (uri ? uri : "<none>") << "'");
 
+    // age is not necessarily the age now, but the age at the given check_time
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
 
     // FIXME: what to do when age < 0 or counter overflow?
     assert(age >= 0);
 
-    R = uri ? refreshLimits(uri) : refreshUncompiledPattern(".");
-
+    /* We need a refresh rule. In order of preference:
+     *
+     *   1. the rule that matches this URI by regex
+     *   2. the "." rule from the config file
+     *   3. the default "." rule
+     */
+    const RefreshPattern *R = uri ? refreshLimits(uri) : refreshUncompiledPattern(".");
     if (NULL == R)
         R = &DefaultRefresh;
 
-    debugs(22, 3, "refreshCheck: Matched '" << R->pattern << " " <<
+    debugs(22, 3, "Matched '" << R->pattern << " " <<
            (int) R->min << " " << (int) (100.0 * R->pct) << "%% " <<
            (int) R->max << "'");
 
@@ -292,16 +370,21 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             entry->mem_obj->getReply()->cache_control->hasStaleIfError() &&
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
-        debugs(22, 3, "refreshCheck: stale-if-error period expired.");
+        debugs(22, 3, "stale-if-error period expired. Will produce error if validation fails.");
         request->flags.failOnValidationError = true;
     }
 
+    /* If the origin server specified either of:
+     *   Cache-Control: must-revalidate
+     *   Cache-Control: proxy-revalidate
+     * the spec says the response must always be revalidated if stale.
+     */
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
 #if USE_HTTP_VIOLATIONS
             && !R->flags.ignore_must_revalidate
 #endif
        ) {
-        debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
+        debugs(22, 3, "YES: Must revalidate stale object (origin set must-revalidate or proxy-revalidate)");
         if (request)
             request->flags.failOnValidationError = true;
         return STALE_MUST_REVALIDATE;
@@ -311,81 +394,111 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if (request && !request->flags.ignoreCc) {
         HttpHdrCc *cc = request->cache_control;
 
+        /* If the request is an IMS request, and squid is configured NOT to service this from cache
+         * (either by 'refresh-ims' in the refresh pattern or 'refresh_all_ims on' globally)
+         * then force a reload from the origin.
+         */
         if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {
-            /* The clients no-cache header is changed into a IMS query */
-            debugs(22, 3, "refreshCheck: YES: refresh-ims");
+            // The client's no-cache header is changed into a IMS query
+            debugs(22, 3, "YES: Client IMS request forcing revalidation of object (refresh-ims option)");
             return STALE_FORCED_RELOAD;
         }
 
 #if USE_HTTP_VIOLATIONS
+        /* Normally a client reload request ("Cache-Control: no-cache" or "Pragma: no-cache")
+         * means we must treat this reponse as STALE and fetch a new one.
+         *
+         * However, some options exist to override this behaviour. For example, we might just
+         * revalidate our existing response, or even just serve it up without revalidating it.
+         *
+         *     ---- Note on the meaning of nocache_hack -----
+         *
+         * The nocache_hack flag has a very specific and complex meaning:
+         *
+         * (a) this is a reload request ("Cache-Control: no-cache" or "Pragma: no-cache" header)
+         * and (b) the configuration file either has at least one refresh_pattern with
+         * ignore-reload or reload-into-ims (not necessarily the rule matching this request) or
+         * the global reload_into_ims is set to on
+         *
+         * In other words: this is a client reload, and we might need to override
+         * the default behaviour (but we might not).
+         *
+         * "nocache_hack" is a pretty deceptive name for such a complicated meaning.
+         */
+        if (request->flags.noCacheHack()) {
 
-        if (!request->flags.noCacheHack()) {
-            (void) 0;
-        } else if (R->flags.ignore_reload) {
-            /* The clients no-cache header is ignored */
-            debugs(22, 3, "refreshCheck: MAYBE: ignore-reload");
-        } else if (R->flags.reload_into_ims || Config.onoff.reload_into_ims) {
-            /* The clients no-cache header is changed into a IMS query */
-            debugs(22, 3, "refreshCheck: YES: reload-into-ims");
-            return STALE_RELOAD_INTO_IMS;
-        } else {
-            /* The clients no-cache header is not overridden on this request */
-            debugs(22, 3, "refreshCheck: YES: client reload");
-            request->flags.noCache = true;
-            return STALE_FORCED_RELOAD;
+            if (R->flags.ignore_reload) {
+                /* The client's no-cache header is ignored completely - we'll try to serve
+                 * what we have (assuming it's still fresh, etc.)
+                 */
+                debugs(22, 3, "MAYBE: Ignoring client reload request - trying to serve from cache (ignore-reload option)");
+            } else if (R->flags.reload_into_ims || Config.onoff.reload_into_ims) {
+                /* The client's no-cache header is not honoured completely - we'll just try
+                 * to revalidate our cached copy (IMS to origin) instead of fetching a new
+                 * copy with an unconditional GET.
+                 */
+                debugs(22, 3, "YES: Client reload request - cheating, only revalidating with origin (reload-into-ims option)");
+                return STALE_RELOAD_INTO_IMS;
+            } else {
+                /* The client's no-cache header is honoured - we fetch a new copy from origin */
+                debugs(22, 3, "YES: Client reload request - fetching new copy from origin");
+                request->flags.noCache = true;
+                return STALE_FORCED_RELOAD;
+            }
         }
-
 #endif
+
+        // Check the Cache-Control client request header
         if (NULL != cc) {
+
+            // max-age directive
             if (cc->hasMaxAge()) {
 #if USE_HTTP_VIOLATIONS
+                // Ignore client "Cache-Control: max-age=0" header
                 if (R->flags.ignore_reload && cc->maxAge() == 0) {
-                    debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
+                    debugs(22, 3, "MAYBE: Ignoring client reload request - trying to serve from cache (ignore-reload option)");
                 } else
 #endif
                 {
-                    if (cc->maxAge() == 0) {
-                        debugs(22, 3, "refreshCheck: YES: client-max-age = 0");
-                        return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
-                    }
-
-                    if (age > cc->maxAge()) {
-                        debugs(22, 3, "refreshCheck: YES: age > client-max-age");
+                    // Honour client "Cache-Control: max-age=x" header
+                    if (age > cc->maxAge() || cc->maxAge() == 0) {
+                        debugs(22, 3, "YES: Revalidating object - client 'Cache-Control: max-age=" << cc->maxAge() << "'");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
                 }
             }
 
+            // max-stale directive
             if (cc->hasMaxStale() && staleness > -1) {
                 if (cc->maxStale()==HttpHdrCc::MAX_STALE_ANY) {
-                    /* max-stale directive without a value */
-                    debugs(22, 3, "refreshCheck: NO: max-stale wildcard");
+                    debugs(22, 3, "NO: Client accepts a stale response of any age - 'Cache-Control: max-stale'");
                     return FRESH_REQUEST_MAX_STALE_ALL;
                 } else if (staleness < cc->maxStale()) {
-                    debugs(22, 3, "refreshCheck: NO: staleness < max-stale");
+                    debugs(22, 3, "NO: Client accepts a stale response - 'Cache-Control: max-stale=" << cc->maxStale() << "'");
                     return FRESH_REQUEST_MAX_STALE_VALUE;
                 }
             }
         }
     }
 
+    // If the object is fresh, return the right FRESH_ code
     if (-1 == staleness) {
-        debugs(22, 3, "refreshCheck: object isn't stale..");
+        debugs(22, 3, "Object isn't stale..");
         if (sf.expires) {
-            debugs(22, 3, "refreshCheck: returning FRESH_EXPIRES");
+            debugs(22, 3, "returning FRESH_EXPIRES");
             return FRESH_EXPIRES;
         }
 
         assert(!sf.max);
 
         if (sf.lmfactor) {
-            debugs(22, 3, "refreshCheck: returning FRESH_LMFACTOR_RULE");
+            debugs(22, 3, "returning FRESH_LMFACTOR_RULE");
             return FRESH_LMFACTOR_RULE;
         }
 
         assert(sf.min);
 
-        debugs(22, 3, "refreshCheck: returning FRESH_MIN_RULE");
+        debugs(22, 3, "returning FRESH_MIN_RULE");
         return FRESH_MIN_RULE;
     }
 
@@ -396,7 +509,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      */
     int max_stale = (R->max_stale >= 0 ? R->max_stale : Config.maxStale);
     if ( max_stale >= 0 && staleness > max_stale) {
-        debugs(22, 3, "refreshCheck: YES: max-stale limit");
+        debugs(22, 3, "YES: refresh_pattern max-stale=N limit from squid.conf");
         if (request)
             request->flags.failOnValidationError = true;
         return STALE_MAX_STALE;
@@ -406,7 +519,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #if USE_HTTP_VIOLATIONS
 
         if (R->flags.override_expire && age < R->min) {
-            debugs(22, 3, "refreshCheck: NO: age < min && override-expire");
+            debugs(22, 3, "NO: Serving from cache - even though explicit expiry has passed, we enforce Min value (override-expire option)");
             return FRESH_OVERRIDE_EXPIRES;
         }
 
@@ -419,21 +532,30 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (sf.lmfactor) {
 #if USE_HTTP_VIOLATIONS
-
         if (R->flags.override_lastmod && age < R->min) {
-            debugs(22, 3, "refreshCheck: NO: age < min && override-lastmod");
+            debugs(22, 3, "NO: Serving from cache - even though L-M factor says the object is stale, we enforce Min value (override-lastmod option)");
             return FRESH_OVERRIDE_LASTMOD;
         }
-
 #endif
+        debugs(22, 3, "YES: L-M factor says the object is stale'");
         return STALE_LMFACTOR_RULE;
     }
 
-    debugs(22, 3, "refreshCheck: returning STALE_DEFAULT");
+    debugs(22, 3, "returning STALE_DEFAULT");
     return STALE_DEFAULT;
 }
 
-int
+/**
+ * This is called by http.cc once it has received and parsed the origin server's
+ * response headers. It uses the result as part of its algorithm to decide whether a
+ * response should be cached.
+ *
+ * \retval true if the entry is cacheable, regardless of whether FRESH or STALE
+ * \retval false if the entry is not cacheable
+ *
+ * TODO: this algorithm seems a bit odd and might not be quite right. Verify against HTTPbis.
+ */
+bool
 refreshIsCachable(const StoreEntry * entry)
 {
     /*
@@ -449,26 +571,26 @@ refreshIsCachable(const StoreEntry * entry)
 
     if (reason < STALE_MUST_REVALIDATE)
         /* Does not need refresh. This is certainly cachable */
-        return 1;
+        return true;
 
     if (entry->lastmod < 0)
         /* Last modified is needed to do a refresh */
-        return 0;
+        return false;
 
     if (entry->mem_obj == NULL)
         /* no mem_obj? */
-        return 1;
+        return true;
 
     if (entry->getReply() == NULL)
         /* no reply? */
-        return 1;
+        return true;
 
     if (entry->getReply()->content_length == 0)
         /* No use refreshing (caching?) 0 byte objects */
-        return 0;
+        return false;
 
     /* This seems to be refreshable. Cache it */
-    return 1;
+    return true;
 }
 
 /// whether reply is stale if it is a hit
@@ -485,9 +607,14 @@ refreshIsStaleIfHit(const int reason)
     }
 }
 
-/* refreshCheck... functions below are protocol-specific wrappers around
- * refreshCheck() function above */
-
+/**
+ * Protocol-specific wrapper around refreshCheck() function.
+ *
+ * Note the reason for STALE/FRESH then return true/false respectively.
+ *
+ * \retval 1 if STALE
+ * \retval 0 if FRESH
+ */
 int
 refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 {
@@ -498,6 +625,7 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 
+/// \see int refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 int
 refreshCheckICP(const StoreEntry * entry, HttpRequest * request)
 {
@@ -508,6 +636,7 @@ refreshCheckICP(const StoreEntry * entry, HttpRequest * request)
 }
 
 #if USE_HTCP
+/// \see int refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 int
 refreshCheckHTCP(const StoreEntry * entry, HttpRequest * request)
 {
@@ -520,6 +649,7 @@ refreshCheckHTCP(const StoreEntry * entry, HttpRequest * request)
 #endif
 
 #if USE_CACHE_DIGESTS
+/// \see int refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 int
 refreshCheckDigest(const StoreEntry * entry, time_t delta)
 {
@@ -530,9 +660,18 @@ refreshCheckDigest(const StoreEntry * entry, time_t delta)
     ++ refreshCounts[rcCDigest].status[reason];
     return (reason < 200) ? 0 : 1;
 }
-
 #endif
 
+/**
+ * Get the configured maximum caching time for objects with this URL
+ * according to refresh_pattern.
+ *
+ * Used by http.cc when generating a upstream requests to ensure that
+ * responses it is given are fresh enough to be worth caching.
+ *
+ * \retval pattern-max if there is a refresh_pattern matching the URL configured.
+ * \retval REFRESH_DEFAULT_MAX if there are no explicit limits configured
+ */
 time_t
 getMaxAge(const char *url)
 {
@@ -545,57 +684,40 @@ getMaxAge(const char *url)
         return REFRESH_DEFAULT_MAX;
 }
 
-static void
-
-refreshCountsStats(StoreEntry * sentry, struct RefreshCounts *rc)
+static int
+refreshCountsStatsEntry(StoreEntry * sentry, struct RefreshCounts &rc, int code, const char *desc)
 {
-    int sum = 0;
-    int tot = rc->total;
-
-    storeAppendPrintf(sentry, "\n\n%s histogram:\n", rc->proto);
-    storeAppendPrintf(sentry, "Count\t%%Total\tCategory\n");
-
-#define refreshCountsStatsEntry(code,desc) { \
-	storeAppendPrintf(sentry, "%6d\t%6.2f\t%s\n", \
-	    rc->status[code], xpercent(rc->status[code], tot), desc); \
-    sum += rc->status[code]; \
+    storeAppendPrintf(sentry, "%6d\t%6.2f\t%s\n", rc.status[code], xpercent(rc.status[code], rc.total), desc);
+    return rc.status[code];
 }
 
-    refreshCountsStatsEntry(FRESH_REQUEST_MAX_STALE_ALL,
-                            "Fresh: request max-stale wildcard");
-    refreshCountsStatsEntry(FRESH_REQUEST_MAX_STALE_VALUE,
-                            "Fresh: request max-stale value");
-    refreshCountsStatsEntry(FRESH_EXPIRES,
-                            "Fresh: expires time not reached");
-    refreshCountsStatsEntry(FRESH_LMFACTOR_RULE,
-                            "Fresh: refresh_pattern last-mod factor percentage");
-    refreshCountsStatsEntry(FRESH_MIN_RULE,
-                            "Fresh: refresh_pattern min value");
-    refreshCountsStatsEntry(FRESH_OVERRIDE_EXPIRES,
-                            "Fresh: refresh_pattern override expires");
-    refreshCountsStatsEntry(FRESH_OVERRIDE_LASTMOD,
-                            "Fresh: refresh_pattern override lastmod");
-    refreshCountsStatsEntry(STALE_MUST_REVALIDATE,
-                            "Stale: response has must-revalidate");
-    refreshCountsStatsEntry(STALE_RELOAD_INTO_IMS,
-                            "Stale: changed reload into IMS");
-    refreshCountsStatsEntry(STALE_FORCED_RELOAD,
-                            "Stale: request has no-cache directive");
-    refreshCountsStatsEntry(STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE,
-                            "Stale: age exceeds request max-age value");
-    refreshCountsStatsEntry(STALE_EXPIRES,
-                            "Stale: expires time reached");
-    refreshCountsStatsEntry(STALE_MAX_RULE,
-                            "Stale: refresh_pattern max age rule");
-    refreshCountsStatsEntry(STALE_LMFACTOR_RULE,
-                            "Stale: refresh_pattern last-mod factor percentage");
-    refreshCountsStatsEntry(STALE_DEFAULT,
-                            "Stale: by default");
+static void
+refreshCountsStats(StoreEntry * sentry, struct RefreshCounts &rc)
+{
+    if (!rc.total)
+        return;
 
-    tot = sum;			/* paranoid: "total" line shows 100% if we forgot nothing */
-    storeAppendPrintf(sentry, "%6d\t%6.2f\tTOTAL\n",
-                      rc->total, xpercent(rc->total, tot));
-    \
+    storeAppendPrintf(sentry, "\n\n%s histogram:\n", rc.proto);
+    storeAppendPrintf(sentry, "Count\t%%Total\tCategory\n");
+
+    int sum = 0;
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_ALL, "Fresh: request max-stale wildcard");
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_VALUE, "Fresh: request max-stale value");
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_EXPIRES, "Fresh: expires time not reached");
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_LMFACTOR_RULE, "Fresh: refresh_pattern last-mod factor percentage");
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_MIN_RULE, "Fresh: refresh_pattern min value");
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_OVERRIDE_EXPIRES, "Fresh: refresh_pattern override-expires");
+    sum += refreshCountsStatsEntry(sentry, rc, FRESH_OVERRIDE_LASTMOD, "Fresh: refresh_pattern override-lastmod");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_MUST_REVALIDATE, "Stale: response has must-revalidate");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_RELOAD_INTO_IMS, "Stale: changed reload into IMS");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_FORCED_RELOAD, "Stale: request has no-cache directive");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE, "Stale: age exceeds request max-age value");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_EXPIRES, "Stale: expires time reached");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_MAX_RULE, "Stale: refresh_pattern max age rule");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_LMFACTOR_RULE, "Stale: refresh_pattern last-mod factor percentage");
+    sum += refreshCountsStatsEntry(sentry, rc, STALE_DEFAULT, "Stale: by default");
+
+    storeAppendPrintf(sentry, "%6d\t%6.2f\tTOTAL\n", rc.total, xpercent(rc.total, sum));
     storeAppendPrintf(sentry, "\n");
 }
 
@@ -625,7 +747,7 @@ refreshStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n\nRefreshCheck histograms for various protocols\n");
 
     for (i = 0; i < rcCount; ++i)
-        refreshCountsStats(sentry, &refreshCounts[i]);
+        refreshCountsStats(sentry, refreshCounts[i]);
 }
 
 static void

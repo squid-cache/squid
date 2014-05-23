@@ -35,7 +35,7 @@ public:
             left(false),
             space(false),
             zero(false),
-            divisor(0),
+            divisor(1),
             next(NULL)
     { data.string = NULL; }
 
@@ -68,7 +68,7 @@ public:
     bool left;
     bool space;
     bool zero;
-    int divisor;
+    int divisor;    // class invariant: MUST NOT be zero.
     Token *next;	/* todo: move from linked list to array */
 
 private:

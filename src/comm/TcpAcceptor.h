@@ -4,8 +4,8 @@
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "base/Subscription.h"
-#include "comm_err_t.h"
 #include "comm/forward.h"
+#include "comm_err_t.h"
 
 namespace Comm
 {

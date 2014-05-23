@@ -38,7 +38,6 @@
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "URL.h"
-#include "URLScheme.h"
 
 static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
                                    const AnyP::ProtocolType protocol,
@@ -515,9 +514,9 @@ urlCanonical(HttpRequest * request)
         if (request->port != urlDefaultPort(request->protocol))
             snprintf(portbuf, 32, ":%d", request->port);
 
-        const URLScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
+        const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
         snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
-                 sch.const_str(),
+                 sch.c_str(),
                  request->login,
                  *request->login ? "@" : null_string,
                  request->GetHost(),
@@ -562,9 +561,9 @@ urlCanonicalClean(const HttpRequest * request)
             strcat(loginbuf, "@");
         }
 
-        const URLScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
+        const AnyP::UriScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
         snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
-                 sch.const_str(),
+                 sch.c_str(),
                  loginbuf,
                  request->GetHost(),
                  portbuf,
@@ -662,10 +661,10 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     size_t urllen;
 
-    const URLScheme sch = req->protocol; // temporary, until bug 1961 URL handling is fixed.
+    const AnyP::UriScheme sch = req->protocol; // temporary, until bug 1961 URL handling is fixed.
     if (req->port != urlDefaultPort(req->protocol)) {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
-                          sch.const_str(),
+                          sch.c_str(),
                           req->login,
                           *req->login ? "@" : null_string,
                           req->GetHost(),
@@ -673,7 +672,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
                          );
     } else {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
-                          sch.const_str(),
+                          sch.c_str(),
                           req->login,
                           *req->login ? "@" : null_string,
                           req->GetHost()
@@ -859,7 +858,7 @@ urlCheckRequest(const HttpRequest * r)
         break;
 
     case AnyP::PROTO_HTTPS:
-#if USE_SSL
+#if USE_OPENSSL
 
         rc = 1;
 
@@ -980,9 +979,3 @@ URLHostName::extract(char const *aUrl)
 
     return Host;
 }
-
-URL::URL() : scheme()
-{}
-
-URL::URL(URLScheme const &aScheme): scheme(aScheme)
-{}

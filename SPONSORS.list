@@ -2,8 +2,41 @@ In addition to the numerous volunteer developers (see CONTRIBUTORS),
 the following organizations have provided non-financial support for
 the Squid Project:
 
+@Squid-3.4:
+LaunchPad - http://launchpad.net/
+
+	Provide Bazaar mirroring services and host the Squid-3 developer
+	project code.
+
+Messagenet - http://messagenet.it/
+
+	Messagenet donated hardware and bandwidth for the wiki server
+	and most continuous integration testing.
+
+RackSpace - http://www.rackspace.com/
+
+	RackSpace donated a number of virtual machines from their cloud
+	infrastructure to support and extend the continuous integration
+	testing infrastructure.
+
+The Measurement Factory - http://www.measurement-factory.com/
+
+	Measurement Factory has constributed significant resources
+	toward Squid-3 development and server maintenance.
+
+Treehouse Networks, NZ - http://treenet.co.nz/
+
+	Treehouse Networks has contributed significant resources
+	toward Squid-3 development and maintenance for their customer
+	gateways and CDN.
+
 @Squid-3.3:
-Netbox Blue Pty (http://netboxblue.com/)
+iCelero - http://icelero.com/
+
+	iCelero.com contributed development resources towards
+	testing and stabilization of Squid-3.3 on Windows.
+
+Netbox Blue Pty - http://netboxblue.com/
 
 	Netbox Blue Pty. contributed development resources towards
 	testing and stabilizing of authentication systems in Squid-3.2
@@ -20,30 +53,9 @@ iiNet Ltd - http://www.iinet.net.au/
 	In Squid-3.2 iiNet sponsored development time to resolve
 	authentication problems.
 
-LaunchPad - http://launchpad.net/
-
-	Provide Bazaar mirroring services and host the Squid-3 developer
-	project code.
-
-Messagenet - http://messagenet.it/
-
-	Messagenet donated hardware and bandwidth for the wiki server
-	and most continuous integration testing.
-
 Palisade Systems - http://www.palisadesys.com/
 
 	Palisade Systems funded SSL Bump feature development in Squid3.
-
-The Measurement Factory - http://www.measurement-factory.com/
-
-	Measurement Factory has constributed significant resources
-	toward Squid-3 development and server maintenance.
-
-Treehouse Networks, NZ - http://treenet.co.nz/
-
-	Treehouse Networks has contributed significant resources
-	toward Squid-3 development and maintenance for their customer
-	gateways and CDN.
 
 @Squid-3.1:
 Barefruit - http://www.barefruit.com/

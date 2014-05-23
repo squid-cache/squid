@@ -2,10 +2,11 @@
 #define SQUID_ANYP_PORTCFG_H
 
 #include "anyp/forward.h"
+#include "anyp/ProtocolVersion.h"
 #include "anyp/TrafficMode.h"
 #include "comm/Connection.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -15,18 +16,25 @@ namespace AnyP
 class PortCfg
 {
 public:
-    PortCfg(const char *aProtocol);
+    PortCfg();
     ~PortCfg();
     AnyP::PortCfg *clone() const;
-#if USE_SSL
+#if USE_OPENSSL
     /// creates, configures, and validates SSL context and related port options
     void configureSslServerContext();
 #endif
 
+    /**
+     * Set this ports transport type from a string representation.
+     * Unknown transport type representations will halt Squid.
+     * Supports: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1.
+     */
+    void setTransport(const char *aProtocol);
+
     PortCfg *next;
 
     Ip::Address s;
-    char *protocol;            /* protocol name */
+    AnyP::ProtocolVersion transport; ///< transport protocol and version received by this port
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
 
@@ -56,7 +64,7 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
-#if USE_SSL
+#if USE_OPENSSL
     char *cert;
     char *key;
     int version;

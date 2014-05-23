@@ -29,8 +29,8 @@
  *
  */
 
-#include "SquidString.h"
 #include "HttpHeaderFieldStat.h"
+#include "SquidString.h"
 
 /// compiled version of HttpHeaderFieldAttrs plus stats. Currently a POD.
 class HttpHeaderFieldInfo

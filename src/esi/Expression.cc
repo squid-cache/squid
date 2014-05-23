@@ -36,12 +36,8 @@
 #include "esi/Expression.h"
 #include "profiler/Profiler.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
+#include <cmath>
 
 /* stack precedence rules:
  * before pushing an operator onto the stack, the

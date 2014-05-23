@@ -1,8 +1,8 @@
 #ifndef SQUID_ACLNOTE_H
 #define SQUID_ACLNOTE_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 
 class HttpRequest;
 

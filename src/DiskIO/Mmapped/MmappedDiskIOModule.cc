@@ -18,7 +18,7 @@ MmappedDiskIOModule::init()
 {}
 
 void
-MmappedDiskIOModule::shutdown()
+MmappedDiskIOModule::gracefulShutdown()
 {}
 
 DiskIOStrategy*

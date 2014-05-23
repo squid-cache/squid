@@ -1,52 +1,40 @@
 #include "squid.h"
 #include "base/RunnersRegistry.h"
-#include <list>
-#include <map>
+#include <set>
 
-typedef std::list<RegisteredRunner*> Runners;
-typedef std::map<RunnerRegistry, Runners*> Registries;
+/// a collection of unique runners, in no particular order
+typedef std::set<RegisteredRunner*> Runners;
+/// all known runners
+static Runners *TheRunners = NULL;
 
-/// all known registries
-static Registries *TheRegistries = NULL;
-
-/// returns the requested runners list, initializing structures as needed
+/// safely returns registered runners, initializing structures as needed
 static Runners &
-GetRunners(const RunnerRegistry &registryId)
+GetRunners()
 {
-    if (!TheRegistries)
-        TheRegistries = new Registries;
-
-    if (TheRegistries->find(registryId) == TheRegistries->end())
-        (*TheRegistries)[registryId] = new Runners;
-
-    return *(*TheRegistries)[registryId];
+    if (!TheRunners)
+        TheRunners = new Runners;
+    return *TheRunners;
 }
 
 int
-RegisterRunner(const RunnerRegistry &registryId, RegisteredRunner *rr)
+RegisterRunner(RegisteredRunner *rr)
 {
-    Runners &runners = GetRunners(registryId);
-    runners.push_back(rr);
-    return runners.size();
-}
-
-int
-ActivateRegistered(const RunnerRegistry &registryId)
-{
-    Runners &runners = GetRunners(registryId);
-    typedef Runners::iterator RRI;
-    for (RRI i = runners.begin(); i != runners.end(); ++i)
-        (*i)->run(registryId);
+    Runners &runners = GetRunners();
+    runners.insert(rr);
     return runners.size();
 }
 
 void
-DeactivateRegistered(const RunnerRegistry &registryId)
+RunRegistered(const RegisteredRunner::Method &m)
 {
-    Runners &runners = GetRunners(registryId);
-    while (!runners.empty()) {
-        delete runners.back();
-        runners.pop_back();
+    Runners &runners = GetRunners();
+    typedef Runners::iterator RRI;
+    for (RRI i = runners.begin(); i != runners.end(); ++i)
+        ((*i)->*m)();
+
+    if (m == &RegisteredRunner::finishShutdown) {
+        delete TheRunners;
+        TheRunners = NULL;
     }
 }
 

@@ -9,8 +9,8 @@
 #include "globals.h"
 #include "HttpReply.h"
 #include "ipc/Messages.h"
-#include "ipc/UdsOp.h"
 #include "ipc/TypedMsgHdr.h"
+#include "ipc/UdsOp.h"
 #include "mgr/Filler.h"
 #include "mgr/InfoAction.h"
 #include "mgr/Request.h"
@@ -81,41 +81,17 @@ Mgr::InfoActionData::operator += (const InfoActionData& stats)
     cpu_usage += stats.cpu_usage;
     cpu_usage5 += stats.cpu_usage5;
     cpu_usage60 += stats.cpu_usage60;
-#if HAVE_SBRK
-    proc_data_seg += stats.proc_data_seg;
-#endif
     maxrss += stats.maxrss;
     page_faults += stats.page_faults;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     ms_bytes_total += stats.ms_bytes_total;
     ms_bytes_free += stats.ms_bytes_free;
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-    mp_arena += stats.mp_arena;
-    mp_uordblks += stats.mp_uordblks;
-    mp_ordblks += stats.mp_ordblks;
-    mp_usmblks += stats.mp_usmblks;
-    mp_smblks += stats.mp_smblks;
-    mp_hblkhd += stats.mp_hblkhd;
-    mp_hblks += stats.mp_hblks;
-    mp_fsmblks += stats.mp_fsmblks;
-    mp_fordblks += stats.mp_fordblks;
-#if HAVE_STRUCT_MALLINFO_MXFAST
-    mp_mxfast += stats.mp_mxfast;
-    mp_nlblks += stats.mp_nlblks;
-    mp_grain += stats.mp_grain;
-    mp_uordbytes += stats.mp_uordbytes;
-    mp_allocated += stats.mp_allocated;
-    mp_treeoverhead += stats.mp_treeoverhead;
-#endif
 #endif
     total_accounted += stats.total_accounted;
-#if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-    mem_pool_allocated += stats.mem_pool_allocated;
-#endif
     gb_saved_count += stats.gb_saved_count;
     gb_freed_count += stats.gb_freed_count;
     max_fd += stats.max_fd;
-    biggest_fd += stats.biggest_fd;
+    biggest_fd = max(biggest_fd, stats.biggest_fd);
     number_fd += stats.number_fd;
     opening_fd += stats.opening_fd;
     num_fd_free += stats.num_fd_free;

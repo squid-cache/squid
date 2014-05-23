@@ -55,11 +55,10 @@ bool
 xstrtoul(const char *s, char **end, unsigned long *value,
          unsigned long min, unsigned long max)
 {
-    unsigned long v;
-    char *my_end;
+    char *my_end = NULL;
 
     errno = 0;
-    v = strtoul(s, &my_end, 0);
+    unsigned long v = strtoul(s, &my_end, 0);
 
     if (my_end == s)
         return false;
@@ -81,10 +80,8 @@ bool
 xstrtoui(const char *s, char **end, unsigned int *value,
          unsigned int min, unsigned int max)
 {
-    unsigned long v;
-    bool ret;
-
-    ret = xstrtoul(s, end, &v, min, max);
+    unsigned long v = 0;
+    bool ret = xstrtoul(s, end, &v, min, max);
     if (value != NULL) {
         *value = v;
 

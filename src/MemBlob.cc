@@ -1,6 +1,4 @@
 /*
- * MemBlob.cc (C) 2009 Francesco Chemolli <kinkie@squid-cache.org>
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -33,10 +31,9 @@
 #include "Debug.h"
 #include "Mem.h"
 #include "MemBlob.h"
+#include "SBufDetailedStats.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
@@ -45,6 +42,17 @@ InstanceIdDefinitions(MemBlob, "blob");
 
 MemBlobStats::MemBlobStats(): alloc(0), live(0), append(0), liveBytes(0)
 {}
+
+MemBlobStats&
+MemBlobStats::operator += (const MemBlobStats& s)
+{
+    alloc+=s.alloc;
+    live+=s.live;
+    append+=s.append;
+    liveBytes+=s.liveBytes;
+
+    return *this;
+}
 
 std::ostream&
 MemBlobStats::dump(std::ostream &os) const
@@ -87,6 +95,7 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
+    recordMemBlobSizeAtDestruct(capacity);
 
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -117,13 +126,20 @@ MemBlob::memAlloc(const size_type minSize)
 }
 
 void
+MemBlob::appended(const size_type n)
+{
+    Must(willFit(n));
+    size += n;
+    ++Stats.append;
+}
+
+void
 MemBlob::append(const char *source, const size_type n)
 {
     if (n > 0) { // appending zero bytes is allowed but only affects the stats
         Must(willFit(n));
         Must(source);
-        /// \note memcpy() is safe because we copy to an unused area
-        memcpy(mem + size, source, n);
+        memmove(mem + size, source, n);
         size += n;
     }
     ++Stats.append;

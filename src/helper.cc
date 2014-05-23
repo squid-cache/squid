@@ -81,9 +81,11 @@ static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 CBDATA_CLASS_INIT(helper);
-CBDATA_TYPE(helper_server);
+CBDATA_CLASS_INIT(helper_server);
 CBDATA_CLASS_INIT(statefulhelper);
-CBDATA_TYPE(helper_stateful_server);
+CBDATA_CLASS_INIT(helper_stateful_server);
+
+InstanceIdDefinitions(HelperServerBase, "Hlpr");
 
 void
 HelperServerBase::initStats()
@@ -98,8 +100,6 @@ void
 HelperServerBase::closePipesSafely()
 {
 #if _SQUID_WINDOWS_
-    int no = index + 1;
-
     shutdown(writePipe->fd, SD_BOTH);
 #endif
 
@@ -115,7 +115,7 @@ HelperServerBase::closePipesSafely()
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
             debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                   " #" << no << " (" << hlp->cmdline->key << "," <<
+                   " #" << index << " (" << hlp->cmdline->key << "," <<
                    (long int)pid << ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
@@ -127,8 +127,6 @@ void
 HelperServerBase::closeWritePipeSafely()
 {
 #if _SQUID_WINDOWS_
-    int no = index + 1;
-
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
 #endif
 
@@ -142,7 +140,7 @@ HelperServerBase::closeWritePipeSafely()
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
             debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                   " #" << no << " (" << hlp->cmdline->key << "," <<
+                   " #" << index << " (" << hlp->cmdline->key << "," <<
                    (long int)pid << ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
@@ -223,12 +221,10 @@ helperOpenServers(helper * hlp)
 
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        CBDATA_INIT_TYPE(helper_server);
-        srv = cbdataAlloc(helper_server);
+        srv = new helper_server;
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->initStats();
-        srv->index = k;
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
         srv->readPipe->fd = rfd;
@@ -344,13 +340,11 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        CBDATA_INIT_TYPE(helper_stateful_server);
-        helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
+        helper_stateful_server *srv = new helper_stateful_server;
         srv->hIpc = hIpc;
         srv->pid = pid;
         srv->flags.reserved = false;
         srv->initStats();
-        srv->index = k;
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
         srv->readPipe->fd = rfd;
@@ -514,7 +508,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%s\t%7s\t%7s\t%7s\n",
-                      "#",
+                      "ID #",
                       "FD",
                       "PID",
                       "# Requests",
@@ -527,8 +521,8 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
         double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
-                          srv->index + 1,
+        storeAppendPrintf(sentry, "%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
+                          srv->index.value,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
@@ -569,7 +563,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%6s\t%7s\t%7s\t%7s\n",
-                      "#",
+                      "ID #",
                       "FD",
                       "PID",
                       "# Requests",
@@ -582,8 +576,8 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_stateful_server *srv = (helper_stateful_server *)link->data;
         double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->flags.busy ? current_time : srv->answer_time);
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
-                          srv->index + 1,
+        storeAppendPrintf(sentry, "%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+                          srv->index.value,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
@@ -617,7 +611,7 @@ helperShutdown(helper * hlp)
         link = link->next;
 
         if (srv->flags.shutdown) {
-            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has already SHUT DOWN.");
+            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index << " has already SHUT DOWN.");
             continue;
         }
 
@@ -626,16 +620,16 @@ helperShutdown(helper * hlp)
         srv->flags.shutdown = true;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
-            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is CLOSING.");
+            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index << " is CLOSING.");
             continue;
         }
 
         if (srv->stats.pending) {
-            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is BUSY.");
+            debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index << " is BUSY.");
             continue;
         }
 
-        debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " shutting down.");
+        debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index << " shutting down.");
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
@@ -654,7 +648,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         link = link->next;
 
         if (srv->flags.shutdown) {
-            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has already SHUT DOWN.");
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " has already SHUT DOWN.");
             continue;
         }
 
@@ -663,25 +657,25 @@ helperStatefulShutdown(statefulhelper * hlp)
         srv->flags.shutdown = true;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
-            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is BUSY.");
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is BUSY.");
             continue;
         }
 
         if (srv->flags.closing) {
-            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is CLOSING.");
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is CLOSING.");
             continue;
         }
 
         if (srv->flags.reserved) {
             if (shutting_down) {
-                debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Closing anyway.");
+                debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is RESERVED. Closing anyway.");
             } else {
-                debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Not Shutting Down Yet.");
+                debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is RESERVED. Not Shutting Down Yet.");
                 continue;
             }
         }
 
-        debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " shutting down.");
+        debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " shutting down.");
 
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
@@ -737,7 +731,7 @@ helperServerFree(helper_server *srv)
     if (!srv->flags.shutdown) {
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
+        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index << " exited");
 
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
@@ -805,7 +799,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
     if (!srv->flags.shutdown) {
         assert( hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
+        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index << " exited");
 
         if (hlp->childs.needNew() > 0) {
             debugs(80, DBG_IMPORTANT, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
@@ -879,7 +873,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
         helperRequestFree(r);
     } else {
         debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected reply on channel " <<
-               request_number << " from " << hlp->id_name << " #" << srv->index + 1 <<
+               request_number << " from " << hlp->id_name << " #" << srv->index <<
                " '" << srv->rbuf << "'");
     }
 
@@ -907,7 +901,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
     assert(conn->fd == srv->readPipe->fd);
 
-    debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1);
+    debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index);
 
     if (flag != COMM_OK || len == 0) {
         srv->closePipesSafely();
@@ -921,7 +915,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
     if (!srv->stats.pending) {
         /* someone spoke without being spoken to */
         debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected read from " <<
-               hlp->id_name << " #" << srv->index + 1 << ", " << (int)len <<
+               hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
         srv->roffset = 0;
@@ -974,8 +968,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         if (!spaceSize) {
             debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
-                   "Squid input buffer: " << hlp->id_name << " #" <<
-                   (srv->index + 1));
+                   "Squid input buffer: " << hlp->id_name << " #" << srv->index);
             srv->closePipesSafely();
             return;
         }
@@ -1004,7 +997,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     assert(conn->fd == srv->readPipe->fd);
 
     debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
-           hlp->id_name << " #" << srv->index + 1);
+           hlp->id_name << " #" << srv->index);
 
     if (flag != COMM_OK || len == 0) {
         srv->closePipesSafely();
@@ -1019,7 +1012,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     if (r == NULL) {
         /* someone spoke without being spoken to */
         debugs(84, DBG_IMPORTANT, "helperStatefulHandleRead: unexpected read from " <<
-               hlp->id_name << " #" << srv->index + 1 << ", " << (int)len <<
+               hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
         srv->roffset = 0;
@@ -1095,8 +1088,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         if (!spaceSize) {
             debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
-                   "Squid input buffer: " << hlp->id_name << " #" <<
-                   (srv->index + 1));
+                   "Squid input buffer: " << hlp->id_name << " #" << srv->index);
             srv->closePipesSafely();
             return;
         }
@@ -1297,7 +1289,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t l
 
     if (flag != COMM_OK) {
         /* Helper server has crashed */
-        debugs(84, DBG_CRITICAL, "helperDispatch: Helper " << srv->parent->id_name << " #" << srv->index + 1 << " has crashed");
+        debugs(84, DBG_CRITICAL, "helperDispatch: Helper " << srv->parent->id_name << " #" << srv->index << " has crashed");
         return;
     }
 
@@ -1353,7 +1345,7 @@ helperDispatch(helper_server * srv, helper_request * r)
         Comm::Write(srv->writePipe, srv->writebuf->content(), srv->writebuf->contentSize(), call, NULL);
     }
 
-    debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << strlen(r->buf) << " bytes");
+    debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index << ", " << strlen(r->buf) << " bytes");
 
     ++ srv->stats.uses;
     ++ srv->stats.pending;
@@ -1379,7 +1371,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         return;
     }
 
-    debugs(84, 9, "helperStatefulDispatch busying helper " << hlp->id_name << " #" << srv->index + 1);
+    debugs(84, 9, "helperStatefulDispatch busying helper " << hlp->id_name << " #" << srv->index);
 
     if (r->placeholder == 1) {
         /* a callback is needed before this request can _use_ a helper. */
@@ -1407,7 +1399,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
                                          CommIoCbPtrFun(helperStatefulDispatchWriteDone, hlp));
     Comm::Write(srv->writePipe, r->buf, strlen(r->buf), call, NULL);
     debugs(84, 5, "helperStatefulDispatch: Request sent to " <<
-           hlp->id_name << " #" << srv->index + 1 << ", " <<
+           hlp->id_name << " #" << srv->index << ", " <<
            (int) strlen(r->buf) << " bytes");
 
     ++ srv->stats.uses;

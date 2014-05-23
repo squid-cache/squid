@@ -33,8 +33,8 @@
 #include "squid.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
@@ -43,9 +43,9 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
-#include "MemObject.h"
 #include "mem_node.h"
 #include "MemBuf.h"
+#include "MemObject.h"
 #include "mgr/CountersAction.h"
 #include "mgr/FunAction.h"
 #include "mgr/InfoAction.h"
@@ -58,11 +58,11 @@
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "StatCounters.h"
 #include "stat.h"
-#include "StoreClient.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "store_digest.h"
+#include "StoreClient.h"
 #include "tools.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -70,7 +70,7 @@
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -320,9 +320,6 @@ storeEntryFlags(const StoreEntry * entry)
     if (EBIT_TEST(flags, REFRESH_REQUEST))
         strcat(buf, "REFRESH_REQUEST,");
 
-    if (EBIT_TEST(flags, ENTRY_CACHABLE))
-        strcat(buf, "CACHABLE,");
-
     if (EBIT_TEST(flags, ENTRY_DISPATCHED))
         strcat(buf, "DISPATCHED,");
 
@@ -371,7 +368,7 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
     mb->Printf("\t%s\n", storeEntryFlags(e));
     mb->Printf("\t%s\n", describeTimestamps(e));
     mb->Printf("\t%d locks, %d clients, %d refs\n",
-               (int) e->lock_count,
+               (int) e->locks(),
                storePendingNClients(e),
                (int) e->refcount);
     mb->Printf("\tSwap Dir %d, File %#08X\n",
@@ -394,11 +391,11 @@ statObjects(void *data)
         if (UsingSmp())
             storeAppendPrintf(state->sentry, "} by kid%d\n\n", KidIdentifier);
         state->sentry->complete();
-        state->sentry->unlock();
+        state->sentry->unlock("statObjects+isDone");
         cbdataFree(state);
         return;
     } else if (EBIT_TEST(state->sentry->flags, ENTRY_ABORTED)) {
-        state->sentry->unlock();
+        state->sentry->unlock("statObjects+aborted");
         cbdataFree(state);
         return;
     } else if (state->sentry->checkDeferRead(-1)) {
@@ -436,7 +433,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
     state->sentry = sentry;
     state->filter = filter;
 
-    sentry->lock();
+    sentry->lock("statObjects");
     state->theSearch = Store::Root().search(NULL, NULL);
 
     eventAdd("statObjects", statObjects, state, 0.0, 1);
@@ -502,11 +499,7 @@ GetInfo(Mgr::InfoActionData& stats)
     double cputime;
     double runtime;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
-
     struct mstats ms;
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    struct mallinfo mp;
 #endif
 
     runtime = tvSubDsec(squid_start, current_time);
@@ -591,12 +584,6 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.cpu_usage5 = statCPUUsage(5);
     stats.cpu_usage60 = statCPUUsage(60);
 
-#if HAVE_SBRK
-
-    stats.proc_data_seg = ((char *) sbrk(0) - (char *) sbrk_start);
-
-#endif
-
     stats.maxrss = rusage_maxrss(&rusage);
 
     stats.page_faults = rusage_pagefaults(&rusage);
@@ -609,52 +596,13 @@ GetInfo(Mgr::InfoActionData& stats)
 
     stats.ms_bytes_free = ms.bytes_free;
 
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    mp = mallinfo();
-
-    stats.mp_arena = mp.arena;
-
-    stats.mp_uordblks = mp.uordblks;
-    stats.mp_ordblks = mp.ordblks;
-
-    stats.mp_usmblks = mp.usmblks;
-    stats.mp_smblks = mp.smblks;
-
-    stats.mp_hblkhd = mp.hblkhd;
-    stats.mp_hblks = mp.hblks;
-
-    stats.mp_fsmblks = mp.fsmblks;
-
-    stats.mp_fordblks = mp.fordblks;
-
-#if HAVE_STRUCT_MALLINFO_MXFAST
-
-    stats.mp_mxfast = mp.mxfast;
-
-    stats.mp_nlblks = mp.nlblks;
-
-    stats.mp_grain = mp.grain;
-
-    stats.mp_uordbytes = mp.uordbytes;
-
-    stats.mp_allocated = mp.allocated;
-
-    stats.mp_treeoverhead = mp.treeoverhead;
-
-#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
-#endif /* HAVE_MALLINFO */
+#endif
 
     stats.total_accounted = statMemoryAccounted();
 
     {
         MemPoolGlobalStats mp_stats;
         memPoolGetGlobalStats(&mp_stats);
-#if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-        stats.mem_pool_allocated = mp_stats.TheMeter->alloc.level;
-#endif
-
         stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
         stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
     }
@@ -673,13 +621,17 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
+    storeAppendPrintf(sentry, "Build Info: " SQUID_BUILD_INFO "\n");
+
 #if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",
-                          WIN32_Service_name, WIN32_OS_string);
+                          Service_name, WIN32_OS_string);
         storeAppendPrintf(sentry,"Service command line is: %s\n", WIN32_Service_Command_Line);
     } else
         storeAppendPrintf(sentry,"Running on %s\n",WIN32_OS_string);
+#else
+    storeAppendPrintf(sentry,"Service Name: %s\n", service_name);
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
@@ -813,13 +765,6 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tCPU Usage, 60 minute avg:\t%.2f%%\n",
                       stats.cpu_usage60);
 
-#if HAVE_SBRK
-
-    storeAppendPrintf(sentry, "\tProcess Data Segment Size via sbrk(): %.0f KB\n",
-                      stats.proc_data_seg / 1024);
-
-#endif
-
     storeAppendPrintf(sentry, "\tMaximum Resident Size: %.0f KB\n",
                       stats.maxrss);
 
@@ -837,92 +782,14 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.ms_bytes_free / 1024,
                       Math::doublePercent(stats.ms_bytes_free, stats.ms_bytes_total));
 
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",APP_SHORTNAME);
-
-    storeAppendPrintf(sentry, "\tTotal space in arena:  %6.0f KB\n",
-                      stats.mp_arena / 1024);
-
-    storeAppendPrintf(sentry, "\tOrdinary blocks:       %6.0f KB %6.0f blks\n",
-                      stats.mp_uordblks / 1024, stats.mp_ordblks);
-
-    storeAppendPrintf(sentry, "\tSmall blocks:          %6.0f KB %6.0f blks\n",
-                      stats.mp_usmblks / 1024, stats.mp_smblks);
-
-    storeAppendPrintf(sentry, "\tHolding blocks:        %6.0f KB %6.0f blks\n",
-                      stats.mp_hblkhd / 1024, stats.mp_hblks);
-
-    storeAppendPrintf(sentry, "\tFree Small blocks:     %6.0f KB\n",
-                      stats.mp_fsmblks / 1024);
-
-    storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6.0f KB\n",
-                      stats.mp_fordblks / 1024);
-
-    double t = stats.mp_fsmblks + stats.mp_fordblks;
-
-    storeAppendPrintf(sentry, "\tTotal in use:          %6.0f KB %.0f%%\n",
-                      t / 1024, Math::doublePercent(t, stats.mp_arena + stats.mp_hblkhd));
-
-    t = stats.mp_fsmblks + stats.mp_fordblks;
-
-    storeAppendPrintf(sentry, "\tTotal free:            %6.0f KB %.0f%%\n",
-                      t / 1024, Math::doublePercent(t, stats.mp_arena + stats.mp_hblkhd));
-
-    t = stats.mp_arena + stats.mp_hblkhd;
-
-    storeAppendPrintf(sentry, "\tTotal size:            %6.0f KB\n",
-                      t / 1024);
-
-#if HAVE_STRUCT_MALLINFO_MXFAST
-
-    storeAppendPrintf(sentry, "\tmax size of small blocks:\t%.0f\n", stats.mp_mxfast);
-
-    storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%.0f\n",
-                      stats.mp_nlblks);
-
-    storeAppendPrintf(sentry, "\tsmall block rounding factor:\t%.0f\n", stats.mp_grain);
-
-    storeAppendPrintf(sentry, "\tspace (including overhead) allocated in ord. blks:\t%.0f\n"
-                      ,stats.mp_uordbytes);
-
-    storeAppendPrintf(sentry, "\tnumber of ordinary blocks allocated:\t%.0f\n",
-                      stats.mp_allocated);
-
-    storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%.0f\n",
-                      stats.mp_treeoverhead);
-
-#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
-#endif /* HAVE_MALLINFO */
+#endif
 
     storeAppendPrintf(sentry, "Memory accounted for:\n");
-
-#if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB %3.0f%%\n",
-                      stats.total_accounted / 1024, Math::doublePercent(stats.total_accounted, t));
-
-#else
-
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
-
-#endif
     {
         MemPoolGlobalStats mp_stats;
         memPoolGetGlobalStats(&mp_stats);
-#if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-        storeAppendPrintf(sentry, "\tmemPool accounted:     %6.0f KB %3.0f%%\n",
-                          stats.mem_pool_allocated / 1024,
-                          Math::doublePercent(stats.mem_pool_allocated, t));
-
-        const double iFree = max(0.0, t - stats.mem_pool_allocated);
-        storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6.0f KB %3.0f%%\n",
-                          (t - stats.mem_pool_allocated) / 1024,
-                          Math::doublePercent(iFree, t));
-#endif
-
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
@@ -1460,18 +1327,9 @@ statAvgTick(void *notused)
     if (Config.warnings.high_memory) {
         size_t i = 0;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
-
         struct mstats ms = mstats();
         i = ms.bytes_total;
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-        struct mallinfo mp = mallinfo();
-        i = mp.arena;
-#elif HAVE_SBRK
-
-        i = (size_t) ((char *) sbrk(0) - (char *) sbrk_start);
 #endif
-
         if (Config.warnings.high_memory < i)
             debugs(18, DBG_CRITICAL, "WARNING: Memory usage at " << ((unsigned long int)(i >> 20)) << " MB");
     }
@@ -2022,8 +1880,8 @@ statClientRequests(StoreEntry * s)
             storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
             storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
-            storeAppendPrintf(s, "\tin: buf %p, offset %ld, size %ld\n",
-                              conn->in.buf, (long int) conn->in.notYetUsed, (long int) conn->in.allocatedSize);
+            storeAppendPrintf(s, "\tin: buf %p, used %ld, free %ld\n",
+                              conn->in.buf.c_str(), (long int) conn->in.buf.length(), (long int) conn->in.buf.spaceSize());
             storeAppendPrintf(s, "\tremote: %s\n",
                               conn->clientConnection->remote.toUrl(buf,MAX_IPSTRLEN));
             storeAppendPrintf(s, "\tlocal: %s\n",
@@ -2040,22 +1898,22 @@ statClientRequests(StoreEntry * s)
         e = http->storeEntry();
         storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
         storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
-                          (long int) http->start_time.tv_sec,
-                          (int) http->start_time.tv_usec,
-                          tvSubDsec(http->start_time, current_time));
+                          (long int) http->al->cache.start_time.tv_sec,
+                          (int) http->al->cache.start_time.tv_usec,
+                          tvSubDsec(http->al->cache.start_time, current_time));
 #if USE_AUTH
         if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
         else
 #endif
-            if (http->request->extacl_user.defined()) {
+            if (http->request->extacl_user.size() > 0) {
                 p = http->request->extacl_user.termedBuf();
             }
 
         if (!p && conn != NULL && conn->clientConnection->rfc931[0])
             p = conn->clientConnection->rfc931;
 
-#if USE_SSL
+#if USE_OPENSSL
 
         if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);

@@ -37,8 +37,8 @@
 #include "hier_code.h"
 #include "http/StatusCode.h"
 #include "lookup_t.h"
-#include "rfc2181.h"
 #include "PingData.h"
+#include "rfc2181.h"
 
 class HierarchyLogEntry
 {

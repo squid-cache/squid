@@ -3,9 +3,9 @@
  */
 
 #include "squid.h"
-#include "HttpRequest.h"
-#include "adaptation/ServiceFilter.h"
 #include "adaptation/Service.h"
+#include "adaptation/ServiceFilter.h"
+#include "HttpRequest.h"
 
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {
@@ -71,6 +71,8 @@ Adaptation::FindService(const Service::Id& key)
 
 void Adaptation::DetachServices()
 {
-    while (!AllServices().empty())
-        AllServices().pop_back()->detach();
+    while (!AllServices().empty()) {
+        AllServices().back()->detach();
+        AllServices().pop_back();
+    }
 }

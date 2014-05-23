@@ -13,14 +13,13 @@
 /* Squid provides a number of portability overrides */
 #include "squid.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #include <syslog.h>
-#include <errno.h>
 #include <sys/param.h>
 #include <netdb.h>
-#include <assert.h>
 
 #include "msntauth.h"
 #include "valid.h"

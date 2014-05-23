@@ -7,24 +7,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
-#include "wordlist.h"
 #include <algorithm>
-
-// "delete acl" class to use with std::for_each() in InnerNode::~InnerNode()
-class AclDeleter
-{
-public:
-    void operator()(ACL* acl) {
-        // Do not delete explicit ACLs; they are maintained by Config.aclList.
-        if (acl && !acl->registered)
-            delete acl;
-    }
-};
-
-Acl::InnerNode::~InnerNode()
-{
-    std::for_each(nodes.begin(), nodes.end(), AclDeleter());
-}
 
 void
 Acl::InnerNode::prepareForUse()
@@ -80,13 +63,13 @@ Acl::InnerNode::lineParse()
     return;
 }
 
-wordlist*
+SBufList
 Acl::InnerNode::dump() const
 {
-    wordlist *values = NULL;
+    SBufList rv;
     for (Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i)
-        wordlistAdd(&values, (*i)->name);
-    return values;
+        rv.push_back(SBuf((*i)->name));
+    return rv;
 }
 
 int
@@ -96,7 +79,7 @@ Acl::InnerNode::match(ACLChecklist *checklist)
 }
 
 bool
-Acl::InnerNode::resumeMatchingAt(ACLChecklist *checklist, Nodes::const_iterator pos) const
+Acl::InnerNode::resumeMatchingAt(ACLChecklist *checklist, Acl::Nodes::const_iterator pos) const
 {
     debugs(28, 5, "checking " << name << " at " << (pos-nodes.begin()));
     const int result = doMatch(checklist, pos);

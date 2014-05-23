@@ -228,7 +228,6 @@ HttpRequest::clone() const
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
-    copy->myportname = myportname;
     copy->tag = tag;
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
@@ -272,6 +271,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     extacl_user = aReq->extacl_user;
     extacl_passwd = aReq->extacl_passwd;
 #endif
+
+    myportname = aReq->myportname;
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
@@ -478,7 +479,7 @@ HttpRequest::adaptHistoryImport(const HttpRequest &them)
 bool
 HttpRequest::multipartRangeRequest() const
 {
-    return (range && range->specs.count > 1);
+    return (range && range->specs.size() > 1);
 }
 
 bool
@@ -595,6 +596,7 @@ HttpRequest::maybeCacheable()
 
     switch (protocol) {
     case AnyP::PROTO_HTTP:
+    case AnyP::PROTO_HTTPS:
         if (!method.respMaybeCacheable())
             return false;
 
@@ -662,6 +664,20 @@ HttpRequest::getRangeOffsetLimit()
     }
 
     return rangeOffsetLimit;
+}
+
+void
+HttpRequest::ignoreRange(const char *reason)
+{
+    if (range) {
+        debugs(73, 3, static_cast<void*>(range) << " for " << reason);
+        delete range;
+        range = NULL;
+    }
+    // Some callers also reset isRanged but it may not be safe for all callers:
+    // isRanged is used to determine whether a weak ETag comparison is allowed,
+    // and that check should not ignore the Range header if it was present.
+    // TODO: Some callers also delete HDR_RANGE, HDR_REQUEST_RANGE. Should we?
 }
 
 bool

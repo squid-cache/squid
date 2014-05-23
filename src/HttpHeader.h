@@ -36,6 +36,8 @@
 #include "MemPool.h"
 #include "SquidString.h"
 
+#include <vector>
+
 /* class forward declarations */
 class HttpHdrCc;
 class HttpHdrContRange;
@@ -83,6 +85,7 @@ typedef enum {
     HDR_EXPIRES,                        /**< RFC 2608, 2616 */
     HDR_FROM,                           /**< RFC 2608, 2616 */
     HDR_HOST,                           /**< RFC 2608, 2616 */
+    HDR_HTTP2_SETTINGS,                 /**< HTTP/2.0 upgrade header. see draft-ietf-httpbis-http2-04 */
     /*HDR_IF,*/                         /* RFC 2518 */
     HDR_IF_MATCH,                       /**< RFC 2608, 2616 */
     HDR_IF_MODIFIED_SINCE,              /**< RFC 2608, 2616 */
@@ -178,7 +181,7 @@ typedef enum {
 #endif
     hoRequest,
     hoReply,
-#if USE_SSL
+#if USE_OPENSSL
     hoErrorDetail,
 #endif
     hoEnd
@@ -287,7 +290,7 @@ public:
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
-    Vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
+    std::vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
     HttpHeaderMask mask;	/**< bit set <=> entry present */
     http_hdr_owner_type owner;	/**< request or reply */
     int len;			/**< length when packed, not counting terminating null-byte */

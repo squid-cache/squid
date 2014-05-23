@@ -149,6 +149,12 @@ void Adaptation::History::recordMeta(const HttpHeader *lm)
 }
 
 void
+Adaptation::History::recordAdaptationService(SBuf &srvId)
+{
+    theAdaptationServices.push_back(srvId);
+}
+
+void
 Adaptation::History::setFutureServices(const DynamicGroupCfg &services)
 {
     if (!theFutureServices.empty())

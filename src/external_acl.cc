@@ -44,6 +44,7 @@
 #include "cache_cf.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "ConfigParser.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "fde.h"
@@ -61,9 +62,8 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
-#include "URLScheme.h"
 #include "wordlist.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 #if USE_AUTH
@@ -183,7 +183,7 @@ struct _external_acl_format {
         EXT_ACL_HEADER_REPLY_ID,
         EXT_ACL_HEADER_REPLY_ID_MEMBER,
 
-#if USE_SSL
+#if USE_OPENSSL
         EXT_ACL_USER_CERT,
         EXT_ACL_USER_CA_CERT,
         EXT_ACL_USER_CERT_RAW,
@@ -330,14 +330,16 @@ parse_externalAclHelper(external_acl ** list)
     a->local_addr.setLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
-    token = strtok(NULL, w_space);
+    token = ConfigParser::NextToken();
 
     if (!token)
         self_destruct();
 
     a->name = xstrdup(token);
 
-    token = strtok(NULL, w_space);
+    // Allow supported %macros inside quoted tokens
+    ConfigParser::EnableMacros();
+    token = ConfigParser::NextToken();
 
     /* Parse options */
     while (token) {
@@ -386,8 +388,9 @@ parse_externalAclHelper(external_acl ** list)
             break;
         }
 
-        token = strtok(NULL, w_space);
+        token = ConfigParser::NextToken();
     }
+    ConfigParser::DisableMacros();
 
     /* check that child startup value is sane. */
     if (a->children.n_startup > a->children.n_max)
@@ -465,7 +468,7 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_PATH;
         else if (strcmp(token, "%METHOD") == 0 || strcmp(token, "%>rm") == 0)
             format->type = _external_acl_format::EXT_ACL_METHOD;
-#if USE_SSL
+#if USE_OPENSSL
         else if (strcmp(token, "%USER_CERT") == 0)
             format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
         else if (strcmp(token, "%USER_CERTCHAIN") == 0)
@@ -503,7 +506,7 @@ parse_externalAclHelper(external_acl ** list)
 
         *p = format;
         p = &format->next;
-        token = strtok(NULL, w_space);
+        token = ConfigParser::NextToken();
     }
 
     /* There must be at least one format token */
@@ -620,7 +623,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE(PORT);
                 DUMP_EXT_ACL_TYPE(PATH);
                 DUMP_EXT_ACL_TYPE(METHOD);
-#if USE_SSL
+#if USE_OPENSSL
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT_RAW, " %%USER_CERT_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(USER_CERT, " %%USER_CERT_%s", format->header);
@@ -927,23 +930,20 @@ ACLExternal::match(ACLChecklist *checklist)
     }
 }
 
-wordlist *
+SBufList
 ACLExternal::dump() const
 {
     external_acl_data const *acl = data;
-    wordlist *result = NULL;
-    wordlist *arg;
-    MemBuf mb;
-    mb.init();
-    mb.Printf("%s", acl->def->name);
+    SBufList rv;
+    rv.push_back(SBuf(acl->def->name));
 
-    for (arg = acl->arguments; arg; arg = arg->next) {
-        mb.Printf(" %s", arg->key);
+    for (wordlist *arg = acl->arguments; arg; arg = arg->next) {
+        SBuf s;
+        s.Printf(" %s", arg->key);
+        rv.push_back(s);
     }
 
-    wordlistAdd(&result, mb.buf);
-    mb.clean();
-    return result;
+    return rv;
 }
 
 /******************************************************************
@@ -1108,7 +1108,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 str = sb.termedBuf();
             }
             break;
-#if USE_SSL
+#if USE_OPENSSL
 
         case _external_acl_format::EXT_ACL_USER_CERT_RAW:
 
@@ -1376,6 +1376,8 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 
     // XXX: make entryData store a proper HelperReply object instead of copying.
 
+    entryData.notes.append(&reply.notes);
+
     const char *label = reply.notes.findFirst("tag");
     if (label != NULL && *label != '\0')
         entryData.tag = label;
@@ -1599,6 +1601,18 @@ ExternalACLLookup::LookupDone(void *data, void *result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
+
+    // attach the helper kv-pair to the transaction
+    if (HttpRequest * req = checklist->request) {
+        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+        // workaround by using anything already set in HttpRequest
+        // OR use new and rely on a later Sync copying these to AccessLogEntry
+        if (!req->notes)
+            req->notes = new NotePairs;
+
+        req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+    }
+
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 
@@ -1619,13 +1633,13 @@ ACLExternal::clone() const
     return new ACLExternal(*this);
 }
 
-ACLExternal::ACLExternal (char const *theClass) : data (NULL), class_ (xstrdup (theClass))
+ACLExternal::ACLExternal(char const *theClass) : data(NULL), class_(xstrdup(theClass))
 {}
 
-ACLExternal::ACLExternal (ACLExternal const & old) : data (NULL), class_ (old.class_ ? xstrdup (old.class_) : NULL)
+ACLExternal::ACLExternal(ACLExternal const & old) : data(NULL), class_(old.class_ ? xstrdup(old.class_) : NULL)
 {
     /* we don't have copy constructors for the data yet */
-    assert (!old.data);
+    assert(!old.data);
 }
 
 char const *

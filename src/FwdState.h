@@ -1,7 +1,6 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -9,7 +8,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -20,7 +19,7 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
-#if USE_SSL
+#if USE_OPENSSL
 namespace Ssl
 {
 class ErrorDetail;
@@ -39,6 +38,9 @@ tos_t GetTosToServer(HttpRequest * request);
  * connection to the server, based on the ACL.
  */
 nfmark_t GetNfmarkToServer(HttpRequest * request);
+
+/// Sets initial TOS value and Netfilter for the future outgoing connection.
+void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
 
 class HelperReply;
 
@@ -84,7 +86,7 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-#if USE_SSL
+#if USE_OPENSSL
     /// Callback function called when squid receive message from cert validator helper
     static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
     /// Process response from cert validator helper
