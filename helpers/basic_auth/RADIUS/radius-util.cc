@@ -37,35 +37,24 @@ char util_sccsid[] =
     "		2.1 Copyright 1997 Cistron Internet Services B.V.";
 
 #include "squid.h"
+#include "md5.h"
+#include "radius-util.h"
 
+#include <cctype>
+#include <csignal>
+#include <ctime>
 #if HAVE_SYS_SOCKET_H
-#include	<sys/socket.h>
+#include <sys/socket.h>
 #endif
 #if HAVE_NETINET_IN_H
-#include	<netinet/in.h>
-#endif
-
-#if HAVE_STDIO_H
-#include	<stdio.h>
+#include <netinet/in.h>
 #endif
 #if HAVE_NETDB_H
-#include	<netdb.h>
+#include <netdb.h>
 #endif
 #if HAVE_PWD_H
-#include	<pwd.h>
+#include <pwd.h>
 #endif
-#if HAVE_TIME_H
-#include	<time.h>
-#endif
-#if HAVE_CTYPE_H
-#include	<ctype.h>
-#endif
-#if HAVE_SIGNAL_H
-#include	<signal.h>
-#endif
-
-#include	"md5.h"
-#include	"radius-util.h"
 
 /*
  *	Check for valid IP address in standard dot notation.

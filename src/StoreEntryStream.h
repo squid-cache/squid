@@ -33,9 +33,7 @@
 
 #include "Store.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 /*
  * This class provides a streambuf interface for writing
@@ -48,13 +46,12 @@ class StoreEntryStreamBuf : public std::streambuf
 
 public:
     StoreEntryStreamBuf(StoreEntry *anEntry) : theEntry(anEntry) {
-
-        theEntry->lock();
+        theEntry->lock("StoreEntryStreamBuf");
         theEntry->buffer();
     }
 
     ~StoreEntryStreamBuf() {
-        theEntry->unlock();
+        theEntry->unlock("StoreEntryStreamBuf");
     }
 
 protected:

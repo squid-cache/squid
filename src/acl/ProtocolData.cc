@@ -33,11 +33,10 @@
  */
 
 #include "squid.h"
-#include "acl/ProtocolData.h"
 #include "acl/Checklist.h"
+#include "acl/ProtocolData.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 
 ACLProtocolData::ACLProtocolData() : values (NULL)
@@ -62,22 +61,22 @@ ACLProtocolData::match(AnyP::ProtocolType toFind)
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<AnyP::ProtocolType>::CBDATA_CbDataList;
 /// \endcond
 
-wordlist *
-ACLProtocolData::dump()
+SBufList
+ACLProtocolData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
     CbDataList<AnyP::ProtocolType> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, AnyP::ProtocolType_str[data->element]);
+        sl.push_back(SBuf(AnyP::ProtocolType_str[data->element]));
         data = data->next;
     }
 
-    return W;
+    return sl;
 }
 
 void

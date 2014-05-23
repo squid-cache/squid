@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "StoreFileSystem.h"
 
-Vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
+std::vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
 
 void
 StoreFileSystem::RegisterAllFsWithCacheManager(void)
@@ -65,17 +65,17 @@ StoreFileSystem::FsAdd(StoreFileSystem &instance)
     GetFileSystems().push_back (&instance);
 }
 
-Vector<StoreFileSystem *> const &
+std::vector<StoreFileSystem *> const &
 StoreFileSystem::FileSystems()
 {
     return GetFileSystems();
 }
 
-Vector<StoreFileSystem*> &
+std::vector<StoreFileSystem*> &
 StoreFileSystem::GetFileSystems()
 {
     if (!_FileSystems)
-        _FileSystems = new Vector<StoreFileSystem *>;
+        _FileSystems = new std::vector<StoreFileSystem *>;
 
     return *_FileSystems;
 }
@@ -87,7 +87,7 @@ StoreFileSystem::GetFileSystems()
 void
 StoreFileSystem::FreeAllFs()
 {
-    while (GetFileSystems().size()) {
+    while (!GetFileSystems().empty()) {
         StoreFileSystem *fs = GetFileSystems().back();
         GetFileSystems().pop_back();
         fs->done();

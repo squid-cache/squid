@@ -38,22 +38,34 @@
 
 #include "squid.h"
 #include "acl/Acl.h"
-#include "acl/AclNameList.h"
 #include "acl/AclDenyInfoList.h"
+#include "acl/AclNameList.h"
 #include "acl/Checklist.h"
-#include "acl/Tree.h"
-#include "acl/Strategised.h"
 #include "acl/Gadgets.h"
+#include "acl/Strategised.h"
+#include "acl/Tree.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "Mem.h"
 
+#include <set>
+#include <algorithm>
+
+typedef std::set<ACL*> AclSet;
+/// Accumulates all ACLs to facilitate their clean deletion despite reuse.
+static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
+
 /* does name lookup, returns page_id */
 err_type
 aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
 {
+    if (!name) {
+        debugs(28, 3, "ERR_NONE due to a NULL name");
+        return ERR_NONE;
+    }
+
     AclDenyInfoList *A = NULL;
 
     debugs(28, 8, HERE << "got called for " << name);
@@ -83,10 +95,12 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
 int
 aclIsProxyAuth(const char *name)
 {
-    debugs(28, 5, "aclIsProxyAuth: called for " << name);
-
-    if (NULL == name)
+    if (!name) {
+        debugs(28, 3, "false due to a NULL name");
         return false;
+    }
+
+    debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
     ACL *a;
 
@@ -120,7 +134,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 
     /* first expect a page name */
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: missing 'error page' parameter.");
         return;
@@ -133,7 +147,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     /* next expect a list of ACL names */
     Tail = &A->acl_list;
 
-    while ((t = strtok(NULL, w_space))) {
+    while ((t = ConfigParser::NextToken())) {
         L = (AclNameList *)memAllocate(MEM_ACL_NAME_LIST);
         xstrncpy(L->name, t, ACL_NAME_SZ-1);
         *Tail = L;
@@ -157,7 +171,7 @@ void
 aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 {
     /* first expect either 'allow' or 'deny' */
-    const char *t = ConfigParser::strtokFile();
+    const char *t = ConfigParser::NextToken();
 
     if (!t) {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
@@ -237,23 +251,38 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     *treep = tree;
 }
 
+void
+aclRegister(ACL *acl)
+{
+    if (!acl->registered) {
+        if (!RegisteredAcls)
+            RegisteredAcls = new AclSet;
+        RegisteredAcls->insert(acl);
+        acl->registered = true;
+    }
+}
+
 /*********************/
 /* Destroy functions */
 /*********************/
 
+/// helper for RegisteredAcls cleanup
+static void
+aclDeleteOne(ACL *acl)
+{
+    delete acl;
+}
+
+/// called to delete ALL Acls.
 void
 aclDestroyAcls(ACL ** head)
 {
-    ACL *next = NULL;
-
-    debugs(28, 8, "aclDestroyACLs: invoked");
-
-    for (ACL *a = *head; a; a = next) {
-        next = a->next;
-        delete a;
+    *head = NULL; // Config.aclList
+    if (AclSet *acls = RegisteredAcls) {
+        debugs(28, 8, "deleting all " << acls->size() << " ACLs");
+        std::for_each(acls->begin(), acls->end(), &aclDeleteOne);
+        acls->clear();
     }
-
-    *head = NULL;
 }
 
 void

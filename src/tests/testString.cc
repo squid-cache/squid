@@ -1,10 +1,10 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include "testString.h"
-#include "SquidString.h"
-#include "Mem.h"
 #include "event.h"
+#include "Mem.h"
+#include "SquidString.h"
+#include "testString.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testString );
 

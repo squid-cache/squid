@@ -19,7 +19,7 @@ class User : public Auth::User
 public:
     MEMPROXY_CLASS(Auth::Basic::User);
 
-    User(Auth::Config *);
+    User(Auth::Config *, const char *requestRealm);
     ~User();
     bool authenticated() const;
     bool valid() const;

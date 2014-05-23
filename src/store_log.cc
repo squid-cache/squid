@@ -36,10 +36,10 @@
 #include "log/File.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
-#include "Store.h"
-#include "store_log.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "store_log.h"
 
 static const char *storeLogTags[] = {
     "CREATE",
@@ -62,7 +62,7 @@ storeLog(int tag, const StoreEntry * e)
     MemObject *mem = e->mem_obj;
     HttpReply const *reply;
 
-    if (str_unknown.undefined())
+    if (str_unknown.size()==0)
         str_unknown="unknown"; //hack. Delay initialization as string doesn't support global variables..
 
     if (NULL == storelog)
@@ -70,12 +70,6 @@ storeLog(int tag, const StoreEntry * e)
 
     ++storeLogTagsCounts[tag];
     if (mem != NULL) {
-        if (mem->log_url == NULL) {
-            debugs(20, DBG_IMPORTANT, "storeLog: NULL log_url for " << mem->url);
-            mem->dump();
-            mem->log_url = xstrdup(mem->url);
-        }
-
         reply = e->getReply();
         /*
          * XXX Ok, where should we print the dir number here?
@@ -101,7 +95,7 @@ storeLog(int tag, const StoreEntry * e)
                       reply->content_length,
                       e->contentLen(),
                       RequestMethodStr(mem->method),
-                      mem->log_url);
+                      mem->logUri());
         logfileLineEnd(storelog);
     } else {
         /* no mem object. Most RELEASE cases */

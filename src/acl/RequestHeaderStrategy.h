@@ -35,9 +35,9 @@
 #define SQUID_ACLREQUESTHEADERSTRATEGY_H
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Strategy.h"
 #include "HttpRequest.h"
-#include "acl/FilledChecklist.h"
 
 template <http_hdr_type header>
 

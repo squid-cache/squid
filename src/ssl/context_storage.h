@@ -1,22 +1,21 @@
 #ifndef SQUID_SSL_CONTEXT_STORAGE_H
 #define SQUID_SSL_CONTEXT_STORAGE_H
 
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "base/LruMap.h"
-#include "SquidTime.h"
 #include "CacheManager.h"
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
+#include "SquidTime.h"
 #include "ssl/gadgets.h"
-#if HAVE_MAP
-#include <map>
-#endif
-#if HAVE_LIST
+
 #include <list>
-#endif
+#include <map>
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
+#endif
 
 /// TODO: Replace on real size.
 #define SSL_CTX_SIZE 1024
@@ -52,7 +51,7 @@ public:
     /// Create new SSL context storage for the local listening address/port.
     void addLocalStorage(Ip::Address const & address, size_t size_of_store);
     /// Return the local storage for the given listening address/port.
-    LocalContextStorage & getLocalStorage(Ip::Address const & address);
+    LocalContextStorage *getLocalStorage(Ip::Address const & address);
     /// When reconfigring should be called this method.
     void reconfigureStart();
 private:
@@ -68,6 +67,6 @@ private:
 /// Global cache for store all SSL server certificates.
 extern GlobalContextStorage TheGlobalContextStorage;
 } //namespace Ssl
-#endif // USE_SSL
+#endif // USE_OPENSSL
 
 #endif // SQUID_SSL_CONTEXT_STORAGE_H

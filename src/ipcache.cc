@@ -31,8 +31,9 @@
  */
 
 #include "squid.h"
-#include "cbdata.h"
 #include "CacheManager.h"
+#include "cbdata.h"
+#include "dlink.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -142,17 +143,9 @@ static dlink_list lru_list;
 static void stat_ipcache_get(StoreEntry *);
 
 static FREE ipcacheFreeEntry;
-#if USE_DNSHELPER
-static HLPCB ipcacheHandleReply;
-#else
 static IDNSCB ipcacheHandleReply;
-#endif
 static int ipcacheExpiredEntry(ipcache_entry *);
-#if USE_DNSHELPER
-static int ipcacheParse(ipcache_entry *, const char *buf);
-#else
 static int ipcacheParse(ipcache_entry *, const rfc1035_rr *, int, const char *error);
-#endif
 static ipcache_entry *ipcache_get(const char *);
 static void ipcacheLockEntry(ipcache_entry *);
 static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
@@ -358,110 +351,6 @@ ipcacheCallback(ipcache_entry *i, int wait)
 }
 
 /// \ingroup IPCacheAPI
-#if USE_DNSHELPER
-static int
-ipcacheParse(ipcache_entry *i, const char *inbuf)
-{
-    LOCAL_ARRAY(char, buf, DNS_INBUF_SZ);
-    char *token;
-    int ipcount = 0;
-    int ttl;
-    char *A[32];
-    const char *name = (const char *)i->hash.key;
-    i->expires = squid_curtime + Config.negativeDnsTtl;
-    i->flags.negcached = 1;
-    safe_free(i->addrs.in_addrs);
-    safe_free(i->addrs.bad_mask);
-    safe_free(i->error_message);
-    i->addrs.count = 0;
-
-    if (inbuf == NULL) {
-        debugs(14, DBG_IMPORTANT, "ipcacheParse: Got <NULL> reply");
-        i->error_message = xstrdup("Internal Error");
-        return -1;
-    }
-
-    xstrncpy(buf, inbuf, DNS_INBUF_SZ);
-    debugs(14, 5, "ipcacheParse: parsing: {" << buf << "}");
-    token = strtok(buf, w_space);
-
-    if (NULL == token) {
-        debugs(14, DBG_IMPORTANT, "ipcacheParse: expecting result, got '" << inbuf << "'");
-
-        i->error_message = xstrdup("Internal Error");
-        return -1;
-    }
-
-    if (0 == strcmp(token, "$fail")) {
-        token = strtok(NULL, "\n");
-        assert(NULL != token);
-        i->error_message = xstrdup(token);
-        return 0;
-    }
-
-    if (0 != strcmp(token, "$addr")) {
-        debugs(14, DBG_IMPORTANT, "ipcacheParse: expecting '$addr', got '" << inbuf << "' in response to '" << name << "'");
-
-        i->error_message = xstrdup("Internal Error");
-        return -1;
-    }
-
-    token = strtok(NULL, w_space);
-
-    if (NULL == token) {
-        debugs(14, DBG_IMPORTANT, "ipcacheParse: expecting TTL, got '" << inbuf << "' in response to '" << name << "'");
-
-        i->error_message = xstrdup("Internal Error");
-        return -1;
-    }
-
-    ttl = atoi(token);
-
-    while (NULL != (token = strtok(NULL, w_space))) {
-        A[ipcount] = token;
-
-        if (++ipcount == 32)
-            break;
-    }
-
-    if (ipcount > 0) {
-        int j, k;
-
-        i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(ipcount, sizeof(Ip::Address)));
-        for (int l = 0; l < ipcount; ++l)
-            i->addrs.in_addrs[l].setEmpty(); // perform same init actions as constructor would.
-        i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
-        memset(i->addrs.bad_mask, 0, sizeof(unsigned char) * ipcount);
-
-        for (j = 0, k = 0; k < ipcount; ++k) {
-            if ((i->addrs.in_addrs[j] = A[k]))
-                ++j;
-            else
-                debugs(14, DBG_IMPORTANT, "ipcacheParse: Invalid IP address '" << A[k] << "' in response to '" << name << "'");
-        }
-
-        i->addrs.count = (unsigned char) j;
-    }
-
-    if (i->addrs.count <= 0) {
-        debugs(14, DBG_IMPORTANT, "ipcacheParse: No addresses in response to '" << name << "'");
-        return -1;
-    }
-
-    if (ttl == 0 || ttl > Config.positiveDnsTtl)
-        ttl = Config.positiveDnsTtl;
-
-    if (ttl < Config.negativeDnsTtl)
-        ttl = Config.negativeDnsTtl;
-
-    i->expires = squid_curtime + ttl;
-
-    i->flags.negcached = 0;
-
-    return i->addrs.count;
-}
-
-#else
 static int
 ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *error_message)
 {
@@ -590,15 +479,9 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
     return i->addrs.count;
 }
 
-#endif
-
 /// \ingroup IPCacheInternal
 static void
-#if USE_DNSHELPER
-ipcacheHandleReply(void *data, const HelperReply &reply)
-#else
 ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
-#endif
 {
     ipcache_entry *i;
     static_cast<generic_cbdata *>(data)->unwrap(&i);
@@ -606,17 +489,10 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
     const int age = i->age();
     statCounter.dns.svcTime.count(age);
 
-#if USE_DNSHELPER
-    ipcacheParse(i, reply.other().content());
-#else
-
     int done = ipcacheParse(i, answers, na, error_message);
 
     /* If we have not produced either IPs or Error immediately, wait for recursion to finish. */
-    if (done != 0 || error_message != NULL)
-#endif
-
-    {
+    if (done != 0 || error_message != NULL) {
         ipcacheAddEntry(i);
         ipcacheCallback(i, age);
     }
@@ -699,11 +575,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     i->handlerData = cbdataReference(handlerData);
     i->request_time = current_time;
     c = new generic_cbdata(i);
-#if USE_DNSHELPER
-    dnsSubmit(hashKeyStr(&i->hash), ipcacheHandleReply, c);
-#else
     idnsALookup(hashKeyStr(&i->hash), ipcacheHandleReply, c);
-#endif
 }
 
 /// \ingroup IPCacheInternal
@@ -1071,7 +943,6 @@ ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)
     if (!ia->bad_mask[k]) {
         ia->bad_mask[k] = TRUE;
         ++ia->badcount;
-        i->expires = min(squid_curtime + max((time_t)60, Config.negativeDnsTtl), i->expires);
         debugs(14, 2, "ipcacheMarkBadAddr: " << name << " " << addr );
     }
 

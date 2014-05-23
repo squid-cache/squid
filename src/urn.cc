@@ -190,9 +190,9 @@ UrnState::createUriResRequest (String &uri)
     char *host = getHost (uri);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSTRINGPH,
              host, SQUIDSTRINGPRINT(uri));
-    safe_free (host);
-    safe_free (urlres);
-    urlres = xstrdup (local_urlres);
+    safe_free(host);
+    safe_free(urlres);
+    urlres = xstrdup(local_urlres);
     urlres_r = HttpRequest::CreateFromUrl(urlres);
 }
 
@@ -225,7 +225,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     entry = e;
     request = r;
 
-    entry->lock();
+    entry->lock("UrnState::start");
     setUriResFromRequest(r);
 
     if (urlres_r == NULL)
@@ -244,7 +244,7 @@ UrnState::created(StoreEntry *newEntry)
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());
     } else {
-        urlres_e->lock();
+        urlres_e->lock("UrnState::created");
         sc = storeClientListAdd(urlres_e, this);
     }
 
@@ -285,8 +285,8 @@ url_entry_sort(const void *A, const void *B)
 static void
 urnHandleReplyError(UrnState *urnState, StoreEntry *urlres_e)
 {
-    urlres_e->unlock();
-    urnState->entry->unlock();
+    urlres_e->unlock("urnHandleReplyError+res");
+    urnState->entry->unlock("urnHandleReplyError+prime");
     delete urnState;
 }
 
@@ -419,7 +419,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "</ADDRESS>\n",
         APP_FULLNAME, getMyHostname());
     rep = new HttpReply;
-    rep->setHeaders(Http::scMovedTemporarily, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
+    rep->setHeaders(Http::scFound, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");

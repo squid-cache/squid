@@ -11,14 +11,7 @@ namespace Ip
 class Address;
 };
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
-
-/* memcpy and friends */
-#if HAVE_STRING_H
-#include <string.h>
-#endif
 
 namespace Eui
 {
@@ -27,9 +20,9 @@ class Eui48
 {
 
 public:
-    Eui48() { clear(); };
-    Eui48(const Eui48 &t) { memcpy(this, &t, sizeof(Eui48)); };
-    ~Eui48() {};
+    Eui48() { clear(); }
+    Eui48(const Eui48 &t) { memcpy(this, &t, sizeof(Eui48)); }
+    ~Eui48() {}
 
     const unsigned char *get(void);
 
@@ -38,9 +31,9 @@ public:
         if (len < SZ_EUI48_BUF) clear();
         memcpy(eui, src, len);
         return true;
-    };
+    }
 
-    void clear() { memset(eui, 0, SZ_EUI48_BUF); };
+    void clear() { memset(eui, 0, SZ_EUI48_BUF); }
 
     /**
      * Decode an ascii representation of an EUI-48 ethernet address.

@@ -36,11 +36,11 @@
 
 #if USE_ICMP
 
-#include "SquidTime.h"
-#include "IcmpPinger.h"
+#include "Debug.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
-#include "Debug.h"
+#include "IcmpPinger.h"
+#include "SquidTime.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

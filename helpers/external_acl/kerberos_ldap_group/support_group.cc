@@ -31,6 +31,7 @@
 #include "support.h"
 
 struct gdstruct *init_gd(void);
+void free_gd(struct gdstruct *gdsp);
 
 struct gdstruct *
 init_gd(void) {
@@ -59,7 +60,8 @@ char *utf8dup(struct main_args *margs);
 char *
 utf8dup(struct main_args *margs)
 {
-    int c = 0, s;
+    size_t c = 0;
+    unsigned char s;
     size_t n;
     char *src;
     unsigned char *p, *dupp;
@@ -79,7 +81,7 @@ utf8dup(struct main_args *margs)
                 *p = 194;
                 ++p;
                 *p = s;
-            } else if (s > 191 && s < 256) {
+            } else if (s > 191) {
                 *p = 195;
                 ++p;
                 *p = s - 64;
@@ -121,7 +123,7 @@ hex_utf_char(struct main_args *margs, int flag)
         return NULL;
 
     char *upd = strrchr(up, '@');
-    size_t a = (upd ? (upd - up) : strlen(up) );
+    size_t a = (upd ? (size_t)(upd - up) : strlen(up) );
 
     char *ul = (char *) xmalloc(strlen(up)+1);
     size_t n = 0;
@@ -174,17 +176,17 @@ hex_utf_char(struct main_args *margs, int flag)
         if (iUTF2) {
             if (iUTF2 == 0xC2 && ichar > 0x7F && ichar < 0xC0) {
                 iUTF2 = 0;
-                ul[nl - 1] = ichar;
+                ul[nl - 1] = (char)ichar;
             } else if (iUTF2 == 0xC3 && ichar > 0x7F && ichar < 0xC0) {
                 iUTF2 = 0;
-                ul[nl - 1] = ichar + 64;
+                ul[nl - 1] = (char)(ichar + 64);
             } else if (iUTF2 > 0xC3 && iUTF2 < 0xE0 && ichar > 0x7F && ichar < 0xC0) {
                 iUTF2 = 0;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else {
                 iUTF2 = 0;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
                 xfree(ul);
@@ -193,27 +195,27 @@ hex_utf_char(struct main_args *margs, int flag)
         } else if (iUTF3) {
             if (iUTF3 == 0xE0 && ichar > 0x9F && ichar < 0xC0) {
                 iUTF3 = 1;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF3 > 0xE0 && iUTF3 < 0xED && ichar > 0x7F && ichar < 0xC0) {
                 iUTF3 = 2;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF3 == 0xED && ichar > 0x7F && ichar < 0xA0) {
                 iUTF3 = 3;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF3 > 0xED && iUTF3 < 0xF0 && ichar > 0x7F && ichar < 0xC0) {
                 iUTF3 = 4;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF3 > 0 && iUTF3 < 5 && ichar > 0x7F && ichar < 0xC0) {
                 iUTF3 = 0;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else {
                 iUTF3 = 0;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
                 xfree(ul);
@@ -222,26 +224,26 @@ hex_utf_char(struct main_args *margs, int flag)
         } else if (iUTF4) {
             if (iUTF4 == 0xF0 && ichar > 0x8F && ichar < 0xC0) {
                 iUTF4 = 1;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF4 > 0xF0 && iUTF3 < 0xF4 && ichar > 0x7F && ichar < 0xC0) {
                 iUTF4 = 2;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF4 == 0xF4 && ichar > 0x7F && ichar < 0x90) {
                 iUTF4 = 3;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else if (iUTF4 > 0 && iUTF4 < 5 && ichar > 0x7F && ichar < 0xC0) {
                 if (iUTF4 == 4)
                     iUTF4 = 0;
                 else
                     iUTF4 = 4;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ++nl;
             } else {
                 iUTF4 = 0;
-                ul[nl] = ichar;
+                ul[nl] = (char)ichar;
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
                 xfree(ul);
@@ -249,25 +251,25 @@ hex_utf_char(struct main_args *margs, int flag)
             }
         } else if (ichar < 0x80) {
             /* UTF1 */
-            ul[nl] = ichar;
+            ul[nl] = (char)ichar;
             ++nl;
         } else if (ichar > 0xC1 && ichar < 0xE0) {
             /* UTF2 (Latin) */
             iUTF2 = ichar;
-            ul[nl] = ichar;
+            ul[nl] = (char)ichar;
             ++nl;
         } else if (ichar > 0xDF && ichar < 0xF0) {
             /* UTF3 */
             iUTF3 = ichar;
-            ul[nl] = ichar;
+            ul[nl] = (char)ichar;
             ++nl;
         } else if (ichar > 0xEF && ichar < 0xF5) {
             /* UTF4 */
             iUTF4 = ichar;
-            ul[nl] = ichar;
+            ul[nl] = (char)ichar;
             ++nl;
         } else {
-            ul[nl] = ichar;
+            ul[nl] = (char)ichar;
             ul[nl + 1] = '\0';
             debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
             xfree(ul);

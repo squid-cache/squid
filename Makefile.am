@@ -2,9 +2,9 @@
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5 foreign
-DIST_SUBDIRS	= compat lib libltdl snmplib scripts icons errors contrib doc helpers src test-suite tools
-SUBDIRS		= compat lib $(makesnmplib)
-if USE_LOADABLE_MODULES
+DIST_SUBDIRS	= compat lib libltdl scripts icons errors contrib doc helpers src test-suite tools
+SUBDIRS		= compat lib
+if ENABLE_LOADABLE_MODULES
 SUBDIRS += libltdl
 endif
 SUBDIRS += scripts icons errors doc helpers src tools test-suite

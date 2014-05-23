@@ -24,7 +24,6 @@ libauth_la_SOURCES = \
 	State.h \
 	State.cc \
 	User.h \
-	User.cci \
 	User.cc \
 	UserRequest.h \
 	UserRequest.cc

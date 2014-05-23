@@ -1,12 +1,9 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "ssl/ErrorDetail.h"
-#if HAVE_MAP
-#include <map>
-#endif
-#if HAVE_CLIMITS
+
 #include <climits>
-#endif
+#include <map>
 
 struct SslErrorEntry {
     Ssl::ssl_error_t value;
@@ -19,8 +16,10 @@ typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {SQUID_X509_V_ERR_INFINITE_VALIDATION,
+        "SQUID_X509_V_ERR_INFINITE_VALIDATION"},
     {SQUID_X509_V_ERR_CERT_CHANGE,
-        "SQUID_X509_V_ERR_CERT_CHANGE"},
+     "SQUID_X509_V_ERR_CERT_CHANGE"},
     {SQUID_ERR_SSL_HANDSHAKE,
      "SQUID_ERR_SSL_HANDSHAKE"},
     {SQUID_X509_V_ERR_DOMAIN_MISMATCH,
@@ -87,10 +86,161 @@ static SslErrorEntry TheSslErrorArray[] = {
      "X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH"},
     {X509_V_ERR_KEYUSAGE_NO_CERTSIGN,
      "X509_V_ERR_KEYUSAGE_NO_CERTSIGN"},
+#if defined(X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER)
+    {
+        X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER, //33
+        "X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER"
+    },
+#endif
+#if defined(X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION)
+    {
+        X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION, //34
+        "X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION"
+    },
+#endif
+#if defined(X509_V_ERR_KEYUSAGE_NO_CRL_SIGN)
+    {
+        X509_V_ERR_KEYUSAGE_NO_CRL_SIGN, //35
+        "X509_V_ERR_KEYUSAGE_NO_CRL_SIGN"
+    },
+#endif
+#if defined(X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION)
+    {
+        X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION, //36
+        "X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION"
+    },
+#endif
+#if defined(X509_V_ERR_INVALID_NON_CA)
+    {
+        X509_V_ERR_INVALID_NON_CA, //37
+        "X509_V_ERR_INVALID_NON_CA"
+    },
+#endif
+#if defined(X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED)
+    {
+        X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED, //38
+        "X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED"
+    },
+#endif
+#if defined(X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE)
+    {
+        X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE, //39
+        "X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE"
+    },
+#endif
+#if defined(X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED)
+    {
+        X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED, //40
+        "X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED"
+    },
+#endif
+#if defined(X509_V_ERR_INVALID_EXTENSION)
+    {
+        X509_V_ERR_INVALID_EXTENSION, //41
+        "X509_V_ERR_INVALID_EXTENSION"
+    },
+#endif
+#if defined(X509_V_ERR_INVALID_POLICY_EXTENSION)
+    {
+        X509_V_ERR_INVALID_POLICY_EXTENSION, //42
+        "X509_V_ERR_INVALID_POLICY_EXTENSION"
+    },
+#endif
+#if defined(X509_V_ERR_NO_EXPLICIT_POLICY)
+    {
+        X509_V_ERR_NO_EXPLICIT_POLICY, //43
+        "X509_V_ERR_NO_EXPLICIT_POLICY"
+    },
+#endif
+#if defined(X509_V_ERR_DIFFERENT_CRL_SCOPE)
+    {
+        X509_V_ERR_DIFFERENT_CRL_SCOPE, //44
+        "X509_V_ERR_DIFFERENT_CRL_SCOPE"
+    },
+#endif
+#if defined(X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE)
+    {
+        X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE, //45
+        "X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE"
+    },
+#endif
+#if defined(X509_V_ERR_UNNESTED_RESOURCE)
+    {
+        X509_V_ERR_UNNESTED_RESOURCE, //46
+        "X509_V_ERR_UNNESTED_RESOURCE"
+    },
+#endif
+#if defined(X509_V_ERR_PERMITTED_VIOLATION)
+    {
+        X509_V_ERR_PERMITTED_VIOLATION, //47
+        "X509_V_ERR_PERMITTED_VIOLATION"
+    },
+#endif
+#if defined(X509_V_ERR_EXCLUDED_VIOLATION)
+    {
+        X509_V_ERR_EXCLUDED_VIOLATION, //48
+        "X509_V_ERR_EXCLUDED_VIOLATION"
+    },
+#endif
+#if defined(X509_V_ERR_SUBTREE_MINMAX)
+    {
+        X509_V_ERR_SUBTREE_MINMAX, //49
+        "X509_V_ERR_SUBTREE_MINMAX"
+    },
+#endif
+#if defined(X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE)
+    {
+        X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE, //51
+        "X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE"
+    },
+#endif
+#if defined(X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX)
+    {
+        X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX, //52
+        "X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX"
+    },
+#endif
+#if defined(X509_V_ERR_UNSUPPORTED_NAME_SYNTAX)
+    {
+        X509_V_ERR_UNSUPPORTED_NAME_SYNTAX, //53
+        "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX"
+    },
+#endif
+#if defined(X509_V_ERR_CRL_PATH_VALIDATION_ERROR)
+    {
+        X509_V_ERR_CRL_PATH_VALIDATION_ERROR, //54
+        "X509_V_ERR_CRL_PATH_VALIDATION_ERROR"
+    },
+#endif
     {X509_V_ERR_APPLICATION_VERIFICATION,
      "X509_V_ERR_APPLICATION_VERIFICATION"},
     { SSL_ERROR_NONE, "SSL_ERROR_NONE"},
     {SSL_ERROR_NONE, NULL}
+};
+
+static const char *OptionalSslErrors[] = {
+    "X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER",
+    "X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION",
+    "X509_V_ERR_KEYUSAGE_NO_CRL_SIGN",
+    "X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION",
+    "X509_V_ERR_INVALID_NON_CA",
+    "X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED",
+    "X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE",
+    "X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED",
+    "X509_V_ERR_INVALID_EXTENSION",
+    "X509_V_ERR_INVALID_POLICY_EXTENSION",
+    "X509_V_ERR_NO_EXPLICIT_POLICY",
+    "X509_V_ERR_DIFFERENT_CRL_SCOPE",
+    "X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE",
+    "X509_V_ERR_UNNESTED_RESOURCE",
+    "X509_V_ERR_PERMITTED_VIOLATION",
+    "X509_V_ERR_EXCLUDED_VIOLATION",
+    "X509_V_ERR_SUBTREE_MINMAX",
+    "X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE",
+    "X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX",
+    "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX",
+    "X509_V_ERR_CRL_PATH_VALIDATION_ERROR",
+    NULL
 };
 
 struct SslErrorAlias {
@@ -203,6 +353,16 @@ const char *Ssl::GetErrorName(Ssl::ssl_error_t value)
     return NULL;
 }
 
+bool
+Ssl::ErrorIsOptional(const char *name)
+{
+    for (int i = 0; OptionalSslErrors[i] != NULL; ++i) {
+        if (strcmp(name, OptionalSslErrors[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
 const char *
 Ssl::GetErrorDescr(Ssl::ssl_error_t value)
 {
@@ -241,7 +401,7 @@ static int copy_cn(void *check_data,  ASN1_STRING *cn_data)
     String *str = (String *)check_data;
     if (!str) // no data? abort
         return 0;
-    if (str->defined())
+    if (str->size() > 0)
         str->append(", ");
     str->append((const char *)cn_data->data, cn_data->length);
     return 1;
@@ -338,7 +498,7 @@ const char *Ssl::ErrorDetail::err_descr() const
 
 const char *Ssl::ErrorDetail::err_lib_error() const
 {
-    if (errReason.defined())
+    if (errReason.size() > 0)
         return errReason.termedBuf();
     else if (lib_error_no != SSL_ERROR_NONE)
         return ERR_error_string(lib_error_no, NULL);
@@ -411,7 +571,7 @@ void Ssl::ErrorDetail::buildDetail() const
 
 const String &Ssl::ErrorDetail::toString() const
 {
-    if (!errDetailStr.defined())
+    if (errDetailStr.size() == 0)
         buildDetail();
     return errDetailStr;
 }

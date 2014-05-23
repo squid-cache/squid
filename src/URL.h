@@ -31,9 +31,8 @@
 #ifndef SQUID_SRC_URL_H
 #define SQUID_SRC_URL_H
 
-#include "anyp/ProtocolType.h"
+#include "anyp/UriScheme.h"
 #include "MemPool.h"
-#include "URLScheme.h"
 
 /**
  \ingroup POD
@@ -42,13 +41,11 @@
  */
 class URL
 {
-
 public:
-
     MEMPROXY_CLASS(URL);
-    URL();
-    URL(URLScheme const &);
-    URLScheme const & getScheme() const {return scheme; }
+    URL() : scheme_() {}
+    URL(AnyP::UriScheme const &aScheme) : scheme_(aScheme) {}
+    AnyP::UriScheme const & getScheme() const {return scheme_;}
 
 private:
     /**
@@ -62,7 +59,7 @@ private:
      * is to have one prototype URL with no host etc for each scheme,
      * another is to have an explicit scheme class, and then each URL class
      * could be a subclass of the scheme. Another way is one instance of
-     * a URLScheme class instance for each URLScheme we support, and one URL
+     * a AnyP::UriScheme class instance for each URL scheme we support, and one URL
      * class for each manner of treating the scheme : a Hierarchical URL, a
      * non-hierarchical URL etc.
      \par
@@ -71,7 +68,7 @@ private:
      * In order to make taking any of these routes easy, scheme is private
      * and immutable, only settable at construction time,
      */
-    URLScheme const scheme;
+    AnyP::UriScheme const scheme_;
 };
 
 MEMPROXY_CLASS_INLINE(URL);

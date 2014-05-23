@@ -59,9 +59,7 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 /**
  * Find the first occurrence of find in s, where the search is limited to the

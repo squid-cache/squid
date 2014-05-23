@@ -8,7 +8,6 @@
 
 #include "mgr/Action.h"
 #include "StoreStats.h"
-#include <sys/time.h>
 
 namespace Mgr
 {
@@ -69,37 +68,13 @@ public:
     double cpu_usage;
     double cpu_usage5;
     double cpu_usage60;
-#if HAVE_SBRK
-    double proc_data_seg;
-#endif
     double maxrss;
     double page_faults;
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
     double ms_bytes_total;
     double ms_bytes_free;
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-    double mp_arena;
-    double mp_uordblks;
-    double mp_ordblks;
-    double mp_usmblks;
-    double mp_smblks;
-    double mp_hblkhd;
-    double mp_hblks;
-    double mp_fsmblks;
-    double mp_fordblks;
-#if HAVE_STRUCT_MALLINFO_MXFAST
-    double mp_mxfast;
-    double mp_nlblks;
-    double mp_grain;
-    double mp_uordbytes;
-    double mp_allocated;
-    double mp_treeoverhead;
-#endif
 #endif
     double total_accounted;
-#if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-    double mem_pool_allocated;
-#endif
     double gb_saved_count;
     double gb_freed_count;
     double max_fd;

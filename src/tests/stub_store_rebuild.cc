@@ -33,15 +33,31 @@
 #include "squid.h"
 #include "MemBuf.h"
 #include "store_rebuild.h"
+#include "SwapDir.h"
+
+#include <cstring>
 
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"
 
 void storeRebuildProgress(int sd_index, int total, int sofar) STUB
-void storeRebuildComplete(StoreRebuildData *dc) STUB_NOP
-bool storeRebuildLoadEntry(int, int, MemBuf&, StoreRebuildData&)
-{
-    return false;
-}
 bool storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuildData &counts) STUB_RETVAL(false)
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
+
+void storeRebuildComplete(StoreRebuildData *)
+{
+    --StoreController::store_dirs_rebuilding;
+}
+
+bool
+storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
+{
+    if (fd < 0)
+        return false;
+
+    assert(buf.hasSpace()); // caller must allocate
+    // this stub simulates reading an empty entry
+    memset(buf.space(), 0, buf.spaceSize());
+    buf.appended(buf.spaceSize());
+    return true;
+}

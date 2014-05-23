@@ -279,7 +279,7 @@ Ipc::Mem::Segment::checkSupport(const char *const context)
 #endif // HAVE_SHM
 
 void
-Ipc::Mem::RegisteredRunner::run(const RunnerRegistry &r)
+Ipc::Mem::RegisteredRunner::useConfig()
 {
     // If Squid is built with real segments, we create() real segments
     // in the master process only.  Otherwise, we create() fake
@@ -290,10 +290,10 @@ Ipc::Mem::RegisteredRunner::run(const RunnerRegistry &r)
 #else
     if (IamWorkerProcess())
 #endif
-        create(r);
+        create();
 
     // we assume that master process does not need shared segments
     // unless it is also a worker
     if (!InDaemonMode() || !IamMasterProcess())
-        open(r);
+        open();
 }

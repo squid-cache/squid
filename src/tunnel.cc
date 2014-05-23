@@ -33,10 +33,9 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/Vector.h"
 #include "CachePeer.h"
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -56,12 +55,8 @@
 #include "DelayId.h"
 #endif
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <climits>
+#include <cerrno>
 
 /**
  * TunnelStateData is the state engine performing the tasks for
@@ -100,6 +95,7 @@ public:
     bool noConnections() const;
     char *url;
     HttpRequest::Pointer request;
+    AccessLogEntryPointer al;
     Comm::ConnectionList serverDestinations;
 
     const char * getHost() const {
@@ -237,7 +233,7 @@ TunnelStateData::~TunnelStateData()
     debugs(26, 3, "TunnelStateData destructed this=" << this);
     assert(noConnections());
     xfree(url);
-    serverDestinations.clean();
+    serverDestinations.clear();
     delete connectRespBuf;
 }
 
@@ -778,18 +774,10 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
          */
-        tunnelState->serverDestinations.shift();
+        tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
         if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
-
-            if (Ip::Qos::TheConfig.isAclTosActive()) {
-                tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request.getRaw());
-            }
-
-#if SO_MARK && USE_LIBCAP
-            tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request.getRaw());
-#endif
-
+            GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
             Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
@@ -845,7 +833,7 @@ tos_t GetTosToServer(HttpRequest * request);
 nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 void
-tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
+tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const AccessLogEntryPointer &al)
 {
     debugs(26, 3, HERE);
     /* Create state structure. */
@@ -890,6 +878,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = http->getConn()->clientConnection;
+    tunnelState->al = al;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
@@ -899,7 +888,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
 
-    peerSelect(&(tunnelState->serverDestinations), request,
+    peerSelect(&(tunnelState->serverDestinations), request, al,
                NULL,
                tunnelPeerSelectComplete,
                tunnelState);
@@ -921,7 +910,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
     HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(),
                                           NULL,			/* StoreEntry */
-                                          NULL,			/* AccessLogEntry */
+                                          tunnelState->al,			/* AccessLogEntry */
                                           &hdr_out,
                                           flags);			/* flags */
     packerToMemInit(&p, &mb);
@@ -977,13 +966,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     }
     delete err;
 
-    if (Ip::Qos::TheConfig.isAclTosActive()) {
-        tunnelState->serverDestinations[0]->tos = GetTosToServer(tunnelState->request.getRaw());
-    }
-
-#if SO_MARK && USE_LIBCAP
-    tunnelState->serverDestinations[0]->nfmark = GetNfmarkToServer(tunnelState->request.getRaw());
-#endif
+    GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
 
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");

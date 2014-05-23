@@ -21,8 +21,8 @@ int eventFind(EVH *, void *) STUB_RETVAL(-1)
 EventScheduler::EventScheduler() STUB
 EventScheduler::~EventScheduler() STUB
 void EventScheduler::cancel(EVH * func, void * arg) STUB
+int EventScheduler::timeRemaining() const STUB_RETVAL(1)
 void EventScheduler::clean() STUB
-int EventScheduler::checkDelay() STUB_RETVAL(-1)
 void EventScheduler::dump(StoreEntry *) STUB
 bool EventScheduler::find(EVH * func, void * arg) STUB_RETVAL(false)
 void EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata) STUB

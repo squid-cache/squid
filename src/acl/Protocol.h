@@ -34,8 +34,8 @@
 #ifndef SQUID_ACLPROTOCOL_H
 #define SQUID_ACLPROTOCOL_H
 
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "anyp/ProtocolType.h"
 
 class ACLProtocolStrategy : public ACLStrategy<AnyP::ProtocolType>

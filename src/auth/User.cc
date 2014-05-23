@@ -32,34 +32,32 @@
  */
 
 #include "squid.h"
-#include "auth/User.h"
-#include "auth/UserRequest.h"
-#include "auth/Config.h"
-#include "auth/Gadgets.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "auth/Config.h"
+#include "auth/Gadgets.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 
-#if !_USE_INLINE_
-#include "auth/User.cci"
-#endif
-
 // This should be converted into a pooled type. Does not need to be cbdata
 CBDATA_TYPE(AuthUserIP);
 
 time_t Auth::User::last_discard = 0;
 
-Auth::User::User(Auth::Config *aConfig) :
+Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
         auth_type(Auth::AUTH_UNKNOWN),
         config(aConfig),
         ipcount(0),
         expiretime(0),
+        notes(),
         credentials_state(Auth::Unchecked),
-        username_(NULL)
+        username_(NULL),
+        requestRealm_(aRequestRealm)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
@@ -98,6 +96,9 @@ Auth::User::absorb(Auth::User::Pointer from)
      */
 
     debugs(29, 5, HERE << "auth_user '" << from << "' into auth_user '" << this << "'.");
+
+    // combine the helper response annotations. Ensuring no duplicates are copied.
+    notes.appendNewOnly(&from->notes);
 
     /* absorb the list of IP address sources (for max_user_ip controls) */
     AuthUserIP *new_ipdata;
@@ -338,6 +339,14 @@ Auth::User::addIp(Ip::Address ipaddr)
     debugs(29, 2, HERE << "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
 
+SBuf
+Auth::User::BuildUserKey(const char *username, const char *realm)
+{
+    SBuf key;
+    key.Printf("%s:%s", username, realm);
+    return key;
+}
+
 /**
  * Add the Auth::User structure to the username cache.
  */
@@ -381,5 +390,18 @@ Auth::User::UsernameCacheStats(StoreEntry *output)
                           static_cast<int32_t>(auth_user->expiretime - squid_curtime + ::Config.authenticateTTL),
                           auth_user->username()
                          );
+    }
+}
+
+void
+Auth::User::username(char const *aString)
+{
+    if (aString) {
+        assert(!username_);
+        username_ = xstrdup(aString);
+        if (!requestRealm_.isEmpty())
+            userKey_ = BuildUserKey(username_, requestRealm_.c_str());
+    } else {
+        safe_free(username_);
     }
 }

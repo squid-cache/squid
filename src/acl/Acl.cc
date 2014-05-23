@@ -31,6 +31,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -39,6 +40,8 @@
 #include "globals.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
+
+#include <vector>
 
 const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
 
@@ -55,8 +58,8 @@ void
 ACLFlags::parseFlags()
 {
     char *nextToken;
-    while ((nextToken = ConfigParser::strtokFile()) != NULL && nextToken[0] == '-') {
-
+    while ((nextToken = ConfigParser::PeekAtToken()) != NULL && nextToken[0] == '-') {
+        (void)ConfigParser::NextToken(); //Get token from cfg line
         //if token is the "--" break flag
         if (strcmp(nextToken, "--") == 0)
             break;
@@ -73,10 +76,7 @@ ACLFlags::parseFlags()
 
     /*Regex code needs to parse -i file*/
     if ( isSet(ACL_F_REGEX_CASE))
-        ConfigParser::strtokFilePutBack("-i");
-
-    if (nextToken != NULL && strcmp(nextToken, "--") != 0 )
-        ConfigParser::strtokFileUndo();
+        ConfigParser::TokenPutBack("-i");
 }
 
 const char *
@@ -200,7 +200,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     /* snarf the ACL name */
 
-    if ((t = strtok(NULL, w_space)) == NULL) {
+    if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
@@ -217,7 +217,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL type */
     const char *theType;
 
-    if ((theType = strtok(NULL, w_space)) == NULL) {
+    if ((theType = ConfigParser::NextToken()) == NULL) {
         debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
@@ -298,14 +298,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                A->cfgline);
     }
 
-    /* append */
+    // add to the global list for searching explicit ACLs by name
     assert(head && *head == Config.aclList);
-    A->registered = true;
-
-    while (*head)
-        head = &(*head)->next;
-
+    A->next = *head;
     *head = A;
+
+    // register for centralized cleanup
+    aclRegister(A);
 }
 
 bool
@@ -408,7 +407,7 @@ ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype
     registerMe ();
 }
 
-Vector<ACL::Prototype const *> * ACL::Prototype::Registry;
+std::vector<ACL::Prototype const *> * ACL::Prototype::Registry;
 void *ACL::Prototype::Initialized;
 
 bool
@@ -432,7 +431,7 @@ ACL::Prototype::registerMe ()
     if (!Registry || (Initialized != ((char *)Registry - 5))  ) {
         /* TODO: extract this */
         /* Not initialised */
-        Registry = new Vector <ACL::Prototype const *>;
+        Registry = new std::vector<ACL::Prototype const *>;
         Initialized = (char *)Registry - 5;
     }
 

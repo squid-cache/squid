@@ -52,8 +52,8 @@
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "multicast.h"
-#include "NeighborTypeDomainList.h"
 #include "neighbors.h"
+#include "NeighborTypeDomainList.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
 #include "RequestFlags.h"
@@ -204,8 +204,6 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
         return do_ping;
 
     ACLFilledChecklist checklist(p->access, request, NULL);
-    checklist.src_addr = request->client_addr;
-    checklist.my_addr = request->my_addr;
 
     return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
@@ -1027,7 +1025,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         return;
     }
 
-    if (entry->lock_count == 0) {
+    if (!entry->locked()) {
         // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
@@ -1318,6 +1316,7 @@ peerProbeConnect(CachePeer * p)
         Comm::ConnectionPointer conn = new Comm::Connection;
         conn->remote = p->addresses[i];
         conn->remote.port(p->http_port);
+        conn->setPeer(p);
         getOutgoingAddress(NULL, conn);
 
         ++ p->testing_now;
@@ -1427,7 +1426,7 @@ peerCountMcastPeersDone(void *data)
 
     fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     HTTPMSGUNLOCK(fake->mem_obj->request);
-    fake->unlock();
+    fake->unlock("peerCountMcastPeersDone");
     HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
 }
@@ -1733,7 +1732,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
         return;
     }
 
-    if (e->lock_count == 0) {
+    if (!e->locked()) {
         // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, DBG_IMPORTANT, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);

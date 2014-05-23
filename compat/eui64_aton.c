@@ -77,6 +77,8 @@
 #include "squid.h"
 #include "compat/eui64_aton.h"
 
+#if SQUID_EUI64_ATON
+
 /*
  * Convert an ASCII representation of an EUI-64 to binary form.
  */
@@ -132,3 +134,5 @@ good:
 
     return (0);
 }
+
+#endif /* !SQUID_EUI64_ATON */

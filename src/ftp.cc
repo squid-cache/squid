@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
@@ -59,7 +60,6 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 
 #if USE_DELAY_POOLS
@@ -1110,7 +1110,7 @@ FtpStateData::checkUrlpath()
     int l;
     size_t t;
 
-    if (str_type_eq.undefined()) //hack. String doesn't support global-static
+    if (str_type_eq.size()==0) //hack. String doesn't support global-static
         str_type_eq="type=";
 
     if ((t = request->urlpath.rfind(';')) != String::npos) {
@@ -1777,7 +1777,11 @@ ftpSendPassive(FtpStateData * ftpState)
         return;
     }
 
-    ftpState->sendPassive();
+    if (ftpState->sendPassive()) {
+        // SENT_EPSV_ALL blocks other non-EPSV connections being attempted
+        if (ftpState->state == Ftp::ServerStateData::SENT_EPSV_ALL)
+            ftpState->flags.epsv_all_sent = true;
+    }
 }
 
 void
@@ -2142,6 +2146,13 @@ void FtpStateData::readStor()
     debugs(9, 3, HERE);
 
     if (code == 125 || (code == 150 && Comm::IsConnOpen(data.conn))) {
+        if (!originalRequest()->body_pipe) {
+            debugs(9, 3, "zero-size STOR?");
+            state = WRITING_DATA; // make ftpWriteTransferDone() responsible
+            dataComplete(); // XXX: keep in sync with doneSendingRequestBody()
+            return;
+        }
+
         if (!startRequestBodyFlow()) { // register to receive body data
             ftpFail(this);
             return;
@@ -2347,7 +2358,7 @@ void
 FtpStateData::completedListing()
 {
     assert(entry);
-    entry->lock();
+    entry->lock("FtpStateData");
     ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request);
     ferr.ftp.listing = &listing;
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
@@ -2356,7 +2367,7 @@ FtpStateData::completedListing()
     entry->replaceHttpReply( ferr.BuildHttpReply() );
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
-    entry->unlock();
+    entry->unlock("FtpStateData");
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2700,7 +2711,7 @@ FtpStateData::haveParsedReplyHeaders()
          * Authenticated requests can't be cached.
          */
         e->release();
-    } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !getCurrentOffset()) {
+    } else if (!EBIT_TEST(e->flags, RELEASE_REQUEST) && !getCurrentOffset()) {
         e->setPublicKey();
     } else {
         e->release();

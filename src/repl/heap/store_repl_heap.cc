@@ -41,10 +41,10 @@
 
 #include "squid.h"
 #include "heap.h"
-#include "store_heap_replacement.h"
+#include "MemObject.h"
 #include "SquidList.h"
 #include "Store.h"
-#include "MemObject.h"
+#include "store_heap_replacement.h"
 #include "wordlist.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_heap;
@@ -221,7 +221,7 @@ heap_purgeNext(RemovalPurgeWalker * walker)
 
 try_again:
 
-    if (!heap_nodes(h->theHeap) > 0)
+    if (heap_empty(h->theHeap))
         return NULL;		/* done */
 
     age = heap_peepminkey(h->theHeap);
@@ -230,7 +230,7 @@ try_again:
 
     if (entry->locked()) {
 
-        entry->lock();
+        entry->lock("heap_purgeNext");
         linklistPush(&heap_walker->locked_entries, entry);
 
         goto try_again;
@@ -263,7 +263,7 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     while ((entry = (StoreEntry *)linklistShift(&heap_walker->locked_entries))) {
         heap_node *node = heap_insert(h->theHeap, entry);
         h->setPolicyNode(entry, node);
-        entry->unlock();
+        entry->unlock("heap_purgeDone");
     }
 
     safe_free(walker->_data);

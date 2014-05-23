@@ -1,13 +1,13 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "ssl/Config.h"
-#include "ssl/helper.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
-#include "SwapDir.h"
 #include "ssl/cert_validate_message.h"
+#include "ssl/Config.h"
+#include "ssl/helper.h"
+#include "SwapDir.h"
 #include "wordlist.h"
-#include "SquidConfig.h"
 
 LruMap<Ssl::CertValidationResponse> *Ssl::CertValidationHelper::HelperCache = NULL;
 

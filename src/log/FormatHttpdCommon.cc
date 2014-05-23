@@ -64,7 +64,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   AnyP::ProtocolType_str[al->http.version.protocol],
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
-                  al->cache.replySize,
+                  al->http.clientReplySz.messageTotal(),
                   LogTags_str[al->cache.code],
                   al->http.statusSfx(),
                   hier_code_str[al->hier.code],

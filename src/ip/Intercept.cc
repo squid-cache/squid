@@ -32,8 +32,8 @@
  */
 #include "squid.h"
 #include "comm/Connection.h"
-#include "ip/Intercept.h"
 #include "fde.h"
+#include "ip/Intercept.h"
 #include "src/tools.h"
 
 #if IPF_TRANSPARENT
@@ -92,10 +92,8 @@
 #endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
-#if HAVE_LIMITS_H
-/* must be before including netfilter_ipv4.h */
-#include <limits.h>
-#endif
+/* <climits> must be before including netfilter_ipv4.h */
+#include <climits>
 #include <linux/if.h>
 #include <linux/netfilter_ipv4.h>
 #if HAVE_LINUX_NETFILTER_IPV6_IP6_TABLES_H

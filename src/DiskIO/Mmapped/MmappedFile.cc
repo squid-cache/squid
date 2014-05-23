@@ -4,11 +4,11 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
 #include "globals.h"
 
 #if HAVE_SYS_MMAN_H

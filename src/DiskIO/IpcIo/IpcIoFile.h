@@ -5,9 +5,9 @@
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
-#include "SquidString.h"
 #include "ipc/forward.h"
 #include "ipc/mem/Page.h"
+#include "SquidString.h"
 #include <list>
 #include <map>
 #include <memory>
@@ -85,7 +85,7 @@ protected:
     bool canWait() const;
 
 private:
-    void trackPendingRequest(IpcIoPendingRequest *const pending);
+    void trackPendingRequest(const unsigned int id, IpcIoPendingRequest *const pending);
     void push(IpcIoPendingRequest *const pending);
     IpcIoPendingRequest *dequeueRequest(const unsigned int requestId);
 

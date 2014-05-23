@@ -42,7 +42,6 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "base/Vector.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "CommonPool.h"
@@ -63,8 +62,8 @@
 #include "NullDelayId.h"
 #include "SquidString.h"
 #include "SquidTime.h"
-#include "StoreClient.h"
 #include "Store.h"
+#include "StoreClient.h"
 
 /// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;
@@ -592,7 +591,7 @@ DelayPools::Update(void *unused)
 
     LastUpdate = squid_curtime;
 
-    Vector<Updateable *>::iterator pos = toUpdate.begin();
+    std::vector<Updateable *>::iterator pos = toUpdate.begin();
 
     while (pos != toUpdate.end()) {
         (*pos)->update(incr);
@@ -610,7 +609,7 @@ DelayPools::registerForUpdates(Updateable *anObject)
 void
 DelayPools::deregisterForUpdates (Updateable *anObject)
 {
-    Vector<Updateable *>::iterator pos = toUpdate.begin();
+    std::vector<Updateable *>::iterator pos = toUpdate.begin();
 
     while (pos != toUpdate.end() && *pos != anObject) {
         ++pos;
@@ -618,7 +617,7 @@ DelayPools::deregisterForUpdates (Updateable *anObject)
 
     if (pos != toUpdate.end()) {
         /* move all objects down one */
-        Vector<Updateable *>::iterator temp = pos;
+        std::vector<Updateable *>::iterator temp = pos;
         ++pos;
 
         while (pos != toUpdate.end()) {
@@ -631,7 +630,7 @@ DelayPools::deregisterForUpdates (Updateable *anObject)
     }
 }
 
-Vector<Updateable *> DelayPools::toUpdate;
+std::vector<Updateable *> DelayPools::toUpdate;
 
 void
 DelayPools::Stats(StoreEntry * sentry)

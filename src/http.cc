@@ -36,9 +36,9 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base64.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "base64.h"
 #include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
@@ -49,8 +49,8 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "HttpControlMsg.h"
 #include "http.h"
+#include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
@@ -182,12 +182,14 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
-        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGateway_Timeout, fwd->request));
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, fwd->request));
     }
 
     serverConnection->close();
 }
 
+/// Remove an existing public store entry if the incoming response (to be
+/// stored in a currently private entry) is going to invalidate it.
 static void
 httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 {
@@ -195,6 +197,8 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     int forbidden = 0;
     StoreEntry *pe;
 
+    // If the incoming response already goes into a public entry, then there is
+    // nothing to remove. This protects ready-for-collapsing entries as well.
     if (!EBIT_TEST(e->flags, KEY_PRIVATE))
         return;
 
@@ -208,7 +212,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 
     case Http::scMovedPermanently:
 
-    case Http::scMovedTemporarily:
+    case Http::scFound:
 
     case Http::scGone:
 
@@ -255,7 +259,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (e->mem_obj->request)
         pe = storeGetPublicByRequest(e->mem_obj->request);
     else
-        pe = storeGetPublic(e->mem_obj->url, e->mem_obj->method);
+        pe = storeGetPublic(e->mem_obj->storeId(), e->mem_obj->method);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -272,7 +276,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (e->mem_obj->request)
         pe = storeGetPublicByRequestMethod(e->mem_obj->request, Http::METHOD_HEAD);
     else
-        pe = storeGetPublic(e->mem_obj->url, Http::METHOD_HEAD);
+        pe = storeGetPublic(e->mem_obj->storeId(), Http::METHOD_HEAD);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -335,11 +339,16 @@ HttpStateData::cacheableReply()
      * condition
      */
 #define REFRESH_OVERRIDE(flag) \
-    ((R = (R ? R : refreshLimits(entry->mem_obj->url))) , \
+    ((R = (R ? R : refreshLimits(entry->mem_obj->storeId()))) , \
     (R && R->flags.flag))
 #else
 #define REFRESH_OVERRIDE(flag) 0
 #endif
+
+    if (EBIT_TEST(entry->flags, RELEASE_REQUEST)) {
+        debugs(22, 3, "NO because " << *entry << " has been released.");
+        return 0;
+    }
 
     // Check for Surrogate/1.0 protocol conditions
     // NP: reverse-proxy traffic our parent server has instructed us never to cache
@@ -362,7 +371,7 @@ HttpStateData::cacheableReply()
         }
 
         // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
-        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().defined()) {
+        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() > 0) {
             /* TODO: we are allowed to cache when no-cache= has parameters.
              * Provided we strip away any of the listed headers unless they are revalidated
              * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
@@ -427,7 +436,7 @@ HttpStateData::cacheableReply()
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCache() && !rep->cache_control->noCache().defined() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0 && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
@@ -487,7 +496,7 @@ HttpStateData::cacheableReply()
 
         /* Responses that only are cacheable if the server says so */
 
-    case Http::scMovedTemporarily:
+    case Http::scFound:
     case Http::scTemporaryRedirect:
         if (rep->date <= 0) {
             debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Date missing/invalid");
@@ -517,7 +526,7 @@ HttpStateData::cacheableReply()
 
     case Http::scMethodNotAllowed:
 
-    case Http::scRequestUriTooLarge:
+    case Http::scUriTooLong:
 
     case Http::scInternalServerError:
 
@@ -527,8 +536,8 @@ HttpStateData::cacheableReply()
 
     case Http::scServiceUnavailable:
 
-    case Http::scGateway_Timeout:
-        debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status());
+    case Http::scGatewayTimeout:
+        debugs(22, 3, "MAYBE because HTTP status " << rep->sline.status());
         return -1;
 
         /* NOTREACHED */
@@ -556,7 +565,7 @@ HttpStateData::cacheableReply()
     case Http::scConflict:
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scRequestEntityTooLarge:
+    case Http::scPayloadTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked:
@@ -700,7 +709,7 @@ HttpStateData::processReplyHeader()
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
     /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
+    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
 
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
@@ -910,11 +919,8 @@ HttpStateData::haveParsedReplyHeaders()
 {
     ServerStateData::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->url);
+    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
-
-    if (rep->sline.status() == Http::scPartialContent && rep->content_range)
-        currentOffset = rep->content_range->spec.offset;
 
     entry->timestampsSet();
 
@@ -986,7 +992,7 @@ no_cache:
             const bool ccMustRevalidate = (rep->cache_control->proxyRevalidate() || rep->cache_control->mustRevalidate());
 
             // CC:no-cache (only if there are no parameters)
-            const bool ccNoCacheNoParams = (rep->cache_control->hasNoCache() && rep->cache_control->noCache().undefined());
+            const bool ccNoCacheNoParams = (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size()==0);
 
             // CC:s-maxage=N
             const bool ccSMaxAge = rep->cache_control->hasSMaxAge();
@@ -1709,7 +1715,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     // Add our own If-None-Match field if the cached entry has a strong ETag.
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
-    if (request->etag.defined()) {
+    if (request->etag.size() > 0) {
         hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
                                               request->etag.termedBuf()));
     }
@@ -1728,8 +1734,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* don't cache the result */
         request->flags.cachable = false;
         /* pretend it's not a range request */
-        delete request->range;
-        request->range = NULL;
+        request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
     }
 
@@ -1966,12 +1971,30 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     case HDR_IF_MODIFIED_SINCE:
         /** \par If-Modified-Since:
-        * append unless we added our own;
-         * \note at most one client's ims header can pass through */
-
-        if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
+         * append unless we added our own,
+         * but only if cache_miss_revalidate is enabled, or
+         *  the request is not cacheable, or
+         *  the request contains authentication credentials.
+         * \note at most one client's If-Modified-Since header can pass through
+         */
+        // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
+        if (hdr_out->has(HDR_IF_MODIFIED_SINCE))
+            break;
+        else if (Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
             hdr_out->addEntry(e->clone());
+        break;
 
+    case HDR_IF_NONE_MATCH:
+        /** \par If-None-Match:
+         * append if the wildcard '*' special case value is present, or
+         *   cache_miss_revalidate is disabled, or
+         *   the request is not cacheable in this proxy, or
+         *   the request contains authentication credentials.
+         * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
+         */
+        // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
+        if (hdr_out->hasListMember(HDR_IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
+            hdr_out->addEntry(e->clone());
         break;
 
     case HDR_MAX_FORWARDS:
@@ -2091,7 +2114,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     Http::ProtocolVersion httpver(1,1);
     const char * url;
     if (_peer && !_peer->options.originserver)
-        url = entry->url();
+        url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
     mb->Printf("%s %s %s/%d.%d\r\n",

@@ -5,6 +5,8 @@
 #include "adaptation/forward.h"
 #include "SquidString.h"
 
+#include <vector>
+
 class ConfigParser;
 
 namespace Adaptation
@@ -34,7 +36,7 @@ private:
     static Id LastId;
 };
 
-typedef Vector<Adaptation::AccessRule*> AccessRules;
+typedef std::vector<Adaptation::AccessRule*> AccessRules;
 AccessRules &AllRules();
 AccessRule *FindRule(const AccessRule::Id &id);
 AccessRule *FindRuleByGroupId(const String &groupId);

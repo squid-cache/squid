@@ -67,7 +67,7 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif

@@ -18,6 +18,9 @@ Rock::ReadRequest::ReadRequest(const ::ReadRequest &base,
 Rock::WriteRequest::WriteRequest(const ::WriteRequest &base,
                                  const IoState::Pointer &anSio):
         ::WriteRequest(base),
-        sio(anSio)
+        sio(anSio),
+        sidCurrent(-1),
+        sidNext(-1),
+        eof(false)
 {
 }

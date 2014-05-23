@@ -35,8 +35,8 @@
 #include "squid.h"
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
-#include "Debug.h"
 #include "cache_cf.h"
+#include "Debug.h"
 #include "wordlist.h"
 
 ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const char *attrs, bool optionalAttr) : validAttributesStr(attrs), attributeIsOptional(optionalAttr), attribute (NULL), values (), sslAttributeCall (sslStrategy)
@@ -59,7 +59,7 @@ ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribut
     validAttributes.assign (old.validAttributes.begin(), old.validAttributes.end());
     attributeIsOptional = old.attributeIsOptional;
     if (old.attribute)
-        attribute = xstrdup (old.attribute);
+        attribute = xstrdup(old.attribute);
 }
 
 template<class T>
@@ -98,23 +98,23 @@ ACLCertificateData::match(X509 *cert)
 static void
 aclDumpAttributeListWalkee(char * const & node_data, void *outlist)
 {
-    /* outlist is really a wordlist ** */
-    wordlistAdd((wordlist **)outlist, node_data);
+    /* outlist is really a SBufList * */
+    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
 }
 
-wordlist *
-ACLCertificateData::dump()
+SBufList
+ACLCertificateData::dump() const
 {
-    wordlist *wl = NULL;
+    SBufList sl;
     if (validAttributesStr)
-        wordlistAdd(&wl, attribute);
+        sl.push_back(SBuf(attribute));
     /* damn this is VERY inefficient for long ACL lists... filling
      * a wordlist this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
     /* XXX FIXME: don't break abstraction */
-    values.values->walk(aclDumpAttributeListWalkee, &wl);
-    return wl;
+    values.values->walk(aclDumpAttributeListWalkee, &sl);
+    return sl;
 }
 
 void

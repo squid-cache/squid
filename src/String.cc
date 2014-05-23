@@ -38,9 +38,7 @@
 #include "profiler/Profiler.h"
 #include "Store.h"
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
+#include <climits>
 
 int
 String::psize() const
@@ -376,7 +374,8 @@ strwordtok(char *buf, char **t)
         switch (ch) {
 
         case '\\':
-            ++p;
+            if (quoted)
+                ++p;
 
             switch (*p) {
 

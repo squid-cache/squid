@@ -19,7 +19,6 @@
 
 #include "squid.h"
 #include "Trie.h"
-#include <stdio.h>
 
 int
 main (int argc, char **argv)

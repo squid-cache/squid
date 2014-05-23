@@ -33,9 +33,6 @@
 #include "squid.h"
 #include "html_quote.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif

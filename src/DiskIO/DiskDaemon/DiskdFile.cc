@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "DiskdFile.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
+#include "DiskdFile.h"
 #include "DiskdIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
@@ -59,16 +59,16 @@ DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) :
         mode(0),
         inProgressIOs(0)
 {
-    assert (aPath);
+    assert(aPath);
     debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
-    path_ = xstrdup (aPath);
+    path_ = xstrdup(aPath);
     id = diskd_stats.sio_id;
     ++diskd_stats.sio_id;
 }
 
 DiskdFile::~DiskdFile()
 {
-    assert (inProgressIOs == 0);
+    assert(inProgressIOs == 0);
     safe_free (path_);
 }
 
@@ -76,9 +76,9 @@ void
 DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
 {
     debugs(79, 3, "DiskdFile::open: " << this << " opening for " << callback.getRaw());
-    assert (ioRequestor.getRaw() == NULL);
+    assert(ioRequestor.getRaw() == NULL);
     ioRequestor = callback;
-    assert (callback.getRaw());
+    assert(callback.getRaw());
     mode = flags;
     ssize_t shm_offset;
     char *buf = (char *)IO->shm.get(&shm_offset);
