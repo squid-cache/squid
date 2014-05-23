@@ -39,8 +39,8 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "esi/Include.h"
 #include "esi/VarState.h"
 #include "HttpReply.h"
@@ -295,10 +295,10 @@ ESIInclude::ESIInclude(ESIInclude const &old) :
     flags.onerrorcontinue = old.flags.onerrorcontinue;
 
     if (old.srcurl)
-        srcurl = xstrdup (old.srcurl);
+        srcurl = xstrdup(old.srcurl);
 
     if (old.alturl)
-        alturl = xstrdup (old.alturl);
+        alturl = xstrdup(old.alturl);
 }
 
 void
@@ -353,7 +353,7 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
             assert (src.getRaw() == NULL);
             src = ESIStreamContextNew (this);
             assert (src.getRaw() != NULL);
-            srcurl = xstrdup ( attr[i+1]);
+            srcurl = xstrdup(attr[i+1]);
         } else if (!strcmp(attr[i],"alt")) {
             /* Start a secondary request for thisNode url */
             /* TODO: make a config parameter to wait on requesting alt's
@@ -364,7 +364,7 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
             assert (alt.getRaw() == NULL); /* TODO: FIXME */
             alt = ESIStreamContextNew (this);
             assert (alt.getRaw() != NULL);
-            alturl = xstrdup (attr[i+1]);
+            alturl = xstrdup(attr[i+1]);
         } else if (!strcmp(attr[i],"onerror")) {
             if (!strcmp(attr[i+1], "continue")) {
                 flags.onerrorcontinue = 1;

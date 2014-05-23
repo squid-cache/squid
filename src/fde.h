@@ -34,7 +34,7 @@
 #include "defines.h"
 #include "ip/Address.h"
 
-#if USE_SSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
 
@@ -132,7 +132,7 @@ public:
     CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
-#if USE_SSL
+#if USE_OPENSSL
     SSL *ssl;
     SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
 #endif
@@ -185,7 +185,7 @@ private:
         wstate = NULL;
         read_method = NULL;
         write_method = NULL;
-#if USE_SSL
+#if USE_OPENSSL
         ssl = NULL;
         dynamicSslContext = NULL;
 #endif

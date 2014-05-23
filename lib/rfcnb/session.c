@@ -31,10 +31,10 @@ int RFCNB_saved_errno = 0;
 
 #include "rfcnb/std-includes.h"
 #include <netinet/tcp.h>
-#include "rfcnb/rfcnb.h"
-#include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-io.h"
+#include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-util.h"
+#include "rfcnb/rfcnb.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -84,7 +84,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address, int port
     /* Resolve that name into an IP address */
 
     Service_Address = Called_Name;
-    if (strcmp(Called_Address, "") != 0) {      /* If the Called Address = "" */
+    if (strlen(Called_Address) != 0) {      /* If the Called Address = "" */
         Service_Address = Called_Address;
     }
     if ((errno = RFCNB_Name_To_IP(Service_Address, &Dest_IP)) < 0) {    /* Error */

@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "acl/AllOf.h"
-#include "acl/Checklist.h"
 #include "acl/BoolOps.h"
+#include "acl/Checklist.h"
 #include "globals.h"
 #include "MemBuf.h"
 
@@ -17,10 +17,10 @@ Acl::AllOf::clone() const
     return new AllOf;
 }
 
-wordlist*
+SBufList
 Acl::AllOf::dump() const
 {
-    return empty() ? NULL : nodes.front()->dump();
+    return empty() ? SBufList() : nodes.front()->dump();
 }
 
 int

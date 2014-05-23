@@ -44,9 +44,7 @@
 #include "Store.h"
 #include "StrList.h"
 
-#if HAVE_MAP
 #include <map>
-#endif
 
 /* a row in the table used for parsing surrogate-control header and statistics */
 typedef struct {
@@ -364,9 +362,9 @@ HttpHdrSc::findTarget(const char *target)
     while (node) {
         HttpHdrScTarget *sct = (HttpHdrScTarget *)node->data;
 
-        if (target && sct->target.defined() && !strcmp (target, sct->target.termedBuf()))
+        if (target && sct->target.size() > 0 && !strcmp(target, sct->target.termedBuf()))
             return sct;
-        else if (!target && sct->target.undefined())
+        else if (!target && sct->target.size() == 0)
             return sct;
 
         node = node->next;

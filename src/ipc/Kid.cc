@@ -7,6 +7,7 @@
 #include "globals.h"
 #include "ipc/Kid.h"
 
+#include <ctime>
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif

@@ -5,6 +5,7 @@
 
 #include "squid.h"
 
+#include "acl/FilledChecklist.h"
 #include "FtpServer.h"
 #include "Mem.h"
 #include "SquidConfig.h"
@@ -246,7 +247,7 @@ ServerStateData::failedHttpStatus(err_type &error)
 {
     if (error == ERR_NONE)
         error = ERR_FTP_FAILURE;
-    return error == ERR_READ_TIMEOUT ? Http::scGateway_Timeout :
+    return error == ERR_READ_TIMEOUT ? Http::scGatewayTimeout :
         Http::scBadGateway;
 }
 
@@ -608,7 +609,7 @@ ServerStateData::sendPassive()
         }
         // else fall through to skip EPSV 2
 
-    case Ftp::ServerStateData::SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
+    case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
             debugs(9, 5, HERE << "FTP Channel is IPv4 (" << ctrl.conn->remote << ") attempting EPSV 1 after EPSV ALL has failed.");
             mb.Printf("EPSV 1%s", Ftp::crlf);
@@ -627,8 +628,13 @@ ServerStateData::sendPassive()
         state = SENT_PASV;
         break;
 
-    default:
-        if (!Config.Ftp.epsv) {
+    default: {
+        bool doEpsv = true;
+        if (Config.accessList.ftp_epsv) {
+            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request, NULL);
+            doEpsv = (checklist.fastCheck() == ACCESS_ALLOWED);
+        }
+        if (!doEpsv) {
             debugs(9, 5, HERE << "EPSV support manually disabled. Sending PASV for FTP Channel (" << ctrl.conn->remote <<")");
             mb.Printf("PASV%s", Ftp::crlf);
             state = SENT_PASV;
@@ -650,6 +656,7 @@ ServerStateData::sendPassive()
         }
         break;
     }
+	}
 
     if (ctrl.message)
         wordlistDestroy(&ctrl.message);
@@ -657,21 +664,19 @@ ServerStateData::sendPassive()
     ctrl.offset = 0; //reset readed response, to make room read the next response
 
     writeCommand(mb.content());
-    
-    return true;
-
 
     /*
      * ugly hack for ftp servers like ftp.netscape.com that sometimes
      * dont acknowledge PASV commands. Use connect timeout to be faster then read timeout (minutes).
      */
-    /*
+    /* XXX: resurrect or remove
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
-                                      TimeoutDialer, ftpState, FtpStateData::timeout);
-    commSetConnTimeout(ftpState->ctrl.conn, Config.Timeout.connect, timeoutCall);
-    return true;
+                                      TimeoutDialer, this, FtpStateData::timeout);
+    commSetConnTimeout(ctrl.conn, Config.Timeout.connect, timeoutCall);
     */
+
+    return true;
 }
 
 

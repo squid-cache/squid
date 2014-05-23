@@ -3,12 +3,12 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "testEventLoop.h"
 #include "AsyncEngine.h"
 #include "EventLoop.h"
 #include "Mem.h"
 #include "SquidTime.h"
 #include "stat.h"
+#include "testEventLoop.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
 

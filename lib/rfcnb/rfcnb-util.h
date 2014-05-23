@@ -1,3 +1,6 @@
+#ifndef _RFCNB_RFCNB_UTIL_H
+#define _RFCNB_RFCNB_UTIL_H
+
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
  *
  * Version 1.0
@@ -22,6 +25,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#include "rfcnb/std-includes.h"
 
 void RFCNB_CvtPad_Name(char *name1, char *name2);
 
@@ -48,3 +53,5 @@ int RFCNB_Session_Req(struct RFCNB_Con *con,
 
 typedef void RFCNB_Prot_Print_Routine(FILE * fd, int dir, struct RFCNB_Pkt *pkt, int header, int payload);
 extern RFCNB_Prot_Print_Routine *Prot_Print_Routine;
+
+#endif /* _RFCNB_RFCNB_UTIL_H */

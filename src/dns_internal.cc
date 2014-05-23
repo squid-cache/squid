@@ -32,11 +32,12 @@
 
 #include "squid.h"
 #include "base/InstanceId.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "comm.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
+#include "dlink.h"
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
@@ -66,11 +67,6 @@
 #include <errno.h>
 #endif
 
-/* MS Visual Studio Projects are monolithic, so we need the following
-   #ifndef to exclude the internal DNS code from compile process when
-   using external DNS process.
- */
-#if !USE_DNSHELPER
 #if _SQUID_WINDOWS_
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
@@ -268,6 +264,9 @@ static void idnsSendSlaveAAAAQuery(idns_query *q);
 static void
 idnsCheckMDNS(idns_query *q)
 {
+    if (!Config.onoff.dns_mdns || q->permit_mdns)
+        return;
+
     size_t slen = strlen(q->name);
     if (slen > 6 && memcmp(q->name +(slen-6),".local", 6) == 0) {
         q->permit_mdns = true;
@@ -278,6 +277,10 @@ static void
 idnsAddMDNSNameservers()
 {
     nns_mdns_count=0;
+
+    // mDNS is disabled
+    if (!Config.onoff.dns_mdns)
+        return;
 
     // mDNS resolver addresses are explicit multicast group IPs
     if (Ip::EnableIpv6) {
@@ -717,21 +720,23 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Internal DNS Statistics:\n");
     storeAppendPrintf(sentry, "\nThe Queue:\n");
     storeAppendPrintf(sentry, "                       DELAY SINCE\n");
-    storeAppendPrintf(sentry, "  ID   SIZE SENDS FIRST SEND LAST SEND\n");
-    storeAppendPrintf(sentry, "------ ---- ----- ---------- ---------\n");
+    storeAppendPrintf(sentry, "  ID   SIZE SENDS FIRST SEND LAST SEND M FQDN\n");
+    storeAppendPrintf(sentry, "------ ---- ----- ---------- --------- - ----\n");
 
     for (n = lru_list.head; n; n = n->next) {
         q = (idns_query *)n->data;
-        storeAppendPrintf(sentry, "%#06x %4d %5d %10.3f %9.3f\n",
+        storeAppendPrintf(sentry, "%#06x %4d %5d %10.3f %9.3f %c %s\n",
                           (int) q->query_id, (int) q->sz, q->nsends,
                           tvSubDsec(q->start_t, current_time),
-                          tvSubDsec(q->sent_t, current_time));
+                          tvSubDsec(q->sent_t, current_time),
+                          (q->permit_mdns? 'M':' '),
+                          q->name);
     }
 
     if (Config.dns.packet_max > 0)
-        storeAppendPrintf(sentry, "DNS jumbo-grams: %zd Bytes\n", Config.dns.packet_max);
+        storeAppendPrintf(sentry, "\nDNS jumbo-grams: %zd Bytes\n", Config.dns.packet_max);
     else
-        storeAppendPrintf(sentry, "DNS jumbo-grams: not working\n");
+        storeAppendPrintf(sentry, "\nDNS jumbo-grams: not working\n");
 
     storeAppendPrintf(sentry, "\nNameservers:\n");
     storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES Type\n");
@@ -1495,6 +1500,12 @@ idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
     vc->msglen = ntohs(vc->msglen);
 
+    if (!vc->msglen) {
+        if (Comm::IsConnOpen(conn))
+            conn->close();
+        return;
+    }
+
     vc->msg->init(vc->msglen, vc->msglen);
     AsyncCall::Pointer call = commCbCall(5,4, "idnsReadVC",
                                          CommIoCbPtrFun(idnsReadVC, vc));
@@ -1603,6 +1614,8 @@ dnsInit(void)
 #endif
 
         debugs(78, DBG_IMPORTANT, "or use the 'dns_nameservers' option in squid.conf.");
+        if (Ip::EnableIpv6)
+            idnsAddNameserver("::1");
         idnsAddNameserver("127.0.0.1");
     }
 
@@ -1816,7 +1829,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     debugs(78, 3, "idnsPTRLookup: buf is " << q->sz << " bytes for " << ip <<
            ", id = 0x" << std::hex << q->query_id);
 
-    q->permit_mdns = true;
+    q->permit_mdns = Config.onoff.dns_mdns;
     idnsStartQuery(q, callback, data);
 }
 
@@ -1873,4 +1886,3 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
-#endif /* USE_DNSHELPER */

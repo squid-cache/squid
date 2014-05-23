@@ -31,15 +31,15 @@
  */
 
 #include "squid.h"
-#include "globals.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "comm/Connection.h"
 #include "compat/strtoll.h"
 #include "ConfigParser.h"
 #include "fde.h"
+#include "globals.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldInfo.h"
@@ -50,7 +50,7 @@
 #include "Store.h"
 #include "StrList.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -294,7 +294,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
         return 0;
     }
     /* Make sure it's defined even if empty "" */
-    if (!val->defined())
+    if (!val->termedBuf())
         val->limitInit("", 0);
     return 1;
 }

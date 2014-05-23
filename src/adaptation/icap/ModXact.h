@@ -32,10 +32,11 @@
 #ifndef SQUID_ICAPMODXACT_H
 #define SQUID_ICAPMODXACT_H
 
-#include "BodyPipe.h"
-#include "adaptation/icap/Xaction.h"
+#include "AccessLogEntry.h"
 #include "adaptation/icap/InOut.h"
 #include "adaptation/icap/Launcher.h"
+#include "adaptation/icap/Xaction.h"
+#include "BodyPipe.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
@@ -132,7 +133,7 @@ class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 {
 
 public:
-    ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, ServiceRep::Pointer &s);
+    ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
     virtual ~ModXact();
 
     // BodyProducer methods
@@ -337,6 +338,7 @@ private:
                      } sending;
     } state;
 
+    AccessLogEntry::Pointer alMaster; ///< Master transaction AccessLogEntry
     CBDATA_CLASS2(ModXact);
 };
 
@@ -345,7 +347,7 @@ private:
 class ModXactLauncher: public Launcher
 {
 public:
-    ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer s);
+    ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);
 
 protected:
     virtual Xaction *createXaction();
@@ -356,6 +358,8 @@ protected:
     void updateHistory(bool start);
 
     InOut virgin;
+
+    AccessLogEntry::Pointer al;
 
 private:
     CBDATA_CLASS2(ModXactLauncher);

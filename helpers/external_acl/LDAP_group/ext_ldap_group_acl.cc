@@ -41,15 +41,8 @@
 
 #define LDAP_DEPRECATED 1
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <cstring>
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
@@ -87,10 +80,6 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #include <ldap.h>
 #endif
 
-#endif
-
-#if defined(LDAP_OPT_NETWORK_TIMEOUT)
-#include <sys/time.h>
 #endif
 
 #define PROGRAM_NAME "ext_ldap_group_acl"

@@ -33,49 +33,13 @@
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 /* squid string placeholder (for printf) */
 #ifndef SQUIDSTRINGPH
 #define SQUIDSTRINGPH "%.*s"
 #define SQUIDSTRINGPRINT(s) (s).psize(),(s).rawBuf()
 #endif /* SQUIDSTRINGPH */
-
-#define DEBUGSTRINGS 0
-#if DEBUGSTRINGS
-#include "splay.h"
-
-class String;
-
-class StringRegistry
-{
-
-public:
-    static StringRegistry &Instance();
-
-    void add(String const *);
-
-    StringRegistry();
-
-    void remove(String const *);
-
-private:
-    static OBJH Stat;
-
-    static StringRegistry Instance_;
-
-    static SplayNode<String const *>::SPLAYWALKEE Stater;
-
-    Splay<String const *> entries;
-
-    bool registered;
-
-};
-
-class StoreEntry;
-#endif
 
 class String
 {
@@ -87,7 +51,7 @@ public:
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
-    const static size_type npos = std::string::npos;
+    const static size_type npos = static_cast<size_type>(-1);
 
     String &operator =(char const *);
     String &operator =(String const &);
@@ -105,14 +69,6 @@ public:
     /// throws when size() > MAXINT
     int psize() const;
 
-    /**
-     * \retval true the String has some contents
-     */
-    _SQUID_INLINE_ bool defined() const;
-    /**
-     * \retval true the String does not hold any contents
-     */
-    _SQUID_INLINE_ bool undefined() const;
     /**
      * Returns a raw pointer to the underlying backing store. The caller has been
      * verified not to make any assumptions about null-termination
@@ -150,14 +106,13 @@ public:
 
     _SQUID_INLINE_ void cut(size_type newLength);
 
-#if DEBUGSTRINGS
-    void stat(StoreEntry *) const;
-#endif
-
 private:
     void allocAndFill(const char *str, int len);
     void allocBuffer(size_type sz);
     void setBuffer(char *buf, size_type sz);
+
+    bool defined() const {return buf_!=NULL;}
+    bool undefined() const {return !defined();}
 
     _SQUID_INLINE_ bool nilCmp(bool, bool, int &) const;
 

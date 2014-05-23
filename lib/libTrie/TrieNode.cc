@@ -18,8 +18,8 @@
  */
 
 #include "squid.h"
-#include "TrieNode.h"
 #include "TrieCharTransform.h"
+#include "TrieNode.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

@@ -22,8 +22,8 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include "TrieNode.h"
 #include "TrieCharTransform.h"
+#include "TrieNode.h"
 
 #if !_USE_INLINE_
 #include "Trie.cci"

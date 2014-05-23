@@ -55,12 +55,21 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
+#define SQUID_X509_V_ERR_INFINITE_VALIDATION -4
 #define SQUID_X509_V_ERR_CERT_CHANGE -3
 #define SQUID_ERR_SSL_HANDSHAKE -2
 #define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
 // All SSL errors range: from smallest (negative) custom to largest SSL error
 #define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_CERT_CHANGE
 #define SQUID_SSL_ERROR_MAX INT_MAX
+
+// Maximum certificate validation callbacks. OpenSSL versions exceeding this
+// limit are deemed stuck in an infinite validation loop (OpenSSL bug #3090)
+// and will trigger the SQUID_X509_V_ERR_INFINITE_VALIDATION error.
+// Can be set to a number up to UINT32_MAX
+#ifndef SQUID_CERT_VALIDATION_ITERATION_MAX
+#define SQUID_CERT_VALIDATION_ITERATION_MAX 16384
+#endif
 
 namespace AnyP
 {
@@ -268,6 +277,18 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Initializes the shared session cache if configured
+*/
+void initialize_session_cache();
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Destroy the shared session cache if configured
+*/
+void destruct_session_cache();
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

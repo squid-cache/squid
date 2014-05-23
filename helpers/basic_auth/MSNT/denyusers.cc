@@ -9,15 +9,15 @@
  * have been explicitly denied by the system administrator.
  * Routines at the bottom also use the allowed user functions.
  */
+#include "msntauth.h"
+#include "usersfile.h"
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <unistd.h>
-#include <time.h>
 #include <sys/types.h>
 #include <sys/param.h>
-#include <string.h>
-#include "usersfile.h"
-#include "msntauth.h"
 
 static usersfile DenyUsers;
 static int init = 0;

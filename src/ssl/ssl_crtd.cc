@@ -1,23 +1,13 @@
 #include "squid.h"
 #include "helpers/defines.h"
-#include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
+#include "ssl/crtd_message.h"
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
-#if HAVE_SSTREAM
-#include <sstream>
-#endif
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
-#if HAVE_STDEXCEPT
+#include <sstream>
 #include <stdexcept>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif

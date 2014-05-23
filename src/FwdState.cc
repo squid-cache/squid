@@ -36,8 +36,8 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
-#include "CachePeer.h"
 #include "CacheManager.h"
+#include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -72,13 +72,13 @@
 #include "StoreClient.h"
 #include "urn.h"
 #include "whois.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
-#include "ssl/helper.h"
-#include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
+#include "ssl/helper.h"
 #include "ssl/ServerBump.h"
+#include "ssl/support.h"
 #endif
 #if HAVE_ERRNO_H
 #include <errno.h>
@@ -86,7 +86,7 @@
 
 static PSC fwdPeerSelectionCompleteWrapper;
 static CLCB fwdServerClosedWrapper;
-#if USE_SSL
+#if USE_OPENSSL
 static PF fwdNegotiateSSLWrapper;
 #endif
 static CNCB fwdConnectDoneWrapper;
@@ -113,7 +113,7 @@ FwdState::abort(void* d)
     } else {
         debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
-    fwd->serverDestinations.clean();
+    fwd->serverDestinations.clear();
     fwd->self = NULL;
 }
 
@@ -130,7 +130,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     pconnRace = raceImpossible;
     start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
-    e->lock();
+    e->lock("FwdState");
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
 }
 
@@ -164,7 +164,7 @@ void FwdState::start(Pointer aSelf)
 #endif
 
     // do full route options selection
-    peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
+    peerSelect(&serverDestinations, request, al, entry, fwdPeerSelectionCompleteWrapper, this);
 }
 
 #if STRICT_ORIGINAL_DST
@@ -230,7 +230,7 @@ FwdState::completed()
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
-#if USE_SSL
+#if USE_OPENSSL
             if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
                 CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                              ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
@@ -263,7 +263,7 @@ FwdState::~FwdState()
 
     entry->unregisterAbort();
 
-    entry->unlock();
+    entry->unlock("FwdState");
 
     entry = NULL;
 
@@ -278,7 +278,7 @@ FwdState::~FwdState()
         serverConn->close();
     }
 
-    serverDestinations.clean();
+    serverDestinations.clear();
 
     debugs(17, 3, HERE << "FwdState destructor done");
 }
@@ -473,7 +473,7 @@ FwdState::complete()
         entry->reset();
 
         // drop the last path off the selection list. try the next one.
-        serverDestinations.shift();
+        serverDestinations.erase(serverDestinations.begin());
         startConnectionOrFail();
 
     } else {
@@ -509,7 +509,7 @@ fwdServerClosedWrapper(const CommCloseCbParams &params)
     fwd->serverClosed(params.fd);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 static void
 fwdNegotiateSSLWrapper(int fd, void *data)
 {
@@ -612,7 +612,7 @@ FwdState::retryOrBail()
         if (pconnRace == raceHappened)
             debugs(17, 4, HERE << "retrying the same destination");
         else
-            serverDestinations.shift(); // last one failed. try another.
+            serverDestinations.erase(serverDestinations.begin()); // last one failed. try another.
         startConnectionOrFail();
         return;
     }
@@ -647,7 +647,7 @@ FwdState::handleUnregisteredServerEnd()
     retryOrBail();
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 void
 FwdState::negotiateSSL(int fd)
 {
@@ -714,17 +714,17 @@ FwdState::negotiateSSL(int fd)
                     if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                         serverBump->sslErrors = cbdataReference(errs);
                 }
-            }
 
-            // For intercepted connections, set the host name to the server
-            // certificate CN. Otherwise, we just hope that CONNECT is using
-            // a user-entered address (a host name or a user-entered IP).
-            const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
-            if (request->flags.sslPeek && !isConnectRequest) {
-                if (X509 *srvX509 = errDetails->peerCert()) {
-                    if (const char *name = Ssl::CommonHostName(srvX509)) {
-                        request->SetHost(name);
-                        debugs(83, 3, HERE << "reset request host: " << name);
+                // For intercepted connections, set the host name to the server
+                // certificate CN. Otherwise, we just hope that CONNECT is using
+                // a user-entered address (a host name or a user-entered IP).
+                const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
+                if (request->flags.sslPeek && !isConnectRequest) {
+                    if (X509 *srvX509 = errDetails->peerCert()) {
+                        if (const char *name = Ssl::CommonHostName(srvX509)) {
+                            request->SetHost(name);
+                            debugs(83, 3, HERE << "reset request host: " << name);
+                        }
                     }
                 }
             }
@@ -965,7 +965,8 @@ FwdState::initiateSSL()
         // unless it was the CONNECT request with a user-typed address.
         const char *hostname = request->GetHost();
         const bool hostnameIsIp = request->GetHostIsNumeric();
-        const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
+        const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                      !request->clientConnectionManager->port->flags.isIntercepted();
         if (!request->flags.sslPeek || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
@@ -1032,7 +1033,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!request->flags.pinned) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
@@ -1045,9 +1046,12 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
     const CbcPointer<ConnStateData> &clientConnState =
         request->clientConnectionManager;
-    if (clientConnState->isFtp) {
+    if (clientConnState.valid() && clientConnState->isFtp) {
+        // this is not an idle connection, so we do not want I/O monitoring
+        const bool monitor = false;
         clientConnState->pinConnection(serverConnection(), request,
-                                       serverConnection()->getPeer(), false);
+                                       serverConnection()->getPeer(), false,
+                                       monitor);
     }
 
     dispatch();
@@ -1061,7 +1065,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == serverDestinations[0]->fd);
 
     if (entry->isEmpty()) {
-        ErrorState *anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGateway_Timeout, request);
+        ErrorState *anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request);
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
 
@@ -1108,7 +1112,7 @@ FwdState::connectStart()
         ctimeout = ftimeout;
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
-        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
+        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
         self = NULL; // refcounted
@@ -1127,10 +1131,12 @@ FwdState::connectStart()
         else
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
+            pinned_connection->stopPinnedConnectionMonitoring();
             flags.connected_okay = true;
             ++n_tries;
             request->hier.note(serverConn, request->GetHost());
             request->flags.pinned = true;
+            request->hier.note(serverConn, pinned_connection->pinning.host);
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
@@ -1197,18 +1203,7 @@ FwdState::connectStart()
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    /* Get the server side TOS and Netfilter mark to be set on the connection. */
-    if (Ip::Qos::TheConfig.isAclTosActive()) {
-        serverDestinations[0]->tos = GetTosToServer(request);
-    }
-#if SO_MARK && USE_LIBCAP
-    serverDestinations[0]->nfmark = GetNfmarkToServer(request);
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos)
-           << ", netfilter mark " << serverDestinations[0]->nfmark);
-#else
-    serverDestinations[0]->nfmark = 0;
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos));
-#endif
+    GetMarkingsToServer(request, *serverDestinations[0]);
 
     calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
     Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, ctimeout);
@@ -1235,7 +1230,7 @@ FwdState::dispatch()
     /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
     assert(entry->ping_status != PING_WAITING);
 
-    assert(entry->lock_count);
+    assert(entry->locked());
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
@@ -1264,7 +1259,7 @@ FwdState::dispatch()
     }
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
     if (request->flags.sslPeek) {
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                      ConnStateData::httpsPeeked, serverConnection());
@@ -1285,7 +1280,7 @@ FwdState::dispatch()
         request->peer_domain = NULL;
 
         switch (request->protocol) {
-#if USE_SSL
+#if USE_OPENSSL
 
         case AnyP::PROTO_HTTPS:
             httpStart(this);
@@ -1394,7 +1389,7 @@ ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
     return new ErrorState(type, request->flags.needValidation ?
-                          Http::scGateway_Timeout : Http::scServiceUnavailable, request);
+                          Http::scGatewayTimeout : Http::scServiceUnavailable, request);
 }
 
 static void
@@ -1433,7 +1428,7 @@ FwdState::reforwardableStatus(const Http::StatusCode s) const
 
     case Http::scBadGateway:
 
-    case Http::scGateway_Timeout:
+    case Http::scGatewayTimeout:
         return true;
 
     case Http::scForbidden:
@@ -1592,4 +1587,21 @@ GetNfmarkToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
     return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+}
+
+void
+GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
+{
+    // Get the server side TOS and Netfilter mark to be set on the connection.
+    if (Ip::Qos::TheConfig.isAclTosActive()) {
+        conn.tos = GetTosToServer(request);
+        debugs(17, 3, "from " << conn.local << " tos " << int(conn.tos));
+    }
+
+#if SO_MARK && USE_LIBCAP
+    conn.nfmark = GetNfmarkToServer(request);
+    debugs(17, 3, "from " << conn.local << " netfilter mark " << conn.nfmark);
+#else
+    conn.nfmark = 0;
+#endif
 }

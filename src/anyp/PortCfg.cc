@@ -1,28 +1,66 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "comm.h"
-#if HAVE_LIMITS
-#include <limits>
-#endif
-#if USE_SSL
+#include "fatal.h"
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
+
+#include <cstring>
+#include <limits>
 
 CBDATA_NAMESPACED_CLASS_INIT(AnyP, PortCfg);
 
 int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
 
-AnyP::PortCfg::PortCfg(const char *aProtocol) :
+AnyP::PortCfg::PortCfg() :
         next(NULL),
-        protocol(xstrdup(aProtocol)),
+        s(),
+        transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
         name(NULL),
         defaultsite(NULL),
-#if USE_SSL
+        flags(),
+        allow_direct(false),
+        vhost(false),
+        actAsOrigin(false),
+        ignore_cc(false),
+        connection_auth_disabled(false),
+        vport(0),
+        disable_pmtu_discovery(0),
+        listenConn(),
+#if USE_OPENSSL
+        cert(NULL),
+        key(NULL),
+        version(0),
+        cipher(NULL),
+        options(NULL),
+        clientca(NULL),
+        cafile(NULL),
+        capath(NULL),
+        crlfile(NULL),
+        dhfile(NULL),
+        sslflags(NULL),
+        sslContextSessionId(NULL),
+        generateHostCertificates(false),
         dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
+        staticSslContext(),
+        signingCert(),
+        signPkey(),
+        certsToChain(),
+        untrustedSigningCert(),
+        untrustedSignPkey(),
+        clientVerifyCrls(),
+        clientCA(),
+        dhParams(),
+        contextMethod(),
+        sslContextFlags(0),
+        sslOptions(0),
 #endif
         ftp_track_dirs(false)
-{}
+{
+    memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
+}
 
 AnyP::PortCfg::~PortCfg()
 {
@@ -33,9 +71,8 @@ AnyP::PortCfg::~PortCfg()
 
     safe_free(name);
     safe_free(defaultsite);
-    safe_free(protocol);
 
-#if USE_SSL
+#if USE_OPENSSL
     safe_free(cert);
     safe_free(key);
     safe_free(options);
@@ -51,14 +88,14 @@ AnyP::PortCfg::~PortCfg()
 AnyP::PortCfg *
 AnyP::PortCfg::clone() const
 {
-    AnyP::PortCfg *b = new AnyP::PortCfg(protocol);
-
+    AnyP::PortCfg *b = new AnyP::PortCfg();
     b->s = s;
     if (name)
         b->name = xstrdup(name);
     if (defaultsite)
         b->defaultsite = xstrdup(defaultsite);
 
+    b->transport = transport;
     b->flags = flags;
     b->allow_direct = allow_direct;
     b->vhost = vhost;
@@ -71,7 +108,7 @@ AnyP::PortCfg::clone() const
 #if 0
     // TODO: AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
 
-#if USE_SSL
+#if USE_OPENSSL
     char *cert;
     char *key;
     int version;
@@ -92,7 +129,7 @@ AnyP::PortCfg::clone() const
     return b;
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 void
 AnyP::PortCfg::configureSslServerContext()
 {
@@ -101,18 +138,18 @@ AnyP::PortCfg::configureSslServerContext()
 
     if (!signingCert) {
         char buf[128];
-        fatalf("No valid signing SSL certificate configured for %s_port %s", protocol,  s.toUrl(buf, sizeof(buf)));
+        fatalf("No valid signing SSL certificate configured for %s_port %s", AnyP::ProtocolType_str[transport.protocol],  s.toUrl(buf, sizeof(buf)));
     }
 
     if (!signPkey)
-        debugs(3, DBG_IMPORTANT, "No SSL private key configured for  " <<  protocol << "_port " << s);
+        debugs(3, DBG_IMPORTANT, "No SSL private key configured for  " << AnyP::ProtocolType_str[transport.protocol] << "_port " << s);
 
     Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey,
                                signingCert, signPkey);
 
     if (!untrustedSigningCert) {
         char buf[128];
-        fatalf("Unable to generate  signing SSL certificate for untrusted sites for %s_port %s", protocol, s.toUrl(buf, sizeof(buf)));
+        fatalf("Unable to generate signing SSL certificate for untrusted sites for %s_port %s", AnyP::ProtocolType_str[transport.protocol], s.toUrl(buf, sizeof(buf)));
     }
 
     if (crlfile)
@@ -141,8 +178,26 @@ AnyP::PortCfg::configureSslServerContext()
 
     if (!staticSslContext) {
         char buf[128];
-        fatalf("%s_port %s initialization error", protocol,  s.toUrl(buf, sizeof(buf)));
+        fatalf("%s_port %s initialization error", AnyP::ProtocolType_str[transport.protocol],  s.toUrl(buf, sizeof(buf)));
     }
 }
 #endif
 
+void
+AnyP::PortCfg::setTransport(const char *aProtocol)
+{
+    // HTTP/1.0 not supported because we are version 1.1 which contains a superset of 1.0
+    // and RFC 2616 requires us to upgrade 1.0 to 1.1
+
+    if (strcasecmp("http", aProtocol) == 0 || strcmp("HTTP/1.1", aProtocol) == 0)
+        transport = AnyP::ProtocolVersion(AnyP::PROTO_HTTP, 1,1);
+
+    else if (strcasecmp("https", aProtocol) == 0 || strcmp("HTTPS/1.1", aProtocol) == 0)
+        transport = AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
+
+    else if (strcasecmp("ftp", aProtocol) == 0)
+        transport = AnyP::ProtocolVersion(AnyP::PROTO_FTP, 1,0);
+
+    else
+        fatalf("http(s)_port protocol=%s is not supported\n", aProtocol);
+}

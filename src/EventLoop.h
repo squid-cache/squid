@@ -31,7 +31,7 @@
 #ifndef SQUID_EVENTLOOP_H
 #define SQUID_EVENTLOOP_H
 
-#include "base/Vector.h"
+#include <vector>
 
 #define EVENT_LOOP_TIMEOUT	1000 /* 1s timeout */
 
@@ -89,6 +89,10 @@ public:
 
     int errcount;
 
+    /// the [main program] loop running now; may be nil
+    /// for simplicity, we assume there are no concurrent loops
+    static EventLoop *Running;
+
 private:
     /** setup state variables prior to running */
     void prepareToRun();
@@ -100,7 +104,7 @@ private:
     bool dispatchCalls();
 
     bool last_loop;
-    typedef Vector<AsyncEngine *> engine_vector;
+    typedef std::vector<AsyncEngine *> engine_vector;
     engine_vector engines;
     TimeEngine * timeService;
     AsyncEngine * primaryEngine;

@@ -4,8 +4,8 @@
  */
 
 #include "squid.h"
-#include "tools.h"
 #include "StoreStats.h"
+#include "tools.h"
 
 /* StoreInfoStats */
 

@@ -35,9 +35,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif

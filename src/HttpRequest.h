@@ -262,6 +262,8 @@ public:
      */
     CbcPointer<ConnStateData> clientConnectionManager;
 
+    /// forgets about the cached Range header (for a reason)
+    void ignoreRange(const char *reason);
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
 private:

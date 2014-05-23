@@ -56,7 +56,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
 
-#if USE_SSL
+#if USE_OPENSSL
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif
@@ -78,7 +78,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   LogTags_str[al->cache.code],
                   al->http.statusSfx(),
                   al->http.code,
-                  al->cache.replySize,
+                  al->http.clientReplySz.messageTotal(),
                   al->_private.method_str,
                   al->url,
                   user ? user : dash_str,

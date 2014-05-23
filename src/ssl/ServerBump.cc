@@ -22,7 +22,7 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e):
     const char *uri = urlCanonical(request.getRaw());
     if (e) {
         entry = e;
-        entry->lock();
+        entry->lock("Ssl::ServerBump");
     } else
         entry = storeCreateEntry(uri, uri, request->flags, request->method);
     // We do not need to be a client because the error contents will be used
@@ -36,7 +36,7 @@ Ssl::ServerBump::~ServerBump()
     if (entry) {
         debugs(33, 4, HERE << *entry);
         storeUnregister(sc, entry, this);
-        entry->unlock();
+        entry->unlock("Ssl::ServerBump");
     }
     cbdataReferenceDone(sslErrors);
 }

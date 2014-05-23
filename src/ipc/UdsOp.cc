@@ -4,11 +4,11 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "comm.h"
-#include "CommCalls.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "base/TextException.h"
+#include "CommCalls.h"
 #include "ipc/UdsOp.h"
 
 Ipc::UdsOp::UdsOp(const String& pathAddr):
@@ -81,9 +81,19 @@ Ipc::UdsSender::UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage):
         message(aMessage),
         retries(10), // TODO: make configurable?
         timeout(10), // TODO: make configurable?
+        sleeping(false),
         writing(false)
 {
     message.address(address);
+}
+
+void Ipc::UdsSender::swanSong()
+{
+    // did we abort while waiting between retries?
+    if (sleeping)
+        cancelSleep();
+
+    UdsOp::swanSong();
 }
 
 void Ipc::UdsSender::start()
@@ -96,7 +106,7 @@ void Ipc::UdsSender::start()
 
 bool Ipc::UdsSender::doneAll() const
 {
-    return !writing && UdsOp::doneAll();
+    return !writing && !sleeping && UdsOp::doneAll();
 }
 
 void Ipc::UdsSender::write()
@@ -114,8 +124,53 @@ void Ipc::UdsSender::wrote(const CommIoCbParams& params)
     debugs(54, 5, HERE << params.conn << " flag " << params.flag << " retries " << retries << " [" << this << ']');
     writing = false;
     if (params.flag != COMM_OK && retries-- > 0) {
-        sleep(1); // do not spend all tries at once; XXX: use an async timed event instead of blocking here; store the time when we started writing so that we do not sleep if not needed?
-        write(); // XXX: should we close on error so that conn() reopens?
+        // perhaps a fresh connection and more time will help?
+        conn()->close();
+        startSleep();
+    }
+}
+
+/// pause for a while before resending the message
+void Ipc::UdsSender::startSleep()
+{
+    Must(!sleeping);
+    sleeping = true;
+    eventAdd("Ipc::UdsSender::DelayedRetry",
+             Ipc::UdsSender::DelayedRetry,
+             new Pointer(this), 1, 0, false); // TODO: Use Fibonacci increments
+}
+
+/// stop sleeping (or do nothing if we were not)
+void Ipc::UdsSender::cancelSleep()
+{
+    if (sleeping) {
+        // Why not delete the event? See Comm::ConnOpener::cancelSleep().
+        sleeping = false;
+        debugs(54, 9, "stops sleeping");
+    }
+}
+
+/// legacy wrapper for Ipc::UdsSender::delayedRetry()
+void Ipc::UdsSender::DelayedRetry(void *data)
+{
+    Pointer *ptr = static_cast<Pointer*>(data);
+    assert(ptr);
+    if (UdsSender *us = dynamic_cast<UdsSender*>(ptr->valid())) {
+        // get back inside AsyncJob protection by scheduling an async job call
+        typedef NullaryMemFunT<Ipc::UdsSender> Dialer;
+        AsyncCall::Pointer call = JobCallback(54, 4, Dialer, us, Ipc::UdsSender::delayedRetry);
+        ScheduleCallHere(call);
+    }
+    delete ptr;
+}
+
+/// make another sending attempt after a pause
+void Ipc::UdsSender::delayedRetry()
+{
+    debugs(54, 5, HERE << sleeping);
+    if (sleeping) {
+        sleeping = false;
+        write(); // reopens the connection if needed
     }
 }
 

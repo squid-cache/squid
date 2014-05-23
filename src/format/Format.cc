@@ -15,7 +15,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #endif
 
@@ -495,6 +495,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         break;
 
+        case LFT_TIME_START: {
+            int precision = fmt->widthMax >=0 ? fmt->widthMax :3;
+            snprintf(tmp, sizeof(tmp), "%0*" PRId64 ".%0*d", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, static_cast<int64_t>(al->cache.start_time.tv_sec), precision, (int)(al->cache.start_time.tv_usec / fmt->divisor));
+            out = tmp;
+        }
+        break;
+
         case LFT_TIME_TO_HANDLE_REQUEST:
             outint = al->cache.msec;
             doint = 1;
@@ -794,7 +801,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             if (!out)
                 out = strOrNull(al->cache.extuser);
-#if USE_SSL
+#if USE_OPENSSL
             if (!out)
                 out = strOrNull(al->cache.ssluser);
 #endif
@@ -870,7 +877,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-#if USE_SSL
+#if USE_OPENSSL
             if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
                 if (! (out = Ssl::GetErrorName(al->request->errDetail))) {
                     snprintf(tmp, sizeof(tmp), "SSL_ERR=%d", al->request->errDetail);
@@ -918,6 +925,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             // original client URI
             if (al->request) {
                 out = urlCanonical(al->request);
+                quote = 1;
+            }
+            break;
+
+        case LFT_CLIENT_REQ_URLDOMAIN:
+            if (al->request) {
+                out = al->request->GetHost();
                 quote = 1;
             }
             break;
@@ -982,21 +996,21 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_REQUEST_SIZE_TOTAL:
-            outoff = al->cache.requestSize;
+        case LFT_CLIENT_REQUEST_SIZE_TOTAL:
+            outoff = al->http.clientRequestSz.messageTotal();
             dooff = 1;
             break;
 
-            /*case LFT_REQUEST_SIZE_LINE: */
-        case LFT_REQUEST_SIZE_HEADERS:
-            outoff = al->cache.requestHeadersSize;
+        case LFT_CLIENT_REQUEST_SIZE_HEADERS:
+            outoff = al->http.clientRequestSz.header;
             dooff =1;
             break;
+
             /*case LFT_REQUEST_SIZE_BODY: */
             /*case LFT_REQUEST_SIZE_BODY_NO_TE: */
 
-        case LFT_REPLY_SIZE_TOTAL:
-            outoff = al->cache.replySize;
+        case LFT_ADAPTED_REPLY_SIZE_TOTAL:
+            outoff = al->http.clientReplySz.messageTotal();
             dooff = 1;
             break;
 
@@ -1014,13 +1028,19 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
             break;
 
-            /*case LFT_REPLY_SIZE_LINE: */
-        case LFT_REPLY_SIZE_HEADERS:
-            outint = al->cache.replyHeadersSize;
+        case LFT_ADAPTED_REPLY_SIZE_HEADERS:
+            outint = al->http.clientReplySz.header;
             doint = 1;
             break;
+
             /*case LFT_REPLY_SIZE_BODY: */
             /*case LFT_REPLY_SIZE_BODY_NO_TE: */
+
+        case LFT_CLIENT_IO_SIZE_TOTAL:
+            outint = al->http.clientRequestSz.messageTotal() + al->http.clientReplySz.messageTotal();
+            doint = 1;
+            break;
+            /*case LFT_SERVER_IO_SIZE_TOTAL: */
 
         case LFT_TAG:
             if (al->request)
@@ -1028,11 +1048,6 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
             quote = 1;
 
-            break;
-
-        case LFT_IO_SIZE_TOTAL:
-            outint = al->cache.requestSize + al->cache.replySize;
-            doint = 1;
             break;
 
         case LFT_EXT_LOG:
@@ -1048,7 +1063,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             dooff = 1;
             break;
 
-#if USE_SSL
+#if USE_OPENSSL
         case LFT_SSL_BUMP_MODE: {
             const Ssl::BumpMode mode = static_cast<Ssl::BumpMode>(al->ssl.bumpMode);
             // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'
@@ -1105,6 +1120,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = sb.termedBuf();
                 quote = 1;
             }
+            break;
+
+        case LFT_CREDENTIALS:
+#if USE_AUTH
+            if (al->request && al->request->auth_user_request != NULL)
+                out = strOrNull(al->request->auth_user_request->credentialsStr());
+#endif
+
             break;
 
         case LFT_PERCENT:
@@ -1168,7 +1191,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
 
             // enforce width limits if configured
-            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff;
+            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff && !fmt->divisor;
             if (haveMaxWidth || fmt->widthMin) {
                 const int minWidth = fmt->widthMin >= 0 ?
                                      fmt->widthMin :0;

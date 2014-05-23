@@ -173,7 +173,7 @@ gopherStateFree(const CommCloseCbParams &params)
         return;
 
     if (gopherState->entry) {
-        gopherState->entry->unlock();
+        gopherState->entry->unlock("gopherState");
     }
 
     HTTPMSGUNLOCK(gopherState->req);
@@ -726,7 +726,7 @@ gopherTimeout(const CommTimeoutCbParams &io)
     GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
     debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
 
-    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGateway_Timeout, gopherState->fwd->request));
+    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, gopherState->fwd->request));
 
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
@@ -945,8 +945,7 @@ gopherSendRequest(int fd, void *data)
                                          CommIoCbPtrFun(gopherSendComplete, gopherState));
     Comm::Write(gopherState->serverConn, buf, strlen(buf), call, NULL);
 
-    if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
-        gopherState->entry->setPublicKey();	/* Make it public */
+    gopherState->entry->makePublic();
 }
 
 /// \ingroup ServerProtocolGopherInternal
@@ -962,7 +961,7 @@ gopherStart(FwdState * fwd)
     gopherState = cbdataAlloc(GopherStateData);
     gopherState->buf = (char *)memAllocate(MEM_4K_BUF);
 
-    entry->lock();
+    entry->lock("gopherState");
     gopherState->entry = entry;
 
     gopherState->fwd = fwd;

@@ -34,9 +34,7 @@
 
 #include "rfc1123.h"
 
-#if HAVE_TIME_H
-#include <time.h>
-#endif
+#include <ctime>
 /* NP: sys/time.h is provided by libcompat */
 
 /* globals for accessing time */

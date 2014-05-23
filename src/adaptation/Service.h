@@ -1,11 +1,12 @@
 #ifndef SQUID_ADAPTATION__SERVICE_H
 #define SQUID_ADAPTATION__SERVICE_H
 
-#include "SquidString.h"
-#include "adaptation/forward.h"
+#include "AccessLogEntry.h"
 #include "adaptation/Elements.h"
+#include "adaptation/forward.h"
 #include "adaptation/ServiceConfig.h"
 #include "base/RefCount.h"
+#include "SquidString.h"
 
 // TODO: Move src/ICAP/ICAPServiceRep.h API comments here and update them
 
@@ -31,7 +32,7 @@ public:
     virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
 
-    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
+    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp) = 0;
 
     bool wants(const ServiceFilter &filter) const;
 
@@ -60,7 +61,7 @@ private:
 
 typedef Service::Pointer ServicePointer;
 
-typedef Vector<Adaptation::ServicePointer> Services;
+typedef std::vector<Adaptation::ServicePointer> Services;
 Services &AllServices();
 ServicePointer FindService(const Service::Id &key);
 

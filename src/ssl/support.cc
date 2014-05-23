@@ -36,22 +36,28 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
  */
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "fde.h"
 #include "globals.h"
+#include "ipc/MemMap.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
-#include "ssl/support.h"
 #include "ssl/gadgets.h"
+#include "ssl/support.h"
 #include "URL.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
+
+static void setSessionCallbacks(SSL_CTX *ctx);
+Ipc::MemMap *SslSessionCache = NULL;
+const char *SslSessionCacheName = "ssl_session_cache";
 
 const char *Ssl::BumpModeStr[] = {
     "none",
@@ -239,6 +245,23 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
                       sizeof(buffer));
 
+    // detect infinite loops
+    uint32_t *validationCounter = static_cast<uint32_t *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_validation_counter));
+    if (!validationCounter) {
+        validationCounter = new uint32_t(1);
+        SSL_set_ex_data(ssl, ssl_ex_index_ssl_validation_counter, validationCounter);
+    } else {
+        // overflows allowed if SQUID_CERT_VALIDATION_ITERATION_MAX >= UINT32_MAX
+        (*validationCounter)++;
+    }
+
+    if ((*validationCounter) >= SQUID_CERT_VALIDATION_ITERATION_MAX) {
+        ok = 0; // or the validation loop will never stop
+        error_no = SQUID_X509_V_ERR_INFINITE_VALIDATION;
+        debugs(83, 2, "SQUID_X509_V_ERR_INFINITE_VALIDATION: " <<
+               *validationCounter << " iterations while checking " << buffer);
+    }
+
     if (ok) {
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
@@ -282,30 +305,34 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         else
             debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
 
-        if (check) {
-            ACLFilledChecklist *filledCheck = Filled(check);
-            assert(!filledCheck->sslErrors);
-            filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
-            filledCheck->serverCert.resetAndLock(peer_cert);
-            if (check->fastCheck() == ACCESS_ALLOWED) {
-                debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
-                ok = 1;
-            } else {
-                debugs(83, 5, "confirming SSL error " << error_no);
+        // Check if the certificate error can be bypassed.
+        // Infinity validation loop errors can not bypassed.
+        if (error_no != SQUID_X509_V_ERR_INFINITE_VALIDATION) {
+            if (check) {
+                ACLFilledChecklist *filledCheck = Filled(check);
+                assert(!filledCheck->sslErrors);
+                filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
+                filledCheck->serverCert.resetAndLock(peer_cert);
+                if (check->fastCheck() == ACCESS_ALLOWED) {
+                    debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
+                    ok = 1;
+                } else {
+                    debugs(83, 5, "confirming SSL error " << error_no);
+                }
+                delete filledCheck->sslErrors;
+                filledCheck->sslErrors = NULL;
+                filledCheck->serverCert.reset(NULL);
             }
-            delete filledCheck->sslErrors;
-            filledCheck->sslErrors = NULL;
-            filledCheck->serverCert.reset(NULL);
-        }
-        // If the certificate validator is used then we need to allow all errors and
-        // pass them to certficate validator for more processing
-        else if (Ssl::TheConfig.ssl_crt_validator) {
-            ok = 1;
-            // Check if we have stored certificates chain. Store if not.
-            if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
-                STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
-                if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
-                    sk_X509_pop_free(certStack, X509_free);
+            // If the certificate validator is used then we need to allow all errors and
+            // pass them to certficate validator for more processing
+            else if (Ssl::TheConfig.ssl_crt_validator) {
+                ok = 1;
+                // Check if we have stored certificates chain. Store if not.
+                if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
+                    STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
+                    if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
+                        sk_X509_pop_free(certStack, X509_free);
+                }
             }
         }
     }
@@ -651,6 +678,15 @@ ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
     delete errs;
 }
 
+// "free" function for SSL_get_ex_new_index("ssl_ex_index_ssl_validation_counter")
+static void
+ssl_free_int(void *, void *ptr, CRYPTO_EX_DATA *,
+             int, long, void *)
+{
+    uint32_t *counter = static_cast <uint32_t *>(ptr);
+    delete counter;
+}
+
 /// \ingroup ServerProtocolSSLInternal
 /// Callback handler function to release STACK_OF(X509) "ex" data stored
 /// in an SSL object.
@@ -703,7 +739,6 @@ ssl_initialize(void)
         }
 
 #endif
-
     }
 
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
@@ -713,6 +748,7 @@ ssl_initialize(void)
     ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
+    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -882,6 +918,8 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 
     if (port.sslContextFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
+
+    setSessionCallbacks(sslContext);
 
     return true;
 }
@@ -1553,11 +1591,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
         if (X509_check_issued(certificate, certificate) == X509_V_OK)
             debugs(83, 5, "Certificate is self-signed, will not be chained");
         else {
-            if (sk_X509_push(chain, certificate))
-                CRYPTO_add(&(certificate->references), 1, CRYPTO_LOCK_X509);
-            else
-                debugs(83, DBG_IMPORTANT, "WARNING: unable to add signing certificate to cert chain");
-            // and add to the chain any certificate loaded from the file
+            // and add to the chain any other certificate exist in the file
             while (X509 *ca = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
                 if (!sk_X509_push(chain, ca))
                     debugs(83, DBG_IMPORTANT, "WARNING: unable to add CA certificate to cert chain");
@@ -1646,4 +1680,198 @@ Ssl::CertError::operator != (const CertError &ce) const
     return code != ce.code || cert.get() != ce.cert.get();
 }
 
-#endif /* USE_SSL */
+static int
+store_session_cb(SSL *ssl, SSL_SESSION *session)
+{
+    if (!SslSessionCache)
+        return 0;
+
+    debugs(83, 5, "Request to store SSL Session ");
+
+    SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
+
+    unsigned char *id = session->session_id;
+    unsigned int idlen = session->session_id_length;
+    unsigned char key[MEMMAP_SLOT_KEY_SIZE];
+    // Session ids are of size 32bytes. They should always fit to a
+    // MemMap::Slot::key
+    assert(idlen <= MEMMAP_SLOT_KEY_SIZE);
+    memset(key, 0, sizeof(key));
+    memcpy(key, id, idlen);
+    int pos;
+    Ipc::MemMap::Slot *slotW = SslSessionCache->openForWriting((const cache_key*)key, pos);
+    if (slotW) {
+        int lenRequired =  i2d_SSL_SESSION(session, NULL);
+        if (lenRequired <  MEMMAP_SLOT_DATA_SIZE) {
+            unsigned char *p = (unsigned char *)slotW->p;
+            lenRequired = i2d_SSL_SESSION(session, &p);
+            slotW->set(key, NULL, lenRequired, squid_curtime + Config.SSL.session_ttl);
+        }
+        SslSessionCache->closeForWriting(pos);
+        debugs(83, 5, "wrote an ssl session entry of size " << lenRequired << " at pos " << pos);
+    }
+    return 0;
+}
+
+static void
+remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
+{
+    if (!SslSessionCache)
+        return ;
+
+    debugs(83, 5, "Request to remove corrupted or not valid SSL Session ");
+    int pos;
+    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    if (slot == NULL)
+        return;
+    SslSessionCache->closeForReading(pos);
+    // TODO:
+    // What if we are not able to remove the session?
+    // Maybe schedule a job to remove it later?
+    // For now we just have an invalid entry in cache until will be expired
+    // The openSSL will reject it when we try to use it
+    SslSessionCache->free(pos);
+}
+
+static SSL_SESSION *
+get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
+{
+    if (!SslSessionCache)
+        return NULL;
+
+    SSL_SESSION *session = NULL;
+    const unsigned int *p;
+    p = (unsigned int *)sessionID;
+    debugs(83, 5, "Request to search for SSL Session of len:" <<
+           len << p[0] << ":" << p[1]);
+
+    int pos;
+    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    if (slot != NULL) {
+        if (slot->expire > squid_curtime) {
+            const unsigned char *ptr = slot->p;
+            session = d2i_SSL_SESSION(NULL, &ptr, slot->pSize);
+            debugs(83, 5, "Session retrieved from cache at pos " << pos);
+        } else
+            debugs(83, 5, "Session in cache expired");
+        SslSessionCache->closeForReading(pos);
+    }
+
+    if (!session)
+        debugs(83, 5, "Failed to retrieved from cache\n");
+
+    // With the parameter copy the callback can require the SSL engine
+    // to increment the reference count of the SSL_SESSION object, Normally
+    // the reference count is not incremented and therefore the session must
+    // not be explicitly freed with SSL_SESSION_free(3).
+    *copy = 0;
+    return session;
+}
+
+static void
+setSessionCallbacks(SSL_CTX *ctx)
+{
+    if (SslSessionCache) {
+        SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);
+        SSL_CTX_sess_set_new_cb(ctx, store_session_cb);
+        SSL_CTX_sess_set_remove_cb(ctx, remove_session_cb);
+        SSL_CTX_sess_set_get_cb(ctx, get_session_cb);
+    }
+}
+
+static bool
+isSslServer()
+{
+    if (Config.Sockaddr.https)
+        return true;
+
+    for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+        if (s->flags.tunnelSslBumping)
+            return true;
+    }
+
+    return false;
+}
+
+#define SSL_SESSION_ID_SIZE 32
+#define SSL_SESSION_MAX_SIZE 10*1024
+
+void
+Ssl::initialize_session_cache()
+{
+
+    if (!isSslServer()) //no need to configure ssl session cache.
+        return;
+
+    // Check if the MemMap keys and data are enough big to hold
+    // session ids and session data
+    assert(SSL_SESSION_ID_SIZE >= MEMMAP_SLOT_KEY_SIZE);
+    assert(SSL_SESSION_MAX_SIZE >= MEMMAP_SLOT_DATA_SIZE);
+
+    int configuredItems = ::Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
+    if (IamWorkerProcess() && configuredItems)
+        SslSessionCache = new Ipc::MemMap(SslSessionCacheName);
+    else {
+        SslSessionCache = NULL;
+        return;
+    }
+
+    for (AnyP::PortCfg *s = ::Config.Sockaddr.https; s; s = s->next) {
+        if (s->staticSslContext.get() != NULL)
+            setSessionCallbacks(s->staticSslContext.get());
+    }
+
+    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; s; s = s->next) {
+        if (s->staticSslContext.get() != NULL)
+            setSessionCallbacks(s->staticSslContext.get());
+    }
+}
+
+void
+destruct_session_cache()
+{
+    delete SslSessionCache;
+}
+
+/// initializes shared memory segments used by MemStore
+class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    SharedSessionCacheRr(): owner(NULL) {}
+    virtual void useConfig();
+    virtual ~SharedSessionCacheRr();
+
+protected:
+    virtual void create();
+
+private:
+    Ipc::MemMap::Owner *owner;
+};
+
+RunnerRegistrationEntry(SharedSessionCacheRr);
+
+void
+SharedSessionCacheRr::useConfig()
+{
+    Ipc::Mem::RegisteredRunner::useConfig();
+}
+
+void
+SharedSessionCacheRr::create()
+{
+    if (!isSslServer()) //no need to configure ssl session cache.
+        return;
+
+    int items;
+    items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
+    if (items)
+        owner =  Ipc::MemMap::Init(SslSessionCacheName, items);
+}
+
+SharedSessionCacheRr::~SharedSessionCacheRr()
+{
+    delete owner;
+}
+
+#endif /* USE_OPENSSL */

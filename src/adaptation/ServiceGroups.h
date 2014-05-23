@@ -1,11 +1,12 @@
 #ifndef SQUID_ADAPTATION__SERVICE_GROUPS_H
 #define SQUID_ADAPTATION__SERVICE_GROUPS_H
 
-#include "SquidString.h"
-#include "base/Vector.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "base/RefCount.h"
+#include "SquidString.h"
+
+#include <vector>
 
 namespace Adaptation
 {
@@ -17,9 +18,9 @@ class ServiceGroup: public RefCountable
 public:
     typedef RefCount<ServiceGroup> Pointer;
 
-    typedef Vector<String> Store;
+    typedef std::vector<String> Store;
     typedef String Id;
-    typedef unsigned int Pos; // Vector<>::poistion_type
+    typedef unsigned int Pos; // vector<>::position_type
     friend class ServicePlan;
 
 public:
@@ -113,7 +114,7 @@ public:
 class ServicePlan
 {
 public:
-    typedef unsigned int Pos; // Vector<>::poistion_type
+    typedef unsigned int Pos; // vector<>::position_type
 
 public:
     ServicePlan();
@@ -141,7 +142,7 @@ std::ostream &operator <<(std::ostream &os, const ServicePlan &p)
     return p.print(os);
 }
 
-typedef Vector<ServiceGroupPointer> Groups;
+typedef std::vector<ServiceGroupPointer> Groups;
 Groups &AllGroups();
 ServiceGroupPointer FindGroup(const ServiceGroup::Id &id);
 

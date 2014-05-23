@@ -31,19 +31,19 @@
  */
 
 #include "squid.h"
-#include "CachePeer.h"
 #include "cache_snmp.h"
+#include "CachePeer.h"
 #include "globals.h"
 #include "mem_node.h"
 #include "neighbors.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
-#include "StatCounters.h"
-#include "StatHist.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "stat.h"
+#include "StatCounters.h"
+#include "StatHist.h"
 #include "Store.h"
 #include "tools.h"
 

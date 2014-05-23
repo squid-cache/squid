@@ -33,9 +33,9 @@
 #ifndef SQUID_ACLDOMAINDATA_H
 #define SQUID_ACLDOMAINDATA_H
 
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "splay.h"
 
 /// \ingroup ACLAPI
 class ACLDomainData : public ACLData<char const *>
@@ -46,7 +46,7 @@ public:
 
     virtual ~ACLDomainData();
     bool match(char const *);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;

@@ -40,8 +40,11 @@
 #include "Notes.h"
 #include "YesNoNone.h"
 
-#if USE_SSL
+#if USE_OPENSSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
+#endif
+
 class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
 #endif
@@ -112,12 +115,8 @@ public:
         int icp_query_max;  /* msec */
         int icp_query_min;  /* msec */
         int mcast_icp_query;    /* msec */
-
-#if !USE_DNSHELPER
         time_msec_t idns_retransmit;
         time_msec_t idns_query;
-#endif
-
     } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
@@ -140,7 +139,7 @@ public:
 
     struct {
         AnyP::PortCfg *http;
-#if USE_SSL
+#if USE_OPENSSL
         AnyP::PortCfg *https;
 #endif
         AnyP::PortCfg *ftp;
@@ -197,10 +196,6 @@ public:
     char *effectiveGroup;
 
     struct {
-#if USE_DNSHELPER
-        char *dnsserver;
-#endif
-
         wordlist *redirect;
         wordlist *store_id;
 #if USE_UNLINKD
@@ -209,15 +204,12 @@ public:
 #endif
 
         char *diskd;
-#if USE_SSL
+#if USE_OPENSSL
 
         char *ssl_password;
 #endif
 
     } Program;
-#if USE_DNSHELPER
-    HelperChildConfig dnsChildren;
-#endif
 
     HelperChildConfig redirectChildren;
     HelperChildConfig storeIdChildren;
@@ -339,9 +331,11 @@ public:
         int check_hostnames;
         int allow_underscore;
         int via;
+        int cache_miss_revalidate;
         int emailErrData;
         int httpd_suppress_version_string;
         int global_internal_static;
+        int collapsed_forwarding;
 
 #if FOLLOW_X_FORWARDED_FOR
         int acl_uses_indirect_client;
@@ -357,6 +351,7 @@ public:
         int memory_cache_disk;
         int hostStrictVerify;
         int client_dst_passthru;
+        int dns_mdns;
     } onoff;
 
     int pipeline_max_prefetch;
@@ -375,6 +370,8 @@ public:
         acl_access *AlwaysDirect;
         acl_access *ASlists;
         acl_access *noCache;
+        acl_access *sendHit;
+        acl_access *storeMiss;
         acl_access *stats_collection;
 #if SQUID_SNMP
 
@@ -393,7 +390,7 @@ public:
         acl_access *htcp_clr;
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
         acl_access *ssl_bump;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
@@ -403,6 +400,8 @@ public:
         /// spoof_client_ip squid.conf acl.
         /// nil unless configured
         acl_access* spoof_client_ip;
+
+        acl_access *ftp_epsv;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
@@ -495,11 +494,13 @@ public:
         int rebuild_chunk_percentage;
     } digest;
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 
     struct {
         int unclean_shutdown;
         char *ssl_engine;
+        int session_ttl;
+        size_t sessionCacheSize;
     } SSL;
 #endif
 
@@ -515,7 +516,7 @@ public:
     time_t minimum_expiry_time; /* seconds */
     external_acl *externalAclHelperList;
 
-#if USE_SSL
+#if USE_OPENSSL
 
     struct {
         char *cert;
@@ -545,6 +546,10 @@ public:
 #endif
 
     int client_ip_max_connections;
+
+    char *redirector_extras;
+
+    char *storeId_extras;
 
     struct {
         int v4_first;       ///< Place IPv4 first in the order of DNS results.

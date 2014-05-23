@@ -5,12 +5,12 @@
 #include <libecap/adapter/service.h>
 #include <libecap/common/names.h>
 #include <libecap/common/registry.h>
-#include "base/TextException.h"
-#include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/MessageRep.h"
-#include "HttpRequest.h"
+#include "adaptation/ecap/ServiceRep.h"
+#include "base/TextException.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
@@ -70,11 +70,55 @@ Adaptation::Ecap::Host::describe(std::ostream &os) const
     os << PACKAGE_NAME << " v" << PACKAGE_VERSION;
 }
 
-void
-Adaptation::Ecap::Host::noteService(const libecap::weak_ptr<libecap::adapter::Service> &weak)
+/// Strips libecap version components not affecting compatibility decisions.
+static SBuf
+EssentialVersion(const SBuf &raw)
 {
-    Must(!weak.expired());
-    RegisterAdapterService(weak.lock());
+    // all libecap x.y.* releases are supposed to be compatible so we strip
+    // everything after the second period
+    const SBuf::size_type minorPos = raw.find('.');
+    const SBuf::size_type microPos = minorPos == SBuf::npos ?
+                                     SBuf::npos : raw.find('.', minorPos+1);
+    return raw.substr(0, microPos); // becomes raw if microPos is npos
+}
+
+/// If "their" libecap version is not compatible with what Squid has been built
+/// with, then complain and return false.
+static bool
+SupportedVersion(const char *vTheir, const char *them)
+{
+    if (!vTheir || !*vTheir) {
+        debugs(93, DBG_CRITICAL, "ERROR: Cannot use " << them <<
+               " with libecap prior to v1.0.");
+        return false;
+    }
+
+    // we support what we are built with
+    const SBuf vSupported(LIBECAP_VERSION);
+    debugs(93, 2, them << " with libecap v" << vTheir << "; us: v" << vSupported);
+
+    if (EssentialVersion(SBuf(vTheir)) == EssentialVersion(vSupported))
+        return true; // their version is supported
+
+    debugs(93, DBG_CRITICAL, "ERROR: Cannot use " << them <<
+           " with libecap v" << vTheir <<
+           ": incompatible with supported libecap v" << vSupported);
+    return false;
+}
+
+void
+Adaptation::Ecap::Host::noteVersionedService(const char *vGiven, const libecap::weak_ptr<libecap::adapter::Service> &weak)
+{
+    /*
+     * Check that libecap used to build the service is compatible with ours.
+     * This has to be done using vGiven string and not Service object itself
+     * because dereferencing a Service pointer coming from an unsupported
+     * version is unsafe.
+     */
+    if (SupportedVersion(vGiven, "eCAP service built")) {
+        Must(!weak.expired());
+        RegisterAdapterService(weak.lock());
+    }
 }
 
 static int
@@ -126,7 +170,8 @@ Adaptation::Ecap::Host::newResponse() const
 void
 Adaptation::Ecap::Host::Register()
 {
-    if (!TheHost) {
+    if (!TheHost && SupportedVersion(libecap::VersionString(),
+                                     "Squid executable dynamically linked")) {
         TheHost.reset(new Adaptation::Ecap::Host);
         libecap::RegisterHost(TheHost);
     }

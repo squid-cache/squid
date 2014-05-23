@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "acl/SslErrorData.h"
 #include "acl/Checklist.h"
+#include "acl/SslErrorData.h"
 #include "cache_cf.h"
 #include "wordlist.h"
 
@@ -62,23 +62,21 @@ ACLSslErrorData::match(const Ssl::CertErrors *toFind)
 }
 
 /* explicit instantiation required for some systems */
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 // AYJ: 2009-05-20 : Removing. clashes with template <int> instantiation for other ACLs.
 // template cbdata_type Ssl::Errors::CBDATA_CbDataList;
 /** \endcond */
 
-wordlist *
-ACLSslErrorData::dump()
+SBufList
+ACLSslErrorData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
     Ssl::Errors *data = values;
-
     while (data != NULL) {
-        wordlistAdd(&W, Ssl::GetErrorName(data->element));
+        sl.push_back(SBuf(Ssl::GetErrorName(data->element)));
         data = data->next;
     }
-
-    return W;
+    return sl;
 }
 
 void

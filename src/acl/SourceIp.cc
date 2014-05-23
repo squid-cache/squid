@@ -32,8 +32,8 @@
  */
 
 #include "squid.h"
-#include "acl/SourceIp.h"
 #include "acl/FilledChecklist.h"
+#include "acl/SourceIp.h"
 
 char const *
 ACLSourceIP::typeString() const

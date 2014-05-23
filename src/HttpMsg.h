@@ -33,10 +33,10 @@
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
+#include "http/ProtocolVersion.h"
+#include "http/StatusCode.h"
 #include "HttpHeader.h"
 #include "HttpRequestMethod.h"
-#include "http/StatusCode.h"
-#include "http/ProtocolVersion.h"
 
 /// common parts of HttpRequest and HttpReply
 class HttpMsg : public RefCountable

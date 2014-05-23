@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "DiskIOModule.h"
 
-Vector<DiskIOModule*> *DiskIOModule::_Modules = NULL;
+std::vector<DiskIOModule*> *DiskIOModule::_Modules = NULL;
 
 //DiskIOModule() : initialised (false) {}
 
@@ -70,17 +70,17 @@ DiskIOModule::ModuleAdd(DiskIOModule &instance)
     GetModules().push_back (&instance);
 }
 
-Vector<DiskIOModule *> const &
+std::vector<DiskIOModule *> const &
 DiskIOModule::Modules()
 {
     return GetModules();
 }
 
-Vector<DiskIOModule*> &
+std::vector<DiskIOModule*> &
 DiskIOModule::GetModules()
 {
     if (!_Modules)
-        _Modules = new Vector<DiskIOModule *>;
+        _Modules = new std::vector<DiskIOModule *>;
 
     return *_Modules;
 }
@@ -92,10 +92,10 @@ DiskIOModule::GetModules()
 void
 DiskIOModule::FreeAllModules()
 {
-    while (GetModules().size()) {
+    while (!GetModules().empty()) {
         DiskIOModule *fs = GetModules().back();
         GetModules().pop_back();
-        fs->shutdown();
+        fs->gracefulShutdown();
     }
 }
 

@@ -68,8 +68,8 @@
  */
 
 #include "squid.h"
-#include "Store.h"
 #include "MemBuf.h"
+#include "Store.h"
 
 /* local types */
 

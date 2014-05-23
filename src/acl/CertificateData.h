@@ -33,11 +33,11 @@
 #ifndef SQUID_ACLCERTIFICATEDATA_H
 #define SQUID_ACLCERTIFICATEDATA_H
 
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "ssl/support.h"
 #include "acl/StringData.h"
+#include "splay.h"
+#include "ssl/support.h"
 #include <string>
 #include <list>
 
@@ -53,7 +53,7 @@ public:
     ACLCertificateData &operator= (ACLCertificateData const &);
     virtual ~ACLCertificateData();
     bool match(X509 *);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<X509 *> *clone() const;

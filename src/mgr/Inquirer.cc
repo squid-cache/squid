@@ -9,17 +9,17 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipc/UdsOp.h"
 #include "mgr/ActionWriter.h"
-#include "mgr/IntParam.h"
-#include "mgr/Inquirer.h"
 #include "mgr/Command.h"
+#include "mgr/Inquirer.h"
+#include "mgr/IntParam.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "SquidTime.h"
-#include "errorpage.h"
 #include <memory>
 #include <algorithm>
 

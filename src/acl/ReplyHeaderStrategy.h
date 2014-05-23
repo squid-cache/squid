@@ -36,8 +36,8 @@ class ACLChecklist;
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
 #include "acl/FilledChecklist.h"
+#include "acl/Strategy.h"
 #include "HttpReply.h"
 
 template <http_hdr_type header>

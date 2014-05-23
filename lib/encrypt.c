@@ -148,7 +148,7 @@ register char *pc;
 int n;
 {
     for (; n--; pc++, a++)
-        *a = e[*pc];
+        *a = e[(int)*pc];
 }
 
 static void
@@ -164,7 +164,7 @@ register char *schl;
 
     for (i = 0; i < 8; i++) {
         for (j = 0, sbval = 0; j < 6; j++)
-            sbval = (sbval << 1) | (nachr_r[*e++] ^ *schl++);
+            sbval = (sbval << 1) | (nachr_r[(int)*e++] ^ *schl++);
         sbval = S_BOX[i][sbval];
         for (tp += 4, j = 4; j--; sbval >>= 1)
             *--tp = sbval & 1;
@@ -173,7 +173,7 @@ register char *schl;
 
     e = PERM;
     for (i = 0; i < BS2; i++)
-        *nachr_l++ ^= tmp[*e++];
+        *nachr_l++ ^= tmp[(int)*e++];
 }
 
 void

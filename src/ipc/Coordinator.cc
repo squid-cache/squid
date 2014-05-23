@@ -28,7 +28,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
 
 Ipc::Coordinator::Coordinator():
-        Port(coordinatorAddr)
+        Port(Ipc::Port::CoordinatorAddr())
 {
 }
 
@@ -136,7 +136,7 @@ void Ipc::Coordinator::handleRegistrationRequest(const HereIamMessage& msg)
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
     msg.pack(message);
-    SendMessage(MakeAddr(strandAddrPfx, msg.strand.kidId), message);
+    SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
 }
 
 void
@@ -156,7 +156,7 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
     SharedListenResponse response(c->fd, errNo, request.mapId);
     TypedMsgHdr message;
     response.pack(message);
-    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+    SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 }
 
 void
@@ -181,7 +181,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
     Mgr::Response response(request.requestId);
     TypedMsgHdr message;
     response.pack(message);
-    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+    SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 
 }
 
@@ -221,7 +221,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
     const StrandSearchResponse response(strand);
     TypedMsgHdr message;
     response.pack(message);
-    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+    SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 }
 
 #if SQUID_SNMP
@@ -233,7 +233,7 @@ Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
     Snmp::Response response(request.requestId);
     TypedMsgHdr message;
     response.pack(message);
-    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+    SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 
     AsyncJob::Start(new Snmp::Inquirer(request, strands_));
 }

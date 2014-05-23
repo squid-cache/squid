@@ -7,8 +7,8 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 #if USE_AUTH
-#include "auth/UserRequest.h"
 #include "auth/AclProxyAuth.h"
+#include "auth/UserRequest.h"
 #endif
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
@@ -24,7 +24,7 @@ ACLFilledChecklist::ACLFilledChecklist() :
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
-#if USE_SSL
+#if USE_OPENSSL
         sslErrors(NULL),
 #endif
         extacl_entry (NULL),
@@ -54,7 +54,7 @@ ACLFilledChecklist::~ACLFilledChecklist()
 
     cbdataReferenceDone(conn_);
 
-#if USE_SSL
+#if USE_OPENSSL
     cbdataReferenceDone(sslErrors);
 #endif
 
@@ -140,7 +140,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
-#if USE_SSL
+#if USE_OPENSSL
         sslErrors(NULL),
 #endif
         extacl_entry (NULL),

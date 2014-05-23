@@ -32,9 +32,6 @@
 #ifndef SQUID_UTIL_H
 #define SQUID_UTIL_H
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_TIME_H
 #include <time.h>
 #endif
@@ -61,20 +58,6 @@ SQUIDCEXTERN void Tolower(char *);
 #endif
 #endif
 #include "SquidNew.h"
-#endif
-
-#if XMALLOC_TRACE
-#define xmalloc(size) (xmalloc_func="xmalloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xmalloc(size))
-#define xfree(ptr) (xmalloc_func="xfree",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xfree(ptr))
-#define xrealloc(ptr,size) (xmalloc_func="xrealloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xrealloc(ptr,size))
-#define xcalloc(n,size) (xmalloc_func="xcalloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xcalloc(n,size))
-#define xstrdup(ptr) (xmalloc_func="xstrdup",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xstrdup(ptr))
-extern int xmalloc_line;
-extern char *xmalloc_file;
-extern char *xmalloc_func;
-extern int xmalloc_trace;
-extern size_t xmalloc_total;
-extern void xmalloc_find_leaks(void);
 #endif
 
 SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);

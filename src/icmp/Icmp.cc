@@ -30,9 +30,9 @@
  *
  */
 #include "squid.h"
+#include "Debug.h"
 #include "Icmp.h"
 #include "SquidTime.h"
-#include "Debug.h"
 
 Icmp::Icmp()
 {

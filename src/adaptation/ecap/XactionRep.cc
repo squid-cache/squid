@@ -7,14 +7,16 @@
 #include <libecap/common/named_values.h>
 #include <libecap/common/names.h>
 #include <libecap/adapter/xaction.h>
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "SquidTime.h"
 #include "adaptation/Answer.h"
-#include "adaptation/ecap/XactionRep.h"
 #include "adaptation/ecap/Config.h"
+#include "adaptation/ecap/XactionRep.h"
 #include "adaptation/Initiator.h"
+#include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "format/Format.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
@@ -36,7 +38,7 @@ public:
 };
 
 Adaptation::Ecap::XactionRep::XactionRep(
-    HttpMsg *virginHeader, HttpRequest *virginCause,
+    HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp,
     const Adaptation::ServicePointer &aService):
         AsyncJob("Adaptation::Ecap::XactionRep"),
         Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
@@ -45,7 +47,8 @@ Adaptation::Ecap::XactionRep::XactionRep(
         makingVb(opUndecided), proxyingAb(opUndecided),
         adaptHistoryId(-1),
         vbProductionFinished(false),
-        abProductionFinished(false), abProductionAtEnd(false)
+        abProductionFinished(false), abProductionAtEnd(false),
+        al(alp)
 {
     if (virginCause)
         theCauseRep = new MessageRep(virginCause);
@@ -143,7 +146,7 @@ Adaptation::Ecap::XactionRep::usernameValue() const
     if (request->auth_user_request != NULL) {
         if (char const *name = request->auth_user_request->username())
             return libecap::Area::FromTempBuffer(name, strlen(name));
-        else if (request->extacl_user.defined() && request->extacl_user.size())
+        else if (request->extacl_user.size() > 0)
             return libecap::Area::FromTempBuffer(request->extacl_user.rawBuf(),
                                                  request->extacl_user.size());
     }
@@ -180,7 +183,7 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
         typedef Notes::iterator ACAMLI;
         for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
             if (name == (*i)->key.termedBuf()) {
-                if (const char *value = (*i)->match(request, reply))
+                if (const char *value = (*i)->match(request, reply, al))
                     return libecap::Area::FromTempString(value);
                 else
                     return libecap::Area();
@@ -201,7 +204,7 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
 
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-        const char *v = (*i)->match(request, reply);
+        const char *v = (*i)->match(request, reply, al);
         if (v) {
             const libecap::Name name((*i)->key.termedBuf());
             const libecap::Area value = libecap::Area::FromTempString(v);
@@ -230,7 +233,7 @@ Adaptation::Ecap::XactionRep::start()
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
         typedef Notes::iterator ACAMLI;
         for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-            const char *v = (*i)->match(request, reply);
+            const char *v = (*i)->match(request, reply, al);
             if (v) {
                 if (ah->metaHeaders == NULL)
                     ah->metaHeaders = new NotePairs();
@@ -271,6 +274,25 @@ Adaptation::Ecap::XactionRep::swanSong()
         ah->recordXactFinish(adaptHistoryId);
 
     Adaptation::Initiate::swanSong();
+}
+
+void
+Adaptation::Ecap::XactionRep::resume()
+{
+    // go async to gain exception protection and done()-based job destruction
+    typedef NullaryMemFunT<Adaptation::Ecap::XactionRep> Dialer;
+    AsyncCall::Pointer call = asyncCall(93, 5, "Adaptation::Ecap::XactionRep::doResume",
+                                        Dialer(this, &Adaptation::Ecap::XactionRep::doResume));
+    ScheduleCallHere(call);
+}
+
+/// the guts of libecap::host::Xaction::resume() API implementation
+/// which just goes async in Adaptation::Ecap::XactionRep::resume().
+void
+Adaptation::Ecap::XactionRep::doResume()
+{
+    Must(theMaster);
+    theMaster->resume();
 }
 
 libecap::Message &
@@ -593,12 +615,6 @@ Adaptation::Ecap::XactionRep::adaptationAborted()
 {
     tellQueryAborted(true); // should eCAP support retries?
     mustStop("adaptationAborted");
-}
-
-bool
-Adaptation::Ecap::XactionRep::callable() const
-{
-    return !done();
 }
 
 void

@@ -1,7 +1,11 @@
 STUB_SOURCE= tests/STUB.h \
+	tests/stub_CacheDigest.cc \
+	tests/stub_CollapsedForwarding.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_ETag.cc \
+	tests/stub_EventLoop.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
@@ -9,12 +13,16 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_Port.cc \
+	tests/stub_SBufDetailedStats.cc \
 	tests/stub_StatHist.cc \
+	tests/stub_StoreMeta.cc \
+	tests/stub_SwapDir.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_carp.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_db.cc \
 	tests/stub_client_side.cc \
@@ -23,6 +31,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_event.cc \
+	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
 	tests/stub_fd.cc \
 	tests/stub_helper.cc \
@@ -33,6 +42,8 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libauth.cc \
+	tests/stub_libauth_acls.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
@@ -44,12 +55,18 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_mem_node.cc \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
+	tests/stub_redirect.cc \
 	tests/stub_stat.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_digest.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
+	tests/stub_time.cc \
 	tests/stub_tools.cc \
+	tests/stub_tunnel.cc \
+	tests/stub_wccp2.cc \
+	tests/stub_whois.cc \
 	tests/stub_wordlist.cc 

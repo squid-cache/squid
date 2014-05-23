@@ -99,7 +99,7 @@ operator <<(std::ostream &os, const SwapChecksum24 &sum)
  *
  \par
  * Defines the structure of a binary swap.state file entry for UFS stores.
- * TODO: Move to fs/ufs (and remove from COSS).
+ * TODO: Move to fs/ufs
  *
  \note StoreSwapLogData entries are written in native machine byte order
  *     They are not necessarily portable across architectures.
@@ -152,8 +152,6 @@ public:
 
     /**
      * The last time that a client requested this object.
-     * Strictly speaking, this time is set whenever the StoreEntry
-     * is locked (via storeLockObject()).
      */
     SwappedTime lastref;
 
