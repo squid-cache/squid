@@ -401,7 +401,6 @@ ServerStateData::startDataDownload()
     setVirginReply(reply);
     adaptOrFinalizeReply();
 
-    switchTimeoutToDataChannel();
     maybeReadVirginBody();
     state = READING_DATA;
 }
