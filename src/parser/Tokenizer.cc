@@ -60,36 +60,23 @@ Parser::Tokenizer::skip(const char tokenChar)
 bool
 Parser::Tokenizer::int64 (int64_t & result, int base)
 {
-    //register uint64_t acc;
-    register uint64_t cutoff;
-    bool neg = false;
-    static SBuf zerox("0x"), zero("0");
-
     if (buf_.isEmpty())
         return false;
 
-    if (buf_[0] == '-') {
-        neg = true;
-        buf_.consume(1);
-    }
-    if (buf_[0] == '+')
-        buf_.consume(1);
-    if (base == 0) {
-        if (buf_.startsWith(zerox))
-            base = 16;
-        else if (buf_.startsWith(zero))
-            base = 8;
-        else
-            base = 10;
-    }
-    if (base != 8 && base != 10 && base != 16)
+    // API mismatch with strtoll: we don't eat leading space.
+    if (xisspace(buf_[0]))
         return false;
 
-    // TODO: finish
-    cutoff = neg ? -(uint64_t) INT64_MIN : INT64_MAX;
+    char *eon;
+    errno = 0; // reset errno
 
-    // dummy to keep compiler happy. Remove before continuing
-    if (neg) result = cutoff;
+    int64_t rv = strtoll(buf_.rawContent(), &eon, base);
 
-    return false;
+    if (errno != 0)
+        return false;
+
+    buf_.consume(eon - buf_.rawContent()); // consume the parsed chunk
+    result = rv;
+    return true;
+
 }
