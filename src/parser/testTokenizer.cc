@@ -106,10 +106,9 @@ testTokenizer::testCharacterSet()
 void
 testTokenizer::testTokenizerInt64()
 {
-    int64_t rv;
-
     // successful parse in base 10
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("1234"));
         const int64_t benchmark = 1234;
         CPPUNIT_ASSERT(t.int64(rv, 10));
@@ -118,6 +117,7 @@ testTokenizer::testTokenizerInt64()
 
     // successful parse, autodetect base
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("1234"));
         const int64_t benchmark = 1234;
         CPPUNIT_ASSERT(t.int64(rv));
@@ -126,6 +126,7 @@ testTokenizer::testTokenizerInt64()
 
     // successful parse, autodetect base
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("01234"));
         const int64_t benchmark = 01234;
         CPPUNIT_ASSERT(t.int64(rv));
@@ -134,6 +135,7 @@ testTokenizer::testTokenizerInt64()
 
     // successful parse, autodetect base
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("0x12f4"));
         const int64_t benchmark = 0x12f4;
         CPPUNIT_ASSERT(t.int64(rv));
@@ -142,18 +144,21 @@ testTokenizer::testTokenizerInt64()
 
     // API mismatch: don't eat leading space
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf(" 1234"));
         CPPUNIT_ASSERT(!t.int64(rv));
     }
 
     // API mismatch: don't eat multiple leading spaces
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("  1234"));
         CPPUNIT_ASSERT(!t.int64(rv));
     }
 
     // trailing spaces
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("1234  foo"));
         const int64_t benchmark = 1234;
         CPPUNIT_ASSERT(t.int64(rv));
@@ -163,6 +168,7 @@ testTokenizer::testTokenizerInt64()
 
     // trailing nonspaces
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("1234foo"));
         const int64_t benchmark = 1234;
         CPPUNIT_ASSERT(t.int64(rv));
@@ -172,10 +178,18 @@ testTokenizer::testTokenizerInt64()
 
     // trailing nonspaces
     {
+        int64_t rv;
         Parser::Tokenizer t(SBuf("0x1234foo"));
         const int64_t benchmark = 0x1234f;
         CPPUNIT_ASSERT(t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
         CPPUNIT_ASSERT_EQUAL(SBuf("oo"), t.buf());
+    }
+
+    // overflow
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1029397752385698678762234"));
+        CPPUNIT_ASSERT(!t.int64(rv));
     }
 }
