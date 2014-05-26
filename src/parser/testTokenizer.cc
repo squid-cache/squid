@@ -102,3 +102,80 @@ testTokenizer::testCharacterSet()
 {
 
 }
+
+void
+testTokenizer::testTokenizerInt64()
+{
+    int64_t rv;
+
+    // successful parse in base 10
+    {
+        Parser::Tokenizer t(SBuf("1234"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv, 10));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // successful parse, autodetect base
+    {
+        Parser::Tokenizer t(SBuf("1234"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // successful parse, autodetect base
+    {
+        Parser::Tokenizer t(SBuf("01234"));
+        const int64_t benchmark = 01234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // successful parse, autodetect base
+    {
+        Parser::Tokenizer t(SBuf("0x12f4"));
+        const int64_t benchmark = 0x12f4;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // API mismatch: don't eat leading space
+    {
+        Parser::Tokenizer t(SBuf(" 1234"));
+        CPPUNIT_ASSERT(!t.int64(rv));
+    }
+
+    // API mismatch: don't eat multiple leading spaces
+    {
+        Parser::Tokenizer t(SBuf("  1234"));
+        CPPUNIT_ASSERT(!t.int64(rv));
+    }
+
+    // trailing spaces
+    {
+        Parser::Tokenizer t(SBuf("1234  foo"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("  foo"), t.buf());
+    }
+
+    // trailing nonspaces
+    {
+        Parser::Tokenizer t(SBuf("1234foo"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("foo"), t.buf());
+    }
+
+    // trailing nonspaces
+    {
+        Parser::Tokenizer t(SBuf("0x1234foo"));
+        const int64_t benchmark = 0x1234f;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("oo"), t.buf());
+    }
+}

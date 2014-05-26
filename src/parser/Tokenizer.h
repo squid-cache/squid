@@ -21,6 +21,9 @@ class Tokenizer {
 public:
    explicit Tokenizer(const SBuf &inBuf) : buf_(inBuf) {}
 
+   // return a copy the current contents of the parse buffer
+   const SBuf buf() const { return buf_; }
+
    /// whether the end of the buffer has been reached
    bool atEnd() const { return buf_.isEmpty(); }
 
@@ -66,7 +69,7 @@ public:
 
    /** parse an unsigned int64_t at the beginning of the buffer
     *
-    * strtoull(3)-alike function: tries to parse unsigned 64-bit integer
+    * strtoll(3)-alike function: tries to parse unsigned 64-bit integer
     * at the beginning of the parse buffer, in the base specified by the user
     * or guesstimated; consumes the parsed characters.
     *
@@ -76,9 +79,7 @@ public:
     *   the base
     * \return true if the parsing was successful
     */
-   bool uint64 (uint64_t & result, int base);
-
-   bool int64 (int64_t &result, int base);
+   bool int64 (int64_t &result, int base = 0);
 
 private:
    SBuf buf_; ///< yet unparsed input
