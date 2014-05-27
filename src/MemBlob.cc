@@ -33,9 +33,7 @@
 #include "MemBlob.h"
 #include "SBufDetailedStats.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
@@ -97,7 +95,7 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
-    recordMemBlobSizeAtDestruct(size);
+    recordMemBlobSizeAtDestruct(capacity);
 
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -141,8 +139,7 @@ MemBlob::append(const char *source, const size_type n)
     if (n > 0) { // appending zero bytes is allowed but only affects the stats
         Must(willFit(n));
         Must(source);
-        /// \note memcpy() is safe because we copy to an unused area
-        memcpy(mem + size, source, n);
+        memmove(mem + size, source, n);
         size += n;
     }
     ++Stats.append;

@@ -239,7 +239,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t n
         if (ls->domain && !strcasecmp(ls->domain, domain)) {
             debug((char *) "%s| %s: DEBUG: Found lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain);
             hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
-            hp[nhosts].host = strdup(ls->lserver);
+            hp[nhosts].host = xstrdup(ls->lserver);
             hp[nhosts].port = -1;
             hp[nhosts].priority = -2;
             hp[nhosts].weight = -2;
@@ -247,7 +247,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t n
         } else if ( !ls->domain || !strcasecmp(ls->domain, "") ) {
             debug((char *) "%s| %s: DEBUG: Found lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain?ls->domain:"NULL");
             hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
-            hp[nhosts].host = strdup(ls->lserver);
+            hp[nhosts].host = xstrdup(ls->lserver);
             hp[nhosts].port = -1;
             hp[nhosts].priority = -2;
             hp[nhosts].weight = -2;
@@ -401,7 +401,7 @@ finalise:
     debug("%s| %s: DEBUG: Adding %s to list\n", LogTime(), PROGRAM, domain);
 
     hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
-    hp[nhosts].host = strdup(domain);
+    hp[nhosts].host = xstrdup(domain);
     hp[nhosts].port = -1;
     hp[nhosts].priority = -2;
     hp[nhosts].weight = -2;

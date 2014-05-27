@@ -17,7 +17,7 @@ public:
     ACLNoteData();
     virtual ~ACLNoteData();
     virtual bool match(HttpRequest* request);
-    virtual wordlist *dump();
+    virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const;
     virtual ACLData<HttpRequest *> *clone() const;

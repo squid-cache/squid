@@ -53,7 +53,7 @@ public:
     ACLCertificateData &operator= (ACLCertificateData const &);
     virtual ~ACLCertificateData();
     bool match(X509 *);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<X509 *> *clone() const;

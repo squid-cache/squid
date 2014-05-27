@@ -8,14 +8,10 @@
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
 #endif
-
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_TCP_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
 #endif
-
-#if HAVE_LIMITS
 #include <limits>
-#endif
 
 class fde;
 
@@ -142,7 +138,7 @@ class Config
 public:
 
     Config();
-    ~Config() {};
+    ~Config() {}
 
     void parseConfigLine();
 

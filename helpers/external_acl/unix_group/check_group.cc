@@ -58,12 +58,8 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cctype>
+#include <cstring>
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
@@ -72,9 +68,6 @@
 #endif
 #if HAVE_PWD_H
 #include <pwd.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
 #endif
 
 /*

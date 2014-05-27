@@ -51,8 +51,8 @@ Adaptation::AccessRule::group()
 Adaptation::AccessRules &
 Adaptation::AllRules()
 {
-    static AccessRules TheRules;
-    return TheRules;
+    static AccessRules *TheRules = new AccessRules;
+    return *TheRules;
 }
 
 // TODO: make AccessRules::find work

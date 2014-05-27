@@ -1262,7 +1262,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         reply_ = dynamic_cast<HttpReply*>(adapted.header);
     }
 
-    Adaptation::Icap::History::Pointer h = request_->icapHistory();
+    Adaptation::Icap::History::Pointer h = (request_ ? request_->icapHistory() : NULL);
     Must(h != NULL); // ICAPXaction::maybeLog calls only if there is a log
     al.icp.opcode = ICP_INVALID;
     al.url = h->log_uri.termedBuf();
@@ -1285,7 +1285,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     if (h->rfc931.size())
         al.cache.rfc931 = h->rfc931.termedBuf();
 
-#if USE_SSL
+#if USE_OPENSSL
     if (h->ssluser.size())
         al.cache.ssluser = h->ssluser.termedBuf();
 #endif

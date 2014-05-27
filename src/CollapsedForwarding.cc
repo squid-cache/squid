@@ -87,7 +87,7 @@ CollapsedForwarding::Notify(const int workerId)
     Ipc::TypedMsgHdr msg;
     msg.setType(Ipc::mtCollapsedForwardingNotification);
     msg.putInt(KidIdentifier);
-    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrPfx, workerId);
+    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrLabel, workerId);
     Ipc::SendMessage(addr, msg);
 }
 
@@ -110,7 +110,8 @@ CollapsedForwarding::HandleNewData(const char *const when)
         debugs(17, 7, "handled entry " << msg.xitIndex << " in transients_map");
 
         // XXX: stop and schedule an async call to continue
-        assert(++poppedCount < SQUID_MAXFD);
+        ++poppedCount;
+        assert(poppedCount < SQUID_MAXFD);
     }
 }
 
@@ -133,16 +134,16 @@ public:
     virtual ~CollapsedForwardingRr();
 
 protected:
-    virtual void create(const RunnerRegistry &);
-    virtual void open(const RunnerRegistry &);
+    virtual void create();
+    virtual void open();
 
 private:
     Ipc::MultiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(rrAfterConfig, CollapsedForwardingRr);
+RunnerRegistrationEntry(CollapsedForwardingRr);
 
-void CollapsedForwardingRr::create(const RunnerRegistry &)
+void CollapsedForwardingRr::create()
 {
     Must(!owner);
     owner = Ipc::MultiQueue::Init(ShmLabel, Config.workers, 1,
@@ -150,7 +151,7 @@ void CollapsedForwardingRr::create(const RunnerRegistry &)
                                   QueueCapacity);
 }
 
-void CollapsedForwardingRr::open(const RunnerRegistry &)
+void CollapsedForwardingRr::open()
 {
     CollapsedForwarding::Init();
 }

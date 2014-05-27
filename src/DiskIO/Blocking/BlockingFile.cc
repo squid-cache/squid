@@ -46,16 +46,16 @@
 
 CBDATA_CLASS_INIT(BlockingFile);
 
-BlockingFile::BlockingFile(char const *aPath) : fd (-1), closed (true), error_(false)
+BlockingFile::BlockingFile(char const *aPath) : fd(-1), closed(true), error_(false)
 {
     assert(aPath);
     debugs(79, 3, "BlockingFile::BlockingFile: " << aPath);
-    path_ = xstrdup (aPath);
+    path_ = xstrdup(aPath);
 }
 
 BlockingFile::~BlockingFile()
 {
-    safe_free (path_);
+    safe_free(path_);
     doClose();
 }
 

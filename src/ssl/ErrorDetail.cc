@@ -1,12 +1,9 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "ssl/ErrorDetail.h"
-#if HAVE_MAP
-#include <map>
-#endif
-#if HAVE_CLIMITS
+
 #include <climits>
-#endif
+#include <map>
 
 struct SslErrorEntry {
     Ssl::ssl_error_t value;

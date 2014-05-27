@@ -182,7 +182,7 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
-        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGateway_Timeout, fwd->request));
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, fwd->request));
     }
 
     serverConnection->close();
@@ -212,7 +212,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 
     case Http::scMovedPermanently:
 
-    case Http::scMovedTemporarily:
+    case Http::scFound:
 
     case Http::scGone:
 
@@ -496,7 +496,7 @@ HttpStateData::cacheableReply()
 
         /* Responses that only are cacheable if the server says so */
 
-    case Http::scMovedTemporarily:
+    case Http::scFound:
     case Http::scTemporaryRedirect:
         if (rep->date <= 0) {
             debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Date missing/invalid");
@@ -526,7 +526,7 @@ HttpStateData::cacheableReply()
 
     case Http::scMethodNotAllowed:
 
-    case Http::scRequestUriTooLarge:
+    case Http::scUriTooLong:
 
     case Http::scInternalServerError:
 
@@ -536,8 +536,8 @@ HttpStateData::cacheableReply()
 
     case Http::scServiceUnavailable:
 
-    case Http::scGateway_Timeout:
-        debugs(22, 3, HERE << "MAYBE because HTTP status " << rep->sline.status());
+    case Http::scGatewayTimeout:
+        debugs(22, 3, "MAYBE because HTTP status " << rep->sline.status());
         return -1;
 
         /* NOTREACHED */
@@ -565,7 +565,7 @@ HttpStateData::cacheableReply()
     case Http::scConflict:
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scRequestEntityTooLarge:
+    case Http::scPayloadTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked:
@@ -1046,7 +1046,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(request->method) << " " << entry->url() << "\"" );
+        debugs(11, 2, "Request not yet fully sent " << request->method << ' ' << entry->url());
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -1734,8 +1734,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         /* don't cache the result */
         request->flags.cachable = false;
         /* pretend it's not a range request */
-        delete request->range;
-        request->range = NULL;
+        request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
     }
 
@@ -1808,7 +1807,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (!hdr_out->has(HDR_HOST)) {
         if (request->peer_domain) {
             hdr_out->putStr(HDR_HOST, request->peer_domain);
-        } else if (request->port == urlDefaultPort(request->protocol)) {
+        } else if (request->port == urlDefaultPort(request->url.getScheme())) {
             /* use port# only if not default */
             hdr_out->putStr(HDR_HOST, request->GetHost());
         } else {
@@ -1866,7 +1865,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
-        if (flags.front_end_https == 1 || request->protocol == AnyP::PROTO_HTTPS)
+        if (flags.front_end_https == 1 || request->url.getScheme() == AnyP::PROTO_HTTPS)
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
@@ -1959,7 +1958,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         else {
             /* use port# only if not default */
 
-            if (request->port == urlDefaultPort(request->protocol)) {
+            if (request->port == urlDefaultPort(request->url.getScheme())) {
                 hdr_out->putStr(HDR_HOST, request->GetHost());
             } else {
                 httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
@@ -2115,11 +2114,11 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     Http::ProtocolVersion httpver(1,1);
     const char * url;
     if (_peer && !_peer->options.originserver)
-        url = entry->url();
+        url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
-    mb->Printf("%s %s %s/%d.%d\r\n",
-               RequestMethodStr(request->method),
+    mb->Printf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+               SQUIDSBUFPRINT(request->method.image()),
                url && *url ? url : "/",
                AnyP::ProtocolType_str[httpver.protocol],
                httpver.major,httpver.minor);
@@ -2270,7 +2269,7 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
 void
 httpStart(FwdState *fwd)
 {
-    debugs(11, 3, "httpStart: \"" << RequestMethodStr(fwd->request->method) << " " << fwd->entry->url() << "\"" );
+    debugs(11, 3, fwd->request->method << ' ' << fwd->entry->url());
     AsyncJob::Start(new HttpStateData(fwd));
 }
 

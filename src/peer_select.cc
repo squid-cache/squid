@@ -90,6 +90,13 @@ CBDATA_CLASS_INIT(ps_state);
 
 ps_state::~ps_state()
 {
+    while (servers) {
+        FwdServer *next = servers->next;
+        cbdataReferenceDone(servers->_peer);
+        memFree(servers, MEM_FWD_SERVER);
+        servers = next;
+    }
+
     if (entry) {
         debugs(44, 3, entry->url());
 
@@ -149,9 +156,9 @@ peerSelect(Comm::ConnectionList * paths,
     ps_state *psstate;
 
     if (entry)
-        debugs(44, 3, "peerSelect: " << entry->url()  );
+        debugs(44, 3, *entry << ' ' << entry->url());
     else
-        debugs(44, 3, "peerSelect: " << RequestMethodStr(request->method));
+        debugs(44, 3, request->method);
 
     psstate = new ps_state;
 
@@ -229,6 +236,12 @@ peerSelectDnsPaths(ps_state *psstate)
 {
     FwdServer *fs = psstate->servers;
 
+    if (!cbdataReferenceValid(psstate->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete psstate;
+        return;
+    }
+
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must use only the original client destination when going DIRECT
@@ -244,7 +257,7 @@ peerSelectDnsPaths(ps_state *psstate)
             // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
             Comm::ConnectionPointer p = new Comm::Connection();
             p->remote = req->clientConnectionManager->clientConnection->local;
-            p->peerType = fs->code;
+            p->peerType = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
             p->setPeer(fs->_peer);
 
             // check for a configured outgoing address for this destination...
@@ -319,6 +332,12 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 {
     ps_state *psstate = (ps_state *)data;
 
+    if (!cbdataReferenceValid(psstate->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete psstate;
+        return;
+    }
+
     psstate->request->recordLookup(details);
 
     FwdServer *fs = psstate->servers;
@@ -339,14 +358,14 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             // for TPROXY spoofing we must skip unusable addresses.
             if (psstate->request->flags.spoofClientIp && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
-                if (ia->in_addrs[n].isIPv4() != psstate->request->client_addr.isIPv4()) {
+                if (ia->in_addrs[ip].isIPv4() != psstate->request->client_addr.isIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
                 }
             }
 
             p = new Comm::Connection();
-            p->remote = ia->in_addrs[n];
+            p->remote = ia->in_addrs[ip];
 
             // when IPv6 is disabled we cannot use it
             if (!Ip::EnableIpv6 && p->remote.isIPv6()) {
@@ -432,9 +451,15 @@ peerCheckNetdbDirect(ps_state * psstate)
 static void
 peerSelectFoo(ps_state * ps)
 {
+    if (!cbdataReferenceValid(ps->callback_data)) {
+        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
+        delete ps;
+        return;
+    }
+
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
-    debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
+    debugs(44, 3, request->method << ' ' << request->GetHost());
 
     /** If we don't know whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
@@ -666,7 +691,7 @@ peerGetSomeDirect(ps_state * ps)
         return;
 
     /* WAIS is not implemented natively */
-    if (ps->request->protocol == AnyP::PROTO_WAIS)
+    if (ps->request->url.getScheme() == AnyP::PROTO_WAIS)
         return;
 
     peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
@@ -678,7 +703,7 @@ peerGetSomeParent(ps_state * ps)
     CachePeer *p;
     HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
-    debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr(request->method) << " " << request->GetHost());
+    debugs(44, 3, request->method << ' ' << request->GetHost());
 
     if (ps->direct == DIRECT_YES)
         return;

@@ -41,15 +41,9 @@
 #undef malloc
 #undef free
 
-#if HAVE_STDEXCEPT
-#include <stdexcept>
-#endif
-#if HAVE_IOSTREAM
-#include <iostream>
-#endif
-#if HAVE_CASSERT
 #include <cassert>
-#endif
+#include <iostream>
+#include <stdexcept>
 
 /* stub functions for parts of squid not factored to be dynamic yet */
 void

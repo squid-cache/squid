@@ -37,7 +37,6 @@
 #include "acl/MethodData.h"
 #include "cache_cf.h"
 #include "HttpRequestMethod.h"
-#include "wordlist.h"
 
 int ACLMethodData::ThePurgeCount = 0;
 
@@ -64,22 +63,22 @@ ACLMethodData::match(HttpRequestMethod toFind)
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<HttpRequestMethod>::CBDATA_CbDataList;
 /// \endcond
 
-wordlist *
-ACLMethodData::dump()
+SBufList
+ACLMethodData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
     CbDataList<HttpRequestMethod> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, RequestMethodStr(data->element));
+        sl.push_back(data->element.image());
         data = data->next;
     }
 
-    return W;
+    return sl;
 }
 
 void
@@ -90,9 +89,9 @@ ACLMethodData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        if (strcmp(t, "PURGE") == 0)
-            ++ThePurgeCount; // configuration code wants to know
         CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t, NULL));
+        if (q->element == Http::METHOD_PURGE)
+            ++ThePurgeCount; // configuration code wants to know
         *(Tail) = q;
         Tail = &q->next;
     }

@@ -4,9 +4,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -158,7 +155,7 @@ send_request(int fd, const char *data)
     struct _r *r;
     struct _r **R;
     char *method, *url, *file, *size, *checksum;
-    char *tmp = strdup(data);
+    char *tmp = xstrdup(data);
     struct stat st;
     int file_fd = -1;
     method = strtok(tmp, " ");
@@ -177,13 +174,13 @@ send_request(int fd, const char *data)
     if (checksum && strcmp(checksum, "-") == 0)
         checksum = NULL;
     msg[0] = '\0';
-    sprintf(buf, "%s %s HTTP/1.0\r\n", method, url);
+    snprintf(buf, sizeof(buf)-1, "%s %s HTTP/1.0\r\n", method, url);
     strcat(msg, buf);
     strcat(msg, "Accept: */*\r\n");
     strcat(msg, "Proxy-Connection: Keep-Alive\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
         w = time(NULL) - (lrand48() & 0x3FFFF);
-        sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
+        snprintf(buf, sizeof(buf)-1, "If-Modified-Since: %s\r\n", mkrfc850(&w));
         strcat(msg, buf);
     }
     if (file) {
@@ -196,7 +193,7 @@ send_request(int fd, const char *data)
             close(file_fd);
             return -1;
         }
-        sprintf(buf, "Content-length: %d\r\n", st.st_size);
+        snprintf(buf, sizeof(buf)-1, "Content-length: %d\r\n", st.st_size);
         strcat(msg, buf);
     }
     strcat(msg, "\r\n");
@@ -557,14 +554,14 @@ char *argv[];
     int c;
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
-    progname = strdup(argv[0]);
+    progname = xstrdup(argv[0]);
     while ((c = getopt(argc, argv, "p:h:n:t:icl:r")) != -1) {
         switch (c) {
         case 'p':
             proxy_port = atoi(optarg);
             break;
         case 'h':
-            proxy_addr = strdup(optarg);
+            proxy_addr = xstrdup(optarg);
             break;
         case 'n':
             max_outstanding = atoi(optarg);

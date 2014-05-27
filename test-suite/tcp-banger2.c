@@ -34,9 +34,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -329,7 +326,7 @@ request(char *urlin) {
         checksum = "-";
     r = calloc(1, sizeof *r);
     assert(r != NULL);
-    r->url = strdup(url);
+    r->url = xstrdup(url);
     assert(r->url);
     strcpy(r->method, method);
     strcpy(r->requestbodyfile, file);
@@ -349,17 +346,17 @@ request(char *urlin) {
     } else {
         host = NULL;
     }
-    sprintf(msg, "%s %s HTTP/1.0\r\n", method, url);
+    snprintf(msg, sizeof(msg)-1, "%s %s HTTP/1.0\r\n", method, url);
     if (host) {
         url[0] = '\0';
-        sprintf(buf, "Host: %s\r\n", host);
+        snprintf(buf, sizeof(buf)-1, "Host: %s\r\n", host);
         strcat(msg, buf);
         url[0] = '/';
     }
     strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
         w = time(NULL) - (lrand48() & 0x3FFFF);
-        sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
+        snprintf(buf, sizeof(buf)-1, "If-Modified-Since: %s\r\n", mkrfc850(&w));
         strcat(msg, buf);
     }
     if (file && strcmp(file, "-") != 0) {
@@ -369,7 +366,7 @@ request(char *urlin) {
             exit(1);
         }
         fstat(f, &st);
-        sprintf(buf, "Content-Length: %d\r\n", (int) st.st_size);
+        snprintf(buf, sizeof(buf)-1, "Content-Length: %d\r\n", (int) st.st_size);
         strcat(msg, buf);
     }
     if (opt_range && (lrand48() & 0x03) == 0) {
@@ -382,13 +379,13 @@ request(char *urlin) {
                 strcat(msg, ",");
             switch (lrand48() & 0x03) {
             case 0:
-                sprintf(buf, "-%d", len);
+                snprintf(buf, sizeof(buf)-1, "-%d", len);
                 break;
             case 1:
-                sprintf(buf, "%d-", offset);
+                snprintf(buf, sizeof(buf)-1, "%d-", offset);
                 break;
             default:
-                sprintf(buf, "%d-%d", offset, offset + len);
+                snprintf(buf, sizeof(buf)-1, "%d-%d", offset, offset + len);
                 break;
             }
             strcat(msg, buf);
@@ -480,10 +477,10 @@ char *argv[];
     struct timeval to;
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
-    progname = strdup(argv[0]);
+    progname = xstrdup(argv[0]);
     gettimeofday(&now, NULL);
     start = last = now;
-    custom_header = strdup("");
+    custom_header = xstrdup("");
     while ((c = getopt(argc, argv, "ap:h:H:n:icrl:L:t:")) != -1) {
         switch (c) {
         case 'a':
@@ -493,7 +490,7 @@ char *argv[];
             proxy_port = atoi(optarg);
             break;
         case 'h':
-            proxy_addr = strdup(optarg);
+            proxy_addr = xstrdup(optarg);
             break;
         case 'n':
             max_connections = atoi(optarg);

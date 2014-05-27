@@ -34,9 +34,8 @@
 #include "MemBuf.h"
 #include "store_rebuild.h"
 #include "SwapDir.h"
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+
+#include <cstring>
 
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"

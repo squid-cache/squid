@@ -27,18 +27,7 @@ class TokenTableEntry;
 class Token
 {
 public:
-    Token() : type(LFT_NONE),
-            label(NULL),
-            widthMin(-1),
-            widthMax(-1),
-            quote(LOG_QUOTE_NONE),
-            left(false),
-            space(false),
-            zero(false),
-            divisor(0),
-            next(NULL)
-    { data.string = NULL; }
-
+    Token();
     ~Token();
 
     /// Initialize the format token registrations
@@ -52,7 +41,7 @@ public:
 
     ByteCode_t type;
     const char *label;
-    union {
+    struct {
         char *string;
 
         struct {
@@ -60,7 +49,6 @@ public:
             char *element;
             char separator;
         } header;
-        char *timespec;
     } data;
     int widthMin; ///< minimum field width
     int widthMax; ///< maximum field width
@@ -68,7 +56,7 @@ public:
     bool left;
     bool space;
     bool zero;
-    int divisor;
+    int divisor;    // class invariant: MUST NOT be zero.
     Token *next;	/* todo: move from linked list to array */
 
 private:

@@ -27,9 +27,6 @@
  **********************************************************************/
 
 #include "squid.h"
-
-#include <stdio.h>
-
 #include "snmp_error.h"
 
 static const char *error_string[25] = {

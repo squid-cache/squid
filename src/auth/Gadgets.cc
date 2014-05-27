@@ -133,7 +133,7 @@ authenticateReset(void)
     authenticateRotate();
 
     /* free current global config details too. */
-    Auth::TheConfig.clean();
+    Auth::TheConfig.clear();
 }
 
 AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):

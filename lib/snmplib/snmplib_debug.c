@@ -1,7 +1,5 @@
 #include "squid.h"
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
+
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

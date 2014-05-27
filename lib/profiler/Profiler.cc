@@ -116,9 +116,7 @@
 
 #if USE_XPROF_STATS
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+#include <cassert>
 #if HAVE_GNUMALLLOC_H
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H

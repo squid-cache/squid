@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "comm/TcpAcceptor.h"
@@ -60,7 +61,6 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
-#include "URLScheme.h"
 #include "wordlist.h"
 
 #if USE_DELAY_POOLS
@@ -2561,8 +2561,13 @@ ftpSendPassive(FtpStateData * ftpState)
         ftpState->state = SENT_PASV;
         break;
 
-    default:
-        if (!Config.Ftp.epsv) {
+    default: {
+        bool doEpsv = true;
+        if (Config.accessList.ftp_epsv) {
+            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, ftpState->fwd->request, NULL);
+            doEpsv = (checklist.fastCheck() == ACCESS_ALLOWED);
+        }
+        if (!doEpsv) {
             debugs(9, 5, HERE << "EPSV support manually disabled. Sending PASV for FTP Channel (" << ftpState->ctrl.conn->remote <<")");
             snprintf(cbuf, CTRL_BUFLEN, "PASV\r\n");
             ftpState->state = SENT_PASV;
@@ -2584,7 +2589,8 @@ ftpSendPassive(FtpStateData * ftpState)
                 ftpState->state = SENT_EPSV_1;
             }
         }
-        break;
+    }
+    break;
     }
 
     ftpState->writeCommand(cbuf);
@@ -3510,7 +3516,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        ftperr = new ErrorState(error, Http::scGateway_Timeout, fwd->request);
+        ftperr = new ErrorState(error, Http::scGatewayTimeout, fwd->request);
         break;
 
     default:
@@ -3726,7 +3732,7 @@ ftpUrlWith2f(HttpRequest * request)
 {
     String newbuf = "%2f";
 
-    if (request->protocol != AnyP::PROTO_FTP)
+    if (request->url.getScheme() != AnyP::PROTO_FTP)
         return NULL;
 
     if ( request->urlpath[0]=='/' ) {

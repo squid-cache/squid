@@ -45,7 +45,6 @@ Adaptation::Ecap::Host::Host()
     libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
     libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
     libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);
-    protocolInternal.assignHostId(AnyP::PROTO_INTERNAL);
     protocolCacheObj.assignHostId(AnyP::PROTO_CACHE_OBJECT);
     protocolIcp.assignHostId(AnyP::PROTO_ICP);
 #if USE_HTCP
@@ -78,7 +77,7 @@ EssentialVersion(const SBuf &raw)
     // everything after the second period
     const SBuf::size_type minorPos = raw.find('.');
     const SBuf::size_type microPos = minorPos == SBuf::npos ?
-        SBuf::npos : raw.find('.', minorPos+1);
+                                     SBuf::npos : raw.find('.', minorPos+1);
     return raw.substr(0, microPos); // becomes raw if microPos is npos
 }
 

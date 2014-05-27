@@ -3,7 +3,7 @@
 
 #include "squid.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
@@ -35,4 +35,4 @@ ACLServerCertificateStrategy::Instance()
 
 ACLServerCertificateStrategy ACLServerCertificateStrategy::Instance_;
 
-#endif /* USE_SSL */
+#endif /* USE_OPENSSL */

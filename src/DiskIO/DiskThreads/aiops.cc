@@ -35,22 +35,21 @@
 #endif
 
 #include "squid.h"
+#include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
+#include "Store.h"
 
-#include <stdio.h>
+#include <csignal>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <errno.h>
 #include <dirent.h>
-#include <signal.h>
 #if HAVE_SCHED_H
 #include <sched.h>
 #endif
-#include "DiskIO/DiskThreads/CommIO.h"
-#include "SquidTime.h"
-#include "Store.h"
 
 #define RIDICULOUS_LENGTH	4096
 

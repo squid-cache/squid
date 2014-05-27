@@ -122,8 +122,7 @@ fde::remoteAddr() const
 }
 
 void
-fde::noteUse(PconnPool *pool)
+fde::noteUse()
 {
     ++ pconn.uses;
-    pconn.pool = pool;
 }

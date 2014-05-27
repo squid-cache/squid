@@ -3,7 +3,6 @@
 #include "acl/HierCodeData.h"
 #include "cache_cf.h"
 #include "hier_code.h"
-#include "wordlist.h"
 
 ACLHierCodeData::ACLHierCodeData()
 {
@@ -25,17 +24,17 @@ ACLHierCodeData::match(hier_code toFind)
     return values[toFind];
 }
 
-wordlist *
-ACLHierCodeData::dump()
+SBufList
+ACLHierCodeData::dump() const
 {
-    wordlist *W = NULL;
+    SBufList sl;
 
     for (hier_code iter=HIER_NONE; iter<HIER_MAX; ++iter) {
         if (!values[iter]) continue;
-        wordlistAdd(&W, hier_code_str[iter]);
+        sl.push_back(SBuf(hier_code_str[iter]));
     }
 
-    return W;
+    return sl;
 }
 
 void

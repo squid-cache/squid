@@ -52,14 +52,10 @@
 #include "tools.h"
 #include "UFSSwapDir.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cerrno>
+#include <cmath>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
@@ -230,8 +226,10 @@ Fs::Ufs::UFSSwapDir::changeIO(DiskIOModule *module)
     IO->io = anIO;
     /* Change the IO Options */
 
-    if (currentIOOptions && currentIOOptions->options.size() > 2)
-        delete currentIOOptions->options.pop_back();
+    if (currentIOOptions && currentIOOptions->options.size() > 2) {
+        delete currentIOOptions->options.back();
+        currentIOOptions->options.pop_back();
+    }
 
     /* TODO: factor out these 4 lines */
     ConfigOption *ioOptions = IO->io->getOptionTree();

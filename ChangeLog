@@ -1,3 +1,59 @@
+Changes to squid-3.4.5 (02 May 2014):
+
+	- Regression Bug 4051: inverted test on CONNECT payload existence
+	- Regression Fix: order dependency between cache_dir and maximum_object_size
+	- Fix logformat %note display
+	- Resolve 'dying from an unhandled exception: c'
+
+Changes to squid-3.4.4.2 (23 Apr 2014):
+
+	- version bump for packaging re-build with altered toolchain
+
+Changes to squid-3.4.4.1 (23 Apr 2014):
+
+	- Regression Bug 4019: Cache digest exchange segmentation fault
+	- Regression Bug 3982: EUI logging and helpers show blank MAC address
+	- Bug 4047: Support Android builds
+	- Bug 4043: Remove XMALLOC_TRACE and references to sbrk(2)
+	- Bug 4041: Missing files in compat/Makefile.am
+	- Bug 4014: Build failure with --disable-optimizations --disable-auth
+	- Bug 3986: (partial) assertion due to incorrect error page buffer size
+	- Bug 3955: Solaris EUI-48 lookup leaks FDs
+	- Bug 3371: CONNECT with data sent at once loses data
+	- C++11: Upgrade auto-detection to use the formal -std=c++11
+	- Crypto-NG: libnettle MD5 algorithm support
+	- SSL-Bump: Fix Basic auth caching on bumped connections
+	- Store-ID: Fix request URI when forwarding requests to peers
+	- ... and fix several other build errors
+	- ... and some documentation updates
+
+Changes to squid-3.4.4 (09 Mar 2014):
+
+	- Bug 4029: intercepted HTTPS requests bypass caching checks
+	- Bug 4001: remove use of strsep()
+	- Bug 3186 and 3628: Digest authentication always sending stale=false for nonce
+	- Fix stalled concurrent rock store reads
+	- Fix helper ID number assignment
+	- Fix build failures from CMSG related definitions
+	- Fix build failures from libcompat unsafe.h protections
+	- Copyright: Relicense helpers by Treehouse Networks Ltd.
+	- ... and all bug fixes from 3.3.12
+
+Changes to squid-3.4.3 (02 Feb 2014):
+
+	- Bug 4008: HttpHeader warnOnError should be an int not a bool
+	- Bug 4002: clang 3.4 unable to compile
+	- Bug 3996: Malformed DNS reply leads to crash
+	- Bug 3995: compile error on CentOS 5 with GCC 4.1.2
+	- Bug 3975: atomic detection cross-compilation failure
+	- Bug 3971: "cannot aggregate mgr:client_list: cmd->profile != NULL" in SMP mode
+	- Bug 3954: compile failure in CpuAffinity.cc
+	- Bug 3927: tests/testRock fatal.cc required
+	- Fix memory leak in peer Cache Digest exchange
+	- Fix external_acl_type async loop failures
+	- Fix destination IP address cycling
+	- ... and a few polishing changes
+
 Changes to squid-3.4.2 (30 Dec 2013):
 
 	- Regression Bug 3980: FATAL ERROR due to max_user_ip -s option
@@ -80,6 +136,16 @@ Changes to squid-3.4.0.1 (29 Jul 2013):
 	- ... and many Windows portability changes (still incomplete)
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.3.12 (09 Mar 2014):
+
+	- Regression Bug 3769: client_netmask not evaluated since Comm redesign
+	- Bug 4026: Fix SSL and adaptation_access handling of aborted connections
+	- Bug 3969: Fix credentials caching for Digest authentication
+	- Bug 3806: Caching responses with Vary header
+	- Fix umask default on crash report generated email
+	- Fix pthread library detection on FreeBSD 10
+	- Avoid assertions on Range requests that trigger Squid-generated errors.
 
 Changes to squid-3.3.11 (01 Dec 2013):
 

@@ -300,7 +300,7 @@ peerDigestRequest(PeerDigest * pd)
 {
     CachePeer *p = pd->peer;
     StoreEntry *e, *old_e;
-    char *url;
+    char *url = NULL;
     const cache_key *key;
     HttpRequest *req;
     DigestFetchState *fetch = NULL;
@@ -314,8 +314,7 @@ peerDigestRequest(PeerDigest * pd)
     if (p->digest_url)
         url = xstrdup(p->digest_url);
     else
-        url = internalRemoteUri(p->host, p->http_port,
-                                "/squid-internal-periodic/", StoreDigestFileName);
+        url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestFileName));
 
     req = HttpRequest::CreateFromUrl(url);
 
@@ -398,6 +397,8 @@ peerDigestRequest(PeerDigest * pd)
 
     storeClientCopy(fetch->sc, e, tempBuffer,
                     peerDigestHandleReply, fetch);
+
+    safe_free(url);
 }
 
 /* Handle the data copying .. */

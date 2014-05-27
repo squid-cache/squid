@@ -2,22 +2,20 @@
  * DEBUG: section 93    eCAP Interface
  */
 #include "squid.h"
-#include "Debug.h"
-#include "EventLoop.h"
 #include "adaptation/ecap/Config.h"
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "AsyncEngine.h"
 #include "base/TextException.h"
+#include "Debug.h"
+#include "EventLoop.h"
 
 #include <libecap/adapter/service.h>
 #include <libecap/common/options.h>
 #include <libecap/common/name.h>
 #include <libecap/common/named_values.h>
-#if HAVE_LIMITS
 #include <limits>
-#endif
 #include <map>
 
 /// libecap::adapter::services indexed by their URI
@@ -103,9 +101,9 @@ int
 Adaptation::Ecap::Engine::checkEvents(int)
 {
     // Start with the default I/O loop timeout, convert from milliseconds.
-    static const struct timeval maxTimeout {
+    static const struct timeval maxTimeout = {
         EVENT_LOOP_TIMEOUT/1000, // seconds
-        (EVENT_LOOP_TIMEOUT % 1000)*1000 
+        (EVENT_LOOP_TIMEOUT % 1000)*1000
     }; // microseconds
     struct timeval timeout = maxTimeout;
 

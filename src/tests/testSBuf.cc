@@ -244,6 +244,63 @@ static int sign(int v)
     return 0;
 }
 
+static void
+testComparisonStdFull(const char *left, const char *right)
+{
+    if (sign(strcmp(left, right)) != sign(SBuf(left).cmp(SBuf(right))))
+        std::cerr << std::endl << " cmp(SBuf) npos " << left << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strcmp(left, right)), sign(SBuf(left).cmp(SBuf(right))));
+
+    if (sign(strcmp(left, right)) != sign(SBuf(left).cmp(right)))
+        std::cerr << std::endl << " cmp(char*) npos " << left << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strcmp(left, right)), sign(SBuf(left).cmp(right)));
+
+    if (sign(strcasecmp(left, right)) != sign(SBuf(left).caseCmp(SBuf(right))))
+        std::cerr << std::endl << " caseCmp(SBuf) npos " << left << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strcasecmp(left, right)), sign(SBuf(left).caseCmp(SBuf(right))));
+
+    if (sign(strcasecmp(left, right)) != sign(SBuf(left).caseCmp(right)))
+        std::cerr << std::endl << " caseCmp(char*) npos " << left << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strcasecmp(left, right)), sign(SBuf(left).caseCmp(right)));
+}
+
+static void
+testComparisonStdN(const char *left, const char *right, const size_t n)
+{
+    if (sign(strncmp(left, right, n)) != sign(SBuf(left).cmp(SBuf(right), n)))
+        std::cerr << std::endl << " cmp(SBuf) " << n << ' ' << left << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strncmp(left, right, n)), sign(SBuf(left).cmp(SBuf(right), n)));
+
+    if (sign(strncmp(left, right, n)) != sign(SBuf(left).cmp(right, n)))
+        std::cerr << std::endl << " cmp(char*) " << n << ' ' << SBuf(left) << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strncmp(left, right, n)), sign(SBuf(left).cmp(right, n)));
+
+    if (sign(strncasecmp(left, right, n)) != sign(SBuf(left).caseCmp(SBuf(right), n)))
+        std::cerr << std::endl << " caseCmp(SBuf) " << n << ' ' << left << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strncasecmp(left, right, n)), sign(SBuf(left).caseCmp(SBuf(right), n)));
+
+    if (sign(strncasecmp(left, right, n)) != sign(SBuf(left).caseCmp(right, n)))
+        std::cerr << std::endl << " caseCmp(char*) " << n << ' ' << SBuf(left) << " ?= " << right << std::endl;
+    CPPUNIT_ASSERT_EQUAL(sign(strncasecmp(left, right, n)), sign(SBuf(left).caseCmp(right, n)));
+}
+
+static void
+testComparisonStdOneWay(const char *left, const char *right)
+{
+    testComparisonStdFull(left, right);
+    const size_t maxN = 2 + min(strlen(left), strlen(right));
+    for (size_t n = 0; n <= maxN; ++n) {
+        testComparisonStdN(left, right, n);
+    }
+}
+
+static void
+testComparisonStd(const char *s1, const char *s2)
+{
+    testComparisonStdOneWay(s1, s2);
+    testComparisonStdOneWay(s2, s1);
+}
+
 void
 testSBuf::testComparisons()
 {
@@ -278,6 +335,41 @@ testSBuf::testComparisons()
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,3));
     CPPUNIT_ASSERT_EQUAL(0,s1.caseCmp(s2,2));
     CPPUNIT_ASSERT_EQUAL(0,s1.cmp(s2,2));
+
+    testComparisonStd("foo", "fooz");
+    testComparisonStd("foo", "foo");
+    testComparisonStd("foo", "f");
+    testComparisonStd("foo", "bar");
+
+    testComparisonStd("foo", "FOOZ");
+    testComparisonStd("foo", "FOO");
+    testComparisonStd("foo", "F");
+
+    testComparisonStdOneWay("", "");
+
+    // rare case C-string input matching SBuf with N>strlen(s)
+    {
+        char *right = xstrdup("foo34567890123456789012345678");
+        SBuf left("fooZYXWVUTSRQPONMLKJIHGFEDCBA");
+        // is 3 bytes in length. NEVER more.
+        right[3] = '\0';
+        left.setAt(3, '\0');
+
+        // pick another spot to truncate at if something goes horribly wrong.
+        right[14] = '\0';
+        left.setAt(14, '\0');
+
+        const SBuf::size_type maxN = 20 + min(left.length(), static_cast<SBuf::size_type>(strlen(right)));
+        for (SBuf::size_type n = 0; n <= maxN; ++n) {
+            if (sign(strncmp(left.rawContent(), right, n)) != sign(left.cmp(right, n)) )
+                std::cerr << std::endl << " cmp(char*) " << n << ' ' << left << " ?= " << right;
+            CPPUNIT_ASSERT_EQUAL(sign(strncmp(left.rawContent(), right, n)), sign(left.cmp(right, n)));
+            if (sign(strncasecmp(left.rawContent(), right, n)) != sign(left.caseCmp(right, n)))
+                std::cerr << std::endl << " caseCmp(char*) " << n << ' ' << left << " ?= " << right;
+            CPPUNIT_ASSERT_EQUAL(sign(strncasecmp(left.rawContent(), right, n)), sign(left.caseCmp(right, n)));
+        }
+        xfree(right);
+    }
 }
 
 void
@@ -798,7 +890,6 @@ testSBuf::testFindFirstNotOf()
     idx=haystack.findFirstNotOf(CharacterSet("t4","The"));
     CPPUNIT_ASSERT_EQUAL(3U,idx);
 }
-
 
 void
 testSBuf::testAutoFind()

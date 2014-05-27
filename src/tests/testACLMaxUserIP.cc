@@ -1,5 +1,4 @@
 #define SQUID_UNIT_TEST 1
-
 #include "squid.h"
 
 #if USE_AUTH
@@ -8,9 +7,7 @@
 #include "ConfigParser.h"
 #include "testACLMaxUserIP.h"
 
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
 
@@ -41,12 +38,13 @@ testACLMaxUserIP::testParseLine()
     ACL::ParseAclLine(LegacyParser, &anACL);
     ACLMaxUserIP *maxUserIpACL = dynamic_cast<ACLMaxUserIP *>(anACL);
     CPPUNIT_ASSERT(maxUserIpACL);
-
-    /* we want a maximum of one, and strict to be true */
-    CPPUNIT_ASSERT_EQUAL(1, maxUserIpACL->getMaximum());
-    CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->getStrict());
-    /* the acl must be vaid */
-    CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
+    if (maxUserIpACL) {
+        /* we want a maximum of one, and strict to be true */
+        CPPUNIT_ASSERT_EQUAL(1, maxUserIpACL->getMaximum());
+        CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->getStrict());
+        /* the acl must be vaid */
+        CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
+    }
     delete anACL;
     xfree(line);
 }
