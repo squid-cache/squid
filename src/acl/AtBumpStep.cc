@@ -9,12 +9,11 @@
 int
 ACLAtStepStrategy::match (ACLData<Ssl::BumpStep> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
-    if (checklist->conn() != NULL) {
-        if (Ssl::ServerBump *bump = checklist->conn()->serverBump())
-            return data->match(bump->step);
-        else
-            return data->match(Ssl::bumpStep1);
-    }
+    Ssl::ServerBump *bump;
+    if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
+        return data->match(bump->step);
+    else
+        return data->match(Ssl::bumpStep1);
     return 0;
 }
 
