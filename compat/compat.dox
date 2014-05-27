@@ -4,7 +4,7 @@
 \title Squid Portability
 
 
-\section 1 Aim
+\section sec1 Aim
 
 \par 
 Squid aims to build and run on many modern systems. To do this we have traditionally
@@ -18,7 +18,7 @@ The Portability library libcompat-squid.la has been created to correct the three
 stable build portability, code cleanliness, and clearer licensing.
 
 
-\section 2 Requirements
+\section sec2 Requirements
 
 \par
 The system calls used by Squid are not required to be standard. Often we depend on
@@ -26,17 +26,17 @@ some non-standard call which can give great performance benefits.
 But they are required to meet several other criteria:
  \li  They must be of actual benefit to Squid during its operation.
  \li  A better alternative must not exist.
- \li  If not available on all OS an open-source GPLv2+ implementation must be available
-      to be included with the Squid sources and used when required.
+ \li  If not available on all OS an open-source GPLv2+ compatible implementation must be
+      available to be included with the Squid sources and used when required.
 
 \par
-To be built into the libcompat-squid.la as a layer below all Squid-bundled binaries. The code
-must also qualify by being provided natively by some OS where Squid builds. \br
+To be built into the libcompat-squid.la as a layer below all Squid-bundled binaries. The
+code must also qualify by being provided natively by some OS where Squid builds. \br
 Code and Algorithms which do not meet this final criteria are relegated to the slightly
 higher level of basic component, rather than portability.
 
 
-\section 3 Component Types
+\section sec3 Component Types
 
 \par Macro re-definition
 Where the only difference between systems is their naming scheme. One of the schemes is
@@ -62,16 +62,16 @@ same name with an 'x' pre-pended. Currently these extra protections are added on
 handling and memory allocation.
 
 
-\section 4 Layout
+\section sec4 Layout
 The internal code structure of libcompat-squid.la files has a hierarchy. The API has a flat
 global scope separate from the file layout. The API is pulled in by including compat/compat.h.
-The strict dependency requirements which exist within the compat API make including
+The strict dependency requirements which exist within the compat API make including an
 individual part separately a risky operation.
 
 \par
-Squid coding guidelines require each .c and .cc file to include squid.h first
-in their included files. squid.h begin with an order-specific sequence of defines and
-includes compat/compat.h to incorporate the compat layer appropriately in every soure file.
+Squid coding guidelines require each .c and .cc file to include squid.h first in their
+included files. squid.h begins with an order-specific sequence of defines and includes
+compat/compat.h to incorporate the compat layer appropriately in every source file.
 
 \par
 Internally the compat/ directory contains the public API file compat/compat.h which structures
@@ -84,9 +84,9 @@ special compat layer handling. Hacks for specific systems should be restricted t
 as much as possible.
 
 \par
-compat/compat_shared.h file contains the shared portability definitions which are shared
-across a great many systems. These should be written with protective macros to prevent any
-symbols or code being defined which is not necessary. Protections here must not be system-specific.
+compat/compat_shared.h file contains the portability definitions which are shared across a
+great many systems. These should be written with protective macros to prevent any symbols or
+code being defined which is not necessary. Protections here must not be system-specific.
 
 \par
 Also in compat/ directory are the .h and .c files for emulators detected by autoconf. These

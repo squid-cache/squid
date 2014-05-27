@@ -48,6 +48,7 @@
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "fde.h"
+#include "format/ByteCode.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -62,9 +63,8 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
-#include "URLScheme.h"
 #include "wordlist.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 #if USE_AUTH
@@ -151,55 +151,7 @@ public:
 };
 
 struct _external_acl_format {
-    enum format_type {
-        EXT_ACL_UNKNOWN,
-#if USE_AUTH
-        EXT_ACL_LOGIN,
-#endif
-#if USE_IDENT
-        EXT_ACL_IDENT,
-#endif
-        EXT_ACL_SRC,
-        EXT_ACL_SRCPORT,
-#if USE_SQUID_EUI
-        EXT_ACL_SRCEUI48,
-        EXT_ACL_SRCEUI64,
-#endif
-        EXT_ACL_MYADDR,
-        EXT_ACL_MYPORT,
-        EXT_ACL_URI,
-        EXT_ACL_DST,
-        EXT_ACL_PROTO,
-        EXT_ACL_PORT,
-        EXT_ACL_PATH,
-        EXT_ACL_METHOD,
-
-        EXT_ACL_HEADER_REQUEST,
-        EXT_ACL_HEADER_REQUEST_MEMBER,
-        EXT_ACL_HEADER_REQUEST_ID,
-        EXT_ACL_HEADER_REQUEST_ID_MEMBER,
-
-        EXT_ACL_HEADER_REPLY,
-        EXT_ACL_HEADER_REPLY_MEMBER,
-        EXT_ACL_HEADER_REPLY_ID,
-        EXT_ACL_HEADER_REPLY_ID_MEMBER,
-
-#if USE_SSL
-        EXT_ACL_USER_CERT,
-        EXT_ACL_USER_CA_CERT,
-        EXT_ACL_USER_CERT_RAW,
-        EXT_ACL_USER_CERTCHAIN_RAW,
-#endif
-#if USE_AUTH
-        EXT_ACL_EXT_USER,
-#endif
-        EXT_ACL_EXT_LOG,
-        EXT_ACL_TAG,
-        EXT_ACL_ACLNAME,
-        EXT_ACL_ACLDATA,
-        EXT_ACL_PERCENT,
-        EXT_ACL_END
-    } type;
+    Format::ByteCode_t type;
     external_acl_format *next;
     char *header;
     char *member;
@@ -255,7 +207,7 @@ free_external_acl(void *data)
  \param format   - structure to contain all the info about this format element.
  */
 void
-parse_header_token(external_acl_format *format, char *header, const _external_acl_format::format_type type)
+parse_header_token(external_acl_format *format, char *header, const Format::ByteCode_t type)
 {
     /* header format */
     char *member, *end;
@@ -283,30 +235,17 @@ parse_header_token(external_acl_format *format, char *header, const _external_ac
 
         format->member = xstrdup(member);
 
-        if (type == _external_acl_format::EXT_ACL_HEADER_REQUEST)
-            format->type = _external_acl_format::EXT_ACL_HEADER_REQUEST_MEMBER;
+        if (type == Format::LFT_ADAPTED_REQUEST_HEADER)
+            format->type = Format::LFT_ADAPTED_REQUEST_HEADER_ELEM;
         else
-            format->type = _external_acl_format::EXT_ACL_HEADER_REQUEST_MEMBER;
+            format->type = Format::LFT_REPLY_HEADER_ELEM;
+
     } else {
         format->type = type;
     }
 
     format->header = xstrdup(header);
     format->header_id = httpHeaderIdByNameDef(header, strlen(header));
-
-    if (format->header_id != -1) {
-        if (member) {
-            if (type == _external_acl_format::EXT_ACL_HEADER_REQUEST)
-                format->type = _external_acl_format::EXT_ACL_HEADER_REQUEST_ID_MEMBER;
-            else
-                format->type = _external_acl_format::EXT_ACL_HEADER_REPLY_ID_MEMBER;
-        } else {
-            if (type == _external_acl_format::EXT_ACL_HEADER_REQUEST)
-                format->type = _external_acl_format::EXT_ACL_HEADER_REQUEST_ID;
-            else
-                format->type = _external_acl_format::EXT_ACL_HEADER_REPLY_ID;
-        }
-    }
 }
 
 void
@@ -422,84 +361,84 @@ parse_externalAclHelper(external_acl ** list)
         if (strncmp(token, "%{", 2) == 0) {
             // deprecated. but assume the old configs all referred to request headers.
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %{...} is being replaced by %>ha{...} for : " << token);
-            parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+            parse_header_token(format, (token+2), Format::LFT_ADAPTED_REQUEST_HEADER);
         } else if (strncmp(token, "%>{", 3) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %>{...} is being replaced by %>ha{...} for : " << token);
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+            parse_header_token(format, (token+3), Format::LFT_ADAPTED_REQUEST_HEADER);
         } else if (strncmp(token, "%>ha{", 5) == 0) {
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+            parse_header_token(format, (token+3), Format::LFT_ADAPTED_REQUEST_HEADER);
         } else if (strncmp(token, "%<{", 3) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %<{...} is being replaced by %<h{...} for : " << token);
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
+            parse_header_token(format, (token+3), Format::LFT_REPLY_HEADER);
         } else if (strncmp(token, "%<h{", 4) == 0) {
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
+            parse_header_token(format, (token+3), Format::LFT_REPLY_HEADER);
 #if USE_AUTH
         } else if (strcmp(token, "%LOGIN") == 0 || strcmp(token, "%ul") == 0) {
-            format->type = _external_acl_format::EXT_ACL_LOGIN;
+            format->type = Format::LFT_USER_LOGIN;
             a->require_auth = true;
 #endif
         }
 #if USE_IDENT
         else if (strcmp(token, "%IDENT") == 0 || strcmp(token, "%ui") == 0)
-            format->type = _external_acl_format::EXT_ACL_IDENT;
+            format->type = Format::LFT_USER_IDENT;
 #endif
         else if (strcmp(token, "%SRC") == 0 || strcmp(token, "%>a") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRC;
+            format->type = Format::LFT_CLIENT_IP_ADDRESS;
         else if (strcmp(token, "%SRCPORT") == 0 || strcmp(token, "%>p") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRCPORT;
+            format->type = Format::LFT_CLIENT_PORT;
 #if USE_SQUID_EUI
         else if (strcmp(token, "%SRCEUI48") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRCEUI48;
+            format->type = Format::LFT_EXT_ACL_CLIENT_EUI48;
         else if (strcmp(token, "%SRCEUI64") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRCEUI64;
+            format->type = Format::LFT_EXT_ACL_CLIENT_EUI64;
 #endif
         else if (strcmp(token, "%MYADDR") == 0 || strcmp(token, "%la") == 0)
-            format->type = _external_acl_format::EXT_ACL_MYADDR;
+            format->type = Format::LFT_LOCAL_LISTENING_IP;
         else if (strcmp(token, "%MYPORT") == 0 || strcmp(token, "%lp") == 0)
-            format->type = _external_acl_format::EXT_ACL_MYPORT;
+            format->type = Format::LFT_LOCAL_LISTENING_PORT;
         else if (strcmp(token, "%URI") == 0 || strcmp(token, "%>ru") == 0)
-            format->type = _external_acl_format::EXT_ACL_URI;
-        else if (strcmp(token, "%DST") == 0)
-            format->type = _external_acl_format::EXT_ACL_DST;
-        else if (strcmp(token, "%PROTO") == 0)
-            format->type = _external_acl_format::EXT_ACL_PROTO;
-        else if (strcmp(token, "%PORT") == 0)
-            format->type = _external_acl_format::EXT_ACL_PORT;
+            format->type = Format::LFT_CLIENT_REQ_URI;
+        else if (strcmp(token, "%DST") == 0 || strcmp(token, "%>rd") == 0)
+            format->type = Format::LFT_CLIENT_REQ_URLDOMAIN;
+        else if (strcmp(token, "%PROTO") == 0 || strcmp(token, "%>rs") == 0)
+            format->type = Format::LFT_CLIENT_REQ_URLSCHEME;
+        else if (strcmp(token, "%PORT") == 0) // XXX: add a logformat token
+            format->type = Format::LFT_CLIENT_REQ_URLPORT;
         else if (strcmp(token, "%PATH") == 0 || strcmp(token, "%>rp") == 0)
-            format->type = _external_acl_format::EXT_ACL_PATH;
+            format->type = Format::LFT_CLIENT_REQ_URLPATH;
         else if (strcmp(token, "%METHOD") == 0 || strcmp(token, "%>rm") == 0)
-            format->type = _external_acl_format::EXT_ACL_METHOD;
-#if USE_SSL
+            format->type = Format::LFT_CLIENT_REQ_METHOD;
+#if USE_OPENSSL
         else if (strcmp(token, "%USER_CERT") == 0)
-            format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
+            format->type = Format::LFT_EXT_ACL_USER_CERT_RAW;
         else if (strcmp(token, "%USER_CERTCHAIN") == 0)
-            format->type = _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW;
+            format->type = Format::LFT_EXT_ACL_USER_CERTCHAIN_RAW;
         else if (strncmp(token, "%USER_CERT_", 11) == 0) {
-            format->type = _external_acl_format::EXT_ACL_USER_CERT;
+            format->type = Format::LFT_EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
         } else if (strncmp(token, "%USER_CA_CERT_", 11) == 0) {
-            format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
+            format->type = Format::LFT_EXT_ACL_USER_CA_CERT;
             format->header = xstrdup(token + 11);
         } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type %CA_CERT_* code is obsolete. Use %USER_CA_CERT_* instead");
-            format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
+            format->type = Format::LFT_EXT_ACL_USER_CA_CERT;
             format->header = xstrdup(token + 11);
         }
 #endif
 #if USE_AUTH
-        else if (strcmp(token, "%EXT_USER") == 0)
-            format->type = _external_acl_format::EXT_ACL_EXT_USER;
+        else if (strcmp(token, "%EXT_USER") == 0 || strcmp(token, "%ue") == 0)
+            format->type = Format::LFT_USER_EXTERNAL;
 #endif
-        else if (strcmp(token, "%EXT_LOG") == 0)
-            format->type = _external_acl_format::EXT_ACL_EXT_LOG;
-        else if (strcmp(token, "%TAG") == 0)
-            format->type = _external_acl_format::EXT_ACL_TAG;
+        else if (strcmp(token, "%EXT_LOG") == 0 || strcmp(token, "%ea") == 0)
+            format->type = Format::LFT_EXT_LOG;
+        else if (strcmp(token, "%TAG") == 0  || strcmp(token, "%et") == 0)
+            format->type = Format::LFT_TAG;
         else if (strcmp(token, "%ACL") == 0)
-            format->type = _external_acl_format::EXT_ACL_ACLNAME;
+            format->type = Format::LFT_EXT_ACL_NAME;
         else if (strcmp(token, "%DATA") == 0)
-            format->type = _external_acl_format::EXT_ACL_ACLDATA;
+            format->type = Format::LFT_EXT_ACL_DATA;
         else if (strcmp(token, "%%") == 0)
-            format->type = _external_acl_format::EXT_ACL_PERCENT;
+            format->type = Format::LFT_PERCENT;
         else {
             debugs(0, DBG_CRITICAL, "ERROR: Unknown Format token " << token);
             self_destruct();
@@ -574,67 +513,60 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         for (format = node->format; format; format = format->next) {
             switch (format->type) {
 
-            case _external_acl_format::EXT_ACL_HEADER_REQUEST:
-            case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID:
-                storeAppendPrintf(sentry, " %%>{%s}", format->header);
+            case Format::LFT_ADAPTED_REQUEST_HEADER:
+                storeAppendPrintf(sentry, " %%>ha{%s}", format->header);
                 break;
 
-            case _external_acl_format::EXT_ACL_HEADER_REQUEST_MEMBER:
-            case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID_MEMBER:
-                storeAppendPrintf(sentry, " %%>{%s:%s}", format->header, format->member);
+            case Format::LFT_ADAPTED_REQUEST_HEADER_ELEM:
+                storeAppendPrintf(sentry, " %%>ha{%s:%s}", format->header, format->member);
                 break;
 
-            case _external_acl_format::EXT_ACL_HEADER_REPLY:
-            case _external_acl_format::EXT_ACL_HEADER_REPLY_ID:
-                storeAppendPrintf(sentry, " %%<{%s}", format->header);
+            case Format::LFT_REPLY_HEADER:
+                storeAppendPrintf(sentry, " %%<h{%s}", format->header);
                 break;
 
-            case _external_acl_format::EXT_ACL_HEADER_REPLY_MEMBER:
-            case _external_acl_format::EXT_ACL_HEADER_REPLY_ID_MEMBER:
-                storeAppendPrintf(sentry, " %%<{%s:%s}", format->header, format->member);
+            case Format::LFT_REPLY_HEADER_ELEM:
+                storeAppendPrintf(sentry, " %%<h{%s:%s}", format->header, format->member);
                 break;
-#define DUMP_EXT_ACL_TYPE(a) \
-            case _external_acl_format::EXT_ACL_##a: \
-                storeAppendPrintf(sentry, " %%%s", #a); \
-                break
+
 #define DUMP_EXT_ACL_TYPE_FMT(a, fmt, ...) \
-            case _external_acl_format::EXT_ACL_##a: \
+            case Format::LFT_##a: \
                 storeAppendPrintf(sentry, fmt, ##__VA_ARGS__); \
                 break
 #if USE_AUTH
-                DUMP_EXT_ACL_TYPE(LOGIN);
+                DUMP_EXT_ACL_TYPE_FMT(USER_LOGIN," %%ul");
 #endif
 #if USE_IDENT
 
-                DUMP_EXT_ACL_TYPE(IDENT);
+                DUMP_EXT_ACL_TYPE_FMT(USER_IDENT," %%ui");
 #endif
-
-                DUMP_EXT_ACL_TYPE(SRC);
-                DUMP_EXT_ACL_TYPE(SRCPORT);
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_IP_ADDRESS," %%>a");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_PORT," %%>p");
 #if USE_SQUID_EUI
-                DUMP_EXT_ACL_TYPE(SRCEUI48);
-                DUMP_EXT_ACL_TYPE(SRCEUI64);
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_CLIENT_EUI48," %%SRCEUI48");
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_CLIENT_EUI64," %%SRCEUI64");
 #endif
-
-                DUMP_EXT_ACL_TYPE(MYADDR);
-                DUMP_EXT_ACL_TYPE(MYPORT);
-                DUMP_EXT_ACL_TYPE(URI);
-                DUMP_EXT_ACL_TYPE(DST);
-                DUMP_EXT_ACL_TYPE(PROTO);
-                DUMP_EXT_ACL_TYPE(PORT);
-                DUMP_EXT_ACL_TYPE(PATH);
-                DUMP_EXT_ACL_TYPE(METHOD);
-#if USE_SSL
-                DUMP_EXT_ACL_TYPE_FMT(USER_CERT_RAW, " %%USER_CERT_RAW");
-                DUMP_EXT_ACL_TYPE_FMT(USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
-                DUMP_EXT_ACL_TYPE_FMT(USER_CERT, " %%USER_CERT_%s", format->header);
-                DUMP_EXT_ACL_TYPE_FMT(USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
+                DUMP_EXT_ACL_TYPE_FMT(LOCAL_LISTENING_IP," %%>la");
+                DUMP_EXT_ACL_TYPE_FMT(LOCAL_LISTENING_PORT," %%>lp");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_REQ_URI," %%>ru");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_REQ_URLDOMAIN," %%>rd");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_REQ_URLSCHEME," %%>rs");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_REQ_URLPORT," %%>rP");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_REQ_URLPATH," %%>rp");
+                DUMP_EXT_ACL_TYPE_FMT(CLIENT_REQ_METHOD," %%>rm");
+#if USE_OPENSSL
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERT_RAW, " %%USER_CERT_RAW");
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERT, " %%USER_CERT_%s", format->header);
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
 #endif
 #if USE_AUTH
-                DUMP_EXT_ACL_TYPE(EXT_USER);
+                DUMP_EXT_ACL_TYPE_FMT(USER_EXTERNAL," %%ue");
 #endif
-                DUMP_EXT_ACL_TYPE(EXT_LOG);
-                DUMP_EXT_ACL_TYPE(TAG);
+                DUMP_EXT_ACL_TYPE_FMT(EXT_LOG," %%ea");
+                DUMP_EXT_ACL_TYPE_FMT(TAG," %%et");
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_NAME," %%ACL");
+                DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_DATA," %%DATA");
                 DUMP_EXT_ACL_TYPE_FMT(PERCENT, " %%%%");
             default:
                 fatal("unknown external_acl format error");
@@ -931,23 +863,20 @@ ACLExternal::match(ACLChecklist *checklist)
     }
 }
 
-wordlist *
+SBufList
 ACLExternal::dump() const
 {
     external_acl_data const *acl = data;
-    wordlist *result = NULL;
-    wordlist *arg;
-    MemBuf mb;
-    mb.init();
-    mb.Printf("%s", acl->def->name);
+    SBufList rv;
+    rv.push_back(SBuf(acl->def->name));
 
-    for (arg = acl->arguments; arg; arg = arg->next) {
-        mb.Printf(" %s", arg->key);
+    for (wordlist *arg = acl->arguments; arg; arg = arg->next) {
+        SBuf s;
+        s.Printf(" %s", arg->key);
+        rv.push_back(s);
     }
 
-    wordlistAdd(&result, mb.buf);
-    mb.clean();
-    return result;
+    return rv;
 }
 
 /******************************************************************
@@ -984,7 +913,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         switch (format->type) {
 #if USE_AUTH
-        case _external_acl_format::EXT_ACL_LOGIN:
+        case Format::LFT_USER_LOGIN:
             // if this ACL line was the cause of credentials fetch
             // they may not already be in the checklist
             if (ch->auth_user_request == NULL && ch->request)
@@ -995,7 +924,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 #endif
 #if USE_IDENT
-        case _external_acl_format::EXT_ACL_IDENT:
+        case Format::LFT_USER_IDENT:
             str = ch->rfc931;
 
             if (!str || !*str) {
@@ -1008,113 +937,105 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 #endif
 
-        case _external_acl_format::EXT_ACL_SRC:
+        case Format::LFT_CLIENT_IP_ADDRESS:
             str = ch->src_addr.toStr(buf,sizeof(buf));
             break;
 
-        case _external_acl_format::EXT_ACL_SRCPORT:
+        case Format::LFT_CLIENT_PORT:
             snprintf(buf, sizeof(buf), "%d", request->client_addr.port());
             str = buf;
             break;
 
 #if USE_SQUID_EUI
-        case _external_acl_format::EXT_ACL_SRCEUI48:
+        case Format::LFT_EXT_ACL_CLIENT_EUI48:
             if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
                     request->clientConnectionManager->clientConnection->remoteEui48.encode(buf, sizeof(buf)))
                 str = buf;
             break;
 
-        case _external_acl_format::EXT_ACL_SRCEUI64:
+        case Format::LFT_EXT_ACL_CLIENT_EUI64:
             if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
                     request->clientConnectionManager->clientConnection->remoteEui64.encode(buf, sizeof(buf)))
                 str = buf;
             break;
 #endif
 
-        case _external_acl_format::EXT_ACL_MYADDR:
+        case Format::LFT_LOCAL_LISTENING_IP:
             str = request->my_addr.toStr(buf, sizeof(buf));
             break;
 
-        case _external_acl_format::EXT_ACL_MYPORT:
+        case Format::LFT_LOCAL_LISTENING_PORT:
             snprintf(buf, sizeof(buf), "%d", request->my_addr.port());
             str = buf;
             break;
 
-        case _external_acl_format::EXT_ACL_URI:
+        case Format::LFT_CLIENT_REQ_URI:
             str = urlCanonical(request);
             break;
 
-        case _external_acl_format::EXT_ACL_DST:
+        case Format::LFT_CLIENT_REQ_URLDOMAIN:
             str = request->GetHost();
             break;
 
-        case _external_acl_format::EXT_ACL_PROTO:
-            str = AnyP::ProtocolType_str[request->protocol];
+        case Format::LFT_CLIENT_REQ_URLSCHEME:
+            str = request->url.getScheme().c_str();
             break;
 
-        case _external_acl_format::EXT_ACL_PORT:
+        case Format::LFT_CLIENT_REQ_URLPORT:
             snprintf(buf, sizeof(buf), "%d", request->port);
             str = buf;
             break;
 
-        case _external_acl_format::EXT_ACL_PATH:
+        case Format::LFT_CLIENT_REQ_URLPATH:
             str = request->urlpath.termedBuf();
             break;
 
-        case _external_acl_format::EXT_ACL_METHOD:
-            str = RequestMethodStr(request->method);
-            break;
+        case Format::LFT_CLIENT_REQ_METHOD: {
+            const SBuf &s = request->method.image();
+            sb.append(s.rawContent(), s.length());
+        }
+        str = sb.termedBuf();
+        break;
 
-        case _external_acl_format::EXT_ACL_HEADER_REQUEST:
-            sb = request->header.getByName(format->header);
+        case Format::LFT_ADAPTED_REQUEST_HEADER:
+            if (format->header_id == -1)
+                sb = request->header.getByName(format->header);
+            else
+                sb = request->header.getStrOrList(format->header_id);
             str = sb.termedBuf();
             break;
 
-        case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID:
-            sb = request->header.getStrOrList(format->header_id);
+        case Format::LFT_ADAPTED_REQUEST_HEADER_ELEM:
+            if (format->header_id == -1)
+                sb = request->header.getByNameListMember(format->header, format->member, format->separator);
+            else
+                sb = request->header.getListMember(format->header_id, format->member, format->separator);
             str = sb.termedBuf();
             break;
 
-        case _external_acl_format::EXT_ACL_HEADER_REQUEST_MEMBER:
-            sb = request->header.getByNameListMember(format->header, format->member, format->separator);
-            str = sb.termedBuf();
-            break;
-
-        case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID_MEMBER:
-            sb = request->header.getListMember(format->header_id, format->member, format->separator);
-            str = sb.termedBuf();
-            break;
-
-        case _external_acl_format::EXT_ACL_HEADER_REPLY:
+        case Format::LFT_REPLY_HEADER:
             if (reply) {
-                sb = reply->header.getByName(format->header);
+                if (format->header_id == -1)
+                    sb = reply->header.getByName(format->header);
+                else
+                    sb = reply->header.getStrOrList(format->header_id);
                 str = sb.termedBuf();
             }
             break;
 
-        case _external_acl_format::EXT_ACL_HEADER_REPLY_ID:
+        case Format::LFT_REPLY_HEADER_ELEM:
             if (reply) {
-                sb = reply->header.getStrOrList(format->header_id);
+                if (format->header_id == -1)
+                    sb = reply->header.getByNameListMember(format->header, format->member, format->separator);
+                else
+                    sb = reply->header.getListMember(format->header_id, format->member, format->separator);
                 str = sb.termedBuf();
             }
             break;
 
-        case _external_acl_format::EXT_ACL_HEADER_REPLY_MEMBER:
-            if (reply) {
-                sb = reply->header.getByNameListMember(format->header, format->member, format->separator);
-                str = sb.termedBuf();
-            }
-            break;
+#if USE_OPENSSL
 
-        case _external_acl_format::EXT_ACL_HEADER_REPLY_ID_MEMBER:
-            if (reply) {
-                sb = reply->header.getListMember(format->header_id, format->member, format->separator);
-                str = sb.termedBuf();
-            }
-            break;
-#if USE_SSL
-
-        case _external_acl_format::EXT_ACL_USER_CERT_RAW:
+        case Format::LFT_EXT_ACL_USER_CERT_RAW:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
                 SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
@@ -1125,7 +1046,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
             break;
 
-        case _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW:
+        case Format::LFT_EXT_ACL_USER_CERTCHAIN_RAW:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
                 SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
@@ -1136,7 +1057,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
             break;
 
-        case _external_acl_format::EXT_ACL_USER_CERT:
+        case Format::LFT_EXT_ACL_USER_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
                 SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
@@ -1147,7 +1068,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
             break;
 
-        case _external_acl_format::EXT_ACL_USER_CA_CERT:
+        case Format::LFT_EXT_ACL_USER_CA_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
                 SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
@@ -1159,20 +1080,20 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 #endif
 #if USE_AUTH
-        case _external_acl_format::EXT_ACL_EXT_USER:
+        case Format::LFT_USER_EXTERNAL:
             str = request->extacl_user.termedBuf();
             break;
 #endif
-        case _external_acl_format::EXT_ACL_EXT_LOG:
+        case Format::LFT_EXT_LOG:
             str = request->extacl_log.termedBuf();
             break;
-        case _external_acl_format::EXT_ACL_TAG:
+        case Format::LFT_TAG:
             str = request->tag.termedBuf();
             break;
-        case _external_acl_format::EXT_ACL_ACLNAME:
+        case Format::LFT_EXT_ACL_NAME:
             str = acl_data->name;
             break;
-        case _external_acl_format::EXT_ACL_ACLDATA:
+        case Format::LFT_EXT_ACL_DATA:
             data_used = true;
             for (arg = acl_data->arguments; arg; arg = arg->next) {
                 if (!first)
@@ -1192,13 +1113,14 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 first = 0;
             }
             break;
-        case _external_acl_format::EXT_ACL_PERCENT:
+        case Format::LFT_PERCENT:
             str = "%";
             break;
-        case _external_acl_format::EXT_ACL_UNKNOWN:
 
-        case _external_acl_format::EXT_ACL_END:
-            fatal("unknown external_acl format error");
+        default:
+            // TODO: replace this function with Format::assemble()
+            // For now die on unsupported logformat codes.
+            fatalf("ERROR: unknown external_acl_type format %u", (uint8_t)format->type);
             break;
         }
 
@@ -1607,14 +1529,16 @@ ExternalACLLookup::LookupDone(void *data, void *result)
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
 
     // attach the helper kv-pair to the transaction
-    if (HttpRequest * req = checklist->request) {
-        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
-        // workaround by using anything already set in HttpRequest
-        // OR use new and rely on a later Sync copying these to AccessLogEntry
-        if (!req->notes)
-            req->notes = new NotePairs;
+    if (checklist->extacl_entry) {
+        if (HttpRequest * req = checklist->request) {
+            // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+            // workaround by using anything already set in HttpRequest
+            // OR use new and rely on a later Sync copying these to AccessLogEntry
+            if (!req->notes)
+                req->notes = new NotePairs;
 
-        req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+            req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+        }
     }
 
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
@@ -1637,13 +1561,13 @@ ACLExternal::clone() const
     return new ACLExternal(*this);
 }
 
-ACLExternal::ACLExternal (char const *theClass) : data (NULL), class_ (xstrdup (theClass))
+ACLExternal::ACLExternal(char const *theClass) : data(NULL), class_(xstrdup(theClass))
 {}
 
-ACLExternal::ACLExternal (ACLExternal const & old) : data (NULL), class_ (old.class_ ? xstrdup (old.class_) : NULL)
+ACLExternal::ACLExternal(ACLExternal const & old) : data(NULL), class_(old.class_ ? xstrdup(old.class_) : NULL)
 {
     /* we don't have copy constructors for the data yet */
-    assert (!old.data);
+    assert(!old.data);
 }
 
 char const *

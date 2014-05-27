@@ -94,7 +94,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-x-accelerator-vary \
 	--enable-ipv6 \
 	--enable-auto-locale \
-	--enable-translation \
+	--disable-translation \
 	--enable-zph-qos \
 	--enable-esi \
 	--with-aio \

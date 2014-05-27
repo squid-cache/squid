@@ -51,9 +51,7 @@
 #include "esi/Element.h"
 #endif
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 class AsyncCall;
 class HttpRequest;

@@ -36,12 +36,13 @@
 #include "adaptation/History.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
-#include "base/Vector.h"
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "Store.h"
+
+#include <algorithm>
 
 bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;
@@ -87,15 +88,19 @@ Adaptation::Config::removeService(const String& service)
         for (SGSI it = services.begin(); it != services.end(); ++it) {
             if (*it == service) {
                 group->removedServices.push_back(service);
-                group->services.prune(service);
-                debugs(93, 5, HERE << "adaptation service " << service <<
+                ServiceGroup::Store::iterator newend;
+                newend = std::remove(group->services.begin(), group->services.end(), service);
+                group->services.resize(newend-group->services.begin());
+                debugs(93, 5, "adaptation service " << service <<
                        " removed from group " << group->id);
                 break;
             }
         }
         if (services.empty()) {
             removeRule(group->id);
-            AllGroups().prune(group);
+            Groups::iterator newend;
+            newend = std::remove(AllGroups().begin(), AllGroups().end(), group);
+            AllGroups().resize(newend-AllGroups().begin());
         } else {
             ++i;
         }
@@ -122,8 +127,10 @@ Adaptation::Config::removeRule(const String& id)
     for (ARI it = rules.begin(); it != rules.end(); ++it) {
         AccessRule* rule = *it;
         if (rule->groupId == id) {
-            debugs(93, 5, HERE << "removing access rules for:" << id);
-            AllRules().prune(rule);
+            debugs(93, 5, "removing access rules for:" << id);
+            AccessRules::iterator newend;
+            newend = std::remove(AllRules().begin(), AllRules().end(), rule);
+            AllRules().resize(newend-AllRules().begin());
             delete (rule);
             break;
         }
@@ -139,7 +146,7 @@ Adaptation::Config::clear()
     const ServiceConfigs& configs = serviceConfigs;
     for (SCI cfg = configs.begin(); cfg != configs.end(); ++cfg)
         removeService((*cfg)->key);
-    serviceConfigs.clean();
+    serviceConfigs.clear();
     debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
            AllGroups().size() << ", services: " << serviceConfigs.size());
 }
@@ -163,7 +170,7 @@ Adaptation::Config::freeService()
 
     DetachServices();
 
-    serviceConfigs.clean();
+    serviceConfigs.clear();
 }
 
 void
@@ -210,7 +217,7 @@ Adaptation::Config::finalize()
     debugs(93,3, HERE << "Created " << created << " adaptation services");
 
     // services remember their configs; we do not have to
-    serviceConfigs.clean();
+    serviceConfigs.clear();
     return true;
 }
 

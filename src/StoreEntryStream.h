@@ -33,9 +33,7 @@
 
 #include "Store.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 /*
  * This class provides a streambuf interface for writing

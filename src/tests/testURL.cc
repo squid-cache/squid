@@ -7,9 +7,7 @@
 #include "testURL.h"
 #include "URL.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testURL );
 
@@ -22,17 +20,17 @@ testURL::setUp()
 }
 
 /*
- * we can construct a URL with a URLScheme.
+ * we can construct a URL with a AnyP::UriScheme.
  * This creates a URL for that scheme.
  */
 void
 testURL::testConstructScheme()
 {
-    URLScheme empty_scheme;
+    AnyP::UriScheme empty_scheme;
     URL protoless_url(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(empty_scheme, protoless_url.getScheme());
 
-    URLScheme ftp_scheme(AnyP::PROTO_FTP);
+    AnyP::UriScheme ftp_scheme(AnyP::PROTO_FTP);
     URL ftp_url(AnyP::PROTO_FTP);
     CPPUNIT_ASSERT_EQUAL(ftp_scheme, ftp_url.getScheme());
 }
@@ -45,7 +43,7 @@ testURL::testConstructScheme()
 void
 testURL::testDefaultConstructor()
 {
-    URLScheme aScheme;
+    AnyP::UriScheme aScheme;
     URL aUrl;
     CPPUNIT_ASSERT_EQUAL(aScheme, aUrl.getScheme());
 

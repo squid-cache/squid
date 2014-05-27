@@ -382,7 +382,7 @@ RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
         offset = RFCNB_Pkt_Hdr_Len;     /* Otherwise skip the header       */
     }
 
-    frag_len = pkt_frag->len;
+    frag_len = (pkt_frag ? pkt_frag->len : 0);
 
     if (more <= frag_len)       /* If len left to get less than frag space */
         this_len = more;        /* Get the rest ...                        */

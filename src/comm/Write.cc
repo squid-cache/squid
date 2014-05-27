@@ -9,13 +9,11 @@
 #include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
-
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+
+#include <cerrno>
 
 void
 Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback)

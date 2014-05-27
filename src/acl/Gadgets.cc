@@ -50,6 +50,13 @@
 #include "HttpRequest.h"
 #include "Mem.h"
 
+#include <set>
+#include <algorithm>
+
+typedef std::set<ACL*> AclSet;
+/// Accumulates all ACLs to facilitate their clean deletion despite reuse.
+static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
+
 /* does name lookup, returns page_id */
 err_type
 aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
@@ -244,23 +251,38 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     *treep = tree;
 }
 
+void
+aclRegister(ACL *acl)
+{
+    if (!acl->registered) {
+        if (!RegisteredAcls)
+            RegisteredAcls = new AclSet;
+        RegisteredAcls->insert(acl);
+        acl->registered = true;
+    }
+}
+
 /*********************/
 /* Destroy functions */
 /*********************/
 
+/// helper for RegisteredAcls cleanup
+static void
+aclDeleteOne(ACL *acl)
+{
+    delete acl;
+}
+
+/// called to delete ALL Acls.
 void
 aclDestroyAcls(ACL ** head)
 {
-    ACL *next = NULL;
-
-    debugs(28, 8, "aclDestroyACLs: invoked");
-
-    for (ACL *a = *head; a; a = next) {
-        next = a->next;
-        delete a;
+    *head = NULL; // Config.aclList
+    if (AclSet *acls = RegisteredAcls) {
+        debugs(28, 8, "deleting all " << acls->size() << " ACLs");
+        std::for_each(acls->begin(), acls->end(), &aclDeleteOne);
+        acls->clear();
     }
-
-    *head = NULL;
 }
 
 void

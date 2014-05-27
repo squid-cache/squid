@@ -32,6 +32,8 @@
 #include "squid.h"
 #include "md5.h"
 
+#if !HAVE_NETTLE_MD5_H
+
 #if HAVE_STRING_H
 #include <string.h>		/* for memcpy() */
 #endif
@@ -252,3 +254,4 @@ SquidMD5Transform(uint32_t buf[4], uint32_t const in[16])
 }
 
 #endif /* !ASM_MD5 */
+#endif /* HAVE_ETTLE_MD5_H */

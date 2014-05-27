@@ -48,6 +48,8 @@
 #include "tools.h"
 #include "Transients.h"
 
+#include <cerrno>
+#include <climits>
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
 #include <sys/statvfs.h>
@@ -56,9 +58,6 @@
 /* statfs() needs <sys/param.h> and <sys/mount.h> on BSD systems */
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
-#endif
-#if HAVE_LIMITS_H
-#include <limits.h>
 #endif
 #if HAVE_SYS_MOUNT_H
 #include <sys/mount.h>
@@ -69,9 +68,6 @@
 #endif
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
@@ -1370,7 +1366,7 @@ StoreSearchHashIndex::next(void (aCallback)(void *), void *aCallbackData)
 bool
 StoreSearchHashIndex::next()
 {
-    if (entries.size())
+    if (!entries.empty())
         entries.pop_back();
 
     while (!isDone() && !entries.size())

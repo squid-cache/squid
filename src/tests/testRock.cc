@@ -18,11 +18,9 @@
 #include "testRock.h"
 #include "testStoreSupport.h"
 
+#include <stdexcept>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_STDEXCEPT
-#include <stdexcept>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -82,7 +80,7 @@ testRock::setUp()
     store->create();
 
     rr = new Rock::SwapDirRr;
-    rr->run(rrAfterConfig);
+    rr->useConfig();
 }
 
 void
@@ -96,7 +94,8 @@ testRock::tearDown()
 
     free_cachedir(&Config.cacheSwap);
 
-    delete rr;
+    rr->finishShutdown(); // deletes rr
+    rr = NULL;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);
@@ -117,17 +116,13 @@ testRock::commonInit()
     StoreFileSystem::SetupAllFs();
 
     Config.Store.avgObjectSize = 1024;
-
     Config.Store.objectsPerBucket = 20;
-
     Config.Store.maxObjectSize = 2048;
 
     Config.store_dir_select_algorithm = xstrdup("round-robin");
 
     Config.replPolicy = new RemovalPolicySettings;
-
-    Config.replPolicy->type = xstrdup ("lru");
-
+    Config.replPolicy->type = xstrdup("lru");
     Config.replPolicy->args = NULL;
 
     /* garh garh */

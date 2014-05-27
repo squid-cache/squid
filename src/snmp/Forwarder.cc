@@ -101,5 +101,5 @@ Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
     }
     Ipc::TypedMsgHdr message;
     response.pack(message);
-    Ipc::SendMessage(Ipc::coordinatorAddr, message);
+    Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }

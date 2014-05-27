@@ -42,12 +42,12 @@
 //
 
 #include "convert.hh"
-#include <string.h>
+
+#include <cstdlib>
+#include <cstring>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #ifndef SA
 #define SA struct sockaddr

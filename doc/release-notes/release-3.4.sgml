@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.4.2 release notes</title>
+<title>Squid 3.4.5 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.4.2 for testing.
+The Squid Team are pleased to announce the release of Squid-3.4.5 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.4/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
@@ -412,6 +412,11 @@ This section gives an account of those changes in three categories:
 	<p>NOTE: systems such as NetBSD and FreeBSD which do not yet support
 	   the getsockname() API in recent PF versions require <em>--with-nat-devpf</em>
 	   to re-enable /dev/pf support when using PF firewall.
+
+	<tag>--disable-translation</tag>
+	<p>Default changed to prevent translating error page templates during build.
+	    Use --enable-translation to explicitly build and install the templates.
+	<p>The latest pre-translated templates can be downloaded from <url url="http://www.squid-cache.org/Versions/langpack/">
 
 </descrip>
 </p>

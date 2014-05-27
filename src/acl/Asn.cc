@@ -50,7 +50,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "StoreClient.h"
-#include "wordlist.h"
 
 #define WHOIS_PORT 43
 #define	AS_REQBUF_SZ	4096
@@ -75,7 +74,7 @@ struct squid_radix_node_head *AS_tree_head;
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS-IGNORE
+/// \cond AUTODOCS_IGNORE
 template cbdata_type CbDataList<int>::CBDATA_CbDataList;
 /// \endcond
 
@@ -551,20 +550,21 @@ ACLASN::match(Ip::Address toMatch)
     return asnMatchIp(data, toMatch);
 }
 
-wordlist *
-ACLASN::dump()
+SBufList
+ACLASN::dump() const
 {
-    wordlist *W = NULL;
-    char buf[32];
+    SBufList sl;
+
     CbDataList<int> *ldata = data;
 
     while (ldata != NULL) {
-        snprintf(buf, sizeof(buf), "%d", ldata->element);
-        wordlistAdd(&W, buf);
+        SBuf s;
+        s.Printf("%d", ldata->element);
+        sl.push_back(s);
         ldata = ldata->next;
     }
 
-    return W;
+    return sl;
 }
 
 bool

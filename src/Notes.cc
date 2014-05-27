@@ -146,25 +146,27 @@ Notes::dump(StoreEntry *entry, const char *key)
 void
 Notes::clean()
 {
-    notes.clean();
+    notes.clear();
 }
 
 NotePairs::~NotePairs()
 {
-    while (!entries.empty())
-        delete entries.pop_back();
+    while (!entries.empty()) {
+        delete entries.back();
+        entries.pop_back();
+    }
 }
 
 const char *
-NotePairs::find(const char *noteKey) const
+NotePairs::find(const char *noteKey, const char *sep) const
 {
     static String value;
     value.clean();
-    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         if ((*i)->name.cmp(noteKey) == 0) {
             if (value.size())
-                value.append(", ");
-            value.append(ConfigParser::QuoteString((*i)->value));
+                value.append(sep);
+            value.append((*i)->value);
         }
     }
     return value.size() ? value.termedBuf() : NULL;
@@ -175,10 +177,10 @@ NotePairs::toString(const char *sep) const
 {
     static String value;
     value.clean();
-    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         value.append((*i)->name);
         value.append(": ");
-        value.append(ConfigParser::QuoteString((*i)->value));
+        value.append((*i)->value);
         value.append(sep);
     }
     return value.size() ? value.termedBuf() : NULL;
@@ -187,7 +189,7 @@ NotePairs::toString(const char *sep) const
 const char *
 NotePairs::findFirst(const char *noteKey) const
 {
-    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         if ((*i)->name.cmp(noteKey) == 0)
             return (*i)->value.termedBuf();
     }
@@ -217,7 +219,7 @@ NotePairs::addStrList(const char *key, const char *values)
 bool
 NotePairs::hasPair(const char *key, const char *value) const
 {
-    for (Vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         if ((*i)->name.cmp(key) == 0 && (*i)->value.cmp(value) == 0)
             return true;
     }
@@ -227,7 +229,7 @@ NotePairs::hasPair(const char *key, const char *value) const
 void
 NotePairs::append(const NotePairs *src)
 {
-    for (Vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
         entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
     }
 }
@@ -235,7 +237,7 @@ NotePairs::append(const NotePairs *src)
 void
 NotePairs::appendNewOnly(const NotePairs *src)
 {
-    for (Vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
         if (!hasPair((*i)->name.termedBuf(), (*i)->value.termedBuf()))
             entries.push_back(new NotePairs::Entry((*i)->name.termedBuf(), (*i)->value.termedBuf()));
     }

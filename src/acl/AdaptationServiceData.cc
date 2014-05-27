@@ -9,7 +9,6 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "wordlist.h"
 
 void
 ACLAdaptationServiceData::parse()

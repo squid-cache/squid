@@ -24,8 +24,6 @@ SOFTWARE.
 #define SQUID_NO_STRING_BUFFER_PROTECT 1
 #include "squid.h"
 
-#include <stdio.h>
-
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

@@ -132,13 +132,18 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
 
     http->al->http.code = errstate->httpStatus;
 
+    if (http->request)
+        http->request->ignoreRange("responding with a Squid-generated error");
+
     createStoreEntry(method, RequestFlags());
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
 }
 
-void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
+// Assumes that the entry contains an error response without Content-Range.
+// To use with regular entries, make HTTP Range header removal conditional.
+void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry, const char *reason)
 {
     entry->lock("clientReplyContext::setReplyToStoreEntry"); // removeClientStoreReference() unlocks
     sc = storeClientListAdd(entry, this);
@@ -147,6 +152,8 @@ void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
 #endif
     reqofs = 0;
     reqsize = 0;
+    if (http->request)
+        http->request->ignoreRange(reason);
     flags.storelogiccomplete = 1;
     http->storeEntry(entry);
 }
@@ -447,8 +454,10 @@ void
 clientReplyContext::cacheHit(StoreIOBuffer result)
 {
     /** Ignore if the HIT object is being deleted. */
-    if (deleting)
+    if (deleting) {
+        debugs(88, 3, "HIT object being deleted. Ignore the HIT.");
         return;
+    }
 
     StoreEntry *e = http->storeEntry();
 
@@ -469,6 +478,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 
     if (result.length == 0) {
+        debugs(88, 5, "store IO buffer has no content. MISS");
         /* the store couldn't get enough data from the file for us to id the
          * object
          */
@@ -527,15 +537,15 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 
     if (r->method == Http::METHOD_PURGE) {
+        debugs(88, 5, "PURGE gets a HIT");
         removeClientStoreReference(&sc, http);
         e = NULL;
         purgeRequest();
         return;
     }
 
-    if (e->checkNegativeHit()
-            && !r->flags.noCacheHack()
-       ) {
+    if (e->checkNegativeHit() && !r->flags.noCacheHack()) {
+        debugs(88, 5, "negative-HIT");
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
     } else if (blockedHit()) {
@@ -573,7 +583,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              */
             http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
             processMiss();
-        } else if (r->protocol == AnyP::PROTO_HTTP) {
+        } else if (r->url.getScheme() == AnyP::PROTO_HTTP) {
             debugs(88, 3, "validate HIT object? YES.");
             /*
              * Object needs to be revalidated
@@ -589,12 +599,14 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             http->logType = LOG_TCP_MISS;
             processMiss();
         }
-    } else if (r->conditional())
+    } else if (r->conditional()) {
+        debugs(88, 5, "conditional HIT");
         processConditional(result);
-    else {
+    } else {
         /*
          * plain ol' cache hit
          */
+        debugs(88, 5, "plain old HIT");
 
 #if USE_DELAY_POOLS
         if (e->store_status != STORE_OK)
@@ -619,7 +631,7 @@ clientReplyContext::processMiss()
     char *url = http->uri;
     HttpRequest *r = http->request;
     ErrorState *err = NULL;
-    debugs(88, 4, "clientProcessMiss: '" << RequestMethodStr(r->method) << " " << url << "'");
+    debugs(88, 4, r->method << ' ' << url);
 
     /**
      * We might have a left-over StoreEntry from a failed cache hit
@@ -675,10 +687,6 @@ clientReplyContext::processMiss()
             return;
         }
 
-        /** Check for internal requests. Update Protocol info if so. */
-        if (http->flags.internal)
-            r->protocol = AnyP::PROTO_INTERNAL;
-
         assert(r->clientConnectionManager == http->getConn());
 
         /** Start forwarding to get the new object from network */
@@ -696,10 +704,9 @@ clientReplyContext::processMiss()
 void
 clientReplyContext::processOnlyIfCachedMiss()
 {
-    debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
-           RequestMethodStr(http->request->method) << " " << http->uri << "'");
-    http->al->http.code = Http::scGateway_Timeout;
-    ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGateway_Timeout, NULL,
+    debugs(88, 4, http->request->method << ' ' << http->uri);
+    http->al->http.code = Http::scGatewayTimeout;
+    ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGatewayTimeout, NULL,
                                        http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
@@ -823,7 +830,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
             if (StoreEntry *entry = storeGetPublic(url, m)) {
-                debugs(88, 5, "purging " << *entry << ' ' << RequestMethodStr(m) << ' ' << url);
+                debugs(88, 5, "purging " << *entry << ' ' << m << ' ' << url);
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
                 if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
@@ -1983,9 +1990,9 @@ clientReplyContext::ProcessReplyAccessResult(allow_t rv, void *voidMe)
 void
 clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 {
-    debugs(88, 2, "The reply for " << RequestMethodStr(http->request->method)
-           << " " << http->uri << " is " << accessAllowed << ", because it matched '"
-           << (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
+    debugs(88, 2, "The reply for " << http->request->method
+           << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
+           << (AclMatchedName ? AclMatchedName : "NO ACL's"));
 
     if (accessAllowed != ACCESS_ALLOWED) {
         ErrorState *err;

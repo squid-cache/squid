@@ -125,7 +125,7 @@ void Adaptation::Icap::Options::configure(const HttpReply *reply)
 void Adaptation::Icap::Options::cfgMethod(ICAP::Method m)
 {
     Must(m != ICAP::methodNone);
-    methods += m;
+    methods.push_back(m);
 }
 
 // TODO: HttpHeader should provide a general method for this type of conversion

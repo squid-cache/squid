@@ -11,7 +11,7 @@ class SBufEqual
 {
 public:
     explicit SBufEqual(const SBuf &reference, SBufCaseSensitive sensitivity = caseSensitive) :
-        reference_(reference), sensitivity_(sensitivity) {}
+            reference_(reference), sensitivity_(sensitivity) {}
     bool operator() (const SBuf & checking) { return checking.compare(reference_,sensitivity_) == 0; }
 private:
     SBuf reference_;
@@ -23,7 +23,7 @@ class SBufStartsWith
 {
 public:
     explicit SBufStartsWith(const SBuf &prefix, SBufCaseSensitive sensitivity = caseSensitive) :
-        prefix_(prefix), sensitivity_(sensitivity) {}
+            prefix_(prefix), sensitivity_(sensitivity) {}
     bool operator() (const SBuf & checking) { return checking.startsWith(prefix_,sensitivity_); }
 private:
     SBuf prefix_;
@@ -38,7 +38,7 @@ class SBufAddLength
 {
 public:
     explicit SBufAddLength(const SBuf &separator) :
-        separatorLen_(separator.length()) {}
+            separatorLen_(separator.length()) {}
     SBuf::size_type operator()(const SBuf::size_type sz, const SBuf & item) {
         return sz + item.length() + separatorLen_;
     }
@@ -68,7 +68,7 @@ SBufContainerJoin(const Container &items, const SBuf& separator)
     typename Container::const_iterator i(items.begin());
     rv.append(*i);
     ++i;
-    for (;i != items.end(); ++i)
+    for (; i != items.end(); ++i)
         rv.append(separator).append(*i);
     return rv;
 }

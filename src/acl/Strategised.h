@@ -63,7 +63,7 @@ public:
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     virtual int match (M const &);
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
     virtual bool empty () const;
     virtual bool valid () const;
     virtual ACL *clone()const;
@@ -161,7 +161,7 @@ ACLStrategised<MatchType>::match(MatchType const &toFind)
 }
 
 template <class MatchType>
-wordlist *
+SBufList
 ACLStrategised<MatchType>::dump() const
 {
     return data->dump();

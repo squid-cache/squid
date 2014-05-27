@@ -34,18 +34,15 @@
 #define SQUID_ACL_H
 
 #include "acl/forward.h"
-#include "base/Vector.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
 #include "MemPool.h"
+#include "SBufList.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
+#include <vector>
 
 class ConfigParser;
 
@@ -101,10 +98,10 @@ public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    static ACL *Factory (char const *);
+    static ACL *Factory(char const *);
     static void ParseAclLine(ConfigParser &parser, ACL ** head);
     static void Initialize();
-    static ACL* FindByName(const char *name);
+    static ACL *FindByName(const char *name);
 
     ACL();
     explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs) { memset(name, '\0', sizeof(name)); }
@@ -119,15 +116,15 @@ public:
     /// Updates the checklist state on match, async, and failure.
     bool matches(ACLChecklist *checklist) const;
 
-    virtual ACL *clone()const = 0;
+    virtual ACL *clone() const = 0;
 
     /// parses node represenation in squid.conf; dies on failures
     virtual void parse() = 0;
     virtual char const *typeString() const = 0;
     virtual bool isProxyAuth() const;
-    virtual wordlist *dump() const = 0;
-    virtual bool empty () const = 0;
-    virtual bool valid () const;
+    virtual SBufList dump() const = 0;
+    virtual bool empty() const = 0;
+    virtual bool valid() const;
 
     int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
@@ -138,7 +135,7 @@ public:
     char *cfgline;
     ACL *next; // XXX: remove or at least use refcounting
     ACLFlags flags; ///< The list of given ACL flags
-    bool registered; ///< added to Config.aclList and can be reused via by FindByName()
+    bool registered; ///< added to the global list of ACLs via aclRegister()
 
 public:
 
@@ -146,21 +143,21 @@ public:
     {
 
     public:
-        Prototype ();
-        Prototype (ACL const *, char const *);
+        Prototype();
+        Prototype(ACL const *, char const *);
         ~Prototype();
         static bool Registered(char const *);
-        static ACL *Factory (char const *);
+        static ACL *Factory(char const *);
 
     private:
-        ACL const*prototype;
+        ACL const *prototype;
         char const *typeString;
 
     private:
-        static Vector<Prototype const *> * Registry;
+        static std::vector<Prototype const *> * Registry;
         static void *Initialized;
-        typedef Vector<Prototype const*>::iterator iterator;
-        typedef Vector<Prototype const*>::const_iterator const_iterator;
+        typedef std::vector<Prototype const*>::iterator iterator;
+        typedef std::vector<Prototype const*>::const_iterator const_iterator;
         void registerMe();
     };
 

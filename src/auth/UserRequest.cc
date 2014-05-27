@@ -41,9 +41,9 @@
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "format/Format.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "format/Format.h"
 #include "MemBuf.h"
 
 /* Generic Functions */
@@ -65,8 +65,8 @@ Auth::UserRequest::start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTH
 {
     assert(handler);
     assert(data);
-    debugs(29, 9, HERE << "auth_user_request '" << this << "'");
-    module_start(request, al, handler, data);
+    debugs(29, 9, this);
+    startHelperLookup(request, al, handler, data);
 }
 
 bool
@@ -525,9 +525,12 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
             for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
                 Auth::Config *scheme = *i;
 
-                if (scheme->active())
-                    scheme->fixHeader(NULL, rep, type, request);
-                else
+                if (scheme->active()) {
+                    if (auth_user_request != NULL && auth_user_request->scheme()->type() == scheme->type())
+                        scheme->fixHeader(auth_user_request, rep, type, request);
+                    else
+                        scheme->fixHeader(NULL, rep, type, request);
+                } else
                     debugs(29, 4, HERE << "Configured scheme " << scheme->type() << " not Active");
             }
         }

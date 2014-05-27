@@ -41,10 +41,9 @@
 #define sys_nerr _sys_nerr
 
 #undef assert
-#include <assert.h>
-#include <stdio.h>
+#include <cassert>
+#include <cstring>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/timeb.h>
 #if HAVE_WIN32_PSAPI
 #include <psapi.h>

@@ -15,9 +15,7 @@
 #include "testStoreSupport.h"
 #include "testUfs.h"
 
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 
 #define TESTDIR "testUfs_Store"
 
@@ -53,16 +51,13 @@ testUfs::commonInit()
         return;
 
     Config.Store.avgObjectSize = 1024;
-
     Config.Store.objectsPerBucket = 20;
-
     Config.Store.maxObjectSize = 2048;
 
     Config.store_dir_select_algorithm = xstrdup("round-robin");
 
     Config.replPolicy = new RemovalPolicySettings;
-
-    Config.replPolicy->type = xstrdup ("lru");
+    Config.replPolicy->type = xstrdup("lru");
 
     /* garh garh */
     storeReplAdd("lru", createRemovalPolicy_lru);
@@ -240,7 +235,7 @@ testUfs::testUfsDefaultEngine()
     addSwapDir(aStore);
     commonInit();
     Config.replPolicy = new RemovalPolicySettings;
-    Config.replPolicy->type = xstrdup ("lru");
+    Config.replPolicy->type = xstrdup("lru");
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
     char *path=xstrdup(TESTDIR);

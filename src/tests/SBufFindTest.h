@@ -3,10 +3,8 @@
 
 #include "SBuf.h"
 
-#if HAVE_STRING
-#include <string>
-#endif
 #include <set>
+#include <string>
 
 /// Generates and executes a [configurable] large number of SBuf::*find()
 /// test cases using random strings. Reports detected failures.

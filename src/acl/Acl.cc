@@ -31,6 +31,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -39,6 +40,8 @@
 #include "globals.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
+
+#include <vector>
 
 const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
 
@@ -295,12 +298,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                A->cfgline);
     }
 
-    // prepend so that ACLs declared later (and possibly using earlier ACLs)
-    // are destroyed earlier (before the ACLs they use are destroyed)
+    // add to the global list for searching explicit ACLs by name
     assert(head && *head == Config.aclList);
-    A->registered = true;
     A->next = *head;
     *head = A;
+
+    // register for centralized cleanup
+    aclRegister(A);
 }
 
 bool
@@ -403,7 +407,7 @@ ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype
     registerMe ();
 }
 
-Vector<ACL::Prototype const *> * ACL::Prototype::Registry;
+std::vector<ACL::Prototype const *> * ACL::Prototype::Registry;
 void *ACL::Prototype::Initialized;
 
 bool
@@ -427,7 +431,7 @@ ACL::Prototype::registerMe ()
     if (!Registry || (Initialized != ((char *)Registry - 5))  ) {
         /* TODO: extract this */
         /* Not initialised */
-        Registry = new Vector <ACL::Prototype const *>;
+        Registry = new std::vector<ACL::Prototype const *>;
         Initialized = (char *)Registry - 5;
     }
 

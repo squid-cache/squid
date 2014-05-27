@@ -10,16 +10,16 @@
 static StatHist sbufDestructTimeStats;
 static StatHist memblobDestructTimeStats;
 
-namespace SBufDetailedStatsHistInitializer {
-    // run the post-instantiation initialization methods for StatHist objects
-    struct Initializer
-    {
-        Initializer() {
-            sbufDestructTimeStats.logInit(300,30.0,128000.0);
-            memblobDestructTimeStats.logInit(300,30.0,128000.0);
-        }
-    };
-    Initializer initializer;
+namespace SBufDetailedStatsHistInitializer
+{
+// run the post-instantiation initialization methods for StatHist objects
+struct Initializer {
+    Initializer() {
+        sbufDestructTimeStats.logInit(100,30.0,128000.0);
+        memblobDestructTimeStats.logInit(100,30.0,128000.0);
+    }
+};
+Initializer initializer;
 }
 
 void

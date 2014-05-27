@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"POT-Creation-Date: 2014-03-06 11:09+1300\n"
 "PO-Revision-Date: 2012-02-28 20:29+0200\n"
 "Last-Translator: Gergely <mail.gery@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -13,6 +13,14 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.1.6\n"
 "X-Launchpad-Export-Date: 2009-10-04 07:48+0000\n"
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:30
+msgid "%D"
+msgstr ""
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:29
+msgid "%E (TLS code: %x)"
+msgstr ""
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -46,40 +54,62 @@ msgstr "%f"
 msgid "%g"
 msgstr "%g"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:73
 msgid "%ssl_error_descr"
 msgstr "%ssl_error_descr"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:97
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:117
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:101
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:129
 msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
-#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:5
 msgid "%ssl_error_descr: %ssl_lib_error"
 msgstr "%ssl_error_descr: %ssl_lib_error"
 
-#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:17
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:21
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:29
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:33
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:45
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:49
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:61
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:65
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:85
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:89
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:93
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:101
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:105
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:109
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:113
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:121
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:129
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:133
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.detail:1
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:25
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:37
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:69
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:97
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:133
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.detail:137
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.detail:141
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.detail:145
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.detail:149
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.detail:153
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.detail:157
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.detail:161
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.detail:165
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.detail:169
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.detail:173
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.detail:177
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.detail:181
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.detail:185
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.detail:189
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.detail:193
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.detail:197
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.detail:201
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.detail:205
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.detail:209
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.detail:213
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.detail:217
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:221
 msgid "%ssl_error_descr: %ssl_subject"
 msgstr "%ssl_error_descr: %ssl_subject"
 
@@ -183,7 +213,7 @@ msgstr ""
 "Hálózati hiba történt az adatok küldése közben, kérem, ismételje meg a "
 "műveletet."
 
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:221
 msgid "Application verification failure"
 msgstr "A tanúsítvány kibocsátásának ellenőrzése nem sikerült."
 
@@ -193,27 +223,31 @@ msgid ""
 "has failed."
 msgstr "A HTTP-kérésben szereplő előfeltételek nem teljesíthetők."
 
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:129
 msgid "Authority and issuer serial number mismatch"
 msgstr ""
 "A kibocsátói tanúsítvány sorozatszáma nem egyezik a kiadott tanúsítványban "
 "megadott sorozatszámmal."
 
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:125
 msgid "Authority and subject key identifier mismatch"
 msgstr ""
 "A kibocsátói tanúsítvány kulcsazonosítója nem egyezik a kiadott "
 "tanúsítványban szereplő kulcsazonosítóval."
 
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:53
 msgid "CRL has expired"
 msgstr "Lejárt CRL"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:49
 msgid "CRL is not yet valid"
 msgstr "A CRL érvényességi ideje még nem kezdődött el"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.descr:217
+msgid "CRL path validation error"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:37
 msgid "CRL signature failure"
 msgstr "Hibás aláírás a CRL-ben"
 
@@ -231,35 +265,39 @@ msgstr "Adminisztrátori hozzáférés megtagadva"
 msgid "Cannot Resolve URN"
 msgstr "Az URN nem oldható fel"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
+msgid "Cert validation infinite loop detected"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:93
 msgid "Certificate chain too long"
 msgstr "A tanúsítványlánc túl hosszú"
 
-#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:9
 msgid "Certificate does not match domainname"
 msgstr "A tanúsítvány nem érvényes a kérésben szereplő a domainnévre"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:45
 msgid "Certificate has expired"
 msgstr "A tanúsítvány lejárt"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:41
 msgid "Certificate is not yet valid"
 msgstr "A tanúsítvány érvényességi ideje még nem kezdődött el"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:113
 msgid "Certificate not trusted"
 msgstr "A tanúsítvány nem megbízható"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:117
 msgid "Certificate rejected"
 msgstr "A tanúsítvány vissza lett utasítva"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:97
 msgid "Certificate revoked"
 msgstr "A tanúsítvány visszavonásra került"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:33
 msgid "Certificate signature failure"
 msgstr "A tanúsítvány aláírása hibás"
 
@@ -274,6 +312,10 @@ msgstr "Nem sikerült kapcsolódni a(z) %I szerverhez"
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "Hiányzó „Content-Length” fejléc a POST vagy PUT kérésben"
+
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
+msgid "Different CRL scope"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.body.div.h4:19
 msgid "Directory Content:"
@@ -427,19 +469,19 @@ msgstr "Ha Internet Explorert használ: <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "Ha Operát használ: <ul>"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's lastUpdate field"
 msgstr "A CRL-ben szereplő lastUpdate mező formátuma hibás"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:69
 msgid "Format error in CRL's nextUpdate field"
 msgstr "A CRL-ben szereplő nextUpdate mező formátuma hibás"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:61
 msgid "Format error in certificate's notAfter field"
 msgstr "A tanúsítványban szereplő notAfter mező hibás formátumú"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:57
 msgid "Format error in certificate's notBefore field"
 msgstr "A tanúsítványban szereplő notBefore mező hibás formátumú"
 
@@ -483,7 +525,7 @@ msgstr "Átjáróhiba"
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:36
 #: templates/ERR_READ_ERROR+html.body.div.p:36
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:36
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:42
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:30
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:36
 #: templates/ERR_TOO_BIG+html.body.div.p:36
@@ -502,7 +544,7 @@ msgstr ""
 "A kérésben szereplő <q>Expect:</q> fejléc nem támogatott a HTTP/1.0 "
 "protokollban."
 
-#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr "Sikertelen SSL-kézfogás"
 
@@ -513,7 +555,8 @@ msgstr "Ne várjon túl sokat a %T-n lévő URN-ektől! :)"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
 #: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
-msgstr "Ezeket a beállításokat az alábbi menüpontokon keresztül találhatja meg:"
+msgstr ""
+"Ezeket a beállításokat az alábbi menüpontokon keresztül találhatja meg:"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
@@ -552,7 +595,7 @@ msgstr "Érvénytelen double-escape az URL-Path-ban"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "A HTTP proxy mezőben adja meg a proxy nevét (%h) és portszámát (%b)."
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:101
 msgid "Invalid CA certificate"
 msgstr "Érvénytelen CA-tanúsítvány"
 
@@ -560,7 +603,7 @@ msgstr "Érvénytelen CA-tanúsítvány"
 msgid "Invalid URL"
 msgstr "Érvénytelen URL"
 
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:133
 msgid "Key usage does not include certificate signing"
 msgstr ""
 "A tanúsítványban megadott kulcshasználati jogosultság nem engedi meg "
@@ -597,11 +640,11 @@ msgstr "Hiányzó WAIS továbbító"
 msgid "Operation successful"
 msgstr "Sikeres művelet"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:73
 msgid "Out of memory"
 msgstr "Nincs elég memória a tanúsítvány ellenőrzéséhez"
 
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:105
 msgid "Path length constraint exceeded"
 msgstr "Túl hosszú elérési útvonal"
 
@@ -612,23 +655,26 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Kérem, lépjen kapcsolatba a <a href=\"mailto:%w%W\">szerver "
-"üzemeltetőjével</a>, ha nem tud bejelentkezni. Ha Ön a szerver "
-"adminisztrátora, akkor olvassa el a Squid dokumentációját a "
-"gyorsítótár-kezelő interfész használatáról. A hiba pontos okáról a Squid "
-"logfájljából tájékozódhat."
+"Kérem, lépjen kapcsolatba a <a href=\"mailto:%w%W\">szerver üzemeltetőjével</"
+"a>, ha nem tud bejelentkezni. Ha Ön a szerver adminisztrátora, akkor olvassa "
+"el a Squid dokumentációját a gyorsítótár-kezelő interfész használatáról. A "
+"hiba pontos okáról a Squid logfájljából tájékozódhat."
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself."
 msgstr ""
-"Kérem, lépjen kapcsolatba a <a href=\"mailto:%w%W\">szerver "
-"üzemeltetőjével</a>, ha nem tud bejelentkezni."
+"Kérem, lépjen kapcsolatba a <a href=\"mailto:%w%W\">szerver üzemeltetőjével</"
+"a>, ha nem tud bejelentkezni."
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
 msgstr "Egy előfeltétel nem teljesült"
+
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.descr:189
+msgid "RFC 3779 resource not subset of parent's resources"
+msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
@@ -642,21 +688,22 @@ msgstr "Időtúllépés történt az adatok fogadása közben"
 msgid "Request is too large."
 msgstr "A kérés mérete túllépte a szerveren beállított limitet"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:85
 msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
-msgstr "SSL-tanúsítványhiba: a tanúsítvány kibocsátója ismeretlen: %ssl_ca_name"
+msgstr ""
+"SSL-tanúsítványhiba: a tanúsítvány kibocsátója ismeretlen: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:41
 msgid "SSL Certficate is not valid before: %ssl_notbefore"
 msgstr ""
 "Az SSL-tanúsítvány nem érvényes a következő időpont előtt: %ssl_notbefore"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:45
 msgid "SSL Certificate expired on: %ssl_notafter"
 msgstr "Az SSL-tanúsítvány lejárt. Az érvényességi idő vége: %ssl_notafter"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:61
 msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
@@ -664,7 +711,7 @@ msgstr ""
 "Az SSL-tanúsítványban megadott lejárati dátum („not after” mező) "
 "érvénytelen: %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:57
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr ""
@@ -685,19 +732,19 @@ msgstr "Válassza ki az „Automatikus felismerés” opciót"
 msgid "Select Use Automatic proxy configuration"
 msgstr "Válassza ki az \"Automatikus proxybeállítás használata\" opciót"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:77
 msgid "Self signed certificate"
 msgstr "Self-signed tanúsítvány"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:81
 msgid "Self signed certificate in certificate chain"
 msgstr "A tanúsítványlánc self-signed tanúsítványt tartalmaz"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:81
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
 msgstr "Self-signed SSL-tanúsítvány a láncban: %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:77
 msgid "Self-signed SSL Certificate: %ssl_subject"
 msgstr "Self-signed tanúsítvány: %ssl_subject"
 
@@ -767,7 +814,7 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "A proxyszerver által küldött FTP-parancs:"
 
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:121
 msgid "Subject issuer mismatch"
 msgstr ""
 "A kibocsátó tanúsítványában szereplő név nem egyezik a kiadott "
@@ -784,8 +831,8 @@ msgstr "Az ESI feldolgozó által visszaadott üzenet:"
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Az FTP-szerver túlterheltség miatt nem tudta kiszolgálni a(z) <a href=\"%U\">%"
-"U</a> kérést."
+"Az FTP-szerver túlterheltség miatt nem tudta kiszolgálni a(z) <a href=\"%U\">"
+"%U</a> kérést."
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:26
 msgid ""
@@ -864,7 +911,8 @@ msgstr ""
 
 #: templates/ERR_TOO_BIG+html.body.div.blockquote.p:23
 msgid "The request or reply is too large."
-msgstr "A kérés vagy a válasz mérete meghaladja a szerveren beállított limitet."
+msgstr ""
+"A kérés vagy a válasz mérete meghaladja a szerveren beállított limitet."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
@@ -908,11 +956,15 @@ msgstr "Az oldal nem tölthető be"
 msgid "The server responded with:"
 msgstr "A távoli szerver válasza:"
 
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:27
+#, fuzzy
+msgid "The system returned:"
+msgstr "A rendszer által visszaadott hibaüzenet: <i>%E</i>"
+
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:26
 #: templates/ERR_READ_ERROR+html.body.div.p:26
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:26
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:26
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
@@ -1031,7 +1083,7 @@ msgstr ""
 "RFC 1738 szabványnak. Ha valóban ez a hiba forrása, akkor próbálja meg "
 "elérni a fájlt itt: <a href=\"%B\">%B</a>."
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:34
 msgid ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
 "security settings for handling your request. It is possible that the remote "
@@ -1090,19 +1142,19 @@ msgstr ""
 msgid "URI Host Conflict"
 msgstr "Ütköző URI-hosztok"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:29
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
 msgstr "A kibocsátó publikus kulcsa nem dekódolható: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:29
 msgid "Unable to decode issuer public key"
 msgstr "A kibocsátó publikus kulcsa nem dekódolható"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:25
 msgid "Unable to decrypt CRL's signature"
 msgstr "A CRL aláírása nem dekódolható"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:21
 msgid "Unable to decrypt certificate's signature"
 msgstr "A tanúsítvány aláírása nem dekódolható"
 
@@ -1114,19 +1166,19 @@ msgstr "A(z) <q>%H</q> DNS-névhez tartozó IP-cím nem oldható fel"
 msgid "Unable to forward this request at this time."
 msgstr "A kérés jelenleg nem továbbítható"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:17
 msgid "Unable to get certificate CRL"
 msgstr "A tanúsítványhoz tartozó CRL nem érhető el"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:13
 msgid "Unable to get issuer certificate"
 msgstr "A kibocsátó tanúsítványa nem érhető el"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:85
 msgid "Unable to get local issuer certificate"
 msgstr "A helyi kibocsátó tanúsítványa nem érhető el"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:89
 msgid "Unable to verify the first certificate"
 msgstr "A tanúsítvány aláírása nem ellenőrizhető"
 
@@ -1139,8 +1191,13 @@ msgstr "Nem támogatott HTTP-verzió"
 msgid "Unsupported Request Method and Protocol"
 msgstr "Nem támogatott kéréstípus vagy protokoll"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:109
 msgid "Unsupported certificate purpose"
+msgstr "A tanúsítvány nem használható a kért művelet elvégzéséhez"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.descr:185
+#, fuzzy
+msgid "Unsupported extension feature"
 msgstr "A tanúsítvány nem használható a kért művelet elvégzéséhez"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
@@ -1170,8 +1227,8 @@ msgid ""
 msgstr ""
 "A böngésző által küldött kérés tartalmazza az <q>only-if-cached</q> "
 "direktívát, de a kért tartalom nem szerepel a gyorsítótárban. A tartalom "
-"ismételt letöltésére lenne szükség, ezt azonban tiltja az <q>only-if-"
-"cached</q> direktíva."
+"ismételt letöltésére lenne szükség, ezt azonban tiltja az <q>only-if-cached</"
+"q> direktíva."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
 #: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:21
@@ -1204,7 +1261,7 @@ msgstr "A hálózat használatához módosítania kell a böngésző beállítá
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:28
 #: templates/ERR_READ_ERROR+html.body.div.p:30
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:30
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:24
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:30
 #: templates/ERR_TOO_BIG+html.body.div.p:30
@@ -1227,11 +1284,89 @@ msgstr ""
 
 #: templates/ERR_ESI+html.body.div.p:33
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr "A webszerver üzemeltetőjének e-mail címe: <a href=\"mailto:%w\">%w</a>."
+msgstr ""
+"A webszerver üzemeltetőjének e-mail címe: <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:23
 msgid "Zero Sized Reply"
 msgstr "Üres válasz"
+
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.descr:197
+msgid "excluded subtree violation"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:153
+#, fuzzy
+msgid "invalid non-CA certificate (has CA markings)"
+msgstr "Érvénytelen CA-tanúsítvány"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.descr:169
+msgid "invalid or inconsistent certificate extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.descr:173
+msgid "invalid or inconsistent certificate policy extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.descr:145
+#, fuzzy
+msgid "key usage does not include CRL signing"
+msgstr ""
+"A tanúsítványban megadott kulcshasználati jogosultság nem engedi meg "
+"tanúsítványok aláírását."
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.descr:161
+#, fuzzy
+msgid "key usage does not include digital signature"
+msgstr ""
+"A tanúsítványban megadott kulcshasználati jogosultság nem engedi meg "
+"tanúsítványok aláírását."
+
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.descr:201
+msgid "name constraints minimum and maximum not supported"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.descr:177
+msgid "no explicit policy"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.descr:193
+msgid "permitted subtree violation"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.descr:165
+msgid "proxy certificates not allowed, please set the appropriate flag"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.descr:157
+#, fuzzy
+msgid "proxy path length constraint exceeded"
+msgstr "Túl hosszú elérési útvonal"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.descr:137
+#, fuzzy
+msgid "unable to get CRL issuer certificate"
+msgstr "A kibocsátó tanúsítványa nem érhető el"
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.descr:149
+msgid "unhandled critical CRL extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.descr:141
+msgid "unhandled critical extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.descr:205
+msgid "unsupported name constraint type"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.descr:209
+msgid "unsupported or invalid name constraint syntax"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:213
+msgid "unsupported or invalid name syntax"
+msgstr ""
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "HIBA: A kért URN nem tölthető le"
@@ -1242,17 +1377,17 @@ msgstr "Üres válasz"
 #~ msgid "Parent Directory"
 #~ msgstr "Szülőkönyvtár"
 
-msgid ""
-"This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to "
-"origin servers, and all configured parent caches are currently "
-"unreachable."
-msgstr ""
-"A kérés nem továbbítható a forrásszerver vagy valamelyik parent cache felé. "
-"A hiba legvalószínűbb oka, hogy a rendszergazda nem engedélyezte a közvetlen "
-"kapcsolatokat a távoli szerverek felé, és jelenleg minden parent cache "
-"elérhetetlen."
+#~ msgid ""
+#~ "This request could not be forwarded to the origin server or to any parent "
+#~ "caches. The most likely cause for this error is that the cache "
+#~ "administrator does not allow this cache to make direct connections to "
+#~ "origin servers, and all configured parent caches are currently "
+#~ "unreachable."
+#~ msgstr ""
+#~ "A kérés nem továbbítható a forrásszerver vagy valamelyik parent cache "
+#~ "felé. A hiba legvalószínűbb oka, hogy a rendszergazda nem engedélyezte a "
+#~ "közvetlen kapcsolatokat a távoli szerverek felé, és jelenleg minden "
+#~ "parent cache elérhetetlen."
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "Az alábbi URL-re történő PUT műveletnél: <a href=\"%U\">%U</a>"

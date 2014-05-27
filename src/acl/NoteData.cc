@@ -29,7 +29,7 @@ ACLNoteData::matchNotes(NotePairs *note)
     if (values->empty())
         return (note->findFirst(name.termedBuf()) != NULL);
 
-    for (Vector<NotePairs::Entry *>::iterator i = note->entries.begin(); i!= note->entries.end(); ++i) {
+    for (std::vector<NotePairs::Entry *>::iterator i = note->entries.begin(); i!= note->entries.end(); ++i) {
         if ((*i)->name.cmp(name.termedBuf()) == 0) {
             if (values->match((*i)->value.termedBuf()))
                 return true;
@@ -51,15 +51,15 @@ ACLNoteData::match(HttpRequest *request)
     return false;
 }
 
-wordlist *
-ACLNoteData::dump()
+SBufList
+ACLNoteData::dump() const
 {
-    wordlist *W = NULL;
-    wordlistAdd(&W, name.termedBuf());
-    wordlist * dumpR = values->dump();
-    wordlistAddWl(&W, dumpR);
-    wordlistDestroy(&dumpR);
-    return W;
+    SBufList sl;
+    sl.push_back(SBuf(name));
+    // temp is needed until c++11 move constructor
+    SBufList temp = values->dump();
+    sl.splice(sl.end(), temp);
+    return sl;
 }
 
 void

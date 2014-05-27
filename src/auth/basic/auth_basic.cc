@@ -197,25 +197,6 @@ authenticateBasicStats(StoreEntry * sentry)
     helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
 }
 
-static Auth::User::Pointer
-authBasicAuthUserFindUsername(const char *userkey)
-{
-    AuthUserHashPointer *usernamehash;
-    debugs(29, 9, "Looking for user '" << userkey << "'");
-
-    if (userkey && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, userkey)))) {
-        while (usernamehash) {
-            if ((usernamehash->user()->auth_type == Auth::AUTH_BASIC) &&
-                    !strcmp(userkey, (char const *)usernamehash->key))
-                return usernamehash->user();
-
-            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
-        }
-    }
-
-    return NULL;
-}
-
 char *
 Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
 {
@@ -289,7 +270,6 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         Tolower(cleartext);
     local_basic->username(cleartext);
 
-
     if (local_basic->passwd == NULL) {
         debugs(29, 4, HERE << "no password in proxy authorization header '" << proxy_auth << "'");
         auth_user_request->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
@@ -312,7 +292,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     /* now lookup and see if we have a matching auth_user structure in memory. */
     Auth::User::Pointer auth_user;
 
-    if ((auth_user = authBasicAuthUserFindUsername(lb->userKey())) == NULL) {
+    if ((auth_user = findUserInCache(lb->userKey(), Auth::AUTH_BASIC)) == NULL) {
         /* the user doesn't exist in the username cache yet */
         /* save the credentials */
         debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
