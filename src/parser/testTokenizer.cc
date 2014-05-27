@@ -192,4 +192,15 @@ testTokenizer::testTokenizerInt64()
         Parser::Tokenizer t(SBuf("1029397752385698678762234"));
         CPPUNIT_ASSERT(!t.int64(rv));
     }
+
+    // buffered sub-string parsing
+    {
+        int64_t rv;
+        SBuf base("1029397752385698678762234");
+        const int64_t benchmark = 22;
+        Parser::Tokenizer t(base.substr(base.length()-4,2));
+        CPPUNIT_ASSERT_EQUAL(SBuf("22"),t.buf());
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
 }
