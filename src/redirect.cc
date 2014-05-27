@@ -37,7 +37,7 @@
 #include "client_side_request.h"
 #include "comm/Connection.h"
 #include "fde.h"
-#include "fqdncache.h"
+#include "format/Format.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
@@ -49,7 +49,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -65,9 +65,6 @@ public:
     void *data;
     SBuf orig_url;
 
-    Ip::Address client_addr;
-    const char *client_ident;
-    const char *method_s;
     HLPCB *handler;
 
 private:
@@ -82,15 +79,14 @@ static OBJH redirectStats;
 static OBJH storeIdStats;
 static int redirectorBypassed = 0;
 static int storeIdBypassed = 0;
+static Format::Format *redirectorExtrasFmt = NULL;
+static Format::Format *storeIdExtrasFmt = NULL;
 
 CBDATA_CLASS_INIT(RedirectStateData);
 
 RedirectStateData::RedirectStateData(const char *url) :
         data(NULL),
         orig_url(url),
-        client_addr(),
-        client_ident(NULL),
-        method_s(NULL),
         handler(NULL)
 {
 }
@@ -135,8 +131,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
                  * At this point altering the helper buffer in that way is not harmful, but annoying.
                  * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
                  */
-                const char * result = reply.other().content();
-                const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
+                char * result = reply.modifiableOther().content();
 
                 HelperReply newReply;
                 // BACKWARD COMPATIBILITY 2012-06-15:
@@ -146,8 +141,22 @@ redirectHandleReply(void *data, const HelperReply &reply)
                 newReply.result = HelperReply::Okay;
                 newReply.notes.append(&reply.notes);
 
+                // check and parse for obsoleted Squid-2 urlgroup feature
+                if (*result == '!') {
+                    static int urlgroupWarning = 0;
+                    if (!urlgroupWarning++)
+                        debugs(85, DBG_IMPORTANT, "UPGRADE WARNING: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
+                    if (char *t = strchr(result+1, '!')) {
+                        *t = '\0';
+                        newReply.notes.add("urlgroup", result+1);
+                        result = t + 1;
+                    }
+                }
+
+                const Http::StatusCode status = static_cast<Http::StatusCode>(atoi(result));
+
                 if (status == Http::scMovedPermanently
-                        || status == Http::scMovedTemporarily
+                        || status == Http::scFound
                         || status == Http::scSeeOther
                         || status == Http::scPermanentRedirect
                         || status == Http::scTemporaryRedirect) {
@@ -166,7 +175,8 @@ redirectHandleReply(void *data, const HelperReply &reply)
                     // status code is not a redirect code (or does not exist)
                     // treat as a re-write URL request
                     // TODO: validate the URL produced here is RFC 2616 compliant URI
-                    newReply.notes.add("rewrite-url", reply.other().content());
+                    if (*result)
+                        newReply.notes.add("rewrite-url", result);
                 }
 
                 void *cbdata;
@@ -233,77 +243,35 @@ storeIdStats(StoreEntry * sentry)
 }
 
 static void
-constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data)
+constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientHttpRequest * http, HLPCB *handler, void *data, Format::Format *requestExtrasFmt)
 {
-    ConnStateData * conn = http->getConn();
-    const char *fqdn;
     char buf[MAX_REDIRECTOR_REQUEST_STRLEN];
     int sz;
     Http::StatusCode status;
-    char claddr[MAX_IPSTRLEN];
-    char myaddr[MAX_IPSTRLEN];
 
     /** TODO: create a standalone method to initialize
      * the RedirectStateData for all the helpers.
      */
     RedirectStateData *r = new RedirectStateData(http->uri);
-    if (conn != NULL)
-        r->client_addr = conn->log_addr;
-    else
-        r->client_addr.setNoAddr();
-    r->client_ident = NULL;
-#if USE_AUTH
-    if (http->request->auth_user_request != NULL) {
-        r->client_ident = http->request->auth_user_request->username();
-        debugs(61, 5, HERE << "auth-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-#endif
-
-    if (!r->client_ident && http->request->extacl_user.size() > 0) {
-        r->client_ident = http->request->extacl_user.termedBuf();
-        debugs(61, 5, HERE << "acl-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-
-    if (!r->client_ident && conn != NULL && conn->clientConnection != NULL && conn->clientConnection->rfc931[0]) {
-        r->client_ident = conn->clientConnection->rfc931;
-        debugs(61, 5, HERE << "ident-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-
-#if USE_SSL
-
-    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-        r->client_ident = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
-        debugs(61, 5, HERE << "ssl-user=" << (r->client_ident?r->client_ident:"NULL"));
-    }
-#endif
-
-    if (!r->client_ident)
-        r->client_ident = dash_str;
-
-    r->method_s = RequestMethodStr(http->request->method);
-
     r->handler = handler;
-
     r->data = cbdataReference(data);
 
-    if ((fqdn = fqdncache_gethostbyaddr(r->client_addr, 0)) == NULL)
-        fqdn = dash_str;
+    static MemBuf requestExtras;
+    requestExtras.reset();
+    if (requestExtrasFmt)
+        requestExtrasFmt->assemble(requestExtras, http->al, 0);
 
-    sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s %s/%s %s %s myip=%s myport=%d\n",
+    sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s%s%s\n",
                   r->orig_url.c_str(),
-                  r->client_addr.toStr(claddr,MAX_IPSTRLEN),
-                  fqdn,
-                  r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
-                  r->method_s,
-                  http->request->my_addr.toStr(myaddr,MAX_IPSTRLEN),
-                  http->request->my_addr.port());
+                  requestExtras.hasContent() ? " " : "",
+                  requestExtras.hasContent() ? requestExtras.content() : "");
 
     if ((sz<=0) || (sz>=MAX_REDIRECTOR_REQUEST_STRLEN)) {
         if (sz<=0) {
             status = Http::scInternalServerError;
             debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to " << name << ". Request ABORTED.");
         } else {
-            status = Http::scRequestUriTooLarge;
+            status = Http::scUriTooLong;
             debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to " << name << " exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
         }
 
@@ -353,7 +321,7 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         return;
     }
 
-    constructHelperQuery("redirector", redirectors, redirectHandleReply, http, handler, data);
+    constructHelperQuery("redirector", redirectors, redirectHandleReply, http, handler, data, redirectorExtrasFmt);
 }
 
 /**
@@ -379,7 +347,7 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         return;
     }
 
-    constructHelperQuery("storeId helper", storeIds, storeIdHandleReply, http, handler, data);
+    constructHelperQuery("storeId helper", storeIds, storeIdHandleReply, http, handler, data, storeIdExtrasFmt);
 }
 
 void
@@ -420,6 +388,16 @@ redirectInit(void)
         helperOpenServers(storeIds);
     }
 
+    if (Config.redirector_extras) {
+        redirectorExtrasFmt = new ::Format::Format("url_rewrite_extras");
+        (void)redirectorExtrasFmt->parse(Config.redirector_extras);
+    }
+
+    if (Config.storeId_extras) {
+        storeIdExtrasFmt = new ::Format::Format("store_id_extras");
+        (void)storeIdExtrasFmt->parse(Config.storeId_extras);
+    }
+
     init = true;
 }
 
@@ -448,4 +426,9 @@ redirectShutdown(void)
     delete storeIds;
     storeIds = NULL;
 
+    delete redirectorExtrasFmt;
+    redirectorExtrasFmt = NULL;
+
+    delete storeIdExtrasFmt;
+    storeIdExtrasFmt = NULL;
 }

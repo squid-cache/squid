@@ -7,10 +7,12 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
+#include "globals.h"
 #include "ipc/Port.h"
 
-const char Ipc::coordinatorAddr[] = DEFAULT_STATEDIR "/coordinator.ipc";
-const char Ipc::strandAddrPfx[] = DEFAULT_STATEDIR "/kid";
+static const char channelPathPfx[] = DEFAULT_STATEDIR "/";
+static const char coordinatorAddrLabel[] = "-coordinator";
+const char Ipc::strandAddrLabel[] =  "-kid";
 
 Ipc::Port::Port(const String& aListenAddr):
         UdsOp(aListenAddr)
@@ -39,14 +41,29 @@ bool Ipc::Port::doneAll() const
     return false; // listen forever
 }
 
-String Ipc::Port::MakeAddr(const char* pathAddr, int id)
+String Ipc::Port::MakeAddr(const char* processLabel, int id)
 {
     assert(id >= 0);
-    String addr = pathAddr;
+    String addr = channelPathPfx;
+    addr.append(service_name);
+    addr.append(processLabel);
     addr.append('-');
     addr.append(xitoa(id));
     addr.append(".ipc");
     return addr;
+}
+
+String
+Ipc::Port::CoordinatorAddr()
+{
+    static String coordinatorAddr;
+    if (!coordinatorAddr.size()) {
+        coordinatorAddr= channelPathPfx;
+        coordinatorAddr.append(service_name);
+        coordinatorAddr.append(coordinatorAddrLabel);
+        coordinatorAddr.append(".ipc");
+    }
+    return coordinatorAddr;
 }
 
 void Ipc::Port::noteRead(const CommIoCbParams& params)

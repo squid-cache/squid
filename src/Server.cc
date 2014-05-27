@@ -517,7 +517,7 @@ ServerStateData::maybePurgeOthers()
 
     // XXX: should we use originalRequest() here?
     const char *reqUrl = urlCanonical(request);
-    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
+    debugs(88, 5, "maybe purging due to " << request->method << ' ' << reqUrl);
     purgeEntriesByUrl(request, reqUrl);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);

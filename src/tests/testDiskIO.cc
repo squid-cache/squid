@@ -1,6 +1,6 @@
 #define SQUID_UNIT_TEST 1
-
 #include "squid.h"
+
 #include "DiskIO/DiskIOModule.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
@@ -12,9 +12,7 @@
 #include "testDiskIO.h"
 #include "testStoreSupport.h"
 
-#if HAVE_STDEXCEPT
 #include <stdexcept>
-#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testDiskIO );
 

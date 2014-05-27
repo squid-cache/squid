@@ -20,40 +20,22 @@
 #include "ntlmauth/support_bits.cci"
 #include "rfcnb/rfcnb.h"
 #include "smblib/smblib.h"
-//#include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cctype>
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
 #endif
 
 /************* CONFIGURATION ***************/

@@ -32,9 +32,7 @@
 
 #include "squid.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 int
 isPowTen(int count)

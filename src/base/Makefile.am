@@ -23,9 +23,7 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Subscription.h \
 	TextException.cc \
-	TextException.h \
-	Vector.cc \
-	Vector.h
+	TextException.h
 
 EXTRA_PROGRAMS = \
 	testCharacterSet

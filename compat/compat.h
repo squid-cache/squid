@@ -56,6 +56,7 @@
 /*****************************************************/
 
 #include "compat/os/aix.h"
+#include "compat/os/android.h"
 #include "compat/os/dragonfly.h"
 #include "compat/os/freebsd.h"
 #include "compat/os/hpux.h"
@@ -102,9 +103,6 @@
  * may be used instead with explicit configuration.
  */
 #include "compat/GnuRegex.h"
-
-/* some functions are unsafe to be used in Squid. */
-#include "compat/unsafe.h"
 
 /* cppunit is not quite C++0x compatible yet */
 #include "compat/cppunit.h"

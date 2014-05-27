@@ -173,7 +173,7 @@ WIN32_SOURCE =
 WINSVC_SOURCE =
 endif
 
-if USE_IPC_WIN32
+if ENABLE_WIN32_IPC
 IPC_SOURCE = SquidIpc.h ipc_win32.cc
 else
 IPC_SOURCE = SquidIpc.h ipc.cc
@@ -182,13 +182,13 @@ endif
 AIO_WIN32_ALL_SOURCES = \
 	DiskIO/AIO/aio_win32.cc \
 	DiskIO/AIO/aio_win32.h
-if USE_AIO_WIN32
+if ENABLE_WIN32_AIO
 AIO_WIN32_SOURCES = $(AIO_WIN32_ALL_SOURCES)
 else
 AIO_WIN32_SOURCES =
 endif
 
-if USE_AIOPS_WIN32
+if ENABLE_WIN32_AIOPS
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
 	DiskIO/DiskThreads/CommIO.cc \
 	DiskIO/DiskThreads/CommIO.h
@@ -472,6 +472,8 @@ squid_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
@@ -555,8 +557,6 @@ squid_SOURCES = \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URL.h \
-	URLScheme.cc \
-	URLScheme.h \
 	urn.h \
 	urn.cc \
 	wccp.h \
@@ -627,6 +627,7 @@ squid_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
@@ -640,11 +641,11 @@ squid_LDADD = \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
 	$(DISK_OS_LIBS) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(SNMP_LIBS) \
 	parser/libsquid-parser.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -678,7 +679,7 @@ squid_DEPENDENCIES = \
 	ipc/libipc.la \
 	mgr/libmgr.la
 
-if USE_LOADABLE_MODULES
+if ENABLE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
 squid_LDADD += -L$(top_builddir) $(LIBLTDL)
 squid_LDFLAGS = -export-dynamic -dlopen force
@@ -763,6 +764,7 @@ ufsdump_LDADD = \
 	mgr/libmgr.la \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
+	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
@@ -1080,8 +1082,7 @@ check_PROGRAMS+=\
 	tests/testSBuf \
 	tests/testSBufList \
 	tests/testConfigParser \
-	tests/testStatHist \
-	tests/testVector
+	tests/testStatHist
 
 if HAVE_FS_ROCK
 check_PROGRAMS += tests/testRock
@@ -1194,7 +1195,6 @@ tests_testHttpReply_SOURCES=\
 	tests/testMain.cc \
 	tests/stub_time.cc \
 	url.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
@@ -1214,6 +1214,7 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
+	$(NETTLELIB) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
@@ -1328,8 +1329,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_time.cc \
 	url.cc \
 	URL.h \
-	URLScheme.cc \
-	URLScheme.h \
 	Mem.h \
 	tests/stub_mem.cc \
 	MemBuf.cc \
@@ -1355,6 +1354,7 @@ tests_testACLMaxUserIP_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(DISK_OS_LIBS) \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -1521,6 +1521,8 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	redirect.h \
 	tests/stub_redirect.cc \
 	refresh.h \
@@ -1575,7 +1577,6 @@ tests_testCacheManager_SOURCES = \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -1618,6 +1619,7 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -1747,6 +1749,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_stat.cc \
@@ -1763,7 +1766,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_time.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc \
@@ -1794,12 +1796,13 @@ tests_testDiskIO_LDADD = \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	mgr/libmgr.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -1902,6 +1905,8 @@ tests_testEvent_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2008,7 +2013,6 @@ tests_testEvent_SOURCES = \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2048,6 +2052,7 @@ tests_testEvent_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -2150,6 +2155,8 @@ tests_testEventLoop_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2256,7 +2263,6 @@ tests_testEventLoop_SOURCES = \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2296,6 +2302,7 @@ tests_testEventLoop_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -2394,6 +2401,8 @@ tests_test_http_range_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -2497,7 +2506,6 @@ tests_test_http_range_SOURCES = \
 	tests/stub_tunnel.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2537,6 +2545,7 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -2734,6 +2743,8 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.h \
 	peer_userhash.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	redirect.h \
 	tests/stub_libauth_acls.cc \
 	tests/stub_redirect.cc \
@@ -2787,7 +2798,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2808,6 +2818,7 @@ tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
 	mgr/libmgr.la \
@@ -2821,11 +2832,11 @@ tests_testHttpRequest_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(DISK_OS_LIBS) \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -2974,7 +2985,6 @@ tests_testStore_SOURCES= \
 	tests/TestSwapDir.h \
 	tests/stub_time.cc \
 	url.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc
 
@@ -2995,12 +3005,13 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	anyp/libanyp.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -3084,6 +3095,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_UdsOp.cc \
@@ -3203,7 +3215,6 @@ tests_testUfs_SOURCES = \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
 	time.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc \
 	$(DISKIO_SOURCE)
@@ -3231,8 +3242,8 @@ tests_testUfs_LDADD = \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
-	ipc/libipc.la \
 	$(SSL_LIBS) \
+	ipc/libipc.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
 	base/libbase.la \
@@ -3240,6 +3251,7 @@ tests_testUfs_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -3277,7 +3289,7 @@ tests_testRock_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fatal.h \
-	tests/stub_fatal.cc \
+	fatal.cc \
 	fd.h \
 	fd.cc \
 	fde.h \
@@ -3376,6 +3388,7 @@ tests_testRock_SOURCES = \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_Port.cc \
 	tests/stub_pconn.cc \
 	tests/stub_store_client.cc \
@@ -3386,7 +3399,6 @@ tests_testRock_SOURCES = \
 	tests/stub_tools.cc \
 	time.cc \
 	url.cc \
-	URLScheme.cc \
 	wordlist.h \
 	wordlist.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -3412,12 +3424,14 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
+	eui/libeui.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -3515,6 +3529,8 @@ tests_testURL_SOURCES = \
 	HttpParser.cc \
 	HttpParser.h \
 	HttpReply.cc \
+	PeerPoolMgr.h \
+	PeerPoolMgr.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -3614,8 +3630,8 @@ tests_testURL_SOURCES = \
 	tests/stub_store_stats.cc \
 	tests/testURL.cc \
 	tests/testURL.h \
-	tests/testURLScheme.cc \
-	tests/testURLScheme.h \
+	tests/testUriScheme.cc \
+	tests/testUriScheme.h \
 	tests/testMain.cc \
 	tests/stub_time.cc \
 	tests/stub_EventLoop.cc \
@@ -3623,7 +3639,6 @@ tests_testURL_SOURCES = \
 	tools.cc \
 	tests/stub_tunnel.cc \
 	url.cc \
-	URLScheme.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -3648,6 +3663,7 @@ tests_testURL_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -3660,10 +3676,10 @@ tests_testURL_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(NETTLELIB) \
 	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -3806,6 +3822,9 @@ tests_testStatHist_SOURCES = \
 	fatal.h \
 	tests/stub_fatal.cc \
 	tests/stub_MemBuf.cc \
+	$(SBUF_SOURCE) \
+	SBufDetailedStats.h \
+	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	StatHist.h \
 	String.cc \
@@ -3824,6 +3843,7 @@ tests_testStatHist_SOURCES = \
 	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
+	time.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/testMain.cc \
@@ -3840,21 +3860,6 @@ tests_testStatHist_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
 tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
-
-tests_testVector_SOURCES = \
-	tests/testVector.cc \
-	tests/testMain.cc \
-	tests/testVector.h
-nodist_tests_testVector_SOURCES = \
-	$(TESTSOURCES)
-tests_testVector_LDADD= \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testVector_LDFLAGS = $(LIBADD_DL)
-tests_testVector_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
-
 
 TESTS += testHeaders
 

@@ -45,8 +45,6 @@ public:
     static const CharacterSet CR;
     // line feed
     static const CharacterSet LF;
-    // CRLF
-    static const CharacterSet CRLF;
     // double quote
     static const CharacterSet DQUOTE;
     // 0-9
@@ -66,9 +64,9 @@ public:
     static const CharacterSet TCHAR;
     // special VCHARs
     static const CharacterSet SPECIAL;
-    // qdtext (ready but not enabled for now)
+    // qdtext (ready but not enabled as it requires a c++11 constructor)
     //static const CharacterSet QDTEXT;
-    // obs-text
+    // obs-text (ready but not enabled as it requires a c++11 constructor)
     //static const CharacterSet OBSTEXT;
 
 private:
@@ -78,7 +76,7 @@ private:
      *  constructor. This assumption is relied upon in operator[], add,
      *  operator+=
      */
-   Storage chars_;
+    Storage chars_;
 };
 
 #endif /* _SQUID_SRC_PARSER_CHARACTERSET_H */

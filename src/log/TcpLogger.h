@@ -4,9 +4,7 @@
 #include "base/AsyncJob.h"
 #include "ip/Address.h"
 
-#if HAVE_LIST
 #include <list>
-#endif
 
 class MemBlob;
 typedef RefCount<MemBlob> MemBlobPointer;

@@ -37,10 +37,6 @@
 #include "IoStats.h"
 #include "rfc2181.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
 extern char tmp_error_buf[ERROR_BUF_SZ];
@@ -56,6 +52,7 @@ extern const char *null_string;	/* "" */
 extern const char *version_string;	/* VERSION */
 extern const char *appname_string;	/* PACKAGE */
 extern char const *visible_appname_string; /* NULL */
+extern char *service_name;        /* xstrdup(APP_SHORTNAME) */
 extern const char *fdTypeStr[];
 extern const char *hier_strings[];
 extern const char *memStatusStr[];
@@ -69,7 +66,6 @@ extern int NDnsServersAlloc;	/* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;		/* SQUID_MAXFD */
 extern int config_lineno;	/* 0 */
-extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
 extern int neighbors_do_private_keys;	/* 1 */
 extern int opt_catch_signals;	/* 1 */
@@ -121,13 +117,9 @@ extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #if _SQUID_WINDOWS_
 extern unsigned int WIN32_OS_version;	/* 0 */
 extern char *WIN32_OS_string;           /* NULL */
-extern char *WIN32_Service_name;        /* NULL */
 extern char *WIN32_Command_Line;        /* NULL */
 extern char *WIN32_Service_Command_Line; /* NULL */
 extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
-#endif
-#if HAVE_SBRK
-extern void *sbrk_start;	/* 0 */
 #endif
 
 extern int ssl_ex_index_server;	/* -1 */

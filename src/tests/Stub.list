@@ -1,9 +1,11 @@
 STUB_SOURCE= tests/STUB.h \
 	tests/stub_CacheDigest.cc \
+	tests/stub_CollapsedForwarding.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_ETag.cc \
+	tests/stub_EventLoop.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
@@ -11,6 +13,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_Port.cc \
+	tests/stub_SBufDetailedStats.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_StoreMeta.cc \
 	tests/stub_SwapDir.cc \
@@ -51,6 +54,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_mem.cc \
 	tests/stub_mem_node.cc \
 	tests/stub_mime.cc \
+	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_redirect.cc \
 	tests/stub_stat.cc \

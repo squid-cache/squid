@@ -1,9 +1,7 @@
 #ifndef _SQUID_SRC_ANYP_PROTOCOLTYPE_H
 #define _SQUID_SRC_ANYP_PROTOCOLTYPE_H
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 namespace AnyP
 {
@@ -29,7 +27,6 @@ typedef enum {
 #endif
     PROTO_URN,
     PROTO_WHOIS,
-    PROTO_INTERNAL,
     PROTO_ICY,
     PROTO_UNKNOWN,
     PROTO_MAX

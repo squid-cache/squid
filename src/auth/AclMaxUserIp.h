@@ -42,22 +42,21 @@
 /// \ingroup ACLAPI
 class ACLMaxUserIP : public ACL
 {
-
 public:
     MEMPROXY_CLASS(ACLMaxUserIP);
 
-    ACLMaxUserIP(char const *);
-    ACLMaxUserIP(ACLMaxUserIP const &);
+    ACLMaxUserIP(char const *theClass);
+    ACLMaxUserIP(ACLMaxUserIP const &old);
     ~ACLMaxUserIP();
-    ACLMaxUserIP&operator=(ACLMaxUserIP const &);
+    ACLMaxUserIP &operator =(ACLMaxUserIP const &);
 
-    virtual ACL *clone()const;
+    virtual ACL *clone() const;
     virtual char const *typeString() const;
     virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool empty () const;
-    virtual bool valid () const;
+    virtual int match(ACLChecklist *cl);
+    virtual SBufList dump() const;
+    virtual bool empty() const;
+    virtual bool valid() const;
     virtual bool requiresRequest() const {return true;}
 
     int getMaximum() const {return maximum;}
@@ -67,9 +66,9 @@ public:
 private:
     static Prototype RegistryProtoype;
     static ACLMaxUserIP RegistryEntry_;
-    static ACLFlag  SupportedFlags[];
+    static ACLFlag SupportedFlags[];
 
-    int match(Auth::UserRequest::Pointer, Ip::Address const &);
+    int match(Auth::UserRequest::Pointer auth_user_request, Ip::Address const &src_addr);
     char const *class_;
     int maximum;
 };

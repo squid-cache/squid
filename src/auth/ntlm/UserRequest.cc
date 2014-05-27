@@ -5,10 +5,10 @@
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
+#include "format/Format.h"
 #include "globals.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
-#include "format/Format.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
 
@@ -95,7 +95,7 @@ Auth::Ntlm::UserRequest::module_direction()
 }
 
 void
-Auth::Ntlm::UserRequest::module_start(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
+Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 

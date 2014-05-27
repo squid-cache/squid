@@ -3,7 +3,6 @@
 
 #include "adaptation/DynamicGroupCfg.h"
 #include "base/RefCount.h"
-#include "base/Vector.h"
 #include "HttpHeader.h"
 #include "Notes.h"
 #include "SBuf.h"
@@ -57,7 +56,7 @@ public:
     /// AccessLogEntry::notes when ALE becomes available
     NotePairs::Pointer metaHeaders;
 
-    typedef Vector<SBuf> AdaptationServices;
+    typedef std::vector<SBuf> AdaptationServices;
     AdaptationServices theAdaptationServices; ///< The service groups used
 
     /// sets future services for the Adaptation::AccessCheck to notice
@@ -87,7 +86,7 @@ private:
         bool retried; ///< whether the xaction was replaced by another
     };
 
-    typedef Vector<Entry> Entries;
+    typedef std::vector<Entry> Entries;
     Entries theEntries; ///< historical record, in the order of xact starts
 
     // theXx* will become a map<string,string>, but we only support one record

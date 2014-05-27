@@ -190,9 +190,9 @@ UrnState::createUriResRequest (String &uri)
     char *host = getHost (uri);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSTRINGPH,
              host, SQUIDSTRINGPRINT(uri));
-    safe_free (host);
-    safe_free (urlres);
-    urlres = xstrdup (local_urlres);
+    safe_free(host);
+    safe_free(urlres);
+    urlres = xstrdup(local_urlres);
     urlres_r = HttpRequest::CreateFromUrl(urlres);
 }
 
@@ -419,7 +419,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "</ADDRESS>\n",
         APP_FULLNAME, getMyHostname());
     rep = new HttpReply;
-    rep->setHeaders(Http::scMovedTemporarily, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
+    rep->setHeaders(Http::scFound, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");

@@ -3,15 +3,8 @@
  */
 #include "squid.h"
 
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstdlib>
+#include <cstring>
 #if HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
@@ -27,8 +20,9 @@
 #define BOOL_DEFINED
 #endif
 
+#if HAVE_RPCSVC_YPCLNT_H
 #include <rpcsvc/ypclnt.h>
-
+#endif
 #if HAVE_RPCSVC_YP_PROT_H
 #include <rpcsvc/yp_prot.h>
 #endif

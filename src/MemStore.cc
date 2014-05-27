@@ -746,33 +746,38 @@ MemStore::EntryLimit()
     return entryLimit;
 }
 
-/// reports our needs for shared memory pages to Ipc::Mem::Pages
-class MemStoreClaimMemoryNeedsRr: public RegisteredRunner
+/// reports our needs for shared memory pages to Ipc::Mem::Pages;
+/// decides whether to use a shared memory cache or checks its configuration;
+/// and initializes shared memory segments used by MemStore
+class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &r);
+    MemStoreRr(): spaceOwner(NULL), mapOwner(NULL) {}
+    virtual void finalizeConfig();
+    virtual void claimMemoryNeeds();
+    virtual void useConfig();
+    virtual ~MemStoreRr();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create();
+
+private:
+    Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner
+    MemStoreMap::Owner *mapOwner; ///< primary map Owner
 };
 
-RunnerRegistrationEntry(rrClaimMemoryNeeds, MemStoreClaimMemoryNeedsRr);
+RunnerRegistrationEntry(MemStoreRr);
 
 void
-MemStoreClaimMemoryNeedsRr::run(const RunnerRegistry &)
+MemStoreRr::claimMemoryNeeds()
 {
     Ipc::Mem::NotePageNeed(Ipc::Mem::PageId::cachePage, MemStore::EntryLimit());
 }
 
-/// decides whether to use a shared memory cache or checks its configuration
-class MemStoreCfgRr: public ::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &);
-};
-
-RunnerRegistrationEntry(rrFinalizeConfig, MemStoreCfgRr);
-
-void MemStoreCfgRr::run(const RunnerRegistry &r)
+void
+MemStoreRr::finalizeConfig()
 {
     // decide whether to use a shared memory cache if the user did not specify
     if (!Config.memShared.configured()) {
@@ -790,32 +795,15 @@ void MemStoreCfgRr::run(const RunnerRegistry &r)
     }
 }
 
-/// initializes shared memory segments used by MemStore
-class MemStoreRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    MemStoreRr(): spaceOwner(NULL), mapOwner(NULL) {}
-    virtual void run(const RunnerRegistry &);
-    virtual ~MemStoreRr();
-
-protected:
-    virtual void create(const RunnerRegistry &);
-
-private:
-    Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner
-    MemStoreMap::Owner *mapOwner; ///< primary map Owner
-};
-
-RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
-
-void MemStoreRr::run(const RunnerRegistry &r)
+void
+MemStoreRr::useConfig()
 {
     assert(Config.memShared.configured());
-    Ipc::Mem::RegisteredRunner::run(r);
+    Ipc::Mem::RegisteredRunner::useConfig();
 }
 
-void MemStoreRr::create(const RunnerRegistry &)
+void
+MemStoreRr::create()
 {
     if (!Config.memShared)
         return;

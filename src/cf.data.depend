@@ -55,6 +55,7 @@ peer_access		cache_peer acl
 pipelinePrefetch
 PortCfg
 QosConfig
+TokenOrQuotedString
 refreshpattern
 removalpolicy
 size_t
@@ -74,3 +75,4 @@ wordlist
 sslproxy_ssl_bump	acl
 sslproxy_cert_sign	acl
 sslproxy_cert_adapt	acl
+ftp_epsv                acl

@@ -36,17 +36,9 @@
 #include "SBufExceptions.h"
 #include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-
-#if HAVE_SSTREAM
-#include <sstream>
-#endif
-
-#if HAVE_IOSTREAM
+#include <cstring>
 #include <iostream>
-#endif
+#include <sstream>
 
 #ifdef VA_COPY
 #undef VA_COPY
@@ -67,7 +59,7 @@ SBufStats::SBufStats()
         : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
         assignFast(0), clear(0), append(0), toStream(0), setChar(0),
         getChar(0), compareSlow(0), compareFast(0), copyOut(0),
-        rawAccess(0), chop(0), trim(0), find(0), scanf(0),
+        rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
         caseChange(0), cowFast(0), cowSlow(0), live(0)
 {}
 
@@ -88,6 +80,7 @@ SBufStats::operator +=(const SBufStats& ss)
     compareFast += ss.compareFast;
     copyOut += ss.copyOut;
     rawAccess += ss.rawAccess;
+    nulTerminate += ss.nulTerminate;
     chop += ss.chop;
     trim += ss.trim;
     find += ss.find;
@@ -240,6 +233,7 @@ SBuf::append(const char * S, size_type Ssize)
     if (Ssize == npos)
         Ssize = strlen(S);
     debugs(24, 7, "from c-string to id " << id);
+    // coverity[access_dbuff_in_call]
     return lowAppend(S, Ssize);
 }
 
@@ -383,12 +377,12 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 }
 
 int
-SBuf::compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n) const
+SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const
 {
     if (n != npos)
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
 
-    size_type byteCompareLen = min(S.length(), length());
+    const size_type byteCompareLen = min(S.length(), length());
     ++stats.compareSlow;
     int rv = 0;
     if (isCaseSensitive == caseSensitive) {
@@ -405,8 +399,61 @@ SBuf::compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n) con
     return -1;
 }
 
+int
+SBuf::compare(const char *s, const SBufCaseSensitive isCaseSensitive, const size_type n) const
+{
+    // 0-length comparison is always true regardless of buffer states
+    if (!n) {
+        ++stats.compareFast;
+        return 0;
+    }
+
+    // N-length compare MUST provide a non-NULL C-string pointer
+    assert(s);
+
+    // when this is a 0-length string, no need for any complexity.
+    if (!length()) {
+        ++stats.compareFast;
+        return '\0' - *s;
+    }
+
+    // brute-force scan in order to avoid ever needing strlen() on a c-string.
+    ++stats.compareSlow;
+    const char *left = buf();
+    const char *right = s;
+    int rv = 0;
+    // what area to scan.
+    // n may be npos, but we treat that as a huge positive value
+    size_type byteCount = min(length(), n);
+
+    // loop until we find a difference, a '\0', or reach the end of area to scan
+    if (isCaseSensitive == caseSensitive) {
+        while ((rv = *left - *right++) == 0) {
+            if (*left++ == '\0' || --byteCount == 0)
+                break;
+        }
+    } else {
+        while ((rv = tolower(*left) - tolower(*right++)) == 0) {
+            if (*left++ == '\0' || --byteCount == 0)
+                break;
+        }
+    }
+
+    // If we stopped scanning because we reached the end
+    //  of buf() before we reached the end of s,
+    // pretend we have a 0-terminator there to compare.
+    // NP: the loop already incremented "right" ready for this comparison
+    if (!byteCount && length() < n)
+        return '\0' - *right;
+
+    // If we found a difference within the scan area,
+    // or we found a '\0',
+    // or all n characters were identical (and none was \0).
+    return rv;
+}
+
 bool
-SBuf::startsWith(const SBuf &S, SBufCaseSensitive isCaseSensitive) const
+SBuf::startsWith(const SBuf &S, const SBufCaseSensitive isCaseSensitive) const
 {
     debugs(24, 8, id << " startsWith " << S.id << ", caseSensitive: " <<
            isCaseSensitive);
@@ -451,6 +498,7 @@ SBuf::consume(size_type n)
         n = length();
     else
         n = min(n, length());
+    debugs(24, 8, "consume " << n);
     SBuf rv(substr(0, n));
     chop(n);
     return rv;
@@ -498,6 +546,7 @@ SBuf::c_str()
     *rawSpace(1) = '\0';
     ++store_->size;
     ++stats.setChar;
+    ++stats.nulTerminate;
     return buf();
 }
 
@@ -771,6 +820,7 @@ SBufStats::dump(std::ostream& os) const
     "\ncomparisons not requiring data-scan: " << compareFast <<
     "\ncopy-out ops: " << copyOut <<
     "\nraw access to memory: " << rawAccess <<
+    "\nNULL terminate C string: " << nulTerminate <<
     "\nchop operations: " << chop <<
     "\ntrim operations: " << trim <<
     "\nfind: " << find <<

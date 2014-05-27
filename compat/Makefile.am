@@ -39,13 +39,11 @@ libcompat_squid_la_SOURCES = \
 	stdio.h \
 	stdvarargs.h \
 	strnstr.cc \
-	strsep.h \
 	strtoll.h \
 	strnrchr.h \
 	strnrchr.c \
 	tempnam.h \
 	types.h \
-	unsafe.h \
 	valgrind.h \
 	xalloc.cc \
 	xalloc.h \
@@ -58,6 +56,7 @@ libcompat_squid_la_SOURCES = \
 	xstrto.h \
 	\
 	os/aix.h \
+	os/android.h \
 	os/dragonfly.h \
 	os/freebsd.h \
 	os/hpux.h \
@@ -75,7 +74,7 @@ libcompat_squid_la_SOURCES = \
 	os/solaris.h \
 	os/sunos.h
 
-libcompat_squid_la_LIBADD= $(LIBOBJS)
+libcompat_squid_la_LIBADD= $(LTLIBOBJS)
 
 check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler

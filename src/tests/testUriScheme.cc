@@ -4,16 +4,14 @@
 
 #include <cppunit/TestAssert.h>
 
+#include "anyp/UriScheme.h"
 #include "Mem.h"
 #include "SquidString.h"
-#include "testURLScheme.h"
-#include "URLScheme.h"
+#include "tests/testUriScheme.h"
 
-#if HAVE_SSTREAM
 #include <sstream>
-#endif
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testURLScheme );
+CPPUNIT_TEST_SUITE_REGISTRATION( testUriScheme );
 
 #if 0
 /*
@@ -47,58 +45,58 @@ testHttpRequestMethod::testConstructCharStartEnd()
 #endif
 
 /*
- * we should be able to assign a protocol_t to a URLScheme for ease
+ * we should be able to assign a protocol_t to a AnyP::UriScheme for ease
  * of code conversion
  */
 void
-testURLScheme::testAssignFromprotocol_t()
+testUriScheme::testAssignFromprotocol_t()
 {
-    URLScheme empty_scheme;
-    URLScheme scheme;
+    AnyP::UriScheme empty_scheme;
+    AnyP::UriScheme scheme;
     scheme = AnyP::PROTO_NONE;
     CPPUNIT_ASSERT_EQUAL(empty_scheme, scheme);
 
-    URLScheme https_scheme(AnyP::PROTO_HTTPS);
+    AnyP::UriScheme https_scheme(AnyP::PROTO_HTTPS);
     scheme = AnyP::PROTO_HTTPS;
     CPPUNIT_ASSERT_EQUAL(https_scheme, scheme);
 }
 
 /*
- * We should be able to get a protocol_t from a URLScheme for ease
+ * We should be able to get a protocol_t from a AnyP::UriScheme for ease
  * of migration
  */
 void
-testURLScheme::testCastToprotocol_t()
+testUriScheme::testCastToprotocol_t()
 {
     /* explicit cast */
-    AnyP::ProtocolType protocol = static_cast<AnyP::ProtocolType>(URLScheme());
+    AnyP::ProtocolType protocol = static_cast<AnyP::ProtocolType>(AnyP::UriScheme());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_NONE, protocol);
     /* and implicit */
-    protocol = URLScheme(AnyP::PROTO_HTTP);
+    protocol = AnyP::UriScheme(AnyP::PROTO_HTTP);
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, protocol);
 }
 
 /*
- * a default constructed URLScheme is == AnyP::PROTO_NONE
+ * a default constructed AnyP::UriScheme is == AnyP::PROTO_NONE
  */
 void
-testURLScheme::testDefaultConstructor()
+testUriScheme::testDefaultConstructor()
 {
-    URLScheme lhs;
-    URLScheme rhs(AnyP::PROTO_NONE);
+    AnyP::UriScheme lhs;
+    AnyP::UriScheme rhs(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
 /*
- * we should be able to construct a URLScheme from the old 'protocol_t' enum.
+ * we should be able to construct a AnyP::UriScheme from the old 'protocol_t' enum.
  */
 void
-testURLScheme::testConstructprotocol_t()
+testUriScheme::testConstructprotocol_t()
 {
-    URLScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
+    AnyP::UriScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
 
-    URLScheme lhs_cacheobj(AnyP::PROTO_CACHE_OBJECT), rhs_cacheobj(AnyP::PROTO_CACHE_OBJECT);
+    AnyP::UriScheme lhs_cacheobj(AnyP::PROTO_CACHE_OBJECT), rhs_cacheobj(AnyP::PROTO_CACHE_OBJECT);
     CPPUNIT_ASSERT_EQUAL(lhs_cacheobj, rhs_cacheobj);
     CPPUNIT_ASSERT(lhs_none != rhs_cacheobj);
 }
@@ -107,47 +105,47 @@ testURLScheme::testConstructprotocol_t()
  * we should be able to get a char const * version of the method.
  */
 void
-testURLScheme::testConst_str()
+testUriScheme::testC_str()
 {
     String lhs("wais");
-    URLScheme wais(AnyP::PROTO_WAIS);
-    String rhs(wais.const_str());
+    AnyP::UriScheme wais(AnyP::PROTO_WAIS);
+    String rhs(wais.c_str());
     CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
 /*
- * a URLScheme replaces protocol_t, so we should be able to test for equality on
+ * a AnyP::UriScheme replaces protocol_t, so we should be able to test for equality on
  * either the left or right hand side seamlessly.
  */
 void
-testURLScheme::testEqualprotocol_t()
+testUriScheme::testEqualprotocol_t()
 {
-    CPPUNIT_ASSERT(URLScheme() == AnyP::PROTO_NONE);
-    CPPUNIT_ASSERT(not (URLScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(AnyP::PROTO_HTTP == URLScheme(AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHE_OBJECT == URLScheme(AnyP::PROTO_HTTP)));
+    CPPUNIT_ASSERT(AnyP::UriScheme() == AnyP::PROTO_NONE);
+    CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(AnyP::PROTO_HTTP == AnyP::UriScheme(AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHE_OBJECT == AnyP::UriScheme(AnyP::PROTO_HTTP)));
 }
 
 /*
- * a URLScheme should testable for inequality with a protocol_t.
+ * a AnyP::UriScheme should testable for inequality with a protocol_t.
  */
 void
-testURLScheme::testNotEqualprotocol_t()
+testUriScheme::testNotEqualprotocol_t()
 {
-    CPPUNIT_ASSERT(URLScheme(AnyP::PROTO_NONE) != AnyP::PROTO_HTTP);
-    CPPUNIT_ASSERT(not (URLScheme(AnyP::PROTO_HTTP) != AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(AnyP::PROTO_NONE != URLScheme(AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(not (AnyP::PROTO_WAIS != URLScheme(AnyP::PROTO_WAIS)));
+    CPPUNIT_ASSERT(AnyP::UriScheme(AnyP::PROTO_NONE) != AnyP::PROTO_HTTP);
+    CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_HTTP) != AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(AnyP::PROTO_NONE != AnyP::UriScheme(AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_WAIS != AnyP::UriScheme(AnyP::PROTO_WAIS)));
 }
 
 /*
  * we should be able to send it to a stream and get the normalised version
  */
 void
-testURLScheme::testStream()
+testUriScheme::testStream()
 {
     std::ostringstream buffer;
-    buffer << URLScheme(AnyP::PROTO_HTTP);
+    buffer << AnyP::UriScheme(AnyP::PROTO_HTTP);
     String http_str("http");
     String from_buf(buffer.str().c_str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);

@@ -1,7 +1,5 @@
 /*
  * DEBUG: section 14    IP Storage and Handling
- * AUTHOR: Amos Jeffries
- * COPYRIGHT: GPL version 2, (C)2007-2013 Treehouse Networks Ltd.
  */
 #include "squid.h"
 #include "compat/getaddrinfo.h"
@@ -11,12 +9,8 @@
 #include "ip/tools.h"
 #include "util.h"
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cassert>
+#include <cstring>
 #if HAVE_ARPA_INET_H
 /* for inet_ntoa() */
 #include <arpa/inet.h>
@@ -249,8 +243,8 @@ Ip::Address::isSiteLocal6() const
 bool
 Ip::Address::isSiteLocalAuto() const
 {
-    return mSocketAddr_.sin6_addr.s6_addr[10] == static_cast<uint8_t>(0xff) &&
-           mSocketAddr_.sin6_addr.s6_addr[11] == static_cast<uint8_t>(0xfe);
+    return mSocketAddr_.sin6_addr.s6_addr[11] == static_cast<uint8_t>(0xff) &&
+           mSocketAddr_.sin6_addr.s6_addr[12] == static_cast<uint8_t>(0xfe);
 }
 
 bool

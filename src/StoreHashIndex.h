@@ -117,7 +117,7 @@ private:
     void *cbdata;
     bool _done;
     int bucket;
-    Vector<StoreEntry *> entries;
+    std::vector<StoreEntry *> entries;
 
     // keep this last. it plays with private/public
     CBDATA_CLASS2(StoreSearchHashIndex);

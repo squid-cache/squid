@@ -39,6 +39,7 @@
 #include "HttpRequestMethod.h"
 #include "Notes.h"
 #include "RequestFlags.h"
+#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -135,6 +136,9 @@ protected:
 
 public:
     HttpRequestMethod method;
+
+    // TODO expand to include all URI parts
+    URL url; ///< the request URI (scheme only)
 
     char login[MAX_LOGIN_SZ];
 
@@ -262,6 +266,8 @@ public:
      */
     CbcPointer<ConnStateData> clientConnectionManager;
 
+    /// forgets about the cached Range header (for a reason)
+    void ignoreRange(const char *reason);
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
 private:

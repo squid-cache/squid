@@ -46,7 +46,7 @@ class wordlist;
 
 namespace Format
 {
-    class Format;
+class Format;
 }
 
 namespace Auth
@@ -128,6 +128,9 @@ public:
     /** add headers as needed when challenging for auth */
     virtual void fixHeader(UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
 
+    /// Find any existing user credentials in the authentication cache by name and type.
+    virtual Auth::User::Pointer findUserInCache(const char *nameKey, Auth::Type type);
+
     /** prepare to handle requests */
     virtual void init(Config *) = 0;
 
@@ -147,7 +150,7 @@ public:
     Format::Format *keyExtras; ///< The compiled request format
 };
 
-typedef Vector<Config *> ConfigVector;
+typedef std::vector<Config *> ConfigVector;
 
 extern ConfigVector TheConfig;
 

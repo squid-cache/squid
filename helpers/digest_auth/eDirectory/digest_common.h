@@ -11,20 +11,11 @@
 #ifndef SQUID_DIGEST_COMMON_H_
 #define SQUID_DIGEST_COMMON_H_
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
 #endif
 #if HAVE_STRINGS_H
 #include <strings.h>
@@ -44,6 +35,7 @@
 #include "util.h"
 
 typedef struct _request_data {
+    int channelId;
     char *user;
     char *realm;
     char *password;

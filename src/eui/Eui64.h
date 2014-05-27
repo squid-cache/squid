@@ -8,16 +8,9 @@ namespace Ip
 class Address;
 }
 
-#if HAVE_CSTRING
 #include <cstring>
-#endif
 #if HAVE_SYS_EUI64_H
 #include <sys/eui64.h>
-#endif
-
-/* memcpy and friends */
-#if HAVE_STRING_H
-#include <string.h>
 #endif
 
 namespace Eui
@@ -34,9 +27,9 @@ class Eui64
 {
 
 public:
-    Eui64() { clear(); };
-    Eui64(const Eui64 &t) { memcpy(this, &t, sizeof(Eui64)); };
-    ~Eui64() {};
+    Eui64() { clear(); }
+    Eui64(const Eui64 &t) { memcpy(this, &t, sizeof(Eui64)); }
+    ~Eui64() {}
 
     const unsigned char *get(void);
 
@@ -45,9 +38,9 @@ public:
         if (len < SZ_EUI64_BUF) clear();
         memcpy(eui, src, len);
         return true;
-    };
+    }
 
-    void clear() { memset(eui, 0, SZ_EUI64_BUF); };
+    void clear() { memset(eui, 0, SZ_EUI64_BUF); }
 
     /**
      * Decode an ascii representation of an EUI-64 address.

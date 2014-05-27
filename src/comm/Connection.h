@@ -48,12 +48,8 @@
 #include "eui/Eui64.h"
 #endif
 
-#if HAVE_IOSFWD
 #include <iosfwd>
-#endif
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 class CachePeer;
 

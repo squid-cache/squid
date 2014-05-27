@@ -14,9 +14,7 @@
 #if HAVE_OPENSSL_TXT_DB_H
 #include <openssl/txt_db.h>
 #endif
-#if HAVE_STRING
 #include <string>
-#endif
 
 namespace Ssl
 {

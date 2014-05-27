@@ -31,13 +31,16 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "pconn.h"
+#include "PeerPoolMgr.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
@@ -63,6 +66,11 @@ IdleConnList::~IdleConnList()
 {
     if (parent_)
         parent_->unlinkList(this);
+
+    if (size_) {
+        parent_ = NULL; // prevent reentrant notifications and deletions
+        closeN(size_);
+    }
 
     delete[] theList_;
 
@@ -292,6 +300,8 @@ IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
 {
     const int index = findIndexOf(conn);
     if (index >= 0) {
+        if (parent_)
+            parent_->notifyManager("idle conn closure");
         /* might delete this */
         removeAt(index);
         clearHandlers(conn);
@@ -366,7 +376,7 @@ PconnPool::dumpHash(StoreEntry *e) const
     hash_first(hid);
 
     int i = 0;
-    for (hash_link *walker = hid->next; walker; walker = hash_next(hid)) {
+    for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
         ++i;
     }
@@ -374,7 +384,9 @@ PconnPool::dumpHash(StoreEntry *e) const
 
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
-PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr),
+PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
+        table(NULL), descr(aDescr),
+        mgr(aMgr),
         theCount(0)
 {
     int i;
@@ -386,10 +398,18 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr),
     PconnModule::GetInstance()->add(this);
 }
 
+static void
+DeleteIdleConnList(void *hashItem)
+{
+    delete reinterpret_cast<IdleConnList*>(hashItem);
+}
+
 PconnPool::~PconnPool()
 {
-    descr = NULL;
+    PconnModule::GetInstance()->remove(this);
+    hashFreeItems(table, &DeleteIdleConnList);
     hashFreeMemory(table);
+    descr = NULL;
 }
 
 void
@@ -404,6 +424,7 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
         debugs(48, 3, HERE << "Squid is shutting down. Refusing to do anything");
         return;
     }
+    // TODO: also close used pconns if we exceed peer max-conn limit
 
     const char *aKey = key(conn, domain);
     IdleConnList *list = (IdleConnList *) hash_lookup(table, aKey);
@@ -423,35 +444,64 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
     snprintf(desc, FD_DESC_SZ, "Idle server: %s", aKey);
     fd_note(conn->fd, desc);
     debugs(48, 3, HERE << "pushed " << conn << " for " << aKey);
+
+    // successful push notifications resume multi-connection opening sequence
+    notifyManager("push");
 }
 
 Comm::ConnectionPointer
-PconnPool::pop(const Comm::ConnectionPointer &destLink, const char *domain, bool isRetriable)
+PconnPool::pop(const Comm::ConnectionPointer &dest, const char *domain, bool keepOpen)
 {
-    const char * aKey = key(destLink, domain);
+
+    const char * aKey = key(dest, domain);
 
     IdleConnList *list = (IdleConnList *)hash_lookup(table, aKey);
     if (list == NULL) {
         debugs(48, 3, HERE << "lookup for key {" << aKey << "} failed.");
+        // failure notifications resume standby conn creation after fdUsageHigh
+        notifyManager("pop failure");
         return Comm::ConnectionPointer();
     } else {
-        debugs(48, 3, HERE << "found " << hashKeyStr(&list->hash) << (isRetriable?"(to use)":"(to kill)") );
+        debugs(48, 3, HERE << "found " << hashKeyStr(&list->hash) <<
+               (keepOpen ? " to use" : " to kill"));
     }
 
     /* may delete list */
-    Comm::ConnectionPointer temp = list->findUseable(destLink);
-    if (!isRetriable && Comm::IsConnOpen(temp))
-        temp->close();
+    Comm::ConnectionPointer popped = list->findUseable(dest);
+    if (!keepOpen && Comm::IsConnOpen(popped))
+        popped->close();
 
-    return temp;
+    // successful pop notifications replenish standby connections pool
+    notifyManager("pop");
+    return popped;
 }
 
 void
-PconnPool::closeN(int n, const Comm::ConnectionPointer &destLink, const char *domain)
+PconnPool::notifyManager(const char *reason)
 {
-    // TODO: optimize: we can probably do hash_lookup just once
-    for (int i = 0; i < n; ++i)
-        pop(destLink, domain, false); // may fail!
+    if (mgr.valid())
+        PeerPoolMgr::Checkpoint(mgr, reason);
+}
+
+void
+PconnPool::closeN(int n)
+{
+    hash_table *hid = table;
+    hash_first(hid);
+
+    // close N connections, one per list, to treat all lists "fairly"
+    for (int i = 0; i < n && count(); ++i) {
+
+        hash_link *current = hash_next(hid);
+        if (!current) {
+            hash_first(hid);
+            current = hash_next(hid);
+            Must(current); // must have one because the count() was positive
+        }
+
+        // may delete current
+        reinterpret_cast<IdleConnList*>(current)->closeN(1);
+    }
 }
 
 void
@@ -477,11 +527,8 @@ PconnPool::noteUses(int uses)
  * This simple class exists only for the cache manager
  */
 
-PconnModule::PconnModule() : pools(NULL), poolCount(0)
+PconnModule::PconnModule(): pools()
 {
-    pools = (PconnPool **) xcalloc(MAX_NUM_PCONN_POOLS, sizeof(*pools));
-//TODO: re-link to MemPools. WAS:    pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
-    debugs(48, DBG_CRITICAL, "persistent connection module initialized");
     registerWithCacheManager();
 }
 
@@ -505,21 +552,26 @@ PconnModule::registerWithCacheManager(void)
 void
 PconnModule::add(PconnPool *aPool)
 {
-    assert(poolCount < MAX_NUM_PCONN_POOLS);
-    *(pools+poolCount) = aPool;
-    ++poolCount;
+    pools.insert(aPool);
+}
+
+void
+PconnModule::remove(PconnPool *aPool)
+{
+    pools.erase(aPool);
 }
 
 void
 PconnModule::dump(StoreEntry *e)
 {
-    int i;
-
-    for (i = 0; i < poolCount; ++i) {
+    typedef Pools::const_iterator PCI;
+    int i = 0; // TODO: Why number pools if they all have names?
+    for (PCI p = pools.begin(); p != pools.end(); ++p, ++i) {
+        // TODO: Let each pool dump itself the way it wants to.
         storeAppendPrintf(e, "\n Pool %d Stats\n", i);
-        (*(pools+i))->dumpHist(e);
+        (*p)->dumpHist(e);
         storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);
-        (*(pools+i))->dumpHash(e);
+        (*p)->dumpHash(e);
     }
 }
 

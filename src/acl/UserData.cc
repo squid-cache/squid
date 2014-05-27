@@ -37,7 +37,6 @@
 #include "acl/UserData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "wordlist.h"
 
 template<class T>
 inline void
@@ -97,28 +96,28 @@ ACLUserData::match(char const *user)
 static void
 aclDumpUserListWalkee(char * const & node_data, void *outlist)
 {
-    /* outlist is really a wordlist ** */
-    wordlistAdd((wordlist **)outlist, (char const *)node_data);
+    /* outlist is really a SBufList* */
+    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
 }
 
-wordlist *
-ACLUserData::dump()
+SBufList
+ACLUserData::dump() const
 {
-    wordlist *wl = NULL;
+    SBufList sl;
 
     if (flags.case_insensitive)
-        wordlistAdd(&wl, "-i");
+        sl.push_back(SBuf("-i"));
 
     /* damn this is VERY inefficient for long ACL lists... filling
-     * a wordlist this way costs Sum(1,N) iterations. For instance
+     * a SBufList this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
     if (flags.required)
-        wordlistAdd(&wl, "REQUIRED");
+        sl.push_back(SBuf("REQUIRED"));
     else if (names)
-        names->walk(aclDumpUserListWalkee, &wl);
+        names->walk(aclDumpUserListWalkee, &sl);
 
-    return wl;
+    return sl;
 }
 
 void

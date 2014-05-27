@@ -41,15 +41,8 @@
 
 #define LDAP_DEPRECATED 1
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <cstring>
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 

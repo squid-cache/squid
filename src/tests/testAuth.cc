@@ -166,9 +166,7 @@ testAuthConfig::create()
     }
 }
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 /* AuthUserRequest::scheme returns the correct scheme for all
  * authentication types
