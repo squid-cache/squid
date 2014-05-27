@@ -73,12 +73,13 @@ public:
     * at the beginning of the parse buffer, in the base specified by the user
     * or guesstimated; consumes the parsed characters.
     *
-    * \param result output value. Not touched if parseing is unsuccessful
-    * \param base specify base to do the parsing in, with the same restrictions
-    *   as strtoll. Defaults to 0 (meaning guess)
-    * \return true if the parsing was successful
+    * \param result Output value. Not touched if parsing is unsuccessful.
+    * \param base   Specify base to do the parsing in, with the same restrictions
+    *               as strtoll. Defaults to 0 (meaning guess)
+    *
+    * \return whether the parsing was successful
     */
-   bool int64 (int64_t &result, int base = 0);
+   bool int64(int64_t &result, int base = 0);
 
 private:
    SBuf buf_; ///< yet unparsed input

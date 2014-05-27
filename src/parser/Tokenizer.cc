@@ -56,9 +56,8 @@ Parser::Tokenizer::skip(const char tokenChar)
     return false;
 }
 
-// adapted from compatr/strtoll.c
 bool
-Parser::Tokenizer::int64 (int64_t & result, int base)
+Parser::Tokenizer::int64(int64_t & result, int base)
 {
     if (buf_.isEmpty())
         return false;
@@ -78,5 +77,4 @@ Parser::Tokenizer::int64 (int64_t & result, int base)
     buf_.consume(eon - buf_.rawContent()); // consume the parsed chunk
     result = rv;
     return true;
-
 }
