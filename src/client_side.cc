@@ -3622,7 +3622,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     // Require both a match and a positive bump mode to work around exceptional
     // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
     if (answer == ACCESS_ALLOWED && (answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice)) {
-        debugs(33, 2, HERE << "sslBump needed for " << connState->clientConnection);
+        debugs(33, 2, HERE << "sslBump needed for " << connState->clientConnection << " method " << answer.kind);
         connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
         httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
@@ -3693,6 +3693,7 @@ httpsAccept(const CommAcceptCbParams &params)
         request->myportname = s->name;
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
+        acl_checklist->conn(connState);
         acl_checklist->src_addr = params.conn->remote;
         acl_checklist->my_addr = s->s;
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, connState);
@@ -3993,7 +3994,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
     ConnStateData *conn = (ConnStateData *)data;
     SSL *ssl = fd_table[fd].ssl;
 
-    debugs(83, 2, "Start peek and splice on" << fd);
+    debugs(83, 2, "Start peek and splice on " << fd);
 
     if (!Squid_SSL_accept(conn, clientPeekAndSpliceSSL))
         debugs(83, 2, "SSL_accept failed.");
@@ -4063,14 +4064,15 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         // Do splice:
 
         connState->sslBumpMode = Ssl::bumpSplice;
+        fd_table[connState->clientConnection->fd].read_method = &default_read_method;
+        fd_table[connState->clientConnection->fd].write_method = &default_write_method;
 
         if (connState->transparent()) {
-#if 0 && HANDLE_TRANSPARENT_PEEK_AND_SLPICE
             // fake a CONNECT request to force connState to tunnel
             static char ip[MAX_IPSTRLEN];
             connState->clientConnection->local.toUrl(ip, sizeof(ip));
             connState->in.buf.assign("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n").append(rbuf.content(), rbuf.contentSize());
-            bool ret = connState->handleReadData(&in.buf);
+            bool ret = connState->handleReadData(&connState->in.buf);
             if (ret)
                 ret = connState->clientParseRequests();
 
@@ -4078,12 +4080,9 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
                 debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl spliced connection: " << connState->clientConnection);
                 connState->clientConnection->close();
             }
-#endif
         } else {
             // in.buf still has the "CONNECT ..." request data, reset it to SSL hello message
             connState->in.buf.append(rbuf.content(), rbuf.contentSize());
-            fd_table[connState->clientConnection->fd].read_method = &default_read_method;
-            fd_table[connState->clientConnection->fd].write_method = &default_write_method;
             ClientSocketContext::Pointer context = connState->getCurrentContext();
             ClientHttpRequest *http = context->http;
             tunnelStart(http, &http->out.size, &http->al->http.code, http->al);
