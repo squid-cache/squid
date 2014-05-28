@@ -31,7 +31,7 @@ typedef enum {
     scNotModified = 304,
     scUseProxy = 305,
     scTemporaryRedirect = 307,
-    scPermanentRedirect = 308, /**< RFC-reschke-http-status-308-07 */
+    scPermanentRedirect = 308, /**< RFC7238 */
     scBadRequest = 400,
     scUnauthorized = 401,
     scPaymentRequired = 402,
