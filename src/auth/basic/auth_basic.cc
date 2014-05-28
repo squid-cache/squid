@@ -148,7 +148,6 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * s
     storeAppendPrintf(entry, "\n");
 
     storeAppendPrintf(entry, "%s basic realm %s\n", name, basicAuthRealm);
-    storeAppendPrintf(entry, "%s basic children %d startup=%d idle=%d concurrency=%d\n", name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
     Auth::Config::dump(entry, name, scheme);
@@ -177,8 +176,6 @@ Auth::Basic::Config::parse(Auth::Config * scheme, int n_configured, char *param_
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param basic program", authenticateProgram->key);
-    } else if (strcmp(param_str, "children") == 0) {
-        authenticateChildren.parseConfig();
     } else if (strcmp(param_str, "realm") == 0) {
         parse_eol(&basicAuthRealm);
     } else if (strcmp(param_str, "credentialsttl") == 0) {
