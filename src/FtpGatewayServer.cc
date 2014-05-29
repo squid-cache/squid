@@ -120,7 +120,7 @@ ServerStateData::ServerStateData(FwdState *const fwdState):
     AsyncJob("Ftp::Gateway::ServerStateData"), Ftp::ServerStateData(fwdState),
     forwardingCompleted(false)
 {
-    savedReply.message = false;
+    savedReply.message = NULL;
     savedReply.lastCommand = NULL;
     savedReply.lastReply = NULL;
     savedReply.replyCode = 0;
