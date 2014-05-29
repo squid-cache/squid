@@ -42,7 +42,6 @@
 class ClientInfo;
 #endif
 
-class PconnPool;
 class dwrite_q;
 class _fde_disk
 {
@@ -70,7 +69,7 @@ public:
     char const *remoteAddr() const;
     void dumpStats (StoreEntry &, int);
     bool readPending(int);
-    void noteUse(PconnPool *);
+    void noteUse();
 
 public:
 
@@ -110,7 +109,6 @@ public:
 
     struct {
         int uses;                   /* ie # req's over persistent conn */
-        PconnPool *pool;
     } pconn;
 
 #if USE_DELAY_POOLS
@@ -167,7 +165,6 @@ private:
         bytes_read = 0;
         bytes_written = 0;
         pconn.uses = 0;
-        pconn.pool = NULL;
 #if USE_DELAY_POOLS
         clientInfo = NULL;
 #endif

@@ -101,6 +101,9 @@ public:
     ErrorState(); // not implemented.
     ~ErrorState();
 
+    /// Creates a general request forwarding error with the right http_status.
+    static ErrorState *NewForwarding(err_type type, HttpRequest *request);
+
     /**
      * Allocates and initializes an error response
      */

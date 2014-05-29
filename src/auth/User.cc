@@ -59,7 +59,6 @@ Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
         username_(NULL),
         requestRealm_(aRequestRealm)
 {
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
     debugs(29, 5, HERE << "Initialised auth_user '" << this << "'.");
@@ -91,7 +90,6 @@ Auth::User::absorb(Auth::User::Pointer from)
 {
     /*
      * XXX Incomplete: it should merge in hash references too and ask the module to merge in scheme data
-     *  dlink_list proxy_auth_list;
      *  dlink_list proxy_match_cache;
      */
 

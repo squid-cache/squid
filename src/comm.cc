@@ -1180,9 +1180,6 @@ _comm_close(int fd, char const *file, int line)
 
     commCallCloseHandlers(fd);
 
-    if (F->pconn.uses && F->pconn.pool)
-        F->pconn.pool->noteUses(F->pconn.uses);
-
     comm_empty_os_read_buffers(fd);
 
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",

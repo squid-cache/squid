@@ -12,6 +12,7 @@ LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
+	$(LIBGNUTLS_LIBS) \
 	$(NETTLELIB) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
@@ -49,4 +50,6 @@ squidclient_SOURCES = \
 	squidclient.cc \
 	stub_debug.cc \
 	test_tools.cc \
-	time.cc
+	time.cc \
+	Transport.cc \
+	Transport.h

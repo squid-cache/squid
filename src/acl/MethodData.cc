@@ -74,7 +74,7 @@ ACLMethodData::dump() const
     CbDataList<HttpRequestMethod> *data = values;
 
     while (data != NULL) {
-        sl.push_back(SBuf(RequestMethodStr(data->element)));
+        sl.push_back(data->element.image());
         data = data->next;
     }
 
@@ -89,9 +89,9 @@ ACLMethodData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        if (strcmp(t, "PURGE") == 0)
-            ++ThePurgeCount; // configuration code wants to know
         CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t, NULL));
+        if (q->element == Http::METHOD_PURGE)
+            ++ThePurgeCount; // configuration code wants to know
         *(Tail) = q;
         Tail = &q->next;
     }
