@@ -45,7 +45,15 @@ public:
     MEMPROXY_CLASS(URL);
     URL() : scheme_() {}
     URL(AnyP::UriScheme const &aScheme) : scheme_(aScheme) {}
+
+    void clear() {
+        scheme_=AnyP::PROTO_NONE;
+    }
+
     AnyP::UriScheme const & getScheme() const {return scheme_;}
+
+    /// convert the URL scheme to that given
+    void setScheme(const AnyP::ProtocolType &p) {scheme_=p;}
 
 private:
     /**
@@ -68,7 +76,7 @@ private:
      * In order to make taking any of these routes easy, scheme is private
      * and immutable, only settable at construction time,
      */
-    AnyP::UriScheme const scheme_;
+    AnyP::UriScheme scheme_;
 };
 
 MEMPROXY_CLASS_INLINE(URL);

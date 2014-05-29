@@ -1046,7 +1046,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(request->method) << " " << entry->url() << "\"" );
+        debugs(11, 2, "Request not yet fully sent " << request->method << ' ' << entry->url());
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -1807,7 +1807,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (!hdr_out->has(HDR_HOST)) {
         if (request->peer_domain) {
             hdr_out->putStr(HDR_HOST, request->peer_domain);
-        } else if (request->port == urlDefaultPort(request->protocol)) {
+        } else if (request->port == urlDefaultPort(request->url.getScheme())) {
             /* use port# only if not default */
             hdr_out->putStr(HDR_HOST, request->GetHost());
         } else {
@@ -1865,7 +1865,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
-        if (flags.front_end_https == 1 || request->protocol == AnyP::PROTO_HTTPS)
+        if (flags.front_end_https == 1 || request->url.getScheme() == AnyP::PROTO_HTTPS)
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
@@ -1958,7 +1958,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         else {
             /* use port# only if not default */
 
-            if (request->port == urlDefaultPort(request->protocol)) {
+            if (request->port == urlDefaultPort(request->url.getScheme())) {
                 hdr_out->putStr(HDR_HOST, request->GetHost());
             } else {
                 httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
@@ -2117,8 +2117,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
-    mb->Printf("%s %s %s/%d.%d\r\n",
-               RequestMethodStr(request->method),
+    mb->Printf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+               SQUIDSBUFPRINT(request->method.image()),
                url && *url ? url : "/",
                AnyP::ProtocolType_str[httpver.protocol],
                httpver.major,httpver.minor);
@@ -2269,7 +2269,7 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
 void
 httpStart(FwdState *fwd)
 {
-    debugs(11, 3, "httpStart: \"" << RequestMethodStr(fwd->request->method) << " " << fwd->entry->url() << "\"" );
+    debugs(11, 3, fwd->request->method << ' ' << fwd->entry->url());
     AsyncJob::Start(new HttpStateData(fwd));
 }
 
