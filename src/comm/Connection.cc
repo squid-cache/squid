@@ -4,6 +4,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "fde.h"
+#include "neighbors.h"
 #include "SquidTime.h"
 
 class CachePeer;
@@ -66,7 +67,7 @@ Comm::Connection::close()
         comm_close(fd);
         fd = -1;
         if (CachePeer *p=getPeer())
-            -- p->stats.conn_open;
+            peerConnClosed(p);
     }
 }
 

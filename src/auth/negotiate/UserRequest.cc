@@ -97,7 +97,7 @@ Auth::Negotiate::UserRequest::module_direction()
 }
 
 void
-Auth::Negotiate::UserRequest::module_start(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
+Auth::Negotiate::UserRequest::startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 

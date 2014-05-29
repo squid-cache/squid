@@ -1213,6 +1213,55 @@ dnl Solaris10 provides MD5 natively through libmd5
 AC_CHECK_LIB(md5, MD5Init, [CRYPTLIB="$CRYPTLIB -lmd5"])
 AC_SUBST(CRYPTLIB)
 
+SSLLIB=""
+
+dnl User may want to disable GnuTLS
+AC_ARG_WITH(gnutls,
+  AS_HELP_STRING([--without-gnutls],
+                 [Do not use GnuTLS for SSL. Default: auto-detect]), [ 
+case "$with_gnutls" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-gnutls path does not point to a directory])
+    fi
+    LIBGNUTLS_PATH="-L$with_gnutls/lib"
+    CPPFLAGS="-I$with_gnutls/include $CPPFLAGS"
+  esac
+])
+AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
+if test "x$with_gnutls" != "xno"; then
+  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h)
+
+  # User may have provided a custom location for GnuTLS. Otherwise...
+  SQUID_STATE_SAVE(squid_gnutls_state)
+  LIBS="$LIBS $LIBGNUTLS_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.1.5],,[
+    ## find the package without pkg-config
+    ## check that the library is actually new enough.
+    ## by testing for a 3.1.5+ function which we use
+    AC_CHECK_LIB(gnutls,gnutls_certificate_verify_peers3,[LIBGNUTLS_LIBS="-lgnutls"])
+  ])
+
+  SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
+
+  if test "x$with_gnutls" = "xyes" -a "x$LIBGNUTLS_LIBS" = "x"; then
+    AC_MSG_ERROR([Required GnuTLS library not found])
+  fi
+  if test "x$LIBGNUTLS_LIBS" != "x" ; then
+    CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
+    SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
+    AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
+  else
+    with_gnutls=no
+  fi
+fi
+AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
+
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
   AS_HELP_STRING([--with-openssl=PATH],
@@ -3455,6 +3504,7 @@ AC_CONFIG_FILES([
 	helpers/negotiate_auth/wrapper/Makefile
 	helpers/external_acl/Makefile
 	helpers/external_acl/AD_group/Makefile
+	helpers/external_acl/delayer/Makefile
 	helpers/external_acl/eDirectory_userip/Makefile
 	helpers/external_acl/file_userip/Makefile
 	helpers/external_acl/kerberos_ldap_group/Makefile
