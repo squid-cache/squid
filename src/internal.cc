@@ -73,6 +73,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
     } else if (0 == strncmp(upath, "/squid-internal-mgr/", 20)) {
+        debugs(17, 2, "calling CacheManager due to URL-path /squid-internal-mgr/");
         CacheManager::GetInstance()->Start(clientConn, request, entry);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",

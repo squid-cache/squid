@@ -26,7 +26,7 @@ public:
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
     virtual Direction module_direction();
-    virtual void module_start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
+    virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
     virtual const char *credentialsStr();
 
     virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);

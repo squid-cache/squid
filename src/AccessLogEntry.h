@@ -223,8 +223,7 @@ public:
 #endif
 
     // Why is this a sub-class and not a set of real "private:" fields?
-    // It looks like its duplicating HTTPRequestMethod anyway!
-    // TODO: shuffle this to the relevant protocol section OR replace with request->method
+    // TODO: shuffle this to the relevant ICP/HTCP protocol section
     class Private
     {
 

@@ -16,6 +16,8 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+class PconnPool;
+typedef RefCount<PconnPool> PconnPoolPointer;
 class ErrorState;
 class HttpRequest;
 
@@ -24,6 +26,7 @@ namespace Ssl
 {
 class ErrorDetail;
 class CertValidationResponse;
+class PeerConnectorAnswer;
 };
 #endif
 
@@ -72,11 +75,12 @@ public:
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
-    void initiateSSL();
-    void negotiateSSL(int fd);
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
+    /// Pops a connection from connection pool if available. If not
+    /// checks the peer stand-by connection pool for available connection.
+    Comm::ConnectionPointer pconnPop(const Comm::ConnectionPointer &dest, const char *domain);
     void pconnPush(Comm::ConnectionPointer & conn, const char *domain);
 
     bool dontRetry() { return flags.dont_retry; }
@@ -86,14 +90,6 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-#if USE_OPENSSL
-    /// Callback function called when squid receive message from cert validator helper
-    static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
-    /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponse const &);
-    /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
-#endif
 private:
     // hidden for safer management of self; use static fwdStart
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
@@ -107,7 +103,13 @@ private:
     void completed();
     void retryOrBail();
     ErrorState *makeConnectingError(const err_type type) const;
+#if USE_OPENSSL
+    void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
+#endif
     static void RegisterWithCacheManager(void);
+
+    /// stops monitoring server connection for closure and updates pconn stats
+    void closeServerConnection(const char *reason);
 
 public:
     StoreEntry *entry;
