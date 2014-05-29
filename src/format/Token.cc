@@ -81,7 +81,9 @@ static TokenTableEntry TokenTable2C[] = {
 
     {">rm", LFT_CLIENT_REQ_METHOD},
     {">ru", LFT_CLIENT_REQ_URI},
+    {">rs", LFT_CLIENT_REQ_URLSCHEME},
     {">rd", LFT_CLIENT_REQ_URLDOMAIN},
+    {">rP", LFT_CLIENT_REQ_URLPORT},
     {">rp", LFT_CLIENT_REQ_URLPATH},
     /*{">rq", LFT_CLIENT_REQ_QUERY},*/
     {">rv", LFT_CLIENT_REQ_VERSION},
@@ -91,9 +93,13 @@ static TokenTableEntry TokenTable2C[] = {
     {"rp", LFT_REQUEST_URLPATH_OLD_31},
     /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
     {"rv", LFT_REQUEST_VERSION},
+    {"rG", LFT_REQUEST_URLGROUP_OLD_2X},
 
     {"<rm", LFT_SERVER_REQ_METHOD},
     {"<ru", LFT_SERVER_REQ_URI},
+    {"<rs", LFT_SERVER_REQ_URLSCHEME},
+    {"<rd", LFT_SERVER_REQ_URLDOMAIN},
+    {"<rP", LFT_SERVER_REQ_URLPORT},
     {"<rp", LFT_SERVER_REQ_URLPATH},
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
@@ -407,6 +413,8 @@ done:
 
     case LFT_REPLY_HEADER:
 
+    case LFT_NOTE:
+
         if (data.string) {
             char *header = data.string;
             char *cp = strchr(header, ':');
@@ -534,11 +542,34 @@ done:
         break;
 #endif
 
+    case LFT_REQUEST_URLGROUP_OLD_2X:
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"rG\" formatting code is deprecated. Use \"note{urlgroup}\" instead.");
+        type = LFT_NOTE;
+        data.header.header = xstrdup("urlgroup");
+        break;
+
     default:
         break;
     }
 
     return (cur - def);
+}
+
+Format::Token::Token() : type(LFT_NONE),
+        label(NULL),
+        widthMin(-1),
+        widthMax(-1),
+        quote(LOG_QUOTE_NONE),
+        left(false),
+        space(false),
+        zero(false),
+        divisor(1),
+        next(NULL)
+{
+    data.string = NULL;
+    data.header.header = NULL;
+    data.header.element = NULL;
+    data.header.separator = ',';
 }
 
 Format::Token::~Token()

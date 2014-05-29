@@ -987,10 +987,8 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
 
-    debugs(33, 3, "clientSetKeepaliveFlag: http_ver = " <<
-           request->http_ver.major << "." << request->http_ver.minor);
-    debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
-           RequestMethodStr(request->method));
+    debugs(33, 3, "http_ver = " << request->http_ver);
+    debugs(33, 3, "method = " << request->method);
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
     request->flags.proxyKeepalive = request->persistent();
@@ -2828,20 +2826,23 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
-        if (internalHostnameIs(request->GetHost()) &&
-                request->port == getMyPort()) {
+        if (internalHostnameIs(request->GetHost()) && request->port == getMyPort()) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port);
             http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port << " (global_internal_static on)");
             request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = true;
-        }
+        } else
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port << " (not this proxy)");
     }
 
-    if (http->flags.internal) {
-        request->protocol = AnyP::PROTO_HTTP;
+    if (http->flags.internal)
         request->login[0] = '\0';
-    }
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
@@ -2920,6 +2921,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http->request->method == Http::METHOD_CONNECT) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
+
+        // consume header early so that tunnel gets just the body
+        connNoteUseOfBuffer(conn, http->req_sz);
+        notedUseOfBuffer = true;
     }
 
 #if USE_OPENSSL
@@ -3860,9 +3865,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         connState->clientConnection->local.toUrl(ip, sizeof(ip));
-        SBuf reqStr;
-        reqStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
-        bool ret = connState->handleReadData(&reqStr);
+        connState->in.buf.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        bool ret = connState->handleReadData(&connState->in.buf);
         if (ret)
             ret = connState->clientParseRequests();
 

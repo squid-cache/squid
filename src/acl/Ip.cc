@@ -111,7 +111,6 @@ acl_ip_data::toSBuf() const
     return SBuf(tmpbuf);
 }
 
-
 /*
  * aclIpAddrNetworkCompare - The guts of the comparison for IP ACLs
  * matching checks.  The first argument (p) is a "host" address,

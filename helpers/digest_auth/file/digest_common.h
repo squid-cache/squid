@@ -27,6 +27,7 @@
 #endif
 
 typedef struct _request_data {
+    int channelId;
     char *user;
     char *realm;
     char *password;

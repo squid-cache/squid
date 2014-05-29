@@ -158,15 +158,15 @@ NotePairs::~NotePairs()
 }
 
 const char *
-NotePairs::find(const char *noteKey) const
+NotePairs::find(const char *noteKey, const char *sep) const
 {
     static String value;
     value.clean();
     for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         if ((*i)->name.cmp(noteKey) == 0) {
             if (value.size())
-                value.append(", ");
-            value.append(ConfigParser::QuoteString((*i)->value));
+                value.append(sep);
+            value.append((*i)->value);
         }
     }
     return value.size() ? value.termedBuf() : NULL;
@@ -180,7 +180,7 @@ NotePairs::toString(const char *sep) const
     for (std::vector<NotePairs::Entry *>::const_iterator  i = entries.begin(); i != entries.end(); ++i) {
         value.append((*i)->name);
         value.append(": ");
-        value.append(ConfigParser::QuoteString((*i)->value));
+        value.append((*i)->value);
         value.append(sep);
     }
     return value.size() ? value.termedBuf() : NULL;

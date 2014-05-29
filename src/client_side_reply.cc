@@ -583,7 +583,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              */
             http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
             processMiss();
-        } else if (r->protocol == AnyP::PROTO_HTTP) {
+        } else if (r->url.getScheme() == AnyP::PROTO_HTTP) {
             debugs(88, 3, "validate HIT object? YES.");
             /*
              * Object needs to be revalidated
@@ -631,7 +631,7 @@ clientReplyContext::processMiss()
     char *url = http->uri;
     HttpRequest *r = http->request;
     ErrorState *err = NULL;
-    debugs(88, 4, "clientProcessMiss: '" << RequestMethodStr(r->method) << " " << url << "'");
+    debugs(88, 4, r->method << ' ' << url);
 
     /**
      * We might have a left-over StoreEntry from a failed cache hit
@@ -687,10 +687,6 @@ clientReplyContext::processMiss()
             return;
         }
 
-        /** Check for internal requests. Update Protocol info if so. */
-        if (http->flags.internal)
-            r->protocol = AnyP::PROTO_INTERNAL;
-
         assert(r->clientConnectionManager == http->getConn());
 
         /** Start forwarding to get the new object from network */
@@ -708,8 +704,7 @@ clientReplyContext::processMiss()
 void
 clientReplyContext::processOnlyIfCachedMiss()
 {
-    debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
-           RequestMethodStr(http->request->method) << " " << http->uri << "'");
+    debugs(88, 4, http->request->method << ' ' << http->uri);
     http->al->http.code = Http::scGatewayTimeout;
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGatewayTimeout, NULL,
                                        http->getConn()->clientConnection->remote, http->request);
@@ -835,7 +830,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
             if (StoreEntry *entry = storeGetPublic(url, m)) {
-                debugs(88, 5, "purging " << *entry << ' ' << RequestMethodStr(m) << ' ' << url);
+                debugs(88, 5, "purging " << *entry << ' ' << m << ' ' << url);
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
                 if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
@@ -1995,9 +1990,9 @@ clientReplyContext::ProcessReplyAccessResult(allow_t rv, void *voidMe)
 void
 clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 {
-    debugs(88, 2, "The reply for " << RequestMethodStr(http->request->method)
-           << " " << http->uri << " is " << accessAllowed << ", because it matched '"
-           << (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
+    debugs(88, 2, "The reply for " << http->request->method
+           << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
+           << (AclMatchedName ? AclMatchedName : "NO ACL's"));
 
     if (accessAllowed != ACCESS_ALLOWED) {
         ErrorState *err;
