@@ -56,6 +56,7 @@ libcompat_squid_la_SOURCES = \
 	xstrto.h \
 	\
 	os/aix.h \
+	os/android.h \
 	os/dragonfly.h \
 	os/freebsd.h \
 	os/hpux.h \

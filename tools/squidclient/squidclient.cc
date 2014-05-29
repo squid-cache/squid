@@ -38,6 +38,7 @@
 #include "tools/squidclient/gssapi_support.h"
 #include "tools/squidclient/Parameters.h"
 #include "tools/squidclient/Ping.h"
+#include "tools/squidclient/Transport.h"
 
 #if _SQUID_WINDOWS_
 /** \cond AUTODOCS-IGNORE */
@@ -84,20 +85,11 @@ using namespace Squid;
 #define HEADERLEN	65536
 #endif
 
-/// display debug messages at varying verbosity levels
-#define debugVerbose(LEVEL, MESSAGE) \
-    while ((LEVEL) <= scParams.verbosityLevel) {std::cerr << MESSAGE << std::endl; break;}
-
 /* Local functions */
-static int client_comm_bind(int, const Ip::Address &);
-
-static int client_comm_connect(int, const Ip::Address &);
 static void usage(const char *progname);
 
 void pipe_handler(int sig);
 static void set_our_signal(void);
-static ssize_t myread(int fd, void *buf, size_t len);
-static ssize_t mywrite(int fd, void *buf, size_t len);
 
 Parameters scParams;
 
@@ -106,7 +98,6 @@ static char *put_file = NULL;
 
 static struct stat sb;
 int total_bytes = 0;
-int io_timeout = 120;
 
 #if _SQUID_AIX_
 /* Bug 3854: AIX 6.1 tries to link in this fde.h global symbol
@@ -129,19 +120,16 @@ usage(const char *progname)
 {
     std::cerr << "Version: " << VERSION << std::endl
               << "Usage: " << progname << " [Basic Options] [HTTP Options]" << std::endl
-              << std::endl
-              << "Basic Options:" << std::endl
-              << "    -h host         Send message to server on 'host'.  Default is localhost." << std::endl
-              << "    -l host         Specify a local IP address to bind to.  Default is none." << std::endl
-              << "    -p port         Port number on server to contact. Default is " << CACHE_HTTP_PORT << "." << std::endl
-              << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
-              << "    -T timeout      Timeout value (seconds) for read/write operations" << std::endl
-              << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
-              << "                    Levels:" << std::endl
-              << "                      1 - Print outgoing request message to stderr." << std::endl
-              << "                      2 - Print action trace to stderr." << std::endl
-              << "    --help          Display this help text." << std::endl
               << std::endl;
+    std::cerr
+        << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
+        << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
+        << "                    Levels:" << std::endl
+        << "                      1 - Print outgoing request message to stderr." << std::endl
+        << "                      2 - Print action trace to stderr." << std::endl
+        << "    --help          Display this help text." << std::endl
+        << std::endl;
+    Transport::Config.usage();
     Ping::Config.usage();
     std::cerr
         << "HTTP Options:" << std::endl
@@ -171,16 +159,13 @@ usage(const char *progname)
 int
 main(int argc, char *argv[])
 {
-    int conn, len, bytesWritten;
-    uint16_t port;
+    int len, bytesWritten;
     bool to_stdout, reload;
     int keep_alive = 0;
     int opt_noaccept = 0;
 #if HAVE_GSSAPI
     int www_neg = 0, proxy_neg = 0;
 #endif
-    const char *hostname, *localhost;
-    Ip::Address iaddr;
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
     char extra_hdrs[HEADERLEN];
     const char *method = "GET";
@@ -197,10 +182,7 @@ main(int argc, char *argv[])
     const char *useragent = NULL;
 
     /* set the defaults */
-    hostname = "localhost";
-    localhost = NULL;
     extra_hdrs[0] = '\0';
-    port = CACHE_HTTP_PORT;
     to_stdout = true;
     reload = false;
 
@@ -212,7 +194,7 @@ main(int argc, char *argv[])
         url[BUFSIZ - 1] = '\0';
 
         int optIndex = 0;
-        const char *shortOpStr = "aA:h:j:V:l:P:i:kmnN:p:rsvt:p:H:T:u:U:w:W:?";
+        const char *shortOpStr = "aA:h:j:V:l:P:i:kmnN:p:rsvt:H:T:u:U:w:W:?";
 
         // options for controlling squidclient
         static struct option basicOptions[] = {
@@ -220,7 +202,11 @@ main(int argc, char *argv[])
             {"help",    no_argument, 0, '?'},
             {"verbose", no_argument, 0, 'v'},
             {"quiet",   no_argument, 0, 's'},
+            {"host",    required_argument, 0, 'h'},
+            {"local",   required_argument, 0, 'l'},
+            {"port",    required_argument, 0, 'p'},
             {"ping",    no_argument, 0, '\1'},
+            {"https",   no_argument, 0, '\3'},
             {0, 0, 0, 0}
         };
 
@@ -231,9 +217,18 @@ main(int argc, char *argv[])
             switch (c) {
             case '\1':
                 to_stdout = 0;
-                if (Ping::Config.parseCommandOpts(argc, argv, c, optIndex))
-                    continue;
-                break;
+                Ping::Config.parseCommandOpts(argc, argv, c, optIndex);
+                continue;
+
+            case 'h':		/* remote host */
+            case 'l':		/* local host */
+            case 'p':		/* port number */
+                // rewind and let the Transport::Config parser handle
+                optind -= 2;
+
+            case '\3': // request over a TLS connection
+                Transport::Config.parseCommandOpts(argc, argv, c, optIndex);
+                continue;
 
             default: // fall through to next switch
                 break;
@@ -252,20 +247,12 @@ main(int argc, char *argv[])
                 useragent = optarg;
                 break;
 
-            case 'h':		/* remote host */
-                hostname = optarg;
-                break;
-
             case 'j':
                 host = optarg;
                 break;
 
             case 'V':
                 version = optarg;
-                break;
-
-            case 'l':		/* local host */
-                localhost = optarg;
                 break;
 
             case 's':		/* silent */
@@ -278,12 +265,6 @@ main(int argc, char *argv[])
 
             case 'r':		/* reload */
                 reload = true;
-                break;
-
-            case 'p':		/* port number */
-                sscanf(optarg, "%hd", &port);
-                if (port < 1)
-                    port = CACHE_HTTP_PORT;	/* default */
                 break;
 
             case 'P':
@@ -313,7 +294,7 @@ main(int argc, char *argv[])
                 break;
 
             case 'T':
-                io_timeout = atoi(optarg);
+                Transport::Config.ioTimeout = atoi(optarg);
                 break;
 
             case 'u':
@@ -380,9 +361,9 @@ main(int argc, char *argv[])
         }
         // embed the -w proxy password into old-style cachemgr URLs
         if (at)
-            snprintf(url, BUFSIZ, "cache_object://%s/%s@%s", hostname, t, at);
+            snprintf(url, BUFSIZ, "cache_object://%s/%s@%s", Transport::Config.hostname, t, at);
         else
-            snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
+            snprintf(url, BUFSIZ, "cache_object://%s/%s", Transport::Config.hostname, t);
         xfree(t);
     }
     if (put_file) {
@@ -499,8 +480,8 @@ main(int argc, char *argv[])
                 std::cerr << "ERROR: server host missing" << std::endl;
         }
         if (proxy_neg) {
-            if (hostname) {
-                snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", GSSAPI_token(hostname));
+            if (Transport::Config.hostname) {
+                snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", GSSAPI_token(Transport::Config.hostname));
                 strcat(msg, buf);
             } else
                 std::cerr << "ERROR: proxy server host missing" << std::endl;
@@ -525,61 +506,13 @@ main(int argc, char *argv[])
 
     for (uint32_t i = 0; loops == 0 || i < loops; ++i) {
         size_t fsize = 0;
-        struct addrinfo *AI = NULL;
 
-        debugVerbose(2, "Resolving... " << hostname);
-
-        /* Connect to the server */
-
-        if (localhost) {
-            if ( !iaddr.GetHostByName(localhost) ) {
-                std::cerr << "ERROR: Cannot resolve " << localhost << ": Host unknown." << std::endl;
-                exit(1);
-            }
-        } else {
-            /* Process the remote host name to locate the Protocol required
-               in case we are being asked to link to another version of squid */
-            if ( !iaddr.GetHostByName(hostname) ) {
-                std::cerr << "ERROR: Cannot resolve " << hostname << ": Host unknown." << std::endl;
-                exit(1);
-            }
-        }
-
-        iaddr.getAddrInfo(AI);
-        if ((conn = socket(AI->ai_family, AI->ai_socktype, 0)) < 0) {
-            std::cerr << "ERROR: could not open socket to " << iaddr << std::endl;
-            Ip::Address::FreeAddrInfo(AI);
-            exit(1);
-        }
-        Ip::Address::FreeAddrInfo(AI);
-
-        if (localhost && client_comm_bind(conn, iaddr) < 0) {
-            std::cerr << "ERROR: could not bind socket to " << iaddr << std::endl;
-            exit(1);
-        }
-
-        iaddr.setEmpty();
-        if ( !iaddr.GetHostByName(hostname) ) {
-            std::cerr << "ERROR: Cannot resolve " << hostname << ": Host unknown." << std::endl;
-            exit(1);
-        }
-
-        iaddr.port(port);
-
-        debugVerbose(2, "Connecting... " << hostname << " (" << iaddr << ")");
-
-        if (client_comm_connect(conn, iaddr) < 0) {
-            char hostnameBuf[MAX_IPSTRLEN];
-            iaddr.toUrl(hostnameBuf, MAX_IPSTRLEN);
-            std::cerr << "ERROR: Cannot connect to " << hostnameBuf
-                      << (!errno ?": Host unknown." : "") << std::endl;
-            exit(1);
-        }
-        debugVerbose(2, "Connected to: " << hostname << " (" << iaddr << ")");
+        if (!Transport::Connect())
+            continue;
 
         /* Send the HTTP request */
         debugVerbose(2, "Sending HTTP request ... ");
-        bytesWritten = mywrite(conn, msg, strlen(msg));
+        bytesWritten = Transport::Write(msg, strlen(msg));
 
         if (bytesWritten < 0) {
             std::cerr << "ERROR: write" << std::endl;
@@ -596,7 +529,7 @@ main(int argc, char *argv[])
             lseek(put_fd, 0, SEEK_SET);
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
 
-                x = mywrite(conn, buf, x);
+                x = Transport::Write(buf, x);
 
                 total_bytes += x;
 
@@ -615,18 +548,30 @@ main(int argc, char *argv[])
         setmode(1, O_BINARY);
 #endif
 
-        while ((len = myread(conn, buf, sizeof(buf))) > 0) {
+        while ((len = Transport::Read(buf, sizeof(buf))) > 0) {
             fsize += len;
 
             if (to_stdout && fwrite(buf, len, 1, stdout) != 1)
                 std::cerr << "ERROR: writing to stdout: " << xstrerror() << std::endl;
         }
 
+#if USE_GNUTLS
+        if (Transport::Config.tlsEnabled) {
+            if (len == 0) {
+                std::cerr << "- Peer has closed the TLS connection" << std::endl;
+            } else if (!gnutls_error_is_fatal(len)) {
+                std::cerr << "WARNING: " << gnutls_strerror(len) << std::endl;
+            } else {
+                std::cerr << "ERROR: " << gnutls_strerror(len) << std::endl;
+            }
+        }
+#endif
+
 #if _SQUID_WINDOWS_
         setmode(1, O_TEXT);
 #endif
 
-        (void) close(conn);	/* done with socket */
+        Transport::CloseConnection();
 
         if (Ping::LoopDone(i))
             break;
@@ -635,30 +580,8 @@ main(int argc, char *argv[])
     }
 
     Ping::DisplayStats();
+    Transport::ShutdownTls();
     return 0;
-}
-
-/// Set up the source socket address from which to send.
-static int
-client_comm_bind(int sock, const Ip::Address &addr)
-{
-    static struct addrinfo *AI = NULL;
-    addr.getAddrInfo(AI);
-    int res = bind(sock, AI->ai_addr, AI->ai_addrlen);
-    Ip::Address::FreeAddrInfo(AI);
-    return res;
-}
-
-/// Set up the destination socket address for message to send to.
-static int
-client_comm_connect(int sock, const Ip::Address &addr)
-{
-    static struct addrinfo *AI = NULL;
-    addr.getAddrInfo(AI);
-    int res = connect(sock, AI->ai_addr, AI->ai_addrlen);
-    Ip::Address::FreeAddrInfo(AI);
-    Ping::TimerStart();
-    return res;
 }
 
 void
@@ -682,27 +605,5 @@ set_our_signal(void)
     }
 #else
     signal(SIGPIPE, pipe_handler);
-#endif
-}
-
-static ssize_t
-myread(int fd, void *buf, size_t len)
-{
-#if _SQUID_WINDOWS_
-    return recv(fd, buf, len, 0);
-#else
-    alarm(io_timeout);
-    return read(fd, buf, len);
-#endif
-}
-
-static ssize_t
-mywrite(int fd, void *buf, size_t len)
-{
-#if _SQUID_WINDOWS_
-    return send(fd, buf, len, 0);
-#else
-    alarm(io_timeout);
-    return write(fd, buf, len);
 #endif
 }

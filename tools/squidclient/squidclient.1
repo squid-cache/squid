@@ -7,10 +7,11 @@ A simple HTTP web client tool
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B squidclient
-.if !'po4a'hide' .B "[ \-\-ping [ping-options] ] "
-.if !'po4a'hide' .B "[ \-aknNrsv ] [ \-A"
+.if !'po4a'hide' .B "[ \-aknNrsv ] "
+.if !'po4a'hide' .B "[ \-\-ping [ping\-options] ] "
+.if !'po4a'hide' .B "[ \-\-https] [tls\-options] [ \-A"
 string
-.if !'po4a'hide' .B "] [ \-h"
+.if !'po4a'hide' .B "] [ \-h | \-\-host"
 remote host
 .if !'po4a'hide' .B "] [ \-H '"
 string
@@ -18,11 +19,11 @@ string
 IMS
 .if !'po4a'hide' .B "] [ \-j '"
 Host header
-.if !'po4a'hide' .B "' ] [ \-l"
-local host
+.if !'po4a'hide' .B "' ] [ \-l | \-\-local"
+host
 .if !'po4a'hide' .B "] [ \-m"
 method
-.if !'po4a'hide' .B "] [ \-p"
+.if !'po4a'hide' .B "] [ \-p | \-\-port"
 port
 .if !'po4a'hide' .B "] [ \-P"
 file
@@ -49,6 +50,14 @@ count
 interval
 .if !'po4a'hide' .B "] "
 .
+.if !'po4a'hide' .B "TLS options: [ \-\-anonymous\-tls ] [ \-\-trusted\-ca"
+CA certificates file
+.if !'po4a'hide' .B "...] [ \-\-cert"
+client X.509 certificate file
+.if !'po4a'hide' .B "] [ \-\-params"
+TLS session parameters
+.if !'po4a'hide' .B "] "
+.
 .SH DESCRIPTION
 .B squidclient
 is a tool providing a command line interface for retrieving URLs.
@@ -70,8 +79,8 @@ Send
 as User-Agent: header. To omit the header completely set string to empty ('').
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-h host"
-Retrieve URL from cache on hostname.  Default is
+.if !'po4a'hide' .B "\-h | \-\-host host"
+Retrieve URL from server host.  Default is
 .B localhost
 .
 .if !'po4a'hide' .TP
@@ -93,7 +102,7 @@ Host header content
 Keep the connection active. Default is to do only one request then close.
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-l host"
+.if !'po4a'hide' .B "\-l | \-\-local host"
 Specify a local IP address to bind to.  Default is none.
 .
 .if !'po4a'hide' .TP
@@ -176,6 +185,31 @@ Proxy authentication password
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-W password"
 WWW authentication password
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-https"
+Use Transport Layer Security on the HTTP connection.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-anonymous\-tls"
+Use TLS with unauthenticated (anonymous) certificate.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-cert file"
+File containing client X.509 certificate in PEM format.
+May be repeated to load several client certificates.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-trusted-ca file"
+File containing trusted Certificate Authority (CA) certificates in PEM format.
+May be repeated to load any number of files.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-\-params values"
+TLS library specific parameters for the communication session.
+See the library documentation for details on valid parameters.
+.if !'po4a'hide' .I "GnuTLS: http://gnutls.org/manual/html_node/Priority\-Strings.html"
+If repeated only the last value will have effect.
 .
 .if !'po4a'hide' .TP 10
 .if !'po4a'hide' .B "\-\-ping [options]"
