@@ -119,9 +119,7 @@ Auth::Negotiate::Config::dump(StoreEntry * entry, const char *name, Auth::Config
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s negotiate children %d startup=%d idle=%d concurrency=%d\n",
-                      name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
-    storeAppendPrintf(entry, "%s %s keep_alive %s\n", name, "negotiate", keep_alive ? "on" : "off");
+    storeAppendPrintf(entry, "\n%s %s keep_alive %s\n", name, "negotiate", keep_alive ? "on" : "off");
     Auth::Config::dump(entry, name, scheme);
 }
 
@@ -138,8 +136,6 @@ Auth::Negotiate::Config::parse(Auth::Config * scheme, int n_configured, char *pa
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param negotiate program", authenticateProgram->key);
-    } else if (strcmp(param_str, "children") == 0) {
-        authenticateChildren.parseConfig();
     } else if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else
