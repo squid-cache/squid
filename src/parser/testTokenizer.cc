@@ -203,4 +203,16 @@ testTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT(t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
     }
+
+    // base-16, prefix
+    {
+        int64_t rv;
+        SBuf base("deadbeefrow");
+        const int64_t benchmark=0xdeadbeef;
+        Parser::Tokenizer t(base);
+        CPPUNIT_ASSERT(t.int64(rv,16));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("row"),t.buf());
+
+    }
 }
