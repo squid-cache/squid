@@ -94,7 +94,10 @@ Auth::Config::registerWithCacheManager(void)
 void
 Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
-    if (strcmp(param_str, "key_extras") == 0) {
+    if (strcmp(param_str, "children") == 0) {
+        authenticateChildren.parseConfig();
+
+    } else if (strcmp(param_str, "key_extras") == 0) {
         keyExtrasLine = ConfigParser::NextQuotedToken();
         Format::Format *nlf =  new ::Format::Format(scheme->type());
         if (!nlf->parse(keyExtrasLine.termedBuf())) {
@@ -119,6 +122,11 @@ Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 void
 Auth::Config::dump(StoreEntry *entry, const char *name, Auth::Config *scheme)
 {
+    storeAppendPrintf(entry, "%s %s children %d startup=%d idle=%d concurrency=%d\n",
+                      name, scheme->type(),
+                      authenticateChildren.n_max, authenticateChildren.n_startup,
+                      authenticateChildren.n_idle, authenticateChildren.concurrency);
+
     if (keyExtrasLine.size() > 0)
         storeAppendPrintf(entry, "%s %s key_extras \"%s\"\n", name, scheme->type(), keyExtrasLine.termedBuf());
 }
