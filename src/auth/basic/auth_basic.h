@@ -28,7 +28,7 @@ public:
     virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, Auth::Config *);
+    virtual bool dump(StoreEntry *, const char *, Auth::Config *) const;
     virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(Auth::Config *);
     virtual void parse(Auth::Config *, int, char *);
