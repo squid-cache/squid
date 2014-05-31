@@ -83,7 +83,6 @@ public:
     virtual const char * type() const;
 
 public:
-    char *digestAuthRealm;
     time_t nonceGCInterval;
     time_t noncemaxduration;
     unsigned int noncemaxuses;

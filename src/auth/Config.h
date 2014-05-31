@@ -148,6 +148,10 @@ public:
     wordlist *authenticateProgram; ///< Helper program to run, includes all parameters
     String keyExtrasLine;  ///< The format of the request to the auth helper
     Format::Format *keyExtras; ///< The compiled request format
+
+protected:
+    /// RFC 7235 section 2.2 - Protection Space (Realm)
+    SBuf realm;
 };
 
 typedef std::vector<Config *> ConfigVector;

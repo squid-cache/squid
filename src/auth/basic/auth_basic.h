@@ -23,7 +23,6 @@ class Config : public Auth::Config
 {
 public:
     Config();
-    ~Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
@@ -38,7 +37,6 @@ public:
     virtual const char * type() const;
 
 public:
-    char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
     int utf8;
