@@ -122,8 +122,9 @@ public:
     /**
      * Responsible for writing to the StoreEntry the configuration parameters that a user
      * would put in a config file to recreate the running configuration.
+     * Returns whether the scheme is configured.
      */
-    virtual void dump(StoreEntry *, const char *, Config *);
+    virtual bool dump(StoreEntry *, const char *, Config *) const;
 
     /** add headers as needed when challenging for auth */
     virtual void fixHeader(UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
