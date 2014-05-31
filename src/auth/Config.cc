@@ -94,7 +94,23 @@ Auth::Config::registerWithCacheManager(void)
 void
 Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
-    if (strcmp(param_str, "children") == 0) {
+    if (strcmp(param_str, "realm") == 0) {
+        realm.clear();
+
+        char *token = ConfigParser::NextQuotedOrToEol();
+
+        while (*token && xisspace(*token))
+            ++token;
+
+        if (!token || !*token) {
+            debugs(29, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Missing auth_param " << scheme->type() << " realm");
+            self_destruct();
+            return;
+        }
+
+        realm = token;
+
+    } else if (strcmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
 
     } else if (strcmp(param_str, "key_extras") == 0) {
@@ -122,6 +138,8 @@ Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 void
 Auth::Config::dump(StoreEntry *entry, const char *name, Auth::Config *scheme)
 {
+    storeAppendPrintf(entry, "%s %s realm " SQUIDSBUFPH "\n", name, scheme->type(), SQUIDSBUFPRINT(realm));
+
     storeAppendPrintf(entry, "%s %s children %d startup=%d idle=%d concurrency=%d\n",
                       name, scheme->type(),
                       authenticateChildren.n_max, authenticateChildren.n_startup,

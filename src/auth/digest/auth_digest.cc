@@ -499,8 +499,7 @@ Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::Config * 
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s %s realm %s\n%s %s nonce_max_count %d\n%s %s nonce_max_duration %d seconds\n%s %s nonce_garbage_interval %d seconds\n",
-                      name, "digest", digestAuthRealm,
+    storeAppendPrintf(entry, "\n%s %s nonce_max_count %d\n%s %s nonce_max_duration %d seconds\n%s %s nonce_garbage_interval %d seconds\n",
                       name, "digest", noncemaxuses,
                       name, "digest", (int) noncemaxduration,
                       name, "digest", (int) nonceGCInterval);
@@ -518,7 +517,7 @@ Auth::Digest::Config::configured() const
 {
     if ((authenticateProgram != NULL) &&
             (authenticateChildren.n_max != 0) &&
-            (digestAuthRealm != NULL) && (noncemaxduration > -1))
+            !realm.isEmpty() && (noncemaxduration > -1))
         return true;
 
     return false;
@@ -550,12 +549,13 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
     }
 
     debugs(29, 9, "Sending type:" << hdrType <<
-           " header: 'Digest realm=\"" << digestAuthRealm << "\", nonce=\"" <<
+           " header: 'Digest realm=\"" << realm << "\", nonce=\"" <<
            authenticateDigestNonceNonceb64(nonce) << "\", qop=\"" << QOP_AUTH <<
            "\", stale=" << (stale ? "true" : "false"));
 
     /* in the future, for WWW auth we may want to support the domain entry */
-    httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"%s\", nonce=\"%s\", qop=\"%s\", stale=%s", digestAuthRealm, authenticateDigestNonceNonceb64(nonce), QOP_AUTH, stale ? "true" : "false");
+    httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"" SQUIDSBUFPH "\", nonce=\"%s\", qop=\"%s\", stale=%s",
+                      SQUIDSBUFPRINT(realm), authenticateDigestNonceNonceb64(nonce), QOP_AUTH, stale ? "true" : "false");
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
@@ -613,12 +613,9 @@ Auth::Digest::Config::done()
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
-
-    safe_free(digestAuthRealm);
 }
 
 Auth::Digest::Config::Config() :
-        digestAuthRealm(NULL),
         nonceGCInterval(5*60),
         noncemaxduration(30*60),
         noncemaxuses(50),
@@ -638,8 +635,6 @@ Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param digest program", authenticateProgram->key);
-    } else if (strcmp(param_str, "realm") == 0) {
-        parse_eol(&digestAuthRealm);
     } else if (strcmp(param_str, "nonce_garbage_interval") == 0) {
         parse_time_t(&nonceGCInterval);
     } else if (strcmp(param_str, "nonce_max_duration") == 0) {
