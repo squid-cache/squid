@@ -1,6 +1,35 @@
 #include "squid.h"
 #include "parser/Tokenizer.h"
 
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif
+#ifndef INT64_MIN
+/* Native 64 bit system without strtoll() */
+#if defined(LONG_MIN) && (SIZEOF_LONG == 8)
+#define INT64_MIN LONG_MIN
+#else
+/* 32 bit system */
+#define INT64_MIN       -9223372036854775807L-1L
+#endif
+#endif
+
+#ifndef INT64_MAX
+/* Native 64 bit system without strtoll() */
+#if defined(LONG_MAX) && (SIZEOF_LONG == 8)
+#define INT64_MAX LONG_MAX
+#else
+/* 32 bit system */
+#define INT64_MAX       9223372036854775807L
+#endif
+#endif
+
 bool
 Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
