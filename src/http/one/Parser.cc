@@ -2,6 +2,9 @@
 #include "Debug.h"
 #include "http/one/Parser.h"
 
+/// RFC 7230 section 2.6 - 7 magic octets
+const SBuf Http::One::Parser::Http1magic("HTTP/1.");
+
 void
 Http::One::Parser::clear()
 {

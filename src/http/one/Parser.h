@@ -72,6 +72,9 @@ public:
     char *getHeaderField(const char *name);
 
 public:
+    /// RFC 7230 section 2.6 - 7 magic octets
+    static const SBuf Http1magic;
+
     SBuf buf;
 
 protected:
