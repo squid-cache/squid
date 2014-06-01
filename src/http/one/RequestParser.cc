@@ -203,7 +203,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     }
 
     /* Set method_ */
-    SBuf tmp = buf.substr(req.m_start, req.m_end - req.m_start + 1);
+    const SBuf tmp = buf.substr(req.m_start, req.m_end - req.m_start + 1);
     method_ = HttpRequestMethod(tmp);
 
     // First non-whitespace after first SP = beginning of URL+Version
