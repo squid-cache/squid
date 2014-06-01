@@ -14,6 +14,7 @@ libsquid_parser_la_SOURCES = \
 	Tokenizer.cc
 
 SBUF_SOURCE= \
+	$(top_srcdir)/src/base/CharacterSet.h \
 	$(top_srcdir)/src/SBuf.h \
 	$(top_srcdir)/src/SBuf.cc \
 	$(top_srcdir)/src/MemBlob.h \
@@ -32,7 +33,6 @@ testTokenizer_SOURCES = \
 	testTokenizer.cc \
 	Tokenizer.h
 nodist_testTokenizer_SOURCES = \
-	$(top_srcdir)/src/base/CharacterSet.h \
 	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/tests/stub_mem.cc \
 	$(top_srcdir)/src/tests/stub_debug.cc \
