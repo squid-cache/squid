@@ -42,14 +42,14 @@ Http::One::RequestParser::skipGarbageLines()
 {
 #if WHEN_RFC_COMPLIANT // CRLF or bare-LF is what RFC 2616 tolerant parsers do ...
     if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && (buf[0] == '\r' || buf[0] == '\n'))
+        if (Config.onoff.relaxed_header_parser < 0 && (buf_[0] == '\r' || buf_[0] == '\n'))
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                    "CRLF bytes received ahead of request-line. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix empty lines
         // ie any series of either \n or \r\n with no other characters and no repeated \r
-        while (!buf.isEmpty() && (buf[0] == '\n' || (buf[0] == '\r' && buf[1] == '\n'))) {
-            buf.consume(1);
+        while (!buf_.isEmpty() && (buf_[0] == '\n' || (buf_[0] == '\r' && buf_[1] == '\n'))) {
+            buf_.consume(1);
         }
     }
 #endif
@@ -62,13 +62,13 @@ Http::One::RequestParser::skipGarbageLines()
      */
 #if USE_HTTP_VIOLATIONS
     if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && buf[0] == ' ')
+        if (Config.onoff.relaxed_header_parser < 0 && buf_[0] == ' ')
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                    "Whitespace bytes received ahead of method. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix spaces (other bytes are valid method values)
-        while (!buf.isEmpty() && buf[0] == ' ') {
-            buf.consume(1);
+        while (!buf_.isEmpty() && buf_[0] == ' ') {
+            buf_.consume(1);
         }
     }
 #endif
@@ -97,51 +97,51 @@ Http::One::RequestParser::parseRequestFirstLine()
     int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
     int line_end = -1; // tracks the last byte BEFORE terminal \r\n or \n sequence
 
-    debugs(74, 5, "parsing possible request: buf.length=" << buf.length());
-    debugs(74, DBG_DATA, buf);
+    debugs(74, 5, "parsing possible request: buf.length=" << buf_.length());
+    debugs(74, DBG_DATA, buf_);
 
     // Single-pass parse: (provided we have the whole line anyways)
 
     req.start = 0;
     req.end = -1;
-    for (SBuf::size_type i = 0; i < buf.length(); ++i) {
+    for (SBuf::size_type i = 0; i < buf_.length(); ++i) {
         // track first and last whitespace (SP only)
-        if (buf[i] == ' ') {
+        if (buf_[i] == ' ') {
             last_whitespace = i;
             if (first_whitespace < req.start)
                 first_whitespace = i;
         }
 
         // track next non-SP/non-HT byte after first_whitespace
-        if (second_word < first_whitespace && buf[i] != ' ' && buf[i] != '\t') {
+        if (second_word < first_whitespace && buf_[i] != ' ' && buf_[i] != '\t') {
             second_word = i;
         }
 
         // locate line terminator
-        if (buf[i] == '\n') {
+        if (buf_[i] == '\n') {
             req.end = i;
             line_end = i - 1;
             break;
         }
-        if (i < buf.length() - 1 && buf[i] == '\r') {
+        if (i < buf_.length() - 1 && buf_[i] == '\r') {
             if (Config.onoff.relaxed_header_parser) {
-                if (Config.onoff.relaxed_header_parser < 0 && buf[i + 1] == '\r')
+                if (Config.onoff.relaxed_header_parser < 0 && buf_[i + 1] == '\r')
                     debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                            "Series of carriage-return bytes received prior to line terminator. " <<
                            "Ignored due to relaxed_header_parser.");
 
                 // Be tolerant of invalid multiple \r prior to terminal \n
-                if (buf[i + 1] == '\n' || buf[i + 1] == '\r')
+                if (buf_[i + 1] == '\n' || buf_[i + 1] == '\r')
                     line_end = i - 1;
-                while (i < buf.length() - 1 && buf[i + 1] == '\r')
+                while (i < buf_.length() - 1 && buf_[i + 1] == '\r')
                     ++i;
 
-                if (buf[i + 1] == '\n') {
+                if (buf_[i + 1] == '\n') {
                     req.end = i + 1;
                     break;
                 }
             } else {
-                if (buf[i + 1] == '\n') {
+                if (buf_[i + 1] == '\n') {
                     req.end = i + 1;
                     line_end = i - 1;
                     break;
@@ -157,7 +157,7 @@ Http::One::RequestParser::parseRequestFirstLine()
 
     if (req.end == -1) {
         // DoS protection against long first-line
-        if ((size_t)buf.length() >= Config.maxRequestHeaderSize) {
+        if ((size_t)buf_.length() >= Config.maxRequestHeaderSize) {
             debugs(33, 5, "Too large request-line");
             // XXX: return URL-too-log status code if second_whitespace is not yet found.
             request_parse_status = Http::scHeaderTooLarge;
@@ -203,7 +203,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     }
 
     /* Set method_ */
-    const SBuf tmp = buf.substr(req.m_start, req.m_end - req.m_start + 1);
+    const SBuf tmp = buf_.substr(req.m_start, req.m_end - req.m_start + 1);
     method_ = HttpRequestMethod(tmp);
 
     // First non-whitespace after first SP = beginning of URL+Version
@@ -218,20 +218,20 @@ Http::One::RequestParser::parseRequestFirstLine()
     if (last_whitespace < second_word && last_whitespace >= req.start) {
         msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
-        uri_ = buf.substr(req.u_start, req.u_end - req.u_start + 1);
+        uri_ = buf_.substr(req.u_start, req.u_end - req.u_start + 1);
         request_parse_status = Http::scOkay; // HTTP/0.9
         return 1;
     } else {
         // otherwise last whitespace is somewhere after end of URI.
         req.u_end = last_whitespace;
         // crop any trailing whitespace in the area we think of as URI
-        for (; req.u_end >= req.u_start && xisspace(buf[req.u_end]); --req.u_end);
+        for (; req.u_end >= req.u_start && xisspace(buf_[req.u_end]); --req.u_end);
     }
     if (req.u_end < req.u_start) {
         request_parse_status = Http::scBadRequest; // missing URI
         return -1;
     }
-    uri_ = buf.substr(req.u_start, req.u_end - req.u_start + 1);
+    uri_ = buf_.substr(req.u_start, req.u_end - req.u_start + 1);
 
     // Last whitespace SP = before start of protocol/version
     if (last_whitespace >= line_end) {
@@ -242,7 +242,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     req.v_end = line_end;
 
     /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
-    if ((req.v_end - req.v_start +1) < (int)Http1magic.length() || !buf.substr(req.v_start, SBuf::npos).startsWith(Http1magic)) {
+    if ((req.v_end - req.v_start +1) < (int)Http1magic.length() || !buf_.substr(req.v_start, SBuf::npos).startsWith(Http1magic)) {
         // non-HTTP/1 protocols not supported / implemented.
         request_parse_status = Http::scHttpVersionNotSupported;
         return -1;
@@ -259,14 +259,14 @@ Http::One::RequestParser::parseRequestFirstLine()
         return -1;
     }
     /* next should be one or more digits */
-    if (!isdigit(buf[i])) {
+    if (!isdigit(buf_[i])) {
         request_parse_status = Http::scHttpVersionNotSupported;
         return -1;
     }
     int min = 0;
-    for (; i <= line_end && (isdigit(buf[i])) && min < 65536; ++i) {
+    for (; i <= line_end && (isdigit(buf_[i])) && min < 65536; ++i) {
         min = min * 10;
-        min = min + (buf[i]) - '0';
+        min = min + (buf_[i]) - '0';
     }
     // catch too-big values or trailing garbage
     if (min >= 65536 || i < line_end) {
@@ -285,7 +285,7 @@ Http::One::RequestParser::parseRequestFirstLine()
 bool
 Http::One::RequestParser::parse(const SBuf &aBuf)
 {
-    buf = aBuf;
+    buf_ = aBuf;
     debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");
 
     // stage 1: locate the request-line
@@ -293,7 +293,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
         skipGarbageLines();
 
         // if we hit something before EOS treat it as a message
-        if (!buf.isEmpty())
+        if (!buf_.isEmpty())
             parsingStage_ = HTTP_PARSE_FIRST;
         else
             return false;
@@ -306,7 +306,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
 
         // first-line (or a look-alike) found successfully.
         if (retcode > 0) {
-            buf.consume(firstLineSize()); // first line bytes including CRLF terminator are now done.
+            buf_.consume(firstLineSize()); // first line bytes including CRLF terminator are now done.
             parsingStage_ = HTTP_PARSE_MIME;
         }
 
@@ -315,7 +315,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
         debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << method_ << ")");
         debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
         debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
-        debugs(74, 5, "Parser: bytes processed=" << (aBuf.length()-buf.length()));
+        debugs(74, 5, "Parser: bytes processed=" << (aBuf.length()-buf_.length()));
         PROF_stop(HttpParserParseReqLine);
 
         // syntax errors already
@@ -334,8 +334,8 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
              *       (ie, none, so don't try parsing em)
              */
             int64_t mimeHeaderBytes = 0;
-            if ((mimeHeaderBytes = headersEnd(buf.c_str(), buf.length())) == 0) {
-                if (buf.length()+firstLineSize() >= Config.maxRequestHeaderSize) {
+            if ((mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) == 0) {
+                if (buf_.length()+firstLineSize() >= Config.maxRequestHeaderSize) {
                     debugs(33, 5, "Too large request");
                     request_parse_status = Http::scHeaderTooLarge;
                     parsingStage_ = HTTP_PARSE_DONE;
@@ -343,8 +343,8 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
                     debugs(33, 5, "Incomplete request, waiting for end of headers");
                 return false;
             }
-            mimeHeaderBlock_ = buf.substr(req.end+1, mimeHeaderBytes);
-            buf.consume(mimeHeaderBytes); // done with these bytes now.
+            mimeHeaderBlock_ = buf_.substr(req.end+1, mimeHeaderBytes);
+            buf_.consume(mimeHeaderBytes); // done with these bytes now.
 
         } else
             debugs(33, 3, "Missing HTTP/1.x identifier");

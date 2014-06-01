@@ -65,7 +65,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     CPPUNIT_ASSERT_EQUAL(expect.status, output.request_parse_status);
     CPPUNIT_ASSERT_EQUAL(expect.msgStart, output.req.start);
     CPPUNIT_ASSERT_EQUAL(expect.msgEnd, output.req.end);
-    CPPUNIT_ASSERT_EQUAL(expect.suffixSz, output.buf.length());
+    CPPUNIT_ASSERT_EQUAL(expect.suffixSz, output.buf_.length());
     CPPUNIT_ASSERT_EQUAL(expect.methodStart, output.req.m_start);
     CPPUNIT_ASSERT_EQUAL(expect.methodEnd, output.req.m_end);
     CPPUNIT_ASSERT_EQUAL(expect.method, output.method_);
@@ -1381,7 +1381,7 @@ testHttp1Parser::testDripFeed()
         testResults(__LINE__, ioBuf, hp, expect);
 
         // sync the buffers like Squid does
-        ioBuf = hp.buf;
+        ioBuf = hp.remaining();
 
         // Squid stops using the parser once it has parsed the first message.
         if (!hp.needsMoreData())
