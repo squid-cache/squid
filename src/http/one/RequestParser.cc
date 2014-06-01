@@ -80,6 +80,7 @@ Http::One::RequestParser::skipGarbageLines()
  * Governed by:
  *  RFC 1945 section 5.1
  *  RFC 2616 section 5.1
+ *  RFC 7230
  *
  * Parsing state is stored between calls. However the current implementation
  * begins parsing from scratch on every call.
@@ -240,48 +241,18 @@ Http::One::RequestParser::parseRequestFirstLine()
     req.v_start = last_whitespace + 1;
     req.v_end = line_end;
 
-    // We only accept HTTP protocol requests right now.
-    // TODO: accept other protocols; RFC 2326 (RTSP protocol) etc
-    if ((req.v_end - req.v_start +1) < 5 || buf.substr(req.v_start, 5).caseCmp(SBuf("HTTP/")) != 0) {
-#if USE_HTTP_VIOLATIONS
-        // being lax; old parser accepted strange versions
-        // there is a LOT of cases which are ambiguous, therefore we cannot use relaxed_header_parser here.
-        msgProtocol_ = Http::ProtocolVersion(0,9);
-        req.u_end = line_end;
-        request_parse_status = Http::scOkay; // treat as HTTP/0.9
-        return 1;
-#else
-        // protocol not supported / implemented.
+    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+    if ((req.v_end - req.v_start +1) < (int)Http1magic.length() || !buf.substr(req.v_start, SBuf::npos).startsWith(Http1magic)) {
+        // non-HTTP/1 protocols not supported / implemented.
         request_parse_status = Http::scHttpVersionNotSupported;
         return -1;
-#endif
     }
+    // NP: magic octets include the protocol name and major version DIGIT.
     msgProtocol_.protocol = AnyP::PROTO_HTTP;
+    msgProtocol_.major = 1;
 
-    int i = req.v_start + sizeof("HTTP/") -1;
+    int i = req.v_start + Http1magic.length() -1;
 
-    /* next should be 1 or more digits */
-    if (!isdigit(buf[i])) {
-        request_parse_status = Http::scHttpVersionNotSupported;
-        return -1;
-    }
-    int maj = 0;
-    for (; i <= line_end && (isdigit(buf[i])) && maj < 65536; ++i) {
-        maj = maj * 10;
-        maj = maj + (buf[i]) - '0';
-    }
-    // catch too-big values or missing remainders
-    if (maj >= 65536 || i > line_end) {
-        request_parse_status = Http::scHttpVersionNotSupported;
-        return -1;
-    }
-    msgProtocol_.major = maj;
-
-    /* next should be .; we -have- to have this as we have a whole line.. */
-    if (buf[i] != '.') {
-        request_parse_status = Http::scHttpVersionNotSupported;
-        return -1;
-    }
     // catch missing minor part
     if (++i > line_end) {
         request_parse_status = Http::scHttpVersionNotSupported;
@@ -303,13 +274,6 @@ Http::One::RequestParser::parseRequestFirstLine()
         return -1;
     }
     msgProtocol_.minor = min;
-
-    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
-    /* We currently only support 0.9, 1.0, 1.1 properly in this parser */
-    if ((maj == 0 && min != 9) || (maj > 1)) {
-        request_parse_status = Http::scHttpVersionNotSupported;
-        return -1;
-    }
 
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.

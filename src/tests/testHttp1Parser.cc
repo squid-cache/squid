@@ -221,10 +221,8 @@ testHttp1Parser::testParseRequestLineProtocols()
         input.clear();
     }
 
-    // RFC 2616 : future version full-request
+    // RFC 7230 : future versions do not use request-line syntax
     {
-        // IETF HTTPbis WG has made this two-digits format invalid.
-        // it gets treated same as HTTP/0.9 for now
         input.append("GET / HTTP/10.12\r\n", 18);
         struct resultSet expect = {
             .parsed = false,
@@ -242,7 +240,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .uri = "/",
             .versionStart = 6,
             .versionEnd = 15,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,10,12)
+            .version = AnyP::ProtocolVersion()
         };
         output.clear();
         testResults(__LINE__, input, output, expect);
@@ -251,8 +249,6 @@ testHttp1Parser::testParseRequestLineProtocols()
 
     // unknown non-HTTP protocol names
     {
-        // XXX: violations mode treats them as HTTP/0.9 requests! which is wrong.
-#if !USE_HTTP_VIOLATIONS
         input.append("GET / FOO/1.0\n", 14);
         struct resultSet expect = {
             .parsed = false,
@@ -275,7 +271,6 @@ testHttp1Parser::testParseRequestLineProtocols()
         output.clear();
         testResults(__LINE__, input, output, expect);
         input.clear();
-#endif
     }
 
     // no version
@@ -297,7 +292,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .uri = "/",
             .versionStart = 6,
             .versionEnd = 10,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+            .version = AnyP::ProtocolVersion()
         };
         output.clear();
         testResults(__LINE__, input, output, expect);
@@ -323,7 +318,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .uri = "/",
             .versionStart = 6,
             .versionEnd = 12,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+            .version = AnyP::ProtocolVersion()
         };
         output.clear();
         testResults(__LINE__, input, output, expect);
@@ -349,7 +344,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .uri = "/",
             .versionStart = 6,
             .versionEnd = 12,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+            .version = AnyP::ProtocolVersion()
         };
         output.clear();
         testResults(__LINE__, input, output, expect);
@@ -375,7 +370,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .uri = "/",
             .versionStart = 6,
             .versionEnd = 19,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0)
+            .version = AnyP::ProtocolVersion()
         };
         output.clear();
         testResults(__LINE__, input, output, expect);
