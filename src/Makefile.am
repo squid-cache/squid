@@ -46,8 +46,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp comm eui acl format fs repl
-DIST_SUBDIRS = base anyp comm eui acl format fs repl
+SUBDIRS	= base anyp parser comm eui acl format fs repl
+DIST_SUBDIRS = base anyp parser comm eui acl format fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -647,6 +647,7 @@ squid_LDADD = \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SNMP_LIBS) \
+	parser/libsquid-parser.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
