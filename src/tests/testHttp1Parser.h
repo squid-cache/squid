@@ -6,6 +6,7 @@
 class testHttp1Parser : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testHttp1Parser );
+    CPPUNIT_TEST( testParserConstruct );
     CPPUNIT_TEST( testParseRequestLineTerminators );
     CPPUNIT_TEST( testParseRequestLineMethods );
     CPPUNIT_TEST( testParseRequestLineProtocols );
@@ -16,6 +17,8 @@ class testHttp1Parser : public CPPUNIT_NS::TestFixture
 
 protected:
     void globalSetup(); // MemPools init etc.
+
+    void testParserConstruct(); // whether the constructor works
 
     // request-line unit tests
     void testParseRequestLineTerminators(); // terminator detection correct

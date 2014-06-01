@@ -79,6 +79,51 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 }
 
 void
+testHttp1Parser::testParserConstruct()
+{
+    // whether the constructor works
+    {
+        Http1::RequestParser output;
+        CPPUNIT_ASSERT_EQUAL(true, output.needsMoreData());
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NONE, output.parsingStage_);
+        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status); // XXX: clear() not being called.
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.start);
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
+        CPPUNIT_ASSERT(output.buf_.isEmpty());
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_start);
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.m_end);
+        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), output.method_);
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_start);
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.u_end);
+        CPPUNIT_ASSERT(output.uri_.isEmpty());
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_start);
+        CPPUNIT_ASSERT_EQUAL(-1, output.req.v_end);
+        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output.msgProtocol_);
+    }
+
+    // whether new() works
+    {
+        Http1::RequestParser *output = new Http1::RequestParser;
+        CPPUNIT_ASSERT_EQUAL(true, output->needsMoreData());
+        CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NONE, output->parsingStage_);
+        CPPUNIT_ASSERT_EQUAL(Http::scNone, output->request_parse_status);
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.start);
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.end);
+        CPPUNIT_ASSERT(output->buf_.isEmpty());
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.m_start);
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.m_end);
+        CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), output->method_);
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.u_start);
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.u_end);
+        CPPUNIT_ASSERT(output->uri_.isEmpty());
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.v_start);
+        CPPUNIT_ASSERT_EQUAL(-1, output->req.v_end);
+        CPPUNIT_ASSERT_EQUAL(AnyP::ProtocolVersion(), output->msgProtocol_);
+        delete output;
+    }
+}
+
+void
 testHttp1Parser::testParseRequestLineProtocols()
 {
     // ensure MemPools etc exist
@@ -1320,8 +1365,8 @@ testHttp1Parser::testDripFeed()
         .parsed = false,
         .needsMore = true,
         .parserState = Http1::HTTP_PARSE_NONE,
-        .status = Http::scBadRequest,
-        .msgStart = 0,
+        .status = Http::scNone,
+        .msgStart = -1,
         .msgEnd = -1,
         .suffixSz = 0,
         .methodStart = -1,
