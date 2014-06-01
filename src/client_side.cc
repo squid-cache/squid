@@ -2072,7 +2072,8 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
     if (hp.requestUri().startsWith(cache_object))
         return; /* already in good shape */
 
-    const char *url = SBuf(hp.requestUri()).c_str(); // XXX: performance regression. convert to SBuf parse
+    // XXX: performance regression. convert to SBuf parse when Tokenizer available
+    const char *url = SBuf(hp.requestUri()).c_str();
     if (*url != '/') {
         if (conn->port->vhost)
             return; /* already in good shape */
@@ -2260,6 +2261,13 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
                      clientSocketDetach, newClient, tempBuffer);
 
     /* set url */
+    /* XXX Alex: this is actually a performance GAIN:
+     *   This one line is replacing a half-dzen lines re-allcoating the URI string memory.
+     *   It avoids an allocation+copy in the event that hp.requestUri() has
+     *   a) already previously had c_str() used on it, or
+     *   b) a following c_str() is used on it.
+     * Once we have internal*() code converted to SBuf this occasional reallocate will also go.
+     */
     const char *url = SBuf(hp.requestUri()).c_str();
 
     debugs(33,5, HERE << "repare absolute URL from " <<
