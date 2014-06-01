@@ -23,7 +23,7 @@ class RequestParser : public Http1::Parser
 
 public:
     /* Http::One::Parser API */
-    RequestParser() : Parser() {}
+    RequestParser() : Parser() {clear();}
     virtual ~RequestParser() {}
     virtual void clear();
     virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
