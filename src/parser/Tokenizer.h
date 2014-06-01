@@ -36,9 +36,14 @@ public:
    /** Basic strtok(3):
     *  Skips all leading delimiters (if any),
     *  accumulates all characters up to the next delimiter (a token), and
-    *  skips all trailing delimiters (if any).
+    *  skips all trailing delimiters.
     *
     *  Want to extract delimiters? Use prefix() instead.
+    *
+    * At least one terminating delimiter is required. \0 may be passed
+    * as a delimiter to treat end of buffer content as the end of token.
+    *
+    * \return false if no terminal delimiter is found.
     */
    bool token(SBuf &returnedToken, const CharacterSet &delimiters);
 
