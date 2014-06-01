@@ -30,6 +30,8 @@ class Parser : public RefCountable
     Parser& operator =(const Parser&); // do not implement
 
 public:
+    typedef SBuf::size_type size_type;
+
     Parser() { clear(); }
     virtual ~Parser() {}
 
@@ -49,16 +51,16 @@ public:
     bool needsMoreData() const {return parsingStage_!=HTTP_PARSE_DONE;}
 
     /// size in bytes of the first line including CRLF terminator
-    virtual int64_t firstLineSize() const = 0;
+    virtual size_type firstLineSize() const = 0;
 
     /// size in bytes of the message headers including CRLF terminator(s)
     /// but excluding first-line bytes
-    int64_t headerBlockSize() const {return mimeHeaderBlock_.length();}
+    size_type headerBlockSize() const {return mimeHeaderBlock_.length();}
 
     /// size in bytes of HTTP message block, includes first-line and mime headers
     /// excludes any body/entity/payload bytes
     /// excludes any garbage prefix before the first-line
-    int64_t messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
+    size_type messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
     /// buffer containing HTTP mime headers, excluding message first-line.
     SBuf mimeHeader() const {return mimeHeaderBlock_;}

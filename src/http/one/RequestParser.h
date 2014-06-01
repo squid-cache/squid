@@ -26,7 +26,7 @@ public:
     RequestParser() : Parser() {clear();}
     virtual ~RequestParser() {}
     virtual void clear();
-    virtual int64_t firstLineSize() const {return req.end - req.start + 1;}
+    virtual Http1::Parser::size_type firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse(const SBuf &aBuf);
 
     /// the HTTP method if this is a request message
