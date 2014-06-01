@@ -2201,7 +2201,7 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
         const bool parsedOk = hp.parse(csd->in.buf);
 
         // sync the buffers after parsing.
-        csd->in.buf = hp.buf;
+        csd->in.buf = hp.remaining();
 
         if (hp.needsMoreData()) {
             debugs(33, 5, "Incomplete request, waiting for end of request line");
