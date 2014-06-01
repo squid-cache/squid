@@ -1,8 +1,7 @@
 #include "squid.h"
-
-#include "testTokenizer.h"
 #include "base/CharacterSet.h"
-#include "Tokenizer.h"
+#include "parser/Tokenizer.h"
+#include "testTokenizer.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testTokenizer );
 
@@ -96,12 +95,124 @@ testTokenizer::testTokenizerToken()
     CPPUNIT_ASSERT(t.token(s,whitespace));
     CPPUNIT_ASSERT_EQUAL(SBuf("Host:"),s);
 
-    //no separator found
-    CPPUNIT_ASSERT(!t.token(s,tab));
 }
 
 void
 testTokenizer::testCharacterSet()
 {
 
+}
+
+void
+testTokenizer::testTokenizerInt64()
+{
+    // successful parse in base 10
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1234"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv, 10));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // successful parse, autodetect base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1234"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // successful parse, autodetect base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("01234"));
+        const int64_t benchmark = 01234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // successful parse, autodetect base
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x12f4"));
+        const int64_t benchmark = 0x12f4;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // API mismatch: don't eat leading space
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf(" 1234"));
+        CPPUNIT_ASSERT(!t.int64(rv));
+    }
+
+    // API mismatch: don't eat multiple leading spaces
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("  1234"));
+        CPPUNIT_ASSERT(!t.int64(rv));
+    }
+
+    // trailing spaces
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1234  foo"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("  foo"), t.buf());
+    }
+
+    // trailing nonspaces
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1234foo"));
+        const int64_t benchmark = 1234;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("foo"), t.buf());
+    }
+
+    // trailing nonspaces
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("0x1234foo"));
+        const int64_t benchmark = 0x1234f;
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("oo"), t.buf());
+    }
+
+    // overflow
+    {
+        int64_t rv;
+        Parser::Tokenizer t(SBuf("1029397752385698678762234"));
+        CPPUNIT_ASSERT(!t.int64(rv));
+    }
+
+    // buffered sub-string parsing
+    {
+        int64_t rv;
+        SBuf base("1029397752385698678762234");
+        const int64_t benchmark = 22;
+        Parser::Tokenizer t(base.substr(base.length()-4,2));
+        CPPUNIT_ASSERT_EQUAL(SBuf("22"),t.buf());
+        CPPUNIT_ASSERT(t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+    }
+
+    // base-16, prefix
+    {
+        int64_t rv;
+        SBuf base("deadbeefrow");
+        const int64_t benchmark=0xdeadbeef;
+        Parser::Tokenizer t(base);
+        CPPUNIT_ASSERT(t.int64(rv,16));
+        CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT_EQUAL(SBuf("row"),t.buf());
+
+    }
 }
