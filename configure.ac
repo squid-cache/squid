@@ -3467,6 +3467,7 @@ AC_CONFIG_FILES([
 	src/ipc/Makefile
 	src/ssl/Makefile
 	src/mgr/Makefile
+	src/parser/Makefile
 	src/snmp/Makefile
 	contrib/Makefile
 	icons/Makefile
