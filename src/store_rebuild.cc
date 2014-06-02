@@ -44,9 +44,8 @@
 #include "StoreSearch.h"
 #include "SwapDir.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
+
 static StoreRebuildData counts;
 
 static struct timeval rebuild_start;

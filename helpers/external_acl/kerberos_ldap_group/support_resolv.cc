@@ -28,9 +28,7 @@
 #ifdef HAVE_LDAP
 
 #include "support.h"
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif

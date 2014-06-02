@@ -51,9 +51,7 @@
 #include "ssl/support.h"
 #include "URL.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 static void setSessionCallbacks(SSL_CTX *ctx);
 Ipc::MemMap *SslSessionCache = NULL;
