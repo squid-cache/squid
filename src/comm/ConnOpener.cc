@@ -17,9 +17,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 class CachePeer;
 

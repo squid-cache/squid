@@ -60,11 +60,9 @@
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
+#include <cerrno>
 #if HAVE_RESOLV_H
 #include <resolv.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #if _SQUID_WINDOWS_

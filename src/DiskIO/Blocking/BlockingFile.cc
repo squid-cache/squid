@@ -40,9 +40,7 @@
 #include "DiskIO/WriteRequest.h"
 #include "globals.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 CBDATA_CLASS_INIT(BlockingFile);
 

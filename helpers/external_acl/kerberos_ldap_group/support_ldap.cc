@@ -28,9 +28,7 @@
 #ifdef HAVE_LDAP
 
 #include "support.h"
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 char *convert_domain_to_bind_path(char *domain);
 char *escape_filter(char *filter);

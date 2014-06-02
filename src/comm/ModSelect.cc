@@ -45,11 +45,9 @@
 #include "StatHist.h"
 #include "Store.h"
 
+#include <cerrno>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
