@@ -31,15 +31,15 @@
 bool
 Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
-    SBuf savebuf(buf_);
+    const SBuf savebuf(buf_);
     skip(delimiters);
-    SBuf::size_type tokenLen = buf_.findFirstOf(delimiters); // not found = npos => consume to end
+    const SBuf::size_type tokenLen = buf_.findFirstOf(delimiters); // not found = npos => consume to end
     if (tokenLen == SBuf::npos && !delimiters['\0']) {
         // no delimiter found, nor is NUL/EOS/npos acceptible as one
         buf_ = savebuf;
         return false;
     }
-    SBuf retval = buf_.consume(tokenLen);
+    const SBuf retval = buf_.consume(tokenLen);
     skip(delimiters);
     returnedToken = retval;
     return true;
@@ -48,7 +48,7 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 bool
 Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
-    SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
+    const SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     returnedToken = buf_.consume(prefixLen);
@@ -58,7 +58,7 @@ Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, c
 bool
 Parser::Tokenizer::skip(const CharacterSet &tokenChars)
 {
-    SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
+    const SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     buf_.consume(prefixLen);
@@ -122,7 +122,7 @@ Parser::Tokenizer::int64(int64_t & result, int base)
     uint64_t cutoff;
 
     cutoff = neg ? -static_cast<uint64_t>(INT64_MIN) : INT64_MAX;
-    int cutlim = cutoff % static_cast<int64_t>(base);
+    const int cutlim = cutoff % static_cast<int64_t>(base);
     cutoff /= static_cast<uint64_t>(base);
 
     int any = 0, c;
