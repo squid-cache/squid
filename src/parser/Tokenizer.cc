@@ -1,11 +1,9 @@
 #include "squid.h"
 #include "parser/Tokenizer.h"
 
+#include <cerrno>
 #if HAVE_CTYPE_H
 #include <ctype.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 #if HAVE_STDINT_H
 #include <stdint.h>

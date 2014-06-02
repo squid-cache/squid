@@ -52,6 +52,7 @@
 #include "tools.h"
 #include "wordlist.h"
 
+#include <cerrno>
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
@@ -66,9 +67,6 @@
 #endif
 #if HAVE_GRP_H
 #include <grp.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #define DEAD_MSG "\

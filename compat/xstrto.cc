@@ -47,9 +47,7 @@
  *      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 bool
 xstrtoul(const char *s, char **end, unsigned long *value,

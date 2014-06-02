@@ -142,14 +142,12 @@
 #include "snmp_core.h"
 #endif
 
+#include <cerrno>
 #if HAVE_PATHS_H
 #include <paths.h>
 #endif
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #if USE_WIN32_SERVICE
