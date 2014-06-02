@@ -892,16 +892,18 @@ configDoConfigure(void)
             Config2.effectiveGroupID = pwd->pw_gid;
 
 #if HAVE_PUTENV
-
             if (pwd->pw_dir && *pwd->pw_dir) {
-                int len;
-                char *env_str = (char *)xcalloc((len = strlen(pwd->pw_dir) + 6), 1);
-                snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
-                putenv(env_str);
+                // putenv() leaks by design; avoid leaks when nothing changes
+                static SBuf lastDir;
+                if (lastDir.isEmpty() || !lastDir.cmp(pwd->pw_dir)) {
+                    lastDir = pwd->pw_dir;
+                    int len = strlen(pwd->pw_dir) + 6;
+                    char *env_str = (char *)xcalloc(len, 1);
+                    snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
+                    putenv(env_str);
+                }
             }
-
 #endif
-
         }
     } else {
         Config2.effectiveUserID = geteuid();
