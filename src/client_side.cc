@@ -2074,7 +2074,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
         return; /* already in good shape */
 
     // XXX: re-use proper URL parser for this
-    SBuf url = hp.requestUri(); // save point if we abort.
+    SBuf url = hp.requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
         ::Parser::Tokenizer tok(url);
         if (tok.remaining()[0] == '/')
@@ -2098,14 +2098,14 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
         if (!tok.skip(authority))
             break;
 
+        static const SBuf slashUri("/");
         SBuf t = tok.remaining();
         if (t.isEmpty())
-            url = SBuf("/");
+            url = slashUri;
         else if (t[0]=='/') // looks like path
             url = t;
         else if (t[0]=='?' || t[0]=='#') { // looks like query or fragment. fix '/'
-            url.clear();
-            url.append("/",1);
+            url = slashUri;
             url.append(t);
         } // else do nothing. invalid path
 
