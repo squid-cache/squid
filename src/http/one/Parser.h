@@ -69,6 +69,12 @@ public:
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     /**
+     * Scan the mime header block (badly) for a header with teh given name.
+     *
+     * BUG: omits lines when searching for headers with obs-fold or multiple entries.
+     *
+     * BUG: limits output to just 1KB when Squid accepts up to 64KB line length.
+     *
      * \return A pointer to a field-value of the first matching field-name, or NULL.
      */
     char *getHeaderField(const char *name);
