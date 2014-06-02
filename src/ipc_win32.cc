@@ -43,13 +43,11 @@
 #include "SquidTime.h"
 #include "tools.h"
 
+#include <cerrno>
 #ifndef _MSWSOCK_
 #include <mswsock.h>
 #endif
 #include <process.h>
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
 
 struct ipc_params {
     int type;

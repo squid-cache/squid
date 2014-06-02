@@ -142,14 +142,12 @@
 #include "snmp_core.h"
 #endif
 
+#include <cerrno>
 #if HAVE_PATHS_H
 #include <paths.h>
 #endif
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #if USE_WIN32_SERVICE
@@ -292,7 +290,11 @@ usage(void)
 #if USE_WIN32_SERVICE
             "       -i        Installs as a Windows Service (see -n option).\n"
 #endif
-            "       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check|parse\n"
+            "       -k reconfigure|rotate|shutdown|"
+#ifdef SIGTTIN
+            "restart|"
+#endif
+            "interrupt|kill|debug|check|parse\n"
             "                 Parse configuration file, then send signal to \n"
             "                 running copy (except -k parse) and exit.\n"
             "       -n name   Specify service name to use for service operations\n"

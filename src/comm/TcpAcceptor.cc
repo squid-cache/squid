@@ -53,9 +53,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 #ifdef HAVE_NETINET_TCP_H
 // required for accept_filter to build.
 #include <netinet/tcp.h>
@@ -122,6 +120,12 @@ Comm::TcpAcceptor::swanSong()
 {
     debugs(5,5, HERE);
     unsubscribe("swanSong");
+    if (IsConnOpen(conn)) {
+        if (closer_ != NULL)
+            comm_remove_close_handler(conn->fd, closer_);
+        conn->close();
+    }
+
     conn = NULL;
     AcceptLimiter::Instance().removeDead(this);
     AsyncJob::swanSong();
@@ -182,6 +186,20 @@ Comm::TcpAcceptor::setListen()
         debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
     }
+
+    typedef CommCbMemFunT<Comm::TcpAcceptor, CommCloseCbParams> Dialer;
+    closer_ = JobCallback(5, 4, Dialer, this, Comm::TcpAcceptor::handleClosure);
+    comm_add_close_handler(conn->fd, closer_);
+}
+
+/// called when listening descriptor is closed by an external force
+/// such as clientHttpConnectionsClose()
+void
+Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &io)
+{
+    closer_ = NULL;
+    conn = NULL;
+    Must(done());
 }
 
 /**

@@ -40,9 +40,7 @@
 #include "Parsing.h"
 #include "SquidConfig.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /*
  * This logfile UDP module is mostly inspired by a patch by Tim Starling
