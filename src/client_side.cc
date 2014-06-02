@@ -2536,7 +2536,8 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         assert (repContext);
         switch (hp.request_parse_status) {
         case Http::scHeaderTooLarge:
-            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri,
+                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         case Http::scMethodNotAllowed:
             repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
@@ -2715,6 +2716,10 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
     if (http->request->method == Http::METHOD_CONNECT) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
+
+        // consume header early so that tunnel gets just the body
+        connNoteUseOfBuffer(conn, http->req_sz);
+        notedUseOfBuffer = true;
     }
 
 #if USE_OPENSSL

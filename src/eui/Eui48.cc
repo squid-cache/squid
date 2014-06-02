@@ -41,9 +41,7 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /* START Legacy includes pattern */
 /* TODO: clean this up so we dont have per-OS requirements.

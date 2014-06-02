@@ -467,7 +467,7 @@ peerClearRR()
 {
     CachePeer *p = NULL;
     for (p = Config.peers; p; p = p->next) {
-        p->rr_count = 0;
+        p->rr_count = 1;
     }
 }
 
@@ -1269,7 +1269,7 @@ peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
         peerCountMcastPeersSchedule(p, 10);
 
 #if USE_ICMP
-    if (p->type != PEER_MULTICAST)
+    if (p->type != PEER_MULTICAST && IamWorkerProcess())
         if (!p->options.no_netdb_exchange)
             eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
 #endif

@@ -41,9 +41,7 @@
 #include "profiler/Profiler.h"
 #include "StatCounters.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 static PF diskHandleRead;
 static PF diskHandleWrite;

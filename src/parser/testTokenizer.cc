@@ -6,9 +6,9 @@
 CPPUNIT_TEST_SUITE_REGISTRATION( testTokenizer );
 
 SBuf text("GET http://resource.com/path HTTP/1.1\r\n"
-    "Host: resource.com\r\n"
-    "Cookie: laijkpk3422r j1noin \r\n"
-    "\r\n");
+          "Host: resource.com\r\n"
+          "Cookie: laijkpk3422r j1noin \r\n"
+          "\r\n");
 const CharacterSet alpha("alpha","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 const CharacterSet whitespace("whitespace"," \r\n");
 const CharacterSet crlf("crlf","\r\n");
