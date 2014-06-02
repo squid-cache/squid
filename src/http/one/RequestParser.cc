@@ -344,8 +344,8 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
                     debugs(33, 5, "Incomplete request, waiting for end of headers");
                 return false;
             }
-            mimeHeaderBlock_ = buf_.substr(req.end+1, mimeHeaderBytes);
-            buf_.consume(mimeHeaderBytes); // done with these bytes now.
+            mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
+            debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
 
         } else
             debugs(33, 3, "Missing HTTP/1.x identifier");
