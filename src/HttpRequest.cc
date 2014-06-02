@@ -317,13 +317,13 @@ bool
 HttpRequest::parseFirstLine(const char *start, const char *end)
 {
     const char *t = start + strcspn(start, w_space);
-    SBuf m(start, start-t);
+    SBuf m(start, start-t); // XXX: SBuf ctor allocates and data-copies. performance regression.
     method = HttpRequestMethod(m);
 
     if (method == Http::METHOD_NONE)
         return false;
 
-    start = t + strspn(t, w_space);
+    start = t + strspn(t, w_space); // XXX: breaks if whitespace exists in URL
 
     const char *ver = findTrailingHTTPVersion(start, end);
 
@@ -369,6 +369,7 @@ HttpRequest::parseHeader(Http1::RequestParser &hp)
     if (!hp.headerBlockSize())
         return true;
 
+    // XXX: c_str() reallocates. performance regression.
     const bool result = header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize());
 
     if (result)

@@ -334,6 +334,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
              *       (ie, none, so don't try parsing em)
              */
             int64_t mimeHeaderBytes = 0;
+            // XXX: c_str() reallocates. performance regression.
             if ((mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) == 0) {
                 if (buf_.length()+firstLineSize() >= Config.maxRequestHeaderSize) {
                     debugs(33, 5, "Too large request");
