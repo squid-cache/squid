@@ -81,9 +81,8 @@
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+
+#include <cerrno>
 
 static PSC fwdPeerSelectionCompleteWrapper;
 static CLCB fwdServerClosedWrapper;

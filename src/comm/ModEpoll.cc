@@ -65,11 +65,9 @@
 
 #define DEBUG_EPOLL 0
 
+#include <cerrno>
 #if HAVE_SYS_EPOLL_H
 #include <sys/epoll.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 static int kdpfd;

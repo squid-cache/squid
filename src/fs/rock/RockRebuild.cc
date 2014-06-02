@@ -15,9 +15,7 @@
 #include "tools.h"
 #include "typedefs.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 

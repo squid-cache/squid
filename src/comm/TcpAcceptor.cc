@@ -53,9 +53,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 #ifdef HAVE_NETINET_TCP_H
 // required for accept_filter to build.
 #include <netinet/tcp.h>

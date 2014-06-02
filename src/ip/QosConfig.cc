@@ -11,11 +11,7 @@
 #include "ip/tools.h"
 #include "Parsing.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-
-/* Qos namespace */
+#include <cerrno>
 
 void
 Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
