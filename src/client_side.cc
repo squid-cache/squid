@@ -2099,7 +2099,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
             break;
 
         static const SBuf slashUri("/");
-        SBuf t = tok.remaining();
+        const SBuf t = tok.remaining();
         if (t.isEmpty())
             url = slashUri;
         else if (t[0]=='/') // looks like path
