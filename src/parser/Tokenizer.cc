@@ -107,7 +107,7 @@ Parser::Tokenizer::int64(int64_t & result, int base)
     }
     if (s >= end) return false;
     if (( base == 0 || base == 16) && *s == '0' && (s+1 <= end ) &&
-                    tolower(*(s+1)) == 'x') {
+            tolower(*(s+1)) == 'x') {
         s += 2;
         base = 16;
     }
