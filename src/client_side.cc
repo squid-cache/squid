@@ -119,6 +119,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
+#include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
@@ -2072,29 +2073,51 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
     if (hp.requestUri().startsWith(cache_object))
         return; /* already in good shape */
 
-    // XXX: performance regression. convert to SBuf parse when Tokenizer available
-    const char *url = SBuf(hp.requestUri()).c_str();
-    if (*url != '/') {
+    // XXX: re-use proper URL parser for this
+    SBuf url = hp.requestUri(); // save point if we abort.
+    do { // use a loop so we can break out of it
+        ::Parser::Tokenizer tok(url);
+        if (tok.remaining()[0] == '/')
+            break;
+
         if (conn->port->vhost)
             return; /* already in good shape */
 
-        /* else we need to ignore the host name */
-        url = strstr(url, "//");
+        // skip the URI scheme
+        static const CharacterSet uriScheme = CharacterSet::ALPHA + CharacterSet::DIGIT + CharacterSet(NULL,"+-.");
+        static const SBuf uriSchemeEnd("://");
+        if (!tok.skip(uriScheme))
+            break;
+        if (!tok.skip(uriSchemeEnd))
+            break;
+
+        // skip the authority segment
+        // RFC 3986 complex nested ABNF for "authority" boils down to this:
+        static const CharacterSet authority = CharacterSet("authority","-._~%:@[]!$&'()*+,;=") +
+             CharacterSet::HEXDIG + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        if (!tok.skip(authority))
+            break;
+
+        SBuf t = tok.remaining();
+        if (t.isEmpty())
+            url = SBuf("/");
+        else if (t[0]=='/') // looks like path
+            url = t;
+        else if (t[0]=='?' || t[0]=='#') { // looks like query or fragment. fix '/'
+            url.clear();
+            url.append("/",1);
+            url.append(t);
+        } // else do nothing. invalid path
+
+    } while(false);
 
 #if SHOULD_REJECT_UNKNOWN_URLS
-
-        if (!url) {
-            hp.request_parse_status = Http::scBadRequest;
-            return parseHttpRequestAbort(conn, "error:invalid-request");
-        }
-#endif
-
-        if (url)
-            url = strchr(url + 2, '/');
-
-        if (!url)
-            url = (char *) "/";
+    // reject URI which are not well-formed even after the processing above
+    if (url[0] != '/') {
+        hp.request_parse_status = Http::scBadRequest;
+        return parseHttpRequestAbort(conn, "error:invalid-request");
     }
+#endif
 
     if (vport < 0)
         vport = http->getConn()->clientConnection->local.port();
@@ -2117,13 +2140,12 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
                 host = thost;
             }
         } // else nothing to alter port-wise.
-        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen +
-                     strlen(host);
+        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen + strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
         const char *protocol = switchedToHttps ?
                                "https" : AnyP::UriScheme(conn->port->transport.protocol).c_str();
-        snprintf(http->uri, url_sz, "%s://%s%s", protocol, host, url);
-        debugs(33, 5, "ACCEL VHOST REWRITE: '" << http->uri << "'");
+        snprintf(http->uri, url_sz, "%s://%s" SQUIDSBUFPH, protocol, host, SQUIDSBUFPRINT(url));
+        debugs(33, 5, "ACCEL VHOST REWRITE: " << http->uri);
     } else if (conn->port->defaultsite /* && !vhost */) {
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
         const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen +
@@ -2134,19 +2156,19 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
         if (vport > 0) {
             snprintf(vportStr, sizeof(vportStr),":%d",vport);
         }
-        snprintf(http->uri, url_sz, "%s://%s%s%s",
-                 AnyP::UriScheme(conn->port->transport.protocol).c_str(), conn->port->defaultsite, vportStr, url);
-        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: '" << http->uri <<"'");
+        snprintf(http->uri, url_sz, "%s://%s%s" SQUIDSBUFPH,
+                 AnyP::UriScheme(conn->port->transport.protocol).c_str(), conn->port->defaultsite, vportStr, SQUIDSBUFPRINT(url));
+        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: " << http->uri);
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
         debugs(33, 5, "ACCEL VPORT REWRITE: http_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
         const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
-        snprintf(http->uri, url_sz, "%s://%s:%d%s",
+        snprintf(http->uri, url_sz, "%s://%s:%d" SQUIDSBUFPH,
                  AnyP::UriScheme(conn->port->transport.protocol).c_str(),
-                 ipbuf, vport, url);
-        debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
+                 ipbuf, vport, SQUIDSBUFPRINT(url));
+        debugs(33, 5, "ACCEL VPORT REWRITE: " << http->uri);
     }
 }
 
@@ -2261,13 +2283,8 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
                      clientSocketDetach, newClient, tempBuffer);
 
     /* set url */
-    /* XXX Alex: this is actually a performance GAIN:
-     *   This one line is replacing a half-dzen lines re-allcoating the URI string memory.
-     *   It avoids an allocation+copy in the event that hp.requestUri() has
-     *   a) already previously had c_str() used on it, or
-     *   b) a following c_str() is used on it.
-     * Once we have internal*() code converted to SBuf this occasional reallocate will also go.
-     */
+    // XXX: c_str() does re-allocate but here replaces explicit malloc/free.
+    // when internalCheck() accepts SBuf removing this will be a net gain for performance.
     const char *url = SBuf(hp.requestUri()).c_str();
 
     debugs(33,5, HERE << "repare absolute URL from " <<
