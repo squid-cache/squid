@@ -82,7 +82,7 @@ void
 CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
 {
     Must(profile != NULL);
-    if (std::find(menu_.begin(), menu_.end(), profile) == menu_.end()) {
+    if (!CacheManager::findAction(profile->name)) {
         menu_.push_back(profile);
         debugs(16, 3, HERE << "registered profile: " << *profile);
     } else {
