@@ -1524,7 +1524,6 @@ ClientHttpRequest::processRequest()
             return;
         }
 #endif
-        logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this, &out.size, &al->http.code, al);
         return;
