@@ -48,6 +48,7 @@
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
 #include "ip/QosConfig.h"
+#include "LogTags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
@@ -157,7 +158,8 @@ public:
     };
 
     Connection client, server;
-    int *status_ptr;		/* pointer to status for logging */
+    int *status_ptr;        ///< pointer for logging HTTP status
+    LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
     MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
 
@@ -708,6 +710,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
 {
     assert(!tunnelState->waitingForConnectExchange());
     *tunnelState->status_ptr = Http::scOkay;
+    *tunnelState->logTag_ptr = LOG_TCP_TUNNEL;
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -929,6 +932,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
     tunnelState->request = request;
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
+    tunnelState->logTag_ptr = &http->logType;
     tunnelState->client.conn = http->getConn()->clientConnection;
     tunnelState->http = http;
     tunnelState->al = al;
