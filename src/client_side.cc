@@ -3243,7 +3243,7 @@ ConnStateData::clientReadFtpData(const CommIoCbParams &io)
     assert(Comm::IsConnOpen(ftp.dataConn));
     assert(io.conn->fd == ftp.dataConn->fd);
 
-    if (io.flag == COMM_OK) {
+    if (io.flag == COMM_OK && bodyPipe != NULL) {
         if (io.size > 0) {
             kb_incr(&(statCounter.client_http.kbytes_in), io.size);
 
@@ -3258,7 +3258,7 @@ ConnStateData::clientReadFtpData(const CommIoCbParams &io)
             if (ftp.uploadAvailSize <= 0)
                 finishDechunkingRequest(true);
         }
-    } else {
+    } else { //not COMM_OK or unexpected read
         debugs(33, 5, HERE << io.conn << " closed");
         FtpCloseDataConnection(this);
         finishDechunkingRequest(false);
@@ -5660,6 +5660,8 @@ FtpWriteForwardedForeign(ClientSocketContext *context, const HttpReply *reply)
 {
     ConnStateData *const connState = context->getConn();
     FtpChangeState(connState, ConnStateData::FTP_CONNECTED, "foreign reply");
+    //Close the data connection.
+    FtpCloseDataConnection(connState);
     // 451: We intend to keep the control connection open.
     FtpWriteErrorReply(context, reply, 451);
 }
