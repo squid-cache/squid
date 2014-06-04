@@ -53,17 +53,19 @@ if test "x${enable_arch_native}" != "xno"; then
 fi
 
 # might be cross-compiling.
-if test "x$HOSTCXX" = "x"; then
-  HOSTCXX="$CXX"
+# NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
+AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
+if test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"; then
+  AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Uses BUILDCXX instead.])
+  BUILDCXX="$HOSTCXX"
+fi
+if test "x$BUILDCXX" = "x"; then
+  BUILDCXX="$CXX"
   if test "x$squid_cv_check_marchnative" = "xyes"; then
     CXXFLAGS="$CXXFLAGS -march=native"
   fi
 fi
-if test "x$squid_cv_check_marchnative" = "xyes"; then
-  # always valid for the Host compiler.
-  HOSTCXX="$HOSTCXX -march=native"
-fi
-AC_SUBST(HOSTCXX)
+AC_SUBST(BUILDCXX)
 
 AC_MSG_CHECKING([simplified host os])
 simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
@@ -3417,6 +3419,18 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
+if test "x$BUILDCXXFLAGS" = "x"; then
+  # if we are NOT cross-compiling, use the default build flags for cf_gen and friends
+  # otherwise rely on the user-provided value
+  if test "x$squid_cv_check_marchnative" = "xyes"; then
+    # always valid for the Build compiler.
+    BUILDCXXFLAGS="-march-native"
+  fi
+  BUILDCXXFLAGS="$BUILDCXXFLAGS $CXXFLAGS"
+fi
+AC_SUBST(BUILDCXXFLAGS)
+
 AC_MSG_NOTICE([BUILD LIBRARIES: $LIBS])
 AC_MSG_NOTICE([BUILD EXTRA LIBRARIES: $XTRA_LIBS])
 AC_MSG_NOTICE([BUILD OBJECTS: $OBJS])
@@ -3425,6 +3439,7 @@ AC_MSG_NOTICE([BUILD C FLAGS: $CFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C FLAGS: $SQUID_CFLAGS])
 AC_MSG_NOTICE([BUILD C++ FLAGS: $CXXFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
+AC_MSG_NOTICE([BUILD Tools C++ FLAGS: $BUILDCXXFLAGS])
 
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
