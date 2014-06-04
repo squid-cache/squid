@@ -29,14 +29,15 @@ Http::One::Parser::getHeaderField(const char *name)
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const int namelen = name ? strlen(name) : 0;
 
-    debugs(25, 5, "looking for '" << name << "'");
-
-    ::Parser::Tokenizer tok(mimeHeaderBlock_);
-    SBuf p;
-    const SBuf crlf("\r\n");
+    debugs(25, 5, "looking for " << name);
 
     // while we can find more LF in the SBuf
-    while (tok.prefix(p, CharacterSet::LF)) {
+    static CharacterSet iso8859Line = CharacterSet("non-LF",'\0','\n'-1) + CharacterSet(NULL, '\n'+1, (unsigned char)0xFF);
+    ::Parser::Tokenizer tok(mimeHeaderBlock_);
+    SBuf p;
+    static const SBuf crlf("\r\n");
+
+    while (tok.prefix(p, iso8859Line)) {
         tok.skip(CharacterSet::LF); // move tokenizer past the LF
 
         // header lines must start with the name (case insensitive)
@@ -63,7 +64,7 @@ Http::One::Parser::getHeaderField(const char *name)
 
         // return the header field-value
         xstrncpy(header, p.rawContent(), p.length());
-        debugs(25, 5, "returning: " << header);
+        debugs(25, 5, "returning " << header);
         return header;
     }
 
