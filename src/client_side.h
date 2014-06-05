@@ -289,7 +289,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    bool handleReadData(SBuf *buf);
+    bool handleReadData();
     bool handleRequestBodyData();
 
     /**
@@ -384,7 +384,6 @@ protected:
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
 private:
-    int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;

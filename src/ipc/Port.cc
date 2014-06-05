@@ -6,6 +6,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "comm/Read.h"
 #include "CommCalls.h"
 #include "globals.h"
 #include "ipc/Port.h"
