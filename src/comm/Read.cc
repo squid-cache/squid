@@ -76,15 +76,15 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
     /* Attempt a read */
     ++ statCounter.syscalls.sock.reads;
     const SBuf::size_type sz = buf.spaceSize();
-    char *theBuf = buf.rawSpace(sz);
+    char *inbuf = buf.rawSpace(sz);
     errno = 0;
-    const int retval = FD_READ_METHOD(params.conn->fd, theBuf, sz);
+    const int retval = FD_READ_METHOD(params.conn->fd, inbuf, sz);
     params.xerrno = errno;
 
     debugs(5, 3, params.conn << ", size " << sz << ", retval " << retval << ", errno " << params.xerrno);
 
     if (retval > 0) { // data read most common case
-        buf.append(theBuf, retval);
+        buf.append(inbuf, retval);
         fd_bytes(params.conn->fd, retval, FD_READ);
         params.flag = Comm::OK;
         params.size = retval;
@@ -121,7 +121,8 @@ Comm::HandleRead(int fd, void *data)
     assert(data == COMMIO_FD_READCB(fd));
     assert(ccb->active());
 
-    // without a buffer, just call back
+    // Without a buffer, just call back.
+    // The callee may ReadMore() to get the data.
     if (!ccb->buf) {
         ccb->finish(Comm::OK, 0);
         return;
