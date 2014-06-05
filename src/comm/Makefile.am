@@ -21,6 +21,8 @@ libcomm_la_SOURCES= \
 	ModPoll.cc \
 	ModSelect.cc \
 	ModSelectWin32.cc \
+	Read.cc \
+	Read.h \
 	TcpAcceptor.cc \
 	TcpAcceptor.h \
 	UdpOpenDialer.h \

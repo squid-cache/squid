@@ -51,7 +51,7 @@ void ConnStateData::stopSending(const char *error) STUB
 void ConnStateData::expectNoForwarding() STUB
 void ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer) STUB
 void ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer) STUB
-bool ConnStateData::handleReadData(SBuf *buf) STUB_RETVAL(false)
+bool ConnStateData::handleReadData() STUB_RETVAL(false)
 bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)
 void ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth) STUB
 void ConnStateData::unpinConnection() STUB

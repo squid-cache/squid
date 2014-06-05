@@ -40,6 +40,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fde.h"

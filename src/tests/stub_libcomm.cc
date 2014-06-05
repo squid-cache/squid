@@ -48,6 +48,16 @@ void Comm::ResetSelect(int) STUB
 comm_err_t Comm::DoSelect(int) STUB_RETVAL(COMM_ERROR)
 void Comm::QuickPollRequired(void) STUB
 
+#include "comm/Read.h"
+void Comm::Read(const Comm::ConnectionPointer &conn, AsyncCall::Pointer &callback) STUB
+bool Comm::MonitorsRead(int fd) STUB_RETVAL(false)
+comm_err_t Comm::ReadNow(CommIoCbParams &params, SBuf &buf) STUB_RETVAL(COMM_ERROR)
+void Comm::ReadCancel(int fd, AsyncCall::Pointer &callback) STUB
+//void Comm::HandleRead(int, void*) STUB
+
+void comm_read_base(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback) STUB
+void comm_read_cancel(int fd, IOCB *callback, void *data) STUB
+
 #include "comm/TcpAcceptor.h"
 //Comm::TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub) STUB
 void Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub) STUB
