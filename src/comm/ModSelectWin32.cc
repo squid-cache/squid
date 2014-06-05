@@ -434,7 +434,7 @@ Comm::DoSelect(int msec)
 #endif
         if (nreadfds + nwritefds == 0) {
             assert(shutting_down);
-            return COMM_SHUTDOWN;
+            return Comm::SHUTDOWN;
         }
 
         if (msec > MAX_POLL_TIME)
