@@ -1694,7 +1694,7 @@ commStopHalfClosedMonitor(int const fd)
     // cancel the read if one was scheduled
     AsyncCall::Pointer reader = fd_table[fd].halfClosedReader;
     if (reader != NULL)
-        comm_read_cancel(fd, reader);
+        Comm::ReadCancel(fd, reader);
     fd_table[fd].halfClosedReader = NULL;
 
     TheHalfClosed->del(fd);
