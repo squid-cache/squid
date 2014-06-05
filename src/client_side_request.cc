@@ -1558,7 +1558,7 @@ ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
 
 // called when comm_write has completed
 static void
-SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t errflag, int, void *data)
+SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag errflag, int, void *data)
 {
     ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
     debugs(85, 5, HERE << "responded to CONNECT: " << r << " ? " << errflag);
@@ -1568,10 +1568,10 @@ SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t err
 }
 
 void
-ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
+ClientHttpRequest::sslBumpEstablish(Comm::Flag errflag)
 {
-    // Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up
-    if (errflag == COMM_ERR_CLOSING)
+    // Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up
+    if (errflag == Comm::ERR_CLOSING)
         return;
 
     if (errflag) {

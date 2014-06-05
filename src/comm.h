@@ -71,7 +71,6 @@ int ignoreErrno(int);
 void commCloseAllSockets(void);
 void checkTimeouts(void);
 
-//typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer details, comm_err_t flag, int xerrno, void *data);
 void comm_add_close_handler(int fd, CLCB *, void *);
 void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 void comm_remove_close_handler(int fd, CLCB *, void *);

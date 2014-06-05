@@ -91,7 +91,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         return;
     }
 
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         /* it might have been a timeout with a partially open link */
         if (params.conn != NULL)
             params.conn->close();

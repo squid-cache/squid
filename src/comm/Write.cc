@@ -125,18 +125,18 @@ Comm::HandleWrite(int fd, void *data)
         if (nleft != 0)
             debugs(5, DBG_IMPORTANT, "FD " << fd << " write failure: connection closed with " << nleft << " bytes remaining.");
 
-        state->finish(nleft ? COMM_ERROR : COMM_OK, errno);
+        state->finish(nleft ? Comm::ERROR : Comm::OK, errno);
     } else if (len < 0) {
         /* An error */
         if (fd_table[fd].flags.socket_eof) {
             debugs(50, 2, HERE << "FD " << fd << " write failure: " << xstrerror() << ".");
-            state->finish(nleft ? COMM_ERROR : COMM_OK, errno);
+            state->finish(nleft ? Comm::ERROR : Comm::OK, errno);
         } else if (ignoreErrno(errno)) {
             debugs(50, 9, HERE << "FD " << fd << " write failure: " << xstrerror() << ".");
             state->selectOrQueueWrite();
         } else {
             debugs(50, 2, HERE << "FD " << fd << " write failure: " << xstrerror() << ".");
-            state->finish(nleft ? COMM_ERROR : COMM_OK, errno);
+            state->finish(nleft ? Comm::ERROR : Comm::OK, errno);
         }
     } else {
         /* A successful write, continue */
@@ -146,7 +146,7 @@ Comm::HandleWrite(int fd, void *data)
             /* Not done, reinstall the write handler and write some more */
             state->selectOrQueueWrite();
         } else {
-            state->finish(nleft ? COMM_OK : COMM_ERROR, errno);
+            state->finish(nleft ? Comm::OK : Comm::ERROR, errno);
         }
     }
 

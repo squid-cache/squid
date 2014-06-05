@@ -1375,11 +1375,11 @@ peerProbeConnect(CachePeer * p)
 }
 
 static void
-peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     CachePeer *p = (CachePeer*)data;
 
-    if (status == COMM_OK) {
+    if (status == Comm::OK) {
         peerConnectSucceded(p);
     } else {
         peerConnectFailedSilent(p);
