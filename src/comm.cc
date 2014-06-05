@@ -98,7 +98,7 @@ static bool WillCheckHalfClosed = false; /// true if check is scheduled
 static EVH commHalfClosedCheck;
 static void commPlanHalfClosedCheck();
 
-static comm_err_t commBind(int s, struct addrinfo &);
+static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -219,19 +219,19 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
-static comm_err_t
+static Comm::Flag
 commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
 
     if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "commBind: bind socket FD " << s << " to " << fd_table[s].local_addr);
-        return COMM_OK;
+        return Comm::OK;
     }
 
     debugs(50, 0, "commBind: Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerror());
 
-    return COMM_ERROR;
+    return Comm::ERROR;
 }
 
 /**
@@ -504,14 +504,14 @@ comm_apply_flags(int new_socket,
         if ( addr.isNoAddr() )
             debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
 
-        if (commBind(new_socket, *AI) != COMM_OK) {
+        if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
         }
     }
 
     if (flags & COMM_NONBLOCKING)
-        if (commSetNonBlocking(new_socket) == COMM_ERROR) {
+        if (commSetNonBlocking(new_socket) == Comm::ERROR) {
             comm_close(new_socket);
             return -1;
         }
@@ -618,7 +618,7 @@ commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
 int
 comm_connect_addr(int sock, const Ip::Address &address)
 {
-    comm_err_t status = COMM_OK;
+    Comm::Flag status = Comm::OK;
     fde *F = &fd_table[sock];
     int x = 0;
     int err = 0;
@@ -637,7 +637,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
      */
     if (F->sock_family == AF_INET && !address.isIPv4()) {
         errno = ENETUNREACH;
-        return COMM_ERR_PROTOCOL;
+        return Comm::ERR_PROTOCOL;
     }
 
     /* Handle IPv4 over IPv6-only socket case.
@@ -649,7 +649,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
      */
     if (!F->local_addr.isIPv4() && address.isIPv4()) {
         errno = ENETUNREACH;
-        return COMM_ERR_PROTOCOL;
+        return Comm::ERR_PROTOCOL;
     }
 
     address.getAddrInfo(AI, F->sock_family);
@@ -724,21 +724,21 @@ comm_connect_addr(int sock, const Ip::Address &address)
     PROF_stop(comm_connect_addr);
 
     if (errno == 0 || errno == EISCONN)
-        status = COMM_OK;
+        status = Comm::OK;
     else if (ignoreErrno(errno))
-        status = COMM_INPROGRESS;
+        status = Comm::INPROGRESS;
     else if (errno == EAFNOSUPPORT || errno == EINVAL)
-        return COMM_ERR_PROTOCOL;
+        return Comm::ERR_PROTOCOL;
     else
-        return COMM_ERROR;
+        return Comm::ERROR;
 
     address.toStr(F->ipaddr, MAX_IPSTRLEN);
 
     F->remote_port = address.port(); /* remote_port is HS */
 
-    if (status == COMM_OK) {
+    if (status == Comm::OK) {
         debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connected to " << address);
-    } else if (status == COMM_INPROGRESS) {
+    } else if (status == Comm::INPROGRESS) {
         debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connection pending");
     }
 
@@ -890,7 +890,7 @@ comm_close_complete(const FdeCbParams &params)
  * + call read handlers with ERR_CLOSING
  * + call closing handlers
  *
- * NOTE: COMM_ERR_CLOSING will NOT be called for CommReads' sitting in a
+ * NOTE: Comm::ERR_CLOSING will NOT be called for CommReads' sitting in a
  * DeferredReadManager.
  */
 void
@@ -942,11 +942,11 @@ _comm_close(int fd, char const *file, int line)
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-        COMMIO_FD_WRITECB(fd)->finish(COMM_ERR_CLOSING, errno);
+        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, errno);
     }
     if (COMMIO_FD_READCB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-        COMMIO_FD_READCB(fd)->finish(COMM_ERR_CLOSING, errno);
+        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, errno);
     }
 
 #if USE_DELAY_POOLS
@@ -1004,7 +1004,7 @@ comm_udp_sendto(int fd,
 
         debugs(50, DBG_IMPORTANT, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
 
-    return COMM_ERROR;
+    return Comm::ERROR;
 }
 
 void
@@ -1129,7 +1129,7 @@ commSetNonBlocking(int fd)
 
         if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror() << " " << fd_table[fd].type);
-            return COMM_ERROR;
+            return Comm::ERROR;
         }
 
 #if _SQUID_CYGWIN_
@@ -1140,12 +1140,12 @@ commSetNonBlocking(int fd)
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-            return COMM_ERROR;
+            return Comm::ERROR;
         }
 
         if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror());
-            return COMM_ERROR;
+            return Comm::ERROR;
         }
 
 #endif
@@ -1170,13 +1170,13 @@ commUnsetNonBlocking(int fd)
 
     if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
         debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-        return COMM_ERROR;
+        return Comm::ERROR;
     }
 
     if (fcntl(fd, F_SETFL, flags & (~SQUID_NONBLOCK)) < 0) {
 #endif
         debugs(50, 0, "commUnsetNonBlocking: FD " << fd << ": " << xstrerror());
-        return COMM_ERROR;
+        return Comm::ERROR;
     }
 
     fd_table[fd].flags.nonblocking = false;
@@ -1611,7 +1611,7 @@ checkTimeouts(void)
             // We have an active write callback and we are timed out
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-            COMMIO_FD_WRITECB(fd)->finish(COMM_ERROR, ETIMEDOUT);
+            COMMIO_FD_WRITECB(fd)->finish(Comm::ERROR, ETIMEDOUT);
         } else if (AlreadyTimedOut(F))
             continue;
 
@@ -1702,7 +1702,7 @@ commStopHalfClosedMonitor(int const fd)
 
 /// I/O handler for the possibly half-closed connection monitoring code
 static void
-commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int, void *)
+commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag flag, int, void *)
 {
     // there cannot be more data coming in on half-closed connections
     assert(size == 0);
@@ -1712,11 +1712,11 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, c
     fd_table[conn->fd].halfClosedReader = NULL; // done reading, for now
 
     // nothing to do if fd is being closed
-    if (flag == COMM_ERR_CLOSING)
+    if (flag == Comm::ERR_CLOSING)
         return;
 
     // if read failed, close the connection
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         debugs(5, 3, HERE << "closing " << conn);
         conn->close();
         return;
@@ -1873,17 +1873,17 @@ CommSelectEngine::checkEvents(int timeout)
 
     switch (Comm::DoSelect(timeout)) {
 
-    case COMM_OK:
+    case Comm::OK:
 
-    case COMM_TIMEOUT:
+    case Comm::TIMEOUT:
         return 0;
 
-    case COMM_IDLE:
+    case Comm::IDLE:
 
-    case COMM_SHUTDOWN:
+    case Comm::SHUTDOWN:
         return EVENT_IDLE;
 
-    case COMM_ERROR:
+    case Comm::ERROR:
         return EVENT_ERROR;
 
     default:
@@ -1957,7 +1957,7 @@ comm_open_uds(int sock_type,
         commSetReuseAddr(new_socket);
 
     if (flags & COMM_NONBLOCKING) {
-        if (commSetNonBlocking(new_socket) != COMM_OK) {
+        if (commSetNonBlocking(new_socket) != Comm::OK) {
             comm_close(new_socket);
             PROF_stop(comm_open);
             return -1;
@@ -1965,7 +1965,7 @@ comm_open_uds(int sock_type,
     }
 
     if (flags & COMM_DOBIND) {
-        if (commBind(new_socket, AI) != COMM_OK) {
+        if (commBind(new_socket, AI) != Comm::OK) {
             comm_close(new_socket);
             PROF_stop(comm_open);
             return -1;

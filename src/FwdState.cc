@@ -539,7 +539,7 @@ fwdServerClosedWrapper(const CommCloseCbParams &params)
 }
 
 void
-fwdConnectDoneWrapper(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+fwdConnectDoneWrapper(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->connectDone(conn, status, xerrno);
@@ -671,9 +671,9 @@ FwdState::handleUnregisteredServerEnd()
 }
 
 void
-FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno)
+FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
 {
-    if (status != COMM_OK) {
+    if (status != Comm::OK) {
         ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
         anErr->xerrno = xerrno;
         fail(anErr);

@@ -3,8 +3,8 @@
 
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
+#include "comm/Flag.h"
 #include "comm/forward.h"
-#include "comm_err_t.h"
 #include "MasterXaction.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
@@ -24,8 +24,8 @@
 class CommAcceptCbParams;
 typedef void IOACB(const CommAcceptCbParams &params);
 
-typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
-typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
+typedef void CNCB(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data);
+typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag flag, int xerrno, void *data);
 
 class CommTimeoutCbParams;
 typedef void CTCB(const CommTimeoutCbParams &params);
@@ -72,12 +72,12 @@ public:
      *  - On read calls this is the connection just read from.
      *  - On close calls this describes the connection which is now closed.
      *  - On timeouts this is the connection whose operation timed out.
-     *   + NP: timeouts might also return to the connect/read/write handler with COMM_ERR_TIMEOUT.
+     *   + NP: timeouts might also return to the connect/read/write handler with Comm::TIMEOUT.
      */
     Comm::ConnectionPointer conn;
 
-    comm_err_t flag;  ///< comm layer result status.
-    int xerrno;      ///< The last errno to occur. non-zero if flag is COMM_ERR.
+    Comm::Flag flag;  ///< comm layer result status.
+    int xerrno;      ///< The last errno to occur. non-zero if flag is Comm::ERROR.
 
     int fd; ///< FD which the call was about. Set by the async call creator.
 private:
