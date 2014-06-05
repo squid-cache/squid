@@ -71,7 +71,7 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
     debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
            " [" << this << ']');
-    if (params.flag == COMM_OK) {
+    if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());
         receive(buf);
     }

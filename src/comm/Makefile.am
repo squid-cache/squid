@@ -11,6 +11,7 @@ libcomm_la_SOURCES= \
 	ConnOpener.h \
 	Connection.cc \
 	Connection.h \
+	Flag.h \
 	forward.h \
 	IoCallback.cc \
 	IoCallback.h \

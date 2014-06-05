@@ -239,7 +239,7 @@ commIncomingStats(StoreEntry * sentry)
  * comm_setselect and fd_table[] and calls callbacks for IO ready
  * events.
  */
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     int num, i,fd;
@@ -267,7 +267,7 @@ Comm::DoSelect(int msec)
 
         PROF_stop(comm_check_incoming);
 
-        return COMM_ERROR;
+        return Comm::ERROR;
     }
 
     PROF_stop(comm_check_incoming);
@@ -276,7 +276,7 @@ Comm::DoSelect(int msec)
     statCounter.select_fds_hist.count(num);
 
     if (num == 0)
-        return COMM_TIMEOUT;		/* No error.. */
+        return Comm::TIMEOUT;		/* No error.. */
 
     PROF_start(comm_handle_ready_fd);
 
@@ -323,7 +323,7 @@ Comm::DoSelect(int msec)
 
     PROF_stop(comm_handle_ready_fd);
 
-    return COMM_OK;
+    return Comm::OK;
 }
 
 void

@@ -375,12 +375,12 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
 
 /// called when we wrote the 1xx response
 void
-ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *, size_t, comm_err_t errflag, int xerrno)
+ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag errflag, int xerrno)
 {
-    if (errflag == COMM_ERR_CLOSING)
+    if (errflag == Comm::ERR_CLOSING)
         return;
 
-    if (errflag == COMM_OK) {
+    if (errflag == Comm::OK) {
         ScheduleCallHere(cbControlMsgSent);
         return;
     }
@@ -396,7 +396,7 @@ ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *
 
 /// wroteControlMsg() wrapper: ClientSocketContext is not an AsyncJob
 void
-ClientSocketContext::WroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+ClientSocketContext::WroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = static_cast<ClientSocketContext*>(data);
     context->wroteControlMsg(conn, bufnotused, size, errflag, xerrno);
@@ -1061,7 +1061,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
                                              CommIoCbPtrFun(clientWriteComplete, this));
         Comm::Write(clientConnection, &mb, call);
     }  else
-        writeComplete(clientConnection, NULL, 0, COMM_OK);
+        writeComplete(clientConnection, NULL, 0, Comm::OK);
 }
 
 /**
@@ -1503,7 +1503,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     const bool mustSendLastChunk = http->request->flags.chunkedReply &&
                                    !http->request->flags.streamError && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
-        context->writeComplete(context->clientConnection, NULL, 0, COMM_OK);
+        context->writeComplete(context->clientConnection, NULL, 0, Comm::OK);
         PROF_stop(clientSocketRecipient);
         return;
     }
@@ -1547,7 +1547,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 }
 
 static void
-clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
+clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     debugs(33,7, HERE << "clientWriteBodyComplete schedules clientWriteComplete");
     clientWriteComplete(conn, NULL, size, errflag, xerrno, data);
@@ -1841,7 +1841,7 @@ ClientSocketContext::socketState()
  * no more data to send.
  */
 void
-clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = (ClientSocketContext *)data;
     context->writeComplete(conn, bufnotused, size, errflag);
@@ -1897,7 +1897,7 @@ ConnStateData::stopSending(const char *error)
 }
 
 void
-ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag)
+ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag)
 {
     const StoreEntry *entry = http->storeEntry();
     http->out.size += size;
@@ -1906,9 +1906,9 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
            (entry ? entry->objectLen() : 0));
     clientUpdateSocketStats(http->logType, size);
 
-    /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
+    /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
 
-    if (errflag == COMM_ERR_CLOSING || !Comm::IsConnOpen(conn))
+    if (errflag == Comm::ERR_CLOSING || !Comm::IsConnOpen(conn))
         return;
 
     if (errflag || clientHttpRequestStatus(conn->fd, http)) {
@@ -2969,8 +2969,8 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     Must(reading());
     reader = NULL;
 
-    /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
-    if (io.flag == COMM_ERR_CLOSING) {
+    /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
+    if (io.flag == Comm::ERR_CLOSING) {
         debugs(33,5, io.conn << " closing Bailout.");
         return;
     }
@@ -2989,13 +2989,13 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     rd.conn = io.conn;
     switch (Comm::ReadNow(rd, in.buf))
     {
-    case COMM_INPROGRESS:
+    case Comm::INPROGRESS:
         if (in.buf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
         readSomeData();
         return;
 
-    case COMM_OK:
+    case Comm::OK:
         kb_incr(&(statCounter.client_http.kbytes_in), rd.size);
         // may comm_close or setReplyToError
         if (!handleReadData())
@@ -3004,7 +3004,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-    case COMM_EOF: // close detected by 0-byte read
+    case Comm::ENDFILE: // close detected by 0-byte read
         debugs(33, 5, io.conn << " closed?");
 
         if (connFinishedWithConn(rd.size)) {
@@ -3025,7 +3025,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-    // case COMM_ERROR:
+    // case Comm::ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
         notifyAllContexts(rd.xerrno);
@@ -3330,7 +3330,7 @@ httpAccept(const CommAcceptCbParams &params)
         return;
     }
 
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
         debugs(33, 2, "httpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
@@ -3646,7 +3646,7 @@ httpsAccept(const CommAcceptCbParams &params)
         return;
     }
 
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
         debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
@@ -4507,7 +4507,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
 {
     pinning.readHandler = NULL; // Comm unregisters handlers before calling
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return; // close handler will clean up
 
     // We could use getConcurrentRequestCount(), but this may be faster.

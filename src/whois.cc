@@ -51,7 +51,7 @@
 class WhoisState
 {
 public:
-    void readReply(const Comm::ConnectionPointer &, char *aBuffer, size_t aBufferLength, comm_err_t flag, int xerrno);
+    void readReply(const Comm::ConnectionPointer &, char *aBuffer, size_t aBufferLength, Comm::Flag flag, int xerrno);
     void setReplyToOK(StoreEntry *sentry);
     StoreEntry *entry;
     HttpRequest::Pointer request;
@@ -72,7 +72,7 @@ static IOCB whoisReadReply;
 /* PUBLIC */
 
 static void
-whoisWriteComplete(const Comm::ConnectionPointer &, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+whoisWriteComplete(const Comm::ConnectionPointer &, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
 {
     xfree(buf);
 }
@@ -120,7 +120,7 @@ whoisTimeout(const CommTimeoutCbParams &io)
 }
 
 static void
-whoisReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+whoisReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     WhoisState *p = (WhoisState *)data;
     p->readReply(conn, buf, len, flag, xerrno);
@@ -136,17 +136,17 @@ WhoisState::setReplyToOK(StoreEntry *sentry)
 }
 
 void
-WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t aBufferLength, comm_err_t flag, int xerrno)
+WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t aBufferLength, Comm::Flag flag, int xerrno)
 {
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
-    if (flag == COMM_ERR_CLOSING)
+    /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
+    if (flag == Comm::ERR_CLOSING)
         return;
 
     aBuffer[aBufferLength] = '\0';
     debugs(75, 3, HERE << conn << " read " << aBufferLength << " bytes");
     debugs(75, 5, "{" << aBuffer << "}");
 
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         debugs(50, 2, HERE  << conn << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(errno)) {
