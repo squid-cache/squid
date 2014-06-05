@@ -31,6 +31,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fd.h"

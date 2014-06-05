@@ -25,14 +25,6 @@ public:
     iocb_type type;
     Comm::ConnectionPointer conn;
     AsyncCall::Pointer callback;
-
-    /// Buffer to store read(2) into when set.
-    // This is a pointer to the Jobs buffer rather than an SBuf using
-    // the same store since we cannot know when or how the Job will
-    // alter its SBuf while we are reading.
-    SBuf *buf2;
-
-    // Legacy c-string buffers used when buf2 is unset.
     char *buf;
     FREE *freefunc;
     int size;
