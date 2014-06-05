@@ -50,6 +50,5 @@ inline void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, A
     comm_read_base(conn, buf, len, callback);
 }
 void comm_read_cancel(int fd, IOCB *callback, void *data);
-inline void comm_read_cancel(int fd, AsyncCall::Pointer &callback) {Comm::ReadCancel(fd,callback);}
 
 #endif /* _SQUID_COMM_READ_H */
