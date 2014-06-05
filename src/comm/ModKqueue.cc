@@ -242,7 +242,7 @@ Comm::ResetSelect(int fd)
  * events.
  */
 
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     int num, i;
@@ -271,7 +271,7 @@ Comm::DoSelect(int msec)
 
         getCurrentTime();
 
-        return COMM_ERROR;
+        return Comm::ERROR;
 
         /* NOTREACHED */
     }
@@ -279,7 +279,7 @@ Comm::DoSelect(int msec)
     getCurrentTime();
 
     if (num == 0)
-        return COMM_OK;		/* No error.. */
+        return Comm::OK;		/* No error.. */
 
     for (i = 0; i < num; ++i) {
         int fd = (int) ke[i].ident;
@@ -313,7 +313,7 @@ Comm::DoSelect(int msec)
         }
     }
 
-    return COMM_OK;
+    return Comm::OK;
 }
 
 void

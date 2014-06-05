@@ -119,12 +119,12 @@ Ident::Timeout(const CommTimeoutCbParams &io)
 }
 
 void
-Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
 
-    if (status != COMM_OK) {
-        if (status == COMM_TIMEOUT) {
+    if (status != Comm::OK) {
+        if (status == Comm::TIMEOUT) {
             debugs(30, 3, "IDENT connection timeout to " << state->conn->remote);
         }
         return;
@@ -161,19 +161,19 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
 }
 
 void
-Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     debugs(30, 5, HERE << conn << ": Wrote IDENT request " << len << " bytes.");
 
     // TODO handle write errors better. retry or abort?
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         debugs(30, 2, HERE << conn << " err-flags=" << flag << " IDENT write error: " << xstrerr(xerrno));
         conn->close();
     }
 }
 
 void
-Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     char *ident = NULL;
@@ -182,7 +182,7 @@ Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
     assert(buf == state->buf);
     assert(conn->fd == state->conn->fd);
 
-    if (flag != COMM_OK || len <= 0) {
+    if (flag != Comm::OK || len <= 0) {
         state->conn->close();
         return;
     }

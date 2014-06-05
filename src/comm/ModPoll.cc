@@ -348,7 +348,7 @@ comm_poll_tcp_incoming(void)
 }
 
 /* poll all sockets; call handlers for those that are ready. */
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     struct pollfd pfds[SQUID_MAXFD];
@@ -445,7 +445,7 @@ Comm::DoSelect(int msec)
 
             assert(errno != EINVAL);
 
-            return COMM_ERROR;
+            return Comm::ERROR;
 
             /* NOTREACHED */
         }
@@ -580,12 +580,12 @@ Comm::DoSelect(int msec)
 
         statCounter.select_time += (current_dtime - start);
 
-        return COMM_OK;
+        return Comm::OK;
     } while (timeout > current_dtime);
 
     debugs(5, 8, "comm_poll: time out: " << squid_curtime << ".");
 
-    return COMM_TIMEOUT;
+    return Comm::TIMEOUT;
 }
 
 static void

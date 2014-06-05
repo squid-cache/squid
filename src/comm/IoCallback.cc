@@ -103,7 +103,7 @@ Comm::IoCallback::reset()
 
 // Schedule the callback call and clear the callback
 void
-Comm::IoCallback::finish(comm_err_t code, int xerrn)
+Comm::IoCallback::finish(Comm::Flag code, int xerrn)
 {
     debugs(5, 3, HERE << "called for " << conn << " (" << code << ", " << xerrno << ")");
     assert(active());

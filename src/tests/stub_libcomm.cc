@@ -36,7 +36,7 @@ Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, ti
         void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
         void Comm::IoCallback::selectOrQueueWrite() STUB
         void Comm::IoCallback::cancel(const char *reason) STUB
-        void Comm::IoCallback::finish(comm_err_t code, int xerrn) STUB
+        void Comm::IoCallback::finish(Comm::Flag code, int xerrn) STUB
         Comm::CbEntry *Comm::iocb_table = NULL;
 void Comm::CallbackTableInit() STUB
 void Comm::CallbackTableDestruct() STUB
@@ -45,13 +45,13 @@ void Comm::CallbackTableDestruct() STUB
 void Comm::SelectLoopInit(void) STUB
 void Comm::SetSelect(int, unsigned int, PF *, void *, time_t) STUB
 void Comm::ResetSelect(int) STUB
-comm_err_t Comm::DoSelect(int) STUB_RETVAL(COMM_ERROR)
+Comm::Flag Comm::DoSelect(int) STUB_RETVAL(Comm::ERROR)
 void Comm::QuickPollRequired(void) STUB
 
 #include "comm/Read.h"
 void Comm::Read(const Comm::ConnectionPointer &conn, AsyncCall::Pointer &callback) STUB
 bool Comm::MonitorsRead(int fd) STUB_RETVAL(false)
-comm_err_t Comm::ReadNow(CommIoCbParams &params, SBuf &buf) STUB_RETVAL(COMM_ERROR)
+Comm::Flag Comm::ReadNow(CommIoCbParams &params, SBuf &buf) STUB_RETVAL(Comm::ERROR)
 void Comm::ReadCancel(int fd, AsyncCall::Pointer &callback) STUB
 //void Comm::HandleRead(int, void*) STUB
 
@@ -63,7 +63,7 @@ void comm_read_cancel(int fd, IOCB *callback, void *data) STUB
 void Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub) STUB
 void Comm::TcpAcceptor::unsubscribe(const char *) STUB
 void Comm::TcpAcceptor::acceptNext() STUB
-void Comm::TcpAcceptor::notify(const comm_err_t flag, const Comm::ConnectionPointer &) const STUB
+void Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &) const STUB
 
 #include "comm/Write.h"
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB
