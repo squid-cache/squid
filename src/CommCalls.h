@@ -106,8 +106,6 @@ public:
     bool syncWithComm(); // see CommCommonCbParams::syncWithComm
 };
 
-class SBuf;
-
 // read/write (I/O) parameters
 class CommIoCbParams: public CommCommonCbParams
 {
@@ -120,7 +118,6 @@ public:
 public:
     char *buf;
     size_t size;
-    SBuf *buf2;  // alternative buffer for use when buf is unset
 };
 
 // close parameters

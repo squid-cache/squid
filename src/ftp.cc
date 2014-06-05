@@ -34,6 +34,7 @@
 #include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"

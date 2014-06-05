@@ -34,6 +34,7 @@
 #include "base/AsyncCbdataCalls.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "fd.h"
 #include "fde.h"
