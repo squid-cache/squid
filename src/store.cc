@@ -35,6 +35,7 @@
 #include "CacheDigest.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
+#include "comm/Read.h"
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
