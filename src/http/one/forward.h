@@ -6,6 +6,9 @@
 namespace Http {
 namespace One {
 
+class Parser;
+typedef RefCount<Http::One::Parser> ParserPointer;
+
 class RequestParser;
 typedef RefCount<Http::One::RequestParser> RequestParserPointer;
 
