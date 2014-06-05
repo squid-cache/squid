@@ -264,7 +264,6 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 libsquid_la_SOURCES = \
 	comm.cc \
 	comm.h \
-	comm_err_t.h \
 	CommCalls.cc \
 	CommCalls.h \
 	DescriptorSet.cc \

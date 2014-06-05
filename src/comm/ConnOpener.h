@@ -4,8 +4,8 @@
 #include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
 #include "cbdata.h"
+#include "comm/Flag.h"
 #include "comm/forward.h"
-#include "comm_err_t.h"
 #include "CommCalls.h"
 
 namespace Comm
@@ -40,7 +40,7 @@ private:
 
     void earlyAbort(const CommCloseCbParams &);
     void timeout(const CommTimeoutCbParams &);
-    void sendAnswer(comm_err_t errFlag, int xerrno, const char *why);
+    void sendAnswer(Comm::Flag errFlag, int xerrno, const char *why);
     static void InProgressConnectRetry(int fd, void *data);
     static void DelayedConnectRetry(void *data);
     void connect();
@@ -66,7 +66,7 @@ private:
     int totalTries_;   ///< total number of connection attempts over all destinations so far.
     int failRetries_;  ///< number of retries current destination has been tried.
 
-    /// if we are not done by then, we will call back with COMM_TIMEOUT
+    /// if we are not done by then, we will call back with Comm::TIMEOUT
     time_t deadline_;
 
     /// handles to calls which we may need to cancel.

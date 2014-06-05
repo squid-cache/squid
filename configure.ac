@@ -3425,7 +3425,7 @@ if test "x$BUILDCXXFLAGS" = "x"; then
   # otherwise rely on the user-provided value
   if test "x$squid_cv_check_marchnative" = "xyes"; then
     # always valid for the Build compiler.
-    BUILDCXXFLAGS="-march-native"
+    BUILDCXXFLAGS="-march=native"
   fi
   BUILDCXXFLAGS="$BUILDCXXFLAGS $CXXFLAGS"
 fi
