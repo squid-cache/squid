@@ -70,7 +70,7 @@ comm_read_base(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCa
     Comm::SetSelect(conn->fd, COMM_SELECT_READ, Comm::HandleRead, ccb, 0);
 }
 
-comm_err_t
+Comm::Flag
 Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
 {
     /* Attempt a read */
@@ -86,19 +86,19 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
     if (retval > 0) { // data read most common case
         buf.append(theBuf, retval);
         fd_bytes(params.conn->fd, retval, FD_READ);
-        params.flag = COMM_OK;
+        params.flag = Comm::OK;
         params.size = retval;
 
     } else if (retval == 0) { // remote closure (somewhat less) common
         // Note - read 0 == socket EOF, which is a valid read.
-        params.flag = COMM_EOF;
+        params.flag = Comm::ENDFILE;
 
     } else if (retval < 0) { // connection errors are worst-case
-        debugs(5, 3, params.conn << " COMM_ERROR: " << xstrerr(params.xerrno));
+        debugs(5, 3, params.conn << " Comm::ERROR: " << xstrerr(params.xerrno));
         if (ignoreErrno(params.xerrno))
-            params.flag =  COMM_INPROGRESS;
+            params.flag =  Comm::INPROGRESS;
         else
-            params.flag =  COMM_ERROR;
+            params.flag =  Comm::ERROR;
     }
 
     return params.flag;
@@ -123,7 +123,7 @@ Comm::HandleRead(int fd, void *data)
 
     // without a buffer, just call back
     if (!ccb->buf) {
-        ccb->finish(COMM_OK, 0);
+        ccb->finish(Comm::OK, 0);
         return;
     }
 
@@ -139,13 +139,13 @@ Comm::HandleRead(int fd, void *data)
     if (retval >= 0) {
         fd_bytes(fd, retval, FD_READ);
         ccb->offset = retval;
-        ccb->finish(COMM_OK, errno);
+        ccb->finish(Comm::OK, errno);
         return;
 
     } else if (retval < 0 && !ignoreErrno(errno)) {
-        debugs(5, 3, "comm_read_try: scheduling COMM_ERROR");
+        debugs(5, 3, "comm_read_try: scheduling Comm::ERROR");
         ccb->offset = 0;
-        ccb->finish(COMM_ERROR, errno);
+        ccb->finish(Comm::ERROR, errno);
         return;
     };
 

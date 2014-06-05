@@ -254,7 +254,7 @@ Log::TcpLogger::connect()
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds
         if (connectFailures++ % 100 == 0) {
             debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "tcp:" << remote <<
@@ -321,10 +321,10 @@ void
 Log::TcpLogger::writeDone(const CommIoCbParams &io)
 {
     writeScheduled = false;
-    if (io.flag == COMM_ERR_CLOSING) {
+    if (io.flag == Comm::ERR_CLOSING) {
         debugs(MY_DEBUG_SECTION, 7, "closing");
         // do nothing here -- our comm_close_handler will be called to clean up
-    } else if (io.flag != COMM_OK) {
+    } else if (io.flag != Comm::OK) {
         debugs(MY_DEBUG_SECTION, 2, "write failure: " << xstrerr(io.xerrno));
         // keep the first buffer (the one we failed to write)
         disconnect();

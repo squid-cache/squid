@@ -887,16 +887,16 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
 }
 
 static void
-helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     char *t = NULL;
     helper_server *srv = (helper_server *)data;
     helper *hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
 
-    if (flag == COMM_ERR_CLOSING) {
+    if (flag == Comm::ERR_CLOSING) {
         return;
     }
 
@@ -904,7 +904,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index);
 
-    if (flag != COMM_OK || len == 0) {
+    if (flag != Comm::OK || len == 0) {
         srv->closePipesSafely();
         return;
     }
@@ -981,7 +981,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 }
 
 static void
-helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     char *t = NULL;
     helper_stateful_server *srv = (helper_stateful_server *)data;
@@ -989,9 +989,9 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     statefulhelper *hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
 
-    if (flag == COMM_ERR_CLOSING) {
+    if (flag == Comm::ERR_CLOSING) {
         return;
     }
 
@@ -1000,7 +1000,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
            hlp->id_name << " #" << srv->index);
 
-    if (flag != COMM_OK || len == 0) {
+    if (flag != Comm::OK || len == 0) {
         srv->closePipesSafely();
         return;
     }
@@ -1279,7 +1279,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 }
 
 static void
-helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     helper_server *srv = (helper_server *)data;
 
@@ -1288,7 +1288,7 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t l
     srv->writebuf = NULL;
     srv->flags.writing = false;
 
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         /* Helper server has crashed */
         debugs(84, DBG_CRITICAL, "helperDispatch: Helper " << srv->parent->id_name << " #" << srv->index << " has crashed");
         return;
@@ -1354,7 +1354,7 @@ helperDispatch(helper_server * srv, helper_request * r)
 }
 
 static void
-helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag,
+helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag,
                                 int xerrno, void *data)
 {
     /* nothing! */

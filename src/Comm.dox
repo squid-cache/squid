@@ -102,8 +102,8 @@
 
   \par
   The read, write, and accept notifications (scheduled in step #2
-  above) carry the COMM_ERR_CLOSING error flag. When handling
-  COMM_ERR_CLOSING event, the user code should limit
+  above) carry the Comm::ERR_CLOSING error flag. When handling
+  Comm::ERR_CLOSING event, the user code should limit
   descriptor-related processing, especially Comm calls, because
   supported Comm functionality is very limited when the descriptor is
   closing. New code should use the close handlers instead (scheduled
@@ -121,7 +121,7 @@
   Since all notifications are asynchronous, it is possible for a read
   or write notification that was scheduled before comm_close() was
   called to arrive at its destination after comm_close() was called.
-  Such notification will arrive with COMM_ERR_CLOSING flag even though
+  Such notification will arrive with Comm::ERR_CLOSING flag even though
   that flag was not set at the time of the I/O (and the I/O may have
   been successful). This behavior may change.
 
@@ -140,12 +140,12 @@
   instead.
 
   \par
-  COMM_ERR_CLOSING interface will be removed. The read, write, and
+  Comm::ERR_CLOSING interface will be removed. The read, write, and
   accept notifications will not be scheduled after comm_close() is
   called.  New user code should register close handlers instead.
 
   \par
-  When COMM_ERR_CLOSING interface is removed, pending notifications
+  When Comm::ERR_CLOSING interface is removed, pending notifications
   (if any) will be canceled after comm_close() is called. However, the
   cancellation may be removed later if Comm is modified to provide safe
   access to closing descriptors and their fragile state. New user code
