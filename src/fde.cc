@@ -32,7 +32,7 @@
  */
 
 #include "squid.h"
-#include "comm.h"
+#include "comm/Read.h"
 #include "fde.h"
 #include "globals.h"
 #include "SquidTime.h"
@@ -44,7 +44,7 @@ bool
 fde::readPending(int fdNumber)
 {
     if (type == FD_SOCKET)
-        return comm_monitors_read(fdNumber);
+        return Comm::MonitorsRead(fdNumber);
 
     return read_handler ? true : false ;
 }
