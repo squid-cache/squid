@@ -3627,7 +3627,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         static char ip[MAX_IPSTRLEN];
         connState->clientConnection->local.toUrl(ip, sizeof(ip));
         // Pre-pend this fake request to the TLS bits already in the buffer
-        SBuf retStr("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        SBuf retStr;
+        retStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
         connState->in.buf = retStr.append(connState->in.buf);
         bool ret = connState->handleReadData();
         if (ret)
