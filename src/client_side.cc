@@ -2387,9 +2387,15 @@ ConnStateData::In::maybeMakeSpaceAvailable()
             debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
             return false;
         }
-        const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
-        buf.reserveCapacity(wantCapacity);
-        debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length());
+        if (haveCapacity == 0) {
+            // haveCapacity is based on the SBuf visible window of the MemBlob buffer, which may fill up.
+            // at which point bump the buffer back to default. This allocates a new MemBlob with any un-parsed bytes.
+            buf.reserveCapacity(CLIENT_REQ_BUF_SZ);
+        } else {
+            const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
+            buf.reserveCapacity(wantCapacity);
+        }
+        debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length() << " want=" << wantCapacity);
     }
     return (buf.spaceSize() >= 2);
 }
@@ -3276,7 +3282,8 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
-    in.buf.reserveCapacity(CLIENT_REQ_BUF_SZ);
+    // ensure a buffer is present for this connection
+    in.maybeMakeSpaceAvailable();
 
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
