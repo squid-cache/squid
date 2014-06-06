@@ -2395,7 +2395,7 @@ ConnStateData::In::maybeMakeSpaceAvailable()
             const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
             buf.reserveCapacity(wantCapacity);
         }
-        debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length() << " want=" << wantCapacity);
+        debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length());
     }
     return (buf.spaceSize() >= 2);
 }
