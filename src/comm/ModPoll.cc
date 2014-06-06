@@ -423,9 +423,9 @@ Comm::DoSelect(int msec)
          */
         if (nfds == 0 && npending == 0) {
             if (shutting_down)
-                return COMM_SHUTDOWN;
+                return Comm::SHUTDOWN;
             else
-                return COMM_IDLE;
+                return Comm::IDLE;
         }
 
         for (;;) {
