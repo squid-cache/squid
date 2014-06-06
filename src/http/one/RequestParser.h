@@ -18,13 +18,9 @@ namespace One {
  */
 class RequestParser : public Http1::Parser
 {
-    explicit RequestParser(const RequestParser&); // do not implement
-    RequestParser& operator =(const RequestParser&); // do not implement
-
 public:
     /* Http::One::Parser API */
     RequestParser() : Parser() {clear();}
-    virtual ~RequestParser() {}
     virtual void clear();
     virtual Http1::Parser::size_type firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse(const SBuf &aBuf);
