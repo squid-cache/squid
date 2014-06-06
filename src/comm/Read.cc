@@ -3,11 +3,11 @@
  */
 #include "squid.h"
 #include "comm.h"
-#include "comm_internal.h"
-#include "CommCalls.h"
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
+#include "comm_internal.h"
+#include "CommCalls.h"
 #include "Debug.h"
 #include "fd.h"
 #include "fde.h"
@@ -149,7 +149,6 @@ Comm::HandleRead(int fd, void *data)
         ccb->finish(Comm::ERROR, errno);
         return;
     };
-
 
     /* Nope, register for some more IO */
     Comm::SetSelect(fd, COMM_SELECT_READ, Comm::HandleRead, data, 0);
