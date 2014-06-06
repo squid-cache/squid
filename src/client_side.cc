@@ -2339,8 +2339,14 @@ ConnStateData::In::maybeMakeSpaceAvailable()
             debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
             return false;
         }
-        const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
-        buf.reserveCapacity(wantCapacity);
+        if (haveCapacity == 0) {
+            // haveCapacity is based on the SBuf visible window of the MemBlob buffer, which may fill up.
+            // at which point bump the buffer back to default. This allocates a new MemBlob with any un-parsed bytes.
+            buf.reserveCapacity(CLIENT_REQ_BUF_SZ);
+        } else {
+            const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
+            buf.reserveCapacity(wantCapacity);
+        }
         debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length());
     }
     return (buf.spaceSize() >= 2);
@@ -2883,8 +2889,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
-    switch (Comm::ReadNow(rd, in.buf))
-    {
+    switch (Comm::ReadNow(rd, in.buf)) {
     case Comm::INPROGRESS:
         if (in.buf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
@@ -2921,7 +2926,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-    // case Comm::ERROR:
+        // case Comm::ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
         notifyAllContexts(rd.xerrno);
@@ -3173,7 +3178,8 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
-    in.buf.reserveCapacity(CLIENT_REQ_BUF_SZ);
+    // ensure a buffer is present for this connection
+    in.maybeMakeSpaceAvailable();
 
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
@@ -3516,8 +3522,9 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         connState->clientConnection->local.toUrl(ip, sizeof(ip));
-        // XXX need to *pre-pend* this fake request to the TLS bits already in the buffer
-        connState->in.buf.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        // Pre-pend this fake request to the TLS bits already in the buffer
+        SBuf retStr("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        connState->in.buf = retStr.append(connState->in.buf);
         bool ret = connState->handleReadData();
         if (ret)
             ret = connState->clientParseRequests();
