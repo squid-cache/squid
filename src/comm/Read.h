@@ -2,8 +2,8 @@
 #define _SQUID_COMM_READ_H
 
 #include "base/AsyncCall.h"
-#include "CommCalls.h"
 #include "comm/forward.h"
+#include "CommCalls.h"
 
 class SBuf;
 

@@ -2987,8 +2987,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
-    switch (Comm::ReadNow(rd, in.buf))
-    {
+    switch (Comm::ReadNow(rd, in.buf)) {
     case Comm::INPROGRESS:
         if (in.buf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
@@ -3025,7 +3024,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-    // case Comm::ERROR:
+        // case Comm::ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
         notifyAllContexts(rd.xerrno);
