@@ -26,14 +26,10 @@ enum ParseState {
  */
 class Parser : public RefCountable
 {
-    explicit Parser(const Parser&); // do not implement
-    Parser& operator =(const Parser&); // do not implement
-
 public:
     typedef SBuf::size_type size_type;
 
-    Parser() { clear(); }
-    virtual ~Parser() {}
+    Parser() : parsingStage_(HTTP_PARSE_NONE) {}
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
