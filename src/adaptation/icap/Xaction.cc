@@ -11,6 +11,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Write.h"
+#include "comm/Read.h"
 #include "CommCalls.h"
 #include "err_detail_type.h"
 #include "fde.h"
