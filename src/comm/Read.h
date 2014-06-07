@@ -29,8 +29,8 @@ bool MonitorsRead(int fd);
  * \retval Comm::OK          data has been read and placed in buf, amount in params.size
  * \retval Comm::ERROR       an error occured, the code is placed in params.xerrno
  * \retval Comm::INPROGRESS  unable to read at this time, or a minor error occured
- * \retval Comm::ERR_CLOSING 0-byte read has occured.
- *                          Usually indicates the remote end has disconnected.
+ * \retval Comm::ENDFILE     0-byte read has occured.
+ *                           Usually indicates the remote end has disconnected.
  */
 Comm::Flag ReadNow(CommIoCbParams &params, SBuf &buf);
 
