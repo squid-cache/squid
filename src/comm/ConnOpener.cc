@@ -228,7 +228,7 @@ Comm::ConnOpener::start()
     }
 
     if (createFd())
-        connect();
+        doConnect();
 }
 
 /// called at the end of Comm::ConnOpener::DelayedConnectRetry event
@@ -239,7 +239,7 @@ Comm::ConnOpener::restart()
     calls_.sleep_ = false;
 
     if (createFd())
-        connect();
+        doConnect();
 }
 
 /// Create a socket for the future connection or return false.
@@ -309,7 +309,7 @@ Comm::ConnOpener::connected()
 
 /// Make an FD connection attempt.
 void
-Comm::ConnOpener::connect()
+Comm::ConnOpener::doConnect()
 {
     Must(conn_ != NULL);
     Must(temporaryFd_ >= 0);

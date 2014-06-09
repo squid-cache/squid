@@ -43,7 +43,7 @@ private:
     void sendAnswer(Comm::Flag errFlag, int xerrno, const char *why);
     static void InProgressConnectRetry(int fd, void *data);
     static void DelayedConnectRetry(void *data);
-    void connect();
+    void doConnect();
     void connected();
     void lookupLocalAddress();
 
