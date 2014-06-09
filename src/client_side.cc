@@ -3030,7 +3030,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-        // case Comm::ERROR:
+        // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
         notifyAllContexts(rd.xerrno);

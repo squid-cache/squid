@@ -153,7 +153,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         CbcPointer<Xaction> self(this);
         Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
         dialer.params.conn = connection;
-        dialer.params.flag = Comm::ERROR;
+        dialer.params.flag = Comm::COMM_ERROR;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
         ScheduleCallHere(connector);

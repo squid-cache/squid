@@ -231,7 +231,7 @@ commBind(int s, struct addrinfo &inaddr)
 
     debugs(50, 0, "commBind: Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerror());
 
-    return Comm::ERROR;
+    return Comm::COMM_ERROR;
 }
 
 /**
@@ -511,7 +511,7 @@ comm_apply_flags(int new_socket,
     }
 
     if (flags & COMM_NONBLOCKING)
-        if (commSetNonBlocking(new_socket) == Comm::ERROR) {
+        if (commSetNonBlocking(new_socket) == Comm::COMM_ERROR) {
             comm_close(new_socket);
             return -1;
         }
@@ -730,7 +730,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
     else if (errno == EAFNOSUPPORT || errno == EINVAL)
         return Comm::ERR_PROTOCOL;
     else
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
 
     address.toStr(F->ipaddr, MAX_IPSTRLEN);
 
@@ -1004,7 +1004,7 @@ comm_udp_sendto(int fd,
 
         debugs(50, DBG_IMPORTANT, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
 
-    return Comm::ERROR;
+    return Comm::COMM_ERROR;
 }
 
 void
@@ -1129,7 +1129,7 @@ commSetNonBlocking(int fd)
 
         if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror() << " " << fd_table[fd].type);
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
 
 #if _SQUID_CYGWIN_
@@ -1140,12 +1140,12 @@ commSetNonBlocking(int fd)
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
 
         if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
 
 #endif
@@ -1170,13 +1170,13 @@ commUnsetNonBlocking(int fd)
 
     if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
         debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
     if (fcntl(fd, F_SETFL, flags & (~SQUID_NONBLOCK)) < 0) {
 #endif
         debugs(50, 0, "commUnsetNonBlocking: FD " << fd << ": " << xstrerror());
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
     fd_table[fd].flags.nonblocking = false;
@@ -1611,7 +1611,7 @@ checkTimeouts(void)
             // We have an active write callback and we are timed out
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-            COMMIO_FD_WRITECB(fd)->finish(Comm::ERROR, ETIMEDOUT);
+            COMMIO_FD_WRITECB(fd)->finish(Comm::COMM_ERROR, ETIMEDOUT);
         } else if (AlreadyTimedOut(F))
             continue;
 
@@ -1883,7 +1883,7 @@ CommSelectEngine::checkEvents(int timeout)
     case Comm::SHUTDOWN:
         return EVENT_IDLE;
 
-    case Comm::ERROR:
+    case Comm::COMM_ERROR:
         return EVENT_ERROR;
 
     default:

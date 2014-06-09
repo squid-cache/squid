@@ -94,11 +94,11 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
         params.flag = Comm::ENDFILE;
 
     } else if (retval < 0) { // connection errors are worst-case
-        debugs(5, 3, params.conn << " Comm::ERROR: " << xstrerr(params.xerrno));
+        debugs(5, 3, params.conn << " Comm::COMM_ERROR: " << xstrerr(params.xerrno));
         if (ignoreErrno(params.xerrno))
             params.flag =  Comm::INPROGRESS;
         else
-            params.flag =  Comm::ERROR;
+            params.flag =  Comm::COMM_ERROR;
     }
 
     return params.flag;
@@ -144,9 +144,9 @@ Comm::HandleRead(int fd, void *data)
         return;
 
     } else if (retval < 0 && !ignoreErrno(errno)) {
-        debugs(5, 3, "comm_read_try: scheduling Comm::ERROR");
+        debugs(5, 3, "comm_read_try: scheduling Comm::COMM_ERROR");
         ccb->offset = 0;
-        ccb->finish(Comm::ERROR, errno);
+        ccb->finish(Comm::COMM_ERROR, errno);
         return;
     };
 
