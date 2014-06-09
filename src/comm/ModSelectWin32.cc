@@ -460,7 +460,7 @@ Comm::DoSelect(int msec)
 
             examine_select(&readfds, &writefds);
 
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
 
             /* NOTREACHED */
         }

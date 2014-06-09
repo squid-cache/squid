@@ -445,7 +445,7 @@ Comm::DoSelect(int msec)
 
             assert(errno != EINVAL);
 
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
 
             /* NOTREACHED */
         }
