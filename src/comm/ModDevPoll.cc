@@ -366,7 +366,7 @@ Comm::DoSelect(int msec)
         /* error during poll */
         getCurrentTime();
         PROF_stop(comm_check_incoming);
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
     PROF_stop(comm_check_incoming);

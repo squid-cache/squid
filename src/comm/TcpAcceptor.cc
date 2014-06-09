@@ -322,7 +322,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
  *
  * \retval Comm::OK         success. details parameter filled.
  * \retval Comm::NOMESSAGE  attempted accept() but nothing useful came in.
- * \retval Comm::ERROR      an outright failure occured.
+ * \retval Comm::COMM_ERROR      an outright failure occured.
  *                         Or if this client has too many connections already.
  */
 Comm::Flag
@@ -347,10 +347,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
             return Comm::NOMESSAGE;
         } else if (ENFILE == errno || EMFILE == errno) {
             debugs(50, 3, HERE << status() << ": " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         } else {
             debugs(50, DBG_IMPORTANT, HERE << status() << ": " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
     }
 
@@ -362,7 +362,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             Ip::Address::FreeAddrInfo(gai);
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
     }
 
@@ -372,7 +372,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
         Ip::Address::FreeAddrInfo(gai);
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
     details->local = *gai;
     Ip::Address::FreeAddrInfo(gai);
@@ -401,7 +401,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
         // Failed.
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
 #if USE_SQUID_EUI
