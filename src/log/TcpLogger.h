@@ -66,7 +66,7 @@ private:
     void appendChunk(const char *chunk, const size_t len);
     void writeIfNeeded();
     void writeIfPossible();
-    void connect();
+    void doConnect();
     void disconnect();
 
     /* comm callbacks */

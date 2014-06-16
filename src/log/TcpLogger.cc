@@ -58,7 +58,7 @@ Log::TcpLogger::~TcpLogger()
 void
 Log::TcpLogger::start()
 {
-    connect();
+    doConnect();
 }
 
 bool
@@ -231,7 +231,7 @@ Log::TcpLogger::appendChunk(const char *chunk, const size_t len)
 
 /// starts [re]connecting to the remote logger
 void
-Log::TcpLogger::connect()
+Log::TcpLogger::doConnect()
 {
     if (shutting_down)
         return;
@@ -313,7 +313,7 @@ Log::TcpLogger::delayedReconnect()
     Must(reconnectScheduled);
     Must(!conn);
     reconnectScheduled = false;
-    connect();
+    doConnect();
 }
 
 /// Comm::Write callback
@@ -328,7 +328,7 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
         debugs(MY_DEBUG_SECTION, 2, "write failure: " << xstrerr(io.xerrno));
         // keep the first buffer (the one we failed to write)
         disconnect();
-        connect();
+        doConnect();
     } else {
         debugs(MY_DEBUG_SECTION, 5, "write successful");
 
