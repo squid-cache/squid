@@ -262,16 +262,21 @@ aclRegister(ACL *acl)
     }
 }
 
+/// remove registered acl from the centralized deletion set
+static
+void
+aclDeregister(ACL *acl)
+{
+    if (acl->registered) {
+        if (RegisteredAcls)
+            RegisteredAcls->erase(acl);
+        acl->registered = false;
+    }
+}
+
 /*********************/
 /* Destroy functions */
 /*********************/
-
-/// helper for RegisteredAcls cleanup
-static void
-aclDeleteOne(ACL *acl)
-{
-    delete acl;
-}
 
 /// called to delete ALL Acls.
 void
@@ -280,8 +285,15 @@ aclDestroyAcls(ACL ** head)
     *head = NULL; // Config.aclList
     if (AclSet *acls = RegisteredAcls) {
         debugs(28, 8, "deleting all " << acls->size() << " ACLs");
-        std::for_each(acls->begin(), acls->end(), &aclDeleteOne);
-        acls->clear();
+        while (!acls->empty()) {
+            ACL *acl = *acls->begin();
+            // We use centralized deletion (this function) so ~ACL should not
+            // delete other ACLs, but we still deregister first to prevent any
+            // accesses to the being-deleted ACL via RegisteredAcls.
+            assert(acl->registered); // make sure we are making progress
+            aclDeregister(acl);
+            delete acl;
+        }
     }
 }
 
@@ -290,7 +302,8 @@ aclDestroyAclList(ACLList **list)
 {
     debugs(28, 8, "aclDestroyAclList: invoked");
     assert(list);
-    cbdataFree(*list);
+    delete *list;
+    *list = NULL;
 }
 
 void
@@ -299,7 +312,8 @@ aclDestroyAccessList(acl_access ** list)
     assert(list);
     if (*list)
         debugs(28, 3, "destroying: " << *list << ' ' << (*list)->name);
-    cbdataFree(*list);
+    delete *list;
+    *list = NULL;
 }
 
 /* maex@space.net (06.09.1996)
