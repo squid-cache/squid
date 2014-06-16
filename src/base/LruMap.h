@@ -189,7 +189,7 @@ template <class EntryValue, size_t EntryCost>
 void
 LruMap<EntryValue, EntryCost>::trim()
 {
-    while (memLimit() >= 0 && size() >= memLimit()) {
+    while (size() >= memLimit()) {
         QueueIterator i = index.end();
         --i;
         if (i != index.end()) {
