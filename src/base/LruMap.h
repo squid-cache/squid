@@ -140,6 +140,10 @@ LruMap<EntryValue, EntryCost>::add(const char *key, EntryValue *t)
 
     del(key);
     trim();
+
+    if (memLimit() == 0)
+        return false;
+
     index.push_front(new Entry(key, t));
     storage.insert(MapPair(key, index.begin()));
 
@@ -185,7 +189,7 @@ template <class EntryValue, size_t EntryCost>
 void
 LruMap<EntryValue, EntryCost>::trim()
 {
-    while (memLimit() > 0 && size() >= memLimit()) {
+    while (memLimit() >= 0 && size() >= memLimit()) {
         QueueIterator i = index.end();
         --i;
         if (i != index.end()) {
