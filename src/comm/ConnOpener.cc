@@ -230,7 +230,7 @@ Comm::ConnOpener::start()
     }
 
     if (createFd())
-        connect();
+        doConnect();
 }
 
 /// called at the end of Comm::ConnOpener::DelayedConnectRetry event
@@ -241,7 +241,7 @@ Comm::ConnOpener::restart()
     calls_.sleep_ = false;
 
     if (createFd())
-        connect();
+        doConnect();
 }
 
 /// Create a socket for the future connection or return false.
@@ -311,7 +311,7 @@ Comm::ConnOpener::connected()
 
 /// Make an FD connection attempt.
 void
-Comm::ConnOpener::connect()
+Comm::ConnOpener::doConnect()
 {
     Must(conn_ != NULL);
     Must(temporaryFd_ >= 0);
@@ -344,7 +344,7 @@ Comm::ConnOpener::connect()
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
-            sendAnswer(COMM_ERR_CONNECT, xerrno, "Comm::ConnOpener::connect");
+            sendAnswer(COMM_ERR_CONNECT, xerrno, "Comm::ConnOpener::doConnect");
         }
     }
     }
@@ -426,7 +426,7 @@ Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 }
 
 /* Legacy Wrapper for the retry event after COMM_INPROGRESS
- * XXX: As soon as Comm::SetSelect() accepts Async calls we can use a ConnOpener::connect call
+ * XXX: As soon as Comm::SetSelect() accepts Async calls we can use a ConnOpener::doConnect call
  */
 void
 Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
@@ -437,7 +437,7 @@ Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
         // Ew. we are now outside the all AsyncJob protections.
         // get back inside by scheduling another call...
         typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
-        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
+        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::doConnect);
         ScheduleCallHere(call);
     }
     delete ptr;
