@@ -3928,7 +3928,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     // to make sure the connection does not get stuck on non-SSL clients.
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
-                                                 this, ConnStateData::requestTimeout);
+                                     this, ConnStateData::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
 
     // Disable the client read handler until CachePeer selection is complete
