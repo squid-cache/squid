@@ -1090,15 +1090,23 @@ acl CONNECT method CONNECT
 NOCOMMENT_END
 DOC_END
 
-NAME: follow_x_forwarded_for
+NAME: proxy_forwarded_access follow_x_forwarded_for
 TYPE: acl_access
-IFDEF: FOLLOW_X_FORWARDED_FOR
 LOC: Config.accessList.followXFF
 DEFAULT_IF_NONE: deny all
-DEFAULT_DOC: X-Forwarded-For header will be ignored.
+DEFAULT_DOC: indirect client IP will not be accepted.
 DOC_START
-	Allowing or Denying the X-Forwarded-For header to be followed to
-	find the original source of a request.
+	Determine which client proxies can be trusted to provide correct
+	information regarding real client IP address.
+
+	The original source details can be relayed in:
+		HTTP message Forwarded header, or
+		HTTP message X-Forwarded-For header, or
+		PROXY protocol connection header.
+
+	Allowing or Denying the X-Forwarded-For or Forwarded headers to
+	be followed to find the original source of a request. Or permitting
+	a client proxy to connect using PROXY protocol.
 
 	Requests may pass through a chain of several other proxies
 	before reaching us.  The X-Forwarded-For header will contain a
@@ -1530,6 +1538,11 @@ DOC_START
 			NP: disables authentication and maybe IPv6 on the port.
 
 	   accel	Accelerator / reverse proxy mode
+
+	   proxy-surrogate
+			Support for PROXY protocol version 1 connections.
+			The proxy_forwarded_access is required to whitelist
+			downstream proxies which can be trusted.
 
 	   ssl-bump	For each CONNECT request allowed by ssl_bump ACLs,
 			establish secure connection with the client and with
