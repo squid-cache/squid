@@ -43,6 +43,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Support named services
 	<item>Upgraded squidclient tool
 	<item>Helper support for concurrency channels
+	<item>Support PROXY protocol
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -163,6 +164,27 @@ Most user-facing changes are reflected in squid.conf (see below).
    With these helpers concurrency may now be set to 0 or any higher number as desired.
 
 
+<sect1>Support PROXY protocol
+<p>More info at <url url="http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt">
+
+<p>PROXY protocol provides a simple way for proxies and tunnels of any kind to
+   relay the original client source details without having to alter or understand
+   the protocol being relayed on the connection.
+
+<p>Squid currently supports receiving version 1 of the protocol.
+
+<p>Squid can be configured by adding an <em>http_port</em> or <em>https_port</em>
+   with the <em>proxy-surrogate</em> mode flag. The <em>proxy_forwarded_access</em>
+   must also be configured with <em>src</em> ACLs to whitelist proxies which are
+   trusted to send correct client details.
+
+<p>
+<verbatim>
+ http_port 3128 proxy-surrogate
+ proxy_forwarded_access allow localhost
+</verbatim>
+
+
 <sect>Changes to squid.conf since Squid-3.4
 <p>
 There have been changes to Squid's configuration file since Squid-3.4.
@@ -193,6 +215,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>collapsed_forwarding</tag>
 	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
            Collapsing of requests is performed across SMP workers.
+
+	<tag>proxy_forwarded_access</tag>
+	<p>Renamed from <em>follow_x_forwarded_for</em> and extended to control more
+	   ways for locating the indirect (original) client IP details.
 
 	<tag>send_hit</tag>
 	<p>New configuration directive to enable/disable sending cached content
@@ -310,6 +336,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>dns_children</tag>
 	<p>DNS external helper interface has been removed.
+
+	<tag>follow_x_forwarded_for</tag>
+	<p>Renamed <em>proxy_forwarded_access</em> and extended.
 
 </descrip>
 

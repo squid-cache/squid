@@ -3597,14 +3597,14 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     /* modes first */
 
     if (strcmp(token, "accel") == 0) {
-        if (s->flags.isIntercepted()) {
+        if (s->flags.isIntercepted() || s->flags.proxySurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.accelSurrogate = true;
         s->vhost = true;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
-        if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
+        if (s->flags.accelSurrogate || s->flags.tproxyIntercept || s->flags.proxySurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
@@ -3614,7 +3614,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
     } else if (strcmp(token, "tproxy") == 0) {
-        if (s->flags.natIntercept || s->flags.accelSurrogate) {
+        if (s->flags.natIntercept || s->flags.accelSurrogate || s->flags.proxySurrogate) {
             debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
@@ -3627,6 +3627,13 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
             self_destruct();
         }
+
+    } else if (strcmp(token, "proxy-surrogate") == 0) {
+        if (s->flags.natIntercept || s->flags.accelSurrogate  || s->flags.tproxyIntercept) {
+            debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: proxy-surrogate option requires its own port. It cannot be shared with other modes.");
+            self_destruct();
+        }
+        s->flags.proxySurrogate = true;
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
         if (!s->flags.accelSurrogate) {
@@ -3869,6 +3876,9 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 
     else if (s->flags.tproxyIntercept)
         storeAppendPrintf(e, " tproxy");
+
+    else if (s->flags.proxySurrogate)
+        storeAppendPrintf(e, " proxy-surrogate");
 
     else if (s->flags.accelSurrogate) {
         storeAppendPrintf(e, " accel");

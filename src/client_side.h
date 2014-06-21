@@ -389,6 +389,14 @@ private:
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
 
+    /* PROXY protocol functionality */
+    void proxyProtocolValidateClient();
+    bool parseProxyProtocolMagic();
+    bool proxyProtocolError(bool isFatal);
+
+    /// whether PROXY protocol header is still expected on this port
+    bool needProxyProtocolHeader_;
+
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection
     Auth::UserRequest::Pointer auth_;
