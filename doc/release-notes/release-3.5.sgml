@@ -171,7 +171,10 @@ Most user-facing changes are reflected in squid.conf (see below).
    relay the original client source details without having to alter or understand
    the protocol being relayed on the connection.
 
-<p>Squid currently supports receiving version 1 of the protocol.
+<p>Squid currently supports receiving version 1 or 2 of the protocol.
+   A port which has been configured to receive this protocol may only be used to
+   receive traffic from client software sending in this protocol.
+   Regular forward-proxy HTTP traffic is not accepted.
 
 <p>Squid can be configured by adding an <em>http_port</em> or <em>https_port</em>
    with the <em>proxy-surrogate</em> mode flag. The <em>proxy_forwarded_access</em>

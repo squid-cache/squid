@@ -1540,7 +1540,7 @@ DOC_START
 	   accel	Accelerator / reverse proxy mode
 
 	   proxy-surrogate
-			Support for PROXY protocol version 1 connections.
+			Support for PROXY protocol version 1 or 2 connections.
 			The proxy_forwarded_access is required to whitelist
 			downstream proxies which can be trusted.
 
