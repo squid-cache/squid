@@ -3006,12 +3006,12 @@ ConnStateData::parseProxyProtocolMagic()
                 return false;
 
             if (porta > 0 && porta <= 0xFFFF) // max uint16_t
-                originalClient.port(ntohs(static_cast<uint16_t>(porta)));
+                originalClient.port(static_cast<uint16_t>(porta));
             else
                 return proxyProtocolError(true);
 
             if (portb > 0 && portb <= 0xFFFF) // max uint16_t
-                originalDest.port(ntohs(static_cast<uint16_t>(portb)));
+                originalDest.port(static_cast<uint16_t>(portb));
             else
                 return proxyProtocolError(true);
 
