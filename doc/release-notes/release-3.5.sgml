@@ -352,7 +352,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p><em>There are no changes to existing ./configure options in Squid-3.5.</em>
+	<tag>--enable-icap-client</tag>
+	<p>Deprecated. ICAP client is now auto-enabled.
+	   Use --disable-icap-client to disable if you need to.
 
 </descrip>
 </p>
