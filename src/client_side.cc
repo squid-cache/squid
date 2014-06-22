@@ -3043,7 +3043,7 @@ ConnStateData::parseProxyProtocolMagic()
             proxyProtocolError(true);
 
         const char family = (in.buf[1] & 0xF0) >>4;
-        if (family > 0x2) // values other than 0x0-0x3 are invalid. we dont accept 0x3
+        if (family > 0x3) // values other than 0x0-0x3 are invalid
             proxyProtocolError(true);
 
         const char proto = (in.buf[1] & 0x0F);
