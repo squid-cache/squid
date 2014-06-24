@@ -71,8 +71,6 @@ public:
     Auth::Type auth_type;
     /** the config for this user */
     Auth::Config *config;
-    /** we may have many proxy-authenticate strings that decode to the same user */
-    dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
     size_t ipcount;
     long expiretime;

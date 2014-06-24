@@ -31,8 +31,10 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
@@ -67,9 +69,7 @@
 #include "MemObject.h"
 #endif
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
@@ -1241,7 +1241,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     assert(io.fd == data.conn->fd);
@@ -1251,7 +1251,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         return;
     }
 
-    if (io.flag == COMM_OK && io.size > 0) {
+    if (io.flag == Comm::OK && io.size > 0) {
         debugs(9,5,HERE << "appended " << io.size << " bytes to readBuf");
         data.readBuf->appended(io.size);
 #if USE_DELAY_POOLS
@@ -1266,7 +1266,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         ++ IOStats.Ftp.read_hist[bin];
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpDataRead: read error: " << xstrerr(io.xerrno));
 
@@ -1601,7 +1601,7 @@ FtpStateData::ftpWriteCommandCallback(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (io.flag) {
@@ -1742,7 +1742,7 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
@@ -1752,11 +1752,11 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
 
     assert(ctrl.offset < ctrl.size);
 
-    if (io.flag == COMM_OK && io.size > 0) {
+    if (io.flag == Comm::OK && io.size > 0) {
         fd_bytes(io.fd, io.size, FD_READ);
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpReadControlReply: read error: " << xstrerr(io.xerrno));
 
@@ -2560,8 +2560,13 @@ ftpSendPassive(FtpStateData * ftpState)
         ftpState->state = SENT_PASV;
         break;
 
-    default:
-        if (!Config.Ftp.epsv) {
+    default: {
+        bool doEpsv = true;
+        if (Config.accessList.ftp_epsv) {
+            ACLFilledChecklist checklist(Config.accessList.ftp_epsv, ftpState->fwd->request, NULL);
+            doEpsv = (checklist.fastCheck() == ACCESS_ALLOWED);
+        }
+        if (!doEpsv) {
             debugs(9, 5, HERE << "EPSV support manually disabled. Sending PASV for FTP Channel (" << ftpState->ctrl.conn->remote <<")");
             snprintf(cbuf, CTRL_BUFLEN, "PASV\r\n");
             ftpState->state = SENT_PASV;
@@ -2583,7 +2588,8 @@ ftpSendPassive(FtpStateData * ftpState)
                 ftpState->state = SENT_EPSV_1;
             }
         }
-        break;
+    }
+    break;
     }
 
     ftpState->writeCommand(cbuf);
@@ -2727,17 +2733,17 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 void
-FtpStateData::ftpPasvCallback(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
     ftpState->data.opener = NULL;
 
-    if (status != COMM_OK) {
+    if (status != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
-        if (status == COMM_TIMEOUT)
+        if (status == Comm::TIMEOUT)
             ftpState->writeCommand("ABOR");
 
         // try another connection attempt with some other method
@@ -2925,7 +2931,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         data.listenConn->close();
         data.listenConn = NULL;
         debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: " << io.conn << ": " << xstrerr(io.xerrno));
@@ -2968,7 +2974,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         }
     }
 
-    /** On COMM_OK start using the accepted data socket and discard the temporary listen socket. */
+    /** On Comm::OK start using the accepted data socket and discard the temporary listen socket. */
     data.close();
     data.opened(io.conn, dataCloser());
     static char ntoapeer[MAX_IPSTRLEN];
@@ -3509,7 +3515,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        ftperr = new ErrorState(error, Http::scGateway_Timeout, fwd->request);
+        ftperr = new ErrorState(error, Http::scGatewayTimeout, fwd->request);
         break;
 
     default:
@@ -3725,7 +3731,7 @@ ftpUrlWith2f(HttpRequest * request)
 {
     String newbuf = "%2f";
 
-    if (request->protocol != AnyP::PROTO_FTP)
+    if (request->url.getScheme() != AnyP::PROTO_FTP)
         return NULL;
 
     if ( request->urlpath[0]=='/' ) {

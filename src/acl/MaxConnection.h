@@ -52,7 +52,7 @@ public:
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
+    virtual SBufList dump() const;
     virtual bool empty () const;
     virtual bool valid () const;
     virtual void prepareForUse();

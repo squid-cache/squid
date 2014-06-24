@@ -1,7 +1,7 @@
 #ifndef SQUID_SSL_CONTEXT_STORAGE_H
 #define SQUID_SSL_CONTEXT_STORAGE_H
 
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "base/LruMap.h"
 #include "CacheManager.h"
@@ -13,7 +13,9 @@
 
 #include <list>
 #include <map>
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
+#endif
 
 /// TODO: Replace on real size.
 #define SSL_CTX_SIZE 1024
@@ -65,6 +67,6 @@ private:
 /// Global cache for store all SSL server certificates.
 extern GlobalContextStorage TheGlobalContextStorage;
 } //namespace Ssl
-#endif // USE_SSL
+#endif // USE_OPENSSL
 
 #endif // SQUID_SSL_CONTEXT_STORAGE_H

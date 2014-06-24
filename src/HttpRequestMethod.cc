@@ -20,18 +20,9 @@ operator++ (Http::MethodType &aMethod)
  * or from a range of chars, * such as "GET" from "GETFOOBARBAZ"
  * (pass in pointer to G and pointer to F.)
  */
-HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod (Http::METHOD_NONE)
+HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod(Http::METHOD_NONE)
 {
     if (begin == NULL)
-        return;
-
-    /*
-     * This check for '%' makes sure that we don't
-     * match one of the extension method placeholders,
-     * which have the form %EXT[0-9][0-9]
-     */
-
-    if (*begin == '%')
         return;
 
     /*
@@ -42,40 +33,40 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
     if (NULL == end)
         end = begin + strcspn(begin, w_space);
 
-    if (end == begin) {
-        theMethod = Http::METHOD_NONE;
+    if (end == begin)
         return;
-    }
 
+    // TODO: Optimize this linear search.
     for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
         // RFC 2616 section 5.1.1 - Method names are case-sensitive
         // NP: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
-        if (0 == strncasecmp(begin, Http::MethodType_str[theMethod], end-begin)) {
+        if (0 == image().caseCmp(begin, end-begin)) {
 
             // relaxed parser allows mixed-case and corrects them on output
             if (Config.onoff.relaxed_header_parser)
                 return;
 
-            if (0 == strncmp(begin, Http::MethodType_str[theMethod], end-begin))
+            if (0 == image().cmp(begin, end-begin))
                 return;
         }
     }
 
     // if method not found and method string is not null then it is other method
     theMethod = Http::METHOD_OTHER;
-    theImage.limitInit(begin,end-begin);
+    theImage.assign(begin, end-begin);
 }
 
-char const*
+const SBuf &
 HttpRequestMethod::image() const
 {
+    static const SBuf methodOther("METHOD_OTHER");
     if (Http::METHOD_OTHER != theMethod) {
-        return Http::MethodType_str[theMethod];
+        return Http::MethodType_sb[theMethod];
     } else {
-        if (theImage.size()>0) {
-            return theImage.termedBuf();
+        if (!theImage.isEmpty()) {
+            return theImage;
         } else {
-            return "METHOD_OTHER";
+            return methodOther;
         }
     }
 }

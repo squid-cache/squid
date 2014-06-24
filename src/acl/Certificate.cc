@@ -37,7 +37,7 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
  */
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "acl/Certificate.h"
 #include "acl/CertificateData.h"
@@ -67,4 +67,4 @@ ACLCertificateStrategy::Instance()
 
 ACLCertificateStrategy ACLCertificateStrategy::Instance_;
 
-#endif /* USE_SSL */
+#endif /* USE_OPENSSL */

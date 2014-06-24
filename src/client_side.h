@@ -36,10 +36,11 @@
 #include "comm.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
+#include "SBuf.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -86,7 +87,7 @@ public:
     ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
     ~ClientSocketContext();
     bool startOfOutput() const;
-    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
+    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag);
     void keepaliveNextRequest();
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
@@ -142,7 +143,7 @@ public:
 
 protected:
     static IOCB WroteControlMsg;
-    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno);
 
 private:
     void prepareReply(HttpReply * rep);
@@ -161,7 +162,7 @@ private:
 };
 
 class ConnectionDetail;
-#if USE_SSL
+#if USE_OPENSSL
 namespace Ssl
 {
 class ServerBump;
@@ -189,14 +190,12 @@ public:
     ~ConnStateData();
 
     void readSomeData();
-    int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
-    bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
@@ -212,12 +211,10 @@ public:
     struct In {
         In();
         ~In();
-        char *addressToReadInto() const;
+        bool maybeMakeSpaceAvailable();
 
         ChunkedCodingParser *bodyParser; ///< parses chunked request body
-        char *buf;
-        size_t notYetUsed;
-        size_t allocatedSize;
+        SBuf buf;
     } in;
 
     /** number of body bytes we need to comm_read for the "current" request
@@ -293,7 +290,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    bool handleReadData(char *buf, size_t size);
+    bool handleReadData();
     bool handleRequestBodyData();
 
     /**
@@ -337,7 +334,7 @@ public:
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
 
-#if USE_SSL
+#if USE_OPENSSL
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
@@ -388,7 +385,6 @@ protected:
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
 private:
-    int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
@@ -402,7 +398,7 @@ private:
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
-#if USE_SSL
+#if USE_OPENSSL
     bool switchedToHttps_;
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request

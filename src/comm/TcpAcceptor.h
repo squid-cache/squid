@@ -4,8 +4,10 @@
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "base/Subscription.h"
+#include "comm/Flag.h"
 #include "comm/forward.h"
-#include "comm_err_t.h"
+
+class CommCloseCbParams;
 
 namespace Comm
 {
@@ -57,7 +59,7 @@ public:
     void acceptNext();
 
     /// Call the subscribed callback handler with details about a new connection.
-    void notify(const comm_err_t flag, const Comm::ConnectionPointer &details) const;
+    void notify(const Comm::Flag flag, const Comm::ConnectionPointer &details) const;
 
     /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
@@ -73,6 +75,9 @@ private:
     /// Reserved for read-only use.
     ConnectionPointer conn;
 
+    /// listen socket closure handler
+    AsyncCall::Pointer closer_;
+
     /// Method to test if there are enough file descriptors to open a new client connection
     /// if not the accept() will be postponed
     static bool okToAccept();
@@ -81,8 +86,9 @@ private:
     static void doAccept(int fd, void *data);
 
     void acceptOne();
-    comm_err_t oldAccept(Comm::ConnectionPointer &details);
+    Comm::Flag oldAccept(Comm::ConnectionPointer &details);
     void setListen();
+    void handleClosure(const CommCloseCbParams &io);
 
     CBDATA_CLASS2(TcpAcceptor);
 };

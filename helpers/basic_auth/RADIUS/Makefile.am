@@ -15,5 +15,6 @@ basic_radius_auth_SOURCES = \
 basic_radius_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
+	$(NETTLELIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

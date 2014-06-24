@@ -83,6 +83,7 @@ typedef enum {
     HDR_ETAG,                           /**< RFC 2608, 2616 */
     HDR_EXPECT,                         /**< RFC 2616, 2616 */
     HDR_EXPIRES,                        /**< RFC 2608, 2616 */
+    HDR_FORWARDED,                      /**< RFC 7239 */
     HDR_FROM,                           /**< RFC 2608, 2616 */
     HDR_HOST,                           /**< RFC 2608, 2616 */
     HDR_HTTP2_SETTINGS,                 /**< HTTP/2.0 upgrade header. see draft-ietf-httpbis-http2-04 */
@@ -137,7 +138,7 @@ typedef enum {
     HDR_AUTHENTICATION_INFO,            /**< RFC 2617 */
     HDR_X_CACHE,                        /**< Squid custom header */
     HDR_X_CACHE_LOOKUP,	                /**< Squid custom header. temporary hack that became de-facto. TODO remove */
-    HDR_X_FORWARDED_FOR,                /**< Squid custom header */
+    HDR_X_FORWARDED_FOR,                /**< obsolete Squid custom header */
     HDR_X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
     HDR_X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
 #if X_ACCELERATOR_VARY
@@ -176,7 +177,7 @@ typedef enum {
 #endif
     hoRequest,
     hoReply,
-#if USE_SSL
+#if USE_OPENSSL
     hoErrorDetail,
 #endif
     hoEnd

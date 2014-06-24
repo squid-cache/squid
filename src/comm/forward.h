@@ -5,10 +5,12 @@
 
 #include <vector>
 
+/// Abstraction layer for TCP, UDP, TLS, UDS and filedescriptor sockets.
 namespace Comm
 {
 
 class Connection;
+class ConnOpener;
 
 typedef RefCount<Comm::Connection> ConnectionPointer;
 

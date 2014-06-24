@@ -34,7 +34,7 @@
 #include "defines.h"
 #include "ip/Address.h"
 
-#if USE_SSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
 
@@ -42,7 +42,6 @@
 class ClientInfo;
 #endif
 
-class PconnPool;
 class dwrite_q;
 class _fde_disk
 {
@@ -70,7 +69,7 @@ public:
     char const *remoteAddr() const;
     void dumpStats (StoreEntry &, int);
     bool readPending(int);
-    void noteUse(PconnPool *);
+    void noteUse();
 
 public:
 
@@ -110,7 +109,6 @@ public:
 
     struct {
         int uses;                   /* ie # req's over persistent conn */
-        PconnPool *pool;
     } pconn;
 
 #if USE_DELAY_POOLS
@@ -132,7 +130,7 @@ public:
     CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
-#if USE_SSL
+#if USE_OPENSSL
     SSL *ssl;
     SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
 #endif
@@ -167,7 +165,6 @@ private:
         bytes_read = 0;
         bytes_written = 0;
         pconn.uses = 0;
-        pconn.pool = NULL;
 #if USE_DELAY_POOLS
         clientInfo = NULL;
 #endif
@@ -185,7 +182,7 @@ private:
         wstate = NULL;
         read_method = NULL;
         write_method = NULL;
-#if USE_SSL
+#if USE_OPENSSL
         ssl = NULL;
         dynamicSslContext = NULL;
 #endif

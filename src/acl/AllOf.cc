@@ -17,10 +17,10 @@ Acl::AllOf::clone() const
     return new AllOf;
 }
 
-wordlist*
+SBufList
 Acl::AllOf::dump() const
 {
-    return empty() ? NULL : nodes.front()->dump();
+    return empty() ? SBufList() : nodes.front()->dump();
 }
 
 int

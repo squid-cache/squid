@@ -19,6 +19,10 @@ public:
     int verbosityLevel;
 };
 
+/// display debug messages at varying verbosity levels
+#define debugVerbose(LEVEL, MESSAGE) \
+    while ((LEVEL) <= scParams.verbosityLevel) {std::cerr << MESSAGE << std::endl; break;}
+
 /// global squidcleint parameters
 extern Parameters scParams;
 

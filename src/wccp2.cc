@@ -67,7 +67,7 @@ static EVH wccp2AssignBuckets;
 #define WCCP2_MASK_ASSIGNMENT		0x01
 
 #define	WCCP2_NONE_SECURITY_LEN	0
-#define	WCCP2_MD5_SECURITY_LEN	16
+#define	WCCP2_MD5_SECURITY_LEN	SQUID_MD5_DIGEST_LENGTH // 16
 
 /* Useful defines */
 #define	WCCP2_NUMPORTS	8
@@ -573,7 +573,7 @@ wccp2_get_service_by_id(int service, int service_id) {
 static char
 wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 {
-    uint8_t md5_digest[16];
+    uint8_t md5Digest[SQUID_MD5_DIGEST_LENGTH];
     char pwd[WCCP2_PASSWORD_LEN];
     SquidMD5_CTX M;
 
@@ -601,7 +601,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
      * including the WCCP message header. The WCCP security implementation
      * area should be zero'ed before calculating the MD5 hash.
      */
-    /* XXX eventually we should be able to kill md5_digest and blit it directly in */
+    /* XXX eventually we should be able to kill md5Digest and blit it directly in */
     memset(ws->security_implementation, 0, sizeof(ws->security_implementation));
 
     SquidMD5Init(&M);
@@ -610,9 +610,9 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     SquidMD5Update(&M, packet, len);
 
-    SquidMD5Final(md5_digest, &M);
+    SquidMD5Final(md5Digest, &M);
 
-    memcpy(ws->security_implementation, md5_digest, sizeof(md5_digest));
+    memcpy(ws->security_implementation, md5Digest, sizeof(md5Digest));
 
     /* Finished! */
     return 1;
@@ -627,7 +627,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 {
 
     struct wccp2_security_md5_t *ws = (struct wccp2_security_md5_t *) security;
-    uint8_t md5_digest[16], md5_challenge[16];
+    uint8_t md5Digest[SQUID_MD5_DIGEST_LENGTH], md5_challenge[SQUID_MD5_DIGEST_LENGTH];
     char pwd[WCCP2_PASSWORD_LEN];
     SquidMD5_CTX M;
 
@@ -655,7 +655,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     pwd[sizeof(pwd) - 1] = '\0';
 
     /* Take a copy of the challenge: we need to NUL it before comparing */
-    memcpy(md5_challenge, ws->security_implementation, 16);
+    memcpy(md5_challenge, ws->security_implementation, sizeof(md5_challenge));
 
     memset(ws->security_implementation, 0, sizeof(ws->security_implementation));
 
@@ -665,9 +665,9 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     SquidMD5Update(&M, packet, len);
 
-    SquidMD5Final(md5_digest, &M);
+    SquidMD5Final(md5Digest, &M);
 
-    return (memcmp(md5_digest, md5_challenge, 16) == 0);
+    return (memcmp(md5Digest, md5_challenge, SQUID_MD5_DIGEST_LENGTH) == 0);
 }
 
 void

@@ -1,7 +1,7 @@
 #ifndef _SQUID_SRC_COMM_LOOPS_H
 #define _SQUID_SRC_COMM_LOOPS_H
 
-#include "comm_err_t.h"
+#include "comm/Flag.h"
 
 // for PF
 #include "typedefs.h"
@@ -27,7 +27,7 @@ void ResetSelect(int);
 /** Perform a select() or equivalent call.
  * This is used by the main select loop engine to check for FD with IO available.
  */
-comm_err_t DoSelect(int);
+Comm::Flag DoSelect(int);
 
 void QuickPollRequired(void);
 

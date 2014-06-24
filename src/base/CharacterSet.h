@@ -36,38 +36,64 @@ public:
     /// optional set label for debugging (default: "anonymous")
     const char * name;
 
-    // common character sets, insipired to RFC5234
+    // common character sets, RFC 5234
     // A-Za-z
     static const CharacterSet ALPHA;
     // 0-1
     static const CharacterSet BIT;
     // carriage return
     static const CharacterSet CR;
-    // line feed
-    static const CharacterSet LF;
-    // double quote
-    static const CharacterSet DQUOTE;
+    // controls
+#if __cplusplus == 201103L
+    // ready but disabled as needs C++11 constructor
+    //static const CharacterSet CTL;
+#endif
     // 0-9
     static const CharacterSet DIGIT;
+    // double quote
+    static const CharacterSet DQUOTE;
     // 0-9aAbBcCdDeEfF
     static const CharacterSet HEXDIG;
     // horizontal tab
     static const CharacterSet HTAB;
+    // line feed
+    static const CharacterSet LF;
     // white space
     static const CharacterSet SP;
     // visible (printable) characters
     static const CharacterSet VCHAR;
     // <space><tab>
     static const CharacterSet WSP;
-    // character sets from draft httpbis
+
+    // HTTP character sets, RFC 7230
+    // ctext
+#if __cplusplus == 201103L
+    // ready but disabled as needs C++11 constructor
+    //static const CharacterSet CTEXT;
+#endif
+    // XXX: maybe field-vchar = VCHAR / obs-text
     // any VCHAR except for SPECIAL
     static const CharacterSet TCHAR;
     // special VCHARs
     static const CharacterSet SPECIAL;
-    // qdtext (ready but not enabled as it requires a c++11 constructor)
+    // qdtext
+#if __cplusplus == 201103L
+    // ready but disabled as needs C++11 constructor
     //static const CharacterSet QDTEXT;
-    // obs-text (ready but not enabled as it requires a c++11 constructor)
-    //static const CharacterSet OBSTEXT;
+#endif
+    // obs-text
+    static const CharacterSet OBSTEXT;
+
+    // HTTP character sets, RFC 7232
+    // etagc
+#if __cplusplus == 201103L
+    // ready but disabled as needs C++11 constructor
+    //static const CharacterSet ETAGC;
+#endif
+
+    // HTTP character sets, RFC 7235
+    // token68 (internal charaters only, excludes '=' terminator)
+    static const CharacterSet TOKEN68C;
 
 private:
     /** index of characters in this set

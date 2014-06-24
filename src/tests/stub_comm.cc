@@ -55,7 +55,7 @@ void commSetCloseOnExec(int fd) STUB_NOP
 int ignoreErrno(int ierrno) STUB_RETVAL(-1)
 
 void commUnsetFdTimeout(int fd) STUB
-int commSetNonBlocking(int fd) STUB_RETVAL(COMM_ERROR)
+int commSetNonBlocking(int fd) STUB_RETVAL(Comm::COMM_ERROR)
 int commUnsetNonBlocking(int fd) STUB_RETVAL(-1)
 
 // MinGW needs also a stub of _comm_close()

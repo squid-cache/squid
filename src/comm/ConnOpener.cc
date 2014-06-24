@@ -17,9 +17,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 class CachePeer;
 
@@ -64,7 +62,7 @@ Comm::ConnOpener::swanSong()
 {
     if (callback_ != NULL) {
         // inform the still-waiting caller we are dying
-        sendAnswer(COMM_ERR_CONNECT, 0, "Comm::ConnOpener::swanSong");
+        sendAnswer(Comm::ERR_CONNECT, 0, "Comm::ConnOpener::swanSong");
     }
 
     // did we abort with a temporary FD assigned?
@@ -101,7 +99,7 @@ Comm::ConnOpener::getHost() const
  * Pass the results back to the external handler.
  */
 void
-Comm::ConnOpener::sendAnswer(comm_err_t errFlag, int xerrno, const char *why)
+Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
 {
     // only mark the address good/bad AFTER connect is finished.
     if (host_ != NULL) {
@@ -230,7 +228,7 @@ Comm::ConnOpener::start()
     }
 
     if (createFd())
-        connect();
+        doConnect();
 }
 
 /// called at the end of Comm::ConnOpener::DelayedConnectRetry event
@@ -241,7 +239,7 @@ Comm::ConnOpener::restart()
     calls_.sleep_ = false;
 
     if (createFd())
-        connect();
+        doConnect();
 }
 
 /// Create a socket for the future connection or return false.
@@ -257,7 +255,7 @@ Comm::ConnOpener::createFd()
 
     temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
     if (temporaryFd_ < 0) {
-        sendAnswer(COMM_ERR_CONNECT, 0, "Comm::ConnOpener::createFd");
+        sendAnswer(Comm::ERR_CONNECT, 0, "Comm::ConnOpener::createFd");
         return false;
     }
 
@@ -306,12 +304,12 @@ Comm::ConnOpener::connected()
     Must(fd_table[conn_->fd].flags.open);
     fd_table[conn_->fd].local_addr = conn_->local;
 
-    sendAnswer(COMM_OK, 0, "Comm::ConnOpener::connected");
+    sendAnswer(Comm::OK, 0, "Comm::ConnOpener::connected");
 }
 
 /// Make an FD connection attempt.
 void
-Comm::ConnOpener::connect()
+Comm::ConnOpener::doConnect()
 {
     Must(conn_ != NULL);
     Must(temporaryFd_ >= 0);
@@ -320,13 +318,13 @@ Comm::ConnOpener::connect()
 
     switch (comm_connect_addr(temporaryFd_, conn_->remote) ) {
 
-    case COMM_INPROGRESS:
-        debugs(5, 5, HERE << conn_ << ": COMM_INPROGRESS");
+    case Comm::INPROGRESS:
+        debugs(5, 5, HERE << conn_ << ": Comm::INPROGRESS");
         Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, new Pointer(this), 0);
         break;
 
-    case COMM_OK:
-        debugs(5, 5, HERE << conn_ << ": COMM_OK - connected");
+    case Comm::OK:
+        debugs(5, 5, HERE << conn_ << ": Comm::OK - connected");
         connected();
         break;
 
@@ -344,7 +342,7 @@ Comm::ConnOpener::connect()
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
-            sendAnswer(COMM_ERR_CONNECT, xerrno, "Comm::ConnOpener::connect");
+            sendAnswer(Comm::ERR_CONNECT, xerrno, "Comm::ConnOpener::doConnect");
         }
     }
     }
@@ -410,7 +408,7 @@ Comm::ConnOpener::earlyAbort(const CommCloseCbParams &io)
     debugs(5, 3, HERE << io.conn);
     calls_.earlyAbort_ = NULL;
     // NP: is closing or shutdown better?
-    sendAnswer(COMM_ERR_CLOSING, io.xerrno, "Comm::ConnOpener::earlyAbort");
+    sendAnswer(Comm::ERR_CLOSING, io.xerrno, "Comm::ConnOpener::earlyAbort");
 }
 
 /**
@@ -422,11 +420,11 @@ Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 {
     debugs(5, 5, HERE << conn_ << ": * - ERR took too long to receive response.");
     calls_.timeout_ = NULL;
-    sendAnswer(COMM_TIMEOUT, ETIMEDOUT, "Comm::ConnOpener::timeout");
+    sendAnswer(Comm::TIMEOUT, ETIMEDOUT, "Comm::ConnOpener::timeout");
 }
 
-/* Legacy Wrapper for the retry event after COMM_INPROGRESS
- * XXX: As soon as Comm::SetSelect() accepts Async calls we can use a ConnOpener::connect call
+/* Legacy Wrapper for the retry event after Comm::INPROGRESS
+ * XXX: As soon as Comm::SetSelect() accepts Async calls we can use a ConnOpener::doConnect call
  */
 void
 Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
@@ -437,7 +435,7 @@ Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
         // Ew. we are now outside the all AsyncJob protections.
         // get back inside by scheduling another call...
         typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
-        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
+        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::doConnect);
         ScheduleCallHere(call);
     }
     delete ptr;

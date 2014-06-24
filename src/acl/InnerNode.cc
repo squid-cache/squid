@@ -2,12 +2,12 @@
 #include "acl/Acl.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "acl/InnerNode.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
-#include "wordlist.h"
 #include <algorithm>
 
 void
@@ -27,6 +27,7 @@ Acl::InnerNode::add(ACL *node)
 {
     assert(node != NULL);
     nodes.push_back(node);
+    aclRegister(node);
 }
 
 // one call parses one "acl name acltype name1 name2 ..." line
@@ -64,13 +65,13 @@ Acl::InnerNode::lineParse()
     return;
 }
 
-wordlist*
+SBufList
 Acl::InnerNode::dump() const
 {
-    wordlist *values = NULL;
+    SBufList rv;
     for (Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i)
-        wordlistAdd(&values, (*i)->name);
-    return values;
+        rv.push_back(SBuf((*i)->name));
+    return rv;
 }
 
 int

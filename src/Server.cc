@@ -376,7 +376,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
         // kids should increment their counters
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (!requestBodySource) {
@@ -517,7 +517,7 @@ ServerStateData::maybePurgeOthers()
 
     // XXX: should we use originalRequest() here?
     const char *reqUrl = urlCanonical(request);
-    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
+    debugs(88, 5, "maybe purging due to " << request->method << ' ' << reqUrl);
     purgeEntriesByUrl(request, reqUrl);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
