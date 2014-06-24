@@ -18,7 +18,7 @@ public:
     ACLHierCodeData &operator= (ACLHierCodeData const &);
     virtual ~ACLHierCodeData();
     bool match(hier_code);
-    wordlist *dump();
+    virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<hier_code> *clone() const;

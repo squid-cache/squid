@@ -35,11 +35,17 @@ AC_DEFUN([SQUID_DEFAULT_INCLUDES],[[
 dnl *BSD net headers
 AC_DEFUN([SQUID_BSDNET_INCLUDES],[
 SQUID_DEFAULT_INCLUDES
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NET_IF_H
+#include <net/if.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -50,14 +56,8 @@ SQUID_DEFAULT_INCLUDES
 #if HAVE_NETINET_IP_COMPAT_H
 #include <netinet/ip_compat.h>
 #endif
-#if HAVE_NET_IF_H
-#include <net/if.h>
-#endif
 #if HAVE_NETINET_IP_FIL_H
 #include <netinet/ip_fil.h>
-#endif
-#if HAVE_SYS_PARAM_H
-#include <sys/param.h>
 #endif
 ])
 

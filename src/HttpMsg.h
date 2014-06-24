@@ -67,6 +67,8 @@ public:
     bool persistent() const;
 
 public:
+    /// HTTP-Version field in the first line of the message.
+    /// see RFC 7230 section 3.1
     Http::ProtocolVersion http_ver;
 
     HttpHeader header;
@@ -79,8 +81,6 @@ public:
     int hdr_sz;
 
     int64_t content_length;
-
-    AnyP::ProtocolType protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
 

@@ -2,9 +2,7 @@
 #include "compat/xalloc.h"
 #include "compat/xstring.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 char *
 xstrdup(const char *s)

@@ -20,7 +20,7 @@ bool ACLMaxUserIP::valid () const STUB_RETVAL(false)
 void ACLMaxUserIP::parse() STUB
 int ACLMaxUserIP::match(Auth::UserRequest::Pointer, Ip::Address const &) STUB_RETVAL(0)
 int ACLMaxUserIP::match(ACLChecklist *) STUB_RETVAL(0)
-wordlist * ACLMaxUserIP::dump() const STUB_RETVAL(NULL)
+SBufList ACLMaxUserIP::dump() const STUB_RETVAL(SBufList())
 
 #include "auth/AclProxyAuth.h"
 ACLProxyAuth::~ACLProxyAuth() STUB
@@ -30,7 +30,7 @@ ACLProxyAuth & ACLProxyAuth::operator= (ACLProxyAuth const & a) STUB_RETVAL(cons
 char const * ACLProxyAuth::typeString() const STUB_RETVAL(NULL)
 void ACLProxyAuth::parse() STUB
 int ACLProxyAuth::match(ACLChecklist *) STUB_RETVAL(0)
-wordlist * ACLProxyAuth::dump() const STUB_RETVAL(NULL)
+SBufList ACLProxyAuth::dump() const STUB_RETVAL(SBufList())
 bool ACLProxyAuth::empty () const STUB_RETVAL(false)
 bool ACLProxyAuth::valid () const STUB_RETVAL(false)
 ProxyAuthLookup * ProxyAuthLookup::Instance() STUB_RETVAL(NULL)

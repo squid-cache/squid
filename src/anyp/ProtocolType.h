@@ -27,7 +27,6 @@ typedef enum {
 #endif
     PROTO_URN,
     PROTO_WHOIS,
-    PROTO_INTERNAL,
     PROTO_ICY,
     PROTO_UNKNOWN,
     PROTO_MAX

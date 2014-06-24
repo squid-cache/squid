@@ -6,7 +6,6 @@
 Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
         Auth::User(aConfig, aRequestRealm)
 {
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }
 
 Auth::Ntlm::User::~User()

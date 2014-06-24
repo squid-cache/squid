@@ -46,6 +46,7 @@
 #include "Store.h"
 #include "unlinkd.h"
 
+#include <cerrno>
 #if HAVE_SYS_IPC_H
 #include <sys/ipc.h>
 #endif
@@ -54,9 +55,6 @@
 #endif
 #if HAVE_SYS_SHM_H
 #include <sys/shm.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 diskd_stats_t diskd_stats;

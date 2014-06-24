@@ -156,9 +156,9 @@ peerSelect(Comm::ConnectionList * paths,
     ps_state *psstate;
 
     if (entry)
-        debugs(44, 3, "peerSelect: " << entry->url()  );
+        debugs(44, 3, *entry << ' ' << entry->url());
     else
-        debugs(44, 3, "peerSelect: " << RequestMethodStr(request->method));
+        debugs(44, 3, request->method);
 
     psstate = new ps_state;
 
@@ -257,7 +257,7 @@ peerSelectDnsPaths(ps_state *psstate)
             // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
             Comm::ConnectionPointer p = new Comm::Connection();
             p->remote = req->clientConnectionManager->clientConnection->local;
-            p->peerType = fs->code;
+            p->peerType = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
             p->setPeer(fs->_peer);
 
             // check for a configured outgoing address for this destination...
@@ -459,7 +459,7 @@ peerSelectFoo(ps_state * ps)
 
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
-    debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
+    debugs(44, 3, request->method << ' ' << request->GetHost());
 
     /** If we don't know whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
@@ -691,7 +691,7 @@ peerGetSomeDirect(ps_state * ps)
         return;
 
     /* WAIS is not implemented natively */
-    if (ps->request->protocol == AnyP::PROTO_WAIS)
+    if (ps->request->url.getScheme() == AnyP::PROTO_WAIS)
         return;
 
     peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
@@ -703,7 +703,7 @@ peerGetSomeParent(ps_state * ps)
     CachePeer *p;
     HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
-    debugs(44, 3, "peerGetSomeParent: " << RequestMethodStr(request->method) << " " << request->GetHost());
+    debugs(44, 3, request->method << ' ' << request->GetHost());
 
     if (ps->direct == DIRECT_YES)
         return;

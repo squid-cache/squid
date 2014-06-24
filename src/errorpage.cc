@@ -54,7 +54,7 @@
 #include "auth/UserRequest.h"
 #endif
 #include "SquidTime.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
 #endif
 
@@ -228,7 +228,7 @@ errorInitialize(void)
         error_stylesheet.Printf("%s",tmpl.text());
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     Ssl::errorDetailInitialize();
 #endif
 }
@@ -252,7 +252,7 @@ errorClean(void)
 
     error_page_count = 0;
 
-#if USE_SSL
+#if USE_OPENSSL
     Ssl::errorDetailClean();
 #endif
 }
@@ -568,6 +568,15 @@ errorPageName(int pageId)
     return "ERR_UNKNOWN";	/* should not happen */
 }
 
+ErrorState *
+ErrorState::NewForwarding(err_type type, HttpRequest *request)
+{
+    assert(request);
+    const Http::StatusCode status = request->flags.needValidation ?
+                                    Http::scGatewayTimeout : Http::scServiceUnavailable;
+    return new ErrorState(type, status, request);
+}
+
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
         type(t),
         page_id(t),
@@ -588,7 +597,7 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
         callback_data(NULL),
         request_hdrs(NULL),
         err_msg(NULL),
-#if USE_SSL
+#if USE_OPENSSL
         detail(NULL),
 #endif
         detailCode(ERR_DETAIL_NONE)
@@ -673,12 +682,12 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
  *     closing the FD, otherwise we do it ourselves.
  */
 static void
-errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
     debugs(4, 3, HERE << conn << ", size=" << size);
 
-    if (errflag != COMM_ERR_CLOSING) {
+    if (errflag != Comm::ERR_CLOSING) {
         if (err->callback) {
             debugs(4, 3, "errorSendComplete: callback");
             err->callback(conn->fd, err->callback_data, size);
@@ -708,7 +717,7 @@ ErrorState::~ErrorState()
     if (err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err_language);
-#if USE_SSL
+#if USE_OPENSSL
     delete detail;
 #endif
 }
@@ -764,8 +773,8 @@ ErrorState::Dump(MemBuf * mb)
         else
             urlpath_or_slash = "/";
 
-        str.Printf("%s " SQUIDSTRINGPH " %s/%d.%d\n",
-                   RequestMethodStr(request->method),
+        str.Printf(SQUIDSBUFPH " " SQUIDSTRINGPH " %s/%d.%d\n",
+                   SQUIDSBUFPRINT(request->method.image()),
                    SQUIDSTRINGPRINT(urlpath_or_slash),
                    AnyP::ProtocolType_str[request->http_ver.protocol],
                    request->http_ver.major, request->http_ver.minor);
@@ -833,7 +842,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'D':
         if (!allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
-#if USE_SSL
+#if USE_OPENSSL
         // currently only SSL error details implemented
         else if (detail) {
             detail->useRequest(request);
@@ -940,10 +949,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'M':
-        if (request)
-            p = RequestMethodStr(request->method);
-        else if (!building_deny_info_url)
-            p= "[unknown method]";
+        if (request) {
+            const SBuf &m = request->method.image();
+            mb.append(m.rawContent(), m.length());
+        } else if (!building_deny_info_url)
+            p = "[unknown method]";
         break;
 
     case 'o':
@@ -962,7 +972,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'P':
         if (request) {
-            p = AnyP::ProtocolType_str[request->protocol];
+            p = request->url.getScheme().c_str();
         } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }
@@ -983,8 +993,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             else
                 urlpath_or_slash = "/";
 
-            mb.Printf("%s " SQUIDSTRINGPH " %s/%d.%d\n",
-                      RequestMethodStr(request->method),
+            mb.Printf(SQUIDSBUFPH " " SQUIDSTRINGPH " %s/%d.%d\n",
+                      SQUIDSBUFPRINT(request->method.image()),
                       SQUIDSTRINGPRINT(urlpath_or_slash),
                       AnyP::ProtocolType_str[request->http_ver.protocol],
                       request->http_ver.major, request->http_ver.minor);
@@ -1071,7 +1081,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'x':
-#if USE_SSL
+#if USE_OPENSSL
         if (detail)
             mb.Printf("%s", detail->errorName());
         else
@@ -1156,7 +1166,7 @@ ErrorState::BuildHttpReply()
 
     if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
-        Http::StatusCode status = Http::scMovedTemporarily;
+        Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
         if (name[0] == '3')
             status = httpStatus;
@@ -1222,7 +1232,7 @@ ErrorState::BuildHttpReply()
     // error tracking.
     if (request) {
         int edc = ERR_DETAIL_NONE; // error detail code
-#if USE_SSL
+#if USE_OPENSSL
         if (detail)
             edc = detail->errorNo();
         else

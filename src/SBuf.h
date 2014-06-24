@@ -77,6 +77,7 @@ public:
     uint64_t compareFast; ///<number of comparison operations not requiring data scan
     uint64_t copyOut; ///<number of data-copies to other forms of buffers
     uint64_t rawAccess; ///<number of accesses to raw contents
+    uint64_t nulTerminate; ///<number of c_str() terminations
     uint64_t chop;  ///<number of chop operations
     uint64_t trim;  ///<number of trim operations
     uint64_t find;  ///<number of find operations
@@ -254,15 +255,28 @@ public:
      * \retval <0 argument of the call is smaller than called SBuf
      * \retval 0  argument of the call has the same contents of called SBuf
      */
-    int compare(const SBuf &S, SBufCaseSensitive isCaseSensitive, size_type n = npos) const;
+    int compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n = npos) const;
 
-    /// shorthand version for compare
-    inline int cmp(const SBuf &S, size_type n = npos) const {
+    /// shorthand version for compare()
+    inline int cmp(const SBuf &S, const size_type n = npos) const {
         return compare(S,caseSensitive,n);
     }
 
-    /// shorthand version for case-insensitive comparison
-    inline int caseCmp(const SBuf &S, size_type n = npos) const {
+    /// shorthand version for case-insensitive compare()
+    inline int caseCmp(const SBuf &S, const size_type n = npos) const {
+        return compare(S,caseInsensitive,n);
+    }
+
+    /// Comparison with a C-string.
+    int compare(const char *s, const SBufCaseSensitive isCaseSensitive, const size_type n = npos) const;
+
+    /// Shorthand version for C-string compare().
+    inline int cmp(const char *S, const size_type n = npos) const {
+        return compare(S,caseSensitive,n);
+    }
+
+    /// Shorthand version for case-insensitive C-string compare().
+    inline int caseCmp(const char *S, const size_type n = npos) const {
         return compare(S,caseInsensitive,n);
     }
 
@@ -271,7 +285,7 @@ public:
      *  \param isCaseSensitive one of caseSensitive or caseInsensitive
      *  \retval true argument is a prefix of the SBuf
      */
-    bool startsWith(const SBuf &S, SBufCaseSensitive isCaseSensitive = caseSensitive) const;
+    bool startsWith(const SBuf &S, const SBufCaseSensitive isCaseSensitive = caseSensitive) const;
 
     bool operator ==(const SBuf & S) const;
     bool operator !=(const SBuf & S) const;

@@ -15,6 +15,15 @@
 /* for inet_ntoa() */
 #include <arpa/inet.h>
 #endif
+#if HAVE_WS2TCPIP_H
+// Windows IPv6 definitions
+#include <ws2tcpip.h>
+#endif
+
+// some OS (ie WIndows) define IN6_ADDR_EQUAL instead
+#if !defined(IN6_ARE_ADDR_EQUAL) && _SQUID_WINDOWS_
+#define IN6_ARE_ADDR_EQUAL IN6_ADDR_EQUAL
+#endif
 
 /* Debugging only. Dump the address content when a fatal assert is encountered. */
 #define IASSERT(a,b)  \
@@ -29,7 +38,7 @@
 int
 Ip::Address::cidr() const
 {
-    uint8_t shift,byte;
+    uint8_t shift,ipbyte;
     uint8_t bit,caught;
     int len = 0;
     const uint8_t *ptr= mSocketAddr_.sin6_addr.s6_addr;
@@ -46,20 +55,20 @@ Ip::Address::cidr() const
     }
 
     for (; shift<sizeof(mSocketAddr_.sin6_addr) ; ++shift) {
-        byte= *(ptr+shift);
+        ipbyte= *(ptr+shift);
 
-        if (byte == 0xFF) {
+        if (ipbyte == 0xFF) {
             len += 8;
             continue ;  /* A short-cut */
         }
 
         for (caught = 0 , bit= 7 ; !caught && (bit <= 7); --bit) {
-            caught = ((byte & 0x80) == 0x00);  /* Found a '0' at 'bit' ? */
+            caught = ((ipbyte & 0x80) == 0x00);  /* Found a '0' at 'bit' ? */
 
             if (!caught)
                 ++len;
 
-            byte <<= 1;
+            ipbyte <<= 1;
         }
 
         if (caught)
@@ -243,8 +252,8 @@ Ip::Address::isSiteLocal6() const
 bool
 Ip::Address::isSiteLocalAuto() const
 {
-    return mSocketAddr_.sin6_addr.s6_addr[10] == static_cast<uint8_t>(0xff) &&
-           mSocketAddr_.sin6_addr.s6_addr[11] == static_cast<uint8_t>(0xfe);
+    return mSocketAddr_.sin6_addr.s6_addr[11] == static_cast<uint8_t>(0xff) &&
+           mSocketAddr_.sin6_addr.s6_addr[12] == static_cast<uint8_t>(0xfe);
 }
 
 bool

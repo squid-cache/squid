@@ -26,6 +26,7 @@ typedef enum {
     LOG_TCP_DENIED_REPLY,
     LOG_TCP_OFFLINE_HIT,
     LOG_TCP_REDIRECT,
+    LOG_TCP_TUNNEL,             // a binary tunnel was established for this transaction
     LOG_UDP_HIT,
     LOG_UDP_MISS,
     LOG_UDP_DENIED,
