@@ -34,7 +34,6 @@
 #define SQUID_ACL_H
 
 #include "acl/forward.h"
-#include "base/Vector.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
@@ -42,6 +41,7 @@
 
 #include <ostream>
 #include <string>
+#include <vector>
 
 class ConfigParser;
 
@@ -153,10 +153,10 @@ public:
         char const *typeString;
 
     private:
-        static Vector<Prototype const *> * Registry;
+        static std::vector<Prototype const *> * Registry;
         static void *Initialized;
-        typedef Vector<Prototype const*>::iterator iterator;
-        typedef Vector<Prototype const*>::const_iterator const_iterator;
+        typedef std::vector<Prototype const*>::iterator iterator;
+        typedef std::vector<Prototype const*>::const_iterator const_iterator;
         void registerMe();
     };
 

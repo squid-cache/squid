@@ -102,7 +102,7 @@ Adaptation::AccessCheck::check()
         AccessRule *r = *i;
         if (isCandidate(*r)) {
             debugs(93, 5, HERE << "check: rule '" << r->id << "' is a candidate");
-            candidates += r->id;
+            candidates.push_back(r->id);
         }
     }
 
@@ -131,7 +131,7 @@ Adaptation::AccessCheck::checkCandidates()
             return;
         }
 
-        candidates.shift(); // the rule apparently went away (reconfigure)
+        candidates.erase(candidates.begin()); // the rule apparently went away (reconfigure)
     }
 
     debugs(93, 4, HERE << "NO candidates left");
@@ -176,7 +176,7 @@ Adaptation::AccessCheck::noteAnswer(allow_t answer)
     }
 
     // no match or the group disappeared during reconfiguration
-    candidates.shift();
+    candidates.erase(candidates.begin());
     checkCandidates();
 }
 

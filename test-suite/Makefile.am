@@ -31,7 +31,6 @@ endif
 TESTS += debug \
 	syntheticoperators \
 	VirtualDeleteOperator \
-	StackTest \
 	splay\
 	MemPoolTest\
 	mem_node_test\
@@ -46,7 +45,6 @@ check_PROGRAMS += debug \
 		mem_node_test\
 		mem_hdr_test \
 		splay \
-		StackTest \
 		syntheticoperators \
 		VirtualDeleteOperator
 
@@ -88,8 +86,6 @@ mem_hdr_test_LDADD = \
 MemPoolTest_SOURCES = MemPoolTest.cc
 
 splay_SOURCES = splay.cc
-
-StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
 
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
 

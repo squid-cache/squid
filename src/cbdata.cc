@@ -50,12 +50,13 @@
 #include "cbdata.h"
 #include "mgr/Registration.h"
 #include "Store.h"
-#if USE_CBDATA_DEBUG
-#include "Stack.h"
-#endif
 #include "Generic.h"
 
 #include <climits>
+#if USE_CBDATA_DEBUG
+#include <algorithm>
+#include <vector>
+#endif
 
 #if WITH_VALGRIND
 #define HASHED_CBDATA 1
@@ -122,7 +123,7 @@ public:
     dlink_node link;
     const char *file;
     int line;
-    Stack<CBDataCall*> calls;
+    std::vector<CBDataCall*> calls; // used as a stack with random access operator
 #endif
 
     /* cookie used while debugging */
@@ -207,10 +208,11 @@ cbdata_hash(const void *p, unsigned int mod)
 cbdata::~cbdata()
 {
 #if USE_CBDATA_DEBUG
-    CBDataCall *aCall;
 
-    while ((aCall = calls.pop()))
-        delete aCall;
+    while (!calls.empty()) {
+        delete calls.back();
+        calls.pop_back();
+    }
 
 #endif
 
@@ -314,7 +316,7 @@ cbdataInternalAlloc(cbdata_type type)
 
     c->file = file;
     c->line = line;
-    c->calls = Stack<CBDataCall *> ();
+    c->calls = std::vector<CBDataCall *> ();
     c->addHistory("Alloc", file, line);
     dlinkAdd(c, &c->link, &cbdataEntries);
     debugs(45, 3, "cbdataAlloc: " << p << " " << file << ":" << line);
@@ -612,8 +614,8 @@ CBDATA_CLASS_INIT(generic_cbdata);
 struct CBDataCallDumper : public unary_function<CBDataCall, void> {
     CBDataCallDumper (StoreEntry *anEntry):where(anEntry) {}
 
-    void operator()(CBDataCall const &x) {
-        storeAppendPrintf(where, "%s\t%s\t%d\n", x.label, x.file, x.line);
+    void operator()(CBDataCall * const &x) {
+        storeAppendPrintf(where, "%s\t%s\t%d\n", x->label, x->file, x->line);
     }
 
     StoreEntry *where;
@@ -626,7 +628,7 @@ struct CBDataHistoryDumper : public CBDataDumper {
         CBDataDumper::operator()(x);
         storeAppendPrintf(where, "\n");
         storeAppendPrintf(where, "Action\tFile\tLine\n");
-        for_each (x.calls,callDumper);
+        std::for_each (x.calls.begin(), x.calls.end(), callDumper);
         storeAppendPrintf(where, "\n");
     }
 
