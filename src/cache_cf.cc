@@ -245,7 +245,7 @@ static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
-static bool parseNamedIntList(const char *data, const String &name, Vector<int> &list);
+static bool parseNamedIntList(const char *data, const String &name, std::vector<int> &list);
 
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
@@ -462,7 +462,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
     config_lineno = 0;
 
-    Vector<bool> if_states;
+    std::vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
         ++config_lineno;
 
@@ -1843,12 +1843,7 @@ static void
 free_authparam(Auth::ConfigVector * cfg)
 {
     /* Wipe the Auth globals and Detach/Destruct component config + state. */
-    cfg->clean();
-
-    /* remove our pointers to the probably-dead sub-configs */
-    while (cfg->size()) {
-        cfg->pop_back();
-    }
+    cfg->clear();
 
     /* on reconfigure initialize new auth schemes for the new config. */
     if (reconfiguring) {
@@ -1869,7 +1864,7 @@ static int
 find_fstype(char *type)
 {
     for (size_t i = 0; i < StoreFileSystem::FileSystems().size(); ++i)
-        if (strcasecmp(type, StoreFileSystem::FileSystems().items[i]->type()) == 0)
+        if (strcasecmp(type, StoreFileSystem::FileSystems().at(i)->type()) == 0)
             return (int)i;
 
     return (-1);
@@ -1912,7 +1907,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
             sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
 
-            if (strcmp(sd->type(), StoreFileSystem::FileSystems().items[fs]->type()) != 0) {
+            if (strcmp(sd->type(), StoreFileSystem::FileSystems().at(fs)->type()) != 0) {
                 debugs(3, DBG_CRITICAL, "ERROR: Can't change type of existing cache_dir " <<
                        sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
                 return;
@@ -1934,7 +1929,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
     allocate_new_swapdir(swap);
 
-    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().items[fs]->createSwapDir();
+    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().at(fs)->createSwapDir();
 
     sd = dynamic_cast<SwapDir *>(swap->swapDirs[swap->n_configured].getRaw());
 
@@ -4247,7 +4242,7 @@ free_access_log(CustomLog ** definitions)
 
 /// parses list of integers form name=N1,N2,N3,...
 static bool
-parseNamedIntList(const char *data, const String &name, Vector<int> &list)
+parseNamedIntList(const char *data, const String &name, std::vector<int> &list)
 {
     if (data && (strncmp(data, name.rawBuf(), name.size()) == 0)) {
         data += name.size();
@@ -4280,7 +4275,7 @@ parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 
     const char *const pToken = ConfigParser::NextToken();
     const char *const cToken = ConfigParser::NextToken();
-    Vector<int> processes, cores;
+    std::vector<int> processes, cores;
     if (!parseNamedIntList(pToken, "process_numbers", processes)) {
         debugs(3, DBG_CRITICAL, "FATAL: bad 'process_numbers' parameter " <<
                "in 'cpu_affinity_map'");

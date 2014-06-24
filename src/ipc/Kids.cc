@@ -19,8 +19,7 @@ Kids::Kids()
 /// maintain n kids
 void Kids::init()
 {
-    if (storage.size() > 0)
-        storage.clean();
+    storage.clear();
 
     storage.reserve(NumberOfKids());
 

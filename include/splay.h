@@ -3,7 +3,9 @@
 
 #if defined(__cplusplus)
 
-#include "Stack.h"
+#include "fatal.h"
+
+#include <stack>
 
 template <class V>
 class SplayNode
@@ -402,7 +404,7 @@ private:
     void advance();
     void addLeftPath(SplayNode<V> *aNode);
     void init(SplayNode<V> *);
-    Stack<SplayNode<V> *> toVisit;
+    std::stack<SplayNode<V> *> toVisit;
 };
 
 template <class V>
@@ -415,7 +417,12 @@ template <class V>
 bool
 SplayConstIterator<V>::operator == (SplayConstIterator const &right) const
 {
-    return toVisit.top() == right.toVisit.top();
+    if (toVisit.empty() && right.toVisit.empty())
+        return true;
+    if (!toVisit.empty() && !right.toVisit.empty())
+        return toVisit.top() == right.toVisit.top();
+    // only one of the two is empty
+    return false;
 }
 
 template <class V>
@@ -447,19 +454,21 @@ template <class V>
 void
 SplayConstIterator<V>::advance()
 {
-    if (toVisit.size() == 0)
+    if (toVisit.empty())
         return;
 
     toVisit.pop();
 
-    if (toVisit.size() == 0)
+    if (toVisit.empty())
         return;
 
-    SplayNode<V> *currentNode = toVisit.pop();
+    // not empty
+    SplayNode<V> *currentNode = toVisit.top();
+    toVisit.pop();
 
     addLeftPath(currentNode->right);
 
-    toVisit.push_back(currentNode);
+    toVisit.push(currentNode);
 }
 
 template <class V>
@@ -470,7 +479,7 @@ SplayConstIterator<V>::addLeftPath(SplayNode<V> *aNode)
         return;
 
     do {
-        toVisit.push_back(aNode);
+        toVisit.push(aNode);
         aNode = aNode->left;
     } while (aNode != NULL);
 }

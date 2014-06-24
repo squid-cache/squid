@@ -1140,6 +1140,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
              */
             node->readBuffer.offset = request->range->lowestOffset(0);
             http->range_iter.pos = request->range->begin();
+            http->range_iter.end = request->range->end();
             http->range_iter.valid = true;
         }
     }
