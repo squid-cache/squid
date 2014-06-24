@@ -33,6 +33,9 @@ public:
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
 
     template <class FindValue> SplayNode<V> * splay(const FindValue &data, int( * compare)(FindValue const &a, Value const &b)) const;
+
+    /// recursively visit left nodes, this node, and then right nodes
+    template <class Visitor> void visit(Visitor &v) const;
 };
 
 typedef SplayNode<void *> splayNode;
@@ -72,6 +75,9 @@ public:
     const_iterator begin() const;
 
     const_iterator end() const;
+
+    /// recursively visit all nodes, in left-to-right order
+    template <class Visitor> void visit(Visitor &v) const;
 
     size_t elements;
 };
@@ -277,6 +283,25 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
 }
 
 template <class V>
+template <class Visitor>
+void
+SplayNode<V>::visit(Visitor &visitor) const {
+    if (left)
+        left->visit(visitor);
+    visitor(data);
+    if (right)
+        right->visit(visitor);
+}
+
+template <class V>
+template <class Visitor>
+void
+Splay<V>::visit(Visitor &visitor) const {
+    if (head)
+        head->visit(visitor);
+}
+
+template <class V>
 template <class FindValue>
 typename Splay<V>::Value const *
 Splay<V>::find (FindValue const &value, int( * compare)(FindValue const &a, Value const &b)) const
@@ -362,6 +387,7 @@ Splay<V>::end() const
     return const_iterator(NULL);
 }
 
+// XXX: This does not seem to iterate the whole thing in some cases.
 template <class V>
 class SplayConstIterator
 {

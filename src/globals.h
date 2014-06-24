@@ -108,7 +108,7 @@ extern const char *SwapDirType[];
 extern int store_swap_low;	/* 0 */
 extern int store_swap_high;	/* 0 */
 extern size_t store_pages_max;	/* 0 */
-extern int64_t store_maxobjsize;	/* -1 */
+extern int64_t store_maxobjsize;	/* 0 */
 extern hash_table *proxy_auth_username_cache;	/* NULL */
 extern int incoming_sockets_accepted;
 #if _SQUID_WINDOWS_
