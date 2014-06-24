@@ -19,8 +19,10 @@
 
 #include <limits>
 
-/// shared memory segment path to use for Transients maps
-static const char *MapLabel = "transients_map";
+/// shared memory segment path to use for Transients map
+static const SBuf MapLabel("transients_map");
+/// shared memory segment path to use for Transients map extras
+static const char *ExtrasLabel = "transients_ex";
 
 Transients::Transients(): map(NULL), locals(NULL)
 {
@@ -42,6 +44,8 @@ Transients::init()
     Must(!map);
     map = new TransientsMap(MapLabel);
     map->cleaner = this;
+
+    extras = shm_old(TransientsMapExtras)(ExtrasLabel);
 
     locals = new Locals(entryLimit, 0);
 }
@@ -177,14 +181,14 @@ Transients::get(const cache_key *key)
 StoreEntry *
 Transients::copyFromShm(const sfileno index)
 {
-    const TransientsMap::Extras &extras = map->extras(index);
+    const TransientsMapExtras::Item &extra = extras->items[index];
 
     // create a brand new store entry and initialize it with stored info
-    StoreEntry *e = storeCreatePureEntry(extras.url, extras.url,
-                                         extras.reqFlags, extras.reqMethod);
+    StoreEntry *e = storeCreatePureEntry(extra.url, extra.url,
+                                         extra.reqFlags, extra.reqMethod);
 
     assert(e->mem_obj);
-    e->mem_obj->method = extras.reqMethod;
+    e->mem_obj->method = extra.reqMethod;
     e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
 
@@ -271,24 +275,24 @@ Transients::copyToShm(const StoreEntry &e, const sfileno index,
                       const RequestFlags &reqFlags,
                       const HttpRequestMethod &reqMethod)
 {
-    TransientsMap::Extras &extras = map->extras(index);
+    TransientsMapExtras::Item &extra = extras->items[index];
 
     const char *url = e.url();
     const size_t urlLen = strlen(url);
-    Must(urlLen < sizeof(extras.url)); // we have space to store it all, plus 0
-    strncpy(extras.url, url, sizeof(extras.url));
-    extras.url[urlLen] = '\0';
+    Must(urlLen < sizeof(extra.url)); // we have space to store it all, plus 0
+    strncpy(extra.url, url, sizeof(extra.url));
+    extra.url[urlLen] = '\0';
 
-    extras.reqFlags = reqFlags;
+    extra.reqFlags = reqFlags;
 
     Must(reqMethod != Http::METHOD_OTHER);
-    extras.reqMethod = reqMethod.id();
+    extra.reqMethod = reqMethod.id();
 
     return true;
 }
 
 void
-Transients::noteFreeMapSlice(const sfileno sliceId)
+Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
     // TODO: we should probably find the entry being deleted and abort it
 }
@@ -383,7 +387,7 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    TransientsRr(): mapOwner(NULL) {}
+    TransientsRr(): mapOwner(NULL), extrasOwner(NULL) {}
     virtual void useConfig();
     virtual ~TransientsRr();
 
@@ -392,6 +396,7 @@ protected:
 
 private:
     TransientsMap::Owner *mapOwner;
+    Ipc::Mem::Owner<TransientsMapExtras> *extrasOwner;
 };
 
 RunnerRegistrationEntry(TransientsRr);
@@ -415,9 +420,12 @@ TransientsRr::create()
 
     Must(!mapOwner);
     mapOwner = TransientsMap::Init(MapLabel, entryLimit);
+    Must(!extrasOwner);
+    extrasOwner = shm_new(TransientsMapExtras)(ExtrasLabel, entryLimit);
 }
 
 TransientsRr::~TransientsRr()
 {
+    delete extrasOwner;
     delete mapOwner;
 }

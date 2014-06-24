@@ -18,7 +18,7 @@ void MemStore::unlink(StoreEntry &e) STUB
 void MemStore::disconnect(StoreEntry &e) STUB
 void MemStore::reference(StoreEntry &) STUB
 void MemStore::maintain() STUB
-void MemStore::noteFreeMapSlice(const sfileno) STUB
+void MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId) STUB
 void MemStore::get(String const, STOREGETCLIENT, void *) STUB
 void MemStore::init() STUB
 void MemStore::getStats(StoreInfoStats&) const STUB

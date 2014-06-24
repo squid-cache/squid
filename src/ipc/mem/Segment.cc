@@ -9,6 +9,7 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
+#include "SBuf.h"
 #include "tools.h"
 
 #include <fcntl.h>
@@ -30,6 +31,15 @@ Ipc::Mem::Segment::reserve(size_t chunkSize)
     assert(theReserved <= theSize - static_cast<off_t>(chunkSize));
     void *result = reinterpret_cast<char*>(theMem) + theReserved;
     theReserved += chunkSize;
+    return result;
+}
+
+SBuf
+Ipc::Mem::Segment::Name(const SBuf &prefix, const char *suffix)
+{
+    SBuf result = prefix;
+    result.append("_");
+    result.append(suffix);
     return result;
 }
 

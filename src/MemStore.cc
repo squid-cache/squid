@@ -18,9 +18,11 @@
 #include "tools.h"
 
 /// shared memory segment path to use for MemStore maps
-static const char *MapLabel = "cache_mem_map";
+static const SBuf MapLabel("cache_mem_map");
 /// shared memory segment path to use for the free slices index
 static const char *SpaceLabel = "cache_mem_space";
+/// shared memory segment path to use for IDs of shared pages with slice data
+static const char *ExtrasLabel = "cache_mem_ex";
 // TODO: sync with Rock::SwapDir::*Path()
 
 // We store free slot IDs (i.e., "space") as Page objects so that we can use
@@ -61,6 +63,7 @@ MemStore::init()
     }
 
     freeSlots = shm_old(Ipc::Mem::PageStack)(SpaceLabel);
+    extras = shm_old(Extras)(ExtrasLabel);
 
     Must(!map);
     map = new MemStoreMap(MapLabel);
@@ -91,21 +94,25 @@ MemStore::stat(StoreEntry &e) const
                       Math::doublePercent(currentSize(), maxSize()));
 
     if (map) {
-        const int limit = map->entryLimit();
-        storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
-        if (limit > 0) {
+        const int entryLimit = map->entryLimit();
+        const int slotLimit = map->sliceLimit();
+        storeAppendPrintf(&e, "Maximum entries: %9d\n", entryLimit);
+        if (entryLimit > 0) {
             storeAppendPrintf(&e, "Current entries: %" PRId64 " %.2f%%\n",
-                              currentCount(), (100.0 * currentCount() / limit));
+                              currentCount(), (100.0 * currentCount() / entryLimit));
+        }
 
+        storeAppendPrintf(&e, "Maximum slots:   %9d\n", slotLimit);
+        if (slotLimit > 0) {
             const unsigned int slotsFree =
                 Ipc::Mem::PagesAvailable(Ipc::Mem::PageId::cachePage);
-            if (slotsFree <= static_cast<const unsigned int>(limit)) {
-                const int usedSlots = limit - static_cast<const int>(slotsFree);
+            if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
+                const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
                 storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
-                                  usedSlots, (100.0 * usedSlots / limit));
+                                  usedSlots, (100.0 * usedSlots / slotLimit));
             }
 
-            if (limit < 100) { // XXX: otherwise too expensive to count
+            if (slotLimit < 100) { // XXX: otherwise too expensive to count
                 Ipc::ReadWriteLockStats stats;
                 map->updateStats(stats);
                 stats.dump(e);
@@ -323,15 +330,16 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
             const size_t prefixSize = e.mem_obj->endOffset() - sliceOffset;
             assert(prefixSize <= wasSize);
 
-            const MemStoreMap::Extras &extras = map->extras(sid);
-            char *page = static_cast<char*>(PagePointer(extras.page));
+            const MemStoreMapExtras::Item &extra = extras->items[sid];
+
+            char *page = static_cast<char*>(PagePointer(extra.page));
             const StoreIOBuffer sliceBuf(wasSize - prefixSize,
                                          e.mem_obj->endOffset(),
                                          page + prefixSize);
             if (!copyFromShmSlice(e, sliceBuf, wasEof))
                 return false;
             debugs(20, 9, "entry " << index << " copied slice " << sid <<
-                   " from " << extras.page << " +" << prefixSize);
+                   " from " << extra.page << '+' << prefixSize);
         }
         // else skip a [possibly incomplete] slice that we copied earlier
 
@@ -411,7 +419,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
 
 /// whether we should cache the entry
 bool
-MemStore::shouldCache(const StoreEntry &e) const
+MemStore::shouldCache(StoreEntry &e) const
 {
     if (e.mem_status == IN_MEMORY) {
         debugs(20, 5, "already loaded from mem-cache: " << e);
@@ -451,6 +459,11 @@ MemStore::shouldCache(const StoreEntry &e) const
         debugs(20, 5, HERE << "Too big max(" <<
                loadedSize << ", " << expectedSize << "): " << e);
         return false; // will not cache due to cachable entry size limits
+    }
+
+    if (!e.mem_obj->isContiguous()) {
+        debugs(20, 5, "not contiguous");
+        return false;
     }
 
     if (!map) {
@@ -513,7 +526,7 @@ MemStore::copyToShm(StoreEntry &e)
     if (anchor.start < 0) { // must allocate the very first slot for e
         Ipc::Mem::PageId page;
         anchor.start = reserveSapForWriting(page); // throws
-        map->extras(anchor.start).page = page;
+        extras->items[anchor.start].page = page;
     }
 
     lastWritingSlice = anchor.start;
@@ -533,7 +546,7 @@ MemStore::copyToShm(StoreEntry &e)
 
             Ipc::Mem::PageId page;
             slice.next = lastWritingSlice = reserveSapForWriting(page);
-            map->extras(lastWritingSlice).page = page;
+            extras->items[lastWritingSlice].page = page;
             debugs(20, 7, "entry " << index << " new slice: " << lastWritingSlice);
         }
 
@@ -550,7 +563,7 @@ MemStore::copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor)
     Ipc::StoreMap::Slice &slice =
         map->writeableSlice(e.mem_obj->memCache.index, lastWritingSlice);
 
-    Ipc::Mem::PageId page = map->extras(lastWritingSlice).page;
+    Ipc::Mem::PageId page = extras->items[lastWritingSlice].page;
     assert(lastWritingSlice >= 0 && page);
     debugs(20, 7, "entry " << e << " slice " << lastWritingSlice << " has " <<
            page);
@@ -614,9 +627,9 @@ MemStore::reserveSapForWriting(Ipc::Mem::PageId &page)
 }
 
 void
-MemStore::noteFreeMapSlice(const sfileno sliceId)
+MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
-    Ipc::Mem::PageId &pageId = map->extras(sliceId).page;
+    Ipc::Mem::PageId &pageId = extras->items[sliceId].page;
     debugs(20, 9, "slice " << sliceId << " freed " << pageId);
     assert(pageId);
     Ipc::Mem::PageId slotId;
@@ -753,7 +766,7 @@ class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    MemStoreRr(): spaceOwner(NULL), mapOwner(NULL) {}
+    MemStoreRr(): spaceOwner(NULL), mapOwner(NULL), extrasOwner(NULL) {}
     virtual void finalizeConfig();
     virtual void claimMemoryNeeds();
     virtual void useConfig();
@@ -766,6 +779,7 @@ protected:
 private:
     Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner
     MemStoreMap::Owner *mapOwner; ///< primary map Owner
+    Ipc::Mem::Owner<MemStoreMapExtras> *extrasOwner; ///< PageIds Owner
 };
 
 RunnerRegistrationEntry(MemStoreRr);
@@ -820,14 +834,16 @@ MemStoreRr::create()
 
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
-                 entryLimit,
-                 sizeof(Ipc::Mem::PageId));
+                 entryLimit, 0);
     Must(!mapOwner);
     mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
+    Must(!extrasOwner);
+    extrasOwner = shm_new(MemStoreMapExtras)(ExtrasLabel, entryLimit);
 }
 
 MemStoreRr::~MemStoreRr()
 {
+    delete extrasOwner;
     delete mapOwner;
     delete spaceOwner;
 }
