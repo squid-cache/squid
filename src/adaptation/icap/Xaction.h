@@ -41,12 +41,6 @@
 #include "ipcache.h"
 #include "MemBuf.h"
 
-class CommConnectCbParams;
-namespace Comm
-{
-class ConnOpener;
-}
-
 namespace Adaptation
 {
 namespace Icap

@@ -84,15 +84,15 @@ testHttpRequestMethod::testImage()
 {
     // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
     Config.onoff.relaxed_header_parser = 1;
-    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("POST",NULL).image()));
-    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("pOsT",NULL).image()));
-    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("post",NULL).image()));
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("POST",NULL).image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("pOsT",NULL).image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("post",NULL).image());
 
     // strict RFC-compliance parse HTTP methods are case sensitive
     Config.onoff.relaxed_header_parser = 0;
-    CPPUNIT_ASSERT_EQUAL(String("POST"), String(HttpRequestMethod("POST",NULL).image()));
-    CPPUNIT_ASSERT_EQUAL(String("pOsT"), String(HttpRequestMethod("pOsT",NULL).image()));
-    CPPUNIT_ASSERT_EQUAL(String("post"), String(HttpRequestMethod("post",NULL).image()));
+    CPPUNIT_ASSERT_EQUAL(SBuf("POST"), HttpRequestMethod("POST",NULL).image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("pOsT"), HttpRequestMethod("pOsT",NULL).image());
+    CPPUNIT_ASSERT_EQUAL(SBuf("post"), HttpRequestMethod("post",NULL).image());
 }
 
 /*

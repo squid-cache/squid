@@ -31,6 +31,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -726,7 +727,7 @@ gopherTimeout(const CommTimeoutCbParams &io)
     GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
     debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
 
-    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGateway_Timeout, gopherState->fwd->request));
+    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, gopherState->fwd->request));
 
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
@@ -738,7 +739,7 @@ gopherTimeout(const CommTimeoutCbParams &io)
  * Read until error or connection closed.
  */
 static void
-gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *)data;
     StoreEntry *entry = gopherState->entry;
@@ -749,9 +750,9 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
-    /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+    /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
 
-    if (flag == COMM_ERR_CLOSING) {
+    if (flag == Comm::ERR_CLOSING) {
         return;
     }
 
@@ -768,7 +769,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
 
     /* leave one space for \0 in gopherToHTML */
 
-    if (flag == COMM_OK && len > 0) {
+    if (flag == Comm::OK && len > 0) {
 #if USE_DELAY_POOLS
         delayId.bytesIn(len);
 #endif
@@ -779,7 +780,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
 
     debugs(10, 5, HERE << conn << " read len=" << len);
 
-    if (flag == COMM_OK && len > 0) {
+    if (flag == Comm::OK && len > 0) {
         AsyncCall::Pointer nil;
         commSetConnTimeout(conn, Config.Timeout.read, nil);
         ++IOStats.Gopher.reads;
@@ -796,7 +797,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
         req->hier.bodyBytesRead += len;
     }
 
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         debugs(50, DBG_IMPORTANT, "gopherReadReply: error reading: " << xstrerror());
 
         if (ignoreErrno(xerrno)) {
@@ -840,7 +841,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
  * This will be called when request write is complete. Schedule read of reply.
  */
 static void
-gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
+gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;

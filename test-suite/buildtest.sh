@@ -42,7 +42,7 @@ fi
 # but skip if we have no files to remove.
 FILECOUNT=`ls -1 | grep -c .`
 if test "${FILECOUNT}" != "0" ; then
-  make -k distclean || echo "distclean done. errors are unwanted but okay here."
+  ${MAKE:-make} -k distclean || echo "distclean done. errors are unwanted but okay here."
   ls -la .
   rm -fr ./src/fs/aufs/.deps src/fs/diskd/.deps
 fi
@@ -55,7 +55,7 @@ fi
 # eval is need to correctly handle quoted arguments
 	eval "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache}" \
 		2>&1 && \
-	make ${pjobs} ${MAKETEST} 2>&1
+	${MAKE:-make} ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command
 # to the script caller. Probably not needed on most or all platforms.

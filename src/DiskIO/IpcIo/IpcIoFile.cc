@@ -24,9 +24,8 @@
 #include "StatCounters.h"
 #include "tools.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
+
 CBDATA_CLASS_INIT(IpcIoFile);
 
 /// shared memory segment path to use for IpcIoFile maps

@@ -12,6 +12,8 @@ LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
+	$(LIBGNUTLS_LIBS) \
+	$(NETTLELIB) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
@@ -40,10 +42,14 @@ CLEANFILES += test_tools.cc stub_debug.cc time.cc
 bin_PROGRAMS = squidclient
 
 squidclient_SOURCES = \
+	gssapi_support.cc \
+	gssapi_support.h \
 	Parameters.h \
 	Ping.cc \
 	Ping.h \
 	squidclient.cc \
 	stub_debug.cc \
 	test_tools.cc \
-	time.cc
+	time.cc \
+	Transport.cc \
+	Transport.h

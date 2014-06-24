@@ -20,6 +20,7 @@ TRANSLATE_LANGUAGES= \
     id.lang \
     it.lang \
     ja.lang \
+    ka.lang \
     ko.lang \
     lt.lang \
     lv.lang \

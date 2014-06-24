@@ -135,7 +135,7 @@ Cbc &
 CbcPointer<Cbc>::operator *() const
 {
     Cbc *c = get();
-    Must(c);
+    assert(c);
     return *c;
 }
 
@@ -144,7 +144,7 @@ Cbc *
 CbcPointer<Cbc>::operator ->() const
 {
     Cbc *c = get();
-    Must(c);
+    assert(c);
     return c;
 }
 

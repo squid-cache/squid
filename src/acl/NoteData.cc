@@ -51,15 +51,15 @@ ACLNoteData::match(HttpRequest *request)
     return false;
 }
 
-wordlist *
-ACLNoteData::dump()
+SBufList
+ACLNoteData::dump() const
 {
-    wordlist *W = NULL;
-    wordlistAdd(&W, name.termedBuf());
-    wordlist * dumpR = values->dump();
-    wordlistAddWl(&W, dumpR);
-    wordlistDestroy(&dumpR);
-    return W;
+    SBufList sl;
+    sl.push_back(SBuf(name));
+    // temp is needed until c++11 move constructor
+    SBufList temp = values->dump();
+    sl.splice(sl.end(), temp);
+    return sl;
 }
 
 void

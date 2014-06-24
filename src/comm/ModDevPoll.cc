@@ -336,7 +336,7 @@ Comm::ResetSelect(int fd)
  *
  * @param msec milliseconds to poll for (limited by max_poll_time)
  */
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     int num, i;
@@ -366,7 +366,7 @@ Comm::DoSelect(int msec)
         /* error during poll */
         getCurrentTime();
         PROF_stop(comm_check_incoming);
-        return COMM_ERROR;
+        return Comm::COMM_ERROR;
     }
 
     PROF_stop(comm_check_incoming);
@@ -375,7 +375,7 @@ Comm::DoSelect(int msec)
     statCounter.select_fds_hist.count(num);
 
     if (num == 0)
-        return COMM_TIMEOUT; /* no error */
+        return Comm::TIMEOUT; /* no error */
 
     PROF_start(comm_handle_ready_fd);
 
@@ -453,7 +453,7 @@ Comm::DoSelect(int msec)
     }
 
     PROF_stop(comm_handle_ready_fd);
-    return COMM_OK;
+    return Comm::OK;
 }
 
 void

@@ -88,7 +88,7 @@
 #include "adaptation/icap/History.h"
 #endif
 #endif
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
@@ -110,7 +110,7 @@ CBDATA_CLASS_INIT(ClientRequestContext);
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(allow_t, void *);
-#if USE_SSL
+#if USE_OPENSSL
 static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
 #endif
 static int clientHierarchical(ClientHttpRequest * http);
@@ -146,7 +146,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
     store_id_fail_count = 0;
     no_cache_done = false;
     interpreted_req_hdrs = false;
-#if USE_SSL
+#if USE_OPENSSL
     sslBumpCheckDone = false;
 #endif
     debugs(85,3, HERE << this << " ClientRequestContext constructed");
@@ -167,7 +167,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     al->cache.port =  cbdataReference(aConn->port);
     al->cache.caddr = aConn->log_addr;
 
-#if USE_SSL
+#if USE_OPENSSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
         if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
             al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
@@ -177,7 +177,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     sslBumpNeed_ = Ssl::bumpEnd;
 #endif
 }
@@ -678,10 +678,10 @@ ClientRequestContext::hostHeaderVerify()
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
-    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
+    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->url.getScheme())) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
-        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
+        debugs(85, 3, "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->url.getScheme()));
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
         // Okay no problem.
@@ -758,8 +758,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
     acl_checklist = NULL;
     err_type page_id;
     Http::StatusCode status;
-    debugs(85, 2, "The request " <<
-           RequestMethodStr(http->request->method) << " " <<
+    debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
            "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
 
@@ -855,7 +854,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     if (ih != NULL) {
         if (getConn() != NULL && getConn()->clientConnection != NULL) {
             ih->rfc931 = getConn()->clientConnection->rfc931;
-#if USE_SSL
+#if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
                 ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
             }
@@ -984,13 +983,13 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->flags.loopDetected)
         return 0;
 
-    if (request->protocol == AnyP::PROTO_HTTP)
+    if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
 
-    if (request->protocol == AnyP::PROTO_GOPHER)
+    if (request->url.getScheme() == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
 
-    if (request->protocol == AnyP::PROTO_CACHE_OBJECT)
+    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
         return 0;
 
     return 1;
@@ -1279,17 +1278,17 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
             // TODO: change default redirect status for appropriate requests
             // Squid defaults to 302 status for now for better compatibility with old clients.
-            // HTTP/1.0 client should get 302 (Http::scMovedTemporarily)
+            // HTTP/1.0 client should get 302 (Http::scFound)
             // HTTP/1.1 client contacting reverse-proxy should get 307 (Http::scTemporaryRedirect)
             // HTTP/1.1 client being diverted by forward-proxy should get 303 (Http::scSeeOther)
-            Http::StatusCode status = Http::scMovedTemporarily;
+            Http::StatusCode status = Http::scFound;
             if (statusNote != NULL) {
                 const char * result = statusNote;
                 status = static_cast<Http::StatusCode>(atoi(result));
             }
 
             if (status == Http::scMovedPermanently
-                    || status == Http::scMovedTemporarily
+                    || status == Http::scFound
                     || status == Http::scSeeOther
                     || status == Http::scPermanentRedirect
                     || status == Http::scTemporaryRedirect) {
@@ -1438,7 +1437,7 @@ ClientRequestContext::checkNoCacheDone(const allow_t &answer)
     http->doCallouts();
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 bool
 ClientRequestContext::sslBumpAccessCheck()
 {
@@ -1516,16 +1515,15 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
 void
 ClientHttpRequest::processRequest()
 {
-    debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
+    debugs(85, 4, request->method << ' ' << uri);
 
     if (request->method == Http::METHOD_CONNECT && !redirect.status) {
-#if USE_SSL
+#if USE_OPENSSL
         if (sslBumpNeeded()) {
             sslBumpStart();
             return;
         }
 #endif
-        logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this, &out.size, &al->http.code, al);
         return;
@@ -1549,7 +1547,7 @@ ClientHttpRequest::httpStart()
     PROF_stop(httpStart);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 
 void
 ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
@@ -1560,7 +1558,7 @@ ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
 
 // called when comm_write has completed
 static void
-SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t errflag, int, void *data)
+SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag errflag, int, void *data)
 {
     ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
     debugs(85, 5, HERE << "responded to CONNECT: " << r << " ? " << errflag);
@@ -1570,10 +1568,10 @@ SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t err
 }
 
 void
-ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
+ClientHttpRequest::sslBumpEstablish(Comm::Flag errflag)
 {
-    // Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up
-    if (errflag == COMM_ERR_CLOSING)
+    // Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up
+    if (errflag == Comm::ERR_CLOSING)
         return;
 
     if (errflag) {
@@ -1789,7 +1787,7 @@ ClientHttpRequest::doCallouts()
         }
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     // We need to check for SslBump even if the calloutContext->error is set
     // because bumping may require delaying the error until after CONNECT.
     if (!calloutContext->sslBumpCheckDone) {
@@ -1803,7 +1801,7 @@ ClientHttpRequest::doCallouts()
     if (calloutContext->error) {
         const char *storeUri = request->storeId();
         StoreEntry *e= storeCreateEntry(storeUri, storeUri, request->flags, request->method);
-#if USE_SSL
+#if USE_OPENSSL
         if (sslBumpNeeded()) {
             // set final error but delay sending until we bump
             Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e);

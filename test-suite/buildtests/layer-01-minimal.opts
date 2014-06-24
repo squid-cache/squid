@@ -54,7 +54,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-cachemgr-hostname \
 	--disable-eui \
 	--disable-htcp \
-	--disable-ssl \
+	--disable-ssl-crtd \
 	--disable-forw-via-db \
 	--disable-cache-digests \
 	--disable-poll \
@@ -97,6 +97,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
 	--without-dns-cname \
+	--without-openssl \
 	--without-po2html \
 	"
 

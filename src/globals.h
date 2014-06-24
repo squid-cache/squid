@@ -66,7 +66,6 @@ extern int NDnsServersAlloc;	/* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;		/* SQUID_MAXFD */
 extern int config_lineno;	/* 0 */
-extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
 extern int neighbors_do_private_keys;	/* 1 */
 extern int opt_catch_signals;	/* 1 */
@@ -121,9 +120,6 @@ extern char *WIN32_OS_string;           /* NULL */
 extern char *WIN32_Command_Line;        /* NULL */
 extern char *WIN32_Service_Command_Line; /* NULL */
 extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
-#endif
-#if HAVE_SBRK
-extern void *sbrk_start;	/* 0 */
 #endif
 
 extern int ssl_ex_index_server;	/* -1 */
