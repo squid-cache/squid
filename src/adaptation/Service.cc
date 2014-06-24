@@ -71,6 +71,8 @@ Adaptation::FindService(const Service::Id& key)
 
 void Adaptation::DetachServices()
 {
-    while (!AllServices().empty())
-        AllServices().pop_back()->detach();
+    while (!AllServices().empty()) {
+        AllServices().back()->detach();
+        AllServices().pop_back();
+    }
 }

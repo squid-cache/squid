@@ -145,8 +145,8 @@ protected:
     virtual void create();
 
 private:
-    Vector<SwapDir::DirMap::Owner *> mapOwners;
-    Vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
+    std::vector<SwapDir::DirMap::Owner *> mapOwners;
+    std::vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
 };
 
 } // namespace Rock

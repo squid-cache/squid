@@ -1077,8 +1077,7 @@ check_PROGRAMS+=\
 	tests/testSBuf \
 	tests/testSBufList \
 	tests/testConfigParser \
-	tests/testStatHist \
-	tests/testVector
+	tests/testStatHist
 
 if HAVE_FS_ROCK
 check_PROGRAMS += tests/testRock
@@ -3825,21 +3824,6 @@ tests_testStatHist_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
 tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
-
-tests_testVector_SOURCES = \
-	tests/testVector.cc \
-	tests/testMain.cc \
-	tests/testVector.h
-nodist_tests_testVector_SOURCES = \
-	$(TESTSOURCES)
-tests_testVector_LDADD= \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testVector_LDFLAGS = $(LIBADD_DL)
-tests_testVector_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
-
 
 TESTS += testHeaders
 

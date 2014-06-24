@@ -1353,7 +1353,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         bool replyMatchRequest = rep->content_range != NULL ?
                                  request->range->contains(rep->content_range->spec) :
                                  true;
-        const int spec_count = http->request->range->specs.count;
+        const int spec_count = http->request->range->specs.size();
         int64_t actual_clen = -1;
 
         debugs(33, 3, "clientBuildRangeHeader: range spec count: " <<
@@ -1705,7 +1705,7 @@ ClientSocketContext::canPackMoreRanges() const
     if (!http->range_iter.debt()) {
         debugs(33, 5, HERE << "At end of current range spec for " << clientConnection);
 
-        if (http->range_iter.pos.incrementable())
+        if (http->range_iter.pos != http->range_iter.end)
             ++http->range_iter.pos;
 
         http->range_iter.updateSpec();
