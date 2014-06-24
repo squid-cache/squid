@@ -104,7 +104,7 @@ public:
 private:
     void createOneStore(Store &aStore);
     StoreEntry *find(const cache_key *key);
-    bool keepForLocalMemoryCache(const StoreEntry &e) const;
+    bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
     bool anchorCollapsedOnDisk(StoreEntry &collapsed, bool &inSync);
 

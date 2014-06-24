@@ -423,8 +423,8 @@ StoreEntry::mayStartSwapOut()
         return false;
     }
 
-    // check cache_dir max-size limit if all cache_dirs have it
-    if (store_maxobjsize >= 0) {
+    // handle store_maxobjsize limit
+    {
         // TODO: add estimated store metadata size to be conservative
 
         // use guaranteed maximum if it is known

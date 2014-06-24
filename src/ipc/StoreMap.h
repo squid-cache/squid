@@ -4,6 +4,7 @@
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
+#include "SBuf.h"
 #include "typedefs.h"
 
 namespace Ipc
@@ -70,62 +71,80 @@ public:
 
     /// where the chain of StoreEntry slices begins [app]
     Atomic::WordT<StoreMapSliceId> start;
-
-#if 0
-    /// possible persistent states
-    typedef enum {
-        Empty, ///< ready for writing, with nothing of value
-        Writeable, ///< transitions from Empty to Readable
-        Readable, ///< ready for reading
-    } State;
-    State state; ///< current state
-#endif
 };
 
-/// A hack to allocate one shared array for both anchors and slices.
-/// Anchors are indexed by store entry ID and are independent from each other.
-/// Slices are indexed by slice IDs and form entry chains using slice.next.
-class StoreMapSlot
+/// an array of shareable Items
+/// must be the last data member or, if used as a parent class, the last parent
+template <class C>
+class StoreMapItems
 {
 public:
-    StoreMapAnchor anchor; ///< information about store entry as a whole
-    StoreMapSlice slice; ///< information about one stored entry piece
+    typedef C Item;
+    typedef Ipc::Mem::Owner< StoreMapItems<Item> > Owner;
+
+    explicit StoreMapItems(const int aCapacity): capacity(aCapacity), items(aCapacity) {}
+
+    size_t sharedMemorySize() const { return SharedMemorySize(capacity); }
+    static size_t SharedMemorySize(const int aCapacity) { return sizeof(StoreMapItems<Item>) + aCapacity*sizeof(Item); }
+
+    const int capacity; ///< total number of items
+    Ipc::Mem::FlexibleArray<Item> items; ///< storage
 };
+
+/// StoreMapSlices indexed by their slice ID.
+typedef StoreMapItems<StoreMapSlice> StoreMapSlices;
+
+/// StoreMapAnchors indexed by entry fileno plus
+/// sharing-safe basic housekeeping info about Store entries
+class StoreMapAnchors
+{
+public:
+    typedef Ipc::Mem::Owner< StoreMapAnchors > Owner;
+
+    explicit StoreMapAnchors(const int aCapacity);
+
+    size_t sharedMemorySize() const;
+    static size_t SharedMemorySize(const int anAnchorLimit);
+
+    Atomic::Word count; ///< current number of entries
+    Atomic::WordT<uint32_t> victim; ///< starting point for purge search
+    const int capacity; ///< total number of anchors
+    Ipc::Mem::FlexibleArray<StoreMapAnchor> items; ///< anchors storage
+};
+// TODO: Find an elegant way to use StoreMapItems in StoreMapAnchors
 
 class StoreMapCleaner;
 
-/// map of StoreMapSlots indexed by their keys, with read/write slice locking
-/// kids extend to store custom data
+/// Manages shared Store index (e.g., locking/unlocking/freeing entries) using
+/// StoreMapAnchors indexed by their keys and
+/// StoreMapSlices indexed by their slide ID.
 class StoreMap
 {
 public:
     typedef StoreMapAnchor Anchor;
+    typedef StoreMapAnchors Anchors;
     typedef sfileno AnchorId;
     typedef StoreMapSlice Slice;
+    typedef StoreMapSlices Slices;
     typedef StoreMapSliceId SliceId;
 
-    /// data shared across maps in different processes
-    class Shared
-    {
+public:
+    /// aggregates anchor and slice owners for Init() caller convenience
+    class Owner {
     public:
-        Shared(const int aLimit, const size_t anExtrasSize);
-        size_t sharedMemorySize() const;
-        static size_t SharedMemorySize(const int limit, const size_t anExtrasSize);
-
-        const int limit; ///< maximum number of store entries
-        const size_t extrasSize; ///< size of slice extra data
-        Atomic::Word count; ///< current number of entries
-        Atomic::WordT<uint32_t> victim; ///< starting point for purge search
-        Ipc::Mem::FlexibleArray<StoreMapSlot> slots; ///< storage
+        Owner();
+        ~Owner();
+        Anchors::Owner *anchors;
+        Slices::Owner *slices;
+    private:
+        Owner(const Owner &); // not implemented
+        Owner &operator =(const Owner &); // not implemented
     };
 
-public:
-    typedef Mem::Owner<Shared> Owner;
-
     /// initialize shared memory
-    static Owner *Init(const char *const path, const int limit);
+    static Owner *Init(const SBuf &path, const int slotLimit);
 
-    StoreMap(const char *const aPath);
+    StoreMap(const SBuf &aPath);
 
     /// computes map entry position for a given entry key
     sfileno anchorIndexByKey(const cache_key *const key) const;
@@ -186,9 +205,12 @@ public:
     /// copies slice to its designated position
     void importSlice(const SliceId sliceId, const Slice &slice);
 
-    bool valid(const int n) const; ///< whether n is a valid slice coordinate
+    /* SwapFilenMax limits the number of entries, but not slices or slots */
+    bool validEntry(const int n) const; ///< whether n is a valid slice coordinate
+    bool validSlice(const int n) const; ///< whether n is a valid slice coordinate
     int entryCount() const; ///< number of writeable and readable entries
     int entryLimit() const; ///< maximum entryCount() possible
+    int sliceLimit() const; ///< maximum number of slices possible
 
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
@@ -196,41 +218,20 @@ public:
     StoreMapCleaner *cleaner; ///< notified before a readable entry is freed
 
 protected:
-    static Owner *Init(const char *const path, const int limit, const size_t extrasSize);
-
-    const String path; ///< cache_dir path or similar cache name; for logging
-    Mem::Pointer<Shared> shared;
+    const SBuf path; ///< cache_dir path or similar cache name; for logging
+    Mem::Pointer<StoreMapAnchors> anchors; ///< entry inodes (starting blocks)
+    Mem::Pointer<StoreMapSlices> slices; ///< chained entry pieces positions
 
 private:
+    Anchor &anchorAt(const sfileno fileno);
+    const Anchor &anchorAt(const sfileno fileno) const;
     Anchor &anchorByKey(const cache_key *const key);
 
+    Slice &sliceAt(const SliceId sliceId);
+    const Slice &sliceAt(const SliceId sliceId) const;
     Anchor *openForReading(Slice &s);
 
     void freeChain(const sfileno fileno, Anchor &inode, const bool keepLock);
-};
-
-/// StoreMap with extra slice data
-/// Note: ExtrasT must be POD, it is initialized with zeroes, no
-/// constructors or destructors are called
-template <class ExtrasT>
-class StoreMapWithExtras: public StoreMap
-{
-public:
-    typedef ExtrasT Extras;
-
-    /// initialize shared memory
-    static Owner *Init(const char *const path, const int limit);
-
-    StoreMapWithExtras(const char *const path);
-
-    /// write access to the extras; call openForWriting() first!
-    ExtrasT &extras(const sfileno fileno);
-    /// read-only access to the extras; call openForReading() first!
-    const ExtrasT &extras(const sfileno fileno) const;
-
-protected:
-
-    ExtrasT *sharedExtras; ///< pointer to extras in shared memory
 };
 
 /// API for adjusting external state when dirty map slice is being freed
@@ -240,42 +241,8 @@ public:
     virtual ~StoreMapCleaner() {}
 
     /// adjust slice-linked state before a locked Readable slice is erased
-    virtual void noteFreeMapSlice(const sfileno sliceId) = 0;
+    virtual void noteFreeMapSlice(const StoreMapSliceId sliceId) = 0;
 };
-
-// StoreMapWithExtras implementation
-
-template <class ExtrasT>
-StoreMap::Owner *
-StoreMapWithExtras<ExtrasT>::Init(const char *const path, const int limit)
-{
-    return StoreMap::Init(path, limit, sizeof(Extras));
-}
-
-template <class ExtrasT>
-StoreMapWithExtras<ExtrasT>::StoreMapWithExtras(const char *const aPath):
-        StoreMap(aPath)
-{
-    const size_t sharedSizeWithoutExtras =
-        Shared::SharedMemorySize(entryLimit(), 0);
-    sharedExtras = reinterpret_cast<Extras *>(reinterpret_cast<char *>(shared.getRaw()) + sharedSizeWithoutExtras);
-}
-
-template <class ExtrasT>
-ExtrasT &
-StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno)
-{
-    return const_cast<ExtrasT &>(const_cast<const StoreMapWithExtras *>(this)->extras(fileno));
-}
-
-template <class ExtrasT>
-const ExtrasT &
-StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno) const
-{
-    assert(sharedExtras);
-    assert(valid(fileno));
-    return sharedExtras[fileno];
-}
 
 } // namespace Ipc
 
