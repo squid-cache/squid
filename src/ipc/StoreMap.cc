@@ -416,13 +416,15 @@ Ipc::StoreMap::validSlice(const int pos) const
 }
 
 Ipc::StoreMap::Anchor&
-Ipc::StoreMap::anchorAt(const sfileno fileno) {
+Ipc::StoreMap::anchorAt(const sfileno fileno)
+{
     assert(validEntry(fileno));
     return anchors->items[fileno];
 }
 
 const Ipc::StoreMap::Anchor&
-Ipc::StoreMap::anchorAt(const sfileno fileno) const {
+Ipc::StoreMap::anchorAt(const sfileno fileno) const
+{
     return const_cast<StoreMap&>(*this).anchorAt(fileno);
 }
 
@@ -441,13 +443,15 @@ Ipc::StoreMap::anchorByKey(const cache_key *const key)
 }
 
 Ipc::StoreMap::Slice&
-Ipc::StoreMap::sliceAt(const SliceId sliceId) {
+Ipc::StoreMap::sliceAt(const SliceId sliceId)
+{
     assert(validSlice(sliceId));
     return slices->items[sliceId];
 }
 
 const Ipc::StoreMap::Slice&
-Ipc::StoreMap::sliceAt(const SliceId sliceId) const {
+Ipc::StoreMap::sliceAt(const SliceId sliceId) const
+{
     return const_cast<StoreMap&>(*this).sliceAt(sliceId);
 }
 

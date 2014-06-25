@@ -130,7 +130,8 @@ public:
 
 public:
     /// aggregates anchor and slice owners for Init() caller convenience
-    class Owner {
+    class Owner
+    {
     public:
         Owner();
         ~Owner();

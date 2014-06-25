@@ -103,7 +103,7 @@ public:
     virtual bool mayStartSwapOut();
     virtual void trimMemory(const bool preserveSwappable);
 
-    // called when a decision to cache in memory has been made    
+    // called when a decision to cache in memory has been made
     void memOutDecision(const bool willCacheInRam);
     // called when a decision to cache on disk has been made
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
