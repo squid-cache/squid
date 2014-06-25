@@ -686,7 +686,7 @@ DOC_START
 			Up to the value of children-max. (default 1)
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
-	  cache=n	limit the result cache size, default is unbounded.
+	  cache=n	limit the result cache size, default is 262144.
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
 			wait for a new reply. (default is for no grace period)
