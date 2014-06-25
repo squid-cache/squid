@@ -78,6 +78,12 @@ class PortCfg;
  *
  * The individual processing actions are done by other Jobs which we
  * kick off as needed.
+ *
+ * XXX: If an async call ends the ClientHttpRequest job, ClientSocketContext
+ * (and ConnStateData) may not know about it, leading to segfaults and
+ * assertions like areAllContextsForThisConnection(). This is difficult to fix
+ * because ClientHttpRequest lacks a good way to communicate its ongoing
+ * destruction back to the ClientSocketContext which pretends to "own" *http.
  */
 class ClientSocketContext : public RefCountable
 {
@@ -91,7 +97,7 @@ public:
     void keepaliveNextRequest();
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
-    ClientHttpRequest *http;	/* we own this */
+    ClientHttpRequest *http;	/* we pretend to own that job */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
     Pointer next;
