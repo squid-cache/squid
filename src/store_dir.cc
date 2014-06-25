@@ -1060,7 +1060,7 @@ StoreController::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
     bool found = false;
     if (memStore)
         found = memStore->anchorCollapsed(collapsed, inSync);
-    else if (Config.cacheSwap.n_configured)
+    if (!found && Config.cacheSwap.n_configured)
         found = anchorCollapsedOnDisk(collapsed, inSync);
 
     if (found) {
