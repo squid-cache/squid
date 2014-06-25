@@ -1,3 +1,16 @@
+Changes to squid-3.4.6 (25 Jun 2014):
+
+	- Regression: segmentation fault logging with %tg format specifier
+	- Bug 4065: round-robin neighbor selection with unequal weights
+	- Bug 4056: assertion MemPools[type] from netdbExchangeStart()
+	- Bug 4050: segmentation fault in CommSelectEngine::checkEvents on helper response
+	- Fix segmentation fault setting up server SSL connnection
+	- Fix hanging Non-HTTPS connections on SSL-bump enabled port
+	- Fix Cache Manager actions listed more than once
+	- ... and many minor memory leaks
+	- ... and several portability build issues
+	- ... and some documentation updates
+
 Changes to squid-3.4.5 (02 May 2014):
 
 	- Regression Bug 4051: inverted test on CONNECT payload existence
