@@ -1910,11 +1910,12 @@ StoreEntry::getSerialisedMetaData()
  * to start swapping the entry out.
  */
 void
-StoreEntry::transientsAbandonmentCheck() {
+StoreEntry::transientsAbandonmentCheck()
+{
     if (mem_obj && !mem_obj->smpCollapsed && // this worker is responsible
-        mem_obj->xitTable.index >= 0 && // other workers may be interested
-        mem_obj->memCache.index < 0 && // rejected by the shared memory cache
-        mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
+            mem_obj->xitTable.index >= 0 && // other workers may be interested
+            mem_obj->memCache.index < 0 && // rejected by the shared memory cache
+            mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
         debugs(20, 7, "cannot be shared: " << *this);
         if (!shutting_down) // Store::Root() is FATALly missing during shutdown
             Store::Root().transientsAbandon(*this);
@@ -1922,12 +1923,14 @@ StoreEntry::transientsAbandonmentCheck() {
 }
 
 void
-StoreEntry::memOutDecision(const bool willCacheInRam) {
+StoreEntry::memOutDecision(const bool willCacheInRam)
+{
     transientsAbandonmentCheck();
 }
 
 void
-StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision) {
+StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision)
+{
     // Abandon our transient entry if neither shared memory nor disk wants it.
     assert(mem_obj);
     mem_obj->swapout.decision = decision;
