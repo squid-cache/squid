@@ -102,6 +102,12 @@ public:
     /// whether we may start writing to disk (now or in the future)
     virtual bool mayStartSwapOut();
     virtual void trimMemory(const bool preserveSwappable);
+
+    // called when a decision to cache in memory has been made    
+    void memOutDecision(const bool willCacheInRam);
+    // called when a decision to cache on disk has been made
+    void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+
     void abort();
     void unlink();
     void makePublic();
@@ -233,6 +239,9 @@ public:
     /// calls back producer registered with deferProducer
     void kickProducer();
 #endif
+
+protected:
+    void transientsAbandonmentCheck();
 
 private:
     static MemAllocator *pool;

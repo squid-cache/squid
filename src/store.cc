@@ -1903,6 +1903,37 @@ StoreEntry::getSerialisedMetaData()
     return result;
 }
 
+/**
+ * Abandon the transient entry our worker has created if neither the shared
+ * memory cache nor the disk cache wants to store it. Collapsed requests, if
+ * any, should notice and use Plan B instead of getting stuck waiting for us
+ * to start swapping the entry out.
+ */
+void
+StoreEntry::transientsAbandonmentCheck() {
+    if (mem_obj && !mem_obj->smpCollapsed && // this worker is responsible
+        mem_obj->xitTable.index >= 0 && // other workers may be interested
+        mem_obj->memCache.index < 0 && // rejected by the shared memory cache
+        mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
+        debugs(20, 7, "cannot be shared: " << *this);
+        if (!shutting_down) // Store::Root() is FATALly missing during shutdown
+            Store::Root().transientsAbandon(*this);
+    }
+}
+
+void
+StoreEntry::memOutDecision(const bool willCacheInRam) {
+    transientsAbandonmentCheck();
+}
+
+void
+StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision) {
+    // Abandon our transient entry if neither shared memory nor disk wants it.
+    assert(mem_obj);
+    mem_obj->swapout.decision = decision;
+    transientsAbandonmentCheck();
+}
+
 void
 StoreEntry::trimMemory(const bool preserveSwappable)
 {

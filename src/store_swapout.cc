@@ -69,7 +69,7 @@ storeSwapOutStart(StoreEntry * e)
            e->swap_dirn << ", fileno " << std::hex << std::setw(8) << std::setfill('0') <<
            std::uppercase << e->swap_filen);
     e->swap_status = SWAPOUT_WRITING;
-    mem->swapout.decision = MemObject::SwapOut::swStarted;
+    e->swapOutDecision(MemObject::SwapOut::swStarted);
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
@@ -88,7 +88,7 @@ storeSwapOutStart(StoreEntry * e)
 
     if (sio == NULL) {
         e->swap_status = SWAPOUT_NONE;
-        mem->swapout.decision = MemObject::SwapOut::swImpossible;
+        e->swapOutDecision(MemObject::SwapOut::swImpossible);
         delete c;
         xfree((char*)buf);
         storeLog(STORE_LOG_SWAPOUTFAIL, e);
@@ -371,7 +371,7 @@ StoreEntry::mayStartSwapOut()
         return false;
 
     assert(mem_obj);
-    MemObject::SwapOut::Decision &decision = mem_obj->swapout.decision;
+    const MemObject::SwapOut::Decision &decision = mem_obj->swapout.decision;
 
     // if we decided that starting is not possible, do not repeat same checks
     if (decision == MemObject::SwapOut::swImpossible) {
@@ -382,14 +382,14 @@ StoreEntry::mayStartSwapOut()
     // if we swapped out already, do not start over
     if (swap_status == SWAPOUT_DONE) {
         debugs(20, 3, "already did");
-        decision = MemObject::SwapOut::swImpossible;
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
     // if we stared swapping out already, do not start over
     if (decision == MemObject::SwapOut::swStarted) {
         debugs(20, 3, "already started");
-        decision = MemObject::SwapOut::swImpossible;
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
@@ -401,25 +401,25 @@ StoreEntry::mayStartSwapOut()
 
     if (!checkCachable()) {
         debugs(20, 3,  HERE << "not cachable");
-        decision = MemObject::SwapOut::swImpossible;
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
     if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
         debugs(20, 3,  HERE  << url() << " SPECIAL");
-        decision = MemObject::SwapOut::swImpossible;
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
     if (mem_obj->inmem_lo > 0) {
         debugs(20, 3, "storeSwapOut: (inmem_lo > 0)  imem_lo:" <<  mem_obj->inmem_lo);
-        decision = MemObject::SwapOut::swImpossible;
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
     if (!mem_obj->isContiguous()) {
         debugs(20, 3, "storeSwapOut: not Contiguous");
-        decision = MemObject::SwapOut::swImpossible;
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
@@ -433,7 +433,7 @@ StoreEntry::mayStartSwapOut()
         if (expectedEnd > store_maxobjsize) {
             debugs(20, 3,  HERE << "will not fit: " << expectedEnd <<
                    " > " << store_maxobjsize);
-            decision = MemObject::SwapOut::swImpossible;
+            swapOutDecision(MemObject::SwapOut::swImpossible);
             return false; // known to outgrow the limit eventually
         }
 
@@ -442,7 +442,7 @@ StoreEntry::mayStartSwapOut()
         if (currentEnd > store_maxobjsize) {
             debugs(20, 3,  HERE << "does not fit: " << currentEnd <<
                    " > " << store_maxobjsize);
-            decision = MemObject::SwapOut::swImpossible;
+            swapOutDecision(MemObject::SwapOut::swImpossible);
             return false; // already does not fit and may only get bigger
         }
 
@@ -465,6 +465,6 @@ StoreEntry::mayStartSwapOut()
         }
     }
 
-    decision = MemObject::SwapOut::swPossible;
+    swapOutDecision(MemObject::SwapOut::swPossible);
     return true;
 }
