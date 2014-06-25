@@ -941,7 +941,7 @@ StoreEntry::checkTooSmall()
         return 0;
 
     if (STORE_OK == store_status)
-        if (mem_obj->object_sz < 0 ||
+        if (mem_obj->object_sz >= 0 &&
                 mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
     if (getReply()->content_length > -1)
