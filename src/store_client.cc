@@ -434,8 +434,7 @@ store_client::scheduleDiskRead()
     if (getType() == STORE_DISK_CLIENT) {
         // we should have called startSwapin() already
         assert(swapin_sio != NULL);
-    } else
-    if (!swapin_sio && !startSwapin()) {
+    } else if (!swapin_sio && !startSwapin()) {
         debugs(90, 3, "bailing after swapin start failure for " << *entry);
         assert(!flags.store_copying);
         return;

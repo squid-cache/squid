@@ -285,7 +285,8 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
 template <class V>
 template <class Visitor>
 void
-SplayNode<V>::visit(Visitor &visitor) const {
+SplayNode<V>::visit(Visitor &visitor) const
+{
     if (left)
         left->visit(visitor);
     visitor(data);
@@ -296,7 +297,8 @@ SplayNode<V>::visit(Visitor &visitor) const {
 template <class V>
 template <class Visitor>
 void
-Splay<V>::visit(Visitor &visitor) const {
+Splay<V>::visit(Visitor &visitor) const
+{
     if (head)
         head->visit(visitor);
 }
