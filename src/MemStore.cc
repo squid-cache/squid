@@ -495,6 +495,7 @@ MemStore::startCaching(StoreEntry &e)
     e.mem_obj->memCache.io = MemObject::ioWriting;
     slot->set(e);
     map->startAppending(index);
+    e.memOutDecision(true);
     return true;
 }
 
@@ -659,7 +660,7 @@ MemStore::write(StoreEntry &e)
     case MemObject::ioUndecided:
         if (!shouldCache(e) || !startCaching(e)) {
             e.mem_obj->memCache.io = MemObject::ioDone;
-            Store::Root().transientsAbandon(e);
+            e.memOutDecision(false);
             return;
         }
         break;

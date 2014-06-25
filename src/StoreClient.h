@@ -102,7 +102,7 @@ private:
     void scheduleDiskRead();
     void scheduleMemRead();
     void scheduleRead();
-    void startSwapin();
+    bool startSwapin();
     void unpackHeader(char const *buf, ssize_t len);
 
     int type;
