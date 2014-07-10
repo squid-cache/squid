@@ -227,6 +227,7 @@ Comm::ConnOpener::start()
         conn_->local.setIPv4();
     }
 
+    conn_->noteStart();
     if (createFd())
         doConnect();
 }
