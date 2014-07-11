@@ -77,7 +77,7 @@ public:
  * establishment timeout and close the connection on timeouts. This is probably
  * better than having dedicated (or none at all!) timeouts for peer selection,
  * DNS lookup, TCP handshake, SSL handshake, etc. Some steps may have their
- * own timeout, but not all steps should be forced to have theirs. 
+ * own timeout, but not all steps should be forced to have theirs.
  * XXX: tunnel.cc and probably other subsystems does not have an "overall
  * connection establishment" timeout. We need to change their code so that they
  * start monitoring earlier and close on timeouts. This change may need to be
@@ -126,7 +126,7 @@ protected:
 
     /// Sets the read timeout to avoid getting stuck while reading from a
     /// silent server
-    void setReadTimeout(); 
+    void setReadTimeout();
 
     void initializeSsl(); ///< Initializes SSL state
 
