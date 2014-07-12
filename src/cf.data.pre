@@ -716,6 +716,10 @@ DOC_START
 	  log=		String to be logged in access.log. Available as
 	  		%ea in logformat specifications.
 
+  	  clt_conn_tag= Associates a TAG with the client TCP connection.
+			Please see url_rewrite_program related documentation for
+			this kv-pair.
+
 	Any keywords may be sent on any response whether OK, ERR or BH.
 
 	All response keyword values need to be a single token with URL
@@ -3573,6 +3577,19 @@ DOC_START
 	disks. This algorithm does not spread objects by size, so any
 	I/O loading per-disk may appear very unbalanced and volatile.
 
+	If several cache_dirs use similar min-size, max-size, or other
+	limits to to reject certain responses, then do not group such
+	cache_dir lines together, to avoid round-robin selection bias
+	towards the first cache_dir after the group. Instead, interleave
+	cache_dir lines from different groups. For example:
+
+		store_dir_select_algorithm round-robin
+		cache_dir rock /hdd1 ... min-size=100000
+		cache_dir rock /ssd1 ... max-size=99999
+		cache_dir rock /hdd2 ... min-size=100000
+		cache_dir rock /ssd2 ... max-size=99999
+		cache_dir rock /hdd3 ... min-size=100000
+		cache_dir rock /ssd3 ... max-size=99999
 DOC_END
 
 NAME: max_open_disk_fds
@@ -4590,7 +4607,8 @@ DOC_START
 
 	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
-
+	See url_rewrite_extras on how to send "extras" with optional values to
+	the helper.
 	After processing the request the helper must reply using the following format:
 
 	  [channel-ID <SP>] result [<SP> kv-pairs]
@@ -4622,10 +4640,14 @@ DOC_START
 		reserved for delivering a log message.
 
 
-	In the future, the interface protocol will be extended with
-	key=value pairs ("kv-pairs" shown above).  Helper programs
-	should be prepared to receive and possibly ignore additional
-	whitespace-separated tokens on each input line.
+	In addition to the above kv-pairs Squid also understands the following
+	optional kv-pairs received from URL rewriters:
+	  clt_conn_tag=TAG
+		Associates a TAG with the client TCP connection.
+		The TAG is treated as a regular annotation but persists across
+		future requests on the client connection rather than just the
+		current request. A helper may update the TAG during subsequent
+		requests be returning a new kv-pair.
 
 	When using the concurrency= option the protocol is changed by
 	introducing a query channel tag in front of the request/response.
@@ -4782,6 +4804,12 @@ DOC_START
 		An internal error occured in the helper, preventing
 		a result being identified.
 
+	In addition to the above kv-pairs Squid also understands the following
+	optional kv-pairs received from URL rewriters:
+	  clt_conn_tag=TAG
+		Associates a TAG with the client TCP connection.
+		Please see url_rewrite_program related documentation for this
+		kv-pair
 
 	Helper programs should be prepared to receive and possibly ignore
 	additional whitespace-separated tokens on each input line.

@@ -1239,10 +1239,10 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    if (http->al != NULL) {
-        NotePairs &notes = SyncNotes(*http->al, *old_request);
-        notes.append(&reply.notes);
-    }
+    if (http->al != NULL)
+        (void)SyncNotes(*http->al, *old_request);
+
+    UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1360,10 +1360,10 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
 
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    if (http->al != NULL) {
-        NotePairs &notes = SyncNotes(*http->al, *old_request);
-        notes.append(&reply.notes);
-    }
+    if (http->al != NULL)
+        (void)SyncNotes(*http->al, *old_request);
+
+    UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1687,6 +1687,13 @@ ClientHttpRequest::doCallouts()
     if (!calloutContext->http->al->request) {
         calloutContext->http->al->request = request;
         HTTPMSGLOCK(calloutContext->http->al->request);
+
+        NotePairs &notes = SyncNotes(*calloutContext->http->al, *calloutContext->http->request);
+        // Make the previously set client connection ID available as annotation.
+        if (ConnStateData *csd = calloutContext->http->getConn()) {
+            if (!csd->connectionTag().isEmpty())
+                notes.add("clt_conn_tag", SBuf(csd->connectionTag()).c_str());
+        }
     }
 
     if (!calloutContext->error) {
