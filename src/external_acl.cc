@@ -1534,10 +1534,8 @@ ExternalACLLookup::LookupDone(void *data, void *result)
             // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
             // workaround by using anything already set in HttpRequest
             // OR use new and rely on a later Sync copying these to AccessLogEntry
-            if (!req->notes)
-                req->notes = new NotePairs;
 
-            req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+            UpdateRequestNotes(checklist->conn(), *req, checklist->extacl_entry->notes);
         }
     }
 

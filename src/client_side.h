@@ -381,6 +381,10 @@ public:
     bool switchedToHttps() const { return false; }
 #endif
 
+    /* clt_conn_tag=tag annotation access */
+    const SBuf &connectionTag() const { return connectionTag_; }
+    void connectionTag(const char *aTag) { connectionTag_ = aTag; }
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -423,6 +427,8 @@ private:
 
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
+
+    SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
 
     CBDATA_CLASS2(ConnStateData);
 };
