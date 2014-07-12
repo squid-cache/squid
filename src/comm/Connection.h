@@ -47,6 +47,7 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
+#include "SquidTime.h"
 
 #include <iosfwd>
 #include <ostream>
@@ -114,6 +115,10 @@ public:
      */
     void setPeer(CachePeer * p);
 
+    /** The time the connection started */
+    time_t startTime() const {return startTime_;}
+
+    void noteStart() {startTime_ = squid_curtime;}
 private:
     /** These objects may not be exactly duplicated. Use copyDetails() instead. */
     Connection(const Connection &c);
@@ -153,6 +158,9 @@ public:
 private:
     /** cache_peer data object (if any) */
     CachePeer *peer_;
+
+    /** The time the connection object was created */
+    time_t startTime_;
 };
 
 }; // namespace Comm

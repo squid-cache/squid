@@ -93,6 +93,8 @@ Comm::TcpAcceptor::start()
 
     setListen();
 
+    conn->noteStart();
+
     // if no error so far start accepting connections.
     if (errcode == 0)
         SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);

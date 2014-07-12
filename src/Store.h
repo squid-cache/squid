@@ -102,6 +102,12 @@ public:
     /// whether we may start writing to disk (now or in the future)
     virtual bool mayStartSwapOut();
     virtual void trimMemory(const bool preserveSwappable);
+
+    // called when a decision to cache in memory has been made
+    void memOutDecision(const bool willCacheInRam);
+    // called when a decision to cache on disk has been made
+    void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+
     void abort();
     void unlink();
     void makePublic();
@@ -120,11 +126,14 @@ public:
     bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
     void swapOutFileClose(int how);
     const char *url() const;
-    int checkCachable();
+    /// Satisfies cachability requirements shared among disk and RAM caches.
+    /// Encapsulates common checks of mayStartSwapOut() and memoryCachable().
+    /// TODO: Rename and make private so only those two methods can call this.
+    bool checkCachable();
     int checkNegativeHit() const;
     int locked() const;
     int validToSend() const;
-    bool memoryCachable() const; ///< may be cached in memory
+    bool memoryCachable(); ///< checkCachable() and can be cached in memory
 
     /// if needed, initialize mem_obj member w/o URI-related information
     MemObject *makeMemObject();
@@ -231,6 +240,9 @@ public:
     void kickProducer();
 #endif
 
+protected:
+    void transientsAbandonmentCheck();
+
 private:
     static MemAllocator *pool;
 
@@ -272,7 +284,7 @@ private:
     store_client_t storeClientType() const {return STORE_MEM_CLIENT;}
 
     char const *getSerialisedMetaData();
-    bool mayStartSwapout() {return false;}
+    virtual bool mayStartSwapOut() { return false; }
 
     void trimMemory(const bool preserveSwappable) {}
 
