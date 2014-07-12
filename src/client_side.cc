@@ -2908,19 +2908,19 @@ ConnStateData::concurrentRequestQueueFilled() const
  * Perform follow_x_forwarded_for ACL tests on the
  * client which connected to PROXY protocol port.
  */
-void
+bool
 ConnStateData::proxyProtocolValidateClient()
 {
     ACLFilledChecklist ch(Config.accessList.followXFF, NULL, clientConnection->rfc931);
     ch.src_addr = clientConnection->remote;
     ch.my_addr = clientConnection->local;
-    // TODO: we should also pass the port details for myportname here.
+    ch.conn(this);
 
     if (ch.fastCheck() != ACCESS_ALLOWED) {
-        // terminate the connection. invalid input.
-        stopReceiving("PROXY client not permitted by ACLs");
-        stopSending("PROXY client not permitted by ACLs");
+        mustStop("PROXY client not permitted by ACLs");
+        return false;
     }
+    return true;
 }
 
 /**
@@ -3509,9 +3509,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
-    // ensure a buffer is present for this connection
-    in.maybeMakeSpaceAvailable();
-
+    // XXX: should do this in start(), but SSL/TLS operations begin before start() is called
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
@@ -3527,6 +3525,13 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
         }
 #endif
     }
+}
+
+void
+ConnStateData::start()
+{
+    // ensure a buffer is present for this connection
+    in.maybeMakeSpaceAvailable();
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, ConnStateData::connStateClosed);
@@ -3538,20 +3543,28 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = xact->tcpClient->remote;
-        identChecklist.my_addr = xact->tcpClient->local;
+        identChecklist.src_addr = clientConnection->remote;
+        identChecklist.my_addr = clientConnection->local;
         if (identChecklist.fastCheck() == ACCESS_ALLOWED)
-            Ident::Start(xact->tcpClient, clientIdentDone, this);
+            Ident::Start(clientConnection, clientIdentDone, this);
     }
 #endif
 
     clientdbEstablished(clientConnection->remote, 1);
 
-    flags.readMore = true;
+    needProxyProtocolHeader_ = port->flags.proxySurrogate;
+    if (needProxyProtocolHeader_) {
+        if (!proxyProtocolValidateClient()) // will close the connection on failure
+            return;
+    }
 
-    needProxyProtocolHeader_ = xact->squidPort->flags.proxySurrogate;
-    if (needProxyProtocolHeader_)
-        proxyProtocolValidateClient(); // will close the connection on failure
+    // prepare any chidl API state that is needed
+    BodyProducer::start();
+    HttpControlMsgSink::start();
+
+    // if all is well, start reading
+    flags.readMore = true;
+    readSomeData();
 }
 
 /** Handle a new connection on HTTP socket. */
@@ -3590,7 +3603,7 @@ httpAccept(const CommAcceptCbParams &params)
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetConnTimeout(params.conn, Config.Timeout.request, timeoutCall);
 
-    connState->readSomeData();
+    AsyncJob::Start(connState);
 
 #if USE_DELAY_POOLS
     fd_table[params.conn->fd].clientInfo = NULL;
@@ -3778,7 +3791,7 @@ clientNegotiateSSL(int fd, void *data)
                " has no certificate.");
     }
 
-    conn->readSomeData();
+    AsyncJob::Start(conn);
 }
 
 /**
