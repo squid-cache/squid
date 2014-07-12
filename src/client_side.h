@@ -324,6 +324,7 @@ public:
     void requestTimeout(const CommTimeoutCbParams &params);
 
     // AsyncJob API
+    virtual void start();
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
     virtual void swanSong();
 
@@ -390,7 +391,7 @@ private:
     bool concurrentRequestQueueFilled() const;
 
     /* PROXY protocol functionality */
-    void proxyProtocolValidateClient();
+    bool proxyProtocolValidateClient();
     bool parseProxyProtocolMagic();
     bool proxyProtocolError(bool isFatal);
 
