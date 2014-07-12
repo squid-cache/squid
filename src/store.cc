@@ -941,7 +941,7 @@ StoreEntry::checkTooSmall()
         return 0;
 
     if (STORE_OK == store_status)
-        if (mem_obj->object_sz < 0 ||
+        if (mem_obj->object_sz >= 0 &&
                 mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
     if (getReply()->content_length > -1)
@@ -950,11 +950,23 @@ StoreEntry::checkTooSmall()
     return 0;
 }
 
-// TODO: remove checks already performed by swapoutPossible()
 // TODO: move "too many open..." checks outside -- we are called too early/late
-int
+bool
 StoreEntry::checkCachable()
 {
+    // XXX: This method is used for both memory and disk caches, but some
+    // checks are specific to disk caches. Move them to mayStartSwapOut().
+
+    // XXX: This method may be called several times, sometimes with different
+    // outcomes, making store_check_cachable_hist counters misleading.
+
+    // check this first to optimize handling of repeated calls for uncachables
+    if (EBIT_TEST(flags, RELEASE_REQUEST)) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
+        ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
+        return 0; // avoid rerequesting release below
+    }
+
 #if CACHE_ALL_METHODS
 
     if (mem_obj->method != Http::METHOD_GET) {
@@ -965,9 +977,6 @@ StoreEntry::checkCachable()
         if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (EBIT_TEST(flags, RELEASE_REQUEST)) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
-            ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
         } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
@@ -1390,6 +1399,30 @@ storeInit(void)
     storeRegisterWithCacheManager();
 }
 
+/// computes maximum size of a cachable object
+/// larger objects are rejected by all (disk and memory) cache stores
+static int64_t
+storeCalcMaxObjSize()
+{
+    int64_t ms = 0; // nothing can be cached without at least one store consent
+
+    // global maximum is at least the disk store maximum
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        assert (Config.cacheSwap.swapDirs[i].getRaw());
+        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
+        if (ms < storeMax)
+            ms = storeMax;
+    }
+
+    // global maximum is at least the memory store maximum
+    // TODO: move this into a memory cache class when we have one
+    const int64_t memMax = static_cast<int64_t>(min(Config.Store.maxInMemObjSize, Config.memMaxSize));
+    if (ms < memMax)
+        ms = memMax;
+
+    return ms;
+}
+
 void
 storeConfigure(void)
 {
@@ -1398,11 +1431,16 @@ storeConfigure(void)
     store_swap_low = (long) (((float) Store::Root().maxSize() *
                               (float) Config.Swap.lowWaterMark) / (float) 100);
     store_pages_max = Config.memMaxSize / sizeof(mem_node);
+
+    store_maxobjsize = storeCalcMaxObjSize();
 }
 
 bool
-StoreEntry::memoryCachable() const
+StoreEntry::memoryCachable()
 {
+    if (!checkCachable())
+        return 0;
+
     if (mem_obj == NULL)
         return 0;
 
@@ -1499,14 +1537,19 @@ StoreEntry::validToSend() const
     if (!mem_obj) // not backed by a memory cache and not collapsed
         return 0;
 
-    if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
+    // StoreEntry::storeClientType() assumes DISK_CLIENT here, but there is no
+    // disk cache backing that store_client constructor will assert. XXX: This
+    // is wrong for range requests (that could feed off nibbled memory) and for
+    // entries backed by the shared memory cache (that could, in theory, get
+    // nibbled bytes from that cache, but there is no such "memoryIn" code).
+    if (mem_obj->inmem_lo) // in memory cache, but got nibbled at
         return 0;
 
-    // StoreEntry::storeClientType() assumes DISK_CLIENT here, but there is no
-    // disk cache backing so we should not rely on the store cache at all. This
-    // is wrong for range requests that could feed off nibbled memory (XXX).
-    if (mem_obj->inmem_lo) // in local memory cache, but got nibbled at
-        return 0;
+    // The following check is correct but useless at this position. TODO: Move
+    // it up when the shared memory cache can either replenish locally nibbled
+    // bytes or, better, does not use local RAM copy at all.
+    // if (mem_obj->memCache.index >= 0) // backed by a shared memory cache
+    //    return 1;
 
     return 1;
 }
@@ -1858,6 +1901,40 @@ StoreEntry::getSerialisedMetaData()
     assert (swap_hdr_sz >= 0);
     mem_obj->swap_hdr_sz = (size_t) swap_hdr_sz;
     return result;
+}
+
+/**
+ * Abandon the transient entry our worker has created if neither the shared
+ * memory cache nor the disk cache wants to store it. Collapsed requests, if
+ * any, should notice and use Plan B instead of getting stuck waiting for us
+ * to start swapping the entry out.
+ */
+void
+StoreEntry::transientsAbandonmentCheck()
+{
+    if (mem_obj && !mem_obj->smpCollapsed && // this worker is responsible
+            mem_obj->xitTable.index >= 0 && // other workers may be interested
+            mem_obj->memCache.index < 0 && // rejected by the shared memory cache
+            mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
+        debugs(20, 7, "cannot be shared: " << *this);
+        if (!shutting_down) // Store::Root() is FATALly missing during shutdown
+            Store::Root().transientsAbandon(*this);
+    }
+}
+
+void
+StoreEntry::memOutDecision(const bool willCacheInRam)
+{
+    transientsAbandonmentCheck();
+}
+
+void
+StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision)
+{
+    // Abandon our transient entry if neither shared memory nor disk wants it.
+    assert(mem_obj);
+    mem_obj->swapout.decision = decision;
+    transientsAbandonmentCheck();
 }
 
 void

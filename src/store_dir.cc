@@ -207,22 +207,22 @@ SwapDir::objectSizeIsAcceptable(int64_t objsize) const
 static int
 storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 {
-    static int dirn = 0;
-    int i;
-    int load;
-    RefCount<SwapDir> sd;
-
     // e->objectLen() is negative at this point when we are still STORE_PENDING
     ssize_t objsize = e->mem_obj->expectedReplySize();
     if (objsize != -1)
         objsize += e->mem_obj->swap_hdr_sz;
 
-    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (++dirn >= Config.cacheSwap.n_configured)
-            dirn = 0;
+    // Increment the first candidate once per selection (not once per
+    // iteration) to reduce bias when some disk(s) attract more entries.
+    static int firstCandidate = 0;
+    if (++firstCandidate >= Config.cacheSwap.n_configured)
+        firstCandidate = 0;
 
-        sd = dynamic_cast<SwapDir *>(INDEXSD(dirn));
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        const int dirn = (firstCandidate + i) % Config.cacheSwap.n_configured;
+        const SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(dirn));
 
+        int load = 0;
         if (!sd->canStore(*e, objsize, load))
             continue;
 
@@ -865,7 +865,7 @@ void StoreController::markForUnlink(StoreEntry &e)
 // move this into [non-shared] memory cache class when we have one
 /// whether e should be kept in local RAM for possible future caching
 bool
-StoreController::keepForLocalMemoryCache(const StoreEntry &e) const
+StoreController::keepForLocalMemoryCache(StoreEntry &e) const
 {
     if (!e.memoryCachable())
         return false;
@@ -1060,7 +1060,7 @@ StoreController::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
     bool found = false;
     if (memStore)
         found = memStore->anchorCollapsed(collapsed, inSync);
-    else if (Config.cacheSwap.n_configured)
+    if (!found && Config.cacheSwap.n_configured)
         found = anchorCollapsedOnDisk(collapsed, inSync);
 
     if (found) {

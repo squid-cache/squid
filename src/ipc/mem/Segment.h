@@ -7,6 +7,8 @@
 #include "base/RunnersRegistry.h"
 #include "SquidString.h"
 
+class SBuf;
+
 namespace Ipc
 {
 
@@ -35,6 +37,9 @@ public:
 
     /// common path of all segment names in path-based environments
     static const char *BasePath;
+
+    /// concatenates parts of a name to form a complete name (or its prefix)
+    static SBuf Name(const SBuf &prefix, const char *suffix);
 
 private:
 

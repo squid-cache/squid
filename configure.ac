@@ -976,13 +976,12 @@ AC_SUBST(XMLLIB)
 
 # icap argument handling
 AC_ARG_ENABLE(icap-client,
-  AS_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
-    [squid_opt_use_icap_client=$enableval],
-    [squid_opt_use_icap_client=no])
-SQUID_DEFINE_BOOL(ICAP_CLIENT,$squid_opt_use_icap_client,
-     [Enable ICAP client features in Squid])
-AM_CONDITIONAL(USE_ICAP_CLIENT, [test "x$squid_opt_use_icap_client" = "xyes" ])
-if test "x$squid_opt_use_icap_client" = "xyes" ; then
+  AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
+  SQUID_YESNO([$enableval],[Unrecognized argument to --disable-icap-client: $enableval])
+])
+SQUID_DEFINE_BOOL(ICAP_CLIENT,${enable_icap_client:=yes}, [Enable ICAP client features in Squid])
+AM_CONDITIONAL(USE_ICAP_CLIENT, [test "x$enable_icap_client" != "xno" ])
+if test "x$enable_icap_client" != "xno" ; then
   ICAP_LIBS="icap/libicap.la"
   squid_opt_use_adaptation=yes
 else
