@@ -57,8 +57,9 @@ struct arpreq {
     struct sockaddr arp_ha;   /* hardware address */
     int arp_flags;            /* flags */
 };
-
-#include <Iphlpapi.h>
+#if HAVE_IPHLPAPI_H
+#include <iphlpapi.h>
+#endif
 #endif
 
 #if HAVE_SYS_PARAM_H
