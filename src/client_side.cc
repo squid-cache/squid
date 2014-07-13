@@ -3569,7 +3569,7 @@ ConnStateData::start()
             return;
     }
 
-    // prepare any chidl API state that is needed
+    // prepare any child API state that is needed
     BodyProducer::start();
     HttpControlMsgSink::start();
 
