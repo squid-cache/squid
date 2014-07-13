@@ -187,7 +187,7 @@ Most user-facing changes are reflected in squid.conf (see below).
  proxy_forwarded_access allow localhost
 </verbatim>
 
-<p><em>Know Issue:</em> Due to design issues HTTPS traffic is not yet accepted
+<p><em>Known Issue:</em> Due to design issues HTTPS traffic is not yet accepted
    over this protocol. So use of <em>proxy-surrogate</em> on <em>https_port</em>
    is not supported.
 
