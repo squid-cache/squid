@@ -263,11 +263,42 @@ mimicExtensions(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & mimicCert)
         0
     };
 
+    // key usage bit names
+    enum {
+        DigitalSignature,
+        NonRepudiation,
+        KeyEncipherment, // NSS requires for RSA but not EC
+        DataEncipherment,
+        KeyAgreement,
+        KeyCertificateSign,
+        CRLSign,
+        EncipherOnly,
+        DecipherOnly
+    };
+
+    int mimicAlgo = OBJ_obj2nid(mimicCert.get()->cert_info->key->algor->algorithm);
+
     int nid;
     for (int i = 0; (nid = extensions[i]) != 0; ++i) {
         const int pos = X509_get_ext_by_NID(mimicCert.get(), nid, -1);
-        if (X509_EXTENSION *ext = X509_get_ext(mimicCert.get(), pos))
+        if (X509_EXTENSION *ext = X509_get_ext(mimicCert.get(), pos)) {
+            // Mimic extension exactly.
             X509_add_ext(cert.get(), ext, -1);
+            if ( nid == NID_key_usage && mimicAlgo != NID_rsaEncryption ) {
+                // NSS does not requre the KeyEncipherment flag on EC keys
+                // but it does require it for RSA keys.  Since ssl-bump
+                // substitutes RSA keys for EC ones, we need to ensure that
+                // that the more stringent requirements are met.
+
+                const int p = X509_get_ext_by_NID(cert.get(), NID_key_usage, -1);
+                if ((ext = X509_get_ext(cert.get(), p)) != NULL) {
+                    ASN1_BIT_STRING *keyusage = (ASN1_BIT_STRING *)X509V3_EXT_d2i(ext);
+                    ASN1_BIT_STRING_set_bit(keyusage, KeyEncipherment, 1);
+                    X509_EXTENSION_set_data( ext, (ASN1_OCTET_STRING*)keyusage );
+                    ASN1_BIT_STRING_free(keyusage);
+                }
+            }
+        }
     }
 
     // We could also restrict mimicking of the CA extension to CA:FALSE
