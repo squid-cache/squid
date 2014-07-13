@@ -171,12 +171,12 @@ Most user-facing changes are reflected in squid.conf (see below).
    relay the original client source details without having to alter or understand
    the protocol being relayed on the connection.
 
-<p>Squid currently supports receiving version 1 or 2 of the protocol.
+<p>Squid currently supports receiving HTTP via version 1 or 2 of the protocol.
    A port which has been configured to receive this protocol may only be used to
    receive traffic from client software sending in this protocol.
    Regular forward-proxy HTTP traffic is not accepted.
 
-<p>Squid can be configured by adding an <em>http_port</em> or <em>https_port</em>
+<p>Squid can be configured by adding an <em>http_port</em>
    with the <em>proxy-surrogate</em> mode flag. The <em>proxy_forwarded_access</em>
    must also be configured with <em>src</em> ACLs to whitelist proxies which are
    trusted to send correct client details.
@@ -186,6 +186,10 @@ Most user-facing changes are reflected in squid.conf (see below).
  http_port 3128 proxy-surrogate
  proxy_forwarded_access allow localhost
 </verbatim>
+
+<p><em>Know Issue:</em> Due to design issues HTTPS traffic is not yet accepted
+   over this protocol. So use of <em>proxy-surrogate</em> on <em>https_port</em>
+   is not supported.
 
 
 <sect>Changes to squid.conf since Squid-3.4
