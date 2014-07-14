@@ -1179,6 +1179,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libcomm.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1786,7 +1787,6 @@ tests_testDiskIO_LDADD = \
 	acl/libstate.la \
 	libsquid.la \
 	comm/libcomm.la \
-	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
@@ -1794,6 +1794,7 @@ tests_testDiskIO_LDADD = \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
+	anyp/libanyp.la \
 	mgr/libmgr.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -3413,7 +3414,6 @@ tests_testRock_LDADD = \
 	http/libsquid-http.la \
 	libsquid.la \
 	comm/libcomm.la \
-	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(COMMON_LIBS) \
@@ -3423,6 +3423,7 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
+	anyp/libanyp.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
