@@ -136,12 +136,6 @@ public:
 #endif
     } Port;
 
-    struct {
-        AnyP::PortCfg *http;
-#if USE_OPENSSL
-        AnyP::PortCfg *https;
-#endif
-    } Sockaddr;
 #if SQUID_SNMP
 
     struct {
