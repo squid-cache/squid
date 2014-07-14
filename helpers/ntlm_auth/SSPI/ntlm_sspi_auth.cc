@@ -498,8 +498,8 @@ manage_request()
                 helperfail("message=\"can't obtain challenge\"");
 
             return 1;
-            }
-            /* notreached */
+        }
+        /* notreached */
         case NTLM_CHALLENGE:
             SEND_ERR("message=\"Got a challenge. We refuse to have our authority disputed\"");
             return 1;
@@ -588,7 +588,7 @@ manage_request()
             lc(user);
             fprintf(stdout, "OK user=\"%s\\%s\"", domain, user);
             return 1;
-            }
+        }
         default:
             helperfail("message=\"unknown authentication packet type\"");
             return 1;
