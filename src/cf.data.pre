@@ -1500,7 +1500,7 @@ COMMENT_END
 NAME: http_port ascii_port
 TYPE: PortCfg
 DEFAULT: none
-LOC: Config.Sockaddr.http
+LOC: HttpPortList
 DOC_START
 	Usage:	port [mode] [options]
 		hostname:port [mode] [options]
@@ -1737,7 +1737,7 @@ NAME: https_port
 IFDEF: USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
-LOC: Config.Sockaddr.https
+LOC: HttpsPortList
 DOC_START
 	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [mode] [options...]
 

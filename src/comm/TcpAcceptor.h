@@ -1,6 +1,7 @@
 #ifndef SQUID_COMM_TCPACCEPTOR_H
 #define SQUID_COMM_TCPACCEPTOR_H
 
+#include "anyp/forward.h"
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "base/Subscription.h"
@@ -41,6 +42,7 @@ private:
 
 public:
     TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
+    TcpAcceptor(const AnyP::PortCfgPointer &listenPort, const char *note, const Subscription::Pointer &aSub);
 
     /** Subscribe a handler to receive calls back about new connections.
      * Unsubscribes any existing subscribed handler.
@@ -74,6 +76,9 @@ private:
     /// conn being listened on for new connections
     /// Reserved for read-only use.
     ConnectionPointer conn;
+
+    /// configuration details of the listening port (if provided)
+    AnyP::PortCfgPointer listenPort_;
 
     /// listen socket closure handler
     AsyncCall::Pointer closer_;

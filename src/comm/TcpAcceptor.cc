@@ -66,7 +66,17 @@ Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const cha
         errcode(0),
         isLimited(0),
         theCallSub(aSub),
-        conn(newConn)
+        conn(newConn),
+        listenPort_()
+{}
+
+Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *note, const Subscription::Pointer &aSub) :
+        AsyncJob("Comm::TcpAcceptor"),
+        errcode(0),
+        isLimited(0),
+        theCallSub(aSub),
+        conn(p->listenConn),
+        listenPort_(p)
 {}
 
 void
@@ -309,7 +319,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
         params.xaction = new MasterXaction;
-        params.xaction->squidPort = static_cast<AnyP::PortCfg*>(params.data);
+        params.xaction->squidPort = listenPort_;
         params.fd = conn->fd;
         params.conn = params.xaction->tcpClient = newConnDetails;
         params.flag = flag;
