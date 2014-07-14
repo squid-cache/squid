@@ -36,6 +36,7 @@
 #include "hash.h"
 #include "IoStats.h"
 #include "rfc2181.h"
+#include "SBuf.h"
 
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
@@ -52,7 +53,7 @@ extern const char *null_string;	/* "" */
 extern const char *version_string;	/* VERSION */
 extern const char *appname_string;	/* PACKAGE */
 extern char const *visible_appname_string; /* NULL */
-extern char *service_name;        /* xstrdup(APP_SHORTNAME) */
+extern SBuf service_name;        /* SBuf(APP_SHORTNAME) */
 extern const char *fdTypeStr[];
 extern const char *hier_strings[];
 extern const char *memStatusStr[];
