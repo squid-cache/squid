@@ -893,7 +893,7 @@ configDoConfigure(void)
             Config2.effectiveGroupID = pwd->pw_gid;
 
 #if HAVE_PUTENV
-             if (pwd->pw_dir && *pwd->pw_dir) {
+            if (pwd->pw_dir && *pwd->pw_dir) {
                 // putenv() leaks by design; avoid leaks when nothing changes
                 static String lastDir;
                 if (!lastDir.size() || lastDir != pwd->pw_dir) {
