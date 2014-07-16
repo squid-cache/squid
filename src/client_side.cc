@@ -3328,11 +3328,7 @@ httpAccept(const CommAcceptCbParams &params)
     MasterXaction::Pointer xact = params.xaction;
     AnyP::PortCfgPointer s = xact->squidPort;
 
-    if (!s) {
-        // it is possible the call or accept() was still queued when the port was reconfigured
-        debugs(33, 2, "HTTP accept failure: port reconfigured.");
-        return;
-    }
+    // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3646,11 +3642,7 @@ httpsAccept(const CommAcceptCbParams &params)
     MasterXaction::Pointer xact = params.xaction;
     const AnyP::PortCfgPointer s = xact->squidPort;
 
-    if (!s.valid()) {
-        // it is possible the call or accept() was still queued when the port was reconfigured
-        debugs(33, 2, "HTTPS accept failure: port reconfigured.");
-        return;
-    }
+    // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
