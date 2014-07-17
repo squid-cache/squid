@@ -173,7 +173,7 @@ DOC_END
 NAME: ignore_ims_on_miss
 TYPE: obsolete
 DOC_START
-	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+	Remove this line. The HTTP/1.1 feature is now configured by 'cache_miss_revalidate'.
 DOC_END
 
 # Options Removed in 3.2
@@ -5163,7 +5163,7 @@ DOC_START
 	downloads.
 
 	When the user aborts a request, Squid will check the
-	quick_abort values to the amount of data transfered until
+	quick_abort values to the amount of data transferred until
 	then.
 
 	If the transfer has less than 'quick_abort_min' KB remaining,
@@ -7510,17 +7510,25 @@ TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.cache_miss_revalidate
 DOC_START
-	Whether Squid on cache MISS will pass client revalidation requests
-	to the server or tries to fetch new content for caching.
-	This is useful while the cache is mostly empty to more quickly
-	have the cache populated.
+	RFC 7232 defines a conditional request mechanism to prevent
+	response objects being unnecessarily transferred over the network.
+	If that mechanism is used by the client and a cache MISS occurs
+	it can prevent new cache entries being created.
+
+	This option determines whether Squid on cache MISS will pass the
+	client revalidation request to the server or tries to fetch new
+	content for caching. It can be useful while the cache is mostly
+	empty to more quickly have the cache populated by generating
+	non-conditional GETs.
 
 	When set to 'on' (default), Squid will pass all client If-* headers
-	to the server.
+	to the server. This permits server responses without a cacheable
+	payload to be delivered and on MISS no new cache entry is created.
 
 	When set to 'off' and if the request is cacheable, Squid will
 	remove the clients If-Modified-Since and If-None-Match headers from
-	the request sent to the server.
+	the request sent to the server. This requests a 200 status response
+	from the server to create a new cache entry with.
 DOC_END
 
 NAME: always_direct
