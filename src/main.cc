@@ -507,7 +507,7 @@ mainParseOptions(int argc, char *argv[])
             /** \par n
              * Set global option opt_signal_service (to true).
              * Stores the additional parameter given in global service_name */
-            if (optarg || *optarg == '\0') {
+            if (optarg && *optarg != '\0') {
                 const SBuf t(optarg);
                 ::Parser::Tokenizer tok(t);
                 const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
