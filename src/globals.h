@@ -53,7 +53,6 @@ extern const char *null_string;	/* "" */
 extern const char *version_string;	/* VERSION */
 extern const char *appname_string;	/* PACKAGE */
 extern char const *visible_appname_string; /* NULL */
-extern SBuf service_name;        /* SBuf(APP_SHORTNAME) */
 extern const char *fdTypeStr[];
 extern const char *hier_strings[];
 extern const char *memStatusStr[];
