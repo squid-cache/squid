@@ -194,7 +194,7 @@ main(int argc, char *argv[])
         url[BUFSIZ - 1] = '\0';
 
         int optIndex = 0;
-        const char *shortOpStr = "aA:h:j:V:l:P:i:kmnN:p:rsvt:H:T:u:U:w:W:?";
+        const char *shortOpStr = "aA:h:j:V:l:P:i:km:nN:p:rsvt:H:T:u:U:w:W:?";
 
         // options for controlling squidclient
         static struct option basicOptions[] = {
