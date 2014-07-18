@@ -1,10 +1,12 @@
 #include "squid.h"
-#include "tools.h"
+// XXX: need src/ to avoid clashes with ip/tools.h in testIpAddress
+#include "src/tools.h"
 
 #define STUB_API "tools.cc"
 #include "tests/STUB.h"
 
 int DebugSignal = -1;
+SBuf service_name(APP_SHORTNAME);
 void releaseServerSockets(void) STUB
 char * dead_msg(void) STUB_RETVAL(NULL)
 void mail_warranty(void) STUB

@@ -82,6 +82,7 @@ Thanks!\n"
 static void mail_warranty(void);
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
+SBuf service_name(APP_SHORTNAME);
 
 #if _SQUID_LINUX_
 /* Workaround for crappy glic header files */
