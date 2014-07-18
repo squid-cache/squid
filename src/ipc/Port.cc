@@ -8,8 +8,8 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "CommCalls.h"
-#include "globals.h"
 #include "ipc/Port.h"
+#include "tools.h"
 
 static const char channelPathPfx[] = DEFAULT_STATEDIR "/";
 static const char coordinatorAddrLabel[] = "-coordinator";

@@ -52,10 +52,13 @@ check_PROGRAMS += debug \
 tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
 
-DEBUG_SOURCE = test_tools.cc stub_debug.cc stub_tools.cc stub_fatal.cc
+DEBUG_SOURCE = test_tools.cc stub_debug.cc stub_SBuf.cc stub_tools.cc stub_fatal.cc
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc .
+
+stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
+	cp $(top_srcdir)/src/tests/stub_SBuf.cc .
 
 stub_tools.cc: $(top_srcdir)/src/tests/stub_tools.cc
 	cp $(top_srcdir)/src/tests/stub_tools.cc .
