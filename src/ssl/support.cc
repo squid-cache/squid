@@ -1774,7 +1774,7 @@ setSessionCallbacks(SSL_CTX *ctx)
 static bool
 isSslServer()
 {
-    if (HttpsPortList.valid())
+    if (HttpsPortList != NULL)
         return true;
 
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {

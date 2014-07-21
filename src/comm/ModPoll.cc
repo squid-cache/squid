@@ -196,7 +196,7 @@ fdIsDns(int fd)
 static int
 fdIsTcpListen(int fd)
 {
-    for (const AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL && s->listenConn->fd == fd)
             return 1;
     }
