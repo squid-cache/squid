@@ -1893,6 +1893,8 @@ DOC_START
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
+
+	Only fast ACLs are supported.
 DOC_END
 
 NAME: clientside_tos
@@ -1935,6 +1937,8 @@ DOC_START
 	acl good_service_net src 10.0.1.0/24
 	tcp_outgoing_mark 0x00 normal_service_net
 	tcp_outgoing_mark 0x20 good_service_net
+
+	Only fast ACLs are supported.
 DOC_END
 
 NAME: clientside_mark

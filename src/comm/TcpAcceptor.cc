@@ -47,6 +47,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Intercept.h"
+#include "ip/QosConfig.h"
 #include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -198,6 +199,21 @@ Comm::TcpAcceptor::setListen()
         debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
     }
+
+#if 0
+    // Untested code.
+    // Set TOS if needed.
+    // To correctly implement TOS values on listening sockets, probably requires
+    // more work to inherit TOS values to created connection objects.
+    if (conn->tos &&
+        Ip::Qos::setSockTos(conn->fd, conn->tos, conn->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
+        conn->tos = 0;
+#if SO_MARK
+    if (conn->nfmark &&
+        Ip::Qos::setSockNfmark(conn->fd, conn->nfmark) < 0)
+        conn->nfmark = 0;
+#endif
+#endif
 
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommCloseCbParams> Dialer;
     closer_ = JobCallback(5, 4, Dialer, this, Comm::TcpAcceptor::handleClosure);

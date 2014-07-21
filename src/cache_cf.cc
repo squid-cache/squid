@@ -1463,6 +1463,12 @@ parse_acl_tos(acl_tos ** head)
         return;
     }
 
+    const unsigned int chTos = tos & 0xFC;
+    if (chTos != tos) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Tos value '" << tos << "' adjusted to '" << chTos << "'");
+        tos = chTos;
+    }
+
     CBDATA_INIT_TYPE_FREECB(acl_tos, freed_acl_tos);
 
     l = cbdataAlloc(acl_tos);
