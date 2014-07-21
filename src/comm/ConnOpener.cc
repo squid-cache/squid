@@ -14,6 +14,7 @@
 #include "icmp/net_db.h"
 #include "ip/tools.h"
 #include "ipcache.h"
+#include "ip/QosConfig.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
@@ -254,11 +255,24 @@ Comm::ConnOpener::createFd()
     if (callback_ == NULL || callback_->canceled())
         return false;
 
-    temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
+    temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, host_);
     if (temporaryFd_ < 0) {
         sendAnswer(Comm::ERR_CONNECT, 0, "Comm::ConnOpener::createFd");
         return false;
     }
+
+    // Set TOS if needed.
+    if (conn_->tos &&
+        Ip::Qos::setSockTos(temporaryFd_, conn_->tos, conn_->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
+        conn_->tos = 0;
+#if SO_MARK
+    if (conn_->nfmark &&
+        Ip::Qos::setSockNfmark(temporaryFd_, conn_->nfmark) < 0)
+        conn_->nfmark = 0;
+#endif
+
+    fd_table[conn_->fd].tosToServer = conn_->tos;
+    fd_table[conn_->fd].nfmarkToServer = conn_->nfmark;
 
     typedef CommCbMemFunT<Comm::ConnOpener, CommCloseCbParams> abortDialer;
     calls_.earlyAbort_ = JobCallback(5, 4, abortDialer, this, Comm::ConnOpener::earlyAbort);
