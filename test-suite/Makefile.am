@@ -6,6 +6,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 INCLUDES += -I$(srcdir)
 
 LDADD = \
+	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -77,7 +78,7 @@ ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
 ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
 		$(LDADD)
 
-mem_node_test_SOURCES = mem_node_test.cc
+mem_node_test_SOURCES = mem_node_test.cc $(DEBUG_SOURCE)
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
 
 mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
@@ -86,9 +87,9 @@ mem_hdr_test_LDADD = \
 	$(top_builddir)/src/mem_node.o \
 	$(LDADD)
 
-MemPoolTest_SOURCES = MemPoolTest.cc
+MemPoolTest_SOURCES = MemPoolTest.cc $(DEBUG_SOURCE)
 
-splay_SOURCES = splay.cc
+splay_SOURCES = splay.cc $(DEBUG_SOURCE)
 
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
 
