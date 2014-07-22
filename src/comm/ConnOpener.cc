@@ -12,9 +12,9 @@
 #include "fde.h"
 #include "globals.h"
 #include "icmp/net_db.h"
+#include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ipcache.h"
-#include "ip/QosConfig.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
@@ -263,11 +263,11 @@ Comm::ConnOpener::createFd()
 
     // Set TOS if needed.
     if (conn_->tos &&
-        Ip::Qos::setSockTos(temporaryFd_, conn_->tos, conn_->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
+            Ip::Qos::setSockTos(temporaryFd_, conn_->tos, conn_->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
         conn_->tos = 0;
 #if SO_MARK
     if (conn_->nfmark &&
-        Ip::Qos::setSockNfmark(temporaryFd_, conn_->nfmark) < 0)
+            Ip::Qos::setSockNfmark(temporaryFd_, conn_->nfmark) < 0)
         conn_->nfmark = 0;
 #endif
 
