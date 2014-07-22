@@ -1148,6 +1148,8 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
+	MasterXaction.cc \
+	MasterXaction.h \
 	Mem.h \
 	tests/stub_mem.cc \
 	RegexList.h \
@@ -1174,12 +1176,17 @@ tests_testHttpReply_SOURCES=\
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
+	tests/stub_event.cc \
+	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libmgr.cc \
+	tests/stub_libsslsquid.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1201,6 +1208,7 @@ nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
+	CommCalls.o \
 	http/libsquid-http.la \
 	acl/libacls.la \
 	acl/libapi.la \
@@ -1208,7 +1216,7 @@ tests_testHttpReply_LDADD=\
 	anyp/libanyp.la \
 	ip/libip.la \
 	base/libbase.la \
-	$(SSL_LIBS) \
+	ipc/libipc.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2953,6 +2961,7 @@ tests_testStore_SOURCES= \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsslsquid.cc \
 	HttpBody.h \
 	HttpBody.cc \
 	tests/stub_HttpReply.cc \
@@ -3007,7 +3016,6 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
-	$(SSL_LIBS) \
 	ipc/libipc.la \
 	anyp/libanyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
