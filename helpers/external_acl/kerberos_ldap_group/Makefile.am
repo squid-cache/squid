@@ -3,7 +3,7 @@ include $(top_srcdir)/src/Common.am
 EXTRA_DIST = README required.m4 cert_tool ext_kerberos_ldap_group_acl.8
 SUBDIRS = 
 
-AM_CPPFLAGS = $(INCLUDES) -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)
 
 libexec_SCRIPTS = cert_tool
 
