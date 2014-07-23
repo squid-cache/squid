@@ -13,7 +13,7 @@ CLEANFILES =
 check_PROGRAMS = 
 TESTS =
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/lib \
@@ -23,12 +23,12 @@ INCLUDES = \
 
 ## Kerberos headers require their include path.
 ## Because we use libcompat for comm_err.h header protections ...
-INCLUDES += $(KRB5INCS)
+AM_CPPFLAGS += $(KRB5INCS)
 
 ## Loadable Modules requires LTDL include paths.
 ## Because we need this to use the libray linking headers...
 if ENABLE_LOADABLE_MODULES
-INCLUDES += $(INCLTDL)
+AM_CPPFLAGS += $(INCLTDL)
 endif
 
 ## make all compiled sources depend on generated files
