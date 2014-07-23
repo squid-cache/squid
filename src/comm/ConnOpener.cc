@@ -271,8 +271,8 @@ Comm::ConnOpener::createFd()
         conn_->nfmark = 0;
 #endif
 
-    fd_table[conn_->fd].tosToServer = conn_->tos;
-    fd_table[conn_->fd].nfmarkToServer = conn_->nfmark;
+    fd_table[temporaryFd_].tosToServer = conn_->tos;
+    fd_table[temporaryFd_].nfmarkToServer = conn_->nfmark;
 
     typedef CommCbMemFunT<Comm::ConnOpener, CommCloseCbParams> abortDialer;
     calls_.earlyAbort_ = JobCallback(5, 4, abortDialer, this, Comm::ConnOpener::earlyAbort);
