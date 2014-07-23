@@ -234,7 +234,7 @@ cf_gen_LDADD=
 cf_gen.$(OBJEXT): cf_gen_defines.cci
 
 ## cf_gen.cc needs src/cf_gen_defines.cci
-INCLUDES += -I$(top_builddir)/src
+AM_CPPFLAGS += -I$(top_builddir)/src
 
 
 ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
@@ -686,11 +686,11 @@ squid_LDFLAGS = -export-dynamic -dlopen force
 ## squid_LDFLAGS = -all-static -dlopen self
 ##
 ## LTDL headers require their local include path...
-INCLUDES += $(INCLTDL)
+AM_CPPFLAGS += $(INCLTDL)
 endif
 
 ## Kerberos libraries require their include path...
-INCLUDES += $(KRB5INCS)
+AM_CPPFLAGS += $(KRB5INCS)
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc
@@ -3447,7 +3447,7 @@ tests_testRock_LDADD = \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testRock_LDFLAGS = $(INCLUDES) $(LIBADD_DL)
+tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 tests_testRock_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
