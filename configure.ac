@@ -1169,7 +1169,7 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
       AC_MSG_WARN([EUI support probably will not work on host $host.])
       ;;
   esac
-  #Iphlpapi.h check delayed after winsock2.h
+  # iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
     windows.h \
     sys/sockio.h \
@@ -2538,7 +2538,7 @@ if test "x$squid_host_os" = "xmingw" ; then
   AC_CHECK_HEADERS( \
     windows.h \
     ws2tcpip.h \
-    Iphlpapi.h ,,,[
+    iphlpapi.h ,,,[
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
