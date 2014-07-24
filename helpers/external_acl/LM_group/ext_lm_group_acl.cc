@@ -97,7 +97,7 @@ int _wcsicmp(const wchar_t *, const wchar_t *);
 
 int use_global = 0;
 int use_PDC_only = 0;
-char *program_name;
+const char *program_name;
 pid_t mypid;
 char *machinedomain;
 int use_case_insensitive_compare = 0;
@@ -541,12 +541,15 @@ main(int argc, char *argv[])
     }
     debug("External ACL win32 group helper build " __DATE__ ", " __TIME__
           " starting up...\n");
-    if (use_global)
+    if (use_global) {
         debug("Domain Global group mode enabled using '%s' as default domain.\n", DefaultDomain);
-    if (use_case_insensitive_compare)
+    }
+    if (use_case_insensitive_compare) {
         debug("Warning: running in case insensitive mode !!!\n");
-    if (use_PDC_only)
+    }
+    if (use_PDC_only) {
         debug("Warning: using only PDCs for group validation !!!\n");
+    }
 
     /* Main Loop */
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
