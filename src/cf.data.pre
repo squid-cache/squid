@@ -1543,11 +1543,6 @@ DOC_START
 
 	   accel	Accelerator / reverse proxy mode
 
-	   proxy-surrogate
-			Support for PROXY protocol version 1 or 2 connections.
-			The proxy_forwarded_access is required to whitelist
-			downstream proxies which can be trusted.
-
 	   ssl-bump	For each CONNECT request allowed by ssl_bump ACLs,
 			establish secure connection with the client and with
 			the server, decrypt HTTPS messages as they pass through
@@ -1733,6 +1728,11 @@ DOC_START
 			In seconds; idle is the initial time before TCP starts
 			probing the connection, interval how often to probe, and
 			timeout the time before giving up.
+
+	   proxy-surrogate
+			Require PROXY protocol version 1 or 2 connections.
+			The proxy_forwarded_access is required to whitelist
+			downstream proxies which can be trusted.
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
