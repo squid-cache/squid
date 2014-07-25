@@ -2949,7 +2949,7 @@ static const SBuf Proxy20magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A
  * Version 1 and 2 header currently supported.
  */
 bool
-ConnStateData::findProxyProtocolMagic()
+ConnStateData::parseProxyProtocolHeader()
 {
     // http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt
 
@@ -2966,6 +2966,9 @@ ConnStateData::findProxyProtocolMagic()
         // input other than the PROXY header is a protocol error
         return proxyProtocolError("PROXY protocol error: invalid header");
     }
+
+    // TODO: detect short non-magic prefixes earlier to avoid
+    // waiting for more data which may never come
 
     // not enough bytes to parse yet.
     return false;
@@ -3168,7 +3171,7 @@ ConnStateData::clientParseRequests()
         PROF_start(parseHttpRequest);
 
         // try to parse the PROXY protocol header magic bytes
-        if (needProxyProtocolHeader_ && !findProxyProtocolMagic())
+        if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
             break;
 
         HttpParserInit(&parser_, in.buf.c_str(), in.buf.length());
@@ -3522,7 +3525,6 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
-    // XXX: should do this in start(), but SSL/TLS operations begin before start() is called
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
