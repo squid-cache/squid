@@ -402,7 +402,7 @@ private:
 
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
-    bool findProxyProtocolMagic();
+    bool parseProxyProtocolHeader();
     bool parseProxy10();
     bool parseProxy20();
     bool proxyProtocolError(const char *reason = NULL);
