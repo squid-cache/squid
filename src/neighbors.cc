@@ -583,7 +583,7 @@ neighbors_init(void)
             if (0 != strcmp(thisPeer->host, me))
                 continue;
 
-            for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+            for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
                 if (thisPeer->http_port != s->s.port())
                     continue;
 

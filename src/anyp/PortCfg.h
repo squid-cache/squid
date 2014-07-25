@@ -13,12 +13,12 @@
 namespace AnyP
 {
 
-class PortCfg
+class PortCfg : public RefCountable
 {
 public:
     PortCfg();
     ~PortCfg();
-    AnyP::PortCfg *clone() const;
+    AnyP::PortCfgPointer clone() const;
 #if USE_OPENSSL
     /// creates, configures, and validates SSL context and related port options
     void configureSslServerContext();
@@ -31,7 +31,7 @@ public:
      */
     void setTransport(const char *aProtocol);
 
-    PortCfg *next;
+    PortCfgPointer next;
 
     Ip::Address s;
     AnyP::ProtocolVersion transport; ///< transport protocol and version received by this port
@@ -94,11 +94,17 @@ public:
     long sslContextFlags; ///< flags modifying the use of SSL
     long sslOptions; ///< SSL engine options
 #endif
-
-    CBDATA_CLASS2(PortCfg); // namespaced
 };
 
 } // namespace AnyP
+
+/// list of Squid http_port configured
+extern AnyP::PortCfgPointer HttpPortList;
+
+#if USE_OPENSSL
+/// list of Squid https_port configured
+extern AnyP::PortCfgPointer HttpsPortList;
+#endif
 
 // Max number of TCP listening ports
 #define MAXTCPLISTENPORTS 128

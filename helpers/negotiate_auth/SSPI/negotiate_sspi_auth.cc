@@ -37,8 +37,10 @@
  *
  */
 #include "squid.h"
+#include "base64.h"
 #include "helpers/defines.h"
-#include "libntlmauth/support_bits.cci"
+#include "ntlmauth/ntlmauth.h"
+#include "ntlmauth/support_bits.cci"
 #include "sspwin32.h"
 #include "util.h"
 
@@ -135,7 +137,7 @@ try_again:
     if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
         return 0;
 
-    c = memchr(buf, '\n', HELPER_INPUT_BUFFER);		/* safer against overrun than strchr */
+    c = static_cast<char*>(memchr(buf, '\n', HELPER_INPUT_BUFFER));
     if (c) {
         if (oversized) {
             SEND("BH illegal request received");
@@ -153,13 +155,13 @@ try_again:
         decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
         strncpy(helper_command, buf, 2);
         debug("Got '%s' from Squid with data:\n", helper_command);
-        hex_dump(decoded, decodedLen);
+        hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else
         debug("Got '%s' from Squid\n", buf);
 
     if (memcmp(buf, "YR ", 3) == 0) {	/* refresh-request */
         /* figure out what we got */
-        decoded = base64_decode(buf + 3);
+        decodedLen = base64_decode(decoded, sizeof(decoded), buf + 3);
         if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
             SEND("NA * Packet format error, couldn't base64-decode");
             return 1;
@@ -176,7 +178,7 @@ try_again:
                     decodedLen = base64_decode(decoded, sizeof(decoded), c);
                     debug("sending 'AF' %s to squid with data:\n", cred);
                     if (c != NULL)
-                        hex_dump(decoded, decodedLen);
+                        hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
                     else
                         fprintf(stderr, "No data available.\n");
                     printf("AF %s %s\n", c, cred);
@@ -186,7 +188,7 @@ try_again:
                 if (Negotiate_packet_debug_enabled) {
                     decodedLen = base64_decode(decoded, sizeof(decoded), c);
                     debug("sending 'TT' to squid with data:\n");
-                    hex_dump(decoded, decodedLen);
+                    hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
                     printf("TT %s\n", c);
                 } else {
                     SEND2("TT %s", c);
@@ -236,7 +238,7 @@ try_again:
                 decodedLen = base64_decode(decoded, sizeof(decoded), c);
                 debug("sending 'AF' %s to squid with data:\n", cred);
                 if (c != NULL)
-                    hex_dump(decoded, decodedLen);
+                    hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
                 else
                     fprintf(stderr, "No data available.\n");
                 printf("AF %s %s\n", c, cred);
@@ -248,7 +250,7 @@ try_again:
             if (Negotiate_packet_debug_enabled) {
                 decodedLen = base64_decode(decoded, sizeof(decoded), c);
                 debug("sending 'TT' to squid with data:\n");
-                hex_dump(decoded, decodedLen);
+                hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
                 printf("TT %s\n", c);
             } else
                 SEND2("TT %s", c);
