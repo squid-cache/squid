@@ -19,9 +19,7 @@ draft-vinod-carp-v1-03.txt
 	Microsoft CARP peering algorithm
 
 proxy-protocol.txt
-	Documents Proxy Protocol 1.5, for communicating original client IP
-	details between consenting proxies and servers even when
-	transparent interception is taking place.
+	The PROXY protocol, Versions 1 & 2
 
 rfc0959.txt
 	FTP
