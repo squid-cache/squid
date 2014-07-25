@@ -228,10 +228,10 @@ static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
-static void parsePortCfg(AnyP::PortCfg **, const char *protocol);
+static void parsePortCfg(AnyP::PortCfgPointer *, const char *protocol);
 #define parse_PortCfg(l) parsePortCfg((l), token)
-static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfg *);
-static void free_PortCfg(AnyP::PortCfg **);
+static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfgPointer &);
+#define free_PortCfg(h)  *(h)=NULL
 
 #if USE_OPENSSL
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
@@ -358,7 +358,7 @@ SubstituteMacro(char*& line, int& len, const char* macroName, const char* substS
 static void
 ProcessMacros(char*& line, int& len)
 {
-    SubstituteMacro(line, len, "${service_name}", service_name);
+    SubstituteMacro(line, len, "${service_name}", service_name.c_str());
     SubstituteMacro(line, len, "${process_name}", TheKidName);
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
@@ -911,7 +911,7 @@ configDoConfigure(void)
         }
     }
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->flags.tunnelSslBumping)
             continue;
 
@@ -919,7 +919,7 @@ configDoConfigure(void)
         s->configureSslServerContext();
     }
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         debugs(3, DBG_IMPORTANT, "Initializing https_port " << s->s << " SSL context");
         s->configureSslServerContext();
     }
@@ -1461,6 +1461,12 @@ parse_acl_tos(acl_tos ** head)
     if (!xstrtoui(token, NULL, &tos, 0, std::numeric_limits<tos_t>::max())) {
         self_destruct();
         return;
+    }
+
+    const unsigned int chTos = tos & 0xFC;
+    if (chTos != tos) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Tos value '" << tos << "' adjusted to '" << chTos << "'");
+        tos = chTos;
     }
 
     CBDATA_INIT_TYPE_FREECB(acl_tos, freed_acl_tos);
@@ -3484,7 +3490,7 @@ check_null_IpAddress_list(const Ip::Address_list * s)
 #endif /* USE_WCCPv2 */
 
 static void
-parsePortSpecification(AnyP::PortCfg * s, char *token)
+parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
 {
     char *host = NULL;
     unsigned short port = 0;
@@ -3561,7 +3567,7 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
 }
 
 static void
-parse_port_option(AnyP::PortCfg * s, char *token)
+parse_port_option(AnyP::PortCfgPointer &s, char *token)
 {
     /* modes first */
 
@@ -3763,18 +3769,17 @@ parse_port_option(AnyP::PortCfg * s, char *token)
 void
 add_http_port(char *portspec)
 {
-    AnyP::PortCfg *s = new AnyP::PortCfg();
+    AnyP::PortCfgPointer s = new AnyP::PortCfg();
     s->setTransport("HTTP");
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
-    s->next = cbdataReference(Config.Sockaddr.http);
-    cbdataReferenceDone(Config.Sockaddr.http);
-    Config.Sockaddr.http = cbdataReference(s);
+    s->next = HttpPortList;
+    HttpPortList = s;
 }
 
 static void
-parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
+parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 {
     const char *protocol = NULL;
     if (strcmp(optionName, "http_port") == 0 ||
@@ -3794,7 +3799,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         return;
     }
 
-    AnyP::PortCfg *s = new AnyP::PortCfg();
+    AnyP::PortCfgPointer s = new AnyP::PortCfg();
     s->setTransport(protocol);
     parsePortSpecification(s, token);
 
@@ -3824,19 +3829,19 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
-        s->next = cbdataReference(s->clone());
+        s->next = s->clone();
         s->next->s.setIPv4();
         debugs(3, 3, AnyP::UriScheme(s->transport.protocol).c_str() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
-    while (*head)
-        head = &(*head)->next;
+    while (*head != NULL)
+        head = &((*head)->next);
 
-    *head = cbdataReference(s);
+    *head = s;
 }
 
 static void
-dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
+dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
     char buf[MAX_IPSTRLEN];
 
@@ -3963,23 +3968,11 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 }
 
 static void
-dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
+dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
-    while (s) {
-        dump_generic_port(e, n, s);
+    for (AnyP::PortCfgPointer p = s; p != NULL; p = p->next) {
+        dump_generic_port(e, n, p);
         storeAppendPrintf(e, "\n");
-        s = s->next;
-    }
-}
-
-static void
-free_PortCfg(AnyP::PortCfg ** head)
-{
-    AnyP::PortCfg *s;
-
-    while ((s = *head) != NULL) {
-        *head = s->next;
-        cbdataReferenceDone(s);
     }
 }
 

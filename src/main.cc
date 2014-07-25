@@ -73,6 +73,7 @@
 #include "MemPool.h"
 #include "mime.h"
 #include "neighbors.h"
+#include "parser/Tokenizer.h"
 #include "pconn.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
@@ -506,10 +507,18 @@ mainParseOptions(int argc, char *argv[])
             /** \par n
              * Set global option opt_signal_service (to true).
              * Stores the additional parameter given in global service_name */
-            // XXX: verify that the new name has ONLY alphanumeric characters
-            xfree(service_name);
-            service_name = xstrdup(optarg);
-            opt_signal_service = true;
+            if (optarg && *optarg != '\0') {
+                const SBuf t(optarg);
+                ::Parser::Tokenizer tok(t);
+                const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
+                if (!tok.prefix(service_name, chr) || !tok.atEnd())
+                    fatalf("Expected alphanumeric service name for the -n option but got: " SQUIDSBUFPH, SQUIDSBUFPRINT(service_name));
+                if (service_name.length() > 32)
+                    fatalf("Service name (-n option) must be limited to 32 characters but got %u", service_name.length());
+                opt_signal_service = true;
+            } else {
+                fatal("A service name is required for the -n option");
+            }
             break;
 
 #if USE_WIN32_SERVICE
@@ -561,7 +570,7 @@ mainParseOptions(int argc, char *argv[])
             /** \par v
              * Display squid version and build information. Then exit. */
             printf("Squid Cache: Version %s\n" ,version_string);
-            printf("Service Name: %s\n", service_name);
+            printf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
             if (strlen(SQUID_BUILD_INFO))
                 printf("%s\n",SQUID_BUILD_INFO);
             printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);

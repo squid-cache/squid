@@ -510,7 +510,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
             return 1;
 
         /* Register the service Handler function */
-        svcHandle = RegisterServiceCtrlHandler(service_name, WIN32_svcHandler);
+        svcHandle = RegisterServiceCtrlHandler(service_name.c_str(), WIN32_svcHandler);
 
         if (svcHandle == 0)
             return 1;
@@ -671,12 +671,13 @@ WIN32_RemoveService()
     SC_HANDLE schService;
     SC_HANDLE schSCManager;
 
-    if (!service_name)
-        service_name = xstrdup(APP_SHORTNAME);
+    if (service_name.isEmpty())
+        service_name = SBuf(APP_SHORTNAME);
 
-    strcat(REGKEY, service_name);
+    const char *service =  service_name.c_str();
+    strcat(REGKEY, service);
 
-    keys[4] = service_name;
+    keys[4] = service;
 
     schSCManager = OpenSCManager(NULL,	/* machine (NULL == local)    */
                                  NULL,			/* database (NULL == default) */
@@ -686,7 +687,7 @@ WIN32_RemoveService()
     if (!schSCManager)
         fprintf(stderr, "OpenSCManager failed\n");
     else {
-        schService = OpenService(schSCManager, service_name, SERVICE_ALL_ACCESS);
+        schService = OpenService(schSCManager, service, SERVICE_ALL_ACCESS);
 
         if (schService == NULL)
             fprintf(stderr, "OpenService failed\n");
@@ -711,7 +712,7 @@ WIN32_RemoveService()
             if (DeleteService(schService) == 0)
                 fprintf(stderr, "DeleteService failed.\n");
             else
-                printf("Service %s deleted successfully.\n", service_name);
+                printf("Service " SQUIDSBUFPH " deleted successfully.\n", SQUIDSBUFPRINT(service_name));
 
             CloseServiceHandle(schService);
         }
@@ -723,12 +724,13 @@ WIN32_RemoveService()
 void
 WIN32_SetServiceCommandLine()
 {
-    if (!service_name)
-        service_name = xstrdup(APP_SHORTNAME);
+    if (service_name.isEmpty())
+        service_name = SBuf(APP_SHORTNAME);
 
-    strcat(REGKEY, service_name);
+    const char *service = servie_name.c_str();
+    strcat(REGKEY, service);
 
-    keys[4] = service_name;
+    keys[4] = service;
 
     /* Now store the Service Command Line in the registry */
     WIN32_StoreKey(COMMANDLINE, REG_SZ, (unsigned char *) WIN32_Command_Line, strlen(WIN32_Command_Line) + 1);
@@ -743,19 +745,20 @@ WIN32_InstallService()
     char szPath[512];
     int lenpath;
 
-    if (!service_name)
-        service_name = xstrdup(APP_SHORTNAME);
+    if (service_name.isEmpty())
+        service_name = SBuf(APP_SHORTNAME);
 
-    strcat(REGKEY, service_name);
+    const char *service = service_name.c_str();
+    strcat(REGKEY, service);
 
-    keys[4] = service_name;
+    keys[4] = service;
 
     if ((lenpath = GetModuleFileName(NULL, ServicePath, 512)) == 0) {
         fprintf(stderr, "Can't get executable path\n");
         exit(1);
     }
 
-    snprintf(szPath, sizeof(szPath), "%s %s:%s", ServicePath, _WIN_SQUID_SERVICE_OPTION, service_name);
+    snprintf(szPath, sizeof(szPath), "%s %s:" SQUIDSBUFPH, ServicePath, _WIN_SQUID_SERVICE_OPTION, SQUIDSBUFPRINT(service_name));
     schSCManager = OpenSCManager(NULL,	/* machine (NULL == local)    */
                                  NULL,			/* database (NULL == default) */
                                  SC_MANAGER_ALL_ACCESS	/* access required            */
@@ -766,8 +769,8 @@ WIN32_InstallService()
         exit(1);
     } else {
         schService = CreateService(schSCManager,    /* SCManager database     */
-                                   service_name,			    /* name of service        */
-                                   service_name,			    /* name to display        */
+                                   service,			    /* name of service        */
+                                   service,			    /* name to display        */
                                    SERVICE_ALL_ACCESS,			    /* desired access         */
                                    SERVICE_WIN32_OWN_PROCESS,		    /* service type           */
                                    SERVICE_AUTO_START,			    /* start type             */
@@ -801,7 +804,7 @@ WIN32_InstallService()
             WIN32_StoreKey(CONFIGFILE, REG_SZ, (unsigned char *) ConfigFile, strlen(ConfigFile) + 1);
 
             printf("Squid Cache version %s for %s\n", version_string, CONFIG_HOST_TYPE);
-            printf("installed successfully as %s Windows System Service.\n", service_name);
+            printf("installed successfully as " SQUIDSBUFPH " Windows System Service.\n", SQUIDSBUFPRINT(service_name));
             printf("To run, start it from the Services Applet of Control Panel.\n");
             printf("Don't forget to edit squid.conf before starting it.\n\n");
         } else {
@@ -821,8 +824,8 @@ WIN32_sendSignal(int WIN32_signal)
     SC_HANDLE schService;
     SC_HANDLE schSCManager;
 
-    if (!service_name)
-        service_name = xstrdup(APP_SHORTNAME);
+    if (service_name.isEmpty())
+        service_name = SBuf(APP_SHORTNAME);
 
     schSCManager = OpenSCManager(NULL,	/* machine (NULL == local)    */
                                  NULL,			/* database (NULL == default) */
@@ -875,11 +878,11 @@ WIN32_sendSignal(int WIN32_signal)
 
     /* Open a handle to the service. */
     schService = OpenService(schSCManager,	/* SCManager database */
-                             service_name,	/* name of service    */
+                             service_name.c_str(),	/* name of service    */
                              fdwAccess);		/* specify access     */
 
     if (schService == NULL) {
-        fprintf(stderr, "%s: ERROR: Could not open Service %s\n", APP_SHORTNAME, service_name);
+        fprintf(stderr, "%s: ERROR: Could not open Service " SQUIDSBUFPH "\n", APP_SHORTNAME, SQUIDSBUFPRINT(service_name));
         exit(1);
     } else {
         /* Send a control value to the service. */
@@ -887,12 +890,12 @@ WIN32_sendSignal(int WIN32_signal)
         if (!ControlService(schService,	/* handle of service      */
                             fdwControl,	/* control value to send  */
                             &ssStatus)) {	/* address of status info */
-            fprintf(stderr, "%s: ERROR: Could not Control Service %s\n",
-                    APP_SHORTNAME, service_name);
+            fprintf(stderr, "%s: ERROR: Could not Control Service " SQUIDSBUFPH "\n",
+                    APP_SHORTNAME, SQUIDSBUFPRINT(service_name));
             exit(1);
         } else {
             /* Print the service status. */
-            printf("\nStatus of %s Service:\n", service_name);
+            printf("\nStatus of " SQUIDSBUFPH " Service:\n", SQUIDSBUFPRINT(service_name));
             printf("  Service Type: 0x%lx\n", ssStatus.dwServiceType);
             printf("  Current State: 0x%lx\n", ssStatus.dwCurrentState);
             printf("  Controls Accepted: 0x%lx\n", ssStatus.dwControlsAccepted);
@@ -931,10 +934,11 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        service_name = xstrdup(c+1);
-        DispatchTable[0].lpServiceName=service_name;
-        strcat(REGKEY, service_name);
-        keys[4] = service_name;
+        service_name = SBuf(c+1);
+        const char *service = service_name.c_str();
+        DispatchTable[0].lpServiceName=service;
+        strcat(REGKEY, service);
+        keys[4] = service;
 
         if (!StartServiceCtrlDispatcher(DispatchTable)) {
             fprintf(stderr, "StartServiceCtrlDispatcher error = %ld\n",

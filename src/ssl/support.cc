@@ -1774,10 +1774,10 @@ setSessionCallbacks(SSL_CTX *ctx)
 static bool
 isSslServer()
 {
-    if (Config.Sockaddr.https)
+    if (HttpsPortList != NULL)
         return true;
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->flags.tunnelSslBumping)
             return true;
     }
@@ -1808,12 +1808,12 @@ Ssl::initialize_session_cache()
         return;
     }
 
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.https; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         if (s->staticSslContext.get() != NULL)
             setSessionCallbacks(s->staticSslContext.get());
     }
 
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->staticSslContext.get() != NULL)
             setSessionCallbacks(s->staticSslContext.get());
     }

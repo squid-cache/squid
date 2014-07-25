@@ -191,7 +191,7 @@ fdIsDns(int fd)
 static int
 fdIsTcpListener(int fd)
 {
-    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL && s->listenConn->fd == fd)
             return 1;
     }
@@ -317,7 +317,7 @@ comm_select_tcp_incoming(void)
 
     // XXX: only poll sockets that won't be deferred. But how do we identify them?
 
-    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (Comm::IsConnOpen(s->listenConn)) {
             fds[nfds] = s->listenConn->fd;
             ++nfds;

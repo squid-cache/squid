@@ -1,7 +1,7 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-INCLUDES += -I$(top_srcdir)/lib
+AM_CPPFLAGS += -I$(top_srcdir)/lib
 
 noinst_LTLIBRARIES = libntlmauth.la
 

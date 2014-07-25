@@ -164,7 +164,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     al = new AccessLogEntry;
     al->cache.start_time = current_time;
     al->tcpClient = clientConnection = aConn->clientConnection;
-    al->cache.port =  cbdataReference(aConn->port);
+    al->cache.port = aConn->port;
     al->cache.caddr = aConn->log_addr;
 
 #if USE_OPENSSL

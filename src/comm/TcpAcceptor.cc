@@ -47,6 +47,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Intercept.h"
+#include "ip/QosConfig.h"
 #include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -66,7 +67,17 @@ Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const cha
         errcode(0),
         isLimited(0),
         theCallSub(aSub),
-        conn(newConn)
+        conn(newConn),
+        listenPort_()
+{}
+
+Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *note, const Subscription::Pointer &aSub) :
+        AsyncJob("Comm::TcpAcceptor"),
+        errcode(0),
+        isLimited(0),
+        theCallSub(aSub),
+        conn(p->listenConn),
+        listenPort_(p)
 {}
 
 void
@@ -189,6 +200,21 @@ Comm::TcpAcceptor::setListen()
 #endif
     }
 
+#if 0
+    // Untested code.
+    // Set TOS if needed.
+    // To correctly implement TOS values on listening sockets, probably requires
+    // more work to inherit TOS values to created connection objects.
+    if (conn->tos &&
+            Ip::Qos::setSockTos(conn->fd, conn->tos, conn->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
+        conn->tos = 0;
+#if SO_MARK
+    if (conn->nfmark &&
+            Ip::Qos::setSockNfmark(conn->fd, conn->nfmark) < 0)
+        conn->nfmark = 0;
+#endif
+#endif
+
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommCloseCbParams> Dialer;
     closer_ = JobCallback(5, 4, Dialer, this, Comm::TcpAcceptor::handleClosure);
     comm_add_close_handler(conn->fd, closer_);
@@ -309,7 +335,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
         params.xaction = new MasterXaction;
-        params.xaction->squidPort = static_cast<AnyP::PortCfg*>(params.data);
+        params.xaction->squidPort = listenPort_;
         params.fd = conn->fd;
         params.conn = params.xaction->tcpClient = newConnDetails;
         params.flag = flag;

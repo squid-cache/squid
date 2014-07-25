@@ -275,7 +275,7 @@ public:
     } pinning;
 
     /// Squid listening port details where this connection arrived.
-    AnyP::PortCfg *port;
+    AnyP::PortCfgPointer port;
 
     bool transparent() const;
     bool reading() const;

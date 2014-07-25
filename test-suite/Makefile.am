@@ -3,9 +3,10 @@ include $(top_srcdir)/src/Common.am
 AUTOMAKE_OPTIONS = subdir-objects
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)
 
 LDADD = \
+	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -51,19 +52,21 @@ check_PROGRAMS += debug \
 
 tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
-
-DEBUG_SOURCE = test_tools.cc stub_debug.cc stub_tools.cc stub_fatal.cc
+STUBS = stub_debug.cc stub_SBuf.cc stub_tools.cc stub_fatal.cc
+DEBUG_SOURCE = test_tools.cc $(STUBS)
+CLEANFILES += $(STUBS)
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc .
+
+stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
+	cp $(top_srcdir)/src/tests/stub_SBuf.cc .
 
 stub_tools.cc: $(top_srcdir)/src/tests/stub_tools.cc
 	cp $(top_srcdir)/src/tests/stub_tools.cc .
 
 stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
 	cp $(top_srcdir)/src/tests/stub_fatal.cc .
-
-CLEANFILES += stub_debug.cc stub_tools.cc stub_fatal.cc
 
 ## XXX: somewhat broken. Its meant to test our debugs() implementation.
 ## but it has never been linked to the actual src/debug.cc implementation !!
@@ -74,7 +77,7 @@ ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
 ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
 		$(LDADD)
 
-mem_node_test_SOURCES = mem_node_test.cc
+mem_node_test_SOURCES = mem_node_test.cc $(DEBUG_SOURCE)
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
 
 mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
@@ -83,9 +86,9 @@ mem_hdr_test_LDADD = \
 	$(top_builddir)/src/mem_node.o \
 	$(LDADD)
 
-MemPoolTest_SOURCES = MemPoolTest.cc
+MemPoolTest_SOURCES = MemPoolTest.cc $(DEBUG_SOURCE)
 
-splay_SOURCES = splay.cc
+splay_SOURCES = splay.cc $(DEBUG_SOURCE)
 
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
 
