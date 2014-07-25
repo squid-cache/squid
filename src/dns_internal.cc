@@ -899,15 +899,12 @@ idnsInitVC(int nsv)
     Comm::ConnectionPointer conn = new Comm::Connection();
 
     if (!Config.Addrs.udp_outgoing.isNoAddr())
-        conn->local = Config.Addrs.udp_outgoing;
+        conn->setAddrs(Config.Addrs.udp_outgoing, nameservers[nsv].S);
     else
-        conn->local = Config.Addrs.udp_incoming;
+        conn->setAddrs(Config.Addrs.udp_incoming, nameservers[nsv].S);
 
-    conn->remote = nameservers[nsv].S;
-
-    if (conn->remote.isIPv4()) {
+    if (conn->remote.isIPv4())
         conn->local.setIPv4();
-    }
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
 
