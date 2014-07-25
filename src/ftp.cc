@@ -2468,9 +2468,8 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     // Generate a new data channel descriptor to be opened.
     Comm::ConnectionPointer conn = new Comm::Connection;
-    conn->local = ftpState->ctrl.conn->local;
+    conn->setAddrs(ftpState->ctrl.conn->local, ftpState->ctrl.conn->remote);
     conn->local.port(0);
-    conn->remote = ftpState->ctrl.conn->remote;
     conn->remote.port(port);
     conn->tos = ftpState->ctrl.conn->tos;
     conn->nfmark = ftpState->ctrl.conn->nfmark;
@@ -2724,9 +2723,8 @@ ftpReadPasv(FtpStateData * ftpState)
     ftpState->ctrl.last_command = xstrdup("Connect to server data port");
 
     Comm::ConnectionPointer conn = new Comm::Connection;
-    conn->local = ftpState->ctrl.conn->local;
+    conn->setAddrs(ftpState->ctrl.conn->local, ipaddr);
     conn->local.port(0);
-    conn->remote = ipaddr;
     conn->remote.port(port);
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
