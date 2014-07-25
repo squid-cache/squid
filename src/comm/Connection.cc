@@ -45,8 +45,7 @@ Comm::Connection::copyDetails() const
 {
     ConnectionPointer c = new Comm::Connection;
 
-    c->local = local;
-    c->remote = remote;
+    c->setAddrs(local, remote);
     c->peerType = peerType;
     c->tos = tos;
     c->nfmark = nfmark;
