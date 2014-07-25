@@ -43,7 +43,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Support named services
 	<item>Upgraded squidclient tool
 	<item>Helper support for concurrency channels
-	<item>Support PROXY protocol
+	<item>Receive PROXY protocol, Versions 1 & 2
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -164,32 +164,40 @@ Most user-facing changes are reflected in squid.conf (see below).
    With these helpers concurrency may now be set to 0 or any higher number as desired.
 
 
-<sect1>Support PROXY protocol
+<sect1>Receive PROXY protocol, Versions 1 & 2
 <p>More info at <url url="http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt">
 
 <p>PROXY protocol provides a simple way for proxies and tunnels of any kind to
    relay the original client source details without having to alter or understand
    the protocol being relayed on the connection.
 
-<p>Squid currently supports receiving HTTP via version 1 or 2 of the protocol.
-   A port which has been configured to receive this protocol may only be used to
+<p>Squid currently supports receiving HTTP traffic from a client proxy using this protocol.
+   An http_port which has been configured to receive this protocol may only be used to
    receive traffic from client software sending in this protocol.
    Regular forward-proxy HTTP traffic is not accepted.
+
+<p>The <em>accel</em> and <em>intercept</em> options are still used to identify the
+   traffic syntax being delivered by the client proxy.
 
 <p>Squid can be configured by adding an <em>http_port</em>
    with the <em>proxy-surrogate</em> mode flag. The <em>proxy_forwarded_access</em>
    must also be configured with <em>src</em> ACLs to whitelist proxies which are
    trusted to send correct client details.
 
-<p>
+<p>Forward-proxy traffic from a client proxy:
 <verbatim>
  http_port 3128 proxy-surrogate
  proxy_forwarded_access allow localhost
 </verbatim>
 
-<p><em>Known Issue:</em> Due to design issues HTTPS traffic is not yet accepted
-   over this protocol. So use of <em>proxy-surrogate</em> on <em>https_port</em>
-   is not supported.
+<p>Intercepted traffic from a client proxy or tunnel:
+<verbatim>
+ http_port 3128 intercept proxy-surrogate
+ proxy_forwarded_access allow localhost
+</verbatim>
+
+<p><em>Known Issue:</em>
+   Use of <em>proxy-surrogate</em> on <em>https_port</em> is not supported.
 
 
 <sect>Changes to squid.conf since Squid-3.4
@@ -309,6 +317,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>http_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
+	<p><em>New option <em>proxy-surrogate</em> to mark ports receiving PROXY
+	   protocol version 1 or 2 traffic.
 
 	<tag>https_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
