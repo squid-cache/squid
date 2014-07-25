@@ -2342,6 +2342,8 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
      *  - accelerator mode (reverse proxy)
      *  - internal URL
      *  - mixed combos of the above with internal URL
+     *  - remote interception with PROXY protocol
+     *  - remote reverse-proxy with PROXY protocol
      */
     if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
@@ -3045,6 +3047,7 @@ ConnStateData::parseProxy10()
         debugs(33, 5, "PROXY/1.0 protocol on connection " << clientConnection);
         clientConnection->local = originalDest;
         clientConnection->remote = originalClient;
+        clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
         debugs(33, 5, "PROXY/1.0 upgrade: " << clientConnection);
 
         // repeat fetch ensuring the new client FQDN can be logged
@@ -3122,12 +3125,14 @@ ConnStateData::parseProxy20()
         clientConnection->local.port(ntohs(ipu->ipv4_addr.dst_port));
         clientConnection->remote = ipu->ipv4_addr.src_addr;
         clientConnection->remote.port(ntohs(ipu->ipv4_addr.src_port));
+        clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
         break;
     case 0x2: // IPv6
         clientConnection->local = ipu->ipv6_addr.dst_addr;
         clientConnection->local.port(ntohs(ipu->ipv6_addr.dst_port));
         clientConnection->remote = ipu->ipv6_addr.src_addr;
         clientConnection->remote.port(ntohs(ipu->ipv6_addr.src_port));
+        clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
         break;
     default: // do nothing
         break;
