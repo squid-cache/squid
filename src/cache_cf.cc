@@ -3566,14 +3566,14 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     /* modes first */
 
     if (strcmp(token, "accel") == 0) {
-        if (s->flags.isIntercepted() || s->flags.proxySurrogate) {
+        if (s->flags.isIntercepted()) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.accelSurrogate = true;
         s->vhost = true;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
-        if (s->flags.accelSurrogate || s->flags.tproxyIntercept || s->flags.proxySurrogate) {
+        if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
@@ -3583,7 +3583,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
     } else if (strcmp(token, "tproxy") == 0) {
-        if (s->flags.natIntercept || s->flags.accelSurrogate || s->flags.proxySurrogate) {
+        if (s->flags.natIntercept || s->flags.accelSurrogate) {
             debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
@@ -3592,17 +3592,18 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 
+        if (s->flags.proxySurrogate) {
+            debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (proxy-surrogate enabled)");
+        }
+
         if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
             self_destruct();
         }
 
     } else if (strcmp(token, "proxy-surrogate") == 0) {
-        if (s->flags.natIntercept || s->flags.accelSurrogate  || s->flags.tproxyIntercept) {
-            debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: proxy-surrogate option requires its own port. It cannot be shared with other modes.");
-            self_destruct();
-        }
         s->flags.proxySurrogate = true;
+        debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (proxy-surrogate enabled)");
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
         if (!s->flags.accelSurrogate) {
@@ -3802,8 +3803,8 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         parse_port_option(s, token);
     }
 
-#if USE_OPENSSL
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
+#if USE_OPENSSL
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {
@@ -3814,8 +3815,12 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
             self_destruct();
         }
-    }
 #endif
+        if (s->transport.protocol == AnyP::PROTO_HTTPS) {
+            debugs(3,DBG_CRITICAL, "FATAL: https_port: proxy-surrogate option cannot be used on HTTPS ports.");
+            self_destruct();
+        }
+    }
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
