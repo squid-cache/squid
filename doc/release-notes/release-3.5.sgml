@@ -376,8 +376,6 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p><em>There are no new ./configure options in Squid-3.5.</em>
-
 	<tag>BUILDCXX=</tag>
 	<p>Used when cross-compiling Squid.
 	<p>The path and name of a compiler for building cf_gen and related
