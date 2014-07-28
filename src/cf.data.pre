@@ -740,6 +740,7 @@ DOC_START
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_xx	SSL User certificate issuer attribute xx
+	  %ssl::>sni	SSL client SNI sent to Squid
 
 	  %>{Header}	HTTP request header "Header"
 	  %>{Hdr:member}
@@ -3992,6 +3993,10 @@ DOC_START
 
 				In all other cases, a single dash ("-") is
 				logged.
+
+		ssl::>sni	SSL client SNI sent to Squid. Available only
+				after the peek, stare, or splice SSL bumping
+				actions.
 
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):

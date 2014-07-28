@@ -30,6 +30,7 @@ public:
     Ssl::CertErrors *sslErrors; ///< SSL [certificate validation] errors
     Ssl::BumpMode mode; ///< The SSL server bump mode
     Ssl::BumpStep step; ///< The SSL server bumping step
+    SBuf clientSni; ///< the SSL client SNI name
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming
