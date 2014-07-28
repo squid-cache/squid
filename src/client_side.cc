@@ -4003,6 +4003,12 @@ clientPeekAndSpliceSSL(int fd, void *data)
     assert(b);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
     if (bio->gotHello()) {
+        if (conn->serverBump()) {
+            Ssl::Bio::sslFeatures const &features = bio->getFeatures();
+            if (!features.serverName.empty())
+                conn->serverBump()->clientSni = features.serverName.c_str();
+        }
+
         debugs(83, 2, "I got hello. Start forwarding the request!!! ");
         Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
         Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);

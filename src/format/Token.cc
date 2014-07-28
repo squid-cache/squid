@@ -181,6 +181,7 @@ static TokenTableEntry TokenTableSsl[] = {
     {"bump_mode", LFT_SSL_BUMP_MODE},
     {">cert_subject", LFT_SSL_USER_CERT_SUBJECT},
     {">cert_issuer", LFT_SSL_USER_CERT_ISSUER},
+    {">sni", LFT_SSL_CLIENT_SNI},
     {NULL, LFT_NONE}
 };
 #endif
