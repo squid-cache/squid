@@ -975,7 +975,9 @@ DOC_START
 	  # use REQUIRED to accept any non-null user name.
 
 	acl aclname tag tagvalue ...
-	  # string match on tag returned by external acl helper [slow]
+	  # string match on tag returned by external acl helper [fast]
+	  # DEPRECATED. Only the first tag will match with this ACL.
+	  # Use the 'note' ACL instead for handling multiple tag values.
 
 	acl aclname hier_code codename ...
 	  # string match against squid hierarchy code(s); [fast]
