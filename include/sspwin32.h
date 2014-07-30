@@ -70,7 +70,7 @@ extern "C" {
 
     HMODULE LoadSecurityDll(int, const char *);
     void UnloadSecurityDll(void);
-    BOOL WINAPI SSP_LogonUser(unsigned char *, unsigned char *, unsigned char *);
+    BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
     BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
     const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
     const char * WINAPI SSP_MakeChallenge(PVOID, int);

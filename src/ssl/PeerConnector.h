@@ -71,14 +71,17 @@ public:
  * The caller must monitor the connection for closure because this
  * job will not inform the caller about such events.
  \par
- * The caller must monitor the overall connection establishment timeout and
- * close the connection on timeouts. This is probably better than having
- * dedicated (or none at all!) timeouts for peer selection, DNS lookup,
- * TCP handshake, SSL handshake, etc. Some steps may have their own timeout,
- * but not all steps should be forced to have theirs. XXX: Neither tunnel.cc
- * nor forward.cc have a "overall connection establishment" timeout. We need
- * to change their code so that they start monitoring earlier and close on
- * timeouts. This change may need to be discussed on squid-dev.
+ * PeerConnector class curently supports a form of SSL negotiation timeout,
+ * which accounted only when sets the read timeout from SSL peer.
+ * For a complete solution, the caller must monitor the overall connection
+ * establishment timeout and close the connection on timeouts. This is probably
+ * better than having dedicated (or none at all!) timeouts for peer selection,
+ * DNS lookup, TCP handshake, SSL handshake, etc. Some steps may have their
+ * own timeout, but not all steps should be forced to have theirs.
+ * XXX: tunnel.cc and probably other subsystems does not have an "overall
+ * connection establishment" timeout. We need to change their code so that they
+ * start monitoring earlier and close on timeouts. This change may need to be
+ * discussed on squid-dev.
  \par
  * This job never closes the connection, even on errors. If a 3rd-party
  * closes the connection, this job simply quits without informing the caller.
@@ -100,7 +103,7 @@ public:
 public:
     PeerConnector(HttpRequestPointer &aRequest,
                   const Comm::ConnectionPointer &aServerConn,
-                  AsyncCall::Pointer &aCallback);
+                  AsyncCall::Pointer &aCallback, const time_t timeout = 0);
     virtual ~PeerConnector();
 
 protected:
@@ -120,6 +123,10 @@ protected:
     /// If socket already closed return false, else install the comm_close
     /// handler to monitor the socket.
     bool prepareSocket();
+
+    /// Sets the read timeout to avoid getting stuck while reading from a
+    /// silent server
+    void setReadTimeout();
 
     void initializeSsl(); ///< Initializes SSL state
 
@@ -162,6 +169,8 @@ private:
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
     AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
+    time_t negotiationTimeout; ///< the ssl connection timeout to use
+    time_t startTime; ///< when the peer connector negotiation started
 
     CBDATA_CLASS2(PeerConnector);
 };

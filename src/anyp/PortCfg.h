@@ -13,12 +13,12 @@
 namespace AnyP
 {
 
-class PortCfg
+class PortCfg : public RefCountable
 {
 public:
     PortCfg();
     ~PortCfg();
-    AnyP::PortCfg *clone() const;
+    AnyP::PortCfgPointer clone() const;
 #if USE_OPENSSL
     /// creates, configures, and validates SSL context and related port options
     void configureSslServerContext();
@@ -31,7 +31,7 @@ public:
      */
     void setTransport(const char *aProtocol);
 
-    PortCfg *next;
+    PortCfgPointer next;
 
     Ip::Address s;
     AnyP::ProtocolVersion transport; ///< transport protocol and version received by this port
@@ -95,15 +95,26 @@ public:
     long sslOptions; ///< SSL engine options
 #endif
 
-    bool ftp_track_dirs; ///< Whether to track FTP directories
-
-    CBDATA_CLASS2(PortCfg); // namespaced
+    bool ftp_track_dirs; ///< whether ftp_port should track FTP directories
 };
 
 } // namespace AnyP
 
+/// list of Squid http_port configured
+extern AnyP::PortCfgPointer HttpPortList;
+
+#if USE_OPENSSL
+/// list of Squid https_port configured
+extern AnyP::PortCfgPointer HttpsPortList;
+#endif
+
+/// list of Squid ftp_port configured
+extern AnyP::PortCfgPointer FtpPortList;
+
+#if !defined(MAXTCPLISTENPORTS)
 // Max number of TCP listening ports
 #define MAXTCPLISTENPORTS 128
+#endif
 
 // TODO: kill this global array. Need to check performance of array vs list though.
 extern int NHttpSockets;

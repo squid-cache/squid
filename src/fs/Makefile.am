@@ -47,7 +47,7 @@ libfs_la_LIBADD =  $(STORE_LIBS_TO_BUILD)
 libfs_la_DEPENDENCIES = $(STORE_LIBS_TO_BUILD)
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)
 
 
 ## targets below to emulate distributed makefiles

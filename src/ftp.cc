@@ -33,6 +33,8 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "comm.h"
+#include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "CommCalls.h"
 #include "compat/strtoll.h"
@@ -67,9 +69,7 @@
 #include "MemObject.h"
 #endif
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
@@ -177,7 +177,7 @@ public:
     void setCurrentOffset(int64_t offset) { currentOffset = offset; }
     int64_t getCurrentOffset() const { return currentOffset; }
 
-    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno);
+    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno);
     static PF ftpDataWrite;
     virtual void timeout(const CommTimeoutCbParams &io);
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
@@ -480,6 +480,9 @@ FtpStateData::listenForDataChannel(const Comm::ConnectionPointer &conn)
         }
         debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
     }
+
+    conn->tos = ctrl.conn->tos;
+    conn->nfmark = ctrl.conn->nfmark;
 
     assert(Comm::IsConnOpen(conn));
     AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
@@ -1826,16 +1829,16 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 void
-FtpStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno)
+FtpStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno)
 {
     debugs(9, 3, HERE);
     data.opener = NULL;
 
-    if (err != COMM_OK) {
+    if (err != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
-        if (err == COMM_TIMEOUT)
+        if (err == Comm::TIMEOUT)
             writeCommand("ABOR");
 
         // try another connection attempt with some other method
@@ -2023,7 +2026,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         data.listenConn->close();
         data.listenConn = NULL;
         debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: " << io.conn << ": " << xstrerr(io.xerrno));
@@ -2066,7 +2069,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         }
     }
 
-    /** On COMM_OK start using the accepted data socket and discard the temporary listen socket. */
+    /** On Comm::OK start using the accepted data socket and discard the temporary listen socket. */
     data.close();
     data.opened(io.conn, dataCloser());
     data.addr(io.conn->remote);

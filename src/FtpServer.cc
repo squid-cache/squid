@@ -12,6 +12,7 @@
 #include "StatCounters.h"
 #include "client_side.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "errorpage.h"
@@ -295,7 +296,7 @@ ServerStateData::readControlReply(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
@@ -305,11 +306,11 @@ ServerStateData::readControlReply(const CommIoCbParams &io)
 
     assert(ctrl.offset < ctrl.size);
 
-    if (io.flag == COMM_OK && io.size > 0) {
+    if (io.flag == Comm::OK && io.size > 0) {
         fd_bytes(io.fd, io.size, FD_READ);
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpReadControlReply: read error: " << xstrerr(io.xerrno));
 
@@ -695,10 +696,11 @@ ServerStateData::connectDataChannel()
 
     // Generate a new data channel descriptor to be opened.
     Comm::ConnectionPointer conn = new Comm::Connection;
-    conn->local = ctrl.conn->local;
+    conn->setAddrs(ctrl.conn->local, data.host);
     conn->local.port(0);
-    conn->remote = data.host;
     conn->remote.port(data.port);
+    conn->tos = ctrl.conn->tos;
+    conn->nfmark = ctrl.conn->nfmark;
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
@@ -710,7 +712,7 @@ ServerStateData::connectDataChannel()
 }
 
 void
-ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     ServerStateData *ftpState = static_cast<ServerStateData *>(data);
     ftpState->dataChannelConnected(conn, status, xerrno);
@@ -787,7 +789,7 @@ ServerStateData::writeCommandCallback(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (io.flag) {
@@ -873,7 +875,7 @@ ServerStateData::dataRead(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     assert(io.fd == data.conn->fd);
@@ -883,8 +885,8 @@ ServerStateData::dataRead(const CommIoCbParams &io)
         return;
     }
 
-    if (io.flag == COMM_OK && io.size > 0) {
-        debugs(9, 5, HERE << "appended " << io.size << " bytes to readBuf");
+    if (io.flag == Comm::OK && io.size > 0) {
+        debugs(9, 5, "appended " << io.size << " bytes to readBuf");
         data.readBuf->appended(io.size);
 #if USE_DELAY_POOLS
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
@@ -898,7 +900,7 @@ ServerStateData::dataRead(const CommIoCbParams &io)
         ++ IOStats.Ftp.read_hist[bin];
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                HERE << "read error: " << xstrerr(io.xerrno));
 

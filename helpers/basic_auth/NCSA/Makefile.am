@@ -14,4 +14,4 @@ LDADD = \
 	$(XTRA_LIBS)
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)

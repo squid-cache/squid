@@ -136,6 +136,12 @@ public:
     void append(const NotePairs *src);
 
     /**
+     * Replace existing list entries with the src NotePairs entries.
+     * Entries which do not exist in the destination set are added.
+     */
+    void replaceOrAdd(const NotePairs *src);
+
+    /**
      * Append any new entries of the src NotePairs list to our list.
      * Entries which already exist in the destination set are ignored.
      */
@@ -158,6 +164,11 @@ public:
      * of values.
      */
     void add(const char *key, const char *value);
+
+    /**
+     * Remove all notes with a given key.
+     */
+    void remove(const char *key);
 
     /**
      * Adds a note key and values strList to the notes list.
@@ -197,4 +208,9 @@ class AccessLogEntry;
  */
 NotePairs &SyncNotes(AccessLogEntry &ale, HttpRequest &request);
 
+class ConnStateData;
+/**
+ * Updates ConnStateData ids and HttpRequest notes from helpers received notes.
+ */
+void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 #endif

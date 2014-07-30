@@ -36,6 +36,8 @@
 #include "ip/Intercept.h"
 #include "src/tools.h"
 
+#include <cerrno>
+
 #if IPF_TRANSPARENT
 
 #if HAVE_SYS_IOCTL_H
@@ -70,9 +72,6 @@
 #include <ip_nat.h>
 #elif HAVE_NETINET_IP_NAT_H
 #include <netinet/ip_nat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #endif /* IPF_TRANSPARENT required headers */

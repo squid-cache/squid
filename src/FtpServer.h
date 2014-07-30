@@ -140,7 +140,7 @@ protected:
     virtual void handleControlReply();
     void writeCommandCallback(const CommIoCbParams &io);
     static CNCB dataChannelConnected;
-    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno) = 0;
+    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno) = 0;
     void dataRead(const CommIoCbParams &io);
     void dataComplete();
     AsyncCall::Pointer dataCloser();

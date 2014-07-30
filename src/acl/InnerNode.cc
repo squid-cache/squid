@@ -2,6 +2,7 @@
 #include "acl/Acl.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "acl/InnerNode.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -26,6 +27,7 @@ Acl::InnerNode::add(ACL *node)
 {
     assert(node != NULL);
     nodes.push_back(node);
+    aclRegister(node);
 }
 
 // one call parses one "acl name acltype name1 name2 ..." line

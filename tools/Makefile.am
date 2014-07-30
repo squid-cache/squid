@@ -9,7 +9,7 @@ include $(top_srcdir)/src/Common.am
 AUTOMAKE_OPTIONS = subdir-objects
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)
 
 SUBDIRS = purge squidclient
 EXTRA_DIST = 

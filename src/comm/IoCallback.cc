@@ -89,7 +89,6 @@ void
 Comm::IoCallback::reset()
 {
     conn = NULL;
-    buf2 = NULL; // we do not own this buffer.
     if (freefunc) {
         freefunc(buf);
         buf = NULL;
@@ -104,7 +103,7 @@ Comm::IoCallback::reset()
 
 // Schedule the callback call and clear the callback
 void
-Comm::IoCallback::finish(comm_err_t code, int xerrn)
+Comm::IoCallback::finish(Comm::Flag code, int xerrn)
 {
     debugs(5, 3, HERE << "called for " << conn << " (" << code << ", " << xerrno << ")");
     assert(active());
@@ -121,7 +120,6 @@ Comm::IoCallback::finish(comm_err_t code, int xerrn)
         Params &params = GetCommParams<Params>(callback);
         if (conn != NULL) params.fd = conn->fd; // for legacy write handlers...
         params.conn = conn;
-        params.buf2 = buf2;
         params.buf = buf;
         params.size = offset;
         params.flag = code;
