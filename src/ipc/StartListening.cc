@@ -11,9 +11,7 @@
 #include "ipc/StartListening.h"
 #include "tools.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 Ipc::StartListeningCb::StartListeningCb(): conn(NULL), errNo(0)
 {

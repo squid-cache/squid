@@ -41,9 +41,7 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /* START Legacy includes pattern */
 /* TODO: clean this up so we dont have per-OS requirements.
@@ -59,8 +57,9 @@ struct arpreq {
     struct sockaddr arp_ha;   /* hardware address */
     int arp_flags;            /* flags */
 };
-
-#include <Iphlpapi.h>
+#if HAVE_IPHLPAPI_H
+#include <iphlpapi.h>
+#endif
 #endif
 
 #if HAVE_SYS_PARAM_H

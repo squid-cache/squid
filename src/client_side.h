@@ -78,6 +78,12 @@ class PortCfg;
  *
  * The individual processing actions are done by other Jobs which we
  * kick off as needed.
+ *
+ * XXX: If an async call ends the ClientHttpRequest job, ClientSocketContext
+ * (and ConnStateData) may not know about it, leading to segfaults and
+ * assertions like areAllContextsForThisConnection(). This is difficult to fix
+ * because ClientHttpRequest lacks a good way to communicate its ongoing
+ * destruction back to the ClientSocketContext which pretends to "own" *http.
  */
 class ClientSocketContext : public RefCountable
 {
@@ -87,11 +93,11 @@ public:
     ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
     ~ClientSocketContext();
     bool startOfOutput() const;
-    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
+    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag);
     void keepaliveNextRequest();
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
-    ClientHttpRequest *http;	/* we own this */
+    ClientHttpRequest *http;	/* we pretend to own that job */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
     Pointer next;
@@ -144,7 +150,7 @@ public:
 
 protected:
     static IOCB WroteControlMsg;
-    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno);
 
 private:
     void prepareReply(HttpReply * rep);
@@ -272,7 +278,7 @@ public:
     } pinning;
 
     /// Squid listening port details where this connection arrived.
-    AnyP::PortCfg *port;
+    AnyP::PortCfgPointer port;
 
     bool transparent() const;
     bool reading() const;
@@ -293,7 +299,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    bool handleReadData(SBuf *buf);
+    bool handleReadData();
     bool handleRequestBodyData();
 
     /// forward future client requests using the given server connection
@@ -418,6 +424,10 @@ public:
 
     void resumeFtpRequest(ClientSocketContext *const context);
 
+    /* clt_conn_tag=tag annotation access */
+    const SBuf &connectionTag() const { return connectionTag_; }
+    void connectionTag(const char *aTag) { connectionTag_ = aTag; }
+
 protected:
     void startDechunkingRequest();
     void abortChunkedRequestBody(const err_type error);
@@ -427,7 +437,6 @@ protected:
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
 private:
-    int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
     void processFtpRequest(ClientSocketContext *const context);
@@ -465,6 +474,8 @@ private:
 
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
+
+    SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
 
     CBDATA_CLASS2(ConnStateData);
 };

@@ -4,7 +4,7 @@
 #define STUB_API "event.cc"
 #include "tests/STUB.h"
 
-void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata) STUB
+void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata) STUB_NOP
 void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int) STUB
 void eventDelete(EVH * func, void *arg) STUB
 void eventInit(void) STUB

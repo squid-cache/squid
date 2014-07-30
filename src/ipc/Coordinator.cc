@@ -20,9 +20,8 @@
 #include "snmp/Request.h"
 #include "snmp/Response.h"
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+
+#include <cerrno>
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;

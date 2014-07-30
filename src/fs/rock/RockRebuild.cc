@@ -15,9 +15,7 @@
 #include "tools.h"
 #include "typedefs.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
@@ -82,13 +80,13 @@ public:
     /* store entry-level information indexed by sfileno */
     uint64_t size; ///< payload seen so far
     uint32_t version; ///< DbCellHeader::version to distinguish same-URL chains
-    uint32_t state:3;  ///< current entry state (one of the State values)
-    uint32_t anchored:1;  ///< whether we loaded the inode slot for this entry
+    uint8_t state:3;  ///< current entry state (one of the State values)
+    uint8_t anchored:1;  ///< whether we loaded the inode slot for this entry
 
     /* db slot-level information indexed by slotId, starting with firstSlot */
-    uint32_t mapped:1;  ///< whether this slot was added to a mapped entry
-    uint32_t freed:1;  ///< whether this slot was marked as free
-    sfileno more:25; ///< another slot in some entry chain (unordered)
+    uint8_t mapped:1;  ///< whether this slot was added to a mapped entry
+    uint8_t freed:1;  ///< whether this slot was marked as free
+    Ipc::StoreMapSliceId more; ///< another slot in some entry chain (unordered)
     bool used() const { return freed || mapped || more != -1; }
 
     /// possible entry states
@@ -101,7 +99,8 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
         sd(dir),
         entries(NULL),
         dbSize(0),
-        dbEntrySize(0),
+        dbSlotSize(0),
+        dbSlotLimit(0),
         dbEntryLimit(0),
         fd(-1),
         dbOffset(0),
@@ -111,8 +110,10 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     assert(sd);
     memset(&counts, 0, sizeof(counts));
     dbSize = sd->diskOffsetLimit(); // we do not care about the trailer waste
-    dbEntrySize = sd->slotSize;
-    dbEntryLimit = sd->entryLimit();
+    dbSlotSize = sd->slotSize;
+    dbEntryLimit = sd->entryLimitActual();
+    dbSlotLimit = sd->slotLimitActual();
+    assert(dbEntryLimit <= dbSlotLimit);
 }
 
 Rock::Rebuild::~Rebuild()
@@ -150,9 +151,8 @@ Rock::Rebuild::start()
     buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
 
     dbOffset = SwapDir::HeaderSize;
-    loadingPos = 0;
 
-    entries = new LoadingEntry[dbEntryLimit];
+    entries = new LoadingEntry[dbSlotLimit];
 
     checkpoint();
 }
@@ -168,7 +168,7 @@ Rock::Rebuild::checkpoint()
 bool
 Rock::Rebuild::doneAll() const
 {
-    return dbOffset >= dbSize && validationPos >= dbEntryLimit &&
+    return loadingPos >= dbSlotLimit && validationPos >= dbSlotLimit &&
            AsyncJob::doneAll();
 }
 
@@ -182,7 +182,7 @@ Rock::Rebuild::Steps(void *data)
 void
 Rock::Rebuild::steps()
 {
-    if (dbOffset < dbSize)
+    if (loadingPos < dbSlotLimit)
         loadingSteps();
     else
         validationSteps();
@@ -203,14 +203,14 @@ Rock::Rebuild::loadingSteps()
     const timeval loopStart = current_time;
 
     int loaded = 0;
-    while (loaded < dbEntryLimit && dbOffset < dbSize) {
+    while (loadingPos < dbSlotLimit) {
         loadOneSlot();
-        dbOffset += dbEntrySize;
+        dbOffset += dbSlotSize;
         ++loadingPos;
         ++loaded;
 
         if (counts.scancount % 1000 == 0)
-            storeRebuildProgress(sd->index, dbEntryLimit, counts.scancount);
+            storeRebuildProgress(sd->index, dbSlotLimit, counts.scancount);
 
         if (opt_foreground_rebuild)
             continue; // skip "few entries at a time" check below
@@ -257,7 +257,7 @@ Rock::Rebuild::loadOneSlot()
         freeSlotIfIdle(slotId, false);
         return;
     }
-    if (!header.sane(dbEntrySize, dbEntryLimit)) {
+    if (!header.sane(dbSlotSize, dbSlotLimit)) {
         debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << sd->index << "]: " <<
                "Ignoring malformed cache entry meta data at " << dbOffset);
         freeSlotIfIdle(slotId, true);
@@ -303,7 +303,7 @@ Rock::Rebuild::validationSteps()
     const timeval loopStart = current_time;
 
     int validated = 0;
-    while (validationPos < dbEntryLimit) {
+    while (validationPos < dbSlotLimit) {
         validateOneEntry();
         ++validationPos;
         ++validated;

@@ -43,9 +43,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /* === PUBLIC =========================================================== */
 
