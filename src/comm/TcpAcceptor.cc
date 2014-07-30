@@ -47,6 +47,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Intercept.h"
+#include "ip/QosConfig.h"
 #include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -66,7 +67,17 @@ Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const cha
         errcode(0),
         isLimited(0),
         theCallSub(aSub),
-        conn(newConn)
+        conn(newConn),
+        listenPort_()
+{}
+
+Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *note, const Subscription::Pointer &aSub) :
+        AsyncJob("Comm::TcpAcceptor"),
+        errcode(0),
+        isLimited(0),
+        theCallSub(aSub),
+        conn(p->listenConn),
+        listenPort_(p)
 {}
 
 void
@@ -92,6 +103,8 @@ Comm::TcpAcceptor::start()
     Must(IsConnOpen(conn));
 
     setListen();
+
+    conn->noteStart();
 
     // if no error so far start accepting connections.
     if (errcode == 0)
@@ -186,6 +199,21 @@ Comm::TcpAcceptor::setListen()
         debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
     }
+
+#if 0
+    // Untested code.
+    // Set TOS if needed.
+    // To correctly implement TOS values on listening sockets, probably requires
+    // more work to inherit TOS values to created connection objects.
+    if (conn->tos &&
+            Ip::Qos::setSockTos(conn->fd, conn->tos, conn->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
+        conn->tos = 0;
+#if SO_MARK
+    if (conn->nfmark &&
+            Ip::Qos::setSockNfmark(conn->fd, conn->nfmark) < 0)
+        conn->nfmark = 0;
+#endif
+#endif
 
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommCloseCbParams> Dialer;
     closer_ = JobCallback(5, 4, Dialer, this, Comm::TcpAcceptor::handleClosure);
@@ -307,7 +335,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
         params.xaction = new MasterXaction;
-        params.xaction->squidPort = static_cast<AnyP::PortCfg*>(params.data);
+        params.xaction->squidPort = listenPort_;
         params.fd = conn->fd;
         params.conn = params.xaction->tcpClient = newConnDetails;
         params.flag = flag;
@@ -322,7 +350,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
  *
  * \retval Comm::OK         success. details parameter filled.
  * \retval Comm::NOMESSAGE  attempted accept() but nothing useful came in.
- * \retval Comm::ERROR      an outright failure occured.
+ * \retval Comm::COMM_ERROR      an outright failure occured.
  *                         Or if this client has too many connections already.
  */
 Comm::Flag
@@ -347,10 +375,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
             return Comm::NOMESSAGE;
         } else if (ENFILE == errno || EMFILE == errno) {
             debugs(50, 3, HERE << status() << ": " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         } else {
             debugs(50, DBG_IMPORTANT, HERE << status() << ": " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
     }
 
@@ -362,7 +390,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             Ip::Address::FreeAddrInfo(gai);
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
     }
 
@@ -372,7 +400,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
         Ip::Address::FreeAddrInfo(gai);
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
     details->local = *gai;
     Ip::Address::FreeAddrInfo(gai);
@@ -401,7 +429,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
         // Failed.
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
 #if USE_SQUID_EUI

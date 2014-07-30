@@ -33,9 +33,9 @@ void Ssl::Helper::Init()
 
     // we need to start ssl_crtd only if some port(s) need to bump SSL
     bool found = false;
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; !found && s; s = s->next)
+    for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping;
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.https; !found && s; s = s->next)
+    for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping;
     if (!found)
         return;
@@ -134,9 +134,9 @@ void Ssl::CertValidationHelper::Init()
 
     // we need to start ssl_crtd only if some port(s) need to bump SSL
     bool found = false;
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; !found && s; s = s->next)
+    for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping;
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.https; !found && s; s = s->next)
+    for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping;
     if (!found)
         return;

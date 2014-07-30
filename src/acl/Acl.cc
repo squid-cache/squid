@@ -225,8 +225,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
-        AnyP::PortCfg *p = Config.Sockaddr.http;
-        while (p) {
+        AnyP::PortCfgPointer p = HttpPortList;
+        while (p != NULL) {
             // Bug 3239: not reliable when there is interception traffic coming
             if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
@@ -235,8 +235,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
         theType = "localip";
     } else if (strcmp(theType, "myport") == 0) {
-        AnyP::PortCfg *p = Config.Sockaddr.http;
-        while (p) {
+        AnyP::PortCfgPointer p = HttpPortList;
+        while (p != NULL) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
             if (p->flags.natIntercept)

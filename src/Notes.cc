@@ -31,6 +31,7 @@
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "client_side.h"
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpReply.h"
@@ -203,6 +204,20 @@ NotePairs::add(const char *key, const char *note)
 }
 
 void
+NotePairs::remove(const char *key)
+{
+    std::vector<NotePairs::Entry *>::iterator i = entries.begin();
+    while (i != entries.end()) {
+        if ((*i)->name.cmp(key) == 0) {
+            delete *i;
+            i = entries.erase(i);
+        } else {
+            ++i;
+        }
+    }
+}
+
+void
 NotePairs::addStrList(const char *key, const char *values)
 {
     String strValues(values);
@@ -243,6 +258,15 @@ NotePairs::appendNewOnly(const NotePairs *src)
     }
 }
 
+void
+NotePairs::replaceOrAdd(const NotePairs *src)
+{
+    for (std::vector<NotePairs::Entry *>::const_iterator  i = src->entries.begin(); i != src->entries.end(); ++i) {
+        remove((*i)->name.termedBuf());
+    }
+    append(src);
+}
+
 NotePairs &
 SyncNotes(AccessLogEntry &ale, HttpRequest &request)
 {
@@ -257,4 +281,17 @@ SyncNotes(AccessLogEntry &ale, HttpRequest &request)
         assert(ale.notes == request.notes);
     }
     return *ale.notes;
+}
+
+void
+UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &helperNotes)
+{
+    // Tag client connection if the helper responded with clt_conn_tag=tag.
+    if (const char *connTag = helperNotes.findFirst("clt_conn_tag")) {
+        if (csd)
+            csd->connectionTag(connTag);
+    }
+    if (!request.notes)
+        request.notes = new NotePairs;
+    request.notes->replaceOrAdd(&helperNotes);
 }

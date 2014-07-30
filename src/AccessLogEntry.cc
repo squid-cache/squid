@@ -60,5 +60,4 @@ AccessLogEntry::~AccessLogEntry()
     HTTPMSGUNLOCK(icap.reply);
     HTTPMSGUNLOCK(icap.request);
 #endif
-    cbdataReferenceDone(cache.port);
 }

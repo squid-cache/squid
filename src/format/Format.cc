@@ -384,7 +384,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             // avoid logging a dash if we have reliable info
             const bool interceptedAtKnownPort = al->request ?
                                                 (al->request->flags.interceptTproxy ||
-                                                 al->request->flags.intercepted) && al->cache.port :
+                                                 al->request->flags.intercepted) && al->cache.port != NULL :
                                                 false;
             if (interceptedAtKnownPort) {
                 const bool portAddressConfigured = !al->cache.port->s.isAnyAddr();
@@ -416,7 +416,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            if (al->cache.port) {
+            if (al->cache.port != NULL) {
                 outint = al->cache.port->s.port();
                 doint = 1;
             }

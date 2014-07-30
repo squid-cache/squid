@@ -34,7 +34,7 @@ LDADD = \
 	$(XTRA_LIBS)
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir) -I$(top_srcdir)/lib
+AM_CPPFLAGS += -I$(srcdir) -I$(top_srcdir)/lib
 
 
 install-data-local: msntauth.conf.default

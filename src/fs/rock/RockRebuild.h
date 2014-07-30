@@ -55,8 +55,9 @@ private:
     LoadingEntry *entries; ///< store entries being loaded from disk
 
     int64_t dbSize;
-    int dbEntrySize;
-    int dbEntryLimit;
+    int dbSlotSize; ///< the size of a db cell, including the cell header
+    int dbSlotLimit; ///< total number of db cells
+    int dbEntryLimit; ///< maximum number of entries that can be stored in db
 
     int fd; // store db file descriptor
     int64_t dbOffset;

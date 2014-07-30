@@ -45,13 +45,13 @@ void Comm::CallbackTableDestruct() STUB
 void Comm::SelectLoopInit(void) STUB
 void Comm::SetSelect(int, unsigned int, PF *, void *, time_t) STUB
 void Comm::ResetSelect(int) STUB
-Comm::Flag Comm::DoSelect(int) STUB_RETVAL(Comm::ERROR)
+Comm::Flag Comm::DoSelect(int) STUB_RETVAL(Comm::COMM_ERROR)
 void Comm::QuickPollRequired(void) STUB
 
 #include "comm/Read.h"
 void Comm::Read(const Comm::ConnectionPointer &conn, AsyncCall::Pointer &callback) STUB
 bool Comm::MonitorsRead(int fd) STUB_RETVAL(false)
-Comm::Flag Comm::ReadNow(CommIoCbParams &params, SBuf &buf) STUB_RETVAL(Comm::ERROR)
+Comm::Flag Comm::ReadNow(CommIoCbParams &params, SBuf &buf) STUB_RETVAL(Comm::COMM_ERROR)
 void Comm::ReadCancel(int fd, AsyncCall::Pointer &callback) STUB
 //void Comm::HandleRead(int, void*) STUB
 

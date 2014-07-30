@@ -60,7 +60,3 @@ TrieNode::add(char const *aString, size_t theLength, void *privatedata, TrieChar
         return true;
     }
 }
-
-#if !_USE_INLINE_
-#include "TrieNode.cci"
-#endif

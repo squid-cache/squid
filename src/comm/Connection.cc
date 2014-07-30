@@ -22,7 +22,8 @@ Comm::Connection::Connection() :
         tos(0),
         nfmark(0),
         flags(COMM_NONBLOCKING),
-        peer_(NULL)
+        peer_(NULL),
+        startTime_(squid_curtime)
 {
     *rfc931 = 0; // quick init the head. the rest does not matter.
 }
@@ -44,12 +45,12 @@ Comm::Connection::copyDetails() const
 {
     ConnectionPointer c = new Comm::Connection;
 
-    c->local = local;
-    c->remote = remote;
+    c->setAddrs(local, remote);
     c->peerType = peerType;
     c->tos = tos;
     c->nfmark = nfmark;
     c->flags = flags;
+    c->startTime_ = startTime_;
 
     // ensure FD is not open in the new copy.
     c->fd = -1;

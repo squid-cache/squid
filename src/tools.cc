@@ -82,6 +82,7 @@ Thanks!\n"
 static void mail_warranty(void);
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
+SBuf service_name(APP_SHORTNAME);
 
 #if _SQUID_LINUX_
 /* Workaround for crappy glic header files */
@@ -477,13 +478,13 @@ getMyHostname(void)
 
     host[0] = '\0';
 
-    if (Config.Sockaddr.http && sa.isAnyAddr())
-        sa = Config.Sockaddr.http->s;
+    if (HttpPortList != NULL && sa.isAnyAddr())
+        sa = HttpPortList->s;
 
 #if USE_OPENSSL
 
-    if (Config.Sockaddr.https && sa.isAnyAddr())
-        sa = Config.Sockaddr.https->s;
+    if (HttpsPortList != NULL && sa.isAnyAddr())
+        sa = HttpsPortList->s;
 
 #endif
 
@@ -1131,21 +1132,21 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-    AnyP::PortCfg *p = NULL;
-    if ((p = Config.Sockaddr.http)) {
+    AnyP::PortCfgPointer p;
+    if ((p = HttpPortList) != NULL) {
         // skip any special interception ports
-        while (p && p->flags.isIntercepted())
+        while (p != NULL && p->flags.isIntercepted())
             p = p->next;
-        if (p)
+        if (p != NULL)
             return p->s.port();
     }
 
 #if USE_OPENSSL
-    if ((p = Config.Sockaddr.https)) {
+    if ((p = HttpsPortList) != NULL) {
         // skip any special interception ports
-        while (p && p->flags.isIntercepted())
+        while (p != NULL && p->flags.isIntercepted())
             p = p->next;
-        if (p)
+        if (p != NULL)
             return p->s.port();
     }
 #endif
