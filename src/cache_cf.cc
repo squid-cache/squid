@@ -3822,7 +3822,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         }
 #endif
         if (s->transport.protocol == AnyP::PROTO_HTTPS) {
-            debugs(3,DBG_CRITICAL, "FATAL: https_port: proxy-surrogate option cannot be used on HTTPS ports.");
+            debugs(3,DBG_CRITICAL, "FATAL: https_port: proxy-surrogate option is not supported on HTTPS ports.");
             self_destruct();
         }
     }

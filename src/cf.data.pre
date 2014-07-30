@@ -1103,29 +1103,33 @@ DOC_START
 	Determine which client proxies can be trusted to provide correct
 	information regarding real client IP address.
 
-	The original source details can be relayed in:
-		HTTP message Forwarded header, or
-		HTTP message X-Forwarded-For header, or
-		PROXY protocol connection header.
-
-	Allowing or Denying the X-Forwarded-For or Forwarded headers to
-	be followed to find the original source of a request. Or permitting
-	a client proxy to connect using PROXY protocol.
-
 	Requests may pass through a chain of several other proxies
-	before reaching us.  The X-Forwarded-For header will contain a
-	comma-separated list of the IP addresses in the chain, with the
-	rightmost address being the most recent.
+	before reaching us. The original source details may by sent in:
+		* HTTP message Forwarded header, or
+		* HTTP message X-Forwarded-For header, or
+		* PROXY protocol connection header.
 
 	If a request reaches us from a source that is allowed by this
-	configuration item, then we consult the X-Forwarded-For header
-	to see where that host received the request from.  If the
-	X-Forwarded-For header contains multiple addresses, we continue
-	backtracking until we reach an address for which we are not allowed
-	to follow the X-Forwarded-For header, or until we reach the first
-	address in the list. For the purpose of ACL used in the
-	follow_x_forwarded_for directive the src ACL type always matches
-	the address we are testing and srcdomain matches its rDNS.
+	directive, then we trust the information it provides regarding
+	the IP of the client it received from (if any).
+
+	For the purpose of ACLs used in this directive the src ACL type always
+	matches the address we are testing and srcdomain matches its rDNS.
+
+	For proxy-surrogate ports an allow match is required for Squid to
+	permit the corresponding TCP connection, before Squid even looks for
+	HTTP request headers. If there is an allow match, Squid starts using
+	PROXY header information to determine the source address of the
+	connection for all future ACL checks. A deny match results in TCP
+	connection closure. Evaluation described in this paragraph does not
+	happen on non proxy-surrogate ports.
+
+	On each HTTP request Squid checks for X-Forwarded-For header fields.
+	If found the header values are iterated in reverse order and an allow
+	match is required for Squid to continue on to the next value.
+	The verification ends when a value receives a deny match, cannot be
+	tested, or there are no more values to test.
+	NOTE: Squid does not yet follow the Forwarded HTTP header.
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
@@ -1139,8 +1143,8 @@ DOC_START
 
 	SECURITY CONSIDERATIONS:
 
-		Any host for which we follow the X-Forwarded-For header
-		can place incorrect information in the header, and Squid
+		Any host for which we accept client IP details can place
+		incorrect information in the relevant header, and Squid
 		will use the incorrect information as if it were the
 		source address of the request.  This may enable remote
 		hosts to bypass any access control restrictions that are

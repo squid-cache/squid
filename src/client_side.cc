@@ -2932,17 +2932,24 @@ bool
 ConnStateData::proxyProtocolError(const char *msg)
 {
     if (msg) {
-        debugs(33, 2, msg << " from " << clientConnection);
+        // This is important to know, but maybe not so much that flooding the log is okay.
+#if QUIET_PROXY_PROTOCOL
+        // display the first of every 32 occurances at level 1, the others at level 2.
+        static uint8_t hide = 0;
+        debugs(33, (hide++ % 32 == 0 ? DBG_IMPORTANT : 2), msg << " from " << clientConnection);
+#else
+        debugs(33, DBG_IMPORTANT, msg << " from " << clientConnection);
+#endif
         mustStop(msg);
     }
     return false;
 }
 
 /// magic octet prefix for PROXY protocol version 1
-static const SBuf Proxy10magic("PROXY ", 6);
+static const SBuf Proxy1p0magic("PROXY ", 6);
 
 /// magic octet prefix for PROXY protocol version 2
-static const SBuf Proxy20magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
+static const SBuf Proxy2p0magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
 
 /**
  * Test the connection read buffer for PROXY protocol header.
@@ -2953,17 +2960,18 @@ ConnStateData::parseProxyProtocolHeader()
 {
     // http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt
 
-    // detect and parse PROXY protocol version 1 header
-    if (in.buf.length() > Proxy10magic.length() && in.buf.startsWith(Proxy10magic)) {
-         return parseProxy10();
+    // detect and parse PROXY/2.0 protocol header
+    if (in.buf.startsWith(Proxy2p0magic))
+        return parseProxy2p0();
 
-        // detect and parse PROXY protocol version 2 header
-    } else if (in.buf.length() > Proxy20magic.length() && in.buf.startsWith(Proxy20magic)) {
-        return parseProxy20();
+    // detect and parse PROXY/1.0 protocol header
+    if (in.buf.startsWith(Proxy1p0magic))
+         return parseProxy1p0();
 
-        // detect and terminate other protocols
-    } else if (in.buf.length() >= Proxy20magic.length()) {
-        // input other than the PROXY header is a protocol error
+    // detect and terminate other protocols
+    if (in.buf.length() >= Proxy2p0magic.length()) {
+        // PROXY/1.0 magic is shorter, so we know that
+        // the input does not start with any PROXY magic
         return proxyProtocolError("PROXY protocol error: invalid header");
     }
 
@@ -2976,10 +2984,10 @@ ConnStateData::parseProxyProtocolHeader()
 
 /// parse the PROXY/1.0 protocol header from the connection read buffer
 bool
-ConnStateData::parseProxy10()
+ConnStateData::parseProxy1p0()
 {
     ::Parser::Tokenizer tok(in.buf);
-    tok.skip(Proxy10magic);
+    tok.skip(Proxy1p0magic);
 
     SBuf tcpVersion;
     if (!tok.prefix(tcpVersion, CharacterSet::ALPHA+CharacterSet::DIGIT))
@@ -3060,7 +3068,7 @@ ConnStateData::parseProxy10()
 
 /// parse the PROXY/2.0 protocol header from the connection read buffer
 bool
-ConnStateData::parseProxy20()
+ConnStateData::parseProxy2p0()
 {
     if ((in.buf[0] & 0xF0) != 0x20) // version == 2 is mandatory
         return proxyProtocolError("PROXY/2.0 error: invalid version");
@@ -3077,13 +3085,13 @@ ConnStateData::parseProxy20()
     if (proto > 0x2) // values other than 0x0-0x2 are invalid
         return proxyProtocolError("PROXY/2.0 error: invalid protocol type");
 
-    const char *clen = in.buf.rawContent() + Proxy20magic.length() + 2;
+    const char *clen = in.buf.rawContent() + Proxy2p0magic.length() + 2;
     const uint16_t len = ntohs(*(reinterpret_cast<const uint16_t *>(clen)));
 
-    if (in.buf.length() < Proxy20magic.length() + 4 + len)
+    if (in.buf.length() < Proxy2p0magic.length() + 4 + len)
         return false; // need more bytes
 
-    in.buf.consume(Proxy20magic.length() + 4); // 4 being the extra bytes
+    in.buf.consume(Proxy2p0magic.length() + 4); // 4 being the extra bytes
     const SBuf extra = in.buf.consume(len);
     needProxyProtocolHeader_ = false; // found successfully
 

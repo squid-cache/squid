@@ -403,8 +403,8 @@ private:
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
     bool parseProxyProtocolHeader();
-    bool parseProxy10();
-    bool parseProxy20();
+    bool parseProxy1p0();
+    bool parseProxy2p0();
     bool proxyProtocolError(const char *reason = NULL);
 
     /// whether PROXY protocol header is still expected
