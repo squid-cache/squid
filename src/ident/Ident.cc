@@ -124,9 +124,9 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int x
     IdentStateData *state = (IdentStateData *)data;
 
     if (status != Comm::OK) {
-        if (status == Comm::TIMEOUT) {
+        if (status == Comm::TIMEOUT)
             debugs(30, 3, "IDENT connection timeout to " << state->conn->remote);
-        }
+        Ident::identCallback(state, NULL);
         return;
     }
 

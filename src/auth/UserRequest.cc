@@ -264,10 +264,8 @@ authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * con
         // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
         // workaround by using anything already set in HttpRequest
         // OR use new and rely on a later Sync copying these to AccessLogEntry
-        if (!request->notes)
-            request->notes = new NotePairs;
 
-        request->notes->appendNewOnly(&res->user()->notes);
+        UpdateRequestNotes(conn, *request, res->user()->notes);
     }
 
     return res;

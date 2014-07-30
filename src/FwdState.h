@@ -75,6 +75,7 @@ public:
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
     void connectTimeout(int fd);
+    time_t timeLeft() const; ///< the time left before the forwarding timeout expired
     bool checkRetry();
     bool checkRetriable();
     void dispatch();

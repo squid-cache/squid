@@ -77,7 +77,7 @@ public:
     Comm::ConnectionPointer conn;
 
     Comm::Flag flag;  ///< comm layer result status.
-    int xerrno;      ///< The last errno to occur. non-zero if flag is Comm::ERROR.
+    int xerrno;      ///< The last errno to occur. non-zero if flag is Comm::COMM_ERROR.
 
     int fd; ///< FD which the call was about. Set by the async call creator.
 private:

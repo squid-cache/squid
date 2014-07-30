@@ -271,7 +271,7 @@ Comm::DoSelect(int msec)
 
         getCurrentTime();
 
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
 
         /* NOTREACHED */
     }

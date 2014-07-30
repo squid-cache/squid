@@ -9,13 +9,16 @@
 #include <cstring>
 #include <limits>
 
-CBDATA_NAMESPACED_CLASS_INIT(AnyP, PortCfg);
+AnyP::PortCfgPointer HttpPortList;
+#if USE_OPENSSL
+AnyP::PortCfgPointer HttpsPortList;
+#endif
 
 int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
 
 AnyP::PortCfg::PortCfg() :
-        next(NULL),
+        next(),
         s(),
         transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
         name(NULL),
@@ -84,10 +87,10 @@ AnyP::PortCfg::~PortCfg()
 #endif
 }
 
-AnyP::PortCfg *
+AnyP::PortCfgPointer
 AnyP::PortCfg::clone() const
 {
-    AnyP::PortCfg *b = new AnyP::PortCfg();
+    AnyP::PortCfgPointer b = new AnyP::PortCfg();
     b->s = s;
     if (name)
         b->name = xstrdup(name);

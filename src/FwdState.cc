@@ -709,8 +709,10 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
             AsyncCall::Pointer callback = asyncCall(17,4,
                                                     "FwdState::ConnectedToPeer",
                                                     FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+            // Use positive timeout when less than one second is left.
+            const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(requestPointer, serverConnection(), callback);
+                new Ssl::PeerConnector(requestPointer, serverConnection(), callback, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -757,21 +759,9 @@ FwdState::connectTimeout(int fd)
     }
 }
 
-/**
- * Called after Forwarding path selection (via peer select) has taken place.
- * And whenever forwarding needs to attempt a new connection (routing failover)
- * We have a vector of possible localIP->remoteIP paths now ready to start being connected.
- */
-void
-FwdState::connectStart()
+time_t
+FwdState::timeLeft() const
 {
-    assert(serverDestinations.size() > 0);
-
-    debugs(17, 3, "fwdConnectStart: " << entry->url());
-
-    if (!request->hier.first_conn_start.tv_sec) // first attempt
-        request->hier.first_conn_start = current_time;
-
     /* connection timeout */
     int ctimeout;
     if (serverDestinations[0]->getPeer()) {
@@ -787,7 +777,25 @@ FwdState::connectStart()
         ftimeout = 5;
 
     if (ftimeout < ctimeout)
-        ctimeout = ftimeout;
+        return (time_t)ftimeout;
+    else
+        return (time_t)ctimeout;
+}
+
+/**
+ * Called after forwarding path selection (via peer select) has taken place
+ * and whenever forwarding needs to attempt a new connection (routing failover).
+ * We have a vector of possible localIP->remoteIP paths now ready to start being connected.
+ */
+void
+FwdState::connectStart()
+{
+    assert(serverDestinations.size() > 0);
+
+    debugs(17, 3, "fwdConnectStart: " << entry->url());
+
+    if (!request->hier.first_conn_start.tv_sec) // first attempt
+        request->hier.first_conn_start = current_time;
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
@@ -817,6 +825,20 @@ FwdState::connectStart()
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
+
+            /* Update server side TOS and Netfilter mark on the connection. */
+            if (Ip::Qos::TheConfig.isAclTosActive()) {
+                debugs(17, 3, HERE << "setting tos for pinned connection to " << (int)serverConn->tos );
+                serverConn->tos = GetTosToServer(request);
+                Ip::Qos::setSockTos(serverConn, serverConn->tos);
+            }
+#if SO_MARK
+            if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
+                serverConn->nfmark = GetNfmarkToServer(request);
+                Ip::Qos::setSockNfmark(serverConn, serverConn->nfmark);
+            }
+#endif
+
             // the server may close the pinned connection before this request
             pconnRace = racePossible;
             dispatch();
@@ -883,7 +905,7 @@ FwdState::connectStart()
     GetMarkingsToServer(request, *serverDestinations[0]);
 
     calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, ctimeout);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, timeLeft());
     if (host)
         cs->setHost(host);
     AsyncJob::Start(cs);

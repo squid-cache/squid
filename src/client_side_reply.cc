@@ -1347,7 +1347,7 @@ clientReplyContext::buildReplyHeader()
             if (http->storeEntry()->timestamp <= squid_curtime) {
                 // put X-Cache-Age: instead of Age:
                 char age[64];
-                snprintf(age, sizeof(age), "%ld", (long int) squid_curtime - http->storeEntry()->timestamp);
+                snprintf(age, sizeof(age), "%" PRId64, static_cast<int64_t>(squid_curtime - http->storeEntry()->timestamp));
                 hdr->putExt("X-Cache-Age", age);
             }
         } else if (http->storeEntry()->timestamp <= squid_curtime) {
