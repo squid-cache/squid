@@ -82,7 +82,7 @@
  */
 
 static IOCB commHalfClosedReader;
-static void comm_init_opened(const Comm::ConnectionPointer &conn, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
+static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 #if USE_DELAY_POOLS
@@ -231,7 +231,7 @@ commBind(int s, struct addrinfo &inaddr)
 
     debugs(50, 0, "commBind: Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerror());
 
-    return Comm::ERROR;
+    return Comm::COMM_ERROR;
 }
 
 /**
@@ -245,7 +245,7 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
-    return comm_openex(sock_type, proto, addr, flags, 0, 0, note);
+    return comm_openex(sock_type, proto, addr, flags, note);
 }
 
 void
@@ -258,7 +258,7 @@ comm_open_listener(int sock_type,
     conn->flags |= COMM_DOBIND;
 
     /* attempt native enabled port. */
-    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, 0, 0, note);
+    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, note);
 }
 
 int
@@ -274,7 +274,7 @@ comm_open_listener(int sock_type,
     flags |= COMM_DOBIND;
 
     /* attempt native enabled port. */
-    sock = comm_openex(sock_type, proto, addr, flags, 0, 0, note);
+    sock = comm_openex(sock_type, proto, addr, flags, note);
 
     return sock;
 }
@@ -349,8 +349,6 @@ comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
             int flags,
-            tos_t tos,
-            nfmark_t nfmark,
             const char *note)
 {
     int new_socket;
@@ -408,14 +406,6 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
 
-    /* set TOS if needed */
-    if (tos)
-        Ip::Qos::setSockTos(conn, tos);
-
-    /* set netfilter mark if needed */
-    if (nfmark)
-        Ip::Qos::setSockNfmark(conn, nfmark);
-
     if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.isIPv6() )
         comm_set_v6only(conn->fd, 1);
 
@@ -424,7 +414,7 @@ comm_openex(int sock_type,
     if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.isIPv6() )
         comm_set_v6only(conn->fd, 0);
 
-    comm_init_opened(conn, tos, nfmark, note, AI);
+    comm_init_opened(conn, note, AI);
     new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     Ip::Address::FreeAddrInfo(AI);
@@ -439,8 +429,6 @@ comm_openex(int sock_type,
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
 comm_init_opened(const Comm::ConnectionPointer &conn,
-                 tos_t tos,
-                 nfmark_t nfmark,
                  const char *note,
                  struct addrinfo *AI)
 {
@@ -458,9 +446,6 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
 
     fde *F = &fd_table[conn->fd];
     F->local_addr = conn->local;
-    F->tosToServer = tos;
-
-    F->nfmarkToServer = nfmark;
 
     F->sock_family = AI->ai_family;
 }
@@ -511,7 +496,7 @@ comm_apply_flags(int new_socket,
     }
 
     if (flags & COMM_NONBLOCKING)
-        if (commSetNonBlocking(new_socket) == Comm::ERROR) {
+        if (commSetNonBlocking(new_socket) == Comm::COMM_ERROR) {
             comm_close(new_socket);
             return -1;
         }
@@ -537,7 +522,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     assert(Comm::IsConnOpen(conn));
     assert(AI);
 
-    comm_init_opened(conn, 0, 0, note, AI);
+    comm_init_opened(conn, note, AI);
 
     if (!(conn->flags & COMM_NOCLOEXEC))
         fd_table[conn->fd].flags.close_on_exec = true;
@@ -730,7 +715,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
     else if (errno == EAFNOSUPPORT || errno == EINVAL)
         return Comm::ERR_PROTOCOL;
     else
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
 
     address.toStr(F->ipaddr, MAX_IPSTRLEN);
 
@@ -1004,7 +989,7 @@ comm_udp_sendto(int fd,
 
         debugs(50, DBG_IMPORTANT, "comm_udp_sendto: FD " << fd << ", (family=" << fd_table[fd].sock_family << ") " << to_addr << ": " << xstrerror());
 
-    return Comm::ERROR;
+    return Comm::COMM_ERROR;
 }
 
 void
@@ -1129,7 +1114,7 @@ commSetNonBlocking(int fd)
 
         if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror() << " " << fd_table[fd].type);
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
 
 #if _SQUID_CYGWIN_
@@ -1140,12 +1125,12 @@ commSetNonBlocking(int fd)
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
 
         if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror());
-            return Comm::ERROR;
+            return Comm::COMM_ERROR;
         }
 
 #endif
@@ -1170,13 +1155,13 @@ commUnsetNonBlocking(int fd)
 
     if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
         debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
     if (fcntl(fd, F_SETFL, flags & (~SQUID_NONBLOCK)) < 0) {
 #endif
         debugs(50, 0, "commUnsetNonBlocking: FD " << fd << ": " << xstrerror());
-        return Comm::ERROR;
+        return Comm::COMM_ERROR;
     }
 
     fd_table[fd].flags.nonblocking = false;
@@ -1611,7 +1596,7 @@ checkTimeouts(void)
             // We have an active write callback and we are timed out
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-            COMMIO_FD_WRITECB(fd)->finish(Comm::ERROR, ETIMEDOUT);
+            COMMIO_FD_WRITECB(fd)->finish(Comm::COMM_ERROR, ETIMEDOUT);
         } else if (AlreadyTimedOut(F))
             continue;
 
@@ -1883,7 +1868,7 @@ CommSelectEngine::checkEvents(int timeout)
     case Comm::SHUTDOWN:
         return EVENT_IDLE;
 
-    case Comm::ERROR:
+    case Comm::COMM_ERROR:
         return EVENT_ERROR;
 
     default:

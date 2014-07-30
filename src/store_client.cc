@@ -277,10 +277,8 @@ store_client::moreToSend() const
 
     const int64_t len = entry->objectLen();
 
-    // If we do not know the entry length, then we have to open the swap file,
-    // which is only possible if there is one AND if we are allowed to use it.
-    const bool canSwapIn = entry->swap_filen >= 0 &&
-                           getType() == STORE_DISK_CLIENT;
+    // If we do not know the entry length, then we have to open the swap file.
+    const bool canSwapIn = entry->swap_filen >= 0;
     if (len < 0)
         return canSwapIn;
 
@@ -291,7 +289,7 @@ store_client::moreToSend() const
         return true; // if we lack prefix, we can swap it in
 
     // If we cannot swap in, make sure we have what we want in RAM. Otherwise,
-    // scheduleRead calls scheduleDiskRead which asserts on STORE_MEM_CLIENTs.
+    // scheduleRead calls scheduleDiskRead which asserts without a swap file.
     const MemObject *mem = entry->mem_obj;
     return mem &&
            mem->inmem_lo <= copyInto.offset && copyInto.offset < mem->endOffset();
@@ -381,13 +379,15 @@ store_client::doCopy(StoreEntry *anEntry)
      * if needed.
      */
 
-    if (STORE_DISK_CLIENT == getType() && swapin_sio == NULL)
-        startSwapin();
-    else
-        scheduleRead();
+    if (STORE_DISK_CLIENT == getType() && swapin_sio == NULL) {
+        if (!startSwapin())
+            return; // failure
+    }
+    scheduleRead();
 }
 
-void
+/// opens the swapin "file" if possible; otherwise, fail()s and returns false
+bool
 store_client::startSwapin()
 {
     debugs(90, 3, "store_client::doCopy: Need to open swap in file");
@@ -397,7 +397,7 @@ store_client::startSwapin()
         /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
         fail();
         flags.store_copying = false;
-        return;
+        return false;
     } else if (!flags.disk_io_pending) {
         /* Don't set store_io_pending here */
         storeSwapInStart(this);
@@ -405,20 +405,14 @@ store_client::startSwapin()
         if (swapin_sio == NULL) {
             fail();
             flags.store_copying = false;
-            return;
+            return false;
         }
 
-        /*
-         * If the open succeeds we either copy from memory, or
-         * schedule a disk read in the next block.
-         */
-        scheduleRead();
-
-        return;
+        return true;
     } else {
         debugs(90, DBG_IMPORTANT, "WARNING: Averted multiple fd operation (1)");
         flags.store_copying = false;
-        return;
+        return false;
     }
 }
 
@@ -437,11 +431,18 @@ void
 store_client::scheduleDiskRead()
 {
     /* What the client wants is not in memory. Schedule a disk read */
-    assert(STORE_DISK_CLIENT == getType());
+    if (getType() == STORE_DISK_CLIENT) {
+        // we should have called startSwapin() already
+        assert(swapin_sio != NULL);
+    } else if (!swapin_sio && !startSwapin()) {
+        debugs(90, 3, "bailing after swapin start failure for " << *entry);
+        assert(!flags.store_copying);
+        return;
+    }
 
     assert(!flags.disk_io_pending);
 
-    debugs(90, 3, "store_client::doCopy: reading from STORE");
+    debugs(90, 3, "reading " << *entry << " from disk");
 
     fileRead();
 

@@ -13,6 +13,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_Port.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_StoreMeta.cc \

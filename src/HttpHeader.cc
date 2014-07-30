@@ -111,6 +111,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"ETag", HDR_ETAG, ftETag},
     {"Expect", HDR_EXPECT, ftStr},
     {"Expires", HDR_EXPIRES, ftDate_1123},
+    {"Forwarded", HDR_FORWARDED, ftStr},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"HTTP2-Settings", HDR_HTTP2_SETTINGS, ftStr}, /* for now */
@@ -216,6 +217,7 @@ static http_hdr_type ListHeadersArr[] = {
 #endif
     HDR_SURROGATE_CAPABILITY,
     HDR_SURROGATE_CONTROL,
+    HDR_FORWARDED,
     HDR_X_FORWARDED_FOR
 };
 
@@ -267,7 +269,7 @@ static http_hdr_type RequestHeadersArr[] = {
     HDR_ORIGIN,
     HDR_PROXY_CONNECTION,
     HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
-    HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
+    HDR_USER_AGENT, HDR_FORWARDED, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
 };
 
 static HttpHeaderMask HopByHopHeadersMask;

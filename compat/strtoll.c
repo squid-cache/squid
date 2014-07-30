@@ -49,7 +49,7 @@
 #define INT64_MIN LONG_MIN
 #else
 /* 32 bit system */
-#define INT64_MIN       -9223372036854775807L-1L
+#define INT64_MIN       (-9223372036854775807LL-1LL)
 #endif
 #endif
 
@@ -59,7 +59,7 @@
 #define INT64_MAX LONG_MAX
 #else
 /* 32 bit system */
-#define INT64_MAX       9223372036854775807L
+#define INT64_MAX       9223372036854775807LL
 #endif
 #endif
 
