@@ -174,7 +174,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>Squid currently supports receiving HTTP traffic from a client proxy using this protocol.
    An http_port which has been configured to receive this protocol may only be used to
    receive traffic from client software sending in this protocol.
-   Regular forward-proxy HTTP traffic is not accepted.
+   HTTP traffic without the PROXY header is not accepted on such a port.
 
 <p>The <em>accel</em> and <em>intercept</em> options are still used to identify the
    traffic syntax being delivered by the client proxy.
