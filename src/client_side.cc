@@ -3634,6 +3634,46 @@ httpAccept(const CommAcceptCbParams &params)
 #endif
 }
 
+/** handle a new FTP connection */
+static void
+ftpAccept(const CommAcceptCbParams &params)
+{
+    MasterXaction::Pointer xact = params.xaction;
+    AnyP::PortCfgPointer s = xact->squidPort;
+
+    // NP: it is possible the port was reconfigured when the call or accept() was queued.
+
+    if (params.flag != Comm::OK) {
+        // Its possible the call was still queued when the client disconnected
+        debugs(33, 2, "ftpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        return;
+    }
+
+    debugs(33, 4, HERE << params.conn << ": accepted");
+    fd_note(params.conn->fd, "client ftp connect");
+
+    if (s->tcp_keepalive.enabled) {
+        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+    }
+
+    ++incoming_sockets_accepted;
+
+    // Socket is ready, setup the connection manager to start using it
+    ConnStateData *connState = new ConnStateData(xact);
+
+    if (connState->transparent()) {
+        char buf[MAX_IPSTRLEN];
+        connState->clientConnection->local.toUrl(buf, MAX_IPSTRLEN);
+        connState->ftp.host = buf;
+        const char *uri = connState->ftpBuildUri();
+        debugs(33, 5, HERE << "FTP transparent URL: " << uri);
+    }
+
+    FtpWriteEarlyReply(connState, 220, "Service ready");
+
+    // TODO: Merge common httpAccept() parts, applying USE_DELAY_POOLS to FTP.
+}
+
 #if USE_OPENSSL
 
 /** Create SSL connection structure and update fd_table */
@@ -3922,46 +3962,6 @@ httpsAccept(const CommAcceptCbParams &params)
         SSL_CTX *sslContext = s->staticSslContext.get();
         httpsEstablish(connState, sslContext, Ssl::bumpNone);
     }
-}
-
-/** handle a new FTP connection */
-static void
-ftpAccept(const CommAcceptCbParams &params)
-{
-    MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
-
-    // NP: it is possible the port was reconfigured when the call or accept() was queued.
-
-    if (params.flag != Comm::OK) {
-        // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "ftpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
-        return;
-    }
-
-    debugs(33, 4, HERE << params.conn << ": accepted");
-    fd_note(params.conn->fd, "client ftp connect");
-
-    if (s->tcp_keepalive.enabled) {
-        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-    }
-
-    ++incoming_sockets_accepted;
-
-    // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = new ConnStateData(xact);
-
-    if (connState->transparent()) {
-        char buf[MAX_IPSTRLEN];
-        connState->clientConnection->local.toUrl(buf, MAX_IPSTRLEN);
-        connState->ftp.host = buf;
-        const char *uri = connState->ftpBuildUri();
-        debugs(33, 5, HERE << "FTP transparent URL: " << uri);
-    }
-
-    FtpWriteEarlyReply(connState, 220, "Service ready");
-
-    // TODO: Merge common httpAccept() parts, applying USE_DELAY_POOLS to FTP.
 }
 
 void
