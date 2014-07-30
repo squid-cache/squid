@@ -330,7 +330,15 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p><em>There are no new ./configure options in Squid-3.5.</em>
+	<tag>BUILDCXX=</tag>
+	<p>Used when cross-compiling Squid.
+	<p>The path and name of a compiler for building cf_gen and related
+	   tools used in the compile process.
+
+	<tag>BUILDCXXFLAGS=</tag>
+	<p>Used when cross-compiling Squid.
+	<p>C++ compiler flags used for building cf_gen and related
+	   tools used in the compile process.
 
 	<tag>--without-gnutls</tag>
 	<p>New option to explicitly disable use of GnuTLS encryption library.
@@ -342,7 +350,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p><em>There are no changes to existing ./configure options in Squid-3.5.</em>
+	<tag>--enable-icap-client</tag>
+	<p>Deprecated. ICAP client is now auto-enabled.
+	   Use --disable-icap-client to disable if you need to.
 
 </descrip>
 </p>

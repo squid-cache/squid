@@ -376,7 +376,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
         // kids should increment their counters
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (!requestBodySource) {

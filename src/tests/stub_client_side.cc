@@ -7,7 +7,7 @@
 //ClientSocketContext::ClientSocketContext(const ConnectionPointer&, ClientHttpRequest*) STUB
 //ClientSocketContext::~ClientSocketContext() STUB
 bool ClientSocketContext::startOfOutput() const STUB_RETVAL(false)
-void ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag) STUB
+void ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag) STUB
 void ClientSocketContext::keepaliveNextRequest() STUB
 void ClientSocketContext::pullData() STUB
 int64_t ClientSocketContext::getNextRangeOffset() const STUB_RETVAL(0)
@@ -51,9 +51,9 @@ void ConnStateData::stopSending(const char *error) STUB
 void ConnStateData::expectNoForwarding() STUB
 void ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer) STUB
 void ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer) STUB
-bool ConnStateData::handleReadData(SBuf *buf) STUB_RETVAL(false)
+bool ConnStateData::handleReadData() STUB_RETVAL(false)
 bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)
-void ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true) STUB
+void ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor) STUB
 void ConnStateData::unpinConnection(const bool andClose) STUB
 const Comm::ConnectionPointer ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *peer) STUB_RETVAL(NULL)
 void ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io) STUB

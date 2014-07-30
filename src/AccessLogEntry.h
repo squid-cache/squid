@@ -185,7 +185,7 @@ public:
         const char *ssluser;
         Ssl::X509_Pointer sslClientCert; ///< cert received from the client
 #endif
-        AnyP::PortCfg *port;
+        AnyP::PortCfgPointer port;
 
     } cache;
 

@@ -39,9 +39,7 @@
 #include "log/ModStdio.h"
 #include "SquidConfig.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 typedef struct {
     int fd;

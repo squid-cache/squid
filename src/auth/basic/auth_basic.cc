@@ -76,8 +76,7 @@ Auth::Basic::Config::active() const
 bool
 Auth::Basic::Config::configured() const
 {
-    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0) &&
-            (basicAuthRealm != NULL)) {
+    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0) && !realm.isEmpty()) {
         debugs(29, 9, HERE << "returning configured");
         return true;
     }
@@ -96,8 +95,8 @@ void
 Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (authenticateProgram) {
-        debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
-        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"%s\"", basicAuthRealm);
+        debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
+        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(realm));
     }
 }
 
@@ -129,28 +128,18 @@ Auth::Basic::Config::done()
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
-
-    if (basicAuthRealm)
-        safe_free(basicAuthRealm);
 }
 
-void
-Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
+bool
+Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme) const
 {
-    wordlist *list = authenticateProgram;
-    storeAppendPrintf(entry, "%s %s", name, "basic");
+    if (!Auth::Config::dump(entry, name, scheme))
+        return false; // not configured
 
-    while (list != NULL) {
-        storeAppendPrintf(entry, " %s", list->key);
-        list = list->next;
-    }
-
-    storeAppendPrintf(entry, "\n");
-
-    storeAppendPrintf(entry, "%s basic realm %s\n", name, basicAuthRealm);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
-    Auth::Config::dump(entry, name, scheme);
+    storeAppendPrintf(entry, "%s basic utf8 %s\n", name, utf8 ? "on" : "off");
+    return true;
 }
 
 Auth::Basic::Config::Config() :
@@ -158,27 +147,14 @@ Auth::Basic::Config::Config() :
         casesensitive(0),
         utf8(0)
 {
-    basicAuthRealm = xstrdup("Squid proxy-caching web server");
-}
-
-Auth::Basic::Config::~Config()
-{
-    safe_free(basicAuthRealm);
+    static const SBuf defaultRealm("Squid proxy-caching web server");
+    realm = defaultRealm;
 }
 
 void
 Auth::Basic::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
-    if (strcmp(param_str, "program") == 0) {
-        if (authenticateProgram)
-            wordlistDestroy(&authenticateProgram);
-
-        parse_wordlist(&authenticateProgram);
-
-        requirePathnameExists("auth_param basic program", authenticateProgram->key);
-    } else if (strcmp(param_str, "realm") == 0) {
-        parse_eol(&basicAuthRealm);
-    } else if (strcmp(param_str, "credentialsttl") == 0) {
+    if (strcmp(param_str, "credentialsttl") == 0) {
         parse_time_t(&credentialsTTL);
     } else if (strcmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);

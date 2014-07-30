@@ -68,7 +68,7 @@ protected:
     void readCwdOrCdupReply();
     void readUserOrPassReply();
 
-    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno);
+    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno);
     void scheduleReadControlReply();
 
     bool forwardingCompleted; ///< completeForwarding() has been called
@@ -653,12 +653,12 @@ ServerStateData::readTransferDoneReply()
 }
 
 void
-ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, comm_err_t err, int xerrno)
+ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno)
 {
     debugs(9, 3, HERE);
     data.opener = NULL;
 
-    if (err != COMM_OK) {
+    if (err != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect FTP server data channel.");
         forwardError(ERR_CONNECT_FAIL, xerrno);
         return;

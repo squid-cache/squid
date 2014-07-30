@@ -36,6 +36,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "dlink.h"
 #include "event.h"
@@ -60,11 +61,9 @@
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
+#include <cerrno>
 #if HAVE_RESOLV_H
 #include <resolv.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #if _SQUID_WINDOWS_
@@ -797,18 +796,18 @@ idnsTickleQueue(void)
 }
 
 static void
-idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
-    if (flag == COMM_ERR_CLOSING)
+    if (flag == Comm::ERR_CLOSING)
         return;
 
     // XXX: irrelevant now that we have conn pointer?
     if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing())
         return;
 
-    if (flag != COMM_OK || size <= 0) {
+    if (flag != Comm::OK || size <= 0) {
         conn->close();
         return;
     }
@@ -851,11 +850,11 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
-    if (status != COMM_OK || !conn) {
+    if (status != Comm::OK || !conn) {
         char buf[MAX_IPSTRLEN] = "";
         if (vc->ns < nns)
             nameservers[vc->ns].S.toStr(buf,MAX_IPSTRLEN);
@@ -900,15 +899,12 @@ idnsInitVC(int nsv)
     Comm::ConnectionPointer conn = new Comm::Connection();
 
     if (!Config.Addrs.udp_outgoing.isNoAddr())
-        conn->local = Config.Addrs.udp_outgoing;
+        conn->setAddrs(Config.Addrs.udp_outgoing, nameservers[nsv].S);
     else
-        conn->local = Config.Addrs.udp_incoming;
+        conn->setAddrs(Config.Addrs.udp_incoming, nameservers[nsv].S);
 
-    conn->remote = nameservers[nsv].S;
-
-    if (conn->remote.isIPv4()) {
+    if (conn->remote.isIPv4())
         conn->local.setIPv4();
-    }
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
 
@@ -1439,14 +1435,14 @@ idnsCheckQueue(void *unused)
 }
 
 static void
-idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
-    if (flag == COMM_ERR_CLOSING)
+    if (flag == Comm::ERR_CLOSING)
         return;
 
-    if (flag != COMM_OK || len <= 0) {
+    if (flag != Comm::OK || len <= 0) {
         if (Comm::IsConnOpen(conn))
             conn->close();
         return;
@@ -1472,14 +1468,14 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_
 }
 
 static void
-idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
-    if (flag == COMM_ERR_CLOSING)
+    if (flag == Comm::ERR_CLOSING)
         return;
 
-    if (flag != COMM_OK || len <= 0) {
+    if (flag != Comm::OK || len <= 0) {
         if (Comm::IsConnOpen(conn))
             conn->close();
         return;

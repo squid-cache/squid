@@ -682,12 +682,12 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
  *     closing the FD, otherwise we do it ourselves.
  */
 static void
-errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
     debugs(4, 3, HERE << conn << ", size=" << size);
 
-    if (errflag != COMM_ERR_CLOSING) {
+    if (errflag != Comm::ERR_CLOSING) {
         if (err->callback) {
             debugs(4, 3, "errorSendComplete: callback");
             err->callback(conn->fd, err->callback_data, size);

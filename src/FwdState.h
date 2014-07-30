@@ -73,8 +73,9 @@ public:
     bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
+    void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
     void connectTimeout(int fd);
+    time_t timeLeft() const; ///< the time left before the forwarding timeout expired
     bool checkRetry();
     bool checkRetriable();
     void dispatch();

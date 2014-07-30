@@ -1127,7 +1127,7 @@ HttpStateData::persistentConnStatus() const
  */
 /*
 void
-HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     assert (fd == httpState->serverConnection->fd);
@@ -1150,8 +1150,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     debugs(11, 5, HERE << io.conn << ": len " << len << ".");
 
-    // Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
-    if (io.flag == COMM_ERR_CLOSING) {
+    // Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us
+    if (io.flag == Comm::ERR_CLOSING) {
         debugs(11, 3, "http socket closing");
         return;
     }
@@ -1162,7 +1162,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     }
 
     // handle I/O errors
-    if (io.flag != COMM_OK || len < 0) {
+    if (io.flag != Comm::OK || len < 0) {
         debugs(11, 2, HERE << io.conn << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(io.xerrno)) {
@@ -1543,7 +1543,7 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.http.kbytes_out), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (io.flag) {
