@@ -321,7 +321,7 @@ static http_hdr_type ReplyHeadersArr[] = {
 
 /* hop-by-hop headers */
 static HttpHeaderMask HopByHopHeadersMask;
-static http_hdr_type HopByHopRequestHeadersArr[] = {
+static http_hdr_type HopByHopHeadersArr[] = {
     HDR_CONNECTION,
     HDR_HTTP2_SETTINGS,
     HDR_KEEP_ALIVE,
