@@ -2726,6 +2726,8 @@ ftpReadPasv(FtpStateData * ftpState)
     conn->setAddrs(ftpState->ctrl.conn->local, ipaddr);
     conn->local.port(0);
     conn->remote.port(port);
+    conn->tos = ftpState->ctrl.conn->tos;
+    conn->nfmark = ftpState->ctrl.conn->nfmark;
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
