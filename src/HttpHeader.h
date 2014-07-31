@@ -92,7 +92,7 @@ typedef enum {
     HDR_IF_MODIFIED_SINCE,              /**< RFC 2608, 2616 */
     HDR_IF_NONE_MATCH,                  /**< RFC 2608, 2616 */
     HDR_IF_RANGE,                       /**< RFC 2608, 2616 */
-    /*HDR_IF_UNMODIFIED_SINCE,*/        /**< RFC 2608, 2616 */
+    HDR_IF_UNMODIFIED_SINCE,            /**< RFC 7232 */
     HDR_KEEP_ALIVE,                     /**< obsolete HTTP/1.0 header we may need to erase */
     HDR_KEY,                            /**< experimental RFC Draft draft-fielding-http-key-02 */
     HDR_LAST_MODIFIED,                  /**< RFC 2608, 2616 */
