@@ -119,6 +119,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
     {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
     {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
+    {"If-Unmodified-Since", HDR_IF_UNMODIFIED_SINCE, ftDate_1123},
     {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
     {"Key", HDR_KEY, ftStr},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
