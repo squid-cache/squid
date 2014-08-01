@@ -4054,7 +4054,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         if (answer.kind == Ssl::bumpTerminate || answer.kind == Ssl::bumpErr)
             comm_close(connState->clientConnection->fd);
         else {
-            if (answer.kind != Ssl::bumpPeek || answer.kind == Ssl::bumpStare)
+            if (answer.kind != Ssl::bumpPeek && answer.kind != Ssl::bumpStare)
                 connState->sslBumpMode = Ssl::bumpBump;
             else
                 connState->sslBumpMode = (Ssl::BumpMode)answer.kind;
