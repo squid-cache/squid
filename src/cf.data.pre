@@ -169,6 +169,13 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 3.5
+NAME: hierarchy_stoplist
+TYPE: obsolete
+DOC_START
+	Remove this line. Use always_direct or cache_peer_access ACLs instead if you need to prevent cache_peer use.
+DOC_END
+
 # Options Removed in 3.3
 NAME: ignore_ims_on_miss
 TYPE: obsolete
@@ -3150,22 +3157,6 @@ DOC_START
 	
 	NOTE: connect_retries (default: none) can make each of these
 	possible forwarding paths be tried multiple times.
-DOC_END
-
-NAME: hierarchy_stoplist
-TYPE: wordlist
-DEFAULT: none
-LOC: Config.hierarchy_stoplist
-DOC_START
-	A list of words which, if found in a URL, cause the object to
-	be handled directly by this cache.  In other words, use this
-	to not query neighbor caches for certain objects.  You may
-	list this option multiple times.
-
-	Example:
-		hierarchy_stoplist cgi-bin ?
-
-	Note: never_direct overrides this option.
 DOC_END
 
 COMMENT_START
@@ -7477,8 +7468,7 @@ LOC: Config.onoff.nonhierarchical_direct
 DEFAULT: on
 DOC_START
 	By default, Squid will send any non-hierarchical requests
-	(matching hierarchy_stoplist or not cacheable request type) direct
-	to origin servers.
+	(not cacheable request type) direct to origin servers.
 
 	When this is set to "off", Squid will prefer to send these
 	requests to parents.
