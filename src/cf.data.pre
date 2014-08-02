@@ -176,6 +176,19 @@ DOC_START
 	Remove this line. Use always_direct or cache_peer_access ACLs instead if you need to prevent cache_peer use.
 DOC_END
 
+# Options Removed in 3.4
+NAME: log_access
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with access_log directives to control access logging
+DOC_END
+
+NAME: log_icap
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with icap_log directives to control icap logging
+DOC_END
+
 # Options Removed in 3.3
 NAME: ignore_ims_on_miss
 TYPE: obsolete
@@ -184,16 +197,22 @@ DOC_START
 DOC_END
 
 # Options Removed in 3.2
-NAME: ignore_expect_100
-TYPE: obsolete
-DOC_START
-	Remove this line. The HTTP/1.1 feature is now fully supported by default.
-DOC_END
-
 NAME: dns_v4_fallback
 TYPE: obsolete
 DOC_START
 	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, the 'fallback' algorithm is no longer relevant.
+DOC_END
+
+NAME: emulate_httpd_log
+TYPE: obsolete
+DOC_START
+	Replace this with an access_log directive using the format 'common' or 'combined'.
+DOC_END
+
+NAME: forward_log
+TYPE: obsolete
+DOC_START
+	Use a regular access.log with ACL limiting it to MISS events.
 DOC_END
 
 NAME: ftp_list_width
@@ -202,10 +221,34 @@ DOC_START
 	Remove this line. Configure FTP page display using the CSS controls in errorpages.css instead.
 DOC_END
 
+NAME: ignore_expect_100
+TYPE: obsolete
+DOC_START
+	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
+
+NAME: log_fqdn
+TYPE: obsolete
+DOC_START
+	Remove this option from your config. To log FQDN use %>A in the log format.
+DOC_END
+
+NAME: log_ip_on_direct
+TYPE: obsolete
+DOC_START
+	Remove this option from your config. To log server or peer names use %<A in the log format.
+DOC_END
+
 NAME: maximum_single_addr_tries
 TYPE: obsolete
 DOC_START
 	Replaced by connect_retries. The behaviour has changed, please read the documentation before altering.
+DOC_END
+
+NAME: referer_log referrer_log
+TYPE: obsolete
+DOC_START
+	Replace this with an access_log directive using the format 'referrer'.
 DOC_END
 
 NAME: update_headers
@@ -218,6 +261,12 @@ NAME: url_rewrite_concurrency
 TYPE: obsolete
 DOC_START
 	Remove this line. Set the 'concurrency=' option of url_rewrite_children instead.
+DOC_END
+
+NAME: useragent_log
+TYPE: obsolete
+DOC_START
+	Replace this with an access_log directive using the format 'useragent'.
 DOC_END
 
 # Options Removed in 3.1
@@ -4113,18 +4162,6 @@ DOC_START
 	No responses is expected.
 DOC_END
 
-NAME: log_access
-TYPE: obsolete
-DOC_START
-	Remove this line. Use acls with access_log directives to control access logging
-DOC_END
-
-NAME: log_icap
-TYPE: obsolete
-DOC_START
-	Remove this line. Use acls with icap_log directives to control icap logging
-DOC_END
-
 NAME: stats_collection
 TYPE: acl_access
 LOC: Config.accessList.stats_collection
@@ -4216,18 +4253,6 @@ DOC_START
 	that log can be rotated separately by using debug_options.
 DOC_END
 
-NAME: emulate_httpd_log
-TYPE: obsolete
-DOC_START
-	Replace this with an access_log directive using the format 'common' or 'combined'.
-DOC_END
-
-NAME: log_ip_on_direct
-TYPE: obsolete
-DOC_START
-	Remove this option from your config. To log server or peer names use %<A in the log format.
-DOC_END
-
 NAME: mime_table
 TYPE: string
 DEFAULT: @DEFAULT_MIME_TABLE@
@@ -4252,30 +4277,12 @@ DOC_START
 	formats).  To enable this logging set log_mime_hdrs to 'on'.
 DOC_END
 
-NAME: useragent_log
-TYPE: obsolete
-DOC_START
-	Replace this with an access_log directive using the format 'useragent'.
-DOC_END
-
-NAME: referer_log referrer_log
-TYPE: obsolete
-DOC_START
-	Replace this with an access_log directive using the format 'referrer'.
-DOC_END
-
 NAME: pid_filename
 TYPE: string
 DEFAULT: @DEFAULT_PID_FILE@
 LOC: Config.pidFilename
 DOC_START
 	A filename to write the process-id to.  To disable, enter "none".
-DOC_END
-
-NAME: log_fqdn
-TYPE: obsolete
-DOC_START
-	Remove this option from your config. To log FQDN use %>A in the log format.
 DOC_END
 
 NAME: client_netmask
@@ -4288,12 +4295,6 @@ DOC_START
 	Change this to protect the privacy of your cache clients.
 	A netmask of 255.255.255.0 will log all IP's in that range with
 	the last digit set to '0'.
-DOC_END
-
-NAME: forward_log
-TYPE: obsolete
-DOC_START
-	Use a regular access.log with ACL limiting it to MISS events.
 DOC_END
 
 NAME: strip_query_terms
