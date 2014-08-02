@@ -311,6 +311,12 @@ This section gives a thorough account of those changes in three categories:
 	<tag>dns_children</tag>
 	<p>DNS external helper interface has been removed.
 
+	<tag>hierarchy_stoplist</tag>
+	<p>Removed. The old directive values prohibiting CGI and dynamic content
+	   going to cache_peer are no longer relevant.
+	<p>The functionality provided by this directive can be configured
+	   using <em>always_direct allow</em> if still needed.
+
 </descrip>
 
 
