@@ -243,7 +243,6 @@ public:
     } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
-    wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
     wordlist *dns_nameservers;
     CachePeer *peers;
