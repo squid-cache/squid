@@ -715,7 +715,7 @@ DOC_START
 	  %USER_CERT	SSL User certificate in PEM format
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
-	  %USER_CA_xx	SSL User certificate issuer attribute xx
+	  %USER_CA_CERT_xx SSL User certificate issuer attribute xx
 
 	  %>{Header}	HTTP request header "Header"
 	  %>{Hdr:member}

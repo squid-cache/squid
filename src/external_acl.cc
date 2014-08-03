@@ -473,13 +473,13 @@ parse_externalAclHelper(external_acl ** list)
         else if (strncmp(token, "%USER_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%USER_CA_CERT_", 11) == 0) {
+        } else if (strncmp(token, "%USER_CA_CERT_", 14) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
-            format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
+            format->header = xstrdup(token + 14);
+        } else if (strncmp(token, "%CA_CERT_", 9) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type %CA_CERT_* code is obsolete. Use %USER_CA_CERT_* instead");
             format->type = _external_acl_format::EXT_ACL_USER_CA_CERT;
-            format->header = xstrdup(token + 11);
+            format->header = xstrdup(token + 9);
         }
 #endif
 #if USE_AUTH
