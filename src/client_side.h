@@ -33,9 +33,11 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "clientStreamForward.h"
 #include "comm.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
+#include "ipc/FdNotes.h"
 #include "SBuf.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -194,10 +196,9 @@ class ConnStateData : public BodyProducer, public HttpControlMsgSink
 
 public:
     explicit ConnStateData(const MasterXaction::Pointer &xact);
-    ~ConnStateData();
+    virtual ~ConnStateData();
 
     void readSomeData();
-    void readSomeFtpData();
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
@@ -295,9 +296,10 @@ public:
 
     void expectNoForwarding(); ///< cleans up virgin request [body] forwarding state
 
+    /* BodyPipe API */
     BodyPipe::Pointer expectRequestBody(int64_t size);
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer) = 0;
+    virtual void noteBodyConsumerAborted(BodyPipe::Pointer) = 0;
 
     bool handleReadData();
     bool handleRequestBodyData();
@@ -323,8 +325,11 @@ public:
     CachePeer *pinnedPeer() const {return pinning.peer;}
     bool pinnedAuth() const {return pinning.auth;}
 
+    /// called just before a FwdState-dispatched job starts using connection
+    virtual void notePeerConnection(Comm::ConnectionPointer) {}
+
     // pining related comm callbacks
-    void clientPinnedConnectionClosed(const CommCloseCbParams &io);
+    virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
 
     // comm callbacks
     void clientReadRequest(const CommIoCbParams &io);
@@ -333,6 +338,7 @@ public:
     void requestTimeout(const CommTimeoutCbParams &params);
 
     // AsyncJob API
+    virtual void start();
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
     virtual void swanSong();
 
@@ -343,43 +349,10 @@ public:
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
 
-    const bool isFtp;
-    enum FtpState {
-        FTP_BEGIN,
-        FTP_CONNECTED,
-        FTP_HANDLE_FEAT,
-        FTP_HANDLE_PASV,
-        FTP_HANDLE_PORT,
-        FTP_HANDLE_DATA_REQUEST,
-        FTP_HANDLE_UPLOAD_REQUEST,
-        FTP_HANDLE_EPRT,
-        FTP_HANDLE_EPSV,
-        FTP_HANDLE_CWD,
-        FTP_HANDLE_PASS,
-        FTP_HANDLE_CDUP,
-        FTP_ERROR
-    };
-    struct {
-        String uri;
-        String host;
-        String workingDir;
-        FtpState state;
-        bool readGreeting;
-        bool gotEpsvAll; ///< restrict data conn setup commands to just EPSV
-        AsyncCall::Pointer onDataAcceptCall; ///< who to call upon data connection acceptance
-        Comm::ConnectionPointer dataListenConn;
-        Comm::ConnectionPointer dataConn;
-        Ip::Address serverDataAddr;
-        char uploadBuf[CLIENT_REQ_BUF_SZ];
-        size_t uploadAvailSize;
-        AsyncCall::Pointer listener; ///< set when we are passively listening
-        AsyncCall::Pointer connector; ///< set when we are actively connecting
-        AsyncCall::Pointer reader; ///< set when we are reading FTP data
-    } ftp;
-    const char *ftpBuildUri(const char *file = NULL);
-    void ftpSetWorkingDir(const char *dir);
-
 #if USE_OPENSSL
+    /// the second part of old httpsAccept, waiting for future HttpsServer home
+    void postHttpsAccept();
+
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
@@ -422,11 +395,19 @@ public:
 
     void finishDechunkingRequest(bool withSuccess);
 
-    void resumeFtpRequest(ClientSocketContext *const context);
-
     /* clt_conn_tag=tag annotation access */
     const SBuf &connectionTag() const { return connectionTag_; }
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
+
+    /// handle a control message received by context from a peer and call back
+    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call) = 0;
+
+    /// ClientStream calls this to supply response header (once) and data
+    /// for the current ClientSocketContext.
+    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) = 0;
+
+    /// remove no longer needed leading bytes from the input buffer
+    void consumeInput(const size_t byteCount);
 
 protected:
     void startDechunkingRequest();
@@ -436,11 +417,19 @@ protected:
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
-private:
+    // TODO: document
+    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
+    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver) = 0;
+
+    /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
+    virtual int pipelinePrefetchMax() const;
+
+    /// timeout to use when waiting for the next request
+    virtual time_t idleTimeout() const = 0;
+
+protected:
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
-    void processFtpRequest(ClientSocketContext *const context);
-    void handleFtpRequestData();
 
     bool concurrentRequestQueueFilled() const;
 
@@ -450,10 +439,6 @@ private:
     /// some user details that can be used to perform authentication on this connection
     Auth::UserRequest::Pointer auth_;
 #endif
-
-    HttpParser parser_;
-
-    // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
 #if USE_OPENSSL
     bool switchedToHttps_;
@@ -476,8 +461,6 @@ private:
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
 
     SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
-
-    CBDATA_CLASS2(ConnStateData);
 };
 
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
@@ -486,8 +469,23 @@ const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *e
 
 int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
+void clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrCallT<CommAcceptCbPtrFun> > &subCall, const Ipc::FdNoteId noteId);
+
 void clientOpenListenSockets(void);
 void clientConnectionsClose(void);
 void httpRequestFree(void *);
+void clientSetKeepaliveFlag(ClientHttpRequest *http);
+
+/* misplaced declaratrions of Stream callbacks provided/used by client side */
+SQUIDCEXTERN CSR clientGetMoreData;
+SQUIDCEXTERN CSS clientReplyStatus;
+SQUIDCEXTERN CSD clientReplyDetach;
+CSCB clientSocketRecipient;
+CSD clientSocketDetach;
+
+/* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
+ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
+void clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver);
+void clientPostHttpsAccept(ConnStateData *connState);
 
 #endif /* SQUID_CLIENTSIDE_H */

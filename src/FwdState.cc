@@ -39,6 +39,7 @@
 #include "CacheManager.h"
 #include "CachePeer.h"
 #include "client_side.h"
+#include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -47,8 +48,6 @@
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
-#include "ftp.h"
-#include "FtpGatewayServer.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "gopher.h"
@@ -720,15 +719,9 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 #endif
 
-    const CbcPointer<ConnStateData> &clientConnState =
-        request->clientConnectionManager;
-    if (clientConnState.valid() && clientConnState->isFtp) {
-        // this is not an idle connection, so we do not want I/O monitoring
-        const bool monitor = false;
-        clientConnState->pinConnection(serverConnection(), request,
-                                       serverConnection()->getPeer(), false,
-                                       monitor);
-    }
+    // should reach ConnStateData before the dispatched Client job starts
+    CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                 ConnStateData::notePeerConnection, serverConnection());
 
     dispatch();
 }
@@ -1007,7 +1000,7 @@ FwdState::dispatch()
             break;
 
         case AnyP::PROTO_FTP:
-            if (request->clientConnectionManager->isFtp)
+            if (request->flags.ftpNative)
                 ftpGatewayServerStart(this);
             else
                 ftpStart(this);
