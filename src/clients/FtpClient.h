@@ -162,8 +162,6 @@ bool ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr);
 bool ParseProtoIpPort(const char *buf, Ip::Address &addr);
 /// parses a ftp quoted quote-escaped path
 const char *unescapeDoubleQuoted(const char *quotedPath);
-/// Return true if the FTP command takes as parameter a pathname
-bool hasPathParameter(const String &cmd);
-}; // namespace Ftp
+} // namespace Ftp
 
 #endif /* SQUID_FTP_SERVER_H */

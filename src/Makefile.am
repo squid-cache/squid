@@ -46,8 +46,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp parser comm eui acl format fs repl
-DIST_SUBDIRS = base anyp parser comm eui acl format fs repl
+SUBDIRS	= base anyp ftp parser comm eui acl format clients servers fs repl
+DIST_SUBDIRS = base anyp ftp parser comm eui acl format clients servers fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -312,6 +312,7 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
+	clientStreamForward.h \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	CompletionDispatcher.cc \
@@ -363,12 +364,6 @@ squid_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	Generic.h \
@@ -640,6 +635,9 @@ squid_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	format/libformat.la \
+	clients/libclients.la \
+	servers/libservers.la \
+	ftp/libftp.la \
 	$(XTRA_OBJS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
@@ -675,6 +673,9 @@ squid_DEPENDENCIES = \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
+	ftp/libftp.la \
+	clients/libclients.la \
+	servers/libservers.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -1469,12 +1470,6 @@ tests_testCacheManager_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1612,7 +1607,10 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
+	clients/libclients.la \
+	servers/libservers.la \
 	http/libsquid-http.la \
+	ftp/libftp.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -1892,12 +1890,6 @@ tests_testEvent_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2050,7 +2042,10 @@ nodist_tests_testEvent_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_testEvent_LDADD = \
+	clients/libclients.la \
+	servers/libservers.la \
 	http/libsquid-http.la \
+	ftp/libftp.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2146,12 +2141,6 @@ tests_testEventLoop_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2304,7 +2293,10 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_testEventLoop_LDADD = \
+	clients/libclients.la \
+	servers/libservers.la \
 	http/libsquid-http.la \
+	ftp/libftp.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2396,12 +2388,6 @@ tests_test_http_range_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2551,7 +2537,10 @@ nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_test_http_range_LDADD = \
+	clients/libclients.la \
+	servers/libservers.la \
 	http/libsquid-http.la \
+	ftp/libftp.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2708,12 +2697,6 @@ tests_testHttpRequest_SOURCES = \
 	fde.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2847,6 +2830,9 @@ tests_testHttpRequest_SOURCES = \
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
+	clients/libclients.la \
+	servers/libservers.la \
+	ftp/libftp.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3532,12 +3518,6 @@ tests_testURL_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	ftp.h \
-	ftp.cc \
-	FtpGatewayServer.h \
-	FtpGatewayServer.cc \
-	FtpServer.h \
-	FtpServer.cc \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -3692,7 +3672,10 @@ tests_testURL_SOURCES = \
 nodist_tests_testURL_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testURL_LDADD = \
+	clients/libclients.la \
+	servers/libservers.la \
 	http/libsquid-http.la \
+	ftp/libftp.la \
 	anyp/libanyp.la \
 	ident/libident.la \
 	acl/libacls.la \

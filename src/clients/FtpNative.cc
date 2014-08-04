@@ -6,14 +6,15 @@
 #include "squid.h"
 
 #include "anyp/PortCfg.h"
-#include "FtpGatewayServer.h"
-#include "FtpServer.h"
+#include "client_side.h"
+#include "clients/FtpClient.h"
+#include "ftp/Parsing.h"
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
+#include "servers/FtpServer.h"
 #include "Server.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "client_side.h"
 #include "wordlist.h"
 
 namespace Ftp {
@@ -31,8 +32,11 @@ public:
 protected:
     virtual void start();
 
-    ConnStateData::FtpState clientState() const;
-    void clientState(ConnStateData::FtpState newState);
+    const Ftp::MasterState &master() const;
+    Ftp::MasterState &updateMaster();
+    Ftp::ServerState clientState() const;
+    void clientState(Ftp::ServerState newState);
+
     virtual void serverComplete();
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
     virtual void handleControlReply();
@@ -143,11 +147,11 @@ ServerStateData::~ServerStateData()
 void
 ServerStateData::start()
 {
-    if (!fwd->request->clientConnectionManager->ftp.readGreeting)
+    if (!master().clientReadGreeting)
         Ftp::ServerStateData::start();
     else
-    if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ||
-        clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST)
+    if (clientState() == fssHandleDataRequest ||
+        clientState() == fssHandleUploadRequest)
         handleDataRequest();
     else
         sendCommand();
@@ -178,17 +182,38 @@ ServerStateData::serverComplete()
     Ftp::ServerStateData::serverComplete();
 }
 
-ConnStateData::FtpState
+Ftp::MasterState &
+ServerStateData::updateMaster()
+{
+    CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
+    if (mgr.valid()) {
+        if (Ftp::Server *srv = dynamic_cast<Ftp::Server*>(mgr.get()))
+            return srv->master;
+    }
+    // this code will not be necessary once the master is inside MasterXaction
+    debugs(9, 3, "our server side is gone: " << mgr);
+    static Ftp::MasterState Master;
+    Master = Ftp::MasterState();
+    return Master;
+}
+
+const Ftp::MasterState &
+ServerStateData::master() const
+{
+    return const_cast<Ftp::Gateway::ServerStateData*>(this)->updateMaster();
+}
+
+Ftp::ServerState
 ServerStateData::clientState() const
 {
-    return fwd->request->clientConnectionManager->ftp.state;
+    return master().serverState;
 }
 
 void
-ServerStateData::clientState(ConnStateData::FtpState newState)
+ServerStateData::clientState(Ftp::ServerState newState)
 {
-    ConnStateData::FtpState &cltState =
-        fwd->request->clientConnectionManager->ftp.state;
+    // XXX: s/client/server/g
+    Ftp::ServerState &cltState = updateMaster().serverState;
     debugs(9, 3, "client state was " << cltState << " now: " << newState);
     cltState = newState;
 }
@@ -215,7 +240,7 @@ void
 ServerStateData::failed(err_type error, int xerrno)
 {
     if (!doneWithServer())
-        clientState(ConnStateData::FTP_ERROR);
+        clientState(fssError);
 
     // TODO: we need to customize ErrorState instead
     if (entry->isEmpty())
@@ -321,7 +346,8 @@ ServerStateData::forwardPreliminaryReply(const PreliminaryCb cb)
 {
     debugs(9, 5, HERE << "Forwarding preliminary reply to client");
 
-    assert(thePreliminaryCb == NULL);
+    // we must prevent concurrent ConnStateData::sendControlMsg() calls
+    Must(thePreliminaryCb == NULL);
     thePreliminaryCb = cb;
 
     const HttpReply::Pointer reply = createHttpReply(Http::scContinue);
@@ -340,7 +366,7 @@ ServerStateData::proceedAfterPreliminaryReply()
 {
     debugs(9, 5, HERE << "Proceeding after preliminary reply to client");
 
-    assert(thePreliminaryCb != NULL);
+    Must(thePreliminaryCb != NULL);
     const PreliminaryCb cb = thePreliminaryCb;
     thePreliminaryCb = NULL;
     (this->*cb)();
@@ -384,7 +410,7 @@ ServerStateData::createHttpReply(const Http::StatusCode httpStatus, const int cl
 void
 ServerStateData::handleDataRequest()
 {
-    data.addr(fwd->request->clientConnectionManager->ftp.serverDataAddr);
+    data.addr(master().clientDataAddr);
     connectDataChannel();
 }
 
@@ -424,13 +450,13 @@ ServerStateData::startDataUpload()
 void
 ServerStateData::readGreeting()
 {
-    assert(!fwd->request->clientConnectionManager->ftp.readGreeting);
+    assert(!master().clientReadGreeting);
 
     switch (ctrl.replycode) {
     case 220:
-        fwd->request->clientConnectionManager->ftp.readGreeting = true;
-        if (clientState() == ConnStateData::FTP_BEGIN)
-            clientState(ConnStateData::FTP_CONNECTED);
+        updateMaster().clientReadGreeting = true;
+        if (clientState() == fssBegin)
+            clientState(fssConnected);
 
         // Do not forward server greeting to the client because our client
         // side code has greeted the client already. Also, a greeting may
@@ -468,10 +494,10 @@ ServerStateData::sendCommand()
     else
         debugs(9, 5, HERE << "command: " << cmd << ", no parameters");
 
-    if (clientState() == ConnStateData::FTP_HANDLE_PASV ||
-        clientState() == ConnStateData::FTP_HANDLE_EPSV ||
-        clientState() == ConnStateData::FTP_HANDLE_EPRT ||
-        clientState() == ConnStateData::FTP_HANDLE_PORT) {
+    if (clientState() == fssHandlePasv ||
+        clientState() == fssHandleEpsv ||
+        clientState() == fssHandleEprt ||
+        clientState() == fssHandlePort) {
         sendPassive();
         return;
     }
@@ -486,21 +512,21 @@ ServerStateData::sendCommand()
     writeCommand(mb.content());
 
     state =
-        clientState() == ConnStateData::FTP_HANDLE_CDUP ? SENT_CDUP :
-        clientState() == ConnStateData::FTP_HANDLE_CWD ? SENT_CWD :
-        clientState() == ConnStateData::FTP_HANDLE_FEAT ? SENT_FEAT :
-        clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ? SENT_DATA_REQUEST :
-        clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST ? SENT_DATA_REQUEST :
-        clientState() == ConnStateData::FTP_CONNECTED ? SENT_USER :
-        clientState() == ConnStateData::FTP_HANDLE_PASS ? SENT_PASS :
+        clientState() == fssHandleCdup ? SENT_CDUP :
+        clientState() == fssHandleCwd ? SENT_CWD :
+        clientState() == fssHandleFeat ? SENT_FEAT :
+        clientState() == fssHandleDataRequest ? SENT_DATA_REQUEST :
+        clientState() == fssHandleUploadRequest ? SENT_DATA_REQUEST :
+        clientState() == fssConnected ? SENT_USER :
+        clientState() == fssHandlePass ? SENT_PASS :
         SENT_COMMAND;
 }
 
 void
 ServerStateData::readReply()
 {
-    assert(clientState() == ConnStateData::FTP_CONNECTED ||
-           clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST);
+    assert(clientState() == fssConnected ||
+           clientState() == fssHandleUploadRequest);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         forwardPreliminaryReply(&ServerStateData::scheduleReadControlReply);
@@ -511,7 +537,7 @@ ServerStateData::readReply()
 void
 ServerStateData::readFeatReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_FEAT);
+    assert(clientState() == fssHandleFeat);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
@@ -522,12 +548,12 @@ ServerStateData::readFeatReply()
 void
 ServerStateData::readPasvReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_PASV || clientState() == ConnStateData::FTP_HANDLE_EPSV || clientState() == ConnStateData::FTP_HANDLE_PORT || clientState() == ConnStateData::FTP_HANDLE_EPRT);
+    assert(clientState() == fssHandlePasv || clientState() == fssHandleEpsv || clientState() == fssHandlePort || clientState() == fssHandleEprt);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
 
-    if (handlePasvReply(fwd->request->clientConnectionManager->ftp.serverDataAddr))
+    if (handlePasvReply(updateMaster().clientDataAddr))
         forwardReply();
     else
         forwardError();
@@ -539,7 +565,7 @@ ServerStateData::readEpsvReply()
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
 
-    if (handleEpsvReply(fwd->request->clientConnectionManager->ftp.serverDataAddr)) {
+    if (handleEpsvReply(updateMaster().clientDataAddr)) {
         if (ctrl.message == NULL)
             return; // didn't get complete reply yet
 
@@ -551,13 +577,13 @@ ServerStateData::readEpsvReply()
 void
 ServerStateData::readDataReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST ||
-           clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST);
+    assert(clientState() == fssHandleDataRequest ||
+           clientState() == fssHandleUploadRequest);
 
     if (ctrl.replycode == 125 || ctrl.replycode == 150) {
-        if (clientState() == ConnStateData::FTP_HANDLE_DATA_REQUEST)
+        if (clientState() == fssHandleDataRequest)
             forwardPreliminaryReply(&ServerStateData::startDataDownload);
-        else // clientState() == ConnStateData::FTP_HANDLE_UPLOAD_REQUEST
+        else // clientState() == fssHandleUploadRequest
             forwardPreliminaryReply(&ServerStateData::startDataUpload);
     } else
         forwardReply();
@@ -588,8 +614,8 @@ ServerStateData::stopDirTracking()
 {
     debugs(9, 5, "Got code from pwd: " << ctrl.replycode << ", msg: " << ctrl.last_reply);
 
-    if (ctrl.replycode == 257)            
-        fwd->request->clientConnectionManager->ftpSetWorkingDir(Ftp::unescapeDoubleQuoted(ctrl.last_reply));
+    if (ctrl.replycode == 257)
+        updateMaster().workingDir = Ftp::UnescapeDoubleQuoted(ctrl.last_reply);
 
     wordlistDestroy(&ctrl.message);
     safe_free(ctrl.last_command);
@@ -608,7 +634,8 @@ ServerStateData::stopDirTracking()
 void
 ServerStateData::readCwdOrCdupReply()
 {
-    assert(clientState() == ConnStateData::FTP_HANDLE_CWD || clientState() == ConnStateData::FTP_HANDLE_CDUP);
+    assert(clientState() == fssHandleCwd ||
+           clientState() == fssHandleCdup);
 
     debugs(9, 5, HERE << "Got code " << ctrl.replycode << ", msg: " << ctrl.last_reply);
 
