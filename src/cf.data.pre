@@ -1235,7 +1235,7 @@ DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
 	Allowing or Denying access based on defined access lists
 
-	Access to the HTTP port:
+	To allow or deny a message received on an HTTP, HTTPS, or FTP port:
 	http_access allow|deny [!]aclname ...
 
 	NOTE on default values:
@@ -1871,14 +1871,51 @@ TYPE: PortCfg
 DEFAULT: none
 LOC: FtpPortList
 DOC_START
-	Usage:  [ip:]port [options]
+	Enables Native FTP proxy by specifying the socket address where Squid
+	listens for FTP client requests. See http_port directive for various
+	ways to specify the listening address and mode.
 
-	Ftp options:
-		ftp-track-dirs=on|off 
-		    Enables tracking of FTP directories by injecting extra
-		    PWD commands and adjusting Request-URI (in wrapping HTTP
-		    requests) to reflect the current FTP server directory.
-		    Disabled by default.
+	Usage: ftp_port address [mode] [options]
+
+	WARNING: This is a new, experimental, complex feature that has seen
+	limited production exposure. Some Squid modules (e.g., caching) do not
+	currently work with native FTP proxying, and many features have not
+	even been tested for compatibility. Test well before deploying!
+
+	Native FTP proxying differs substantially from proxying HTTP requests
+	with ftp:// URIs because Squid works as an FTP server and receives
+	actual FTP commands (rather than HTTP requests with FTP URLs).
+
+	Native FTP commands accepted at ftp_port are internally converted or
+	wrapped into HTTP-like messages. The same happens to Native FTP
+	responses received from FTP origin servers. Those HTTP-like messages
+	are shoveled through regular access control and adaptation layers
+	between the FTP client and the FTP origin server. This allows Squid to
+	examine, adapt, block, and log FTP exchanges. Squid reuses most HTTP
+	mechanisms when shoveling wrapped FTP messages. For example,
+	http_access and adaptation_access directives are used.
+
+	Modes:
+
+	    intercept	Same as http_port intercept. The FTP origin address is
+			determined based on the intended destination of the
+			intercepted connection.
+
+	By default (i.e., without an explicit mode option), Squid extracts the
+	FTP origin address from the login@origin parameter of the FTP USER
+	command. Many popular FTP clients support such native FTP proxying.
+
+	Options:
+
+	    ftp-track-dirs=on|off 
+			Enables tracking of FTP directories by injecting extra
+			PWD commands and adjusting Request-URI (in wrapping
+			HTTP requests) to reflect the current FTP server
+			directory. Disabled by default.
+
+	Other http_port modes and options that are not specific to HTTP and
+	HTTPS may also work.
+DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
 TYPE: acl_tos
