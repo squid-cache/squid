@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "clients/FtpClient.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "comm/Read.h"
@@ -41,7 +42,6 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
-#include "FtpServer.h"
 #include "FwdState.h"
 #include "html_quote.h"
 #include "HttpHdrContRange.h"

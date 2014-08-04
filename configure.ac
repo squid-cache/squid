@@ -3457,8 +3457,11 @@ AC_CONFIG_FILES([
 	scripts/Makefile
 	src/Makefile
 	src/anyp/Makefile
+	src/ftp/Makefile
 	src/base/Makefile
 	src/acl/Makefile
+	src/clients/Makefile
+	src/servers/Makefile
 	src/fs/Makefile
 	src/repl/Makefile
 	src/auth/Makefile
