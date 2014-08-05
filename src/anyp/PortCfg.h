@@ -27,7 +27,7 @@ public:
     /**
      * Set this ports transport type from a string representation.
      * Unknown transport type representations will halt Squid.
-     * Supports: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1.
+     * Supports: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1, and FTP.
      */
     void setTransport(const char *aProtocol);
 
@@ -46,6 +46,8 @@ public:
     bool ignore_cc;          ///< Ignore request Cache-Control directives
 
     bool connection_auth_disabled; ///< Don't support connection oriented auth
+
+    bool ftp_track_dirs; ///< whether transactions should track FTP directories
 
     int vport;               ///< virtual port support. -1 if dynamic, >0 static
     int disable_pmtu_discovery;
@@ -94,8 +96,6 @@ public:
     long sslContextFlags; ///< flags modifying the use of SSL
     long sslOptions; ///< SSL engine options
 #endif
-
-    bool ftp_track_dirs; ///< whether ftp_port should track FTP directories
 };
 
 } // namespace AnyP

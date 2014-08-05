@@ -30,11 +30,12 @@ AnyP::PortCfg::PortCfg() :
         actAsOrigin(false),
         ignore_cc(false),
         connection_auth_disabled(false),
+        ftp_track_dirs(false),
         vport(0),
         disable_pmtu_discovery(0),
-        listenConn(),
+        listenConn()
 #if USE_OPENSSL
-        cert(NULL),
+        ,cert(NULL),
         key(NULL),
         version(0),
         cipher(NULL),
@@ -59,9 +60,8 @@ AnyP::PortCfg::PortCfg() :
         dhParams(),
         contextMethod(),
         sslContextFlags(0),
-        sslOptions(0),
+        sslOptions(0)
 #endif
-        ftp_track_dirs(false)
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
 }
@@ -105,9 +105,9 @@ AnyP::PortCfg::clone() const
     b->vhost = vhost;
     b->vport = vport;
     b->connection_auth_disabled = connection_auth_disabled;
+    b->ftp_track_dirs = ftp_track_dirs;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
     b->tcp_keepalive = tcp_keepalive;
-    b->ftp_track_dirs = ftp_track_dirs;
 
 #if 0
     // TODO: AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
@@ -200,7 +200,7 @@ AnyP::PortCfg::setTransport(const char *aProtocol)
         transport = AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
 
     else if (strcasecmp("ftp", aProtocol) == 0)
-        transport = AnyP::ProtocolVersion(AnyP::PROTO_FTP, 1,0);
+        transport = AnyP::ProtocolVersion(AnyP::PROTO_FTP, 1,1);
 
     else
         fatalf("http(s)_port protocol=%s is not supported\n", aProtocol);
