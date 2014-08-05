@@ -6,6 +6,6 @@ libclients_la_SOURCES = \
 	FtpClient.cc \
 	FtpClient.h \
 	FtpGateway.cc \
-	FtpNative.cc \
+	FtpRelay.cc \
 	\
 	forward.h

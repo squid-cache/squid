@@ -61,7 +61,7 @@ escapeIAC(const char *buf)
 
 /// configures the channel with a descriptor and registers a close handler
 void
-FtpChannel::opened(const Comm::ConnectionPointer &newConn,
+Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
                       const AsyncCall::Pointer &aCloser)
 {
     assert(!Comm::IsConnOpen(conn));
@@ -77,7 +77,7 @@ FtpChannel::opened(const Comm::ConnectionPointer &newConn,
 
 /// planned close: removes the close handler and calls comm_close
 void
-FtpChannel::close()
+Ftp::Channel::close()
 {
     // channels with active listeners will be closed when the listener handler dies.
     if (Comm::IsConnOpen(conn)) {
@@ -88,7 +88,7 @@ FtpChannel::close()
 }
 
 void
-FtpChannel::forget()
+Ftp::Channel::forget()
 {
     if (Comm::IsConnOpen(conn)) {
         commUnsetConnTimeout(conn);
@@ -98,14 +98,14 @@ FtpChannel::forget()
 }
 
 void
-FtpChannel::clear()
+Ftp::Channel::clear()
 {
     conn = NULL;
     closer = NULL;
 }
 
-ServerStateData::ServerStateData(FwdState *fwdState):
-    AsyncJob("Ftp::ServerStateData"), ::ServerStateData(fwdState)
+Ftp::Client::Client(FwdState *fwdState):
+    AsyncJob("Ftp::Client"), ::ServerStateData(fwdState)
 {
     ++statCounter.server.all.requests;
     ++statCounter.server.ftp.requests;
@@ -114,14 +114,14 @@ ServerStateData::ServerStateData(FwdState *fwdState):
     ctrl.buf = static_cast<char *>(memAllocBuf(4096, &ctrl.size));
     ctrl.offset = 0;
 
-    typedef CommCbMemFunT<ServerStateData, CommCloseCbParams> Dialer;
+    typedef CommCbMemFunT<Client, CommCloseCbParams> Dialer;
     const AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this,
-                                                  ServerStateData::ctrlClosed);
+                                                  Ftp::Client::ctrlClosed);
     ctrl.opened(fwdState->serverConnection(), closer);
 }
 
 void
-ServerStateData::DataChannel::addr(const Ip::Address &import)
+Ftp::Client::DataChannel::addr(const Ip::Address &import)
 {
      static char addrBuf[MAX_IPSTRLEN];
      import.toStr(addrBuf, sizeof(addrBuf));
@@ -130,10 +130,10 @@ ServerStateData::DataChannel::addr(const Ip::Address &import)
      port = import.port();
 }
 
-ServerStateData::~ServerStateData()
+Ftp::Client::~Client()
 {
     if (data.opener != NULL) {
-        data.opener->cancel("Ftp::ServerStateData destructed");
+        data.opener->cancel("Ftp::Client destructed");
         data.opener = NULL;
     }
     data.close();
@@ -162,13 +162,13 @@ ServerStateData::~ServerStateData()
 }
 
 void
-ServerStateData::start()
+Ftp::Client::start()
 {
     scheduleReadControlReply(0);
 }
 
 void
-ServerStateData::initReadBuf()
+Ftp::Client::initReadBuf()
 {
     if (data.readBuf == NULL) {
         data.readBuf = new MemBuf;
@@ -180,7 +180,7 @@ ServerStateData::initReadBuf()
  * Close the FTP server connection(s). Used by serverComplete().
  */
 void
-ServerStateData::closeServer()
+Ftp::Client::closeServer()
 {
     if (Comm::IsConnOpen(ctrl.conn)) {
         debugs(9,3, HERE << "closing FTP server FD " << ctrl.conn->fd << ", this " << this);
@@ -203,13 +203,13 @@ ServerStateData::closeServer()
  \retval false	Either control channel or data is still active.
  */
 bool
-ServerStateData::doneWithServer() const
+Ftp::Client::doneWithServer() const
 {
     return !Comm::IsConnOpen(ctrl.conn) && !Comm::IsConnOpen(data.conn);
 }
 
 void
-ServerStateData::failed(err_type error, int xerrno)
+Ftp::Client::failed(err_type error, int xerrno)
 {
     debugs(9,3,HERE << "entry-null=" << (entry?entry->isEmpty():0) << ", entry=" << entry);
 
@@ -247,7 +247,7 @@ ServerStateData::failed(err_type error, int xerrno)
 }
 
 Http::StatusCode
-ServerStateData::failedHttpStatus(err_type &error)
+Ftp::Client::failedHttpStatus(err_type &error)
 {
     if (error == ERR_NONE)
         error = ERR_FTP_FAILURE;
@@ -261,7 +261,7 @@ ServerStateData::failedHttpStatus(err_type &error)
  * buffered_ok=1.  Perhaps it can be removed at some point.
  */
 void
-ServerStateData::scheduleReadControlReply(int buffered_ok)
+Ftp::Client::scheduleReadControlReply(int buffered_ok)
 {
     debugs(9, 3, HERE << ctrl.conn);
 
@@ -277,18 +277,18 @@ ServerStateData::scheduleReadControlReply(int buffered_ok)
             commUnsetConnTimeout(data.conn);
         }
 
-        typedef CommCbMemFunT<ServerStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this, ServerStateData::timeout);
+        typedef CommCbMemFunT<Client, CommTimeoutCbParams> TimeoutDialer;
+        AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this, Ftp::Client::timeout);
         commSetConnTimeout(ctrl.conn, Config.Timeout.read, timeoutCall);
 
-        typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
-        AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, ServerStateData::readControlReply);
+        typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
+        AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, Ftp::Client::readControlReply);
         comm_read(ctrl.conn, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
     }
 }
 
 void
-ServerStateData::readControlReply(const CommIoCbParams &io)
+Ftp::Client::readControlReply(const CommIoCbParams &io)
 {
     debugs(9, 3, HERE << "FD " << io.fd << ", Read " << io.size << " bytes");
 
@@ -345,7 +345,7 @@ ServerStateData::readControlReply(const CommIoCbParams &io)
 }
 
 void
-ServerStateData::handleControlReply()
+Ftp::Client::handleControlReply()
 {
     debugs(9, 3, HERE);
 
@@ -381,7 +381,7 @@ ServerStateData::handleControlReply()
 }
 
 bool
-ServerStateData::handlePasvReply(Ip::Address &srvAddr)
+Ftp::Client::handlePasvReply(Ip::Address &srvAddr)
 {
     int code = ctrl.replycode;
     char *buf;
@@ -412,7 +412,7 @@ ServerStateData::handlePasvReply(Ip::Address &srvAddr)
 }
 
 bool
-ServerStateData::handleEpsvReply(Ip::Address &remoteAddr)
+Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
 {
     int code = ctrl.replycode;
     char *buf;
@@ -517,10 +517,10 @@ ServerStateData::handleEpsvReply(Ip::Address &remoteAddr)
 }
 
 // The server-side EPRT and PORT commands are not yet implemented.
-// The ServerStateData::sendEprt() will fail because of the unimplemented
+// The Ftp::Client::sendEprt() will fail because of the unimplemented
 // openListenSocket() or sendPort() methods
 bool
-ServerStateData::sendEprt()
+Ftp::Client::sendEprt()
 {
     if (!Config.Ftp.eprt) {
         /* Disabled. Switch immediately to attempting old PORT command. */
@@ -559,14 +559,14 @@ ServerStateData::sendEprt()
 }
 
 bool
-ServerStateData::sendPort()
+Ftp::Client::sendPort()
 {
     failed(ERR_FTP_FAILURE, 0);
     return false;
 }
 
 bool
-ServerStateData::sendPassive()
+Ftp::Client::sendPassive()
 {
     debugs(9, 3, HERE);
 
@@ -687,7 +687,7 @@ ServerStateData::sendPassive()
 
 
 void
-ServerStateData::connectDataChannel()
+Ftp::Client::connectDataChannel()
 {
     safe_free(ctrl.last_command);
 
@@ -705,37 +705,37 @@ ServerStateData::connectDataChannel()
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
-    data.opener = commCbCall(9,3, "Ftp::ServerStateData::dataChannelConnected",
-                             CommConnectCbPtrFun(ServerStateData::dataChannelConnected, this));
+    data.opener = commCbCall(9,3, "Ftp::Client::dataChannelConnected",
+                             CommConnectCbPtrFun(Ftp::Client::dataChannelConnected, this));
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, data.opener, Config.Timeout.connect);
     cs->setHost(data.host);
     AsyncJob::Start(cs);
 }
 
 void
-ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
+Ftp::Client::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
-    ServerStateData *ftpState = static_cast<ServerStateData *>(data);
+    Client *ftpState = static_cast<Client *>(data);
     ftpState->dataChannelConnected(conn, status, xerrno);
 }
 
 bool
-ServerStateData::openListenSocket()
+Ftp::Client::openListenSocket()
 {
     return false;
 }
 
 /// creates a data channel Comm close callback
 AsyncCall::Pointer
-ServerStateData::dataCloser()
+Ftp::Client::dataCloser()
 {
-    typedef CommCbMemFunT<ServerStateData, CommCloseCbParams> Dialer;
-    return JobCallback(9, 5, Dialer, this, ServerStateData::dataClosed);
+    typedef CommCbMemFunT<Client, CommCloseCbParams> Dialer;
+    return JobCallback(9, 5, Dialer, this, Ftp::Client::dataClosed);
 }
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
 void
-ServerStateData::dataClosed(const CommCloseCbParams &io)
+Ftp::Client::dataClosed(const CommCloseCbParams &io)
 {
     debugs(9, 4, HERE);
     if (data.listenConn != NULL) {
@@ -747,7 +747,7 @@ ServerStateData::dataClosed(const CommCloseCbParams &io)
 }
 
 void
-ServerStateData::writeCommand(const char *buf)
+Ftp::Client::writeCommand(const char *buf)
 {
     char *ebuf;
     /* trace FTP protocol communications at level 2 */
@@ -770,16 +770,16 @@ ServerStateData::writeCommand(const char *buf)
         return;
     }
 
-    typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
+    typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(9, 5, Dialer, this,
-                                          ServerStateData::writeCommandCallback);
+                                          Ftp::Client::writeCommandCallback);
     Comm::Write(ctrl.conn, ctrl.last_command, strlen(ctrl.last_command), call, NULL);
 
     scheduleReadControlReply(0);
 }
 
 void
-ServerStateData::writeCommandCallback(const CommIoCbParams &io)
+Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
 {
 
     debugs(9, 5, HERE << "wrote " << io.size << " bytes");
@@ -803,15 +803,15 @@ ServerStateData::writeCommandCallback(const CommIoCbParams &io)
 
 /// handler called by Comm when FTP control channel is closed unexpectedly
 void
-ServerStateData::ctrlClosed(const CommCloseCbParams &io)
+Ftp::Client::ctrlClosed(const CommCloseCbParams &io)
 {
     debugs(9, 4, HERE);
     ctrl.clear();
-    mustStop("Ftp::ServerStateData::ctrlClosed");
+    mustStop("Ftp::Client::ctrlClosed");
 }
 
 void
-ServerStateData::timeout(const CommTimeoutCbParams &io)
+Ftp::Client::timeout(const CommTimeoutCbParams &io)
 {
     debugs(9, 4, HERE << io.conn << ": '" << entry->url() << "'" );
 
@@ -823,13 +823,13 @@ ServerStateData::timeout(const CommTimeoutCbParams &io)
 }
 
 const Comm::ConnectionPointer &
-ServerStateData::dataConnection() const
+Ftp::Client::dataConnection() const
 {
     return data.conn;
 }
 
 void
-ServerStateData::maybeReadVirginBody()
+Ftp::Client::maybeReadVirginBody()
 {
     // too late to read
     if (!Comm::IsConnOpen(data.conn) || fd_table[data.conn->fd].closing())
@@ -849,20 +849,20 @@ ServerStateData::maybeReadVirginBody()
 
     data.read_pending = true;
 
-    typedef CommCbMemFunT<ServerStateData, CommTimeoutCbParams> TimeoutDialer;
+    typedef CommCbMemFunT<Client, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
-                                      TimeoutDialer, this, ServerStateData::timeout);
+                                      TimeoutDialer, this, Ftp::Client::timeout);
     commSetConnTimeout(data.conn, Config.Timeout.read, timeoutCall);
 
     debugs(9,5,HERE << "queueing read on FD " << data.conn->fd);
 
-    typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
+    typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
     entry->delayAwareRead(data.conn, data.readBuf->space(), read_sz,
-                          JobCallback(9, 5, Dialer, this, ServerStateData::dataRead));
+                          JobCallback(9, 5, Dialer, this, Ftp::Client::dataRead));
 }
 
 void
-ServerStateData::dataRead(const CommIoCbParams &io)
+Ftp::Client::dataRead(const CommIoCbParams &io)
 {
     int j;
     int bin;
@@ -931,7 +931,7 @@ ServerStateData::dataRead(const CommIoCbParams &io)
 }
 
 void
-ServerStateData::dataComplete()
+Ftp::Client::dataComplete()
 {
     debugs(9, 3,HERE);
 
@@ -966,7 +966,7 @@ ServerStateData::dataComplete()
  *	including canceling close handlers
  */
 void
-ServerStateData::abortTransaction(const char *reason)
+Ftp::Client::abortTransaction(const char *reason)
 {
     debugs(9, 3, HERE << "aborting transaction for " << reason <<
            "; FD " << (ctrl.conn!=NULL?ctrl.conn->fd:-1) << ", Data FD " << (data.conn!=NULL?data.conn->fd:-1) << ", this " << this);
@@ -976,7 +976,7 @@ ServerStateData::abortTransaction(const char *reason)
     }
 
     fwd->handleUnregisteredServerEnd();
-    mustStop("ServerStateData::abortTransaction");
+    mustStop("Ftp::Client::abortTransaction");
 }
 
 /**
@@ -984,18 +984,18 @@ ServerStateData::abortTransaction(const char *reason)
  * on the data socket
  */
 void
-ServerStateData::switchTimeoutToDataChannel()
+Ftp::Client::switchTimeoutToDataChannel()
 {
     commUnsetConnTimeout(ctrl.conn);
 
-    typedef CommCbMemFunT<ServerStateData, CommTimeoutCbParams> TimeoutDialer;
+    typedef CommCbMemFunT<Client, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this,
-                                                 ServerStateData::timeout);
+                                                 Ftp::Client::timeout);
     commSetConnTimeout(data.conn, Config.Timeout.read, timeoutCall);
 }
 
 void
-ServerStateData::sentRequestBody(const CommIoCbParams &io)
+Ftp::Client::sentRequestBody(const CommIoCbParams &io)
 {
     if (io.size > 0)
         kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
@@ -1006,7 +1006,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
  * called after we wrote the last byte of the request body
  */
 void
-ServerStateData::doneSendingRequestBody()
+Ftp::Client::doneSendingRequestBody()
 {
     ::ServerStateData::doneSendingRequestBody();
     debugs(9,3, HERE);
@@ -1020,7 +1020,7 @@ ServerStateData::doneSendingRequestBody()
 /// Parses FTP server control response into ctrl structure fields,
 /// setting bytesUsed and returning true on success.
 bool
-ServerStateData::parseControlReply(size_t &bytesUsed)
+Ftp::Client::parseControlReply(size_t &bytesUsed)
 {
     char *s;
     char *sbuf;

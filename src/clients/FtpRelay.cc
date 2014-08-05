@@ -7,6 +7,7 @@
 
 #include "anyp/PortCfg.h"
 #include "client_side.h"
+#include "clients/forward.h"
 #include "clients/FtpClient.h"
 #include "ftp/Parsing.h"
 #include "HttpHdrCc.h"
@@ -19,30 +20,35 @@
 
 namespace Ftp {
 
-namespace Gateway {
-
-class ServerStateData: public Ftp::ServerStateData
+/// An FTP client receiving native FTP commands from our FTP server 
+/// (Ftp::Server), forwarding them to the next FTP hop,
+/// and then relaying FTP replies back to our FTP server.
+class Relay: public Ftp::Client
 {
 public:
-    ServerStateData(FwdState *const fwdState);
-    ~ServerStateData();
-
-    virtual void processReplyBody();
+    explicit Relay(FwdState *const fwdState);
+    virtual ~Relay();
 
 protected:
-    virtual void start();
-
     const Ftp::MasterState &master() const;
     Ftp::MasterState &updateMaster();
     Ftp::ServerState clientState() const;
     void clientState(Ftp::ServerState newState);
 
-    virtual void serverComplete();
+    /* Ftp::Client API */
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
+
+    /* ServerStateData API */
+    virtual void serverComplete();
     virtual void handleControlReply();
+    virtual void processReplyBody();
     virtual void handleRequestBodyProducerAborted();
     virtual bool mayReadVirginReplyBody() const;
     virtual void completeForwarding();
+
+    /* AsyncJob API */
+    virtual void start();
+
     void forwardReply();
     void forwardError(err_type error = ERR_NONE, int xerrno = 0);
     void failedErrorMessage(err_type error, int xerrno);
@@ -54,12 +60,12 @@ protected:
     void stopDirTracking();
     bool weAreTrackingDir() const {return savedReply.message != NULL;}
 
-    typedef void (ServerStateData::*PreliminaryCb)();
+    typedef void (Relay::*PreliminaryCb)();
     void forwardPreliminaryReply(const PreliminaryCb cb);
     void proceedAfterPreliminaryReply();
     PreliminaryCb thePreliminaryCb;
 
-    typedef void (ServerStateData::*SM_FUNC)();
+    typedef void (Relay::*SM_FUNC)();
     static const SM_FUNC SM_FUNCS[];
     void readGreeting();
     void sendCommand();
@@ -84,45 +90,48 @@ protected:
         int replyCode; ///< the reply status
     } savedReply; ///< set and delayed while we are tracking using PWD
 
-    CBDATA_CLASS2(ServerStateData);
+    CBDATA_CLASS2(Relay);
 };
 
-CBDATA_CLASS_INIT(ServerStateData);
+} // namespace Ftp
 
-const ServerStateData::SM_FUNC ServerStateData::SM_FUNCS[] = {
-    &ServerStateData::readGreeting, // BEGIN
-    &ServerStateData::readUserOrPassReply, // SENT_USER
-    &ServerStateData::readUserOrPassReply, // SENT_PASS
-    NULL,/*&ServerStateData::readReply*/ // SENT_TYPE
-    NULL,/*&ServerStateData::readReply*/ // SENT_MDTM
-    NULL,/*&ServerStateData::readReply*/ // SENT_SIZE
+CBDATA_NAMESPACED_CLASS_INIT(Ftp, Relay);
+
+const Ftp::Relay::SM_FUNC Ftp::Relay::SM_FUNCS[] = {
+    &Ftp::Relay::readGreeting, // BEGIN
+    &Ftp::Relay::readUserOrPassReply, // SENT_USER
+    &Ftp::Relay::readUserOrPassReply, // SENT_PASS
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_TYPE
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_MDTM
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_SIZE
     NULL, // SENT_EPRT
     NULL, // SENT_PORT
-    &ServerStateData::readEpsvReply, // SENT_EPSV_ALL
-    &ServerStateData::readEpsvReply, // SENT_EPSV_1
-    &ServerStateData::readEpsvReply, // SENT_EPSV_2
-    &ServerStateData::readPasvReply, // SENT_PASV
-    &ServerStateData::readCwdOrCdupReply,  // SENT_CWD
-    NULL,/*&ServerStateData::readDataReply,*/ // SENT_LIST
-    NULL,/*&ServerStateData::readDataReply,*/ // SENT_NLST
-    NULL,/*&ServerStateData::readReply*/ // SENT_REST
-    NULL,/*&ServerStateData::readDataReply*/ // SENT_RETR
-    NULL,/*&ServerStateData::readReply*/ // SENT_STOR
-    NULL,/*&ServerStateData::readReply*/ // SENT_QUIT
-    &ServerStateData::readTransferDoneReply, // READING_DATA
-    &ServerStateData::readReply, // WRITING_DATA
-    NULL,/*&ServerStateData::readReply*/ // SENT_MKDIR
-    &ServerStateData::readFeatReply, // SENT_FEAT
-    NULL,/*&ServerStateData::readPwdReply*/ // SENT_PWD
-    &ServerStateData::readCwdOrCdupReply, // SENT_CDUP
-    &ServerStateData::readDataReply,// SENT_DATA_REQUEST
-    &ServerStateData::readReply, // SENT_COMMAND
+    &Ftp::Relay::readEpsvReply, // SENT_EPSV_ALL
+    &Ftp::Relay::readEpsvReply, // SENT_EPSV_1
+    &Ftp::Relay::readEpsvReply, // SENT_EPSV_2
+    &Ftp::Relay::readPasvReply, // SENT_PASV
+    &Ftp::Relay::readCwdOrCdupReply,  // SENT_CWD
+    NULL,/*&Ftp::Relay::readDataReply,*/ // SENT_LIST
+    NULL,/*&Ftp::Relay::readDataReply,*/ // SENT_NLST
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_REST
+    NULL,/*&Ftp::Relay::readDataReply*/ // SENT_RETR
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_STOR
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_QUIT
+    &Ftp::Relay::readTransferDoneReply, // READING_DATA
+    &Ftp::Relay::readReply, // WRITING_DATA
+    NULL,/*&Ftp::Relay::readReply*/ // SENT_MKDIR
+    &Ftp::Relay::readFeatReply, // SENT_FEAT
+    NULL,/*&Ftp::Relay::readPwdReply*/ // SENT_PWD
+    &Ftp::Relay::readCwdOrCdupReply, // SENT_CDUP
+    &Ftp::Relay::readDataReply,// SENT_DATA_REQUEST
+    &Ftp::Relay::readReply, // SENT_COMMAND
     NULL
 };
 
-ServerStateData::ServerStateData(FwdState *const fwdState):
-    AsyncJob("Ftp::Gateway::ServerStateData"), Ftp::ServerStateData(fwdState),
-    forwardingCompleted(false)
+Ftp::Relay::Relay(FwdState *const fwdState):
+        AsyncJob("Ftp::Relay"),
+        Ftp::Client(fwdState),
+        forwardingCompleted(false)
 {
     savedReply.message = NULL;
     savedReply.lastCommand = NULL;
@@ -134,7 +143,7 @@ ServerStateData::ServerStateData(FwdState *const fwdState):
     entry->releaseRequest();
 }
 
-ServerStateData::~ServerStateData()
+Ftp::Relay::~Relay()
 {
     closeServer(); // TODO: move to Server.cc?
     if (savedReply.message)
@@ -145,10 +154,10 @@ ServerStateData::~ServerStateData()
 }
 
 void
-ServerStateData::start()
+Ftp::Relay::start()
 {
     if (!master().clientReadGreeting)
-        Ftp::ServerStateData::start();
+        Ftp::Client::start();
     else
     if (clientState() == fssHandleDataRequest ||
         clientState() == fssHandleUploadRequest)
@@ -160,7 +169,7 @@ ServerStateData::start()
 /// Keep control connection for future requests, after we are done with it.
 /// Similar to COMPLETE_PERSISTENT_MSG handling in http.cc.
 void
-ServerStateData::serverComplete()
+Ftp::Relay::serverComplete()
 {
     CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
     if (mgr.valid()) {
@@ -179,11 +188,11 @@ ServerStateData::serverComplete()
             }
         }
     }
-    Ftp::ServerStateData::serverComplete();
+    Ftp::Client::serverComplete();
 }
 
 Ftp::MasterState &
-ServerStateData::updateMaster()
+Ftp::Relay::updateMaster()
 {
     CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
     if (mgr.valid()) {
@@ -198,19 +207,19 @@ ServerStateData::updateMaster()
 }
 
 const Ftp::MasterState &
-ServerStateData::master() const
+Ftp::Relay::master() const
 {
-    return const_cast<Ftp::Gateway::ServerStateData*>(this)->updateMaster();
+    return const_cast<Ftp::Relay*>(this)->updateMaster();
 }
 
 Ftp::ServerState
-ServerStateData::clientState() const
+Ftp::Relay::clientState() const
 {
     return master().serverState;
 }
 
 void
-ServerStateData::clientState(Ftp::ServerState newState)
+Ftp::Relay::clientState(Ftp::ServerState newState)
 {
     // XXX: s/client/server/g
     Ftp::ServerState &cltState = updateMaster().serverState;
@@ -227,17 +236,17 @@ ServerStateData::clientState(Ftp::ServerState newState)
  \todo Rewrite FwdState to ignore double completion?
  */
 void
-ServerStateData::completeForwarding()
+Ftp::Relay::completeForwarding()
 {
     debugs(9, 5, forwardingCompleted);
     if (forwardingCompleted)
         return;
     forwardingCompleted = true;
-    Ftp::ServerStateData::completeForwarding();
+    Ftp::Client::completeForwarding();
 }
 
 void
-ServerStateData::failed(err_type error, int xerrno)
+Ftp::Relay::failed(err_type error, int xerrno)
 {
     if (!doneWithServer())
         clientState(fssError);
@@ -246,11 +255,11 @@ ServerStateData::failed(err_type error, int xerrno)
     if (entry->isEmpty())
         failedErrorMessage(error, xerrno); // as a reply
 
-    Ftp::ServerStateData::failed(error, xerrno);
+    Ftp::Client::failed(error, xerrno);
 }
 
 void
-ServerStateData::failedErrorMessage(err_type error, int xerrno)
+Ftp::Relay::failedErrorMessage(err_type error, int xerrno)
 {
     const Http::StatusCode httpStatus = failedHttpStatus(error);
     HttpReply *const reply = createHttpReply(httpStatus);
@@ -260,7 +269,7 @@ ServerStateData::failedErrorMessage(err_type error, int xerrno)
 }
 
 void
-ServerStateData::processReplyBody()
+Ftp::Relay::processReplyBody()
 {
     debugs(9, 3, HERE << "starting");
 
@@ -295,7 +304,7 @@ ServerStateData::processReplyBody()
 }
 
 void
-ServerStateData::handleControlReply()
+Ftp::Relay::handleControlReply()
 {
     if (!request->clientConnectionManager.valid()) {
         debugs(9, 5, "client connection gone");
@@ -303,7 +312,7 @@ ServerStateData::handleControlReply()
         return;
     }
 
-    Ftp::ServerStateData::handleControlReply();
+    Ftp::Client::handleControlReply();
     if (ctrl.message == NULL)
         return; // didn't get complete reply yet
 
@@ -313,7 +322,7 @@ ServerStateData::handleControlReply()
 }
 
 void
-ServerStateData::handleRequestBodyProducerAborted()
+Ftp::Relay::handleRequestBodyProducerAborted()
 {
     ::ServerStateData::handleRequestBodyProducerAborted();
 
@@ -321,14 +330,14 @@ ServerStateData::handleRequestBodyProducerAborted()
 }
 
 bool
-ServerStateData::mayReadVirginReplyBody() const
+Ftp::Relay::mayReadVirginReplyBody() const
 {
     // TODO: move this method to the regular FTP server?
     return Comm::IsConnOpen(data.conn);
 }
 
 void
-ServerStateData::forwardReply()
+Ftp::Relay::forwardReply()
 {
     assert(entry->isEmpty());
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
@@ -342,7 +351,7 @@ ServerStateData::forwardReply()
 }
 
 void
-ServerStateData::forwardPreliminaryReply(const PreliminaryCb cb)
+Ftp::Relay::forwardPreliminaryReply(const PreliminaryCb cb)
 {
     debugs(9, 5, HERE << "Forwarding preliminary reply to client");
 
@@ -353,16 +362,16 @@ ServerStateData::forwardPreliminaryReply(const PreliminaryCb cb)
     const HttpReply::Pointer reply = createHttpReply(Http::scContinue);
 
     // the Sink will use this to call us back after writing 1xx to the client
-    typedef NullaryMemFunT<ServerStateData> CbDialer;
+    typedef NullaryMemFunT<Relay> CbDialer;
     const AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, this,
-        ServerStateData::proceedAfterPreliminaryReply);
+        Ftp::Relay::proceedAfterPreliminaryReply);
 
     CallJobHere1(9, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::sendControlMsg, HttpControlMsg(reply, call));
 }
 
 void
-ServerStateData::proceedAfterPreliminaryReply()
+Ftp::Relay::proceedAfterPreliminaryReply()
 {
     debugs(9, 5, HERE << "Proceeding after preliminary reply to client");
 
@@ -373,13 +382,13 @@ ServerStateData::proceedAfterPreliminaryReply()
 }
 
 void
-ServerStateData::forwardError(err_type error, int xerrno)
+Ftp::Relay::forwardError(err_type error, int xerrno)
 {
     failed(error, xerrno);
 }
 
 HttpReply *
-ServerStateData::createHttpReply(const Http::StatusCode httpStatus, const int clen)
+Ftp::Relay::createHttpReply(const Http::StatusCode httpStatus, const int clen)
 {
     HttpReply *const reply = new HttpReply;
     reply->sline.set(Http::ProtocolVersion(1, 1), httpStatus);
@@ -408,14 +417,14 @@ ServerStateData::createHttpReply(const Http::StatusCode httpStatus, const int cl
 }
 
 void
-ServerStateData::handleDataRequest()
+Ftp::Relay::handleDataRequest()
 {
     data.addr(master().clientDataAddr);
     connectDataChannel();
 }
 
 void
-ServerStateData::startDataDownload()
+Ftp::Relay::startDataDownload()
 {
     assert(Comm::IsConnOpen(data.conn));
 
@@ -432,7 +441,7 @@ ServerStateData::startDataDownload()
 }
 
 void
-ServerStateData::startDataUpload()
+Ftp::Relay::startDataUpload()
 {
     assert(Comm::IsConnOpen(data.conn));
 
@@ -448,7 +457,7 @@ ServerStateData::startDataUpload()
 }
 
 void
-ServerStateData::readGreeting()
+Ftp::Relay::readGreeting()
 {
     assert(!master().clientReadGreeting);
 
@@ -467,7 +476,7 @@ ServerStateData::readGreeting()
     case 120:
         if (NULL != ctrl.message)
             debugs(9, DBG_IMPORTANT, "FTP server is busy: " << ctrl.message->key);
-        forwardPreliminaryReply(&ServerStateData::scheduleReadControlReply);
+        forwardPreliminaryReply(&Ftp::Relay::scheduleReadControlReply);
         break;
     default:
         failed();
@@ -476,7 +485,7 @@ ServerStateData::readGreeting()
 }
 
 void
-ServerStateData::sendCommand()
+Ftp::Relay::sendCommand()
 {
     if (!fwd->request->header.has(HDR_FTP_COMMAND)) {
         abortTransaction("Internal error: FTP gateway request with no command");
@@ -523,19 +532,19 @@ ServerStateData::sendCommand()
 }
 
 void
-ServerStateData::readReply()
+Ftp::Relay::readReply()
 {
     assert(clientState() == fssConnected ||
            clientState() == fssHandleUploadRequest);
 
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
-        forwardPreliminaryReply(&ServerStateData::scheduleReadControlReply);
+        forwardPreliminaryReply(&Ftp::Relay::scheduleReadControlReply);
     else
         forwardReply();
 }
 
 void
-ServerStateData::readFeatReply()
+Ftp::Relay::readFeatReply()
 {
     assert(clientState() == fssHandleFeat);
 
@@ -546,7 +555,7 @@ ServerStateData::readFeatReply()
 }
 
 void
-ServerStateData::readPasvReply()
+Ftp::Relay::readPasvReply()
 {
     assert(clientState() == fssHandlePasv || clientState() == fssHandleEpsv || clientState() == fssHandlePort || clientState() == fssHandleEprt);
 
@@ -560,7 +569,7 @@ ServerStateData::readPasvReply()
 }
 
 void
-ServerStateData::readEpsvReply()
+Ftp::Relay::readEpsvReply()
 {
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; // ignore preliminary replies
@@ -575,22 +584,22 @@ ServerStateData::readEpsvReply()
 }
 
 void
-ServerStateData::readDataReply()
+Ftp::Relay::readDataReply()
 {
     assert(clientState() == fssHandleDataRequest ||
            clientState() == fssHandleUploadRequest);
 
     if (ctrl.replycode == 125 || ctrl.replycode == 150) {
         if (clientState() == fssHandleDataRequest)
-            forwardPreliminaryReply(&ServerStateData::startDataDownload);
+            forwardPreliminaryReply(&Ftp::Relay::startDataDownload);
         else // clientState() == fssHandleUploadRequest
-            forwardPreliminaryReply(&ServerStateData::startDataUpload);
+            forwardPreliminaryReply(&Ftp::Relay::startDataUpload);
     } else
         forwardReply();
 }
 
 bool
-ServerStateData::startDirTracking()
+Ftp::Relay::startDirTracking()
 {
     if (!fwd->request->clientConnectionManager->port->ftp_track_dirs)
         return false;
@@ -610,7 +619,7 @@ ServerStateData::startDirTracking()
 }
 
 void
-ServerStateData::stopDirTracking()
+Ftp::Relay::stopDirTracking()
 {
     debugs(9, 5, "Got code from pwd: " << ctrl.replycode << ", msg: " << ctrl.last_reply);
 
@@ -632,7 +641,7 @@ ServerStateData::stopDirTracking()
 }
 
 void
-ServerStateData::readCwdOrCdupReply()
+Ftp::Relay::readCwdOrCdupReply()
 {
     assert(clientState() == fssHandleCwd ||
            clientState() == fssHandleCdup);
@@ -651,7 +660,7 @@ ServerStateData::readCwdOrCdupReply()
 }
 
 void
-ServerStateData::readUserOrPassReply()
+Ftp::Relay::readUserOrPassReply()
 {
     if (100 <= ctrl.replycode && ctrl.replycode < 200)
         return; //Just ignore
@@ -667,7 +676,7 @@ ServerStateData::readUserOrPassReply()
 }
 
 void
-ServerStateData::readTransferDoneReply()
+Ftp::Relay::readTransferDoneReply()
 {
     debugs(9, 3, HERE);
 
@@ -680,7 +689,7 @@ ServerStateData::readTransferDoneReply()
 }
 
 void
-ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno)
+Ftp::Relay::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno)
 {
     debugs(9, 3, HERE);
     data.opener = NULL;
@@ -699,17 +708,13 @@ ServerStateData::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm:
 }
 
 void
-ServerStateData::scheduleReadControlReply()
+Ftp::Relay::scheduleReadControlReply()
 {
-    Ftp::ServerStateData::scheduleReadControlReply(0);
+    Ftp::Client::scheduleReadControlReply(0);
 }
 
-}; // namespace Gateway
-
-}; // namespace Ftp
-
-void
-ftpGatewayServerStart(FwdState *const fwdState)
+AsyncJob::Pointer
+Ftp::StartRelay(FwdState *const fwdState)
 {
-    AsyncJob::Start(new Ftp::Gateway::ServerStateData(fwdState));
+    return AsyncJob::Start(new Ftp::Relay(fwdState));
 }
