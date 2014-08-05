@@ -102,7 +102,7 @@ releaseServerSockets(void)
 {
     // Release the main ports as early as possible
 
-    // clear http_port, https_port and ftp_port lists
+    // clear http_port, https_port, and ftp_port lists
     clientConnectionsClose();
 
     // clear icp_port's

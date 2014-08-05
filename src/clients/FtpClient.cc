@@ -59,6 +59,8 @@ escapeIAC(const char *buf)
     return ret;
 }
 
+/* Ftp::Channel */
+
 /// configures the channel with a descriptor and registers a close handler
 void
 Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
@@ -104,30 +106,75 @@ Ftp::Channel::clear()
     closer = NULL;
 }
 
-Ftp::Client::Client(FwdState *fwdState):
-    AsyncJob("Ftp::Client"), ::ServerStateData(fwdState)
+/* Ftp::CtrlChannel */
+
+Ftp::CtrlChannel::CtrlChannel():
+        buf(NULL),
+        size(0),
+        offset(0),
+        message(NULL),
+        last_command(NULL),
+        last_reply(NULL),
+        replycode(0)
 {
-    ++statCounter.server.all.requests;
-    ++statCounter.server.ftp.requests;
+    buf = static_cast<char*>(memAllocBuf(4096, &size));
+}
 
-    ctrl.last_command = xstrdup("Connect to server");
-    ctrl.buf = static_cast<char *>(memAllocBuf(4096, &ctrl.size));
-    ctrl.offset = 0;
+Ftp::CtrlChannel::~CtrlChannel()
+{
+    memFreeBuf(size, buf);
+    if (message)
+        wordlistDestroy(&message);
+    safe_free(last_command);
+    safe_free(last_reply);
+}
 
-    typedef CommCbMemFunT<Client, CommCloseCbParams> Dialer;
-    const AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this,
-                                                  Ftp::Client::ctrlClosed);
-    ctrl.opened(fwdState->serverConnection(), closer);
+/* Ftp::DataChannel */
+
+Ftp::DataChannel::DataChannel():
+        readBuf(NULL),
+        host(NULL),
+        port(0),
+        read_pending(false)
+{
+}
+
+Ftp::DataChannel::~DataChannel()
+{
+    delete readBuf;
 }
 
 void
-Ftp::Client::DataChannel::addr(const Ip::Address &import)
+Ftp::DataChannel::addr(const Ip::Address &import)
 {
      static char addrBuf[MAX_IPSTRLEN];
      import.toStr(addrBuf, sizeof(addrBuf));
      xfree(host);
      host = xstrdup(addrBuf);
      port = import.port();
+}
+
+/* Ftp::Client */
+
+Ftp::Client::Client(FwdState *fwdState):
+        AsyncJob("Ftp::Client"),
+        ::ServerStateData(fwdState),
+        ctrl(),
+        data(),
+        state(BEGIN),
+        old_request(NULL),
+        old_reply(NULL),
+        shortenReadTimeout(false)
+{
+    ++statCounter.server.all.requests;
+    ++statCounter.server.ftp.requests;
+
+    ctrl.last_command = xstrdup("Connect to server");
+
+    typedef CommCbMemFunT<Client, CommCloseCbParams> Dialer;
+    const AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this,
+                                                  Ftp::Client::ctrlClosed);
+    ctrl.opened(fwdState->serverConnection(), closer);
 }
 
 Ftp::Client::~Client()
@@ -138,26 +185,8 @@ Ftp::Client::~Client()
     }
     data.close();
 
-    if (ctrl.buf) {
-        memFreeBuf(ctrl.size, ctrl.buf);
-        ctrl.buf = NULL;
-    }
-    if (ctrl.message)
-        wordlistDestroy(&ctrl.message);
-    safe_free(ctrl.last_command);
-    safe_free(ctrl.last_reply);
-
-    if (data.readBuf) {
-        if (!data.readBuf->isNull())
-            data.readBuf->clean();
-
-        delete data.readBuf;
-    }
-
     safe_free(old_request);
-
     safe_free(old_reply);
-
     fwd = NULL; // refcounted
 }
 
@@ -183,24 +212,24 @@ void
 Ftp::Client::closeServer()
 {
     if (Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9,3, HERE << "closing FTP server FD " << ctrl.conn->fd << ", this " << this);
+        debugs(9, 3, "closing FTP server FD " << ctrl.conn->fd << ", this " << this);
         fwd->unregister(ctrl.conn);
         ctrl.close();
     }
 
     if (Comm::IsConnOpen(data.conn)) {
-        debugs(9,3, HERE << "closing FTP data FD " << data.conn->fd << ", this " << this);
+        debugs(9, 3, "closing FTP data FD " << data.conn->fd << ", this " << this);
         data.close();
     }
 
-    debugs(9,3, HERE << "FTP ctrl and data connections closed. this " << this);
+    debugs(9, 3, "FTP ctrl and data connections closed. this " << this);
 }
 
 /**
  * Did we close all FTP server connection(s)?
  *
- \retval true	Both server control and data channels are closed. And not waiting for a new data connection to open.
- \retval false	Either control channel or data is still active.
+ \retval true  Both server control and data channels are closed. And not waiting for a new data connection to open.
+ \retval false Either control channel or data is still active.
  */
 bool
 Ftp::Client::doneWithServer() const
@@ -211,7 +240,7 @@ Ftp::Client::doneWithServer() const
 void
 Ftp::Client::failed(err_type error, int xerrno)
 {
-    debugs(9,3,HERE << "entry-null=" << (entry?entry->isEmpty():0) << ", entry=" << entry);
+    debugs(9, 3, "entry-null=" << (entry?entry->isEmpty():0) << ", entry=" << entry);
 
     const char *command, *reply;
     const Http::StatusCode httpStatus = failedHttpStatus(error);
@@ -263,7 +292,7 @@ Ftp::Client::failedHttpStatus(err_type &error)
 void
 Ftp::Client::scheduleReadControlReply(int buffered_ok)
 {
-    debugs(9, 3, HERE << ctrl.conn);
+    debugs(9, 3, ctrl.conn);
 
     if (buffered_ok && ctrl.offset > 0) {
         /* We've already read some reply data */
@@ -277,9 +306,14 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
             commUnsetConnTimeout(data.conn);
         }
 
+        const time_t tout = shortenReadTimeout ?
+                            min(Config.Timeout.connect, Config.Timeout.read):
+                            Config.Timeout.read;
+        shortenReadTimeout = false; // we only need to do this once, after PASV
+
         typedef CommCbMemFunT<Client, CommTimeoutCbParams> TimeoutDialer;
         AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this, Ftp::Client::timeout);
-        commSetConnTimeout(ctrl.conn, Config.Timeout.read, timeoutCall);
+        commSetConnTimeout(ctrl.conn, tout, timeoutCall);
 
         typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
         AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, Ftp::Client::readControlReply);
@@ -290,7 +324,7 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
 void
 Ftp::Client::readControlReply(const CommIoCbParams &io)
 {
-    debugs(9, 3, HERE << "FD " << io.fd << ", Read " << io.size << " bytes");
+    debugs(9, 3, "FD " << io.fd << ", Read " << io.size << " bytes");
 
     if (io.size > 0) {
         kb_incr(&(statCounter.server.all.kbytes_in), io.size);
@@ -313,7 +347,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
 
     if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
-               "ftpReadControlReply: read error: " << xstrerr(io.xerrno));
+               "FTP control reply read error: " << xstrerr(io.xerrno));
 
         if (ignoreErrno(io.xerrno)) {
             scheduleReadControlReply(0);
@@ -347,7 +381,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
 void
 Ftp::Client::handleControlReply()
 {
-    debugs(9, 3, HERE);
+    debugs(9, 3, status());
 
     size_t bytes_used = 0;
     wordlistDestroy(&ctrl.message);
@@ -356,12 +390,12 @@ Ftp::Client::handleControlReply()
         /* didn't get complete reply yet */
 
         if (ctrl.offset == ctrl.size) {
-            ctrl.buf = (char *)memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size);
+            ctrl.buf = static_cast<char*>(memReallocBuf(ctrl.buf, ctrl.size << 1, &ctrl.size));
         }
 
         scheduleReadControlReply(0);
         return;
-    } 
+    }
 
     assert(ctrl.message); // the entire FTP server response, line by line
     assert(ctrl.replycode >= 0); // FTP status code (from the last line)
@@ -377,7 +411,7 @@ Ftp::Client::handleControlReply()
         memmove(ctrl.buf, ctrl.buf + bytes_used, ctrl.offset);
     }
 
-    debugs(9, 3, HERE << "state=" << state << ", code=" << ctrl.replycode);
+    debugs(9, 3, "state=" << state << ", code=" << ctrl.replycode);
 }
 
 bool
@@ -385,7 +419,7 @@ Ftp::Client::handlePasvReply(Ip::Address &srvAddr)
 {
     int code = ctrl.replycode;
     char *buf;
-    debugs(9, 3, HERE);
+    debugs(9, 3, status());
 
     if (code != 227) {
         debugs(9, 2, "PASV not supported by remote end");
@@ -394,7 +428,7 @@ Ftp::Client::handlePasvReply(Ip::Address &srvAddr)
 
     /*  227 Entering Passive Mode (h1,h2,h3,h4,p1,p2).  */
     /*  ANSI sez [^0-9] is undefined, it breaks on Watcom cc */
-    debugs(9, 5, HERE << "scanning: " << ctrl.last_reply);
+    debugs(9, 5, "scanning: " << ctrl.last_reply);
 
     buf = ctrl.last_reply + strcspn(ctrl.last_reply, "0123456789");
 
@@ -416,7 +450,7 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
 {
     int code = ctrl.replycode;
     char *buf;
-    debugs(9, 3, HERE);
+    debugs(9, 3, status());
 
     if (code != 229 && code != 522) {
         if (code == 200) {
@@ -431,13 +465,14 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     }
 
     if (code == 522) {
-        /* server response with list of supported methods   */
-        /*   522 Network protocol not supported, use (1)    */
-        /*   522 Network protocol not supported, use (1,2)  */
-        /*   522 Network protocol not supported, use (2)  */
-        /* TODO: handle the (1,2) case. We might get it back after EPSV ALL
-         * which means close data + control without self-destructing and re-open from scratch. */
-        debugs(9, 5, HERE << "scanning: " << ctrl.last_reply);
+        /* Peer responded with a list of supported methods:
+         *   522 Network protocol not supported, use (1)
+         *   522 Network protocol not supported, use (1,2)
+         *   522 Network protocol not supported, use (2)
+         * TODO: Handle the (1,2) case which may happen after EPSV ALL. Close
+         * data + control without self-destructing and re-open from scratch.
+         */
+        debugs(9, 5, "scanning: " << ctrl.last_reply);
         buf = ctrl.last_reply;
         while (buf != NULL && *buf != '\0' && *buf != '\n' && *buf != '(')
             ++buf;
@@ -516,7 +551,7 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     return true;
 }
 
-// The server-side EPRT and PORT commands are not yet implemented.
+// FTP clients do not support EPRT and PORT commands yet.
 // The Ftp::Client::sendEprt() will fail because of the unimplemented
 // openListenSocket() or sendPort() methods
 bool
@@ -528,7 +563,7 @@ Ftp::Client::sendEprt()
         return sendPort();
     }
 
-    debugs(9, 3, HERE);
+    debugs(9, 3, status());
 
     if (!openListenSocket()) {
         failed(ERR_FTP_FAILURE, 0);
@@ -537,7 +572,7 @@ Ftp::Client::sendEprt()
 
     debugs(9, 3, "Listening for FTP data connection with FD " << data.conn);
     if (!Comm::IsConnOpen(data.conn)) {
-        /* XXX Need to set error message */
+        // TODO: Set error message.
         failed(ERR_FTP_FAILURE, 0);
         return false;
     }
@@ -568,7 +603,7 @@ Ftp::Client::sendPort()
 bool
 Ftp::Client::sendPassive()
 {
-    debugs(9, 3, HERE);
+    debugs(9, 3, status());
 
     /** \par
       * Checks for EPSV ALL special conditions:
@@ -608,7 +643,7 @@ Ftp::Client::sendPassive()
     switch (state) {
     case SENT_EPSV_ALL: /* EPSV ALL resulted in a bad response. Try ther EPSV methods. */
         if (ctrl.conn->local.isIPv6()) {
-            debugs(9, 5, HERE << "FTP Channel is IPv6 (" << ctrl.conn->remote << ") attempting EPSV 2 after EPSV ALL has failed.");
+            debugs(9, 5, "FTP Channel is IPv6 (" << ctrl.conn->remote << ") attempting EPSV 2 after EPSV ALL has failed.");
             mb.Printf("EPSV 2%s", Ftp::crlf);
             state = SENT_EPSV_2;
             break;
@@ -617,7 +652,7 @@ Ftp::Client::sendPassive()
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
-            debugs(9, 5, HERE << "FTP Channel is IPv4 (" << ctrl.conn->remote << ") attempting EPSV 1 after EPSV ALL has failed.");
+            debugs(9, 5, "FTP Channel is IPv4 (" << ctrl.conn->remote << ") attempting EPSV 1 after EPSV ALL has failed.");
             mb.Printf("EPSV 1%s", Ftp::crlf);
             state = SENT_EPSV_1;
             break;
@@ -629,7 +664,7 @@ Ftp::Client::sendPassive()
         // else fall through to skip EPSV 1
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
-        debugs(9, 5, HERE << "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
+        debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
         mb.Printf("PASV%s", Ftp::crlf);
         state = SENT_PASV;
         break;
@@ -641,28 +676,28 @@ Ftp::Client::sendPassive()
             doEpsv = (checklist.fastCheck() == ACCESS_ALLOWED);
         }
         if (!doEpsv) {
-            debugs(9, 5, HERE << "EPSV support manually disabled. Sending PASV for FTP Channel (" << ctrl.conn->remote <<")");
+            debugs(9, 5, "EPSV support manually disabled. Sending PASV for FTP Channel (" << ctrl.conn->remote <<")");
             mb.Printf("PASV%s", Ftp::crlf);
             state = SENT_PASV;
         } else if (Config.Ftp.epsv_all) {
-            debugs(9, 5, HERE << "EPSV ALL manually enabled. Attempting with FTP Channel (" << ctrl.conn->remote <<")");
+            debugs(9, 5, "EPSV ALL manually enabled. Attempting with FTP Channel (" << ctrl.conn->remote <<")");
             mb.Printf("EPSV ALL%s", Ftp::crlf);
             state = SENT_EPSV_ALL;
         } else {
             if (ctrl.conn->local.isIPv6()) {
-                debugs(9, 5, HERE << "FTP Channel (" << ctrl.conn->remote << "). Sending default EPSV 2");
+                debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << "). Sending default EPSV 2");
                 mb.Printf("EPSV 2%s", Ftp::crlf);
                 state = SENT_EPSV_2;
             }
             if (ctrl.conn->local.isIPv4()) {
-                debugs(9, 5, HERE << "Channel (" << ctrl.conn->remote <<"). Sending default EPSV 1");
+                debugs(9, 5, "Channel (" << ctrl.conn->remote <<"). Sending default EPSV 1");
                 mb.Printf("EPSV 1%s", Ftp::crlf);
                 state = SENT_EPSV_1;
             }
         }
         break;
     }
-	}
+    }
 
     if (ctrl.message)
         wordlistDestroy(&ctrl.message);
@@ -671,17 +706,7 @@ Ftp::Client::sendPassive()
 
     writeCommand(mb.content());
 
-    /*
-     * ugly hack for ftp servers like ftp.netscape.com that sometimes
-     * dont acknowledge PASV commands. Use connect timeout to be faster then read timeout (minutes).
-     */
-    /* XXX: resurrect or remove
-    typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
-                                      TimeoutDialer, this, FtpStateData::timeout);
-    commSetConnTimeout(ctrl.conn, Config.Timeout.connect, timeoutCall);
-    */
-
+    shortenReadTimeout = true;
     return true;
 }
 
@@ -703,9 +728,9 @@ Ftp::Client::connectDataChannel()
     conn->tos = ctrl.conn->tos;
     conn->nfmark = ctrl.conn->nfmark;
 
-    debugs(9, 3, HERE << "connecting to " << conn->remote);
+    debugs(9, 3, "connecting to " << conn->remote);
 
-    data.opener = commCbCall(9,3, "Ftp::Client::dataChannelConnected",
+    data.opener = commCbCall(9, 3, "Ftp::Client::dataChannelConnected",
                              CommConnectCbPtrFun(Ftp::Client::dataChannelConnected, this));
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, data.opener, Config.Timeout.connect);
     cs->setHost(data.host);
@@ -737,7 +762,7 @@ Ftp::Client::dataCloser()
 void
 Ftp::Client::dataClosed(const CommCloseCbParams &io)
 {
-    debugs(9, 4, HERE);
+    debugs(9, 4, status());
     if (data.listenConn != NULL) {
         data.listenConn->close();
         data.listenConn = NULL;
@@ -765,7 +790,7 @@ Ftp::Client::writeCommand(const char *buf)
     ctrl.last_command = ebuf;
 
     if (!Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, 2, HERE << "cannot send to closing ctrl " << ctrl.conn);
+        debugs(9, 2, "cannot send to closing ctrl " << ctrl.conn);
         // TODO: assert(ctrl.closer != NULL);
         return;
     }
@@ -782,7 +807,7 @@ void
 Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
 {
 
-    debugs(9, 5, HERE << "wrote " << io.size << " bytes");
+    debugs(9, 5, "wrote " << io.size << " bytes");
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
@@ -794,7 +819,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
         return;
 
     if (io.flag) {
-        debugs(9, DBG_IMPORTANT, "ftpWriteCommandCallback: " << io.conn << ": " << xstrerr(io.xerrno));
+        debugs(9, DBG_IMPORTANT, "FTP command write error: " << io.conn << ": " << xstrerr(io.xerrno));
         failed(ERR_WRITE_ERROR, io.xerrno);
         /* failed closes ctrl.conn and frees ftpState */
         return;
@@ -805,7 +830,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
 void
 Ftp::Client::ctrlClosed(const CommCloseCbParams &io)
 {
-    debugs(9, 4, HERE);
+    debugs(9, 4, status());
     ctrl.clear();
     mustStop("Ftp::Client::ctrlClosed");
 }
@@ -813,7 +838,7 @@ Ftp::Client::ctrlClosed(const CommCloseCbParams &io)
 void
 Ftp::Client::timeout(const CommTimeoutCbParams &io)
 {
-    debugs(9, 4, HERE << io.conn << ": '" << entry->url() << "'" );
+    debugs(9, 4, io.conn << ": '" << entry->url() << "'" );
 
     if (abortOnBadEntry("entry went bad while waiting for a timeout"))
         return;
@@ -842,9 +867,9 @@ Ftp::Client::maybeReadVirginBody()
 
     const int read_sz = replyBodySpace(*data.readBuf, 0);
 
-    debugs(11,9, HERE << "FTP may read up to " << read_sz << " bytes");
+    debugs(11,9, "FTP may read up to " << read_sz << " bytes");
 
-    if (read_sz < 2)	// see http.cc
+    if (read_sz < 2) // see http.cc
         return;
 
     data.read_pending = true;
@@ -854,7 +879,7 @@ Ftp::Client::maybeReadVirginBody()
                                       TimeoutDialer, this, Ftp::Client::timeout);
     commSetConnTimeout(data.conn, Config.Timeout.read, timeoutCall);
 
-    debugs(9,5,HERE << "queueing read on FD " << data.conn->fd);
+    debugs(9,5,"queueing read on FD " << data.conn->fd);
 
     typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
     entry->delayAwareRead(data.conn, data.readBuf->space(), read_sz,
@@ -869,7 +894,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
 
     data.read_pending = false;
 
-    debugs(9, 3, HERE << "FD " << io.fd << " Read " << io.size << " bytes");
+    debugs(9, 3, "FD " << io.fd << " Read " << io.size << " bytes");
 
     if (io.size > 0) {
         kb_incr(&(statCounter.server.all.kbytes_in), io.size);
@@ -903,7 +928,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
 
     if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
-               HERE << "read error: " << xstrerr(io.xerrno));
+               "FTP data read error: " << xstrerr(io.xerrno));
 
         if (ignoreErrno(io.xerrno)) {
             maybeReadVirginBody();
@@ -913,7 +938,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
             return;
         }
     } else if (io.size == 0) {
-        debugs(9,3, HERE << "Calling dataComplete() because io.size == 0");
+        debugs(9, 3, "Calling dataComplete() because io.size == 0");
         /*
          * DPW 2007-04-23
          * Dangerous curves ahead.  This call to dataComplete was
@@ -933,7 +958,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
 void
 Ftp::Client::dataComplete()
 {
-    debugs(9, 3,HERE);
+    debugs(9, 3,status());
 
     /* Connection closed; transfer done. */
 
@@ -963,12 +988,12 @@ Ftp::Client::dataComplete()
  * Quickly abort the transaction
  *
  \todo destruction should be sufficient as the destructor should cleanup,
- *	including canceling close handlers
+ * including canceling close handlers
  */
 void
 Ftp::Client::abortTransaction(const char *reason)
 {
-    debugs(9, 3, HERE << "aborting transaction for " << reason <<
+    debugs(9, 3, "aborting transaction for " << reason <<
            "; FD " << (ctrl.conn!=NULL?ctrl.conn->fd:-1) << ", Data FD " << (data.conn!=NULL?data.conn->fd:-1) << ", this " << this);
     if (Comm::IsConnOpen(ctrl.conn)) {
         ctrl.conn->close();
@@ -1009,7 +1034,7 @@ void
 Ftp::Client::doneSendingRequestBody()
 {
     ::ServerStateData::doneSendingRequestBody();
-    debugs(9,3, HERE);
+    debugs(9, 3, status());
     dataComplete();
     /* NP: RFC 959  3.3.  DATA CONNECTION MANAGEMENT
      * if transfer type is 'stream' call dataComplete()
@@ -1031,7 +1056,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
     wordlist *list;
     wordlist **tail = &head;
     size_t linelen;
-    debugs(9, 3, HERE);
+    debugs(9, 3, status());
     /*
      * We need a NULL-terminated buffer for scanning, ick
      */
@@ -1045,15 +1070,15 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
     usable = end - sbuf;
 
-    debugs(9, 3, HERE << "usable = " << usable);
+    debugs(9, 3, "usable = " << usable);
 
     if (usable == 0) {
-        debugs(9, 3, HERE << "didn't find end of line");
+        debugs(9, 3, "didn't find end of line");
         safe_free(sbuf);
         return false;
     }
 
-    debugs(9, 3, HERE << len << " bytes to play with");
+    debugs(9, 3, len << " bytes to play with");
     ++end;
     s = sbuf;
     s += strspn(s, crlf);
@@ -1062,7 +1087,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         if (complete)
             break;
 
-        debugs(9, 5, HERE << "s = {" << s << "}");
+        debugs(9, 5, "s = {" << s << "}");
 
         linelen = strcspn(s, crlf) + 1;
 

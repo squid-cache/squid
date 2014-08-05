@@ -271,7 +271,7 @@ public:
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
         bool auth;               /* pinned for www authentication */
-        bool reading;   ///< we are monitoring for server connection closure
+        bool reading;   ///< we are monitoring for peer connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
@@ -304,12 +304,12 @@ public:
     bool handleReadData();
     bool handleRequestBodyData();
 
-    /// forward future client requests using the given server connection
-    /// optionally, monitor pinned server connection for server-side closures
+    /// Forward future client requests using the given server connection.
+    /// Optionally, monitor pinned server connection for server-side closures.
     void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true);
-    /// undo pinConnection() and, optionally, close the pinned connection
+    /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
-    /// returns validated pinnned server connection (and stops its monitoring)
+    /// Returns validated pinnned server connection (and stops its monitoring).
     Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer);
     /**
      * Checks if there is pinning info if it is valid. It can close the server side connection
@@ -417,8 +417,10 @@ protected:
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
-    // TODO: document
+    /// parse input buffer prefix into a single transfer protocol request
     virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
+
+    /// start processing a freshly parsed request
     virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver) = 0;
 
     /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
@@ -430,7 +432,6 @@ protected:
 protected:
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
-
     bool concurrentRequestQueueFilled() const;
 
     void pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth);
@@ -469,11 +470,14 @@ const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *e
 
 int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
+/// accept requests to a given port and inform subCall about them
 void clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrCallT<CommAcceptCbPtrFun> > &subCall, const Ipc::FdNoteId noteId);
 
 void clientOpenListenSockets(void);
 void clientConnectionsClose(void);
 void httpRequestFree(void *);
+
+/// decide whether to expect multiple requests on the corresponding connection
 void clientSetKeepaliveFlag(ClientHttpRequest *http);
 
 /* misplaced declaratrions of Stream callbacks provided/used by client side */

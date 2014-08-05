@@ -93,7 +93,6 @@
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnOpener.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
@@ -106,7 +105,6 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "http.h"
-#include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -114,7 +112,6 @@
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "internal.h"
-#include "ip/tools.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
 #include "log/access_log.h"
@@ -156,7 +153,6 @@
 #include <climits>
 #include <cmath>
 #include <limits>
-#include <set>
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -1462,7 +1458,6 @@ void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
-    debugs(33,7, HERE << "rep->content_length=" << (rep ? rep->content_length : -2) << " receivedData.length=" << receivedData.length);
     /* Test preconditions */
     assert(node != NULL);
     PROF_start(clientSocketRecipient);
@@ -1532,8 +1527,7 @@ ConnStateData::readNextRequest()
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    const int timeout = idleTimeout();
-    commSetConnTimeout(clientConnection, timeout, timeoutCall);
+    commSetConnTimeout(clientConnection, idleTimeout(), timeoutCall);
 
     readSomeData();
     /** Please don't do anything with the FD past here! */
@@ -2638,8 +2632,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     /* compile headers */
     /* we should skip request line! */
     /* XXX should actually know the damned buffer size here */
-    if (http_ver.major >= 1 &&
-        !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
+    if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
         conn->quitAfterError(request.getRaw());
@@ -2804,7 +2797,7 @@ doFtpAndHttp:
         request->body_pipe = conn->expectRequestBody(
                                  chunked ? -1 : request->content_length);
 
-        if (!notedUseOfBuffer) {
+        if (!isFtp) {
             // consume header early so that body pipe gets just the body
             connNoteUseOfBuffer(conn, http->req_sz);
             notedUseOfBuffer = true;
@@ -2832,7 +2825,7 @@ doFtpAndHttp:
                 goto finish;
 
             if (!request->body_pipe->productionEnded()) {
-                debugs(33, 5, HERE << "need more request body");
+                debugs(33, 5, "need more request body");
                 context->mayUseConnection(true);
                 assert(conn->flags.readMore);
             }
@@ -3236,7 +3229,7 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
         io.conn->close();
 }
 
-ConnStateData::ConnStateData(const MasterXaction::Pointer &xact):
+ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
         AsyncJob("ConnStateData"), // kids overwrite
 #if USE_OPENSSL
         sslBumpMode(Ssl::bumpEnd),
@@ -3353,7 +3346,7 @@ ConnStateData::start()
     // kids must extend to actually start doing something (e.g., reading)
 }
 
-/** Handle a new connection on HTTP socket. */
+/** Handle a new connection on an HTTP socket. */
 void
 httpAccept(const CommAcceptCbParams &params)
 {
@@ -3364,22 +3357,21 @@ httpAccept(const CommAcceptCbParams &params)
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "httpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
-    debugs(33, 4, HERE << params.conn << ": accepted");
+    debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client http connect");
 
-    if (s->tcp_keepalive.enabled) {
+    if (s->tcp_keepalive.enabled)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-    }
 
-    ++ incoming_sockets_accepted;
+    ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = Http::NewServer(xact);
-    AsyncJob::Start(connState);
+    AsyncJob::Start(connState); // usually async-calls readSomeData()
 }
 
 #if USE_OPENSSL
@@ -3643,7 +3635,7 @@ httpsAccept(const CommAcceptCbParams &params)
 
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = Https::NewServer(xact);
-    AsyncJob::Start(connState); // will eventually call postHttpsAccept()
+    AsyncJob::Start(connState); // usually async-calls postHttpsAccept()
 }
 
 void
@@ -3654,7 +3646,7 @@ ConnStateData::postHttpsAccept()
     const AnyP::PortCfgPointer s = port;
 
     if (s->flags.tunnelSslBumping) {
-        debugs(33, 5, "httpsAccept: accept transparent connection: " << clientConnection);
+        debugs(33, 5, "accept transparent connection: " << clientConnection);
 
         if (!Config.accessList.ssl_bump) {
             httpsSslBumpAccessCheckDone(ACCESS_DENIED, connState);
@@ -4123,15 +4115,18 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
     // Fill out a Comm::Connection which IPC will open as a listener for us
     port->listenConn = new Comm::Connection;
     port->listenConn->local = port->s;
-    port->listenConn->flags = COMM_NONBLOCKING | (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-                              (port->flags.natIntercept ? COMM_INTERCEPTION : 0);
+    port->listenConn->flags =
+        COMM_NONBLOCKING |
+        (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
+        (port->flags.natIntercept ? COMM_INTERCEPTION : 0);
 
     // route new connections to subCall
     typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
-    AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
-                                    ListeningStartedDialer(&clientListenerConnectionOpened,
-                                                           port, fdNote, sub));
+    AsyncCall::Pointer listenCall =
+        asyncCall(33, 2, "clientListenerConnectionOpened",
+                  ListeningStartedDialer(&clientListenerConnectionOpened,
+                                         port, fdNote, sub));
     Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, listenCall);
 
     assert(NHttpSockets < MAXTCPLISTENPORTS);
@@ -4174,11 +4169,11 @@ clientOpenListenSockets(void)
     Ftp::StartListening();
 
     if (NHttpSockets < 1)
-        fatal("No HTTP, HTTPS or FTP ports configured");
+        fatal("No HTTP, HTTPS, or FTP ports configured");
 }
 
 void
-clientConnectionsClose(void)
+clientConnectionsClose()
 {
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL) {
@@ -4447,7 +4442,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 void
 ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth, bool monitor)
 {
-    if (!Comm::IsConnOpen(pinning.serverConnection) || 
+    if (!Comm::IsConnOpen(pinning.serverConnection) ||
         pinning.serverConnection->fd != pinServer->fd)
         pinNewConnection(pinServer, request, aPeer, auth);
 
@@ -4497,8 +4492,8 @@ ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRe
     comm_add_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
 }
 
-/// [re]start monitoring pinned connection for server closures so that we can
-/// propagate them to an _idle_ client pinned to the server
+/// [re]start monitoring pinned connection for peer closures so that we can
+/// propagate them to an _idle_ client pinned to that peer
 void
 ConnStateData::startPinnedConnectionMonitoring()
 {

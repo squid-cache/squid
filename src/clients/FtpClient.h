@@ -13,8 +13,8 @@ namespace Ftp {
 
 extern const char *const crlf;
 
-/// common code for FTP server control and data channels
-/// does not own the channel descriptor, which is managed by Ftp::Client
+/// Common code for FTP server control and data channels.
+/// Does not own the channel descriptor, which is managed by Ftp::Client.
 class Channel
 {
 public:
@@ -42,6 +42,44 @@ public:
     AsyncCall::Pointer opener; ///< Comm opener handler callback.
 private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
+};
+
+/// FTP channel for control commands.
+/// This channel is opened once per transaction.
+class CtrlChannel: public Ftp::Channel
+{
+public:
+    CtrlChannel();
+    ~CtrlChannel();
+
+    char *buf;
+    size_t size;
+    size_t offset;
+    wordlist *message;
+    char *last_command;
+    char *last_reply;
+    int replycode;
+
+private:
+    CtrlChannel(const CtrlChannel &); // not implemented
+    CtrlChannel &operator =(const CtrlChannel &); // not implemented
+};
+
+/// FTP channel for data exchanges.
+/// This channel may be opened/closed a few times.
+class DataChannel: public Ftp::Channel
+{
+public:
+    DataChannel();
+    ~DataChannel();
+
+    void addr(const Ip::Address &addr); ///< import host and port
+
+public:
+    MemBuf *readBuf;
+    char *host;
+    unsigned short port;
+    bool read_pending;
 };
 
 /// Base class for FTP Gateway and FTP Native client classes.
@@ -74,27 +112,8 @@ public:
     bool openListenSocket();
     void switchTimeoutToDataChannel();
 
-    // \todo: optimize ctrl and data structs member order, to minimize size
-    /// FTP control channel info; the channel is opened once per transaction
-    struct CtrlChannel: public Ftp::Channel {
-        char *buf;
-        size_t size;
-        size_t offset;
-        wordlist *message;
-        char *last_command;
-        char *last_reply;
-        int replycode;
-    } ctrl;
-
-    /// FTP data channel info; the channel may be opened/closed a few times
-    struct DataChannel: public Ftp::Channel {
-        MemBuf *readBuf;
-        char *host;
-        unsigned short port;
-        bool read_pending;
-
-        void addr(const Ip::Address &addr); ///< import host and port
-    } data;
+    CtrlChannel ctrl; ///< FTP control channel state
+    DataChannel data; ///< FTP data channel state
 
     enum {
         BEGIN,
@@ -161,6 +180,10 @@ protected:
 
 private:
     bool parseControlReply(size_t &bytesUsed);
+
+    /// XXX: An old hack for FTP servers like ftp.netscape.com that may not
+    /// respond to PASV. Use faster connect timeout instead of read timeout.
+    bool shortenReadTimeout;
 
     CBDATA_CLASS2(Client);
 };
