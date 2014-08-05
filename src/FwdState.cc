@@ -1001,9 +1001,9 @@ FwdState::dispatch()
 
         case AnyP::PROTO_FTP:
             if (request->flags.ftpNative)
-                ftpGatewayServerStart(this);
+                Ftp::StartRelay(this);
             else
-                ftpStart(this);
+                Ftp::StartGateway(this);
             break;
 
         case AnyP::PROTO_CACHE_OBJECT:
