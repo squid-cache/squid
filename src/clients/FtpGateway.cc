@@ -119,7 +119,7 @@ typedef void (StateMethod)(Ftp::Gateway *);
 
 /// \ingroup ServerProtocolFTPInternal
 /// FTP Gateway: An FTP client that takes an HTTP request with an ftp:// URI,
-/// converts it into one or more FTP commands, and then 
+/// converts it into one or more FTP commands, and then
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
@@ -389,8 +389,8 @@ Ftp::Gateway::~Gateway()
     debugs(9, 3, HERE << entry->url()  );
 
     if (Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, DBG_IMPORTANT, HERE << "Internal bug: Ftp::ServerStateData "
-               "left open control channel " << ctrl.conn);
+        debugs(9, DBG_IMPORTANT, "Internal bug: FTP Gateway left open " <<
+               "control channel " << ctrl.conn);
     }
 
     if (reply_hdr) {
@@ -509,7 +509,7 @@ Ftp::Gateway::timeout(const CommTimeoutCbParams &io)
     if (SENT_PASV == state) {
         /* stupid ftp.netscape.com, of FTP server behind stupid firewall rules */
         flags.pasv_supported = false;
-        debugs(9, DBG_IMPORTANT, HERE << "timeout in SENT_PASV state");
+        debugs(9, DBG_IMPORTANT, "FTP Gateway timeout in SENT_PASV state");
 
         // cancel the data connection setup.
         if (data.opener != NULL) {
@@ -1009,7 +1009,7 @@ Ftp::Gateway::parseListing()
 void
 Ftp::Gateway::processReplyBody()
 {
-    debugs(9, 3, HERE << "Ftp::Gateway::processReplyBody starting.");
+    debugs(9, 3, status());
 
     if (request->method == Http::METHOD_HEAD && (flags.isdir || theSize != -1)) {
         serverComplete();
@@ -1032,7 +1032,7 @@ Ftp::Gateway::processReplyBody()
 #if USE_ADAPTATION
 
     if (adaptationAccessCheckPending) {
-        debugs(9,3, HERE << "returning from Ftp::Gateway::processReplyBody due to adaptationAccessCheckPending");
+        debugs(9, 3, "returning from Ftp::Gateway::processReplyBody due to adaptationAccessCheckPending");
         return;
     }
 
@@ -1214,9 +1214,7 @@ Ftp::Gateway::start()
     buildTitleUrl();
     debugs(9, 5, HERE << "FD " << ctrl.conn->fd << " : host=" << request->GetHost() <<
            ", path=" << request->urlpath << ", user=" << user << ", passwd=" << password);
-
     state = BEGIN;
-
     Ftp::Client::start();
 }
 
@@ -2553,8 +2551,11 @@ Ftp::Gateway::failedHttpStatus(err_type &error)
 {
     if (error == ERR_NONE) {
         switch (state) {
+
         case SENT_USER:
+
         case SENT_PASS:
+
             if (ctrl.replycode > 500) {
                 error = ERR_FTP_FORBIDDEN;
                 return password_url ? Http::scForbidden : Http::scUnauthorized;
@@ -2563,13 +2564,16 @@ Ftp::Gateway::failedHttpStatus(err_type &error)
                 return Http::scServiceUnavailable;
             }
             break;
+
         case SENT_CWD:
+
         case SENT_RETR:
             if (ctrl.replycode == 550) {
                 error = ERR_FTP_NOT_FOUND;
                 return Http::scNotFound;
             }
             break;
+
         default:
             break;
         }

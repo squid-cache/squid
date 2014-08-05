@@ -128,6 +128,7 @@ protected:
 private:
     void doProcessRequest();
     void shovelUploadData();
+    void resetLogin(const char *reason);
 
     String uri; ///< a URI reconstructed from various FTP message details
     String host; ///< intended dest. of a transparently intercepted FTP conn

@@ -182,6 +182,9 @@ public:
      */
     SBuf& append(const SBuf & S);
 
+    /// Append a single character. The character may be NUL (\0).
+    SBuf& append(const char c);
+
     /** Append operation for C-style strings.
      *
      * Append the supplied c-string to the SBuf; extend storage

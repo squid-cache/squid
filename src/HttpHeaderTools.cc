@@ -297,20 +297,18 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     return 1;
 }
 
-// TODO: Optimize using SBuf
-String
+SBuf
 httpHeaderQuoteString(const char *raw)
 {
     assert(raw);
 
-    // HTTPbis says Senders SHOULD NOT escape octets in quoted-strings that
-    // do not require escaping (i.e., except DQUOTE and the backslash octet).
+    // RFC 7230 says a "sender SHOULD NOT generate a quoted-pair in a
+    // quoted-string except where necessary" (i.e., DQUOTE and backslash)
     bool needInnerQuote = false;
     for (const char *s = raw; !needInnerQuote &&  *s; ++s)
         needInnerQuote = *s == '"' || *s == '\\';
 
-    static String quotedStr;
-    quotedStr.clean();
+    SBuf quotedStr;
     quotedStr.append('"');
 
     if (needInnerQuote) {
@@ -322,7 +320,7 @@ httpHeaderQuoteString(const char *raw)
     } else {
         quotedStr.append(raw);
     }
-    
+
     quotedStr.append('"');
     return quotedStr;
 }

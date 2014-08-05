@@ -1907,7 +1907,7 @@ DOC_START
 
 	Options:
 
-	    ftp-track-dirs=on|off 
+	    ftp-track-dirs=on|off
 			Enables tracking of FTP directories by injecting extra
 			PWD commands and adjusting Request-URI (in wrapping
 			HTTP requests) to reflect the current FTP server
