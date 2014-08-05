@@ -283,10 +283,13 @@ Ssl::PeerConnector::cbCheckForPeekAndSplice(allow_t answer, void *data)
 bool
 Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode)
 {
+    SSL *ssl = fd_table[serverConn->fd].ssl;
     // Mark Step3 of bumping
     if (request->clientConnectionManager.valid()) {
         if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
             serverBump->step = Ssl::bumpStep3;
+            if (!serverBump->serverCert.get())
+                serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
         }
     }
 
@@ -297,8 +300,7 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
         acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSplice, this);
         return false;
     }
-    
-    SSL *ssl = fd_table[serverConn->fd].ssl;
+
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     debugs(83,5, "Will check for peek and splice on fd " << serverConn->fd);

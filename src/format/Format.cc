@@ -1143,6 +1143,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 }
             }
             break;
+
+        case LFT_SSL_SERVER_CERT_ISSUER:
+        case LFT_SSL_SERVER_CERT_SUBJECT:
+            // Not implemented
+            break;
 #endif
 
         case LFT_REQUEST_URLGROUP_OLD_2X:
