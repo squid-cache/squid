@@ -452,13 +452,16 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
                     if (adjustSSL(ssl, clientFeatures, true))
                         allowBump = true;
                     allowSplice = true;
+                    helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
+                    debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for peek mode");
                 } else { /*Ssl::bumpStare*/
                     allowBump = true;
-                    if (adjustSSL(ssl, clientFeatures, false))
+                    if (adjustSSL(ssl, clientFeatures, false)) {
                         allowSplice = true;
+                        helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
+                        debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for stare mode");
+                    }
                 }
-                helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
-                debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted");
             }
         }
         // If we do not build any hello message, copy the current
