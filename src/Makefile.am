@@ -1381,6 +1381,8 @@ tests_testBoilerplate_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
+	tests/stub_cbdata.cc \
+	tests/stub_MemBuf.cc \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
 	$(SQUID_CPPUNIT_LIBS) \
