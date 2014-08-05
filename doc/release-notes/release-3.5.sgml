@@ -180,24 +180,24 @@ Most user-facing changes are reflected in squid.conf (see below).
    traffic syntax being delivered by the client proxy.
 
 <p>Squid can be configured by adding an <em>http_port</em>
-   with the <em>proxy-surrogate</em> mode flag. The <em>proxy_forwarded_access</em>
+   with the <em>require-proxy-header</em> mode flag. The <em>proxy_protocol_access</em>
    must also be configured with <em>src</em> ACLs to whitelist proxies which are
    trusted to send correct client details.
 
 <p>Forward-proxy traffic from a client proxy:
 <verbatim>
- http_port 3128 proxy-surrogate
- proxy_forwarded_access allow localhost
+ http_port 3128 require-proxy-header
+ proxy_protocol_access allow localhost
 </verbatim>
 
 <p>Intercepted traffic from a client proxy or tunnel:
 <verbatim>
- http_port 3128 intercept proxy-surrogate
- proxy_forwarded_access allow localhost
+ http_port 3128 intercept require-proxy-header
+ proxy_protocol_access allow localhost
 </verbatim>
 
 <p><em>Known Issue:</em>
-   Use of <em>proxy-surrogate</em> on <em>https_port</em> is not supported.
+   Use of <em>require-proxy-header</em> on <em>https_port</em> is not supported.
 
 
 <sect>Changes to squid.conf since Squid-3.4
@@ -231,9 +231,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
            Collapsing of requests is performed across SMP workers.
 
-	<tag>proxy_forwarded_access</tag>
-	<p>Renamed from <em>follow_x_forwarded_for</em> and extended to control more
-	   ways for locating the indirect (original) client IP details.
+	<tag>proxy_protocol_access</tag>
+	<p>New directive to control which clients are permitted to open PROXY
+	   protocol connections on a port flagged with <em>require-proxy-header</em>.
 
 	<tag>send_hit</tag>
 	<p>New configuration directive to enable/disable sending cached content
@@ -317,7 +317,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>http_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
-	<p><em>New option <em>proxy-surrogate</em> to mark ports receiving PROXY
+	<p><em>New option <em>require-proxy-header</em> to mark ports receiving PROXY
 	   protocol version 1 or 2 traffic.
 
 	<tag>https_port</tag>
@@ -353,10 +353,6 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>dns_children</tag>
 	<p>DNS external helper interface has been removed.
-
-	<tag>follow_x_forwarded_for</tag>
-	<p>Renamed <em>proxy_forwarded_access</em> and extended.
-
 </descrip>
 
 
