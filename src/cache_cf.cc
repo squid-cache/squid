@@ -3599,7 +3599,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 
         if (s->flags.proxySurrogate) {
-            debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (proxy-surrogate enabled)");
+            debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (require-proxy-header enabled)");
         }
 
         if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
@@ -3607,9 +3607,9 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
             self_destruct();
         }
 
-    } else if (strcmp(token, "proxy-surrogate") == 0) {
+    } else if (strcmp(token, "require-proxy-header") == 0) {
         s->flags.proxySurrogate = true;
-        debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (proxy-surrogate enabled)");
+        debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (require-proxy-header enabled)");
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
         if (!s->flags.accelSurrogate) {
@@ -3822,7 +3822,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         }
 #endif
         if (s->transport.protocol == AnyP::PROTO_HTTPS) {
-            debugs(3,DBG_CRITICAL, "FATAL: https_port: proxy-surrogate option is not supported on HTTPS ports.");
+            debugs(3,DBG_CRITICAL, "FATAL: https_port: require-proxy-header option is not supported on HTTPS ports.");
             self_destruct();
         }
     }
@@ -3857,7 +3857,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         storeAppendPrintf(e, " tproxy");
 
     else if (s->flags.proxySurrogate)
-        storeAppendPrintf(e, " proxy-surrogate");
+        storeAppendPrintf(e, " require-proxy-header");
 
     else if (s->flags.accelSurrogate) {
         storeAppendPrintf(e, " accel");
