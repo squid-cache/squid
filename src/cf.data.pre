@@ -741,6 +741,8 @@ DOC_START
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_xx	SSL User certificate issuer attribute xx
 	  %ssl::>sni	SSL client SNI sent to Squid
+	  %ssl::<cert_subject SSL server certificate DN
+	  %ssl::<cert_issuer SSL server certificate issuer DN
 
 	  %>{Header}	HTTP request header "Header"
 	  %>{Hdr:member}

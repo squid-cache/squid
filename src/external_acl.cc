@@ -426,6 +426,10 @@ parse_externalAclHelper(external_acl ** list)
             format->header = xstrdup(token + 11);
         } else if (strcmp(token, "%ssl::>sni") == 0)
             format->type = Format::LFT_SSL_CLIENT_SNI;
+        else if (strcmp(token, "%ssl::<cert_subject") == 0)
+            format->type = Format::LFT_SSL_SERVER_CERT_SUBJECT;
+        else if (strcmp(token, "%ssl::<cert_issuer") == 0)
+            format->type = Format::LFT_SSL_SERVER_CERT_ISSUER;
 #endif
 #if USE_AUTH
         else if (strcmp(token, "%EXT_USER") == 0 || strcmp(token, "%ue") == 0)
@@ -562,6 +566,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERT, " %%USER_CERT_%s", format->header);
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
                 DUMP_EXT_ACL_TYPE_FMT(SSL_CLIENT_SNI, "ssl::>sni");
+                DUMP_EXT_ACL_TYPE_FMT(SSL_SERVER_CERT_SUBJECT, "%%ssl::<cert_subject");
+                DUMP_EXT_ACL_TYPE_FMT(SSL_SERVER_CERT_ISSUER, "%%ssl::<cert_issuer");
 #endif
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE_FMT(USER_EXTERNAL," %%ue");
@@ -1090,6 +1096,24 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 }
             }
             break;
+
+        case Format::LFT_SSL_SERVER_CERT_SUBJECT:
+        case Format::LFT_SSL_SERVER_CERT_ISSUER: {
+            X509 *serverCert = NULL;
+            if (ch->serverCert.get())
+                serverCert = ch->serverCert.get();
+            else if (ch->conn()->serverBump())
+                serverCert = ch->conn()->serverBump()->serverCert.get();
+
+            if (serverCert) {
+                if (format->type == Format::LFT_SSL_SERVER_CERT_SUBJECT)
+                    str = Ssl::GetX509UserAttribute(serverCert, "DN");
+                else
+                    str = Ssl::GetX509CAAttribute(serverCert, "DN");
+            }
+            break;
+        }
+
 #endif
 #if USE_AUTH
         case Format::LFT_USER_EXTERNAL:
