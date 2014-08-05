@@ -831,7 +831,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'B':
         if (building_deny_info_url) break;
-        p = request ? ftpUrlWith2f(request) : "[no URL]";
+        p = request ? Ftp::UrlWith2f(request) : "[no URL]";
         break;
 
     case 'c':

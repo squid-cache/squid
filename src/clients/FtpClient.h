@@ -3,8 +3,8 @@
  *
  */
 
-#ifndef SQUID_FTP_SERVER_H
-#define SQUID_FTP_SERVER_H
+#ifndef SQUID_FTP_CLIENT_H
+#define SQUID_FTP_CLIENT_H
 
 #include "Server.h"
 
@@ -14,8 +14,8 @@ namespace Ftp {
 extern const char *const crlf;
 
 /// common code for FTP server control and data channels
-/// does not own the channel descriptor, which is managed by FtpStateData
-class FtpChannel
+/// does not own the channel descriptor, which is managed by Ftp::Client
+class Channel
 {
 public:
     /// called after the socket is opened, sets up close handler
@@ -44,17 +44,22 @@ private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
 };
 
-/// Base class for FTP over HTTP and FTP Gateway server state.
-class ServerStateData: public ::ServerStateData
+/// Base class for FTP Gateway and FTP Native client classes.
+class Client: public ::ServerStateData
 {
 public:
-    ServerStateData(FwdState *fwdState);
-    virtual ~ServerStateData();
+    explicit Client(FwdState *fwdState);
+    virtual ~Client();
 
+    /// handle a fatal transaction error, closing the control connection
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
+
+    /// read timeout handler
     virtual void timeout(const CommTimeoutCbParams &io);
-    virtual const Comm::ConnectionPointer & dataConnection() const;
-    virtual void abortTransaction(const char *reason);
+
+    /* ServerStateData API */
+    virtual void maybeReadVirginBody();
+
     void writeCommand(const char *buf);
 
     /// extracts remoteAddr from PASV response, validates it,
@@ -67,12 +72,11 @@ public:
     bool sendPassive();
     void connectDataChannel();
     bool openListenSocket();
-    virtual void maybeReadVirginBody();
     void switchTimeoutToDataChannel();
 
     // \todo: optimize ctrl and data structs member order, to minimize size
     /// FTP control channel info; the channel is opened once per transaction
-    struct CtrlChannel: public FtpChannel {
+    struct CtrlChannel: public Ftp::Channel {
         char *buf;
         size_t size;
         size_t offset;
@@ -83,7 +87,7 @@ public:
     } ctrl;
 
     /// FTP data channel info; the channel may be opened/closed a few times
-    struct DataChannel: public FtpChannel {
+    struct DataChannel: public Ftp::Channel {
         MemBuf *readBuf;
         char *host;
         unsigned short port;
@@ -128,11 +132,15 @@ public:
     char *old_reply;
 
 protected:
+    /* AsyncJob API */
     virtual void start();
 
-    void initReadBuf();
+    /* ServerStateData API */
     virtual void closeServer();
     virtual bool doneWithServer() const;
+    virtual const Comm::ConnectionPointer & dataConnection() const;
+    virtual void abortTransaction(const char *reason);
+
     virtual Http::StatusCode failedHttpStatus(err_type &error);
     void ctrlClosed(const CommCloseCbParams &io);
     void scheduleReadControlReply(int buffered_ok);
@@ -145,6 +153,7 @@ protected:
     void dataComplete();
     AsyncCall::Pointer dataCloser();
     virtual void dataClosed(const CommCloseCbParams &io);
+    void initReadBuf();
 
     // sending of the request body to the server
     virtual void sentRequestBody(const CommIoCbParams &io);
@@ -153,15 +162,9 @@ protected:
 private:
     bool parseControlReply(size_t &bytesUsed);
 
-    CBDATA_CLASS2(ServerStateData);
+    CBDATA_CLASS2(Client);
 };
 
-/// parses and validates "A1,A2,A3,A4,P1,P2" IP,port sequence
-bool ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr);
-/// parses and validates EPRT "<d><net-prt><d><net-addr><d><tcp-port><d>" proto,ip,port sequence
-bool ParseProtoIpPort(const char *buf, Ip::Address &addr);
-/// parses a ftp quoted quote-escaped path
-const char *unescapeDoubleQuoted(const char *quotedPath);
 } // namespace Ftp
 
-#endif /* SQUID_FTP_SERVER_H */
+#endif /* SQUID_FTP_CLIENT_H */
