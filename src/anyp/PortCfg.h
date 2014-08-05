@@ -106,8 +106,10 @@ extern AnyP::PortCfgPointer HttpPortList;
 extern AnyP::PortCfgPointer HttpsPortList;
 #endif
 
+#if !defined(MAXTCPLISTENPORTS)
 // Max number of TCP listening ports
 #define MAXTCPLISTENPORTS 128
+#endif
 
 // TODO: kill this global array. Need to check performance of array vs list though.
 extern int NHttpSockets;

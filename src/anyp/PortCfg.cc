@@ -77,10 +77,12 @@ AnyP::PortCfg::~PortCfg()
 #if USE_OPENSSL
     safe_free(cert);
     safe_free(key);
-    safe_free(options);
     safe_free(cipher);
+    safe_free(options);
+    safe_free(clientca);
     safe_free(cafile);
     safe_free(capath);
+    safe_free(crlfile);
     safe_free(dhfile);
     safe_free(sslflags);
     safe_free(sslContextSessionId);
