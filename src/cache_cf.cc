@@ -180,7 +180,6 @@ static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * de
 static void free_access_log(CustomLog ** definitions);
 static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMissing);
 
-static void update_maxobjsize(void);
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
@@ -229,10 +228,10 @@ static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
-static void parsePortCfg(AnyP::PortCfg **, const char *protocol);
+static void parsePortCfg(AnyP::PortCfgPointer *, const char *protocol);
 #define parse_PortCfg(l) parsePortCfg((l), token)
-static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfg *);
-static void free_PortCfg(AnyP::PortCfg **);
+static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfgPointer &);
+#define free_PortCfg(h)  *(h)=NULL
 
 #if USE_OPENSSL
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
@@ -278,29 +277,6 @@ void
 self_destruct(void)
 {
     LegacyParser.destruct();
-}
-
-static void
-update_maxobjsize(void)
-{
-    int64_t ms = -1;
-
-    // determine the maximum size object that can be stored to disk
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        assert (Config.cacheSwap.swapDirs[i].getRaw());
-
-        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
-        if (ms < storeMax)
-            ms = storeMax;
-    }
-
-    // Ensure that we do not discard objects which could be stored only in memory.
-    // It is governed by maximum_object_size_in_memory (for now)
-    // TODO: update this to check each in-memory location (SMP and local memory limits differ)
-    if (ms < static_cast<int64_t>(Config.Store.maxInMemObjSize))
-        ms = Config.Store.maxInMemObjSize;
-
-    store_maxobjsize = ms;
 }
 
 static void
@@ -383,7 +359,7 @@ SubstituteMacro(char*& line, int& len, const char* macroName, const char* substS
 static void
 ProcessMacros(char*& line, int& len)
 {
-    SubstituteMacro(line, len, "${service_name}", service_name);
+    SubstituteMacro(line, len, "${service_name}", service_name.c_str());
     SubstituteMacro(line, len, "${process_name}", TheKidName);
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
@@ -726,7 +702,6 @@ configDoConfigure(void)
 #endif
 
     storeConfigure();
-    update_maxobjsize(); // check for late maximum_object_size directive
 
     snprintf(ThisCache, sizeof(ThisCache), "%s (%s)",
              uniqueHostname(),
@@ -893,16 +868,18 @@ configDoConfigure(void)
             Config2.effectiveGroupID = pwd->pw_gid;
 
 #if HAVE_PUTENV
-
             if (pwd->pw_dir && *pwd->pw_dir) {
-                int len;
-                char *env_str = (char *)xcalloc((len = strlen(pwd->pw_dir) + 6), 1);
-                snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
-                putenv(env_str);
+                // putenv() leaks by design; avoid leaks when nothing changes
+                static SBuf lastDir;
+                if (lastDir.isEmpty() || !lastDir.cmp(pwd->pw_dir)) {
+                    lastDir = pwd->pw_dir;
+                    int len = strlen(pwd->pw_dir) + 6;
+                    char *env_str = (char *)xcalloc(len, 1);
+                    snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
+                    putenv(env_str);
+                }
             }
-
 #endif
-
         }
     } else {
         Config2.effectiveUserID = geteuid();
@@ -935,7 +912,7 @@ configDoConfigure(void)
         }
     }
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->flags.tunnelSslBumping)
             continue;
 
@@ -943,7 +920,7 @@ configDoConfigure(void)
         s->configureSslServerContext();
     }
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         debugs(3, DBG_IMPORTANT, "Initializing https_port " << s->s << " SSL context");
         s->configureSslServerContext();
     }
@@ -1487,6 +1464,12 @@ parse_acl_tos(acl_tos ** head)
         return;
     }
 
+    const unsigned int chTos = tos & 0xFC;
+    if (chTos != tos) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Tos value '" << tos << "' adjusted to '" << chTos << "'");
+        tos = chTos;
+    }
+
     CBDATA_INIT_TYPE_FREECB(acl_tos, freed_acl_tos);
 
     l = cbdataAlloc(acl_tos);
@@ -1936,9 +1919,6 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
             }
 
             sd->reconfigure();
-
-            update_maxobjsize();
-
             return;
         }
     }
@@ -1962,9 +1942,6 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     sd->parse(swap->n_configured, path_str);
 
     ++swap->n_configured;
-
-    /* Update the max object size */
-    update_maxobjsize();
 }
 
 static const char *
@@ -3514,7 +3491,7 @@ check_null_IpAddress_list(const Ip::Address_list * s)
 #endif /* USE_WCCPv2 */
 
 static void
-parsePortSpecification(AnyP::PortCfg * s, char *token)
+parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
 {
     char *host = NULL;
     unsigned short port = 0;
@@ -3591,7 +3568,7 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
 }
 
 static void
-parse_port_option(AnyP::PortCfg * s, char *token)
+parse_port_option(AnyP::PortCfgPointer &s, char *token)
 {
     /* modes first */
 
@@ -3785,18 +3762,17 @@ parse_port_option(AnyP::PortCfg * s, char *token)
 void
 add_http_port(char *portspec)
 {
-    AnyP::PortCfg *s = new AnyP::PortCfg();
+    AnyP::PortCfgPointer s = new AnyP::PortCfg();
     s->setTransport("HTTP");
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
-    s->next = cbdataReference(Config.Sockaddr.http);
-    cbdataReferenceDone(Config.Sockaddr.http);
-    Config.Sockaddr.http = cbdataReference(s);
+    s->next = HttpPortList;
+    HttpPortList = s;
 }
 
 static void
-parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
+parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 {
     const char *protocol = NULL;
     if (strcmp(optionName, "http_port") == 0 ||
@@ -3816,7 +3792,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         return;
     }
 
-    AnyP::PortCfg *s = new AnyP::PortCfg();
+    AnyP::PortCfgPointer s = new AnyP::PortCfg();
     s->setTransport(protocol);
     parsePortSpecification(s, token);
 
@@ -3842,19 +3818,19 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
-        s->next = cbdataReference(s->clone());
+        s->next = s->clone();
         s->next->s.setIPv4();
         debugs(3, 3, AnyP::UriScheme(s->transport.protocol).c_str() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
-    while (*head)
-        head = &(*head)->next;
+    while (*head != NULL)
+        head = &((*head)->next);
 
-    *head = cbdataReference(s);
+    *head = s;
 }
 
 static void
-dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
+dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
     char buf[MAX_IPSTRLEN];
 
@@ -3978,23 +3954,11 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 }
 
 static void
-dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
+dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
-    while (s) {
-        dump_generic_port(e, n, s);
+    for (AnyP::PortCfgPointer p = s; p != NULL; p = p->next) {
+        dump_generic_port(e, n, p);
         storeAppendPrintf(e, "\n");
-        s = s->next;
-    }
-}
-
-static void
-free_PortCfg(AnyP::PortCfg ** head)
-{
-    AnyP::PortCfg *s;
-
-    while ((s = *head) != NULL) {
-        *head = s->next;
-        cbdataReferenceDone(s);
     }
 }
 

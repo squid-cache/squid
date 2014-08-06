@@ -10,6 +10,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "err_detail_type.h"
@@ -120,7 +121,7 @@ Adaptation::Icap::Xaction::openConnection()
         CbcPointer<Xaction> self(this);
         Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
         dialer.params.conn = connection;
-        dialer.params.flag = COMM_OK;
+        dialer.params.flag = Comm::OK;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
         ScheduleCallHere(connector);
@@ -152,7 +153,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         CbcPointer<Xaction> self(this);
         Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
         dialer.params.conn = connection;
-        dialer.params.flag = COMM_ERROR;
+        dialer.params.flag = Comm::COMM_ERROR;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
         ScheduleCallHere(connector);
@@ -185,7 +186,7 @@ Adaptation::Icap::Xaction::reusedConnection(void *data)
 {
     debugs(93, 5, HERE << "reused connection");
     Adaptation::Icap::Xaction *x = (Adaptation::Icap::Xaction*)data;
-    x->noteCommConnected(COMM_OK);
+    x->noteCommConnected(Comm::OK);
 }
 #endif
 
@@ -227,7 +228,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
     cs = NULL;
 
-    if (io.flag == COMM_TIMEOUT) {
+    if (io.flag == Comm::TIMEOUT) {
         handleCommTimedout();
         return;
     }
@@ -235,7 +236,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
     Must(connector != NULL);
     connector = NULL;
 
-    if (io.flag != COMM_OK)
+    if (io.flag != Comm::OK)
         dieOnConnectionFailure(); // throws
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
@@ -286,7 +287,7 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
         ignoreLastWrite = false;
         debugs(93, 7, HERE << "ignoring last write; status: " << io.flag);
     } else {
-        Must(io.flag == COMM_OK);
+        Must(io.flag == Comm::OK);
         al.icap.bytesSent += io.size;
         updateTimeout();
         handleCommWrote(io.size);
@@ -392,7 +393,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
     Must(reader != NULL);
     reader = NULL;
 
-    Must(io.flag == COMM_OK);
+    Must(io.flag == Comm::OK);
 
     if (!io.size) {
         commEof = true;
@@ -428,7 +429,7 @@ void Adaptation::Icap::Xaction::cancelRead()
 {
     if (reader != NULL) {
         Must(haveConnection());
-        comm_read_cancel(connection->fd, reader);
+        Comm::ReadCancel(connection->fd, reader);
         reader = NULL;
     }
 }

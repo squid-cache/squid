@@ -53,17 +53,19 @@ if test "x${enable_arch_native}" != "xno"; then
 fi
 
 # might be cross-compiling.
-if test "x$HOSTCXX" = "x"; then
-  HOSTCXX="$CXX"
+# NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
+AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
+if test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"; then
+  AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Uses BUILDCXX instead.])
+  BUILDCXX="$HOSTCXX"
+fi
+if test "x$BUILDCXX" = "x"; then
+  BUILDCXX="$CXX"
   if test "x$squid_cv_check_marchnative" = "xyes"; then
     CXXFLAGS="$CXXFLAGS -march=native"
   fi
 fi
-if test "x$squid_cv_check_marchnative" = "xyes"; then
-  # always valid for the Host compiler.
-  HOSTCXX="$HOSTCXX -march=native"
-fi
-AC_SUBST(HOSTCXX)
+AC_SUBST(BUILDCXX)
 
 AC_MSG_CHECKING([simplified host os])
 simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
@@ -974,13 +976,12 @@ AC_SUBST(XMLLIB)
 
 # icap argument handling
 AC_ARG_ENABLE(icap-client,
-  AS_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
-    [squid_opt_use_icap_client=$enableval],
-    [squid_opt_use_icap_client=no])
-SQUID_DEFINE_BOOL(ICAP_CLIENT,$squid_opt_use_icap_client,
-     [Enable ICAP client features in Squid])
-AM_CONDITIONAL(USE_ICAP_CLIENT, [test "x$squid_opt_use_icap_client" = "xyes" ])
-if test "x$squid_opt_use_icap_client" = "xyes" ; then
+  AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
+  SQUID_YESNO([$enableval],[Unrecognized argument to --disable-icap-client: $enableval])
+])
+SQUID_DEFINE_BOOL(ICAP_CLIENT,${enable_icap_client:=yes}, [Enable ICAP client features in Squid])
+AM_CONDITIONAL(USE_ICAP_CLIENT, [test "x$enable_icap_client" != "xno" ])
+if test "x$enable_icap_client" != "xno" ; then
   ICAP_LIBS="icap/libicap.la"
   squid_opt_use_adaptation=yes
 else
@@ -1133,7 +1134,7 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
       AC_MSG_WARN([EUI support probably will not work on host $host.])
       ;;
   esac
-  #Iphlpapi.h check delayed after winsock2.h
+  # iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
     windows.h \
     sys/sockio.h \
@@ -2519,7 +2520,7 @@ if test "x$squid_host_os" = "xmingw" ; then
   AC_CHECK_HEADERS( \
     windows.h \
     ws2tcpip.h \
-    Iphlpapi.h ,,,[
+    iphlpapi.h ,,,[
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
@@ -3423,6 +3424,18 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
+if test "x$BUILDCXXFLAGS" = "x"; then
+  # if we are NOT cross-compiling, use the default build flags for cf_gen and friends
+  # otherwise rely on the user-provided value
+  if test "x$squid_cv_check_marchnative" = "xyes"; then
+    # always valid for the Build compiler.
+    BUILDCXXFLAGS="-march=native"
+  fi
+  BUILDCXXFLAGS="$BUILDCXXFLAGS $CXXFLAGS"
+fi
+AC_SUBST(BUILDCXXFLAGS)
+
 AC_MSG_NOTICE([BUILD LIBRARIES: $LIBS])
 AC_MSG_NOTICE([BUILD EXTRA LIBRARIES: $XTRA_LIBS])
 AC_MSG_NOTICE([BUILD OBJECTS: $OBJS])
@@ -3431,6 +3444,7 @@ AC_MSG_NOTICE([BUILD C FLAGS: $CFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C FLAGS: $SQUID_CFLAGS])
 AC_MSG_NOTICE([BUILD C++ FLAGS: $CXXFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
+AC_MSG_NOTICE([BUILD Tools C++ FLAGS: $BUILDCXXFLAGS])
 
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
@@ -3473,6 +3487,7 @@ AC_CONFIG_FILES([
 	src/ipc/Makefile
 	src/ssl/Makefile
 	src/mgr/Makefile
+	src/parser/Makefile
 	src/snmp/Makefile
 	contrib/Makefile
 	icons/Makefile

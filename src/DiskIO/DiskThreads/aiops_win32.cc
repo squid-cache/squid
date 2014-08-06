@@ -40,10 +40,10 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+#include <cerrno>
 #include <csignal>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <dirent.h>
 
 #define RIDICULOUS_LENGTH	4096

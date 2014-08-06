@@ -53,9 +53,7 @@
 #include "ssl/support.h"
 #include "URL.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 static void setSessionCallbacks(SSL_CTX *ctx);
 Ipc::MemMap *SslSessionCache = NULL;
@@ -719,35 +717,29 @@ ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
 static void
 ssl_initialize(void)
 {
-    static int ssl_initialized = 0;
+    static bool initialized = false;
+    if (initialized)
+        return;
+    initialized = true;
 
-    if (!ssl_initialized) {
-        ssl_initialized = 1;
-        SSL_load_error_strings();
-        SSLeay_add_ssl_algorithms();
+    SSL_load_error_strings();
+    SSLeay_add_ssl_algorithms();
+
 #if HAVE_OPENSSL_ENGINE_H
+    if (Config.SSL.ssl_engine) {
+        ENGINE *e;
+        if (!(e = ENGINE_by_id(Config.SSL.ssl_engine)))
+            fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
 
-        if (Config.SSL.ssl_engine) {
-            ENGINE *e;
-
-            if (!(e = ENGINE_by_id(Config.SSL.ssl_engine))) {
-                fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
-            }
-
-            if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
-                int ssl_error = ERR_get_error();
-                fatalf("Failed to initialise SSL engine: %s\n",
-                       ERR_error_string(ssl_error, NULL));
-            }
+        if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
+            int ssl_error = ERR_get_error();
+            fatalf("Failed to initialise SSL engine: %s\n", ERR_error_string(ssl_error, NULL));
         }
-
-#else
-        if (Config.SSL.ssl_engine) {
-            fatalf("Your OpenSSL has no SSL engine support\n");
-        }
-
-#endif
     }
+#else
+    if (Config.SSL.ssl_engine)
+        fatalf("Your OpenSSL has no SSL engine support\n");
+#endif
 
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
@@ -1965,10 +1957,10 @@ setSessionCallbacks(SSL_CTX *ctx)
 static bool
 isSslServer()
 {
-    if (Config.Sockaddr.https)
+    if (HttpsPortList != NULL)
         return true;
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->flags.tunnelSslBumping)
             return true;
     }
@@ -1999,12 +1991,12 @@ Ssl::initialize_session_cache()
         return;
     }
 
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.https; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         if (s->staticSslContext.get() != NULL)
             setSessionCallbacks(s->staticSslContext.get());
     }
 
-    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->staticSslContext.get() != NULL)
             setSessionCallbacks(s->staticSslContext.get());
     }

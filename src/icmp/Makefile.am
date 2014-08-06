@@ -114,6 +114,7 @@ testIcmp_LDADD=\
 	$(SQUID_CPPUNIT_LA) \
 	libicmp-core.la \
 	../ip/libip.la \
+	../base/libbase.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 testIcmp_DEPENDENCIES= $(SQUID_CPPUNIT_LA)

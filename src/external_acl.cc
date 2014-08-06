@@ -417,13 +417,13 @@ parse_externalAclHelper(external_acl ** list)
         else if (strncmp(token, "%USER_CERT_", 11) == 0) {
             format->type = Format::LFT_EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%USER_CA_CERT_", 11) == 0) {
+        } else if (strncmp(token, "%USER_CA_CERT_", 14) == 0) {
             format->type = Format::LFT_EXT_ACL_USER_CA_CERT;
-            format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
+            format->header = xstrdup(token + 14);
+        } else if (strncmp(token, "%CA_CERT_", 9) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type %CA_CERT_* code is obsolete. Use %USER_CA_CERT_* instead");
             format->type = Format::LFT_EXT_ACL_USER_CA_CERT;
-            format->header = xstrdup(token + 11);
+            format->header = xstrdup(token + 9);
         } else if (strcmp(token, "%ssl::>sni") == 0)
             format->type = Format::LFT_SSL_CLIENT_SNI;
         else if (strcmp(token, "%ssl::<cert_subject") == 0)
@@ -1570,10 +1570,8 @@ ExternalACLLookup::LookupDone(void *data, void *result)
             // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
             // workaround by using anything already set in HttpRequest
             // OR use new and rely on a later Sync copying these to AccessLogEntry
-            if (!req->notes)
-                req->notes = new NotePairs;
 
-            req->notes->appendNewOnly(&checklist->extacl_entry->notes);
+            UpdateRequestNotes(checklist->conn(), *req, checklist->extacl_entry->notes);
         }
     }
 

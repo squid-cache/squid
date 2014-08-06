@@ -164,7 +164,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     al = new AccessLogEntry;
     al->cache.start_time = current_time;
     al->tcpClient = clientConnection = aConn->clientConnection;
-    al->cache.port =  cbdataReference(aConn->port);
+    al->cache.port = aConn->port;
     al->cache.caddr = aConn->log_addr;
 
 #if USE_OPENSSL
@@ -945,10 +945,8 @@ ClientRequestContext::clientStoreIdStart()
 static int
 clientHierarchical(ClientHttpRequest * http)
 {
-    const char *url = http->uri;
     HttpRequest *request = http->request;
     HttpRequestMethod method = request->method;
-    const wordlist *p = NULL;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
     if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.interceptTproxy))
@@ -974,11 +972,6 @@ clientHierarchical(ClientHttpRequest * http)
 
     if (method != Http::METHOD_GET)
         return 0;
-
-    /* scan hierarchy_stoplist */
-    for (p = Config.hierarchy_stoplist; p; p = p->next)
-        if (strstr(url, p->key))
-            return 0;
 
     if (request->flags.loopDetected)
         return 0;
@@ -1239,10 +1232,10 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
 
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    if (http->al != NULL) {
-        NotePairs &notes = SyncNotes(*http->al, *old_request);
-        notes.append(&reply.notes);
-    }
+    if (http->al != NULL)
+        (void)SyncNotes(*http->al, *old_request);
+
+    UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1360,10 +1353,10 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
 
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    if (http->al != NULL) {
-        NotePairs &notes = SyncNotes(*http->al, *old_request);
-        notes.append(&reply.notes);
-    }
+    if (http->al != NULL)
+        (void)SyncNotes(*http->al, *old_request);
+
+    UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
     case HelperReply::Unknown:
@@ -1524,7 +1517,6 @@ ClientHttpRequest::processRequest()
             return;
         }
 #endif
-        logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this, &out.size, &al->http.code, al);
         return;
@@ -1559,7 +1551,7 @@ ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
 
 // called when comm_write has completed
 static void
-SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t errflag, int, void *data)
+SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag errflag, int, void *data)
 {
     ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
     debugs(85, 5, HERE << "responded to CONNECT: " << r << " ? " << errflag);
@@ -1569,10 +1561,10 @@ SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t err
 }
 
 void
-ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
+ClientHttpRequest::sslBumpEstablish(Comm::Flag errflag)
 {
-    // Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up
-    if (errflag == COMM_ERR_CLOSING)
+    // Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up
+    if (errflag == Comm::ERR_CLOSING)
         return;
 
     if (errflag) {
@@ -1688,6 +1680,13 @@ ClientHttpRequest::doCallouts()
     if (!calloutContext->http->al->request) {
         calloutContext->http->al->request = request;
         HTTPMSGLOCK(calloutContext->http->al->request);
+
+        NotePairs &notes = SyncNotes(*calloutContext->http->al, *calloutContext->http->request);
+        // Make the previously set client connection ID available as annotation.
+        if (ConnStateData *csd = calloutContext->http->getConn()) {
+            if (!csd->connectionTag().isEmpty())
+                notes.add("clt_conn_tag", SBuf(csd->connectionTag()).c_str());
+        }
     }
 
     if (!calloutContext->error) {

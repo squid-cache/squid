@@ -19,38 +19,20 @@
 
 #include "squid.h"
 #include "Trie.h"
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include "TrieCharTransform.h"
 #include "TrieNode.h"
 
-#if !_USE_INLINE_
-#include "Trie.cci"
+#if HAVE_UNISTD_H
+#include <unistd.h>
 #endif
 
 Trie::Trie(TrieCharTransform *aTransform) : head(0) , transform(aTransform)
 {}
 
-extern "C" void *TrieCreate()
-{
-    return new Trie;
-}
-
 Trie::~Trie()
 {
     delete head;
     delete transform;
-}
-
-extern "C" void TrieDestroy(void *aTrie)
-{
-    delete (Trie *)aTrie;
-}
-
-extern "C" void *TrieFind(void *aTrie, char const *aString, size_t theLength)
-{
-    return ((Trie *)aTrie)->find(aString, theLength);
 }
 
 bool
@@ -69,10 +51,4 @@ Trie::add(char const *aString, size_t theLength, void *privatedata)
     head = new TrieNode;
 
     return head->add(aString, theLength, privatedata, transform);
-}
-
-extern "C" int TrieAdd(void *aTrie, char const *aString, size_t theLength, void *privatedata)
-{
-
-    return ((Trie *)aTrie)->add(aString, theLength, privatedata);
 }

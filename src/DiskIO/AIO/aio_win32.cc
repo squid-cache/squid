@@ -38,9 +38,7 @@
 #include "StatCounters.h"
 #include "win32.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 #if _SQUID_WINDOWS_
 VOID CALLBACK IoCompletionRoutine(DWORD dwErrorCode,

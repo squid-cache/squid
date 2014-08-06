@@ -37,10 +37,7 @@
  */
 
 #include "squid.h"
-
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 typedef struct {
     const char *name;
