@@ -3,7 +3,7 @@
 include $(top_srcdir)/src/Common.am
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)
 
 AUTOMAKE_OPTIONS = subdir-objects
 

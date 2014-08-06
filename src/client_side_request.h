@@ -154,7 +154,7 @@ public:
     /// set the sslBumpNeeded state
     void sslBumpNeed(Ssl::BumpMode mode);
     void sslBumpStart();
-    void sslBumpEstablish(comm_err_t errflag);
+    void sslBumpEstablish(Comm::Flag errflag);
 #endif
 
 #if USE_ADAPTATION

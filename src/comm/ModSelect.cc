@@ -45,11 +45,9 @@
 #include "StatHist.h"
 #include "Store.h"
 
+#include <cerrno>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
@@ -199,7 +197,7 @@ fdIsDns(int fd)
 static int
 fdIsTcpListener(int fd)
 {
-    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL && s->listenConn->fd == fd)
             return 1;
     }
@@ -322,7 +320,7 @@ comm_select_tcp_incoming(void)
 
     // XXX: only poll sockets that won't be deferred. But how do we identify them?
 
-    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (Comm::IsConnOpen(s->listenConn)) {
             fds[nfds] = s->listenConn->fd;
             ++nfds;
@@ -346,7 +344,7 @@ comm_select_tcp_incoming(void)
 
 #define DEBUG_FDBITS 0
 /* Select on all sockets; call handlers for those that are ready. */
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     fd_set readfds;
@@ -442,7 +440,7 @@ Comm::DoSelect(int msec)
 #endif
         if (nreadfds + nwritefds == 0) {
             assert(shutting_down);
-            return COMM_SHUTDOWN;
+            return Comm::SHUTDOWN;
         }
 
         if (msec > MAX_POLL_TIME)
@@ -468,7 +466,7 @@ Comm::DoSelect(int msec)
 
             examine_select(&readfds, &writefds);
 
-            return COMM_ERROR;
+            return Comm::COMM_ERROR;
 
             /* NOTREACHED */
         }
@@ -630,11 +628,11 @@ Comm::DoSelect(int msec)
 
         statCounter.select_time += (current_dtime - start);
 
-        return COMM_OK;
+        return Comm::OK;
     } while (timeout > current_dtime);
     debugs(5, 8, "comm_select: time out: " << squid_curtime);
 
-    return COMM_TIMEOUT;
+    return Comm::TIMEOUT;
 }
 
 static void

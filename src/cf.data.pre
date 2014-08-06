@@ -169,24 +169,49 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 3.5
+NAME: hierarchy_stoplist
+TYPE: obsolete
+DOC_START
+	Remove this line. Use always_direct or cache_peer_access ACLs instead if you need to prevent cache_peer use.
+DOC_END
+
+NAME: log_access
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with access_log directives to control access logging
+DOC_END
+
+NAME: log_icap
+TYPE: obsolete
+DOC_START
+	Remove this line. Use acls with icap_log directives to control icap logging
+DOC_END
+
 # Options Removed in 3.3
 NAME: ignore_ims_on_miss
 TYPE: obsolete
 DOC_START
-	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+	Remove this line. The HTTP/1.1 feature is now configured by 'cache_miss_revalidate'.
 DOC_END
 
 # Options Removed in 3.2
-NAME: ignore_expect_100
-TYPE: obsolete
-DOC_START
-	Remove this line. The HTTP/1.1 feature is now fully supported by default.
-DOC_END
-
 NAME: dns_v4_fallback
 TYPE: obsolete
 DOC_START
 	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, the 'fallback' algorithm is no longer relevant.
+DOC_END
+
+NAME: emulate_httpd_log
+TYPE: obsolete
+DOC_START
+	Replace this with an access_log directive using the format 'common' or 'combined'.
+DOC_END
+
+NAME: forward_log
+TYPE: obsolete
+DOC_START
+	Use a regular access.log with ACL limiting it to MISS events.
 DOC_END
 
 NAME: ftp_list_width
@@ -195,10 +220,34 @@ DOC_START
 	Remove this line. Configure FTP page display using the CSS controls in errorpages.css instead.
 DOC_END
 
+NAME: ignore_expect_100
+TYPE: obsolete
+DOC_START
+	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
+
+NAME: log_fqdn
+TYPE: obsolete
+DOC_START
+	Remove this option from your config. To log FQDN use %>A in the log format.
+DOC_END
+
+NAME: log_ip_on_direct
+TYPE: obsolete
+DOC_START
+	Remove this option from your config. To log server or peer names use %<A in the log format.
+DOC_END
+
 NAME: maximum_single_addr_tries
 TYPE: obsolete
 DOC_START
 	Replaced by connect_retries. The behaviour has changed, please read the documentation before altering.
+DOC_END
+
+NAME: referer_log referrer_log
+TYPE: obsolete
+DOC_START
+	Replace this with an access_log directive using the format 'referrer'.
 DOC_END
 
 NAME: update_headers
@@ -211,6 +260,12 @@ NAME: url_rewrite_concurrency
 TYPE: obsolete
 DOC_START
 	Remove this line. Set the 'concurrency=' option of url_rewrite_children instead.
+DOC_END
+
+NAME: useragent_log
+TYPE: obsolete
+DOC_START
+	Replace this with an access_log directive using the format 'useragent'.
 DOC_END
 
 # Options Removed in 3.1
@@ -294,7 +349,7 @@ DOC_START
 	This is used to define parameters for the various authentication
 	schemes supported by Squid.
 
-	format: auth_param scheme parameter [setting]
+		format: auth_param scheme parameter [setting]
 
 	The order in which authentication schemes are presented to the client is
 	dependent on the order the scheme first appears in config file. IE
@@ -331,306 +386,187 @@ DOC_START
 	=== Parameters common to all schemes. ===
 
 	"program" cmdline
-	Specifies the command for the external authenticator.  Such a program
-	runs a loop that, on every iteration, reads a request line from
-	the standard and responds with a scheme-specific answer. The loop
-	stops when all input is exchausted (EOF). See scheme-specific
-	"program" descriptions below for details.
+		Specifies the command for the external authenticator.
+
+		By default, each authentication scheme is not used unless a
+		program is specified.
+
+		See http://wiki.squid-cache.org/Features/AddonHelpers for
+		more details on helper operations and creating your own.
 
 	"key_extras" format
-	Specifies a string to be append to request line format for the
-	authentication helper. "Quoted" format values may contain spaces and
-	logformat %macros. In theory, any logformat %macro can be used.
-	In practice, a %macro expands as a dash (-) if the helper request is
-	sent before the required macro information is available to Squid.
-	By default, Squid uses request formats provided in scheme-specific
-	examples below (search for %credentials).
-	The expanded key_extras value is added to the Squid credentials
-	cache and, hence, will affect authentication. It can be used to
-	autenticate different users with identical user names (e.g., when user
-	authentication depends on http_port).
-	Avoid adding frequently changing information to key_extras. For
-	example, if you add user source IP, and it changes frequently
-	in your environment, then max_user_ip ACL is going to treat every
-	user+IP combination as a unique "user", breaking the ACL and
-	wasting a lot of memory on those user records. It will also force
-	users to authenticate from scratch whenever their IP changes.
+		Specifies a string to be append to request line format for
+		the authentication helper. "Quoted" format values may contain
+		spaces and logformat %macros. In theory, any logformat %macro
+		can be used. In practice, a %macro expands as a dash (-) if
+		the helper request is sent before the required macro
+		information is available to Squid.
 
-	=== Parameters for the basic scheme follow. ===
+		By default, Squid uses request formats provided in
+		scheme-specific examples below (search for %credentials).
 
-	"program" cmdline
-	Specify the command for the external authenticator.  Such a program
-	reads a request line ("username password" by default) and replies
-	with one of three results:
+		The expanded key_extras value is added to the Squid credentials
+		cache and, hence, will affect authentication. It can be used to
+		autenticate different users with identical user names (e.g.,
+		when user authentication depends on http_port).
 
-	  OK
-		the user exists.
+		Avoid adding frequently changing information to key_extras. For
+		example, if you add user source IP, and it changes frequently
+		in your environment, then max_user_ip ACL is going to treat
+		every user+IP combination as a unique "user", breaking the ACL
+		and wasting a lot of memory on those user records. It will also
+		force users to authenticate from scratch whenever their IP
+		changes.
 
-	  ERR
-		the user does not exist.
+	"realm" string
+		Specifies the protection scope (aka realm name) which is to be
+		reported to the client for the authentication scheme. It is
+		commonly part of the text the user will see when prompted for
+		their username and password.
 
-	  BH
-		An internal error occurred in the helper, preventing
-		a result being identified.
-
-	"ERR" and "BH" results may optionally be followed by message="..."
-	containing a description available as %m in the returned error page.
-
-	If you use an authenticator, make sure you have 1 acl of type
-	proxy_auth.
-
-	By default, the basic authentication scheme is not used unless a
-	program is specified.
-
-	If you want to use the traditional NCSA proxy authentication, set
-	this line to something like
-
-	auth_param basic program @DEFAULT_PREFIX@/libexec/basic_ncsa_auth @DEFAULT_PREFIX@/etc/passwd
-
-	"utf8" on|off
-	HTTP uses iso-latin-1 as character set, while some authentication
-	backends such as LDAP expects UTF-8. If this is set to on Squid will
-	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
-	username & password to the helper.
+		For Basic the default is "Squid proxy-caching web server".
+		For Digest there is no default, this parameter is mandatory.
+		For NTLM and Negotiate this parameter is ignored.
 
 	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
-	The maximum number of authenticator processes to spawn. If you start too few
-	Squid will have to wait for them to process a backlog of credential
-	verifications, slowing it down. When password verifications are
-	done via a (slow) network you are likely to need lots of
-	authenticator processes.
 
-	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure.
-	Squid will start more in groups of up to idle=N in an attempt to meet
-	traffic needs and to keep idle=N free above those traffic needs up to
-	the maximum.
+		The maximum number of authenticator processes to spawn. If
+		you start too few Squid will have to wait for them to process
+		a backlog of credential verifications, slowing it down. When
+		password verifications are done via a (slow) network you are
+		likely to need lots of authenticator processes.
 
-	The concurrency= option sets the number of concurrent requests the
-	helper can process.  The default of 0 is used for helpers who only
-	supports one request at a time. Setting this to a number greater than
-	0 changes the protocol used to include a channel number first on the
-	request/response line, allowing multiple requests to be sent to the
-	same helper in parallel without waiting for the response.
-	Must not be set unless it's known the helper supports this.
+		The startup= and idle= options permit some skew in the exact
+		amount run. A minimum of startup=N will begin during startup
+		and reconfigure. Squid will start more in groups of up to
+		idle=N in an attempt to meet traffic needs and to keep idle=N
+		free above those traffic needs up to the maximum.
 
-	auth_param basic children 20 startup=0 idle=1
+		The concurrency= option sets the number of concurrent requests
+		the helper can process.  The default of 0 is used for helpers
+		who only supports one request at a time. Setting this to a
+		number greater than 0 changes the protocol used to include a
+		channel ID field first on the request/response line, allowing
+		multiple requests to be sent to the same helper in parallel
+		without waiting for the response.
 
-	"realm" realmstring
-	Specifies the realm name which is to be reported to the
-	client for the basic proxy authentication scheme (part of
-	the text the user will see when prompted their username and
-	password). There is no default.
-	auth_param basic realm Squid proxy-caching web server
+		Concurrency must not be set unless it's known the helper
+		supports the input format with channel-ID fields.
+
+		NOTE: NTLM and Negotiate schemes do not support concurrency
+			in the Squid code module even though some helpers can.
+
+
+IF HAVE_AUTH_MODULE_BASIC
+	=== Basic authentication parameters ===
+
+	"utf8" on|off
+		HTTP uses iso-latin-1 as character set, while some
+		authentication backends such as LDAP expects UTF-8. If this is
+		set to on Squid will translate the HTTP iso-latin-1 charset to
+		UTF-8 before sending the username and password to the helper.
 
 	"credentialsttl" timetolive
-	Specifies how long squid assumes an externally validated
-	username:password pair is valid for - in other words how
-	often the helper program is called for that user. Set this
-	low to force revalidation with short lived passwords.  Note
-	setting this high does not impact your susceptibility
-	to replay attacks unless you are using an one-time password
-	system (such as SecureID).  If you are using such a system,
-	you will be vulnerable to replay attacks unless you also
-	use the max_user_ip ACL in an http_access rule.
+		Specifies how long squid assumes an externally validated
+		username:password pair is valid for - in other words how
+		often the helper program is called for that user. Set this
+		low to force revalidation with short lived passwords.
+
+		NOTE: setting this high does not impact your susceptibility
+		to replay attacks unless you are using an one-time password
+		system (such as SecureID). If you are using such a system,
+		you will be vulnerable to replay attacks unless you also
+		use the max_user_ip ACL in an http_access rule.
 
 	"casesensitive" on|off
-	Specifies if usernames are case sensitive. Most user databases are
-	case insensitive allowing the same username to be spelled using both
-	lower and upper case letters, but some are case sensitive. This
-	makes a big difference for user_max_ip ACL processing and similar.
-	auth_param basic casesensitive off
+		Specifies if usernames are case sensitive. Most user databases
+		are case insensitive allowing the same username to be spelled
+		using both lower and upper case letters, but some are case
+		sensitive. This makes a big difference for user_max_ip ACL
+		processing and similar.
 
-	=== Parameters for the digest scheme follow ===
-
-	"program" cmdline
-	Specify the command for the external authenticator.  Such a program
-	reads a request_format line ("username":"realm" by default) and
-	replies with one of three results:
-
-	  OK ha1="..."
-		the user exists. The ha1= key is mandatory and
-		contains the appropriate H(A1) value, hex encoded.
-		See rfc 2616 for the definition of H(A1).
-
-	  ERR
-		the user does not exist.
-
-	  BH
-		An internal error occurred in the helper, preventing
-		a result being identified.
-
-	"ERR" and "BH" results may optionally be followed by message="..."
-	containing a description available as %m in the returned error page.
-
-	By default, the digest authentication scheme is not used unless a
-	program is specified.
-
-	If you want to use a digest authenticator, set this line to
-	something like
-
-	auth_param digest program @DEFAULT_PREFIX@/bin/digest_pw_auth @DEFAULT_PREFIX@/etc/digpass
+ENDIF
+IF HAVE_AUTH_MODULE_DIGEST
+	=== Digest authentication parameters ===
 
 	"utf8" on|off
-	HTTP uses iso-latin-1 as character set, while some authentication
-	backends such as LDAP expects UTF-8. If this is set to on Squid will
-	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
-	username & password to the helper.
-
-	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
-	The maximum number of authenticator processes to spawn (default 5).
-	If you start too few Squid will have to wait for them to
-	process a backlog of H(A1) calculations, slowing it down.
-	When the H(A1) calculations are done via a (slow) network
-	you are likely to need lots of authenticator processes.
-
-	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure.
-	Squid will start more in groups of up to idle=N in an attempt to meet
-	traffic needs and to keep idle=N free above those traffic needs up to
-	the maximum.
-
-	The concurrency= option sets the number of concurrent requests the
-	helper can process.  The default of 0 is used for helpers who only
-	supports one request at a time. Setting this to a number greater than
-	0 changes the protocol used to include a channel number first on the
-	request/response line, allowing multiple requests to be sent to the
-	same helper in parallel without waiting for the response.
-	Must not be set unless it's known the helper supports this.
-
-	auth_param digest children 20 startup=0 idle=1
-
-	"realm" realmstring
-	Specifies the realm name which is to be reported to the
-	client for the digest proxy authentication scheme (part of
-	the text the user will see when prompted their username and
-	password). There is no default.
-	auth_param digest realm Squid proxy-caching web server
+		HTTP uses iso-latin-1 as character set, while some
+		authentication backends such as LDAP expects UTF-8. If this is
+		set to on Squid will translate the HTTP iso-latin-1 charset to
+		UTF-8 before sending the username and password to the helper.
 
 	"nonce_garbage_interval" timeinterval
-	Specifies the interval that nonces that have been issued
-	to client_agent's are checked for validity.
+		Specifies the interval that nonces that have been issued
+		to client_agent's are checked for validity.
 
 	"nonce_max_duration" timeinterval
-	Specifies the maximum length of time a given nonce will be
-	valid for.
+		Specifies the maximum length of time a given nonce will be
+		valid for.
 
 	"nonce_max_count" number
-	Specifies the maximum number of times a given nonce can be
-	used.
+		Specifies the maximum number of times a given nonce can be
+		used.
 
 	"nonce_strictness" on|off
-	Determines if squid requires strict increment-by-1 behavior
-	for nonce counts, or just incrementing (off - for use when
-	user agents generate nonce counts that occasionally miss 1
-	(ie, 1,2,4,6)). Default off.
+		Determines if squid requires strict increment-by-1 behavior
+		for nonce counts, or just incrementing (off - for use when
+		user agents generate nonce counts that occasionally miss 1
+		(ie, 1,2,4,6)). Default off.
 
 	"check_nonce_count" on|off
-	This directive if set to off can disable the nonce count check
-	completely to work around buggy digest qop implementations in
-	certain mainstream browser versions. Default on to check the
-	nonce count to protect from authentication replay attacks.
+		This directive if set to off can disable the nonce count check
+		completely to work around buggy digest qop implementations in
+		certain mainstream browser versions. Default on to check the
+		nonce count to protect from authentication replay attacks.
 
 	"post_workaround" on|off
-	This is a workaround to certain buggy browsers who sends
-	an incorrect request digest in POST requests when reusing
-	the same nonce as acquired earlier on a GET request.
+		This is a workaround to certain buggy browsers who send an
+		incorrect request digest in POST requests when reusing the
+		same nonce as acquired earlier on a GET request.
 
-	=== NTLM scheme options follow ===
-
-	"program" cmdline
-	Specify the command for the external NTLM authenticator.
-	Such a program reads exchanged NTLMSSP packets with
-	the browser via Squid until authentication is completed.
-	If you use an NTLM authenticator, make sure you have 1 acl
-	of type proxy_auth.  By default, the NTLM authenticator program
-	is not used.
-
-	auth_param ntlm program /usr/bin/ntlm_auth
-
-	"children" numberofchildren [startup=N] [idle=N]
-	The maximum number of authenticator processes to spawn (default 5).
-	If you start too few Squid will have to wait for them to
-	process a backlog of credential verifications, slowing it
-	down. When credential verifications are done via a (slow)
-	network you are likely to need lots of authenticator
-	processes.
-
-	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure.
-	Squid will start more in groups of up to idle=N in an attempt to meet
-	traffic needs and to keep idle=N free above those traffic needs up to
-	the maximum.
-
-	auth_param ntlm children 20 startup=0 idle=1
+ENDIF
+IF HAVE_AUTH_MODULE_NEGOTIATE
+	=== Negotiate authentication parameters ===
 
 	"keep_alive" on|off
-	If you experience problems with PUT/POST requests when using the
-	Negotiate authentication scheme then you can try setting this to
-	off. This will cause Squid to forcibly close the connection on
-	the initial requests where the browser asks which schemes are
-	supported by the proxy.
+		If you experience problems with PUT/POST requests when using
+		the this authentication scheme then you can try setting this
+		to off. This will cause Squid to forcibly close the connection
+		on the initial request where the browser asks which schemes
+		are supported by the proxy.
 
-	auth_param ntlm keep_alive on
-
-	=== Options for configuring the NEGOTIATE auth-scheme follow ===
-
-	"program" cmdline
-	Specify the command for the external Negotiate authenticator.
-	This protocol is used in Microsoft Active-Directory enabled setups with
-	the Microsoft Internet Explorer or Mozilla Firefox browsers.
-	Its main purpose is to exchange credentials with the Squid proxy
-	using the Kerberos mechanisms.
-	If you use a Negotiate authenticator, make sure you have at least
-	one acl of type proxy_auth active. By default, the negotiate
-	authenticator program is not used.
-	The only supported program for this role is the ntlm_auth
-	program distributed as part of Samba, version 4 or later.
-
-	auth_param negotiate program /usr/bin/ntlm_auth --helper-protocol=gss-spnego
-
-	"children" numberofchildren [startup=N] [idle=N]
-	The maximum number of authenticator processes to spawn (default 5).
-	If you start too few Squid will have to wait for them to
-	process a backlog of credential verifications, slowing it
-	down. When credential verifications are done via a (slow)
-	network you are likely to need lots of authenticator
-	processes.
-
-	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure.
-	Squid will start more in groups of up to idle=N in an attempt to meet
-	traffic needs and to keep idle=N free above those traffic needs up to
-	the maximum.
-
-	auth_param negotiate children 20 startup=0 idle=1
+ENDIF
+IF HAVE_AUTH_MODULE_NTLM
+	=== NTLM authentication parameters ===
 
 	"keep_alive" on|off
-	If you experience problems with PUT/POST requests when using the
-	Negotiate authentication scheme then you can try setting this to
-	off. This will cause Squid to forcibly close the connection on
-	the initial requests where the browser asks which schemes are
-	supported by the proxy.
+		If you experience problems with PUT/POST requests when using
+		the this authentication scheme then you can try setting this
+		to off. This will cause Squid to forcibly close the connection
+		on the initial request where the browser asks which schemes
+		are supported by the proxy.
+ENDIF
 
-	auth_param negotiate keep_alive on
-	
-	Examples:
+	=== Example Configuration ===
 
-#Recommended minimum configuration per scheme:
+	This configuration displays the recommended authentication scheme
+	order from most to least secure with recommended minimum configuration
+	settings for each scheme:
+
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 20 startup=0 idle=1
 #auth_param negotiate keep_alive on
 #
-#auth_param ntlm program <uncomment and complete this line to activate>
-#auth_param ntlm children 20 startup=0 idle=1
-#auth_param ntlm keep_alive on
-#
-#auth_param digest program <uncomment and complete this line>
+#auth_param digest program <uncomment and complete this line to activate>
 #auth_param digest children 20 startup=0 idle=1
 #auth_param digest realm Squid proxy-caching web server
 #auth_param digest nonce_garbage_interval 5 minutes
 #auth_param digest nonce_max_duration 30 minutes
 #auth_param digest nonce_max_count 50
+#
+#auth_param ntlm program <uncomment and complete this line to activate>
+#auth_param ntlm children 20 startup=0 idle=1
+#auth_param ntlm keep_alive on
 #
 #auth_param basic program <uncomment and complete this line>
 #auth_param basic children 5 startup=5 idle=1
@@ -710,7 +646,7 @@ DOC_START
 			Up to the value of children-max. (default 1)
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
-	  cache=n	limit the result cache size, default is unbounded.
+	  cache=n	limit the result cache size, default is 262144.
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
 			wait for a new reply. (default is for no grace period)
@@ -739,7 +675,7 @@ DOC_START
 	  %USER_CERT	SSL User certificate in PEM format
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
-	  %USER_CA_xx	SSL User certificate issuer attribute xx
+	  %USER_CA_CERT_xx SSL User certificate issuer attribute xx
 	  %ssl::>sni	SSL client SNI sent to Squid
 	  %ssl::<cert_subject SSL server certificate DN
 	  %ssl::<cert_issuer SSL server certificate issuer DN
@@ -837,6 +773,10 @@ DOC_START
 
 	  log=		String to be logged in access.log. Available as
 	  		%ea in logformat specifications.
+
+  	  clt_conn_tag= Associates a TAG with the client TCP connection.
+			Please see url_rewrite_program related documentation for
+			this kv-pair.
 
 	Any keywords may be sent on any response whether OK, ERR or BH.
 
@@ -1093,7 +1033,9 @@ DOC_START
 	  # use REQUIRED to accept any non-null user name.
 
 	acl aclname tag tagvalue ...
-	  # string match on tag returned by external acl helper [slow]
+	  # string match on tag returned by external acl helper [fast]
+	  # DEPRECATED. Only the first tag will match with this ACL.
+	  # Use the 'note' ACL instead for handling multiple tag values.
 
 	acl aclname hier_code codename ...
 	  # string match against squid hierarchy code(s); [fast]
@@ -1629,7 +1571,7 @@ COMMENT_END
 NAME: http_port ascii_port
 TYPE: PortCfg
 DEFAULT: none
-LOC: Config.Sockaddr.http
+LOC: HttpPortList
 DOC_START
 	Usage:	port [mode] [options]
 		hostname:port [mode] [options]
@@ -1866,7 +1808,7 @@ NAME: https_port
 IFDEF: USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
-LOC: Config.Sockaddr.https
+LOC: HttpsPortList
 DOC_START
 	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [mode] [options...]
 
@@ -2022,6 +1964,8 @@ DOC_START
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
+
+	Only fast ACLs are supported.
 DOC_END
 
 NAME: clientside_tos
@@ -2064,6 +2008,8 @@ DOC_START
 	acl good_service_net src 10.0.1.0/24
 	tcp_outgoing_mark 0x00 normal_service_net
 	tcp_outgoing_mark 0x20 good_service_net
+
+	Only fast ACLs are supported.
 DOC_END
 
 NAME: clientside_mark
@@ -3301,22 +3247,6 @@ DOC_START
 	possible forwarding paths be tried multiple times.
 DOC_END
 
-NAME: hierarchy_stoplist
-TYPE: wordlist
-DEFAULT: none
-LOC: Config.hierarchy_stoplist
-DOC_START
-	A list of words which, if found in a URL, cause the object to
-	be handled directly by this cache.  In other words, use this
-	to not query neighbor caches for certain objects.  You may
-	list this option multiple times.
-
-	Example:
-		hierarchy_stoplist cgi-bin ?
-
-	Note: never_direct overrides this option.
-DOC_END
-
 COMMENT_START
  MEMORY CACHE OPTIONS
  -----------------------------------------------------------------------------
@@ -3719,6 +3649,19 @@ DOC_START
 	disks. This algorithm does not spread objects by size, so any
 	I/O loading per-disk may appear very unbalanced and volatile.
 
+	If several cache_dirs use similar min-size, max-size, or other
+	limits to to reject certain responses, then do not group such
+	cache_dir lines together, to avoid round-robin selection bias
+	towards the first cache_dir after the group. Instead, interleave
+	cache_dir lines from different groups. For example:
+
+		store_dir_select_algorithm round-robin
+		cache_dir rock /hdd1 ... min-size=100000
+		cache_dir rock /ssd1 ... max-size=99999
+		cache_dir rock /hdd2 ... min-size=100000
+		cache_dir rock /ssd2 ... max-size=99999
+		cache_dir rock /hdd3 ... min-size=100000
+		cache_dir rock /ssd3 ... max-size=99999
 DOC_END
 
 NAME: max_open_disk_fds
@@ -4262,18 +4205,6 @@ DOC_START
 	No responses is expected.
 DOC_END
 
-NAME: log_access
-TYPE: obsolete
-DOC_START
-	Remove this line. Use acls with access_log directives to control access logging
-DOC_END
-
-NAME: log_icap
-TYPE: obsolete
-DOC_START
-	Remove this line. Use acls with icap_log directives to control icap logging
-DOC_END
-
 NAME: stats_collection
 TYPE: acl_access
 LOC: Config.accessList.stats_collection
@@ -4365,18 +4296,6 @@ DOC_START
 	that log can be rotated separately by using debug_options.
 DOC_END
 
-NAME: emulate_httpd_log
-TYPE: obsolete
-DOC_START
-	Replace this with an access_log directive using the format 'common' or 'combined'.
-DOC_END
-
-NAME: log_ip_on_direct
-TYPE: obsolete
-DOC_START
-	Remove this option from your config. To log server or peer names use %<A in the log format.
-DOC_END
-
 NAME: mime_table
 TYPE: string
 DEFAULT: @DEFAULT_MIME_TABLE@
@@ -4401,30 +4320,12 @@ DOC_START
 	formats).  To enable this logging set log_mime_hdrs to 'on'.
 DOC_END
 
-NAME: useragent_log
-TYPE: obsolete
-DOC_START
-	Replace this with an access_log directive using the format 'useragent'.
-DOC_END
-
-NAME: referer_log referrer_log
-TYPE: obsolete
-DOC_START
-	Replace this with an access_log directive using the format 'referrer'.
-DOC_END
-
 NAME: pid_filename
 TYPE: string
 DEFAULT: @DEFAULT_PID_FILE@
 LOC: Config.pidFilename
 DOC_START
 	A filename to write the process-id to.  To disable, enter "none".
-DOC_END
-
-NAME: log_fqdn
-TYPE: obsolete
-DOC_START
-	Remove this option from your config. To log FQDN use %>A in the log format.
 DOC_END
 
 NAME: client_netmask
@@ -4437,12 +4338,6 @@ DOC_START
 	Change this to protect the privacy of your cache clients.
 	A netmask of 255.255.255.0 will log all IP's in that range with
 	the last digit set to '0'.
-DOC_END
-
-NAME: forward_log
-TYPE: obsolete
-DOC_START
-	Use a regular access.log with ACL limiting it to MISS events.
 DOC_END
 
 NAME: strip_query_terms
@@ -4740,7 +4635,8 @@ DOC_START
 
 	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
-
+	See url_rewrite_extras on how to send "extras" with optional values to
+	the helper.
 	After processing the request the helper must reply using the following format:
 
 	  [channel-ID <SP>] result [<SP> kv-pairs]
@@ -4772,10 +4668,14 @@ DOC_START
 		reserved for delivering a log message.
 
 
-	In the future, the interface protocol will be extended with
-	key=value pairs ("kv-pairs" shown above).  Helper programs
-	should be prepared to receive and possibly ignore additional
-	whitespace-separated tokens on each input line.
+	In addition to the above kv-pairs Squid also understands the following
+	optional kv-pairs received from URL rewriters:
+	  clt_conn_tag=TAG
+		Associates a TAG with the client TCP connection.
+		The TAG is treated as a regular annotation but persists across
+		future requests on the client connection rather than just the
+		current request. A helper may update the TAG during subsequent
+		requests be returning a new kv-pair.
 
 	When using the concurrency= option the protocol is changed by
 	introducing a query channel tag in front of the request/response.
@@ -4932,6 +4832,12 @@ DOC_START
 		An internal error occured in the helper, preventing
 		a result being identified.
 
+	In addition to the above kv-pairs Squid also understands the following
+	optional kv-pairs received from URL rewriters:
+	  clt_conn_tag=TAG
+		Associates a TAG with the client TCP connection.
+		Please see url_rewrite_program related documentation for this
+		kv-pair
 
 	Helper programs should be prepared to receive and possibly ignore
 	additional whitespace-separated tokens on each input line.
@@ -5298,7 +5204,7 @@ DOC_START
 	downloads.
 
 	When the user aborts a request, Squid will check the
-	quick_abort values to the amount of data transfered until
+	quick_abort values to the amount of data transferred until
 	then.
 
 	If the transfer has less than 'quick_abort_min' KB remaining,
@@ -7606,8 +7512,7 @@ LOC: Config.onoff.nonhierarchical_direct
 DEFAULT: on
 DOC_START
 	By default, Squid will send any non-hierarchical requests
-	(matching hierarchy_stoplist or not cacheable request type) direct
-	to origin servers.
+	(not cacheable request type) direct to origin servers.
 
 	When this is set to "off", Squid will prefer to send these
 	requests to parents.
@@ -7645,17 +7550,25 @@ TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.cache_miss_revalidate
 DOC_START
-	Whether Squid on cache MISS will pass client revalidation requests
-	to the server or tries to fetch new content for caching.
-	This is useful while the cache is mostly empty to more quickly
-	have the cache populated.
+	RFC 7232 defines a conditional request mechanism to prevent
+	response objects being unnecessarily transferred over the network.
+	If that mechanism is used by the client and a cache MISS occurs
+	it can prevent new cache entries being created.
+
+	This option determines whether Squid on cache MISS will pass the
+	client revalidation request to the server or tries to fetch new
+	content for caching. It can be useful while the cache is mostly
+	empty to more quickly have the cache populated by generating
+	non-conditional GETs.
 
 	When set to 'on' (default), Squid will pass all client If-* headers
-	to the server.
+	to the server. This permits server responses without a cacheable
+	payload to be delivered and on MISS no new cache entry is created.
 
 	When set to 'off' and if the request is cacheable, Squid will
 	remove the clients If-Modified-Since and If-None-Match headers from
-	the request sent to the server.
+	the request sent to the server. This requests a 200 status response
+	from the server to create a new cache entry with.
 DOC_END
 
 NAME: always_direct

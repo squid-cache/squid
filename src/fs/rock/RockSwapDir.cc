@@ -24,6 +24,7 @@
 
 #include <cstdlib>
 #include <iomanip>
+#include <limits>
 
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -209,11 +210,27 @@ Rock::SwapDir::swappedOut(const StoreEntry &)
 }
 
 int64_t
-Rock::SwapDir::entryLimitAllowed() const
+Rock::SwapDir::slotLimitAbsolute() const
 {
-    const int64_t eLimitLo = map ? map->entryLimit() : 0; // dynamic shrinking unsupported
-    const int64_t eWanted = (maxSize() - HeaderSize)/slotSize;
-    return min(max(eLimitLo, eWanted), entryLimitHigh());
+    // the max value is an invalid one; all values must be below the limit
+    assert(std::numeric_limits<Ipc::StoreMapSliceId>::max() ==
+           std::numeric_limits<SlotId>::max());
+    return std::numeric_limits<SlotId>::max();
+}
+
+int64_t
+Rock::SwapDir::slotLimitActual() const
+{
+    const int64_t sWanted = (maxSize() - HeaderSize)/slotSize;
+    const int64_t sLimitLo = map ? map->sliceLimit() : 0; // dynamic shrinking unsupported
+    const int64_t sLimitHi = slotLimitAbsolute();
+    return min(max(sLimitLo, sWanted), sLimitHi);
+}
+
+int64_t
+Rock::SwapDir::entryLimitActual() const
+{
+    return min(slotLimitActual(), entryLimitAbsolute());
 }
 
 // TODO: encapsulate as a tool
@@ -542,20 +559,35 @@ Rock::SwapDir::validateOptions()
     const int64_t slotSizeRoundingWaste = slotSize;
     const int64_t maxRoundingWaste =
         max(maxSizeRoundingWaste, slotSizeRoundingWaste);
-    const int64_t usableDiskSize = diskOffset(entryLimitAllowed());
-    const int64_t diskWasteSize = maxSize() - usableDiskSize;
-    Must(diskWasteSize >= 0);
 
-    // warn if maximum db size is not reachable due to sfileno limit
-    if (entryLimitAllowed() == entryLimitHigh() &&
-            diskWasteSize >= maxRoundingWaste) {
-        debugs(47, DBG_CRITICAL, "Rock store cache_dir[" << index << "] '" << path << "':");
-        debugs(47, DBG_CRITICAL, "\tmaximum number of entries: " << entryLimitAllowed());
-        debugs(47, DBG_CRITICAL, "\tdb slot size: " << slotSize << " Bytes");
-        debugs(47, DBG_CRITICAL, "\tmaximum db size: " << maxSize() << " Bytes");
-        debugs(47, DBG_CRITICAL, "\tusable db size:  " << usableDiskSize << " Bytes");
-        debugs(47, DBG_CRITICAL, "\tdisk space waste: " << diskWasteSize << " Bytes");
-        debugs(47, DBG_CRITICAL, "WARNING: Rock store config wastes space.");
+    // an entry consumes at least one slot; round up to reduce false warnings
+    const int64_t blockSize = static_cast<int64_t>(slotSize);
+    const int64_t maxObjSize = max(blockSize,
+                                   ((maxObjectSize()+blockSize-1)/blockSize)*blockSize);
+
+    // Does the "sfileno*max-size" limit match configured db capacity?
+    const double entriesMayOccupy = entryLimitAbsolute()*static_cast<double>(maxObjSize);
+    if (entriesMayOccupy + maxRoundingWaste < maxSize()) {
+        const int64_t diskWasteSize = maxSize() - static_cast<int64_t>(entriesMayOccupy);
+        debugs(47, DBG_CRITICAL, "WARNING: Rock cache_dir " << path << " wastes disk space due to entry limits:" <<
+               "\n\tconfigured db capacity: " << maxSize() << " bytes" <<
+               "\n\tconfigured db slot size: " << slotSize << " bytes" <<
+               "\n\tconfigured maximum entry size: " << maxObjectSize() << " bytes" <<
+               "\n\tmaximum number of cache_dir entries supported by Squid: " << entryLimitAbsolute() <<
+               "\n\tdisk space all entries may use: " << entriesMayOccupy << " bytes" <<
+               "\n\tdisk space wasted: " << diskWasteSize << " bytes");
+    }
+
+    // Does the "absolute slot count" limit match configured db capacity?
+    const double slotsMayOccupy = slotLimitAbsolute()*static_cast<double>(slotSize);
+    if (slotsMayOccupy + maxRoundingWaste < maxSize()) {
+        const int64_t diskWasteSize = maxSize() - static_cast<int64_t>(entriesMayOccupy);
+        debugs(47, DBG_CRITICAL, "WARNING: Rock cache_dir " << path << " wastes disk space due to slot limits:" <<
+               "\n\tconfigured db capacity: " << maxSize() << " bytes" <<
+               "\n\tconfigured db slot size: " << slotSize << " bytes" <<
+               "\n\tmaximum number of rock cache_dir slots supported by Squid: " << slotLimitAbsolute() <<
+               "\n\tdisk space all slots may use: " << slotsMayOccupy << " bytes" <<
+               "\n\tdisk space wasted: " << diskWasteSize << " bytes");
     }
 }
 
@@ -634,10 +666,10 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
 }
 
 int64_t
-Rock::SwapDir::diskOffset(int filen) const
+Rock::SwapDir::diskOffset(const SlotId sid) const
 {
-    assert(filen >= 0);
-    return HeaderSize + slotSize*filen;
+    assert(sid >= 0);
+    return HeaderSize + slotSize*sid;
 }
 
 int64_t
@@ -651,19 +683,7 @@ int64_t
 Rock::SwapDir::diskOffsetLimit() const
 {
     assert(map);
-    return diskOffset(map->entryLimit());
-}
-
-int
-Rock::SwapDir::entryMaxPayloadSize() const
-{
-    return slotSize - sizeof(DbCellHeader);
-}
-
-int
-Rock::SwapDir::entriesNeeded(const int64_t objSize) const
-{
-    return (objSize + entryMaxPayloadSize() - 1) / entryMaxPayloadSize();
+    return diskOffset(map->sliceLimit());
 }
 
 bool
@@ -693,11 +713,11 @@ Rock::SwapDir::useFreeSlot(Ipc::Mem::PageId &pageId)
 bool
 Rock::SwapDir::validSlotId(const SlotId slotId) const
 {
-    return 0 <= slotId && slotId < entryLimitAllowed();
+    return 0 <= slotId && slotId < slotLimitActual();
 }
 
 void
-Rock::SwapDir::noteFreeMapSlice(const sfileno sliceId)
+Rock::SwapDir::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
     Ipc::Mem::PageId pageId;
     pageId.pool = index+1;
@@ -770,8 +790,9 @@ Rock::SwapDir::ioCompletedNotification()
                xstrerror());
 
     debugs(47, 2, "Rock cache_dir[" << index << "] limits: " <<
-           std::setw(12) << maxSize() << " disk bytes and " <<
-           std::setw(7) << map->entryLimit() << " entries");
+           std::setw(12) << maxSize() << " disk bytes, " <<
+           std::setw(7) << map->entryLimit() << " entries, and " <<
+           std::setw(7) << map->sliceLimit() << " slots");
 
     rebuild();
 }
@@ -947,25 +968,27 @@ Rock::SwapDir::statfs(StoreEntry &e) const
                       currentSize() / 1024.0,
                       Math::doublePercent(currentSize(), maxSize()));
 
-    if (map) {
-        const int limit = map->entryLimit();
-        storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
-        if (limit > 0) {
-            const int entryCount = map->entryCount();
-            storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
-                              entryCount, (100.0 * entryCount / limit));
+    const int entryLimit = entryLimitActual();
+    const int slotLimit = slotLimitActual();
+    storeAppendPrintf(&e, "Maximum entries: %9d\n", entryLimit);
+    if (map && entryLimit > 0) {
+        const int entryCount = map->entryCount();
+        storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
+                          entryCount, (100.0 * entryCount / entryLimit));
+    }
 
-            const unsigned int slotsFree = !freeSlots ? 0 : freeSlots->size();
-            if (slotsFree <= static_cast<const unsigned int>(limit)) {
-                const int usedSlots = limit - static_cast<const int>(slotsFree);
-                storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
-                                  usedSlots, (100.0 * usedSlots / limit));
-            }
-            if (limit < 100) { // XXX: otherwise too expensive to count
-                Ipc::ReadWriteLockStats stats;
-                map->updateStats(stats);
-                stats.dump(e);
-            }
+    storeAppendPrintf(&e, "Maximum slots:   %9d\n", slotLimit);
+    if (map && slotLimit > 0) {
+        const unsigned int slotsFree = !freeSlots ? 0 : freeSlots->size();
+        if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
+            const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
+            storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
+                              usedSlots, (100.0 * usedSlots / slotLimit));
+        }
+        if (slotLimit < 100) { // XXX: otherwise too expensive to count
+            Ipc::ReadWriteLockStats stats;
+            map->updateStats(stats);
+            stats.dump(e);
         }
     }
 
@@ -984,13 +1007,10 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
 }
 
-const char *
+SBuf
 Rock::SwapDir::inodeMapPath() const
 {
-    static String inodesPath;
-    inodesPath = path;
-    inodesPath.append("_inodes");
-    return inodesPath.termedBuf();
+    return Ipc::Mem::Segment::Name(SBuf(path), "map");
 }
 
 const char *
@@ -1012,7 +1032,7 @@ void Rock::SwapDirRr::create()
     Must(mapOwners.empty() && freeSlotsOwners.empty());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
-            const int64_t capacity = sd->entryLimitAllowed();
+            const int64_t capacity = sd->slotLimitActual();
 
             SwapDir::DirMap::Owner *const mapOwner =
                 SwapDir::DirMap::Init(sd->inodeMapPath(), capacity);
@@ -1021,8 +1041,7 @@ void Rock::SwapDirRr::create()
             // TODO: somehow remove pool id and counters from PageStack?
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
                 shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
-                                             i+1, capacity,
-                                             sizeof(DbCellHeader));
+                                             i+1, capacity, 0);
             freeSlotsOwners.push_back(freeSlotsOwner);
 
             // TODO: add method to initialize PageStack with no free pages

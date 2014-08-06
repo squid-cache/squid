@@ -42,9 +42,7 @@
 #include "SquidIpc.h"
 #include "SquidTime.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /* How many buffers to keep before we say we've buffered too much */
 #define	LOGFILE_MAXBUFS		128

@@ -111,6 +111,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"ETag", HDR_ETAG, ftETag},
     {"Expect", HDR_EXPECT, ftStr},
     {"Expires", HDR_EXPIRES, ftDate_1123},
+    {"Forwarded", HDR_FORWARDED, ftStr},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"HTTP2-Settings", HDR_HTTP2_SETTINGS, ftStr}, /* for now */
@@ -118,6 +119,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
     {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
     {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
+    {"If-Unmodified-Since", HDR_IF_UNMODIFIED_SINCE, ftDate_1123},
     {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
     {"Key", HDR_KEY, ftStr},
     {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
@@ -187,16 +189,21 @@ http_hdr_type &operator++ (http_hdr_type &aHeader)
 static HttpHeaderMask ListHeadersMask;	/* set run-time using  ListHeadersArr */
 static http_hdr_type ListHeadersArr[] = {
     HDR_ACCEPT,
-    HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
-    HDR_ACCEPT_RANGES, HDR_ALLOW,
+    HDR_ACCEPT_CHARSET,
+    HDR_ACCEPT_ENCODING,
+    HDR_ACCEPT_LANGUAGE,
+    HDR_ACCEPT_RANGES,
+    HDR_ALLOW,
     HDR_CACHE_CONTROL,
     HDR_CONTENT_ENCODING,
     HDR_CONTENT_LANGUAGE,
     HDR_CONNECTION,
     HDR_EXPECT,
-    HDR_IF_MATCH, HDR_IF_NONE_MATCH,
+    HDR_IF_MATCH,
+    HDR_IF_NONE_MATCH,
     HDR_KEY,
-    HDR_LINK, HDR_PRAGMA,
+    HDR_LINK,
+    HDR_PRAGMA,
     HDR_PROXY_CONNECTION,
     HDR_PROXY_SUPPORT,
     HDR_TRANSFER_ENCODING,
@@ -216,12 +223,20 @@ static http_hdr_type ListHeadersArr[] = {
 #endif
     HDR_SURROGATE_CAPABILITY,
     HDR_SURROGATE_CONTROL,
+    HDR_FORWARDED,
     HDR_X_FORWARDED_FOR
 };
 
 /* general-headers */
 static http_hdr_type GeneralHeadersArr[] = {
-    HDR_CACHE_CONTROL, HDR_CONNECTION, HDR_DATE, HDR_PRAGMA,
+    HDR_CACHE_CONTROL,
+    HDR_CONNECTION,
+    HDR_DATE,
+    HDR_FORWARDED,
+    HDR_X_FORWARDED_FOR,
+    HDR_MIME_VERSION,
+    HDR_PRAGMA,
+    HDR_PROXY_CONNECTION,
     HDR_TRANSFER_ENCODING,
     HDR_UPGRADE,
     /* HDR_TRAILER, */
@@ -230,22 +245,68 @@ static http_hdr_type GeneralHeadersArr[] = {
 
 /* entity-headers */
 static http_hdr_type EntityHeadersArr[] = {
-    HDR_ALLOW, HDR_CONTENT_BASE, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE,
-    HDR_CONTENT_LENGTH, HDR_CONTENT_LOCATION, HDR_CONTENT_MD5,
-    HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_ETAG, HDR_EXPIRES, HDR_LAST_MODIFIED, HDR_LINK,
+    HDR_ALLOW,
+    HDR_CONTENT_BASE,
+    HDR_CONTENT_ENCODING,
+    HDR_CONTENT_LANGUAGE,
+    HDR_CONTENT_LENGTH,
+    HDR_CONTENT_LOCATION,
+    HDR_CONTENT_MD5,
+    HDR_CONTENT_RANGE,
+    HDR_CONTENT_TYPE,
+    HDR_ETAG,
+    HDR_EXPIRES,
+    HDR_LAST_MODIFIED,
+    HDR_LINK,
     HDR_OTHER
 };
 
+/* request-only headers */
+static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
+static http_hdr_type RequestHeadersArr[] = {
+    HDR_ACCEPT,
+    HDR_ACCEPT_CHARSET,
+    HDR_ACCEPT_ENCODING,
+    HDR_ACCEPT_LANGUAGE,
+    HDR_AUTHORIZATION,
+    HDR_EXPECT,
+    HDR_FROM,
+    HDR_HOST,
+    HDR_HTTP2_SETTINGS,
+    HDR_IF_MATCH,
+    HDR_IF_MODIFIED_SINCE,
+    HDR_IF_NONE_MATCH,
+    HDR_IF_RANGE,
+    HDR_IF_UNMODIFIED_SINCE,
+    HDR_MAX_FORWARDS,
+    HDR_ORIGIN,
+    HDR_PROXY_AUTHORIZATION,
+    HDR_RANGE,
+    HDR_REFERER,
+    HDR_REQUEST_RANGE,
+    HDR_TE,
+    HDR_USER_AGENT,
+    HDR_SURROGATE_CAPABILITY
+};
+
+/* reply-only headers */
 static HttpHeaderMask ReplyHeadersMask;		/* set run-time using ReplyHeaders */
 static http_hdr_type ReplyHeadersArr[] = {
-    HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
-    HDR_ACCEPT_RANGES, HDR_AGE,
+    HDR_ACCEPT_ENCODING,
+    HDR_ACCEPT_RANGES,
+    HDR_AGE,
     HDR_KEY,
-    HDR_LOCATION, HDR_MAX_FORWARDS,
-    HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE, HDR_SET_COOKIE2,
-    HDR_ORIGIN,
+    HDR_LOCATION,
+    HDR_PROXY_AUTHENTICATE,
+    HDR_PUBLIC,
+    HDR_RETRY_AFTER,
+    HDR_SERVER,
+    HDR_SET_COOKIE,
+    HDR_SET_COOKIE2,
     HDR_VARY,
-    HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
+    HDR_WARNING,
+    HDR_WWW_AUTHENTICATE,
+    HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,
     HDR_X_REQUEST_URI,
 #if X_ACCELERATOR_VARY
@@ -258,22 +319,19 @@ static http_hdr_type ReplyHeadersArr[] = {
     HDR_SURROGATE_CONTROL
 };
 
-static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
-static http_hdr_type RequestHeadersArr[] = {
-    HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
-    HDR_HTTP2_SETTINGS,
-    HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
-    HDR_IF_RANGE, HDR_MAX_FORWARDS,
-    HDR_ORIGIN,
-    HDR_PROXY_CONNECTION,
-    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
-    HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
-};
-
+/* hop-by-hop headers */
 static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] = {
-    HDR_CONNECTION, HDR_HTTP2_SETTINGS, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
-    HDR_TE, HDR_TRAILER, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
+    HDR_CONNECTION,
+    HDR_HTTP2_SETTINGS,
+    HDR_KEEP_ALIVE,
+    /*HDR_PROXY_AUTHENTICATE, // removal handled specially for peer login */
+    HDR_PROXY_AUTHORIZATION,
+    HDR_TE,
+    HDR_TRAILER,
+    HDR_TRANSFER_ENCODING,
+    HDR_UPGRADE,
+    HDR_PROXY_CONNECTION
 };
 
 /* header accounting */
@@ -330,32 +388,23 @@ httpHeaderInitModule(void)
 
     /* create masks */
     httpHeaderMaskInit(&ListHeadersMask, 0);
-
     httpHeaderCalcMask(&ListHeadersMask, ListHeadersArr, countof(ListHeadersArr));
 
     httpHeaderMaskInit(&ReplyHeadersMask, 0);
-
     httpHeaderCalcMask(&ReplyHeadersMask, ReplyHeadersArr, countof(ReplyHeadersArr));
-
     httpHeaderCalcMask(&ReplyHeadersMask, GeneralHeadersArr, countof(GeneralHeadersArr));
-
     httpHeaderCalcMask(&ReplyHeadersMask, EntityHeadersArr, countof(EntityHeadersArr));
 
     httpHeaderMaskInit(&RequestHeadersMask, 0);
-
     httpHeaderCalcMask(&RequestHeadersMask, RequestHeadersArr, countof(RequestHeadersArr));
-
     httpHeaderCalcMask(&RequestHeadersMask, GeneralHeadersArr, countof(GeneralHeadersArr));
-
     httpHeaderCalcMask(&RequestHeadersMask, EntityHeadersArr, countof(EntityHeadersArr));
 
     httpHeaderMaskInit(&HopByHopHeadersMask, 0);
-
     httpHeaderCalcMask(&HopByHopHeadersMask, HopByHopHeadersArr, countof(HopByHopHeadersArr));
 
     /* init header stats */
     assert(HttpHeaderStatCount == hoReply + 1);
-
     for (i = 0; i < HttpHeaderStatCount; ++i)
         httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
 
@@ -364,13 +413,11 @@ httpHeaderInitModule(void)
     HttpHeaderStats[hoReply].owner_mask = &ReplyHeadersMask;
 
 #if USE_HTCP
-
     HttpHeaderStats[hoHtcpReply].owner_mask = &ReplyHeadersMask;
-
 #endif
+
     /* init dependent modules */
     httpHdrCcInitModule();
-
     httpHdrScInitModule();
 
     httpHeaderRegisterWithCacheManager();

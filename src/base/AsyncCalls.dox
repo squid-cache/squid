@@ -53,7 +53,7 @@ be dialed is irrelevant here.
 handle the call back, then it must cancel it.  Whether that Call will be
 scheduled is irrelevant here. If the Recipient has an AsyncCall pointer,
 calling AsyncCall::cancel is sufficient, but the code should use
-call-specific APIs when possible (e.g., comm_read_cancel or comm_close).
+call-specific APIs when possible (e.g., Comm::ReadCancel or comm_close).
 
 - Processed calls should be forgotten: If you scheduled, received, or
 cancel the call, set its pointer to NULL. The Caller should forget the
