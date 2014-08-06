@@ -5,7 +5,7 @@ SUBDIRS =
 
 libexec_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
 
-AM_CPPFLAGS = $(INCLUDES) -I$(srcdir)
+AM_CPPFLAGS += -I$(srcdir)
 
 negotiate_kerberos_auth_SOURCES = negotiate_kerberos_auth.cc negotiate_kerberos_pac.cc negotiate_kerberos.h
 negotiate_kerberos_auth_LDFLAGS = 

@@ -69,9 +69,6 @@ rfc4918.txt
 	HTTP Extensions for Distributed Authoring -- WEBDAV
 	Numerous extension methods to HTTP
 
-rfc2616.txt
-	Hypertext Transfer Protocol -- HTTP/1.1
-
 rfc2617.txt
 	HTTP/1.1 Basic and Digest authentication
 
@@ -166,3 +163,41 @@ rfc6762.txt
 	Multicast DNS
 	Details the DNS requirements on the Squid internal DNS client
 	for resolving URLs in the .local domain.
+
+rfc7230.txt
+	Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing
+	Details the message 'frame' delimiters, first-line, and URL
+	syntax, generic parsing rules, connection management, routing,
+	and transfer encoding.
+
+rfc7231.txt
+	Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content
+	Details the basic HTTP methods, headers and status code values
+	and behaviour requirements imposed by each.
+
+rfc7232.txt
+	Hypertext Transfer Protocol (HTTP/1.1): Conditional Requests
+	Last-Modified and Etag validator headers,
+	If-* conditional headers,
+	304 and 412 status codes.
+
+rfc7233.txt
+	Hypertext Transfer Protocol (HTTP/1.1): Range Requests
+	Defines range requests and the rules for constructing and
+	combining responses to those requests.
+
+rfc7234.txt
+	Hypertext Transfer Protocol (HTTP/1.1): Caching
+	Defines HTTP caches and the associated header fields that
+	control cache behavior or indicate cacheable response messages.
+
+rfc7235.txt
+	Hypertext Transfer Protocol (HTTP/1.1): Authentication
+
+rfc7238.txt
+	The Hypertext Transfer Protocol Status Code 308 (Permanent Redirect)
+
+rfc7239.txt
+	Forwarded HTTP Extension
+	Details the Forwarded: header replacement for X-Forwarded-For
+	and other X-Forwarded-* variants

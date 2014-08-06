@@ -1347,7 +1347,7 @@ clientReplyContext::buildReplyHeader()
             if (http->storeEntry()->timestamp <= squid_curtime) {
                 // put X-Cache-Age: instead of Age:
                 char age[64];
-                snprintf(age, sizeof(age), "%ld", (long int) squid_curtime - http->storeEntry()->timestamp);
+                snprintf(age, sizeof(age), "%" PRId64, static_cast<int64_t>(squid_curtime - http->storeEntry()->timestamp));
                 hdr->putExt("X-Cache-Age", age);
             }
         } else if (http->storeEntry()->timestamp <= squid_curtime) {
@@ -1425,7 +1425,7 @@ clientReplyContext::buildReplyHeader()
                     if (!request->flags.accelerated && !request->flags.intercepted) {
                         httpHeaderPutStrf(hdr, HDR_PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
-                          We send "[Proxy-]Connection: Proxy-Support" header to mark
+                          We send "Connection: Proxy-Support" header to mark
                           Proxy-Support as a hop-by-hop header for intermediaries that do not
                           understand the semantics of this header. The RFC should have included
                           this recommendation.

@@ -40,6 +40,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -49,6 +50,7 @@
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
 #include "ip/QosConfig.h"
+#include "LogTags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
@@ -89,10 +91,10 @@ public:
     TunnelStateData &operator =(const TunnelStateData &); // do not implement
 
     class Connection;
-    static void ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
-    static void ReadServer(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
-    static void WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
-    static void WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
+    static void ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data);
+    static void ReadServer(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data);
+    static void WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data);
+    static void WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data);
 
     /// Starts reading peer response to our CONNECT request.
     void readConnectResponse();
@@ -165,7 +167,8 @@ public:
     };
 
     Connection client, server;
-    int *status_ptr;		/* pointer to status for logging */
+    int *status_ptr;        ///< pointer for logging HTTP status
+    LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
     MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
 
@@ -205,16 +208,16 @@ private:
 #endif
 
     CBDATA_CLASS2(TunnelStateData);
-    bool keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to);
+    bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
     void handleConnectResponse(const size_t chunkSize);
-    void readServer(char *buf, size_t len, comm_err_t errcode, int xerrno);
-    void readClient(char *buf, size_t len, comm_err_t errcode, int xerrno);
-    void writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno);
-    void writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno);
+    void readServer(char *buf, size_t len, Comm::Flag errcode, int xerrno);
+    void readClient(char *buf, size_t len, Comm::Flag errcode, int xerrno);
+    void writeClientDone(char *buf, size_t len, Comm::Flag flag, int xerrno);
+    void writeServerDone(char *buf, size_t len, Comm::Flag flag, int xerrno);
 
-    static void ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
-    void readConnectResponseDone(char *buf, size_t len, comm_err_t errcode, int xerrno);
+    static void ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data);
+    void readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno);
 };
 
 static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
@@ -329,7 +332,7 @@ TunnelStateData::Connection::debugLevelForError(int const xerrno) const
 
 /* Read from server side and queue it for writing to the client */
 void
-TunnelStateData::ReadServer(const Comm::ConnectionPointer &c, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+TunnelStateData::ReadServer(const Comm::ConnectionPointer &c, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert(cbdataReferenceValid(tunnelState));
@@ -339,16 +342,16 @@ TunnelStateData::ReadServer(const Comm::ConnectionPointer &c, char *buf, size_t 
 }
 
 void
-TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrno)
+TunnelStateData::readServer(char *buf, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << server.conn << ", read " << len << " bytes, err=" << errcode);
 
     /*
-     * Bail out early on COMM_ERR_CLOSING
+     * Bail out early on Comm::ERR_CLOSING
      * - close handlers will tidy up for us
      */
 
-    if (errcode == COMM_ERR_CLOSING)
+    if (errcode == Comm::ERR_CLOSING)
         return;
 
     if (len > 0) {
@@ -363,12 +366,12 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
 
 /// Called when we read [a part of] CONNECT response from the peer
 void
-TunnelStateData::readConnectResponseDone(char *buf, size_t len, comm_err_t errcode, int xerrno)
+TunnelStateData::readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, server.conn << ", read " << len << " bytes, err=" << errcode);
     assert(waitingForConnectResponse());
 
-    if (errcode == COMM_ERR_CLOSING)
+    if (errcode == Comm::ERR_CLOSING)
         return;
 
     if (len > 0) {
@@ -384,7 +387,7 @@ TunnelStateData::readConnectResponseDone(char *buf, size_t len, comm_err_t errco
 
 /* Read from client side and queue it for writing to the server */
 void
-TunnelStateData::ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+TunnelStateData::ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
@@ -475,7 +478,7 @@ TunnelStateData::Connection::error(int const xerrno)
 
 /* Read from client side and queue it for writing to the server */
 void
-TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
@@ -484,16 +487,16 @@ TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t l
 }
 
 void
-TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrno)
+TunnelStateData::readClient(char *buf, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", read " << len << " bytes, err=" << errcode);
 
     /*
-     * Bail out early on COMM_ERR_CLOSING
+     * Bail out early on Comm::ERR_CLOSING
      * - close handlers will tidy up for us
      */
 
-    if (errcode == COMM_ERR_CLOSING)
+    if (errcode == Comm::ERR_CLOSING)
         return;
 
     if (len > 0) {
@@ -508,7 +511,7 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
 /// Updates state after reading from client or server.
 /// Returns whether the caller should use the data just read.
 bool
-TunnelStateData::keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to)
+TunnelStateData::keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to)
 {
     debugs(26, 3, HERE << "from={" << from.conn << "}, to={" << to.conn << "}");
 
@@ -561,7 +564,7 @@ TunnelStateData::copy(size_t len, Connection &from, Connection &to, IOCB *comple
 
 /* Writes data from the client buffer to the server side */
 void
-TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
@@ -570,13 +573,13 @@ TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, siz
 }
 
 void
-TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno)
+TunnelStateData::writeServerDone(char *buf, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE  << server.conn << ", " << len << " bytes written, flag=" << flag);
 
     /* Error? */
-    if (flag != COMM_OK) {
-        if (flag != COMM_ERR_CLOSING) {
+    if (flag != Comm::OK) {
+        if (flag != Comm::ERR_CLOSING) {
             debugs(26, 4, HERE << "calling TunnelStateData::server.error(" << xerrno <<")");
             server.error(xerrno); // may call comm_close
         }
@@ -610,7 +613,7 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 
 /* Writes data from the server buffer to the client side */
 void
-TunnelStateData::WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+TunnelStateData::WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
@@ -631,13 +634,13 @@ TunnelStateData::Connection::dataSent(size_t amount)
 }
 
 void
-TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno)
+TunnelStateData::writeClientDone(char *buf, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written, flag=" << flag);
 
     /* Error? */
-    if (flag != COMM_OK) {
-        if (flag != COMM_ERR_CLOSING) {
+    if (flag != Comm::OK) {
+        if (flag != Comm::ERR_CLOSING) {
             debugs(26, 4, HERE << "Closing client connection due to comm flags.");
             client.error(xerrno); // may call comm_close
         }
@@ -716,6 +719,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
 {
     assert(!tunnelState->waitingForConnectExchange());
     *tunnelState->status_ptr = Http::scOkay;
+    *tunnelState->logTag_ptr = LOG_TCP_TUNNEL;
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -734,7 +738,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
             // We just need to ensure the bytes from ConnStateData are in client.buf already to deliver
             memcpy(tunnelState->client.buf, in->buf.rawContent(), in->buf.length());
             // NP: readClient() takes care of buffer length accounting.
-            tunnelState->readClient(tunnelState->client.buf, in->buf.length(), COMM_OK, 0);
+            tunnelState->readClient(tunnelState->client.buf, in->buf.length(), Comm::OK, 0);
             in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
         } else
             tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
@@ -747,12 +751,12 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
  * Call the tunnelStartShoveling to start the blind pump.
  */
 static void
-tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << conn << ", flag=" << flag);
 
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         *tunnelState->status_ptr = Http::scInternalServerError;
         tunnelErrorComplete(conn->fd, data, 0);
         return;
@@ -763,13 +767,13 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
 
 /// Called when we are done writing CONNECT request to a peer.
 static void
-tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, conn << ", flag=" << flag);
     assert(tunnelState->waitingForConnectRequest());
 
-    if (flag != COMM_OK) {
+    if (flag != Comm::OK) {
         *tunnelState->status_ptr = Http::scInternalServerError;
         tunnelErrorComplete(conn->fd, data, 0);
         return;
@@ -828,17 +832,17 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
 }
 
 static void
-tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
-    if (status != COMM_OK) {
+    if (status != Comm::OK) {
         debugs(26, 4, HERE << conn << ", comm failure recovery.");
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
          */
         tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
-        if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
+        if (status != Comm::TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
             GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
@@ -937,6 +941,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
     tunnelState->request = request;
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
+    tunnelState->logTag_ptr = &http->logType;
     tunnelState->client.conn = http->getConn()->clientConnection;
     tunnelState->http = http;
     tunnelState->al = al;

@@ -41,11 +41,11 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+#include <cerrno>
 #include <csignal>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <errno.h>
 #include <dirent.h>
 #if HAVE_SCHED_H
 #include <sched.h>

@@ -30,12 +30,15 @@ Ssl::PeerConnector::PeerConnector(
     HttpRequestPointer &aRequest,
     const Comm::ConnectionPointer &aServerConn,
     const Comm::ConnectionPointer &aClientConn,
-    AsyncCall::Pointer &aCallback):
+    AsyncCall::Pointer &aCallback,
+    const time_t timeout):
         AsyncJob("Ssl::PeerConnector"),
         request(aRequest),
         serverConn(aServerConn),
         clientConn(aClientConn),
-        callback(aCallback)
+        callback(aCallback),
+        negotiationTimeout(timeout),
+        startTime(squid_curtime)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -201,6 +204,20 @@ Ssl::PeerConnector::initializeSsl()
         CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
         SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
     }
+}
+
+void
+Ssl::PeerConnector::setReadTimeout()
+{
+    int timeToRead;
+    if (negotiationTimeout) {
+        const int timeUsed = squid_curtime - startTime;
+        const int timeLeft = max(0, static_cast<int>(negotiationTimeout - timeUsed));
+        timeToRead = min(static_cast<int>(::Config.Timeout.read), timeLeft);
+    } else
+        timeToRead = ::Config.Timeout.read;
+    AsyncCall::Pointer nil;
+    commSetConnTimeout(serverConnection(), timeToRead, nil);
 }
 
 void
@@ -478,6 +495,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     switch (ssl_error) {
 
     case SSL_ERROR_WANT_READ:
+        setReadTimeout();
         Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
         return;
 

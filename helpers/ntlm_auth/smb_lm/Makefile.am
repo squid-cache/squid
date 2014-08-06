@@ -13,6 +13,6 @@ ntlm_smb_lm_auth_LDADD = \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
-INCLUDES += -I$(top_srcdir)/lib
+AM_CPPFLAGS += -I$(top_srcdir)/lib
 
 EXTRA_DIST = required.m4

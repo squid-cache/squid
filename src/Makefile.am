@@ -46,8 +46,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp comm eui acl format fs repl
-DIST_SUBDIRS = base anyp comm eui acl format fs repl
+SUBDIRS	= base anyp parser comm eui acl format fs repl
+DIST_SUBDIRS = base anyp parser comm eui acl format fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -234,7 +234,7 @@ cf_gen_LDADD=
 cf_gen.$(OBJEXT): cf_gen_defines.cci
 
 ## cf_gen.cc needs src/cf_gen_defines.cci
-INCLUDES += -I$(top_builddir)/src
+AM_CPPFLAGS += -I$(top_builddir)/src
 
 
 ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
@@ -264,7 +264,6 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 libsquid_la_SOURCES = \
 	comm.cc \
 	comm.h \
-	comm_err_t.h \
 	CommCalls.cc \
 	CommCalls.h \
 	DescriptorSet.cc \
@@ -647,6 +646,7 @@ squid_LDADD = \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SNMP_LIBS) \
+	parser/libsquid-parser.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -686,11 +686,11 @@ squid_LDFLAGS = -export-dynamic -dlopen force
 ## squid_LDFLAGS = -all-static -dlopen self
 ##
 ## LTDL headers require their local include path...
-INCLUDES += $(INCLTDL)
+AM_CPPFLAGS += $(INCLTDL)
 endif
 
 ## Kerberos libraries require their include path...
-INCLUDES += $(KRB5INCS)
+AM_CPPFLAGS += $(KRB5INCS)
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc
@@ -969,7 +969,7 @@ cache_cf.o: cf_parser.cci
 
 # cf_gen builds the configuration files.
 cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES) cf_gen_defines.cci
-	$(HOSTCXX) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
+	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
 
 # squid.conf.default is built by cf_gen when making cf_parser.cci
 squid.conf.default squid.conf.documented: cf_parser.cci
@@ -1148,6 +1148,8 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
+	MasterXaction.cc \
+	MasterXaction.h \
 	Mem.h \
 	tests/stub_mem.cc \
 	RegexList.h \
@@ -1174,11 +1176,17 @@ tests_testHttpReply_SOURCES=\
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
+	tests/stub_event.cc \
+	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libcomm.cc \
+	tests/stub_libmgr.cc \
+	tests/stub_libsslsquid.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1200,6 +1208,7 @@ nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
+	CommCalls.o \
 	http/libsquid-http.la \
 	acl/libacls.la \
 	acl/libapi.la \
@@ -1207,7 +1216,7 @@ tests_testHttpReply_LDADD=\
 	anyp/libanyp.la \
 	ip/libip.la \
 	base/libbase.la \
-	$(SSL_LIBS) \
+	ipc/libipc.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1369,12 +1378,16 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
 	tests/testMain.cc \
 	tests/testBoilerplate.h \
+	tests/stub_debug.cc \
 	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
+	tests/stub_cbdata.cc \
+	tests/stub_MemBuf.cc \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	base/libbase.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
@@ -1786,7 +1799,6 @@ tests_testDiskIO_LDADD = \
 	acl/libstate.la \
 	libsquid.la \
 	comm/libcomm.la \
-	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
@@ -1794,6 +1806,7 @@ tests_testDiskIO_LDADD = \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
+	anyp/libanyp.la \
 	mgr/libmgr.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -2950,6 +2963,7 @@ tests_testStore_SOURCES= \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsslsquid.cc \
 	HttpBody.h \
 	HttpBody.cc \
 	tests/stub_HttpReply.cc \
@@ -3004,7 +3018,6 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
-	$(SSL_LIBS) \
 	ipc/libipc.la \
 	anyp/libanyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -3413,7 +3426,6 @@ tests_testRock_LDADD = \
 	http/libsquid-http.la \
 	libsquid.la \
 	comm/libcomm.la \
-	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(COMMON_LIBS) \
@@ -3423,6 +3435,7 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
+	anyp/libanyp.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -3436,7 +3449,7 @@ tests_testRock_LDADD = \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testRock_LDFLAGS = $(INCLUDES) $(LIBADD_DL)
+tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 tests_testRock_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 

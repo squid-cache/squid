@@ -6,9 +6,10 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "comm/Read.h"
 #include "CommCalls.h"
-#include "globals.h"
 #include "ipc/Port.h"
+#include "tools.h"
 
 static const char channelPathPfx[] = DEFAULT_STATEDIR "/";
 static const char coordinatorAddrLabel[] = "-coordinator";
@@ -45,7 +46,7 @@ String Ipc::Port::MakeAddr(const char* processLabel, int id)
 {
     assert(id >= 0);
     String addr = channelPathPfx;
-    addr.append(service_name);
+    addr.append(service_name.c_str());
     addr.append(processLabel);
     addr.append('-');
     addr.append(xitoa(id));
@@ -59,7 +60,7 @@ Ipc::Port::CoordinatorAddr()
     static String coordinatorAddr;
     if (!coordinatorAddr.size()) {
         coordinatorAddr= channelPathPfx;
-        coordinatorAddr.append(service_name);
+        coordinatorAddr.append(service_name.c_str());
         coordinatorAddr.append(coordinatorAddrLabel);
         coordinatorAddr.append(".ipc");
     }
@@ -70,7 +71,7 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
     debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
            " [" << this << ']');
-    if (params.flag == COMM_OK) {
+    if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());
         receive(buf);
     }

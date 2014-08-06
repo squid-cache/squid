@@ -42,9 +42,7 @@
 #include "SquidIpc.h"
 #include "SquidTime.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 // Instance global to be available in main() and elsewhere.
 IcmpSquid icmpEngine;

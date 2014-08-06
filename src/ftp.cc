@@ -34,6 +34,7 @@
 #include "acl/FilledChecklist.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
@@ -68,9 +69,7 @@
 #include "MemObject.h"
 #endif
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
@@ -643,6 +642,9 @@ FtpStateData::listenForDataChannel(const Comm::ConnectionPointer &conn, const ch
         }
         debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
     }
+
+    conn->tos = ctrl.conn->tos;
+    conn->nfmark = ctrl.conn->nfmark;
 
     assert(Comm::IsConnOpen(conn));
     AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
@@ -1242,7 +1244,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     assert(io.fd == data.conn->fd);
@@ -1252,7 +1254,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         return;
     }
 
-    if (io.flag == COMM_OK && io.size > 0) {
+    if (io.flag == Comm::OK && io.size > 0) {
         debugs(9,5,HERE << "appended " << io.size << " bytes to readBuf");
         data.readBuf->appended(io.size);
 #if USE_DELAY_POOLS
@@ -1267,7 +1269,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         ++ IOStats.Ftp.read_hist[bin];
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpDataRead: read error: " << xstrerr(io.xerrno));
 
@@ -1602,7 +1604,7 @@ FtpStateData::ftpWriteCommandCallback(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (io.flag) {
@@ -1743,7 +1745,7 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
         kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
@@ -1753,11 +1755,11 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
 
     assert(ctrl.offset < ctrl.size);
 
-    if (io.flag == COMM_OK && io.size > 0) {
+    if (io.flag == Comm::OK && io.size > 0) {
         fd_bytes(io.fd, io.size, FD_READ);
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpReadControlReply: read error: " << xstrerr(io.xerrno));
 
@@ -2466,10 +2468,11 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     // Generate a new data channel descriptor to be opened.
     Comm::ConnectionPointer conn = new Comm::Connection;
-    conn->local = ftpState->ctrl.conn->local;
+    conn->setAddrs(ftpState->ctrl.conn->local, ftpState->ctrl.conn->remote);
     conn->local.port(0);
-    conn->remote = ftpState->ctrl.conn->remote;
     conn->remote.port(port);
+    conn->tos = ftpState->ctrl.conn->tos;
+    conn->nfmark = ftpState->ctrl.conn->nfmark;
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
@@ -2720,10 +2723,11 @@ ftpReadPasv(FtpStateData * ftpState)
     ftpState->ctrl.last_command = xstrdup("Connect to server data port");
 
     Comm::ConnectionPointer conn = new Comm::Connection;
-    conn->local = ftpState->ctrl.conn->local;
+    conn->setAddrs(ftpState->ctrl.conn->local, ipaddr);
     conn->local.port(0);
-    conn->remote = ipaddr;
     conn->remote.port(port);
+    conn->tos = ftpState->ctrl.conn->tos;
+    conn->nfmark = ftpState->ctrl.conn->nfmark;
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
@@ -2734,17 +2738,17 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 void
-FtpStateData::ftpPasvCallback(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
     ftpState->data.opener = NULL;
 
-    if (status != COMM_OK) {
+    if (status != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
-        if (status == COMM_TIMEOUT)
+        if (status == Comm::TIMEOUT)
             ftpState->writeCommand("ABOR");
 
         // try another connection attempt with some other method
@@ -2932,7 +2936,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
-    if (io.flag != COMM_OK) {
+    if (io.flag != Comm::OK) {
         data.listenConn->close();
         data.listenConn = NULL;
         debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: " << io.conn << ": " << xstrerr(io.xerrno));
@@ -2975,7 +2979,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         }
     }
 
-    /** On COMM_OK start using the accepted data socket and discard the temporary listen socket. */
+    /** On Comm::OK start using the accepted data socket and discard the temporary listen socket. */
     data.close();
     data.opened(io.conn, dataCloser());
     static char ntoapeer[MAX_IPSTRLEN];

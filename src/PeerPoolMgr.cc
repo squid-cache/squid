@@ -13,6 +13,7 @@
 #include "pconn.h"
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/PeerConnector.h"
 #endif
@@ -91,7 +92,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         return;
     }
 
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         /* it might have been a timeout with a partially open link */
         if (params.conn != NULL)
             params.conn->close();
@@ -112,8 +113,14 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 
         securer = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
                             MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
+
+        const int peerTimeout = peer->connect_timeout > 0 ?
+                                peer->connect_timeout : Config.Timeout.peer_connect;
+        const int timeUsed = squid_curtime - params.conn->startTime();
+        // Use positive timeout when less than one second is left for conn.
+        const int timeLeft = max(1, (peerTimeout - timeUsed));
         Ssl::PeerConnector *connector =
-            new Ssl::PeerConnector(request, params.conn, NULL, securer);
+            new Ssl::PeerConnector(request, params.conn, NULL, securer, timeLeft);
         AsyncJob::Start(connector); // will call our callback
         return;
     }

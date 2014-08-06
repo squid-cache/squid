@@ -18,14 +18,14 @@
 #include "ipc/Queue.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "tools.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
+
 CBDATA_CLASS_INIT(IpcIoFile);
 
 /// shared memory segment path to use for IpcIoFile maps
@@ -43,8 +43,8 @@ std::auto_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
 bool IpcIoFile::DiskerHandleMoreRequestsScheduled = false;
 
-static bool DiskerOpen(const String &path, int flags, mode_t mode);
-static void DiskerClose(const String &path);
+static bool DiskerOpen(const SBuf &path, int flags, mode_t mode);
+static void DiskerClose(const SBuf &path);
 
 /// IpcIo wrapper for debugs() streams; XXX: find a better class name
 struct SipcIo {
@@ -98,7 +98,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
 
     if (IamDiskProcess()) {
-        error_ = !DiskerOpen(dbName, flags, mode);
+        error_ = !DiskerOpen(SBuf(dbName.termedBuf()), flags, mode);
         if (error_)
             return;
 
@@ -140,7 +140,8 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
     Must(diskId < 0); // we do not know our disker yet
 
     if (!response) {
-        debugs(79, DBG_IMPORTANT, HERE << "error: timeout");
+        debugs(79, DBG_IMPORTANT, "ERROR: " << dbName << " communication " <<
+               "channel establishment timeout");
         error_ = true;
     } else {
         diskId = response->strand.kidId;
@@ -150,7 +151,8 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
             Must(inserted);
         } else {
             error_ = true;
-            debugs(79, DBG_IMPORTANT, HERE << "error: no disker claimed " << dbName);
+            debugs(79, DBG_IMPORTANT, "ERROR: no disker claimed " <<
+                   "responsibility for " << dbName);
         }
     }
 
@@ -175,7 +177,7 @@ IpcIoFile::close()
     assert(ioRequestor != NULL);
 
     if (IamDiskProcess())
-        DiskerClose(dbName);
+        DiskerClose(SBuf(dbName.termedBuf()));
     // XXX: else nothing to do?
 
     ioRequestor->closeCompleted();
@@ -227,10 +229,12 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
         ioError = true; // I/O timeout does not warrant setting error_?
     } else {
         if (response->xerrno) {
-            debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(response->xerrno));
+            debugs(79, DBG_IMPORTANT, "ERROR: " << dbName << " read: " <<
+                   xstrerr(response->xerrno));
             ioError = error_ = true;
         } else if (!response->page) {
-            debugs(79, DBG_IMPORTANT, HERE << "error: run out of shared memory pages");
+            debugs(79, DBG_IMPORTANT, "ERROR: " << dbName << " read ran " <<
+                   "out of shared memory pages");
             ioError = true;
         } else {
             const char *const buf = Ipc::Mem::PagePointer(response->page);
@@ -358,14 +362,15 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
             Notify(diskId); // must notify disker
         trackPendingRequest(ipcIo.requestId, pending);
     } catch (const Queue::Full &) {
-        debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
+        debugs(47, DBG_IMPORTANT, "ERROR: worker I/O push queue for " <<
+               dbName << " overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
         // TODO: grow queue size
 
         pending->completeIo(NULL);
         delete pending;
     } catch (const TextException &e) {
-        debugs(47, DBG_IMPORTANT, HERE << e.what());
+        debugs(47, DBG_IMPORTANT, "ERROR: " << dbName << " exception: " << e.what());
         pending->completeIo(NULL);
         delete pending;
     }
@@ -523,15 +528,15 @@ IpcIoFile::checkTimeouts()
 
     if (timeoutsBefore > timeoutsNow) { // some requests were rescued
         // notification message lost or significantly delayed?
-        debugs(47, DBG_IMPORTANT, "WARNING: communication with disker " <<
-               "may be too slow or disrupted for about " <<
+        debugs(47, DBG_IMPORTANT, "WARNING: communication with " << dbName <<
+               " may be too slow or disrupted for about " <<
                Timeout << "s; rescued " << (timeoutsBefore - timeoutsNow) <<
                " out of " << timeoutsBefore << " I/Os");
     }
 
     if (timeoutsNow) {
         debugs(47, DBG_IMPORTANT, "WARNING: abandoning " <<
-               timeoutsNow << " I/Os after at least " <<
+               timeoutsNow << ' ' << dbName << " I/Os after at least " <<
                Timeout << "s timeout");
     }
 
@@ -631,6 +636,7 @@ IpcIoPendingRequest::completeIo(IpcIoMsg *const response)
 
 /* XXX: disker code that should probably be moved elsewhere */
 
+static SBuf DbName; ///< full db file name
 static int TheFile = -1; ///< db file descriptor
 
 static void
@@ -682,8 +688,8 @@ diskerWriteAttempts(IpcIoMsg &ipcIo)
         if (result < 0) {
             ipcIo.xerrno = errno;
             assert(ipcIo.xerrno);
-            debugs(47, DBG_IMPORTANT,  "disker" << KidIdentifier <<
-                   " error writing " << toWrite << '/' << ipcIo.len <<
+            debugs(47, DBG_IMPORTANT, "ERROR: " << DbName << " failure" <<
+                   " writing " << toWrite << '/' << ipcIo.len <<
                    " at " << ipcIo.offset << '+' << wroteSoFar <<
                    " on " << attempts << " try: " << xstrerr(ipcIo.xerrno));
             ipcIo.len = wroteSoFar;
@@ -712,8 +718,8 @@ diskerWriteAttempts(IpcIoMsg &ipcIo)
         toWrite -= wroteNow;
     }
 
-    debugs(47, DBG_IMPORTANT,  "disker" << KidIdentifier <<
-           " exhausted all " << attemptLimit << " attempts while writing " <<
+    debugs(47, DBG_IMPORTANT, "ERROR: " << DbName << " exhausted all " <<
+           attemptLimit << " attempts while writing " <<
            toWrite << '/' << ipcIo.len << " at " << ipcIo.offset << '+' <<
            wroteSoFar);
     return; // not a fatal I/O error, unless the caller treats it as such
@@ -776,9 +782,9 @@ IpcIoFile::WaitBeforePop()
         const int64_t toSpend = balance - maxImbalance/2;
 
         if (toSpend/1e3 > Timeout)
-            debugs(47, DBG_IMPORTANT, "WARNING: Rock disker delays I/O " <<
-                   "requests for " << (toSpend/1e3) << " seconds to obey " <<
-                   ioRate << "/sec rate limit");
+            debugs(47, DBG_IMPORTANT, "WARNING: " << DbName << " delays " <<
+                   "I/O requests for " << (toSpend/1e3) << " seconds " <<
+                   "to obey " << ioRate << "/sec rate limit");
 
         debugs(47, 3, HERE << "rate limiting by " << toSpend << " ms to get" <<
                (1e3*maxRate) << "/sec rate");
@@ -843,7 +849,7 @@ void
 IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 {
     if (ipcIo.command != IpcIo::cmdRead && ipcIo.command != IpcIo::cmdWrite) {
-        debugs(0, DBG_CRITICAL, HERE << "disker" << KidIdentifier <<
+        debugs(0, DBG_CRITICAL, "ERROR: " << DbName <<
                " should not receive " << ipcIo.command <<
                " ipcIo" << workerId << '.' << ipcIo.requestId);
         return;
@@ -869,7 +875,8 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
         // before push()ing and because if disker pops N requests at a time,
         // we should make sure the worker pop() queue length is the worker
         // push queue length plus N+1. XXX: implement the N+1 difference.
-        debugs(47, DBG_IMPORTANT, "BUG: Worker I/O pop queue overflow: " <<
+        debugs(47, DBG_IMPORTANT, "BUG: Worker I/O pop queue for " <<
+               DbName << " overflow: " <<
                SipcIo(workerId, ipcIo, KidIdentifier)); // TODO: report queue len
 
         // the I/O request we could not push will timeout
@@ -877,26 +884,27 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 }
 
 static bool
-DiskerOpen(const String &path, int flags, mode_t mode)
+DiskerOpen(const SBuf &path, int flags, mode_t mode)
 {
     assert(TheFile < 0);
 
-    TheFile = file_open(path.termedBuf(), flags);
+    DbName = path;
+    TheFile = file_open(DbName.c_str(), flags);
 
     if (TheFile < 0) {
         const int xerrno = errno;
-        debugs(47, DBG_CRITICAL, HERE << "rock db error opening " << path << ": " <<
+        debugs(47, DBG_CRITICAL, "ERROR: cannot open " << DbName << ": " <<
                xstrerr(xerrno));
         return false;
     }
 
     ++store_open_disk_fd;
-    debugs(79,3, HERE << "rock db opened " << path << ": FD " << TheFile);
+    debugs(79,3, "rock db opened " << DbName << ": FD " << TheFile);
     return true;
 }
 
 static void
-DiskerClose(const String &path)
+DiskerClose(const SBuf &path)
 {
     if (TheFile >= 0) {
         file_close(TheFile);
@@ -904,6 +912,7 @@ DiskerClose(const String &path)
         TheFile = -1;
         --store_open_disk_fd;
     }
+    DbName.clear();
 }
 
 /// reports our needs for shared memory pages to Ipc::Mem::Pages
