@@ -9,6 +9,7 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
+#include "ftp/Elements.h"
 #include "ftp/Parsing.h"
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
@@ -38,7 +39,7 @@ protected:
 
     /* Ftp::Client API */
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
-    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno);
+    virtual void dataChannelConnected(const CommConnectCbParams &io);
 
     /* ServerStateData API */
     virtual void serverComplete();
@@ -54,7 +55,7 @@ protected:
     void forwardReply();
     void forwardError(err_type error = ERR_NONE, int xerrno = 0);
     void failedErrorMessage(err_type error, int xerrno);
-    HttpReply *createHttpReply(const Http::StatusCode httpStatus, const int clen = 0);
+    HttpReply *createHttpReply(const Http::StatusCode httpStatus, const int64_t clen = 0);
     void handleDataRequest();
     void startDataDownload();
     void startDataUpload();
@@ -386,31 +387,14 @@ Ftp::Relay::forwardError(err_type error, int xerrno)
 }
 
 HttpReply *
-Ftp::Relay::createHttpReply(const Http::StatusCode httpStatus, const int clen)
+Ftp::Relay::createHttpReply(const Http::StatusCode httpStatus, const int64_t clen)
 {
-    HttpReply *const reply = new HttpReply;
-    reply->sline.set(Http::ProtocolVersion(1, 1), httpStatus);
-    HttpHeader &header = reply->header;
-    header.putTime(HDR_DATE, squid_curtime);
-    {
-        HttpHdrCc cc;
-        cc.Private();
-        header.putCc(&cc);
-    }
-    if (clen >= 0)
-        header.putInt64(HDR_CONTENT_LENGTH, clen);
-
+    HttpReply *const reply = Ftp::HttpReplyWrapper(ctrl.replycode, ctrl.last_reply, httpStatus, clen);
     if (ctrl.message) {
         for (wordlist *W = ctrl.message; W && W->next; W = W->next)
-            header.putStr(HDR_FTP_PRE, httpHeaderQuoteString(W->key).c_str());
+            reply->header.putStr(HDR_FTP_PRE, httpHeaderQuoteString(W->key).c_str());
+        // no hdrCacheInit() is needed for after HDR_FTP_PRE addition
     }
-    if (ctrl.replycode > 0)
-        header.putInt(HDR_FTP_STATUS, ctrl.replycode);
-    if (ctrl.last_reply)
-        header.putStr(HDR_FTP_REASON, ctrl.last_reply);
-
-    reply->hdrCacheInit();
-
     return reply;
 }
 
@@ -465,9 +449,9 @@ Ftp::Relay::readGreeting()
         if (serverState() == fssBegin)
             serverState(fssConnected);
 
-        // Do not forward server greeting to the client because our client
-        // side code has greeted the client already. Also, a greeting may
-        // confuse a client that has changed the gateway destination mid-air.
+        // Do not forward server greeting to the user because our FTP Server
+        // has greeted the user already. Also, an original origin greeting may
+        // confuse a user that has changed the origin mid-air.
 
         start();
         break;
@@ -486,7 +470,7 @@ void
 Ftp::Relay::sendCommand()
 {
     if (!fwd->request->header.has(HDR_FTP_COMMAND)) {
-        abortTransaction("Internal error: FTP gateway request with no command");
+        abortTransaction("Internal error: FTP relay request with no command");
         return;
     }
 
@@ -686,20 +670,20 @@ Ftp::Relay::readTransferDoneReply()
 }
 
 void
-Ftp::Relay::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno)
+Ftp::Relay::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, status());
     data.opener = NULL;
 
-    if (err != Comm::OK) {
+    if (io.flag != Comm::OK) {
         debugs(9, 2, "failed to connect FTP server data channel");
-        forwardError(ERR_CONNECT_FAIL, xerrno);
+        forwardError(ERR_CONNECT_FAIL, io.xerrno);
         return;
     }
 
-    debugs(9, 2, "connected FTP server data channel: " << conn);
+    debugs(9, 2, "connected FTP server data channel: " << io.conn);
 
-    data.opened(conn, dataCloser());
+    data.opened(io.conn, dataCloser());
 
     sendCommand();
 }

@@ -306,8 +306,8 @@ Ftp::Server::clientPinnedConnectionClosed(const CommCloseCbParams &io)
     // if the server control connection is gone, reset state to login again
     resetLogin("control connection closure");
 
-    // XXX: Not enough. Gateway::ServerStateData::sendCommand() will not
-    // re-login because clientState() is not ConnStateData::FTP_CONNECTED.
+    // XXX: Reseting is not enough. FtpRelay::sendCommand() will not re-login
+    // because FtpRelay::serverState() is not going to be fssConnected.
 }
 
 /// clear client and server login-related state after the old login is gone
@@ -1278,7 +1278,7 @@ Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
     if (master.clientReadGreeting)
         oldUri = uri;
 
-    master.workingDir = NULL;
+    master.workingDir.clear();
     calcUri(NULL);
 
     if (!master.clientReadGreeting) {
@@ -1574,19 +1574,7 @@ Ftp::Server::setReply(const int code, const char *msg)
     assert(http != NULL);
     assert(http->storeEntry() == NULL);
 
-    HttpReply *const reply = new HttpReply;
-    reply->sline.set(Http::ProtocolVersion(1, 1), Http::scNoContent);
-    HttpHeader &header = reply->header;
-    header.putTime(HDR_DATE, squid_curtime);
-    {
-        HttpHdrCc cc;
-        cc.Private();
-        header.putCc(&cc);
-    }
-    header.putInt64(HDR_CONTENT_LENGTH, 0);
-    header.putInt(HDR_FTP_STATUS, code);
-    header.putStr(HDR_FTP_REASON, msg);
-    reply->hdrCacheInit();
+    HttpReply *const reply = Ftp::HttpReplyWrapper(code, msg, Http::scNoContent, 0);
 
     setLogUri(http, urlCanonicalClean(http->request));
 
@@ -1602,16 +1590,16 @@ Ftp::Server::setReply(const int code, const char *msg)
     http->storeEntry()->replaceHttpReply(reply);
 }
 
-/// Whether Squid FTP gateway supports a given feature (e.g., a command).
+/// Whether Squid FTP Relay supports a named feature (e.g., a command).
 static bool
 Ftp::SupportedCommand(const SBuf &name)
 {
     static std::set<SBuf> BlackList;
     if (BlackList.empty()) {
-        /* Add FTP commands that Squid cannot gateway correctly */
+        /* Add FTP commands that Squid cannot relay correctly. */
 
-        // we probably do not support AUTH TLS.* and AUTH SSL,
-        // but let's disclaim all AUTH support to KISS, for now
+        // We probably do not support AUTH TLS.* and AUTH SSL,
+        // but let's disclaim all AUTH support to KISS, for now.
         BlackList.insert(cmdAuth());
     }
 
