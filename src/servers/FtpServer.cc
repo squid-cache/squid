@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "base/Subscription.h"
 #include "clientStream.h"
 #include "comm/ConnOpener.h"
@@ -13,23 +14,28 @@
 #include "client_side_request.h"
 #include "errorpage.h"
 #include "fd.h"
+#include "ftp/Elements.h"
 #include "ftp/Parsing.h"
 #include "globals.h"
 #include "HttpHdrCc.h"
 #include "ip/tools.h"
 #include "ipc/FdNotes.h"
+#include "parser/Tokenizer.h"
 #include "servers/forward.h"
 #include "servers/FtpServer.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "tools.h"
 
+#include <set>
+#include <map>
+
 CBDATA_NAMESPACED_CLASS_INIT(Ftp, Server);
 
 namespace Ftp {
 static void PrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix = "");
-static bool SupportedCommand(const String &name);
-static bool CommandHasPathParameter(const String &cmd);
+static bool SupportedCommand(const SBuf &name);
+static bool CommandHasPathParameter(const SBuf &cmd);
 };
 
 Ftp::Server::Server(const MasterXaction::Pointer &xact):
@@ -76,7 +82,7 @@ Ftp::Server::start()
         char buf[MAX_IPSTRLEN];
         clientConnection->local.toUrl(buf, MAX_IPSTRLEN);
         host = buf;
-        calcUri();
+        calcUri(NULL);
         debugs(33, 5, "FTP transparent URL: " << uri);
     }
 
@@ -315,24 +321,24 @@ Ftp::Server::resetLogin(const char *reason)
 
 /// computes uri member from host and, if tracked, working dir with file name
 void
-Ftp::Server::calcUri(const char *file)
+Ftp::Server::calcUri(const SBuf *file)
 {
     uri = "ftp://";
     uri.append(host);
-    if (port->ftp_track_dirs && master.workingDir.size()) {
+    if (port->ftp_track_dirs && master.workingDir.length()) {
         if (master.workingDir[0] != '/')
             uri.append("/");
         uri.append(master.workingDir);
     }
 
-    if (uri[uri.size() - 1] != '/')
+    if (uri[uri.length() - 1] != '/')
         uri.append("/");
 
     if (port->ftp_track_dirs && file) {
-        // remove any '/' from the beginning of path
-        while (*file == '/')
-            ++file;
-        uri.append(file);
+        static const CharacterSet Slash("/", "/");
+        Parser::Tokenizer tok(*file);
+        tok.skipAll(Slash);
+        uri.append(tok.remaining());
     }
 }
 
@@ -347,7 +353,7 @@ Ftp::Server::listenForDataConnection()
     conn->flags = COMM_NONBLOCKING;
     conn->local = transparent() ? port->s : clientConnection->local;
     conn->local.port(0);
-    const char *const note = uri.termedBuf();
+    const char *const note = uri.c_str();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
         debugs(5, DBG_CRITICAL, "comm_open_listener failed for FTP data: " <<
@@ -514,13 +520,28 @@ Ftp::Server::changeState(const ServerState newState, const char *reason)
 
 /// whether the given FTP command has a pathname parameter
 static bool
-Ftp::CommandHasPathParameter(const String &cmd)
+Ftp::CommandHasPathParameter(const SBuf &cmd)
 {
-    static const char *pathCommandsStr[]= {"CWD","SMNT", "RETR", "STOR", "APPE",
-                                           "RNFR", "RNTO", "DELE", "RMD", "MKD",
-                                           "LIST", "NLST", "STAT", "MLSD", "MLST"};
-    static const std::set<String> pathCommands(pathCommandsStr, pathCommandsStr + sizeof(pathCommandsStr)/sizeof(pathCommandsStr[0]));
-    return pathCommands.find(cmd) != pathCommands.end();
+    static std::set<SBuf> PathedCommands;
+    if (!PathedCommands.size()) {
+        PathedCommands.insert(cmdMlst());
+        PathedCommands.insert(cmdMlsd());
+        PathedCommands.insert(cmdStat());
+        PathedCommands.insert(cmdNlst());
+        PathedCommands.insert(cmdList());
+        PathedCommands.insert(cmdMkd());
+        PathedCommands.insert(cmdRmd());
+        PathedCommands.insert(cmdDele());
+        PathedCommands.insert(cmdRnto());
+        PathedCommands.insert(cmdRnfr());
+        PathedCommands.insert(cmdAppe());
+        PathedCommands.insert(cmdStor());
+        PathedCommands.insert(cmdRetr());
+        PathedCommands.insert(cmdSmnt());
+        PathedCommands.insert(cmdCwd());
+    }
+
+    return PathedCommands.find(cmd) != PathedCommands.end();
 }
 
 /// Parses a single FTP request on the control connection.
@@ -528,73 +549,65 @@ Ftp::CommandHasPathParameter(const String &cmd)
 ClientSocketContext *
 Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
 {
-    ver = Http::ProtocolVersion(1, 1);
+    // OWS <command> [ RWS <parameter> ] OWS LF
+    static const CharacterSet WhiteSpace = CharacterSet("Ftp::WS", " \f\r\t\v");
+    static const CharacterSet BlackSpace = WhiteSpace.complement("!Ftp::WS");
+    static const CharacterSet NewLine = CharacterSet("NL", "\n");
+    static const CharacterSet OldLine = NewLine.complement("!NL");
 
-    // TODO: Use tokenizer for parsing instead of raw pointer manipulation.
-    const char *inBuf = in.buf.rawContent();
+    // This set is used to ignore empty commands without allowing an attacker
+    // to keep us endlessly busy by feeding us whitespace or empty commands.
+    static const CharacterSet LeadingSpace = (WhiteSpace + NewLine).rename("Ftp::LeadingSpace");
 
-    const char *const eor =
-        static_cast<const char *>(memchr(inBuf, '\n',
-            min(static_cast<size_t>(in.buf.length()), Config.maxRequestHeaderSize)));
+    SBuf cmd;
+    SBuf params;
 
-    if (eor == NULL && in.buf.length() >= Config.maxRequestHeaderSize) {
-        changeState(fssError, "huge req");
-        writeEarlyReply(421, "Too large request");
-        return NULL;
+    Parser::Tokenizer tok(in.buf);
+
+    (void)tok.skipAll(LeadingSpace); // leading OWS and empty commands
+    const bool parsed = tok.prefix(cmd, BlackSpace); // required command
+
+    // note that the condition below will eat either RWS or trailing OWS
+    if (parsed && tok.skipAll(WhiteSpace) && tok.prefix(params, OldLine)) {
+        // now params may include trailing OWS
+        // TODO: Support right-trimming using CharacterSet in Tokenizer instead
+        static const SBuf bufWhiteSpace("\r\t ");
+        params.trim(bufWhiteSpace, false, true);
     }
 
-    if (eor == NULL) {
-        debugs(33, 5, "Incomplete request, waiting for end of request");
-        return NULL;
+    // technically, we may skip multiple NLs below, but that is OK
+    if (!parsed || !tok.skipAll(NewLine)) { // did not find terminating LF yet
+        // we need more data, but can we buffer more?
+        if (in.buf.length() >= Config.maxRequestHeaderSize) {
+            changeState(fssError, "huge req");
+            writeEarlyReply(421, "Huge request");
+            return NULL;
+        } else {
+            debugs(33, 5, "Waiting for more, up to " <<
+                   (Config.maxRequestHeaderSize - in.buf.length()));
+            return NULL;
+        }
     }
 
-    const size_t req_sz = eor + 1 - inBuf;
+    Must(parsed && cmd.length());
+    consumeInput(tok.parsedSize()); // TODO: Would delaying optimize copying?
 
-    // skip leading whitespaces
-    const char *boc = inBuf; // beginning of command
-    while (boc < eor && isspace(*boc)) ++boc;
-    if (boc >= eor) {
-        debugs(33, 5, "Empty request, ignoring");
-        consumeInput(req_sz);
-        return NULL;
-    }
+    debugs(33, 2, ">>ftp " << cmd << (params.isEmpty() ? "" : " ") << params);
 
-    const char *eoc = boc; // end of command
-    while (eoc < eor && !isspace(*eoc)) ++eoc;
-    in.buf.setAt(eoc - inBuf, '\0');
-
-    const char *bop = eoc + 1; // beginning of parameter
-    while (bop < eor && isspace(*bop)) ++bop;
-    if (bop < eor) {
-        const char *eop = eor - 1;
-        while (isspace(*eop)) --eop;
-        assert(eop >= bop);
-        in.buf.setAt(eop + 1 - inBuf, '\0');
-    } else
-        bop = NULL;
-
-    debugs(33, 7, "Parsed FTP command " << boc << " with " <<
-           (bop == NULL ? "no " : "") << "parameters" <<
-           (bop != NULL ? ": " : "") << bop);
-
-    // TODO: Use SBuf instead of String
-    const String cmd = boc;
-    String params = bop;
-
-    consumeInput(req_sz);
+    cmd.toUpper(); // this should speed up and simplify future comparisons
 
     // interception cases do not need USER to calculate the uri
     if (!transparent()) {
         if (!master.clientReadGreeting) {
             // the first command must be USER
-            if (!pinning.pinned && cmd.caseCmp("USER") != 0) {
+            if (!pinning.pinned && cmd != cmdUser()) {
                 writeEarlyReply(530, "Must login first");
                 return NULL;
             }
         }
 
         // process USER request now because it sets FTP peer host name
-        if (cmd.caseCmp("USER") == 0 && !handleUserRequest(cmd, params))
+        if (cmd == cmdUser() && !handleUserRequest(cmd, params))
             return NULL;
     }
 
@@ -604,22 +617,23 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
     }
 
     const HttpRequestMethod method =
-        !cmd.caseCmp("APPE") || !cmd.caseCmp("STOR") || !cmd.caseCmp("STOU") ?
+        cmd == cmdAppe() || cmd == cmdStor() || cmd == cmdStou() ?
         Http::METHOD_PUT : Http::METHOD_GET;
 
-    const char *aPath = params.size() > 0 && CommandHasPathParameter(cmd) ?
-        params.termedBuf() : NULL;
-    calcUri(aPath);
-    char *newUri = xstrdup(uri.termedBuf());
+    const SBuf *path = params.length() && CommandHasPathParameter(cmd) ?
+        &params : NULL;
+    calcUri(path);
+    char *newUri = xstrdup(uri.c_str());
     HttpRequest *const request = HttpRequest::CreateFromUrlAndMethod(newUri, method);
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         writeEarlyReply(501, "Invalid host");
-        uri.clean();
+        uri.clear();
         safe_free(newUri);
         return NULL;
     }
 
+    ver = Http::ProtocolVersion(1, 1);
     request->flags.ftpNative = true;
     request->http_ver = ver;
 
@@ -627,9 +641,8 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
     request->flags.cachable = false; // XXX: reset later by maybeCacheable()
     request->flags.noCache = true;
 
-    request->header.putStr(HDR_FTP_COMMAND, cmd.termedBuf());
-    request->header.putStr(HDR_FTP_ARGUMENTS, params.termedBuf() != NULL ?
-                           params.termedBuf() : "");
+    request->header.putStr(HDR_FTP_COMMAND, cmd.c_str());
+    request->header.putStr(HDR_FTP_ARGUMENTS, params.c_str()); // may be ""
     if (method == Http::METHOD_PUT) {
         request->header.putStr(HDR_EXPECT, "100-continue");
         request->header.putStr(HDR_TRANSFER_ENCODING, "chunked");
@@ -638,7 +651,7 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
     ClientHttpRequest *const http = new ClientHttpRequest(this);
     http->request = request;
     HTTPMSGLOCK(http->request);
-    http->req_sz = req_sz;
+    http->req_sz = tok.parsedSize();
     http->uri = newUri;
 
     ClientSocketContext *const result =
@@ -718,29 +731,29 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer data)
             // assume RFC 2389 FEAT response format, quoted by Squid:
             // <"> SP NAME [SP PARAMS] <">
             // but accommodate MS servers sending four SPs before NAME
-            if (e->value.size() < 4)
-                continue;
-            const char *raw = e->value.termedBuf();
-            if (raw[0] != '"' || raw[1] != ' ')
-                continue;
-            const char *beg = raw + 1 + strspn(raw + 1, " "); // after quote and spaces
+
             // command name ends with (SP parameter) or quote
-            const char *end = beg + strcspn(beg, " \"");
+            static const CharacterSet AfterFeatNameChars("AfterFeatName", " \"");
+            static const CharacterSet FeatNameChars = AfterFeatNameChars.complement("FeatName");
 
-            if (end <= beg)
+            Parser::Tokenizer tok(SBuf(e->value.termedBuf()));
+            if (!tok.skip('"') && !tok.skip(' '))
                 continue;
 
-            // compute the number of spaces before the command
-            prependSpaces = beg - raw - 1;
+            // optional spaces; remember their number to accomodate MS servers
+            prependSpaces = 1 + tok.skipAll(CharacterSet::SP);
 
-            const String cmd = e->value.substr(beg-raw, end-raw);
+            SBuf cmd;
+            if (!tok.prefix(cmd, FeatNameChars))
+                continue;
+            cmd.toUpper();
 
             if (!Ftp::SupportedCommand(cmd))
                 filteredHeader.delAt(pos, deletedCount);
 
-            if (cmd == "EPRT")
+            if (cmd == cmdEprt())
                 hasEPRT = true;
-            else if (cmd == "EPSV")
+            else if (cmd == cmdEpsv())
                 hasEPSV = true;
         }
     }
@@ -823,7 +836,7 @@ void
 Ftp::Server::handleErrorReply(const HttpReply *reply, StoreIOBuffer data)
 {
     if (!pinning.pinned) // we failed to connect to server
-        uri.clean();
+        uri.clear();
     // 421: we will close due to fssError
     writeErrorReply(reply, 421);
 }
@@ -1193,76 +1206,80 @@ Ftp::Server::handleRequest(String &cmd, String &params) {
                "\n----------");
     }
 
-    // TODO: optimize using a static map with case-insensitive lookup
-    static std::pair<const char*, RequestHandler> handlers[] = {
-        std::make_pair("LIST", &Ftp::Server::handleDataRequest),
-        std::make_pair("NLST", &Ftp::Server::handleDataRequest),
-        std::make_pair("MLSD", &Ftp::Server::handleDataRequest),
-        std::make_pair("FEAT", &Ftp::Server::handleFeatRequest),
-        std::make_pair("PASV", &Ftp::Server::handlePasvRequest),
-        std::make_pair("PORT", &Ftp::Server::handlePortRequest),
-        std::make_pair("RETR", &Ftp::Server::handleDataRequest),
-        std::make_pair("EPRT", &Ftp::Server::handleEprtRequest),
-        std::make_pair("EPSV", &Ftp::Server::handleEpsvRequest),
-        std::make_pair("CWD", &Ftp::Server::handleCwdRequest),
-        std::make_pair("PASS", &Ftp::Server::handlePassRequest),
-        std::make_pair("CDUP", &Ftp::Server::handleCdupRequest)
-    };
+    // TODO: When HttpHeader uses SBuf, change keys to SBuf
+    typedef std::map<const std::string, RequestHandler> RequestHandlers;
+    static RequestHandlers handlers;
+    if (!handlers.size()) {
+        handlers["LIST"] = &Ftp::Server::handleDataRequest;
+        handlers["NLST"] = &Ftp::Server::handleDataRequest;
+        handlers["MLSD"] = &Ftp::Server::handleDataRequest;
+        handlers["FEAT"] = &Ftp::Server::handleFeatRequest;
+        handlers["PASV"] = &Ftp::Server::handlePasvRequest;
+        handlers["PORT"] = &Ftp::Server::handlePortRequest;
+        handlers["RETR"] = &Ftp::Server::handleDataRequest;
+        handlers["EPRT"] = &Ftp::Server::handleEprtRequest;
+        handlers["EPSV"] = &Ftp::Server::handleEpsvRequest;
+        handlers["CWD"] = &Ftp::Server::handleCwdRequest;
+        handlers["PASS"] = &Ftp::Server::handlePassRequest;
+        handlers["CDUP"] = &Ftp::Server::handleCdupRequest;
+    }
 
     RequestHandler handler = NULL;
     if (request->method == Http::METHOD_PUT)
         handler = &Ftp::Server::handleUploadRequest;
     else {
-        for (size_t i = 0; i < sizeof(handlers) / sizeof(*handlers); ++i) {
-            if (cmd.caseCmp(handlers[i].first) == 0) {
-                handler = handlers[i].second;
-                break;
-            }
-        }
+        const RequestHandlers::const_iterator hi = handlers.find(cmd.termedBuf());
+        if (hi != handlers.end())
+            handler = hi->second;
     }
 
-    // TODO: complain about unknown commands
-    return handler != NULL ? (this->*handler)(cmd, params) : true;
+    if (!handler) {
+        debugs(11, 7, "forwarding " << cmd << " as is, no post-processing");
+        return true;
+    }
+
+    return (this->*handler)(cmd, params);
 }
 
 /// Called to parse USER command, which is required to create an HTTP request
 /// wrapper. Thus, errors are handled with writeEarlyReply() here.
 bool
-Ftp::Server::handleUserRequest(const String &cmd, String &params)
+Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
 {
-    if (params.size() == 0) {
+    if (params.isEmpty()) {
         writeEarlyReply(501, "Missing username");
         return false;
     }
 
     // find the [end of] user name
-    const String::size_type eou = params.rfind('@');
-    if (eou == String::npos || eou + 1 >= params.size()) {
+    const SBuf::size_type eou = params.rfind('@');
+    if (eou == SBuf::npos || eou + 1 >= params.length()) {
         writeEarlyReply(501, "Missing host");
         return false;
     }
-    // const String login = params.substr(0, eou);
 
     // Determine the intended destination.
-    host = params.substr(eou + 1, params.size());
+    host = params.substr(eou + 1, params.length());
     // If we can parse it as raw IPv6 address, then surround with "[]".
     // Otherwise (domain, IPv4, [bracketed] IPv6, garbage, etc), use as is.
-    if (host.pos(":")) {
-        char ipBuf[MAX_IPSTRLEN];
-        Ip::Address ipa;
-        ipa = host.termedBuf();
+    if (host.find(':') != SBuf::npos) {
+        const Ip::Address ipa(host.c_str());
         if (!ipa.isAnyAddr()) {
+            char ipBuf[MAX_IPSTRLEN];
             ipa.toHostStr(ipBuf, MAX_IPSTRLEN);
             host = ipBuf;
         }
     }
 
-    String oldUri;
+    // const SBuf login = params.substr(0, eou);
+    params.chop(0, eou); // leave just the login part for the peer
+
+    SBuf oldUri;
     if (master.clientReadGreeting)
         oldUri = uri;
 
     master.workingDir = NULL;
-    calcUri();
+    calcUri(NULL);
 
     if (!master.clientReadGreeting) {
         debugs(11, 3, "set URI to " << uri);
@@ -1274,8 +1291,6 @@ Ftp::Server::handleUserRequest(const String &cmd, String &params)
         unpinConnection(true); // close control connection to peer
         resetLogin("URI reset");
     }
-
-    params.cut(eou);
 
     return true;
 }
@@ -1589,18 +1604,18 @@ Ftp::Server::setReply(const int code, const char *msg)
 
 /// Whether Squid FTP gateway supports a given feature (e.g., a command).
 static bool
-Ftp::SupportedCommand(const String &name)
+Ftp::SupportedCommand(const SBuf &name)
 {
-    static std::set<std::string> BlackList;
+    static std::set<SBuf> BlackList;
     if (BlackList.empty()) {
         /* Add FTP commands that Squid cannot gateway correctly */
 
         // we probably do not support AUTH TLS.* and AUTH SSL,
         // but let's disclaim all AUTH support to KISS, for now
-        BlackList.insert("AUTH");
+        BlackList.insert(cmdAuth());
     }
 
     // we claim support for all commands that we do not know about
-    return BlackList.find(name.termedBuf()) == BlackList.end();
+    return BlackList.find(name) == BlackList.end();
 }
 
