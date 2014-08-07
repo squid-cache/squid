@@ -12,6 +12,7 @@
 #include "ftp/Parsing.h"
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
+#include "SBuf.h"
 #include "servers/FtpServer.h"
 #include "Server.h"
 #include "SquidTime.h"
@@ -508,14 +509,13 @@ Ftp::Relay::sendCommand()
         return;
     }
 
-    static MemBuf mb;
-    mb.reset();
+    SBuf buf;
     if (params.size() > 0)
-        mb.Printf("%s %s%s", cmd.termedBuf(), params.termedBuf(), Ftp::crlf);
+        buf.Printf("%s %s%s", cmd.termedBuf(), params.termedBuf(), Ftp::crlf);
     else
-        mb.Printf("%s%s", cmd.termedBuf(), Ftp::crlf);
+        buf.Printf("%s%s", cmd.termedBuf(), Ftp::crlf);
 
-    writeCommand(mb.content());
+    writeCommand(buf.c_str());
 
     state =
         serverState() == fssHandleCdup ? SENT_CDUP :
