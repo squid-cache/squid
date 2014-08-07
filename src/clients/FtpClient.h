@@ -82,7 +82,7 @@ public:
     bool read_pending;
 };
 
-/// Base class for FTP Gateway and FTP Native client classes.
+/// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::ServerStateData
 {
 public:
@@ -166,8 +166,7 @@ protected:
     void readControlReply(const CommIoCbParams &io);
     virtual void handleControlReply();
     void writeCommandCallback(const CommIoCbParams &io);
-    static CNCB dataChannelConnected;
-    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno) = 0;
+    virtual void dataChannelConnected(const CommConnectCbParams &io) = 0;
     void dataRead(const CommIoCbParams &io);
     void dataComplete();
     AsyncCall::Pointer dataCloser();

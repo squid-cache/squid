@@ -32,7 +32,7 @@ class MasterState
 {
 public:
     Ip::Address clientDataAddr; ///< address of our FTP client data connection
-    SBuf workingDir;
+    SBuf workingDir; ///< estimated current working directory for URI formation
     ServerState serverState; ///< what our FTP server is doing
     bool clientReadGreeting; ///< whether our FTP client read their FTP server greeting
 

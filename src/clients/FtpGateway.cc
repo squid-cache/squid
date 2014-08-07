@@ -179,7 +179,7 @@ public:
     void setCurrentOffset(int64_t offset) { currentOffset = offset; }
     int64_t getCurrentOffset() const { return currentOffset; }
 
-    virtual void dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno);
+    virtual void dataChannelConnected(const CommConnectCbParams &io);
     static PF ftpDataWrite;
     virtual void timeout(const CommTimeoutCbParams &io);
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
@@ -972,11 +972,11 @@ Ftp::Gateway::parseListing()
     line = (char *)memAllocate(MEM_4K_BUF);
     ++end;
     s = sbuf;
-    s += strspn(s, Ftp::crlf);
+    s += strspn(s, crlf);
 
-    for (; s < end; s += strcspn(s, Ftp::crlf), s += strspn(s, Ftp::crlf)) {
+    for (; s < end; s += strcspn(s, crlf), s += strspn(s, crlf)) {
         debugs(9, 7, HERE << "s = {" << s << "}");
-        linelen = strcspn(s, Ftp::crlf) + 1;
+        linelen = strcspn(s, crlf) + 1;
 
         if (linelen < 2)
             break;
@@ -1831,16 +1831,16 @@ ftpReadPasv(Ftp::Gateway * ftpState)
 }
 
 void
-Ftp::Gateway::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno)
+Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, HERE);
     data.opener = NULL;
 
-    if (err != Comm::OK) {
+    if (io.flag != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
-        if (err == Comm::TIMEOUT)
+        if (io.xerrno == Comm::TIMEOUT)
             writeCommand("ABOR");
 
         // try another connection attempt with some other method
@@ -1848,7 +1848,7 @@ Ftp::Gateway::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Fl
         return;
     }
 
-    data.opened(conn, dataCloser());
+    data.opened(io.conn, dataCloser());
     ftpRestOrList(this);
 }
 

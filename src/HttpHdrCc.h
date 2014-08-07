@@ -75,8 +75,10 @@ public:
     //manipulation for Cache-Control: private header
     bool hasPrivate() const {return isSet(CC_PRIVATE);}
     const String &Private() const {return private_;}
-    void Private(const String &v = "") {
+    void Private(const String &v) {
         setMask(CC_PRIVATE,true);
+        if (!v.size())
+            return;
         // uses append for multi-line headers
         if (private_.size() > 0)
             private_.append(",");
@@ -87,10 +89,12 @@ public:
     //manipulation for Cache-Control: no-cache header
     bool hasNoCache() const {return isSet(CC_NO_CACHE);}
     const String &noCache() const {return no_cache;}
-    void noCache(String &v) {
+    void noCache(const String &v) {
         setMask(CC_NO_CACHE,true);
+        if (!v.size())
+            return;
         // uses append for multi-line headers
-        if (no_cache.size() > 0)
+        if (no_cache.size() > 0 && v.size() > 0)
             no_cache.append(",");
         no_cache.append(v);
     }

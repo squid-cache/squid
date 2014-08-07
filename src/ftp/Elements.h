@@ -1,9 +1,15 @@
 #ifndef SQUID_FTP_ELEMENTS_H
 #define SQUID_FTP_ELEMENTS_H
 
+#include "http/StatusCode.h"
+
 class SBuf;
+class HttpReply;
 
 namespace Ftp {
+
+/// Create an internal HttpReply structure to house FTP control response info.
+HttpReply *HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::StatusCode httpStatus, const int64_t clen);
 
 /* FTP Commands used by Squid. ALLCAPS case. Safe for static initializaton. */
 const SBuf &cmdAppe();
