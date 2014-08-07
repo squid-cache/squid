@@ -60,8 +60,8 @@ testTokenizer::testTokenizerSkip()
     CPPUNIT_ASSERT(t.prefix(s,alpha));
     CPPUNIT_ASSERT_EQUAL(SBuf("GET"),s);
 
-    // test skip testing character set
-    CPPUNIT_ASSERT(t.skip(whitespace));
+    // test skipping one character from a character set
+    CPPUNIT_ASSERT(t.skipOne(whitespace));
     // check that skip was right
     CPPUNIT_ASSERT(t.prefix(s,alpha));
     CPPUNIT_ASSERT_EQUAL(SBuf("http"),s);
@@ -73,10 +73,14 @@ testTokenizer::testTokenizerSkip()
     CPPUNIT_ASSERT_EQUAL(SBuf("resource"),s);
 
     // no skip
-    CPPUNIT_ASSERT(!t.skip(alpha));
+    CPPUNIT_ASSERT(!t.skipOne(alpha));
     CPPUNIT_ASSERT(!t.skip(SBuf("://")));
     CPPUNIT_ASSERT(!t.skip('a'));
 
+    // test skipping all characters from a character set while looking at .com
+    CPPUNIT_ASSERT(t.skip('.'));
+    CPPUNIT_ASSERT_EQUAL(static_cast<SBuf::size_type>(3), t.skipAll(alpha));
+    CPPUNIT_ASSERT(t.remaining().startsWith(SBuf("/path")));
 }
 
 void

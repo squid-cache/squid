@@ -673,15 +673,15 @@ squid_DEPENDENCIES = \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
-	ftp/libftp.la \
 	clients/libclients.la \
-	servers/libservers.la \
+	ftp/libftp.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	format/libformat.la \
 	ipc/libipc.la \
-	mgr/libmgr.la
+	mgr/libmgr.la \
+	servers/libservers.la
 
 if ENABLE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
@@ -1615,6 +1615,7 @@ tests_testCacheManager_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2050,6 +2051,7 @@ tests_testEvent_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2301,6 +2303,7 @@ tests_testEventLoop_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2545,6 +2548,7 @@ tests_test_http_range_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	parser/libsquid-parser.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2837,6 +2841,7 @@ tests_testHttpRequest_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	parser/libsquid-parser.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -3682,6 +3687,7 @@ tests_testURL_LDADD = \
 	eui/libeui.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \

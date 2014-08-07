@@ -32,7 +32,7 @@ class MasterState
 {
 public:
     Ip::Address clientDataAddr; ///< address of our FTP client data connection
-    String workingDir;
+    SBuf workingDir;
     ServerState serverState; ///< what our FTP server is doing
     bool clientReadGreeting; ///< whether our FTP client read their FTP server greeting
 
@@ -81,9 +81,9 @@ protected:
     bool createDataConnection(Ip::Address cltAddr);
     void closeDataConnection();
 
-    void calcUri(const char *file = NULL);
+    void calcUri(const SBuf *file);
     void changeState(const Ftp::ServerState newState, const char *reason);
-    bool handleUserRequest(const String &cmd, String &params);
+    bool handleUserRequest(const SBuf &cmd, SBuf &params);
     bool checkDataConnPost() const;
     void replyDataWritingCheckpoint();
     void maybeReadUploadData();
@@ -130,8 +130,8 @@ private:
     void shovelUploadData();
     void resetLogin(const char *reason);
 
-    String uri; ///< a URI reconstructed from various FTP message details
-    String host; ///< intended dest. of a transparently intercepted FTP conn
+    SBuf uri; ///< a URI reconstructed from various FTP message details
+    SBuf host; ///< intended dest. of a transparently intercepted FTP conn
     bool gotEpsvAll; ///< restrict data conn setup commands to just EPSV
     AsyncCall::Pointer onDataAcceptCall; ///< who to call upon data conn acceptance
     Comm::ConnectionPointer dataListenConn; ///< data connection listening socket
