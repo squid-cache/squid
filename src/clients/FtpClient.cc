@@ -730,18 +730,11 @@ Ftp::Client::connectDataChannel()
 
     debugs(9, 3, "connecting to " << conn->remote);
 
-    data.opener = commCbCall(9, 3, "Ftp::Client::dataChannelConnected",
-                             CommConnectCbPtrFun(Ftp::Client::dataChannelConnected, this));
+    typedef CommCbMemFunT<Client, CommConnectCbParams> Dialer;
+    data.opener = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, data.opener, Config.Timeout.connect);
     cs->setHost(data.host);
     AsyncJob::Start(cs);
-}
-
-void
-Ftp::Client::dataChannelConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
-{
-    Client *ftpState = static_cast<Client *>(data);
-    ftpState->dataChannelConnected(conn, status, xerrno);
 }
 
 bool
