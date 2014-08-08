@@ -33,6 +33,8 @@ public:
         std::ostream & print(std::ostream &os) const;
         /// Converts to the internal squid SSL version form the sslVersion
         int toSquidSSLVersion() const;
+        /// Configure the SSL object with the SSL features of the sslFeatures object
+        void applyToSSL(SSL *ssl) const;
     public:
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
@@ -80,9 +82,13 @@ protected:
 };
 
 /// BIO node to handle socket IO for squid client side
+/// If bumping is enabled  this Bio detects and analyses client hello message
+/// to retrieve the SSL features supported by the client
 class ClientBio: public Bio {
 public:
-    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), headerState(0), headerBytes(0) {}
+    /// The ssl hello message read states
+    typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived} HelloReadState;
+    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone), helloSize(0) {}
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the 
@@ -108,11 +114,25 @@ private:
     Bio::sslFeatures features;
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
-    int headerState;
-    int headerBytes;
+    HelloReadState helloState; ///< The SSL hello read state
+    int helloSize; ///< The SSL hello message sent by client size
 };
 
 /// BIO node to handle socket IO for squid server side
+/// If bumping is enabled, analyses the SSL hello message sent by squid OpenSSL
+/// subsystem (step3 bumping step) against bumping mode:
+///   * Peek mode:  Send client hello message instead of the openSSL generated
+///                 hello message and normaly denies bumping and allow only 
+///                 splice or terminate the SSL connection
+///   * Stare mode: Sends the openSSL generated hello message and normaly
+///                 denies splicing and allow bump or terminate the SSL
+///                 connection
+///  If SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK is enabled also checks if the
+///  openSSL library features are compatible with the features reported in
+///  web client SSL hello message and if it is, overwrites the openSSL SSL
+///  object members to replace hello message with web client hello message.
+///  This is may allow bumping in peek mode and splicing in stare mode after
+///  the server hello message received.
 class ServerBio: public Bio {
 public:
     explicit ServerBio(const int anFd): Bio(anFd), featuresSet(false), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone) {}
@@ -132,11 +152,17 @@ public:
     /// Sets the random number to use in client SSL HELLO message
     void setClientFeatures(const sslFeatures &features);
 
+    /// The write hold state
     bool holdWrite() const {return holdWrite_;}
+    /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
+    /// Enables or disables the input data recording, for internal analysis. 
     void recordInput(bool r) {record_ = r;}
+    /// Whether we can splice or not the SSL stream
     bool canSplice() {return allowSplice;}
+    /// Whether we can bump or not the SSL stream
     bool canBump() {return allowBump;}
+    /// The bumping mode
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
 private:
     /// A random number to use as "client random" in client hello message
@@ -145,10 +171,10 @@ private:
     MemBuf helloMsg; ///< Used to buffer output data.
     int helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
-    bool allowSplice;
-    bool allowBump;
+    bool allowSplice; ///< True if the SSL stream can be spliced
+    bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
-    bool record_;
+    bool record_; ///< If true the input data recorded to rbuf for internal use
     Ssl::BumpMode bumpMode_;
 };
 

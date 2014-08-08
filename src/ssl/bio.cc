@@ -190,7 +190,7 @@ const char *objToString(unsigned char const *bytes, int len)
 int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
-    if (headerState < 2) {
+    if (helloState < atHelloReceived) {
 
         if (rbuf.isNull())
             rbuf.init(1024, 16384);
@@ -207,7 +207,7 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
         debugs(83, 7, "rbuf size: " << rbuf.contentSize());
     }
 
-    if (headerState == 0) {
+    if (helloState == atHelloNone) {
 
         const unsigned char *head = (const unsigned char *)rbuf.content();
         const char *s = objToString(head, rbuf.contentSize());
@@ -219,34 +219,34 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
 
         if (head[0] == 0x16) {
             debugs(83, 7, "SSL version 3 handshake message");
-            headerBytes = (head[3] << 8) + head[4];
-            debugs(83, 7, "SSL Header Size: " << headerBytes);
-            headerBytes +=5;
+            helloSize = (head[3] << 8) + head[4];
+            debugs(83, 7, "SSL Header Size: " << helloSize);
+            helloSize +=5;
 #ifdef DO_SSLV23
         } else if ((head[0] & 0x80) && head[2] == 0x01 && head[3] == 0x03) { 
             debugs(83, 7, "SSL version 2 handshake message with v3 support");
-            headerBytes = head[1];
-            headerBytes +=5;
+            helloSize = head[1];
+            helloSize +=5;
 #endif
         }else {
             debugs(83, 7, "Not an SSL acceptable handshake message (SSLv2 message?)");
             return -1;
         }
 
-        headerState = 1; //Next state
+        helloState = atHelloStarted; //Next state
     }
 
-    if (headerState == 1) {
+    if (helloState == atHelloStarted) {
         const unsigned char *head = (const unsigned char *)rbuf.content();
         const char *s = objToString(head, rbuf.contentSize());
         debugs(83, 7, "SSL Header: " << s);
 
-        if (headerBytes > rbuf.contentSize()) {
+        if (helloSize > rbuf.contentSize()) {
             BIO_set_retry_read(table);
             return -1;
         }
         features.get((const unsigned char *)rbuf.content());
-        headerState = 2;
+        helloState = atHelloReceived;
     }
 
     if (holdRead_) {
@@ -255,7 +255,7 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
         return -1;
     }
 
-    if (headerState >=2) {
+    if (helloState == atHelloReceived) {
         if (rbuf.hasContent()) {
             int bytes = (size <= rbuf.contentSize() ? size : rbuf.contentSize());
             memcpy(buf, rbuf.content(), bytes);
@@ -305,18 +305,31 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
     return bytes;
 }
 
-bool
-adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
+
+// This function makes the required checks to examine if the client hello message 
+// can be compatible with the features provided by OpenSSL toolkit.
+// If the features are compatible and can be supported it tries to rewrite SSL
+// structure members, to replace the hello message created by openSSL, with the 
+// web client SSL hello message.
+// This is mostly possible in the cases where the web client uses openSSL library
+// similar with this one used by squid.
+static bool
+adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
 {
-    bool fail = false;
+#if SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK
+    if (!ssl->s3) {
+        debugs(83, 5, "No SSLv3 data found!");
+        return false;
+    }
+
     // If the client supports compression but our context does not support
     // we can not adjust.
     if (features.compressMethod && ssl->ctx->comp_methods == NULL) {
         debugs(83, 5, "Client Hello Data supports compression, but we do not!");
-        fail = true;
+        return false;
     }
 
-    //Check ciphers list
+    // Check ciphers list
     size_t token = 0;
     size_t end = 0;
     while (token != std::string::npos) {
@@ -336,14 +349,14 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
       }
       if (!found) {
           debugs(83, 5, "Client Hello Data supports cipher '"<< cipher <<"' but we do not support it!");
-          fail = true;
+          return false;
       }
     }
 
 #if !defined(SSL_TLSEXT_HB_ENABLED)
     if (features.doHeartBeats) {
         debugs(83, 5, "Client Hello Data supports HeartBeats but we do not support!");
-        fail = true;
+        return false;
     }
 #endif
 
@@ -376,7 +389,7 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
 #ifdef TLSEXT_TYPE_use_srtp
             TLSEXT_TYPE_use_srtp,
 #endif
-#if 1 //Allow 13172 Firefox supported extension for testing purposes
+#if 0 //Allow 13172 Firefox supported extension for testing purposes
             13172,
 #endif
             -1
@@ -390,26 +403,19 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
         }
         if (!found) {
             debugs(83, 5, "Extension " << *it <<  " does not supported!");
-            fail = true ;
+            return false;
         }
     }
 
-    if (fail && !force)
+    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
+    if (wb->len < (size_t)features.helloMessage.contentSize())
         return false;
 
-    if (fail) {
-        debugs(83, 5, "Hello Data are OK but can not be bumped any more!");
-    }
-        
-    debugs(83, 5, "Hello Data will be mimicked!");
+    debugs(83, 5, "OpenSSL SSL struct will be adjusted to mimic client hello data!");
 
     //Adjust ssl structure data.
-
     // We need to fix the random in SSL struct:
     memcpy(ssl->s3->client_random, features.client_random, SSL3_RANDOM_SIZE);
-
-    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
-    assert(wb->len > (size_t)features.helloMessage.contentSize());
     memcpy(wb->buf, features.helloMessage.content(), features.helloMessage.contentSize());
     wb->left = features.helloMessage.contentSize();
 
@@ -421,7 +427,10 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features, bool force)
     ssl->init_num = mainHelloSize;
     ssl->s3->wpend_ret = mainHelloSize;
     ssl->s3->wpend_tot = mainHelloSize;
-    return !fail;
+    return true;
+#else
+    return false;
+#endif
 }
 
 int
@@ -447,16 +456,16 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
             assert(!helloMsg.hasContent());
 
             SSL *ssl = fd_table[fd_].ssl;
-            if (featuresSet && ssl && ssl->s3) {
+            if (featuresSet && ssl) {
                 if (bumpMode_ == Ssl::bumpPeek) {
-                    if (adjustSSL(ssl, clientFeatures, true))
+                    if (adjustSSL(ssl, clientFeatures))
                         allowBump = true;
                     allowSplice = true;
                     helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
                     debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for peek mode");
                 } else { /*Ssl::bumpStare*/
                     allowBump = true;
-                    if (adjustSSL(ssl, clientFeatures, false)) {
+                    if (adjustSSL(ssl, clientFeatures)) {
                         allowSplice = true;
                         helloMsg.append(clientFeatures.helloMessage.content(), clientFeatures.helloMessage.contentSize());
                         debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for stare mode");
@@ -493,9 +502,8 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         // Sending hello message complete. Do not send more data for now...
         holdWrite_ = true;
 
-        // The size should be less than the size of the hello message
-        //assert(size >= helloMsgSize);
-        return helloMsgSize;
+        // spoof openSSL that we write what it ask us to write
+        return size;
     } else
         return Ssl::Bio::write(buf, size, table);
 }
@@ -888,6 +896,30 @@ Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello)
 #else
     return false;
 #endif
+}
+
+void
+Ssl::Bio::sslFeatures::applyToSSL(SSL *ssl) const
+{
+    // To increase the possibility for bumping after peek mode selection or
+    // splicing after stare mode selection it is good to set the 
+    // SSL protocol version.
+    // The SSL_set_ssl_method is not the correct method because it will strict
+    // SSL version which can be used to the SSL version used for client hello message.
+    // For example will prevent comunnicating with a tls1.0 server if the 
+    // client sent and tlsv1.2 Hello message.
+    //SSL_set_ssl_method(ssl, Ssl::method(features.toSquidSSLVersion()));
+#ifdef TLSEXT_NAMETYPE_host_name
+    if (!serverName.empty())
+        SSL_set_tlsext_host_name(ssl, serverName.c_str());
+#endif
+    if (!clientRequestedCiphers.empty())
+        SSL_set_cipher_list(ssl, clientRequestedCiphers.c_str());
+#ifdef SSL_OP_NO_COMPRESSION /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
+    if (compressMethod == 0)
+        SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
+#endif
+
 }
 
 std::ostream &

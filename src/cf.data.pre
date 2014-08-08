@@ -1101,9 +1101,9 @@ IF USE_OPENSSL
 	  # At each SslBump step, Squid evaluates ssl_bump directives to find
 	  # the next bumping action (e.g., peek or splice). Valid SslBump step
 	  # values and the corresponding ssl_bump evaluation moments are:
-	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
-	  #   SslBump2: After getting SSL Client Hello info.
-	  #   SslBump3: After getting SSL Server Hello info.
+	  #   step1: After getting TCP-level and HTTP CONNECT info.
+	  #   step2: After getting SSL Client Hello info.
+	  #   step3: After getting SSL Server Hello info.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -2415,13 +2415,13 @@ DOC_START
 		mimicked server certificate, with the client.
 
 	    peek
-		Receive client (step SslBump1) or server (step SslBump2)
+		Receive client (step step1) or server (step step2)
 		certificate while preserving the possibility of splicing the
 		connection. Peeking at the server certificate (during step 2)
 		usually precludes bumping of the connection at step 3.
 
 	    stare
-		Receive client (step SslBump1) or server (step SslBump2)
+		Receive client (step step1) or server (step step2)
 		certificate while preserving the possibility of bumping the
 		connection. Staring at the server certificate (during step 2)
 		usually precludes splicing of the connection at step 3.
@@ -2429,7 +2429,7 @@ DOC_START
 	    terminate
 		Close client and server connections.
 
-	Backward compatibility actions available at step SslBump1:
+	Backward compatibility actions available at step step1:
 
 	    client-first
 		Bump the connection. Establish a secure connection with the
