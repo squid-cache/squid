@@ -3753,9 +3753,9 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         parseBytesOptionValue(&s->dynamicCertMemCacheSize, B_BYTES_STR, token + 28);
 #endif
     } else if (strcmp(token, "ftp-track-dirs=on") == 0) {
-       s->ftp_track_dirs = true;
+        s->ftp_track_dirs = true;
     } else if (strcmp(token, "ftp-track-dirs=off") == 0) {
-       s->ftp_track_dirs = false;
+        s->ftp_track_dirs = false;
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: Unknown http(s)_port option '" << token << "'.");
         self_destruct();

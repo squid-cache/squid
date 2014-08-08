@@ -7,7 +7,8 @@
 
 #include "client_side.h"
 
-namespace Ftp {
+namespace Ftp
+{
 
 typedef enum {
     fssBegin,
