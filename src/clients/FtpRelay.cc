@@ -14,13 +14,14 @@
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
 #include "SBuf.h"
-#include "servers/FtpServer.h"
 #include "Server.h"
+#include "servers/FtpServer.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 
-namespace Ftp {
+namespace Ftp
+{
 
 /// An FTP client receiving native FTP commands from our FTP server
 /// (Ftp::Server), forwarding them to the next FTP hop,
@@ -160,9 +161,8 @@ Ftp::Relay::start()
 {
     if (!master().clientReadGreeting)
         Ftp::Client::start();
-    else
-    if (serverState() == fssHandleDataRequest ||
-        serverState() == fssHandleUploadRequest)
+    else if (serverState() == fssHandleDataRequest ||
+             serverState() == fssHandleUploadRequest)
         handleDataRequest();
     else
         sendCommand();
@@ -363,7 +363,7 @@ Ftp::Relay::forwardPreliminaryReply(const PreliminaryCb cb)
     // the Sink will use this to call us back after writing 1xx to the client
     typedef NullaryMemFunT<Relay> CbDialer;
     const AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, this,
-        Ftp::Relay::proceedAfterPreliminaryReply);
+                                    Ftp::Relay::proceedAfterPreliminaryReply);
 
     CallJobHere1(9, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::sendControlMsg, HttpControlMsg(reply, call));
@@ -486,9 +486,9 @@ Ftp::Relay::sendCommand()
         debugs(9, 5, "command: " << cmd << ", no parameters");
 
     if (serverState() == fssHandlePasv ||
-        serverState() == fssHandleEpsv ||
-        serverState() == fssHandleEprt ||
-        serverState() == fssHandlePort) {
+            serverState() == fssHandleEpsv ||
+            serverState() == fssHandleEprt ||
+            serverState() == fssHandlePort) {
         sendPassive();
         return;
     }

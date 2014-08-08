@@ -11,7 +11,8 @@
 #include "servers/forward.h"
 #include "SquidConfig.h"
 
-namespace Http {
+namespace Http
+{
 
 /// Manages a connection from an HTTP client.
 class Server: public ConnStateData

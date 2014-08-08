@@ -33,8 +33,8 @@
 #define SQUID_CLIENTSTREAM_H
 
 #include "base/RefCount.h"
-#include "dlink.h"
 #include "clientStreamForward.h"
+#include "dlink.h"
 #include "StoreIOBuffer.h"
 
 /**

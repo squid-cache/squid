@@ -3,7 +3,8 @@
 
 #include "ip/forward.h"
 
-namespace Ftp {
+namespace Ftp
+{
 
 /// parses and validates "A1,A2,A3,A4,P1,P2" IP,port sequence
 bool ParseIpPort(const char *buf, const char *forceIp, Ip::Address &addr);

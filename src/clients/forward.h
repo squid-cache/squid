@@ -8,7 +8,8 @@ class AsyncJob;
 template <class Cbc> class CbcPointer;
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 
-namespace Ftp {
+namespace Ftp
+{
 
 /// A new FTP Gateway job
 AsyncJobPointer StartGateway(FwdState *const fwdState);

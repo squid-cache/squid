@@ -28,10 +28,10 @@
 #endif
 #endif
 
-
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf
-Parser::Tokenizer::consume(const SBuf::size_type n) {
+Parser::Tokenizer::consume(const SBuf::size_type n)
+{
     // careful: n may be npos!
     const SBuf result = buf_.consume(n);
     parsed_ += result.length();
@@ -40,7 +40,8 @@ Parser::Tokenizer::consume(const SBuf::size_type n) {
 
 /// convenience method: consume()s up to n bytes and returns their count
 SBuf::size_type
-Parser::Tokenizer::success(const SBuf::size_type n) {
+Parser::Tokenizer::success(const SBuf::size_type n)
+{
     return consume(n).length();
 }
 

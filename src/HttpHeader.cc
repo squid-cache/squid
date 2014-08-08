@@ -739,9 +739,9 @@ HttpHeader::packInto(Packer * p, bool mask_sensitive_info) const
             e->packInto(p);
             continue;
         }
-        switch (e->id) {
         // TODO: When native FTP commands may end up in error pages and other
         // sensitive places, hide HDR_FTP_ARGUMENTS for the FTP PASS command.
+        switch (e->id) {
         case HDR_AUTHORIZATION:
         case HDR_PROXY_AUTHORIZATION:
             packerAppend(p, e->name.rawBuf(), e->name.size());

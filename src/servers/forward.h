@@ -5,21 +5,24 @@ class MasterXaction;
 template <class C> class RefCount;
 typedef RefCount<MasterXaction> MasterXactionPointer;
 
-namespace Http {
+namespace Http
+{
 
 /// create a new HTTP connection handler; never returns NULL
 ConnStateData *NewServer(MasterXactionPointer &xact);
 
 } // namespace Http
 
-namespace Https {
+namespace Https
+{
 
 /// create a new HTTPS connection handler; never returns NULL
 ConnStateData *NewServer(MasterXactionPointer &xact);
 
 } // namespace Https
 
-namespace Ftp {
+namespace Ftp
+{
 
 /// accept connections on all configured ftp_ports
 void StartListening();

@@ -4111,7 +4111,8 @@ clientHttpsConnectionsOpen(void)
 #endif
 
 void
-clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrCallT<CommAcceptCbPtrFun> > &subCall, const Ipc::FdNoteId fdNote) {
+clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrCallT<CommAcceptCbPtrFun> > &subCall, const Ipc::FdNoteId fdNote)
+{
     // Fill out a Comm::Connection which IPC will open as a listener for us
     port->listenConn = new Comm::Connection;
     port->listenConn->local = port->s;
@@ -4443,7 +4444,7 @@ void
 ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth, bool monitor)
 {
     if (!Comm::IsConnOpen(pinning.serverConnection) ||
-        pinning.serverConnection->fd != pinServer->fd)
+            pinning.serverConnection->fd != pinServer->fd)
         pinNewConnection(pinServer, request, aPeer, auth);
 
     if (monitor)

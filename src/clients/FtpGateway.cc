@@ -72,7 +72,8 @@
 
 #include <cerrno>
 
-namespace Ftp {
+namespace Ftp
+{
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
@@ -365,8 +366,8 @@ Ftp::Gateway::dataClosed(const CommCloseCbParams &io)
 }
 
 Ftp::Gateway::Gateway(FwdState *fwdState):
-    AsyncJob("FtpStateData"),
-    Ftp::Client(fwdState)
+        AsyncJob("FtpStateData"),
+        Ftp::Client(fwdState)
 {
     const char *url = entry->url();
     debugs(9, 3, HERE << "'" << url << "'" );
