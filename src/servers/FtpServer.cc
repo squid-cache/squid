@@ -5,13 +5,13 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "base/Subscription.h"
+#include "client_side_reply.h"
+#include "client_side_request.h"
 #include "clientStream.h"
 #include "comm/ConnOpener.h"
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
-#include "client_side_reply.h"
-#include "client_side_request.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "ftp/Elements.h"
@@ -32,7 +32,8 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ftp, Server);
 
-namespace Ftp {
+namespace Ftp
+{
 static void PrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix = "");
 static bool SupportedCommand(const SBuf &name);
 static bool CommandHasPathParameter(const SBuf &cmd);
@@ -197,7 +198,7 @@ Ftp::Server::shovelUploadData()
 
     debugs(33, 5, "handling FTP request data for " << clientConnection);
     const size_t putSize = bodyPipe->putMoreData(uploadBuf,
-                                                 uploadAvailSize);
+                           uploadAvailSize);
     if (putSize > 0) {
         uploadAvailSize -= putSize;
         if (uploadAvailSize > 0)
@@ -262,8 +263,8 @@ Ftp::StartListening()
         // direct new connections accepted by listenConn to Accept()
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         RefCount<AcceptCall> subCall = commCbCall(5, 5, "Ftp::Server::AcceptCtrlConnection",
-            CommAcceptCbPtrFun(Ftp::Server::AcceptCtrlConnection,
-                               CommAcceptCbParams(NULL)));
+                                       CommAcceptCbPtrFun(Ftp::Server::AcceptCtrlConnection,
+                                                          CommAcceptCbParams(NULL)));
         clientStartListeningOn(s, subCall, Ipc::fdnFtpSocket);
     }
 }
@@ -393,8 +394,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
         debugs(33, 5, "late data connection?");
         closeDataConnection(); // in case we are still listening
         params.conn->close();
-    } else
-    if (params.conn->remote != clientConnection->remote) {
+    } else if (params.conn->remote != clientConnection->remote) {
         debugs(33, 2, "rogue data conn? ctrl: " << clientConnection->remote);
         params.conn->close();
         // Some FTP servers close control connection here, but it may make
@@ -489,7 +489,7 @@ Ftp::Server::writeCustomReply(const int code, const char *msg, const HttpReply *
     assert(99 < code && code < 1000);
 
     const bool sendDetails = reply != NULL &&
-        reply->header.has(HDR_FTP_STATUS) && reply->header.has(HDR_FTP_REASON);
+                             reply->header.has(HDR_FTP_STATUS) && reply->header.has(HDR_FTP_REASON);
 
     MemBuf mb;
     mb.init();
@@ -621,7 +621,7 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
         Http::METHOD_PUT : Http::METHOD_GET;
 
     const SBuf *path = params.length() && CommandHasPathParameter(cmd) ?
-        &params : NULL;
+                       &params : NULL;
     calcUri(path);
     char *newUri = xstrdup(uri.c_str());
     HttpRequest *const request = HttpRequest::CreateFromUrlAndMethod(newUri, method);
@@ -682,7 +682,7 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
     assert(context != NULL);
 
     if (context->http && context->http->al != NULL &&
-        !context->http->al->reply && reply) {
+            !context->http->al->reply && reply) {
         context->http->al->reply = reply;
         HTTPMSGLOCK(context->http->al->reply);
     }
@@ -905,7 +905,8 @@ Ftp::Server::wroteReplyData(const CommIoCbParams &io)
 
 /// ClientStream checks after (actual or skipped) reply data writing
 void
-Ftp::Server::replyDataWritingCheckpoint() {
+Ftp::Server::replyDataWritingCheckpoint()
+{
     switch (getCurrentContext()->socketState()) {
     case STREAM_NONE:
         debugs(33, 3, "Keep going");
@@ -1066,8 +1067,8 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
     // Status 125 or 150 implies upload or data request, but we still check
     // the state in case the server is buggy.
     if ((scode == 125 || scode == 150) &&
-        (master.serverState == fssHandleUploadRequest ||
-         master.serverState == fssHandleDataRequest)) {
+            (master.serverState == fssHandleUploadRequest ||
+             master.serverState == fssHandleDataRequest)) {
         if (checkDataConnPost()) {
             // If the data connection is ready, start reading data (here)
             // and forward the response to client (further below).
@@ -1174,8 +1175,8 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
     switch (socketState) {
     case STREAM_UNPLANNED_COMPLETE:
     case STREAM_FAILED:
-         io.conn->close();
-         return;
+        io.conn->close();
+        return;
 
     case STREAM_NONE:
     case STREAM_COMPLETE:
@@ -1189,7 +1190,8 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
 }
 
 bool
-Ftp::Server::handleRequest(String &cmd, String &params) {
+Ftp::Server::handleRequest(String &cmd, String &params)
+{
     HttpRequest *request = getCurrentContext()->http->request;
     Must(request);
 
@@ -1527,7 +1529,7 @@ Ftp::Server::checkDataConnPre()
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
     connector = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
     Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, connector,
-                                                Config.Timeout.connect);
+            Config.Timeout.connect);
     AsyncJob::Start(cs);
     return false; // ConnStateData::processFtpRequest waits handleConnectDone
 }

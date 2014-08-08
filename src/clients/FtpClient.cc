@@ -6,11 +6,8 @@
 #include "squid.h"
 
 #include "acl/FilledChecklist.h"
-#include "clients/FtpClient.h"
-#include "Mem.h"
-#include "SquidConfig.h"
-#include "StatCounters.h"
 #include "client_side.h"
+#include "clients/FtpClient.h"
 #include "comm/ConnOpener.h"
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
@@ -19,12 +16,16 @@
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "ip/tools.h"
+#include "Mem.h"
+#include "SquidConfig.h"
 #include "SquidString.h"
+#include "StatCounters.h"
 #include "tools.h"
 #include "wordlist.h"
 #include <set>
 
-namespace Ftp {
+namespace Ftp
+{
 
 const char *const crlf = "\r\n";
 
@@ -64,7 +65,7 @@ escapeIAC(const char *buf)
 /// configures the channel with a descriptor and registers a close handler
 void
 Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
-                      const AsyncCall::Pointer &aCloser)
+                     const AsyncCall::Pointer &aCloser)
 {
     assert(!Comm::IsConnOpen(conn));
     assert(closer == NULL);
@@ -147,11 +148,11 @@ Ftp::DataChannel::~DataChannel()
 void
 Ftp::DataChannel::addr(const Ip::Address &import)
 {
-     static char addrBuf[MAX_IPSTRLEN];
-     import.toStr(addrBuf, sizeof(addrBuf));
-     xfree(host);
-     host = xstrdup(addrBuf);
-     port = import.port();
+    static char addrBuf[MAX_IPSTRLEN];
+    import.toStr(addrBuf, sizeof(addrBuf));
+    xfree(host);
+    host = xstrdup(addrBuf);
+    port = import.port();
 }
 
 /* Ftp::Client */
@@ -173,7 +174,7 @@ Ftp::Client::Client(FwdState *fwdState):
 
     typedef CommCbMemFunT<Client, CommCloseCbParams> Dialer;
     const AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this,
-                                                  Ftp::Client::ctrlClosed);
+                                      Ftp::Client::ctrlClosed);
     ctrl.opened(fwdState->serverConnection(), closer);
 }
 
@@ -281,7 +282,7 @@ Ftp::Client::failedHttpStatus(err_type &error)
     if (error == ERR_NONE)
         error = ERR_FTP_FAILURE;
     return error == ERR_READ_TIMEOUT ? Http::scGatewayTimeout :
-        Http::scBadGateway;
+           Http::scBadGateway;
 }
 
 /**
@@ -618,7 +619,6 @@ Ftp::Client::sendPassive()
         return false;
     }
 
-
     /// Closes any old FTP-Data connection which may exist. */
     data.close();
 
@@ -709,7 +709,6 @@ Ftp::Client::sendPassive()
     shortenReadTimeout = true;
     return true;
 }
-
 
 void
 Ftp::Client::connectDataChannel()
@@ -1008,7 +1007,7 @@ Ftp::Client::switchTimeoutToDataChannel()
 
     typedef CommCbMemFunT<Client, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this,
-                                                 Ftp::Client::timeout);
+                                     Ftp::Client::timeout);
     commSetConnTimeout(data.conn, Config.Timeout.read, timeoutCall);
 }
 

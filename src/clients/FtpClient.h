@@ -9,7 +9,8 @@
 #include "Server.h"
 
 class String;
-namespace Ftp {
+namespace Ftp
+{
 
 extern const char *const crlf;
 
