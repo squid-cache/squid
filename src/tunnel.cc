@@ -272,6 +272,7 @@ TunnelStateData::TunnelStateData() :
         http(),
         request(NULL),
         status_ptr(NULL),
+        logTag_ptr(NULL),
         connectRespBuf(NULL),
         connectReqWriting(false)
 {
@@ -719,7 +720,8 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
 {
     assert(!tunnelState->waitingForConnectExchange());
     *tunnelState->status_ptr = Http::scOkay;
-    *tunnelState->logTag_ptr = LOG_TCP_TUNNEL;
+    if (tunnelState->logTag_ptr)
+        *tunnelState->logTag_ptr = LOG_TCP_TUNNEL;
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -1119,14 +1121,26 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     ++statCounter.server.other.requests;
 
     tunnelState = new TunnelStateData;
-#if USE_DELAY_POOLS
-    //tunnelState->server.setDelayId(DelayId::DelayClient(http));
-#endif
     tunnelState->url = xstrdup(url);
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL;//????
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = clientConn;
+
+    ConnStateData *conn;
+    if ((conn = request->clientConnectionManager.get())) {
+        ClientSocketContext::Pointer context = conn->getCurrentContext();
+        if (context != NULL && context->http != NULL) {
+            tunnelState->logTag_ptr = &context->http->logType;
+
+#if USE_DELAY_POOLS
+            /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
+            if (srvConn->getPeer() && srvConn->getPeer()->options.no_delay)
+                tunnelState->server.setDelayId(DelayId::DelayClient(context->http));
+#endif
+        }
+    }
+
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
@@ -1137,13 +1151,6 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
     fd_table[clientConn->fd].read_method = &default_read_method;
     fd_table[clientConn->fd].write_method = &default_write_method;
-
-//Server connection
-#if USE_DELAY_POOLS
-    /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
-//    if (conn->getPeer() && conn->getPeer()->options.no_delay)
-//        tunnelState->server.setDelayId(DelayId());
-#endif
 
     tunnelState->request->hier.note(srvConn, tunnelState->getHost());
 
@@ -1166,26 +1173,13 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     fd_table[srvConn->fd].read_method = &default_read_method;
     fd_table[srvConn->fd].write_method = &default_write_method;
 
-    ConnStateData *conn;
-    if ((conn = request->pinnedConnection()) && conn->serverBump() && conn->serverBump()->step == Ssl::bumpStep2) {
-        SSL *ssl = fd_table[clientConn->fd].ssl;
-        assert(ssl);
-        BIO *b = SSL_get_rbio(ssl);
-        Ssl::ClientBio *srvBio = static_cast<Ssl::ClientBio *>(b->ptr);
-        const MemBuf &buf = srvBio->rBufData();
+    SSL *ssl = fd_table[srvConn->fd].ssl;
+    assert(ssl);
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    const MemBuf &buf = srvBio->rBufData();
 
-        AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                             CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
-        Comm::Write(tunnelState->server.conn, buf.content(), buf.contentSize(), call, NULL);
-    } else {
-        SSL *ssl = fd_table[srvConn->fd].ssl;
-        assert(ssl);
-        BIO *b = SSL_get_rbio(ssl);
-        Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-        const MemBuf &buf = srvBio->rBufData();
-
-        AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                             CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
-        Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
-    }
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
 }

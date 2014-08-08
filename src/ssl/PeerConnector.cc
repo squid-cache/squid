@@ -147,17 +147,7 @@ Ssl::PeerConnector::initializeSsl()
         Ssl::ClientBio *clnBio = static_cast<Ssl::ClientBio *>(b->ptr);
         const Ssl::Bio::sslFeatures &features = clnBio->getFeatures();
         if (features.sslVersion != -1) {
-            SSL_set_ssl_method(ssl, Ssl::method(features.toSquidSSLVersion()));
-#ifdef TLSEXT_NAMETYPE_host_name
-            if (!features.serverName.empty())
-                SSL_set_tlsext_host_name(ssl, features.serverName.c_str());
-#endif
-            if (!features.clientRequestedCiphers.empty())
-                SSL_set_cipher_list(ssl, features.clientRequestedCiphers.c_str());
-#ifdef SSL_OP_NO_COMPRESSION /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
-            if (features.compressMethod == 0)
-                SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
-#endif
+            features.applyToSSL(ssl);
             // Should we allow it for all protocols?
             if (features.sslVersion >= 3) {
                 b = SSL_get_rbio(ssl);
@@ -326,12 +316,10 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
     if (peekMode < Ssl::bumpSplice)
         peekMode = Ssl::bumpBump;
 
-#if 1 || SSL_BUMP_FORCE_PEEK_OR_SPLICE 
     if (peekMode == Ssl::bumpSplice && !srvBio->canSplice())
         peekMode = Ssl::bumpPeek;
     else if (peekMode == Ssl::bumpBump && !srvBio->canBump())
         peekMode = Ssl::bumpSplice;
-#endif
 
     if (peekMode == Ssl::bumpTerminate || peekMode == Ssl::bumpErr) {
         comm_close(serverConn->fd);
@@ -519,7 +507,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         // occure in the next SSL_connect call, and we will fail again.
 #if 1
         if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
-            debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error but, hold write on SSL connection on FD " << fd);
+            debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice(false, Ssl::bumpNone);
             return;
         }

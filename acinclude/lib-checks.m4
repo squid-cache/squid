@@ -277,3 +277,45 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
 
 SQUID_STATE_ROLLBACK(check_TXTDB)
 ])
+
+dnl Check if we can rewrite the hello message stored in SSL openSSL object
+dnl The tests are very basic, just check if the required SSL members exist
+dnl in SSL structure.
+AC_DEFUN([SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK],[
+  AH_TEMPLATE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, "Define to 1 if hello message can be overwritten in SSL struct")
+  SQUID_STATE_SAVE(check_openSSL_overwrite_hack)
+  AC_MSG_CHECKING(whether hello message can be overwritten in SSL struct)
+
+  AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM(
+    [
+     #include <openssl/ssl.h>
+     #include <openssl/err.h>
+     #include <assert.h>
+    ],
+    [
+    SSL *ssl;
+    char *random, *msg;
+    memcpy(ssl->s3->client_random, random, SSL3_RANDOM_SIZE);
+    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
+    assert(wb->len == 0);
+    memcpy(wb->buf, msg, 0);
+    assert(wb->left == 0);
+    memcpy(ssl->init_buf->data, msg, 0);
+    ssl->init_num = 0;
+    ssl->s3->wpend_ret = 0;
+    ssl->s3->wpend_tot = 0;
+    ])
+  ],
+  [
+   AC_DEFINE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, 1)
+   AC_MSG_RESULT([yes])
+  ],
+  [
+   AC_MSG_RESULT([no])
+  ],
+  [])
+
+SQUID_STATE_ROLLBACK(check_openSSL_overwrite_hack)
+]
+)

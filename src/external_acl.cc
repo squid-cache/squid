@@ -565,7 +565,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERT, " %%USER_CERT_%s", format->header);
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
-                DUMP_EXT_ACL_TYPE_FMT(SSL_CLIENT_SNI, "ssl::>sni");
+                DUMP_EXT_ACL_TYPE_FMT(SSL_CLIENT_SNI, "%%ssl::>sni");
                 DUMP_EXT_ACL_TYPE_FMT(SSL_SERVER_CERT_SUBJECT, "%%ssl::<cert_subject");
                 DUMP_EXT_ACL_TYPE_FMT(SSL_SERVER_CERT_ISSUER, "%%ssl::<cert_issuer");
 #endif
