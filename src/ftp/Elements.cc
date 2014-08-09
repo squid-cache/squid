@@ -8,11 +8,27 @@
 #include "HttpReply.h"
 #include "SBuf.h"
 
+// FTP does not have a notion of a "protocol version" but we need something for
+// compatibility with the current HttpMsg wrapping layer. We use version 1.1:
+// * some ICAP services probably expect /1.0 or /1.1 when parsing HTTP headers;
+// * FTP commands are sent on a "persistent by default" connection, just like
+//   HTTP/1.1. Using 1.1 leads to fewer exceptions in current code shared by
+//   HTTP and FTP.
+AnyP::ProtocolVersion
+Ftp::ProtocolVersion()
+{
+    return AnyP::ProtocolVersion(AnyP::PROTO_FTP, 1, 1);
+}
+
 HttpReply *
 Ftp::HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::StatusCode httpStatus, const int64_t clen)
 {
     HttpReply *const reply = new HttpReply;
-    reply->sline.set(Http::ProtocolVersion(1, 1), httpStatus);
+
+    Http::ProtocolVersion httpVersion = Http::ProtocolVersion(
+        Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
+    reply->sline.set(httpVersion, httpStatus);
+
     HttpHeader &header = reply->header;
     header.putTime(HDR_DATE, squid_curtime);
     {
