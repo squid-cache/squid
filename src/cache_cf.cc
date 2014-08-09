@@ -52,6 +52,7 @@
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequestMethod.h"
@@ -3566,6 +3567,27 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
     }
 }
 
+/// parses the protocol= option of the *_port directive, returning parsed value
+/// unsupported option values result in a fatal error message
+static AnyP::ProtocolVersion
+parsePortProtocol(const char *value)
+{
+    // HTTP/1.0 not supported because we are version 1.1 which contains a superset of 1.0
+    // and RFC 2616 requires us to upgrade 1.0 to 1.1
+    if (strcasecmp("http", value) == 0 || strcmp("HTTP/1.1", value) == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_HTTP, 1,1);
+
+    if (strcasecmp("https", value) == 0 || strcmp("HTTPS/1.1", value) == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
+
+    if (strcasecmp("ftp", value) == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_FTP,
+            Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
+
+    fatalf("%s directive does not support protocol=%s\n", cfg_directive, value);
+    return AnyP::ProtocolVersion(); // not reached
+}
+
 static void
 parse_port_option(AnyP::PortCfgPointer &s, char *token)
 {
@@ -3638,7 +3660,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
             self_destruct();
         }
-        s->setTransport(token + 9);
+        s->transport = parsePortProtocol(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->flags.accelSurrogate) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
@@ -3766,7 +3788,7 @@ void
 add_http_port(char *portspec)
 {
     AnyP::PortCfgPointer s = new AnyP::PortCfg();
-    s->setTransport("HTTP");
+    s->transport = parsePortProtocol("HTTP");
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
@@ -3798,7 +3820,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     AnyP::PortCfgPointer s = new AnyP::PortCfg();
-    s->setTransport(protocol);
+    s->transport = parsePortProtocol(protocol); // default; protocol=... overwrites
     parsePortSpecification(s, token);
 
     /* parse options ... */
