@@ -24,13 +24,6 @@ public:
     void configureSslServerContext();
 #endif
 
-    /**
-     * Set this ports transport type from a string representation.
-     * Unknown transport type representations will halt Squid.
-     * Supports: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1, and FTP.
-     */
-    void setTransport(const char *aProtocol);
-
     PortCfgPointer next;
 
     Ip::Address s;
