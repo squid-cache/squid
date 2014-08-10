@@ -697,7 +697,7 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
         &Ftp::Server::handleEprtReply,// fssHandleEprt
         &Ftp::Server::handleEpsvReply,// fssHandleEpsv
         NULL, // fssHandleCwd
-        NULL, //fssHandlePass
+        NULL, // fssHandlePass
         NULL, // fssHandleCdup
         &Ftp::Server::handleErrorReply // fssError
     };

@@ -393,8 +393,6 @@ public:
     bool switchedToHttps() const { return false; }
 #endif
 
-    void finishDechunkingRequest(bool withSuccess);
-
     /* clt_conn_tag=tag annotation access */
     const SBuf &connectionTag() const { return connectionTag_; }
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
@@ -411,6 +409,7 @@ public:
 
 protected:
     void startDechunkingRequest();
+    void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody(size_t &putSize);
 
@@ -429,7 +428,9 @@ protected:
     /// timeout to use when waiting for the next request
     virtual time_t idleTimeout() const = 0;
 
-protected:
+    BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
+
+private:
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
@@ -459,7 +460,6 @@ protected:
     const char *stoppedReceiving_;
 
     AsyncCall::Pointer reader; ///< set when we are reading
-    BodyPipe::Pointer bodyPipe; // set when we are reading request body
 
     SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
 };
