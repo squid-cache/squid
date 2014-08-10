@@ -6,8 +6,16 @@
 class SBuf;
 class HttpReply;
 
+namespace AnyP
+{
+class ProtocolVersion;
+}
+
 namespace Ftp
 {
+
+/// Protocol version to use in HttpMsg structures wrapping FTP messages.
+AnyP::ProtocolVersion ProtocolVersion();
 
 /// Create an internal HttpReply structure to house FTP control response info.
 HttpReply *HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::StatusCode httpStatus, const int64_t clen);

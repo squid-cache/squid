@@ -75,12 +75,6 @@
 namespace Ftp
 {
 
-/**
- \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
- \ingroup ServerProtocolFTPAPI
- */
-
-/// \ingroup ServerProtocolFTPInternal
 struct GatewayFlags {
 
     /* passive mode */
@@ -114,11 +108,8 @@ struct GatewayFlags {
 };
 
 class Gateway;
-
-/// \ingroup ServerProtocolFTPInternal
 typedef void (StateMethod)(Ftp::Gateway *);
 
-/// \ingroup ServerProtocolFTPInternal
 /// FTP Gateway: An FTP client that takes an HTTP request with an ftp:// URI,
 /// converts it into one or more FTP commands, and then
 /// converts one or more FTP responses into the final HTTP response.
@@ -210,7 +201,6 @@ typedef Ftp::StateMethod FTPSM; // to avoid lots of non-changes
 
 CBDATA_NAMESPACED_CLASS_INIT(Ftp, Gateway);
 
-/// \ingroup ServerProtocolFTPInternal
 typedef struct {
     char type;
     int64_t size;
@@ -220,14 +210,11 @@ typedef struct {
     char *link;
 } ftpListParts;
 
-/// \ingroup ServerProtocolFTPInternal
 #define FTP_LOGIN_ESCAPED	1
 
-/// \ingroup ServerProtocolFTPInternal
 #define FTP_LOGIN_NOT_ESCAPED	0
 
 #define CTRL_BUFLEN 1024
-/// \ingroup ServerProtocolFTPInternal
 static char cbuf[CTRL_BUFLEN];
 
 /*
@@ -320,7 +307,6 @@ DataTransferDone	Quit
 Quit			-
 ************************************************/
 
-/// \ingroup ServerProtocolFTPInternal
 FTPSM *FTP_SM_FUNCS[] = {
     ftpReadWelcome,		/* BEGIN */
     ftpReadUser,		/* SENT_USER */
@@ -523,13 +509,11 @@ Ftp::Gateway::timeout(const CommTimeoutCbParams &io)
     Ftp::Client::timeout(io);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static const char *Month[] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-/// \ingroup ServerProtocolFTPInternal
 static int
 is_month(const char *buf)
 {
@@ -542,7 +526,6 @@ is_month(const char *buf)
     return 0;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpListPartsFree(ftpListParts ** parts)
 {
@@ -553,10 +536,8 @@ ftpListPartsFree(ftpListParts ** parts)
     safe_free(*parts);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 #define MAX_TOKENS 64
 
-/// \ingroup ServerProtocolFTPInternal
 static ftpListParts *
 ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 {
@@ -1241,7 +1222,6 @@ Ftp::Gateway::handleControlReply()
 
 /* ====================================================================== */
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadWelcome(Ftp::Gateway * ftpState)
 {
@@ -1353,7 +1333,6 @@ Ftp::Gateway::ftpRealm()
     return realm;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendUser(Ftp::Gateway * ftpState)
 {
@@ -1373,7 +1352,6 @@ ftpSendUser(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_USER;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadUser(Ftp::Gateway * ftpState)
 {
@@ -1389,7 +1367,6 @@ ftpReadUser(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendPass(Ftp::Gateway * ftpState)
 {
@@ -1402,7 +1379,6 @@ ftpSendPass(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_PASS;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadPass(Ftp::Gateway * ftpState)
 {
@@ -1416,7 +1392,6 @@ ftpReadPass(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendType(Ftp::Gateway * ftpState)
 {
@@ -1469,7 +1444,6 @@ ftpSendType(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_TYPE;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadType(Ftp::Gateway * ftpState)
 {
@@ -1510,7 +1484,6 @@ ftpReadType(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpTraverseDirectory(Ftp::Gateway * ftpState)
 {
@@ -1548,7 +1521,6 @@ ftpTraverseDirectory(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendCwd(Ftp::Gateway * ftpState)
 {
@@ -1575,7 +1547,6 @@ ftpSendCwd(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_CWD;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadCwd(Ftp::Gateway * ftpState)
 {
@@ -1606,7 +1577,6 @@ ftpReadCwd(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendMkdir(Ftp::Gateway * ftpState)
 {
@@ -1623,7 +1593,6 @@ ftpSendMkdir(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_MKDIR;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadMkdir(Ftp::Gateway * ftpState)
 {
@@ -1645,7 +1614,6 @@ ftpReadMkdir(Ftp::Gateway * ftpState)
         ftpSendReply(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpGetFile(Ftp::Gateway * ftpState)
 {
@@ -1654,7 +1622,6 @@ ftpGetFile(Ftp::Gateway * ftpState)
     ftpSendMdtm(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpListDir(Ftp::Gateway * ftpState)
 {
@@ -1667,7 +1634,6 @@ ftpListDir(Ftp::Gateway * ftpState)
     ftpSendPassive(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendMdtm(Ftp::Gateway * ftpState)
 {
@@ -1681,7 +1647,6 @@ ftpSendMdtm(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_MDTM;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadMdtm(Ftp::Gateway * ftpState)
 {
@@ -1699,7 +1664,6 @@ ftpReadMdtm(Ftp::Gateway * ftpState)
     ftpSendSize(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendSize(Ftp::Gateway * ftpState)
 {
@@ -1721,7 +1685,6 @@ ftpSendSize(Ftp::Gateway * ftpState)
         ftpSendPassive(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadSize(Ftp::Gateway * ftpState)
 {
@@ -1746,9 +1709,6 @@ ftpReadSize(Ftp::Gateway * ftpState)
     ftpSendPassive(ftpState);
 }
 
-/**
- \ingroup ServerProtocolFTPInternal
- */
 static void
 ftpReadEPSV(Ftp::Gateway* ftpState)
 {
@@ -1761,9 +1721,7 @@ ftpReadEPSV(Ftp::Gateway* ftpState)
     }
 }
 
-/** \ingroup ServerProtocolFTPInternal
- *
- * Send Passive connection request.
+/** Send Passive connection request.
  * Default method is to use modern EPSV request.
  * The failover mechanism should check for previous state and re-call with alternates on failure.
  */
@@ -1818,7 +1776,6 @@ Ftp::Gateway::processHeadResponse()
     processReplyBody();
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadPasv(Ftp::Gateway * ftpState)
 {
@@ -1853,7 +1810,6 @@ Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
     ftpRestOrList(this);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
 {
@@ -1891,7 +1847,6 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
     ftpState->listenForDataChannel(temp);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendPORT(Ftp::Gateway * ftpState)
 {
@@ -1938,7 +1893,6 @@ ftpSendPORT(Ftp::Gateway * ftpState)
     Ip::Address::FreeAddrInfo(AI);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadPORT(Ftp::Gateway * ftpState)
 {
@@ -1954,7 +1908,6 @@ ftpReadPORT(Ftp::Gateway * ftpState)
     ftpRestOrList(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendEPRT(Ftp::Gateway * ftpState)
 {
@@ -2010,10 +1963,7 @@ ftpReadEPRT(Ftp::Gateway * ftpState)
     ftpRestOrList(ftpState);
 }
 
-/**
- \ingroup ServerProtocolFTPInternal
- \par
- * "read" handler to accept FTP data connections.
+/** "read" handler to accept FTP data connections.
  *
  \param io    comm accept(2) callback parameters
  */
@@ -2088,7 +2038,6 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     // Ctrl channel operations will determine what happens to this data connection
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpRestOrList(Ftp::Gateway * ftpState)
 {
@@ -2112,7 +2061,6 @@ ftpRestOrList(Ftp::Gateway * ftpState)
         ftpSendRetr(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendStor(Ftp::Gateway * ftpState)
 {
@@ -2138,7 +2086,6 @@ ftpSendStor(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 /// \deprecated use ftpState->readStor() instead.
 static void
 ftpReadStor(Ftp::Gateway * ftpState)
@@ -2181,7 +2128,6 @@ void Ftp::Gateway::readStor()
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendRest(Ftp::Gateway * ftpState)
 {
@@ -2223,7 +2169,6 @@ Ftp::Gateway::restartable()
     return 1;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadRest(Ftp::Gateway * ftpState)
 {
@@ -2243,7 +2188,6 @@ ftpReadRest(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendList(Ftp::Gateway * ftpState)
 {
@@ -2263,7 +2207,6 @@ ftpSendList(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_LIST;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendNlst(Ftp::Gateway * ftpState)
 {
@@ -2285,7 +2228,6 @@ ftpSendNlst(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_NLST;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadList(Ftp::Gateway * ftpState)
 {
@@ -2312,7 +2254,6 @@ ftpReadList(Ftp::Gateway * ftpState)
     }
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendRetr(Ftp::Gateway * ftpState)
 {
@@ -2328,7 +2269,6 @@ ftpSendRetr(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_RETR;
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadRetr(Ftp::Gateway * ftpState)
 {
@@ -2376,7 +2316,6 @@ Ftp::Gateway::completedListing()
     entry->unlock("Ftp::Gateway");
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpReadTransferDone(Ftp::Gateway * ftpState)
 {
@@ -2407,7 +2346,6 @@ Ftp::Gateway::handleRequestBodyProducerAborted()
     failed(ERR_READ_ERROR, 0);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpWriteTransferDone(Ftp::Gateway * ftpState)
 {
@@ -2424,7 +2362,6 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
     ftpSendReply(ftpState);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendQuit(Ftp::Gateway * ftpState)
 {
@@ -2437,10 +2374,7 @@ ftpSendQuit(Ftp::Gateway * ftpState)
     ftpState->state = Ftp::Client::SENT_QUIT;
 }
 
-/**
- * \ingroup ServerProtocolFTPInternal
- *
- *  This completes a client FTP operation with success or other page
+/** Completes a client FTP operation with success or other page
  *  generated and stored in the entry field by the code issuing QUIT.
  */
 static void
@@ -2449,7 +2383,6 @@ ftpReadQuit(Ftp::Gateway * ftpState)
     ftpState->serverComplete();
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpTrySlashHack(Ftp::Gateway * ftpState)
 {
@@ -2513,7 +2446,6 @@ Ftp::Gateway::hackShortcut(FTPSM * nextState)
     nextState(this);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpFail(Ftp::Gateway *ftpState)
 {
@@ -2582,7 +2514,6 @@ Ftp::Gateway::failedHttpStatus(err_type &error)
     return Ftp::Client::failedHttpStatus(error);
 }
 
-/// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendReply(Ftp::Gateway * ftpState)
 {
@@ -2742,18 +2673,6 @@ Ftp::Gateway::ftpAuthRequired(HttpRequest * request, const char *realm)
     return newrep;
 }
 
-/**
- \ingroup ServerProtocolFTPAPI
- \todo Should be a URL class API call.
- *
- *  Construct an URI with leading / in PATH portion for use by CWD command
- *  possibly others. FTP encodes absolute paths as beginning with '/'
- *  after the initial URI path delimiter, which happens to be / itself.
- *  This makes FTP absolute URI appear as:  ftp:host:port//root/path
- *  To encompass older software which compacts multiple // to / in transit
- *  We use standard URI-encoding on the second / making it
- *  ftp:host:port/%2froot/path  AKA 'the FTP %2f hack'.
- */
 const char *
 Ftp::UrlWith2f(HttpRequest * request)
 {

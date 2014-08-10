@@ -732,25 +732,37 @@ HttpHeader::packInto(Packer * p, bool mask_sensitive_info) const
     HttpHeaderPos pos = HttpHeaderInitPos;
     const HttpHeaderEntry *e;
     assert(p);
-    debugs(55, 7, "packing hdr: (" << this << ")");
+    debugs(55, 7, this << " into " << p <<
+           (mask_sensitive_info ? " while masking" : ""));
     /* pack all entries one by one */
     while ((e = getEntry(&pos))) {
         if (!mask_sensitive_info) {
             e->packInto(p);
             continue;
         }
-        // TODO: When native FTP commands may end up in error pages and other
-        // sensitive places, hide HDR_FTP_ARGUMENTS for the FTP PASS command.
+
+        bool maskThisEntry = false;
         switch (e->id) {
         case HDR_AUTHORIZATION:
         case HDR_PROXY_AUTHORIZATION:
-            packerAppend(p, e->name.rawBuf(), e->name.size());
-            packerAppend(p, ": ** NOT DISPLAYED **\r\n", 23);
+            maskThisEntry = true;
             break;
+
+        case HDR_FTP_ARGUMENTS:
+            if (const HttpHeaderEntry *cmd = findEntry(HDR_FTP_COMMAND))
+                maskThisEntry = (cmd->value == "PASS");
+            break;
+
         default:
-            e->packInto(p);
             break;
         }
+        if (maskThisEntry) {
+            packerAppend(p, e->name.rawBuf(), e->name.size());
+            packerAppend(p, ": ** NOT DISPLAYED **\r\n", 23);
+        } else {
+            e->packInto(p);
+        }
+
     }
     /* Pack in the "special" entries */
 
