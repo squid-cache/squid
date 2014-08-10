@@ -189,6 +189,7 @@ protected:
     virtual void dataClosed(const CommCloseCbParams &io);
 
 private:
+    virtual bool mayReadVirginReplyBody() const;
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
 
@@ -2757,6 +2758,13 @@ Ftp::Gateway::haveControlChannel(const char *caller_name) const
     }
 
     return true;
+}
+
+bool
+Ftp::Gateway::mayReadVirginReplyBody() const
+{
+    // TODO: Can we do what Ftp::Relay::mayReadVirginReplyBody() does instead?
+    return !doneWithServer();
 }
 
 AsyncJob::Pointer
