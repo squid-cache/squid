@@ -53,7 +53,6 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
         connector(),
         reader()
 {
-    assert(xact->squidPort->transport.protocol == AnyP::PROTO_FTP);
     flags.readMore = false; // we need to announce ourselves first
 }
 
@@ -633,7 +632,7 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
         return NULL;
     }
 
-    ver = Http::ProtocolVersion(1, 1);
+    ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
     request->flags.ftpNative = true;
     request->http_ver = ver;
 
@@ -698,7 +697,7 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
         &Ftp::Server::handleEprtReply,// fssHandleEprt
         &Ftp::Server::handleEpsvReply,// fssHandleEpsv
         NULL, // fssHandleCwd
-        NULL, //fssHandlePass
+        NULL, // fssHandlePass
         NULL, // fssHandleCdup
         &Ftp::Server::handleErrorReply // fssError
     };
