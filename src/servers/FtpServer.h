@@ -6,6 +6,7 @@
 #define SQUID_SERVERS_FTP_SERVER_H
 
 #include "client_side.h"
+#include "base/Lock.h"
 
 namespace Ftp
 {
@@ -29,15 +30,17 @@ typedef enum {
 // TODO: This should become a part of MasterXaction when we start sending
 // master transactions to the clients/ code.
 /// Transaction information shared among our FTP client and server jobs.
-class MasterState
+class MasterState: public RefCountable
 {
 public:
+    typedef RefCount<MasterState> Pointer;
+
+    MasterState(): serverState(fssBegin), clientReadGreeting(false) {}
+
     Ip::Address clientDataAddr; ///< address of our FTP client data connection
     SBuf workingDir; ///< estimated current working directory for URI formation
     ServerState serverState; ///< what our FTP server is doing
     bool clientReadGreeting; ///< whether our FTP client read their FTP server greeting
-
-    MasterState(): serverState(fssBegin), clientReadGreeting(false) {}
 };
 
 /// Manages a control connection from an FTP client.
@@ -47,7 +50,9 @@ public:
     explicit Server(const MasterXaction::Pointer &xact);
     virtual ~Server();
 
-    MasterState master; ///< info shared among our FTP client and server jobs
+    // This is a pointer in hope to minimize future changes when MasterState
+    // becomes a part of MasterXaction. Guaranteed not to be nil.
+    MasterState::Pointer master; ///< info shared among our FTP client and server jobs
 
 protected:
     friend void StartListening();

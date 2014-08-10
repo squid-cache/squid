@@ -1914,11 +1914,11 @@ DOC_START
 	   name=token	Specifies an internal name for the port. Defaults to
 			the port address. Usable with myportname ACL.
 
-	   ftp-track-dirs=on|off
+	   ftp-track-dirs
 			Enables tracking of FTP directories by injecting extra
 			PWD commands and adjusting Request-URI (in wrapping
 			HTTP requests) to reflect the current FTP server
-			directory. Disabled by default.
+			directory. Tracking is disabled by default.
 
 	   protocol=FTP	Protocol to reconstruct accelerated and intercepted
 			requests with. Defaults to FTP. No other accepted
