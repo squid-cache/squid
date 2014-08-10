@@ -2093,7 +2093,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
                  AnyP::UriScheme(conn->port->transport.protocol).c_str(), conn->port->defaultsite, vportStr, url);
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: '" << http->uri <<"'");
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
-        debugs(33, 5, "ACCEL VPORT REWRITE: http_port IP + vport=" << vport);
+        debugs(33, 5, "ACCEL VPORT REWRITE: *_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
@@ -2612,6 +2612,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
     /* We currently only support 0.9, 1.0, 1.1 properly */
+    /* TODO: move HTTP-specific processing into servers/HttpServer and such */
     if ( (http_ver.major == 0 && http_ver.minor != 9) ||
             (http_ver.major > 1) ) {
 

@@ -858,7 +858,7 @@ DOC_START
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
-	acl aclname myportname 3128 ...       # http(s)_port name [fast]
+	acl aclname myportname 3128 ...       # *_port name [fast]
 
 	acl aclname proto HTTP FTP ...        # request protocol [fast]
  
@@ -1897,9 +1897,13 @@ DOC_START
 
 	Modes:
 
-	    intercept	Same as http_port intercept. The FTP origin address is
+	   intercept	Same as http_port intercept. The FTP origin address is
 			determined based on the intended destination of the
 			intercepted connection.
+
+	   tproxy	Support Linux TPROXY for spoofing outgoing
+			connections using the client IP address.
+			NP: disables authentication and maybe IPv6 on the port.
 
 	By default (i.e., without an explicit mode option), Squid extracts the
 	FTP origin address from the login@origin parameter of the FTP USER
@@ -1907,11 +1911,20 @@ DOC_START
 
 	Options:
 
-	    ftp-track-dirs=on|off
+	   name=token	Specifies an internal name for the port. Defaults to
+			the port address. Usable with myportname ACL.
+
+	   ftp-track-dirs=on|off
 			Enables tracking of FTP directories by injecting extra
 			PWD commands and adjusting Request-URI (in wrapping
 			HTTP requests) to reflect the current FTP server
 			directory. Disabled by default.
+
+	   protocol=FTP	Protocol to reconstruct accelerated and intercepted
+			requests with. Defaults to FTP. No other accepted
+			values have been tested with. An unsupported value
+			results in a FATAL error. Accepted values are FTP,
+			HTTP (or HTTP/1.1), and HTTPS (or HTTPS/1.1).
 
 	Other http_port modes and options that are not specific to HTTP and
 	HTTPS may also work.

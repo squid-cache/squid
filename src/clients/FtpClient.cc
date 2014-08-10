@@ -4,7 +4,6 @@
  */
 
 #include "squid.h"
-
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "clients/FtpClient.h"
@@ -22,6 +21,7 @@
 #include "StatCounters.h"
 #include "tools.h"
 #include "wordlist.h"
+
 #include <set>
 
 namespace Ftp
@@ -29,7 +29,6 @@ namespace Ftp
 
 const char *const crlf = "\r\n";
 
-/// \ingroup ServerProtocolFTPInternal
 static char *
 escapeIAC(const char *buf)
 {
