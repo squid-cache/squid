@@ -4,7 +4,6 @@
  */
 
 #include "squid.h"
-
 #include "anyp/PortCfg.h"
 #include "client_side.h"
 #include "clients/forward.h"
