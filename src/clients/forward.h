@@ -17,12 +17,16 @@ AsyncJobPointer StartGateway(FwdState *const fwdState);
 /// A new FTP Relay job
 AsyncJobPointer StartRelay(FwdState *const fwdState);
 
-/**
- * \defgroup ServerProtocolFTPAPI Server-Side FTP API
- * \ingroup ServerProtocol
+/** Construct an URI with leading / in PATH portion for use by CWD command
+ *  possibly others. FTP encodes absolute paths as beginning with '/'
+ *  after the initial URI path delimiter, which happens to be / itself.
+ *  This makes FTP absolute URI appear as:  ftp:host:port//root/path
+ *  To encompass older software which compacts multiple // to / in transit
+ *  We use standard URI-encoding on the second / making it
+ *  ftp:host:port/%2froot/path  AKA 'the FTP %2f hack'.
+ *
+ * \todo Should be a URL class API call.
  */
-
-/// \ingroup ServerProtocolFTPAPI
 const char *UrlWith2f(HttpRequest *);
 
 } // namespace Ftp

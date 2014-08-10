@@ -824,7 +824,6 @@ FwdState::connectStart()
             pinned_connection->stopPinnedConnectionMonitoring();
             flags.connected_okay = true;
             ++n_tries;
-            request->hier.note(serverConn, request->GetHost());
             request->flags.pinned = true;
             request->hier.note(serverConn, pinned_connection->pinning.host);
             if (pinned_connection->pinnedAuth())

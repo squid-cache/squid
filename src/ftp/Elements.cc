@@ -26,7 +26,7 @@ Ftp::HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::St
     HttpReply *const reply = new HttpReply;
 
     Http::ProtocolVersion httpVersion = Http::ProtocolVersion(
-        Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
+                                            Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
     reply->sline.set(httpVersion, httpStatus);
 
     HttpHeader &header = reply->header;
