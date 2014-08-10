@@ -5,6 +5,8 @@ class MasterXaction;
 template <class C> class RefCount;
 typedef RefCount<MasterXaction> MasterXactionPointer;
 
+class ConnStateData;
+
 namespace Http
 {
 

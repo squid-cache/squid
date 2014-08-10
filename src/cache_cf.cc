@@ -3582,8 +3582,7 @@ parsePortProtocol(const SBuf &value)
         return AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
 
     if (value.cmp("FTP") == 0)
-        return AnyP::ProtocolVersion(AnyP::PROTO_FTP,
-                                     Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
+        return Ftp::ProtocolVersion();
 
     fatalf("%s directive does not support protocol=" SQUIDSBUFPH "\n", cfg_directive, SQUIDSBUFPRINT(value));
     return AnyP::ProtocolVersion(); // not reached

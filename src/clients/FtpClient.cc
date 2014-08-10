@@ -858,7 +858,7 @@ Ftp::Client::maybeReadVirginBody()
 
     const int read_sz = replyBodySpace(*data.readBuf, 0);
 
-    debugs(11,9, "FTP may read up to " << read_sz << " bytes");
+    debugs(9, 9, "FTP may read up to " << read_sz << " bytes");
 
     if (read_sz < 2) // see http.cc
         return;
