@@ -730,7 +730,7 @@ serverConnectionsClose(void)
 #endif
     }
     if (IamWorkerProcess()) {
-        clientHttpConnectionsClose();
+        clientConnectionsClose();
         icpConnectionShutdown();
 #if USE_HTCP
         htcpSocketShutdown();

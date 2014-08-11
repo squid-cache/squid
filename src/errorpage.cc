@@ -31,13 +31,13 @@
  */
 #include "squid.h"
 #include "cache_cf.h"
+#include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "disk.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fde.h"
-#include "ftp.h"
 #include "html_quote.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -831,7 +831,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'B':
         if (building_deny_info_url) break;
-        p = request ? ftpUrlWith2f(request) : "[no URL]";
+        p = request ? Ftp::UrlWith2f(request) : "[no URL]";
         break;
 
     case 'c':
