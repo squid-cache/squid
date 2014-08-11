@@ -68,7 +68,7 @@ const char *Ssl::BumpModeStr[] = {
     "bump",
     "splice",
     "terminate",
-    "err",
+    /*"err",*/
     NULL
 };
 

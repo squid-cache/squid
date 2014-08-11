@@ -278,9 +278,9 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
 SQUID_STATE_ROLLBACK(check_TXTDB)
 ])
 
-dnl Check if we can rewrite the hello message stored in SSL openSSL object
-dnl The tests are very basic, just check if the required SSL members exist
-dnl in SSL structure.
+dnl Check if we can rewrite the hello message stored in an SSL object.
+dnl The tests are very basic, just check if the required members exist in
+dnl SSL structure.
 AC_DEFUN([SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK],[
   AH_TEMPLATE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, "Define to 1 if hello message can be overwritten in SSL struct")
   SQUID_STATE_SAVE(check_openSSL_overwrite_hack)

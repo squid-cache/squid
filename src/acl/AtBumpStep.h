@@ -4,15 +4,16 @@
 #include "acl/Strategy.h"
 #include "ssl/support.h"
 
+/// \ingroup ACLAPI
 class ACLAtStepStrategy : public ACLStrategy<Ssl::BumpStep>
 {
 
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLAtStepStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
+    /**
+     * Not implemented to prevent copies of the instance.
+     */
     ACLAtStepStrategy(ACLAtStepStrategy const &);
 
 private:
