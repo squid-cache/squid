@@ -45,6 +45,7 @@ class HttpHdrRange;
 class HttpHdrSc;
 class Packer;
 class StoreEntry;
+class SBuf;
 
 /* constant attributes of http header fields */
 
@@ -148,6 +149,11 @@ typedef enum {
     HDR_SURROGATE_CAPABILITY,           /**< Edge Side Includes (ESI) header */
     HDR_SURROGATE_CONTROL,              /**< Edge Side Includes (ESI) header */
     HDR_FRONT_END_HTTPS,                /**< MS Exchange custom header we may have to add */
+    HDR_FTP_COMMAND,                    /**< Internal header for FTP command */
+    HDR_FTP_ARGUMENTS,                  /**< Internal header for FTP command arguments */
+    HDR_FTP_PRE,                        /**< Internal header containing leading FTP control response lines */
+    HDR_FTP_STATUS,                     /**< Internal header for FTP reply status */
+    HDR_FTP_REASON,                     /**< Internal header for FTP reply reason */
     HDR_OTHER,                          /**< internal tag value for "unknown" headers */
     HDR_ENUM_END
 } http_hdr_type;
@@ -298,6 +304,10 @@ private:
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
+
+/// quotes string using RFC 7230 quoted-string rules
+SBuf httpHeaderQuoteString(const char *raw);
+
 int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);

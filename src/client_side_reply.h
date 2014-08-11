@@ -31,6 +31,7 @@
 #ifndef SQUID_CLIENTSIDEREPLY_H
 #define SQUID_CLIENTSIDEREPLY_H
 
+#include "acl/forward.h"
 #include "client_side_request.h"
 #include "ip/forward.h"
 #include "RequestFlags.h"

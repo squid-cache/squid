@@ -784,7 +784,7 @@ testSBuf::testCopy()
 void
 testSBuf::testStringOps()
 {
-    SBuf sng(literal.toLower()),
+    SBuf sng(ToLower(literal)),
     ref("the quick brown fox jumped over the lazy dog");
     CPPUNIT_ASSERT_EQUAL(ref,sng);
     sng=literal;
@@ -820,7 +820,7 @@ testSBuf::testStartsWith()
 
     // case-insensitive checks
     CPPUNIT_ASSERT(literal.startsWith(casebuf,caseInsensitive));
-    casebuf=SBuf(fox1).toUpper();
+    casebuf=ToUpper(SBuf(fox1));
     CPPUNIT_ASSERT(literal.startsWith(casebuf,caseInsensitive));
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1),caseInsensitive));
     casebuf = "tha quick";
