@@ -155,10 +155,10 @@ Ssl::ClientBio::isClientHello(int state)
             state == SSL23_ST_SR_CLNT_HELLO_B ||
             state == SSL3_ST_SR_CLNT_HELLO_B ||
             state == SSL3_ST_SR_CLNT_HELLO_C
-        );
+           );
 }
 
-void 
+void
 Ssl::ClientBio::stateChanged(const SSL *ssl, int where, int ret)
 {
     Ssl::Bio::stateChanged(ssl, where, ret);
@@ -179,7 +179,7 @@ const char *objToString(unsigned char const *bytes, int len)
 {
     static std::string buf;
     buf.clear();
-    for(int i = 0; i < len; i++ ) {
+    for (int i = 0; i < len; i++ ) {
         char tmp[3];
         snprintf(tmp, sizeof(tmp), "%.2x", bytes[i]);
         buf.append(tmp);
@@ -223,12 +223,12 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
             debugs(83, 7, "SSL Header Size: " << helloSize);
             helloSize +=5;
 #ifdef DO_SSLV23
-        } else if ((head[0] & 0x80) && head[2] == 0x01 && head[3] == 0x03) { 
+        } else if ((head[0] & 0x80) && head[2] == 0x01 && head[3] == 0x03) {
             debugs(83, 7, "SSL version 2 handshake message with v3 support");
             helloSize = head[1];
             helloSize +=5;
 #endif
-        }else {
+        } else {
             debugs(83, 7, "Not an SSL acceptable handshake message (SSLv2 message?)");
             return -1;
         }
@@ -333,24 +333,24 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
     size_t token = 0;
     size_t end = 0;
     while (token != std::string::npos) {
-      end = features.clientRequestedCiphers.find(':',token);
-      std::string cipher;
-      cipher.assign(features.clientRequestedCiphers, token, end - token);
-      token = (end != std::string::npos ? end + 1 : std::string::npos);
-      bool found = false;
-      STACK_OF(SSL_CIPHER) *cipher_stack = SSL_get_ciphers(ssl);
-      for (int i = 0; i < sk_SSL_CIPHER_num(cipher_stack); i++) {
-          SSL_CIPHER *c = sk_SSL_CIPHER_value(cipher_stack, i);
-          const char *cname = SSL_CIPHER_get_name(c);
-          if (cipher.compare(cname)) {
-              found = true;
-              break;
-          }
-      }
-      if (!found) {
-          debugs(83, 5, "Client Hello Data supports cipher '"<< cipher <<"' but we do not support it!");
-          return false;
-      }
+        end = features.clientRequestedCiphers.find(':',token);
+        std::string cipher;
+        cipher.assign(features.clientRequestedCiphers, token, end - token);
+        token = (end != std::string::npos ? end + 1 : std::string::npos);
+        bool found = false;
+        STACK_OF(SSL_CIPHER) *cipher_stack = SSL_get_ciphers(ssl);
+        for (int i = 0; i < sk_SSL_CIPHER_num(cipher_stack); i++) {
+            SSL_CIPHER *c = sk_SSL_CIPHER_value(cipher_stack, i);
+            const char *cname = SSL_CIPHER_get_name(c);
+            if (cipher.compare(cname)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            debugs(83, 5, "Client Hello Data supports cipher '"<< cipher <<"' but we do not support it!");
+            return false;
+        }
     }
 
 #if !defined(SSL_TLSEXT_HB_ENABLED)
@@ -450,7 +450,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         if (
             buf[1] >= 3  //it is an SSL Version3 message
             && buf[0] == 0x16 // and it is a Handshake/Hello message
-            ) {
+        ) {
 
             //Hello message is the first message we write to server
             assert(!helloMsg.hasContent());
@@ -482,7 +482,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         //allowBump = true;
 
         if (allowSplice) {
-        // Do not write yet.....
+            // Do not write yet.....
             BIO_set_retry_write(table);
             return -1;
         }
@@ -595,7 +595,7 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         return -1;
 
     case BIO_CTRL_DUP:
-        // Should implemented if the SSL_dup openSSL API function 
+        // Should implemented if the SSL_dup openSSL API function
         // used anywhere in squid.
         return 0;
 
@@ -608,16 +608,16 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         }
         return 0;
 
-/*  we may also need to implement these:
-    case BIO_CTRL_RESET:
-    case BIO_C_FILE_SEEK:
-    case BIO_C_FILE_TELL:
-    case BIO_CTRL_INFO:
-    case BIO_CTRL_GET_CLOSE:
-    case BIO_CTRL_SET_CLOSE:
-    case BIO_CTRL_PENDING:
-    case BIO_CTRL_WPENDING:
-*/
+        /*  we may also need to implement these:
+            case BIO_CTRL_RESET:
+            case BIO_C_FILE_SEEK:
+            case BIO_C_FILE_TELL:
+            case BIO_CTRL_INFO:
+            case BIO_CTRL_GET_CLOSE:
+            case BIO_CTRL_SET_CLOSE:
+            case BIO_CTRL_PENDING:
+            case BIO_CTRL_WPENDING:
+        */
     default:
         return 0;
 
@@ -643,16 +643,16 @@ Ssl::Bio::sslFeatures::sslFeatures(): sslVersion(-1), compressMethod(-1), unknow
 
 int Ssl::Bio::sslFeatures::toSquidSSLVersion() const
 {
-    if(sslVersion == SSL2_VERSION)
+    if (sslVersion == SSL2_VERSION)
         return 2;
-    else if(sslVersion == SSL3_VERSION)
+    else if (sslVersion == SSL3_VERSION)
         return 3;
-    else if(sslVersion == TLS1_VERSION)
+    else if (sslVersion == TLS1_VERSION)
         return 4;
 #if OPENSSL_VERSION_NUMBER >= 0x10001000L
-    else if(sslVersion == TLS1_1_VERSION)
+    else if (sslVersion == TLS1_1_VERSION)
         return 5;
-    else if(sslVersion == TLS1_2_VERSION)
+    else if (sslVersion == TLS1_2_VERSION)
         return 6;
 #endif
     else
@@ -665,15 +665,15 @@ Ssl::Bio::sslFeatures::get(const SSL *ssl)
     sslVersion = SSL_version(ssl);
     debugs(83, 7, "SSL version: " << SSL_get_version(ssl) << " (" << sslVersion << ")");
 
-#if defined(TLSEXT_NAMETYPE_host_name) 
-    if(const char *server = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name))
+#if defined(TLSEXT_NAMETYPE_host_name)
+    if (const char *server = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name))
         serverName = server;
     debugs(83, 7, "SNI server name: " << serverName);
 #endif
 
     if (ssl->session->compress_meth)
-            compressMethod = ssl->session->compress_meth;
-    else if(sslVersion >= 3) //if it is 3 or newer version then compression is disabled
+        compressMethod = ssl->session->compress_meth;
+    else if (sslVersion >= 3) //if it is 3 or newer version then compression is disabled
         compressMethod = 0;
     debugs(83, 7, "SSL compression: " << compressMethod);
 
@@ -686,7 +686,7 @@ Ssl::Bio::sslFeatures::get(const SSL *ssl)
         for (int i = 0; i < sk_SSL_CIPHER_num(ciphers); ++i) {
             SSL_CIPHER *c = sk_SSL_CIPHER_value(ciphers, i);
             if (c != NULL) {
-                if(!clientRequestedCiphers.empty())
+                if (!clientRequestedCiphers.empty())
                     clientRequestedCiphers.append(":");
                 clientRequestedCiphers.append(c->name);
             }
@@ -757,7 +757,7 @@ Ssl::Bio::sslFeatures::get(const unsigned char *hello)
         return parseV23Hello(hello);
 #endif
     }
-    
+
     debugs(83, 7, "Not a known SSL handshake message");
     return false;
 }
@@ -799,7 +799,7 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
             for (int i = 0; i < ciphersLen; i += cs) {
                 const SSL_CIPHER *c = method->get_cipher_by_char((ciphers + i));
                 if (c != NULL) {
-                    if(!clientRequestedCiphers.empty())
+                    if (!clientRequestedCiphers.empty())
                         clientRequestedCiphers.append(":");
                     clientRequestedCiphers.append(c->name);
                 } else
@@ -818,10 +818,10 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
         debugs(83, 7, "SSL compression methods number: " << (int)compression[0]);
 
         const unsigned char *pToExtensions = compression + 1 + (int)compression[0];
-        if (pToExtensions <  hello + helloSize) { 
+        if (pToExtensions <  hello + helloSize) {
             int extensionsLen = (pToExtensions[0] << 8) | pToExtensions[1];
             const unsigned char *ext = pToExtensions + 2;
-            while (ext < pToExtensions + extensionsLen){
+            while (ext < pToExtensions + extensionsLen) {
                 short extType = (ext[0] << 8) | ext[1];
                 ext += 2;
                 short extLen = (ext[0] << 8) | ext[1];
@@ -840,7 +840,7 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello)
                     doHeartBeats = true;
                 } else
                     extensions.push_back(extType);
-                    
+
                 ext += extLen;
             }
         }
@@ -873,19 +873,19 @@ Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello)
         for (int i = 0; i < ciphersLen; i += cs) {
             // The v2 hello messages cipher has 3 bytes.
             // The v2 cipher has the first byte not null
-            // Because we are going to sent only v3 message we 
+            // Because we are going to sent only v3 message we
             // are ignoring these ciphers
             if (ciphers[i] != 0)
                 continue;
             const SSL_CIPHER *c = method->get_cipher_by_char((ciphers + i + 1));
             if (c != NULL) {
-                if(!clientRequestedCiphers.empty())
+                if (!clientRequestedCiphers.empty())
                     clientRequestedCiphers.append(":");
                 clientRequestedCiphers.append(c->name);
             }
         }
     }
-    debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);    
+    debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);
 
     //Get Client Random number. It starts on the position 11 of hello message
     memcpy(client_random, ciphers + ciphersLen, SSL3_RANDOM_SIZE);
@@ -902,11 +902,11 @@ void
 Ssl::Bio::sslFeatures::applyToSSL(SSL *ssl) const
 {
     // To increase the possibility for bumping after peek mode selection or
-    // splicing after stare mode selection it is good to set the 
+    // splicing after stare mode selection it is good to set the
     // SSL protocol version.
     // The SSL_set_ssl_method is not the correct method because it will strict
     // SSL version which can be used to the SSL version used for client hello message.
-    // For example will prevent comunnicating with a tls1.0 server if the 
+    // For example will prevent comunnicating with a tls1.0 server if the
     // client sent and tlsv1.2 Hello message.
     //SSL_set_ssl_method(ssl, Ssl::method(features.toSquidSSLVersion()));
 #ifdef TLSEXT_NAMETYPE_host_name
@@ -926,14 +926,14 @@ std::ostream &
 Ssl::Bio::sslFeatures::print(std::ostream &os) const
 {
     static std::string buf;
-    return os << "v" << sslVersion << 
-        " SNI:" << (serverName.empty() ? "-" : serverName) <<
-        " comp:" << compressMethod <<
-        " Ciphers:" << clientRequestedCiphers <<
-        " Random:" << objToString(client_random, SSL3_RANDOM_SIZE) <<
-        " ecPointFormats:" << ecPointFormatList <<
-        " ec:" << ellipticCurves <<
-        " opaquePrf:" << opaquePrf;
+    return os << "v" << sslVersion <<
+           " SNI:" << (serverName.empty() ? "-" : serverName) <<
+           " comp:" << compressMethod <<
+           " Ciphers:" << clientRequestedCiphers <<
+           " Random:" << objToString(client_random, SSL3_RANDOM_SIZE) <<
+           " ecPointFormats:" << ecPointFormatList <<
+           " ec:" << ellipticCurves <<
+           " opaquePrf:" << opaquePrf;
 }
 
 #endif /* USE_SSL */
