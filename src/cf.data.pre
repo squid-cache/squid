@@ -1196,7 +1196,7 @@ TYPE: acl_access
 IFDEF: FOLLOW_X_FORWARDED_FOR
 LOC: Config.accessList.followXFF
 DEFAULT_IF_NONE: deny all
-DEFAULT_DOC: indirect client IP will not be accepted.
+DEFAULT_DOC: X-Forwarded-For header will be ignored.
 DOC_START
 	Determine which client proxies can be trusted to provide correct
 	information regarding real client IP address.
