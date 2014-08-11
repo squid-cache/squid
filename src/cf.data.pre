@@ -1155,7 +1155,7 @@ NAME: proxy_protocol_access
 TYPE: acl_access
 LOC: Config.accessList.proxyProtocol
 DEFAULT: none
-DEFAULT_DOC: all TCP connections will be denied
+DEFAULT_DOC: all TCP connections to ports with require-proxy-header will be denied
 DOC_START
 	Determine which client proxies can be trusted to provide correct
 	information regarding real client IP address using PROXY protocol.
@@ -1180,7 +1180,7 @@ DOC_START
 
 	SECURITY CONSIDERATIONS:
 
-		Any host for which we accept client IP details can place
+		Any host from which we accept client IP details can place
 		incorrect information in the relevant header, and Squid
 		will use the incorrect information as if it were the
 		source address of the request.  This may enable remote
@@ -1236,7 +1236,7 @@ DOC_START
 
 	SECURITY CONSIDERATIONS:
 
-		Any host for which we accept client IP details can place
+		Any host from which we accept client IP details can place
 		incorrect information in the relevant header, and Squid
 		will use the incorrect information as if it were the
 		source address of the request.  This may enable remote
