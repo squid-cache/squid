@@ -3609,7 +3609,11 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
 
     } else if (strcmp(token, "require-proxy-header") == 0) {
         s->flags.proxySurrogate = true;
-        debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (require-proxy-header enabled)");
+        if (s->flags.tproxyIntercept) {
+            // receiving is still permitted, so we do not unset the TPROXY flag
+            // spoofing access control override takes care of the spoof disable later
+            debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (require-proxy-header enabled)");
+        }
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
         if (!s->flags.accelSurrogate) {
