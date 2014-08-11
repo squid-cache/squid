@@ -3969,12 +3969,11 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
         // will call httpsPeeked() with certificate and connection, eventually
         FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
         return;
-    }
-    else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
+    } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
         request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request, NULL, bumpServerMode);
         startPeekAndSplice();
-        return;        
+        return;
     }
 
     // otherwise, use sslConnectHostOrIp

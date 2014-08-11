@@ -1168,7 +1168,7 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     }
 
     timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+                             CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
     fd_table[srvConn->fd].read_method = &default_read_method;
     fd_table[srvConn->fd].write_method = &default_write_method;
