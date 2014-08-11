@@ -11,10 +11,12 @@
 #include <string>
 #endif
 
-namespace Ssl {
+namespace Ssl
+{
 
 /// BIO source and sink node, handling socket I/O and monitoring SSL state
-class Bio {
+class Bio
+{
 public:
     enum Type {
         BIO_TO_CLIENT = 6000,
@@ -22,7 +24,8 @@ public:
     };
 
     /// Class to store SSL connection features
-    class sslFeatures {
+    class sslFeatures
+    {
     public:
         sslFeatures();
         bool get(const SSL *ssl); ///< Retrieves the features from SSL object
@@ -84,14 +87,15 @@ protected:
 /// BIO node to handle socket IO for squid client side
 /// If bumping is enabled  this Bio detects and analyses client hello message
 /// to retrieve the SSL features supported by the client
-class ClientBio: public Bio {
+class ClientBio: public Bio
+{
 public:
     /// The ssl hello message read states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived} HelloReadState;
     explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone), helloSize(0) {}
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
-    /// When the client hello message retrieved, fill the 
+    /// When the client hello message retrieved, fill the
     /// "features" member with the client provided informations.
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ClientBio version of the Ssl::Bio::write method
@@ -122,7 +126,7 @@ private:
 /// If bumping is enabled, analyses the SSL hello message sent by squid OpenSSL
 /// subsystem (step3 bumping step) against bumping mode:
 ///   * Peek mode:  Send client hello message instead of the openSSL generated
-///                 hello message and normaly denies bumping and allow only 
+///                 hello message and normaly denies bumping and allow only
 ///                 splice or terminate the SSL connection
 ///   * Stare mode: Sends the openSSL generated hello message and normaly
 ///                 denies splicing and allow bump or terminate the SSL
@@ -133,7 +137,8 @@ private:
 ///  object members to replace hello message with web client hello message.
 ///  This is may allow bumping in peek mode and splicing in stare mode after
 ///  the server hello message received.
-class ServerBio: public Bio {
+class ServerBio: public Bio
+{
 public:
     explicit ServerBio(const int anFd): Bio(anFd), featuresSet(false), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone) {}
     /// The ServerBio version of the Ssl::Bio::stateChanged method
@@ -156,7 +161,7 @@ public:
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
-    /// Enables or disables the input data recording, for internal analysis. 
+    /// Enables or disables the input data recording, for internal analysis.
     void recordInput(bool r) {record_ = r;}
     /// Whether we can splice or not the SSL stream
     bool canSplice() {return allowSplice;}
