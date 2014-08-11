@@ -31,10 +31,6 @@ libstate_la_SOURCES = \
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
-	AtBumpStep.cc \
-	AtBumpStep.h \
-	AtBumpStepData.cc \
-	AtBumpStepData.h \
 	IntRange.cc \
 	IntRange.h \
 	RegexData.cc \
@@ -137,6 +133,10 @@ libacls_la_SOURCES = \
 EXTRA_libacls_la_SOURCES =
 
 SSL_ACLS = \
+	AtBumpStep.cc \
+	AtBumpStep.h \
+	AtBumpStepData.cc \
+	AtBumpStepData.h \
         CertificateData.cc \
         CertificateData.h  \
         Certificate.cc \

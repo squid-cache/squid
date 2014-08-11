@@ -966,7 +966,6 @@ void
 TunnelStateData::connectToPeer()
 {
     const Comm::ConnectionPointer &srv = server.conn;
-    const Comm::ConnectionPointer &cln = client.conn;
 
 #if USE_OPENSSL
     if (CachePeer *p = srv->getPeer()) {
@@ -975,7 +974,7 @@ TunnelStateData::connectToPeer()
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(request, srv, cln, callback);
+                new Ssl::PeerConnector(request, srv, client.conn, callback);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -1106,6 +1105,7 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 
 #endif
 
+#if USE_OPENSSL
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
 void
@@ -1183,3 +1183,4 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
                                          CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
     Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
 }
+#endif //USE_OPENSSL
