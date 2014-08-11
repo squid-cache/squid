@@ -321,7 +321,7 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
     else if (peekMode == Ssl::bumpBump && !srvBio->canBump())
         peekMode = Ssl::bumpSplice;
 
-    if (peekMode == Ssl::bumpTerminate || peekMode == Ssl::bumpErr) {
+    if (peekMode == Ssl::bumpTerminate) {
         comm_close(serverConn->fd);
         comm_close(clientConn->fd);
     } else if (peekMode != Ssl::bumpSplice) {
@@ -507,7 +507,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         // occure in the next SSL_connect call, and we will fail again.
 #if 1
         if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
-            debugs(81, DBG_IMPORTANT, "fwdNegotiateSSL: Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
+            debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice(false, Ssl::bumpNone);
             return;
         }

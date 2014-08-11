@@ -243,7 +243,6 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
-
 #endif /* USE_OPENSSL */
 
 static void parse_ftp_epsv(acl_access **ftp_epsv);
@@ -4658,9 +4657,6 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpTerminate]) == 0) {
         action.kind = Ssl::bumpTerminate;
-        bumpCfgStyleNow = bcsNew;
-    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpErr]) == 0) {
-        action.kind = Ssl::bumpErr;
         bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpNone]) == 0) {
         action.kind = Ssl::bumpNone;

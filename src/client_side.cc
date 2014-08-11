@@ -4045,7 +4045,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
 
     debugs(33, 5, HERE << "Answer: " << answer << " kind:" << answer.kind);
     if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice) {
-        if (answer.kind == Ssl::bumpTerminate || answer.kind == Ssl::bumpErr)
+        if (answer.kind == Ssl::bumpTerminate)
             comm_close(connState->clientConnection->fd);
         else {
             if (answer.kind != Ssl::bumpPeek && answer.kind != Ssl::bumpStare)

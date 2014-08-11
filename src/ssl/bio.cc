@@ -306,13 +306,13 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 }
 
 
-// This function makes the required checks to examine if the client hello message 
-// can be compatible with the features provided by OpenSSL toolkit.
+// This function makes the required checks to examine if the client hello
+// message is compatible with the features provided by OpenSSL toolkit.
 // If the features are compatible and can be supported it tries to rewrite SSL
-// structure members, to replace the hello message created by openSSL, with the 
+// structure members, to replace the hello message created by openSSL, with the
 // web client SSL hello message.
-// This is mostly possible in the cases where the web client uses openSSL library
-// similar with this one used by squid.
+// This is mostly possible in the cases where the web client uses openSSL
+// library similar with this one used by squid.
 static bool
 adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
 {
