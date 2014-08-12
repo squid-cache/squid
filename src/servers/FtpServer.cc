@@ -1013,6 +1013,7 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
                   strerror(request->errDetail));
     }
 
+#if USE_ADAPTATION
     // XXX: Remove hard coded names. Use an error page template instead.
     const Adaptation::History::Pointer ah = request->adaptHistory();
     if (ah != NULL) { // XXX: add adapt::<all_h but use lastMeta here
@@ -1023,6 +1024,7 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
         if (desc.size())
             mb.Printf("%i-Description: %s\r\n", scode, desc.termedBuf());
     }
+#endif
 
     assert(reply != NULL);
     const char *reason = reply->header.has(HDR_FTP_REASON) ?
