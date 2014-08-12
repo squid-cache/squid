@@ -2993,42 +2993,34 @@ ConnStateData::parseProxy1p0()
     ::Parser::Tokenizer tok(in.buf);
     tok.skip(Proxy1p0magic);
 
-    SBuf tcpVersion;
-    if (!tok.prefix(tcpVersion, CharacterSet::ALPHA+CharacterSet::DIGIT))
-        return proxyProtocolError(tok.atEnd()?"PROXY/1.0 error: invalid protocol family":NULL);
+    static const SBuf unknown("UNKNOWN"), tcpName("TCP");
+    if (tok.skip(tcpName)) {
 
-    if (!tcpVersion.cmp("UNKNOWN")) {
-        // skip to first LF (assumes it is part of CRLF)
-        const SBuf::size_type pos = in.buf.findFirstOf(CharacterSet::LF);
-        if (pos != SBuf::npos) {
-            if (in.buf[pos-1] != '\r')
-                return proxyProtocolError("PROXY/1.0 error: missing CR");
-            // found valid but unusable header
-            in.buf.consume(pos);
-            needProxyProtocolHeader_ = false;
-            return true;
-        }
-        // else, no LF found
-
-        // protocol error only if there are more than 107 bytes prefix header
-        return proxyProtocolError(in.buf.length() > 107? "PROXY/1.0 error: missing CRLF":NULL);
-
-    } else if (!tcpVersion.cmp("TCP",3)) {
+        // skip TCP/IP version number
+        static const CharacterSet tcpVersions("TCP-version","46");
+        if(!tok.skip(tcpVersions))
+            return proxyProtocolError(tok.atEnd() ? "PROXY/1.0 error: missing TCP version" : NULL);
 
         // skip SP after protocol version
         if (!tok.skip(' '))
-            return proxyProtocolError(tok.atEnd()?"PROXY/1.0 error: missing SP":NULL);
+            return proxyProtocolError(tok.atEnd() ? "PROXY/1.0 error: missing SP" : NULL);
 
         SBuf ipa, ipb;
         int64_t porta, portb;
-        const CharacterSet ipChars =  CharacterSet("IP Address",".:") + CharacterSet::HEXDIG;
+        static const CharacterSet ipChars = CharacterSet("IP Address",".:") + CharacterSet::HEXDIG;
 
-        // parse  src-IP SP dst-IP SP src-port SP dst-port CRLF
-        if (!tok.prefix(ipa, ipChars) || !tok.skip(' ') ||
-           !tok.prefix(ipb, ipChars) || !tok.skip(' ') ||
-           !tok.int64(porta) || !tok.skip(' ') ||
-           !tok.int64(portb) || !tok.skip('\r') || !tok.skip('\n'))
-            return proxyProtocolError(!tok.atEnd()?"PROXY/1.0 error: invalid syntax":NULL);
+        // parse:  src-IP SP dst-IP SP src-port SP dst-port CR
+        // leave the LF until later.
+        const bool correct = tok.prefix(ipa, ipChars) && tok.skip(' ') &&
+                             tok.prefix(ipb, ipChars) && tok.skip(' ') &&
+                             tok.int64(porta) && tok.skip(' ') &&
+                             tok.int64(portb) &&
+                             tok.skip('\r');
+        if (!correct)
+            return proxyProtocolError(!tok.atEnd() ? "PROXY/1.0 error: invalid syntax" : NULL);
+
+        if (!tok.skip('\n')) // line terminator.
+            return proxyProtocolError("PROXY/1.0 error: missing LF");
 
         in.buf = tok.remaining(); // sync buffers
         needProxyProtocolHeader_ = false; // found successfully
@@ -3065,7 +3057,25 @@ ConnStateData::parseProxy1p0()
             fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
         return true;
-    }
+
+    } else if (tok.skip(unknown)) {
+        // skip to first LF (assumes it is part of CRLF)
+        const SBuf::size_type pos = in.buf.findFirstOf(CharacterSet::LF);
+        if (pos != SBuf::npos) {
+            if (in.buf[pos-1] != '\r')
+                return proxyProtocolError("PROXY/1.0 error: missing CR");
+            // found valid but unusable header
+            in.buf.consume(pos);
+            needProxyProtocolHeader_ = false;
+            return true;
+        }
+        // else, no LF found
+
+        // protocol error only if there are more than 107 bytes prefix header
+        return proxyProtocolError(in.buf.length() > 107? "PROXY/1.0 error: missing CRLF":NULL);
+
+    } else
+        return proxyProtocolError(tok.atEnd() ? "PROXY/1.0 error: invalid protocol family" : NULL);
 
     return false;
 }
@@ -3074,28 +3084,32 @@ ConnStateData::parseProxy1p0()
 bool
 ConnStateData::parseProxy2p0()
 {
-    if ((in.buf[0] & 0xF0) != 0x20) // version == 2 is mandatory
+    static const SBuf::size_type prefixLen = Proxy2p0magic.length();
+    if (in.buf.length() < prefixLen + 4)
+        return false; // need more bytes
+
+    if ((in.buf[prefixLen] & 0xF0) != 0x20) // version == 2 is mandatory
         return proxyProtocolError("PROXY/2.0 error: invalid version");
 
-    const char command = (in.buf[0] & 0x0F);
+    const char command = (in.buf[prefixLen] & 0x0F);
     if ((command & 0xFE) != 0x00) // values other than 0x0-0x1 are invalid
         return proxyProtocolError("PROXY/2.0 error: invalid command");
 
-    const char family = (in.buf[1] & 0xF0) >>4;
+    const char family = (in.buf[prefixLen+1] & 0xF0) >>4;
     if (family > 0x3) // values other than 0x0-0x3 are invalid
         return proxyProtocolError("PROXY/2.0 error: invalid family");
 
-    const char proto = (in.buf[1] & 0x0F);
+    const char proto = (in.buf[prefixLen+1] & 0x0F);
     if (proto > 0x2) // values other than 0x0-0x2 are invalid
         return proxyProtocolError("PROXY/2.0 error: invalid protocol type");
 
-    const char *clen = in.buf.rawContent() + Proxy2p0magic.length() + 2;
+    const char *clen = in.buf.rawContent() + prefixLen + 2;
     const uint16_t len = ntohs(*(reinterpret_cast<const uint16_t *>(clen)));
 
-    if (in.buf.length() < Proxy2p0magic.length() + 4 + len)
+    if (in.buf.length() < prefixLen + 4 + len)
         return false; // need more bytes
 
-    in.buf.consume(Proxy2p0magic.length() + 4); // 4 being the extra bytes
+    in.buf.consume(prefixLen + 4); // 4 being the extra bytes
     const SBuf extra = in.buf.consume(len);
     needProxyProtocolHeader_ = false; // found successfully
 
@@ -3103,7 +3117,7 @@ ConnStateData::parseProxy2p0()
     if (command == 0x00/* LOCAL*/)
         return true;
 
-    typedef union proxy_addr {
+    union pax {
         struct {        /* for TCP/UDP over IPv4, len = 12 */
             struct in_addr src_addr;
             struct in_addr dst_addr;
@@ -3122,7 +3136,7 @@ ConnStateData::parseProxy2p0()
              uint8_t dst_addr[108];
         } unix_addr;
 #endif
-    } pax;
+    };
 
     const pax *ipu = reinterpret_cast<const pax*>(extra.rawContent());
 
