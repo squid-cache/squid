@@ -33,6 +33,12 @@ public:
     /// return a new CharacterSet containing the union of two sets
     CharacterSet operator +(const CharacterSet &src) const;
 
+    /// return a new CharacterSet containing characters not in this set
+    CharacterSet complement(const char *complementLabel = NULL) const;
+
+    /// change name; handy in const declarations that use operators
+    CharacterSet &rename(const char *label) { name = label; return *this; }
+
     /// optional set label for debugging (default: "anonymous")
     const char * name;
 

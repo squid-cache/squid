@@ -33,9 +33,11 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "clientStreamForward.h"
 #include "comm.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
+#include "ipc/FdNotes.h"
 #include "SBuf.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -137,6 +139,7 @@ public:
     void buildRangeHeader(HttpReply * rep);
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
+    ConnStateData *getConn() const;
     void connIsFinished();
     void removeFromConnectionList(ConnStateData * conn);
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
@@ -193,7 +196,7 @@ class ConnStateData : public BodyProducer, public HttpControlMsgSink
 
 public:
     explicit ConnStateData(const MasterXaction::Pointer &xact);
-    ~ConnStateData();
+    virtual ~ConnStateData();
 
     void readSomeData();
     bool areAllContextsForThisConnection() const;
@@ -268,6 +271,7 @@ public:
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
         bool auth;               /* pinned for www authentication */
+        bool reading;   ///< we are monitoring for peer connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
@@ -292,21 +296,21 @@ public:
 
     void expectNoForwarding(); ///< cleans up virgin request [body] forwarding state
 
+    /* BodyPipe API */
     BodyPipe::Pointer expectRequestBody(int64_t size);
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer) = 0;
+    virtual void noteBodyConsumerAborted(BodyPipe::Pointer) = 0;
 
     bool handleReadData();
     bool handleRequestBodyData();
 
-    /**
-     * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
-     */
-    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth);
-    /**
-     * Decorrelate the ConnStateData object from its pinned CachePeer
-     */
-    void unpinConnection();
+    /// Forward future client requests using the given server connection.
+    /// Optionally, monitor pinned server connection for server-side closures.
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true);
+    /// Undo pinConnection() and, optionally, close the pinned connection.
+    void unpinConnection(const bool andClose);
+    /// Returns validated pinnned server connection (and stops its monitoring).
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer);
     /**
      * Checks if there is pinning info if it is valid. It can close the server side connection
      * if pinned info is not valid.
@@ -321,11 +325,15 @@ public:
     CachePeer *pinnedPeer() const {return pinning.peer;}
     bool pinnedAuth() const {return pinning.auth;}
 
+    /// called just before a FwdState-dispatched job starts using connection
+    virtual void notePeerConnection(Comm::ConnectionPointer) {}
+
     // pining related comm callbacks
-    void clientPinnedConnectionClosed(const CommCloseCbParams &io);
+    virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
 
     // comm callbacks
     void clientReadRequest(const CommIoCbParams &io);
+    void clientReadFtpData(const CommIoCbParams &io);
     void connStateClosed(const CommCloseCbParams &io);
     void requestTimeout(const CommTimeoutCbParams &params);
 
@@ -342,6 +350,9 @@ public:
     void stopPinnedConnectionMonitoring();
 
 #if USE_OPENSSL
+    /// the second part of old httpsAccept, waiting for future HttpsServer home
+    void postHttpsAccept();
+
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
@@ -386,6 +397,16 @@ public:
     const SBuf &connectionTag() const { return connectionTag_; }
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
 
+    /// handle a control message received by context from a peer and call back
+    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call) = 0;
+
+    /// ClientStream calls this to supply response header (once) and data
+    /// for the current ClientSocketContext.
+    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) = 0;
+
+    /// remove no longer needed leading bytes from the input buffer
+    void consumeInput(const size_t byteCount);
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -395,10 +416,26 @@ protected:
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
+    /// parse input buffer prefix into a single transfer protocol request
+    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
+
+    /// start processing a freshly parsed request
+    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver) = 0;
+
+    /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
+    virtual int pipelinePrefetchMax() const;
+
+    /// timeout to use when waiting for the next request
+    virtual time_t idleTimeout() const = 0;
+
+    BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
+
 private:
     int connFinishedWithConn(int size);
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
+
+    void pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth);
 
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
@@ -414,10 +451,6 @@ private:
     /// some user details that can be used to perform authentication on this connection
     Auth::UserRequest::Pointer auth_;
 #endif
-
-    HttpParser parser_;
-
-    // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
 
 #if USE_OPENSSL
     bool switchedToHttps_;
@@ -437,11 +470,8 @@ private:
     const char *stoppedReceiving_;
 
     AsyncCall::Pointer reader; ///< set when we are reading
-    BodyPipe::Pointer bodyPipe; // set when we are reading request body
 
     SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
-
-    CBDATA_CLASS2(ConnStateData);
 };
 
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
@@ -450,8 +480,26 @@ const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *e
 
 int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
+/// accept requests to a given port and inform subCall about them
+void clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrCallT<CommAcceptCbPtrFun> > &subCall, const Ipc::FdNoteId noteId);
+
 void clientOpenListenSockets(void);
-void clientHttpConnectionsClose(void);
+void clientConnectionsClose(void);
 void httpRequestFree(void *);
+
+/// decide whether to expect multiple requests on the corresponding connection
+void clientSetKeepaliveFlag(ClientHttpRequest *http);
+
+/* misplaced declaratrions of Stream callbacks provided/used by client side */
+SQUIDCEXTERN CSR clientGetMoreData;
+SQUIDCEXTERN CSS clientReplyStatus;
+SQUIDCEXTERN CSD clientReplyDetach;
+CSCB clientSocketRecipient;
+CSD clientSocketDetach;
+
+/* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
+ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
+void clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver);
+void clientPostHttpsAccept(ConnStateData *connState);
 
 #endif /* SQUID_CLIENTSIDE_H */

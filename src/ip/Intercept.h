@@ -37,7 +37,7 @@ public:
      * Detects IPv6 and IPv4 level of support matches the address being listened on
      * and if the compiled v2/v4 is usable as far down as a bind()ing.
      *
-     * \param test    Address set on the http(s)_port being checked.
+     * \param test    Address set on the squid.conf *_port being checked.
      * \retval true   TPROXY is available.
      * \retval false  TPROXY is not available.
      */
