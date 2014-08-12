@@ -39,6 +39,7 @@
 #include "CacheManager.h"
 #include "CachePeer.h"
 #include "client_side.h"
+#include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -47,7 +48,6 @@
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
-#include "ftp.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "gopher.h"
@@ -719,6 +719,10 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 #endif
 
+    // should reach ConnStateData before the dispatched Client job starts
+    CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                 ConnStateData::notePeerConnection, serverConnection());
+
     dispatch();
 }
 
@@ -813,7 +817,7 @@ FwdState::connectStart()
         debugs(17,7, "pinned peer connection: " << pinned_connection);
         // pinned_connection may become nil after a pconn race
         if (pinned_connection)
-            serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
+            serverConn = pinned_connection->borrowPinnedConnection(request, serverDestinations[0]->getPeer());
         else
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
@@ -995,7 +999,10 @@ FwdState::dispatch()
             break;
 
         case AnyP::PROTO_FTP:
-            ftpStart(this);
+            if (request->flags.ftpNative)
+                Ftp::StartRelay(this);
+            else
+                Ftp::StartGateway(this);
             break;
 
         case AnyP::PROTO_CACHE_OBJECT:

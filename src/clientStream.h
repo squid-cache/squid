@@ -33,6 +33,7 @@
 #define SQUID_CLIENTSTREAM_H
 
 #include "base/RefCount.h"
+#include "clientStreamForward.h"
 #include "dlink.h"
 #include "StoreIOBuffer.h"
 
@@ -94,28 +95,6 @@
  \li		To allow a node to determine the requested data offset, length and target buffer dynamically. Again, this is to promote loose coupling.
  \li		Because of the callback nature of squid, every node would have to keep these parameters in their context anyway, so this reduces programmer overhead.
  */
-
-/// \ingroup ClientStreamAPI
-typedef RefCount<Lock> ClientStreamData;
-
-class clientStreamNode;
-class ClientHttpRequest;
-class HttpReply;
-
-/* client stream read callback */
-/// \ingroup ClientStreamAPI
-typedef void CSCB(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
-
-/* client stream read */
-/// \ingroup ClientStreamAPI
-typedef void CSR(clientStreamNode *, ClientHttpRequest *);
-
-/* client stream detach */
-/// \ingroup ClientStreamAPI
-typedef void CSD(clientStreamNode *, ClientHttpRequest *);
-
-/// \ingroup ClientStreamAPI
-typedef clientStream_status_t CSS(clientStreamNode *, ClientHttpRequest *);
 
 /// \ingroup ClientStreamAPI
 class clientStreamNode

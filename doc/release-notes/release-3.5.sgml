@@ -43,6 +43,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Support named services
 	<item>Upgraded squidclient tool
 	<item>Helper support for concurrency channels
+	<item>Native FTP Relay
 	<item>Receive PROXY protocol, Versions 1 & 2
 </itemize>
 
@@ -164,6 +165,47 @@ Most user-facing changes are reflected in squid.conf (see below).
    With these helpers concurrency may now be set to 0 or any higher number as desired.
 
 
+<sect1>Native FTP Relay
+<p>Details at <url url="http://wiki.squid-cache.org/Features/FtpRelay">.
+
+<p>Squid is now capable of accepting native FTP commands and relaying native
+   FTP messages between FTP clients and FTP servers. Native FTP commands
+   accepted at ftp_port are internally converted or wrapped into HTTP-like
+   messages. The same happens to Native FTP responses received from FTP origin
+   servers. Those HTTP-like messages are shoveled through regular access
+   control and adaptation layers between the FTP client and the FTP origin
+   server. This allows Squid to examine, adapt, block, and log FTP exchanges.
+   Squid reuses most HTTP mechanisms when shoveling wrapped FTP messages. For
+   example, http_access and adaptation_access directives are used.
+
+<p>FTP Relay is a new, experimental, complex feature that has seen limited
+   production exposure. Some Squid modules (e.g., caching) do not currently
+   work with native FTP proxying, and many features have not even been tested
+   for compatibility. Test well before deploying!
+
+<p>Native FTP proxying differs substantially from proxying HTTP requests with
+   <em>ftp://</em> URIs because Squid works as an FTP server and receives
+   actual FTP commands (rather than HTTP requests with FTP URLs).
+
+<p>FTP Relay highlights:</p>
+
+<itemize>
+    <item>Added ftp_port directive telling Squid to relay native FTP commands.
+    <item>Active and passive FTP support on the user-facing side; require
+	  passive connections to come from the control connection source IP
+	  address.
+    <item>IPv6 support (EPSV and, on the user-facing side, EPRT).
+    <item>Intelligent adaptation of relayed FTP FEAT responses.
+    <item>Relaying of multi-line FTP control responses using various formats.
+    <item>Support relaying of FTP MLSD and MLST commands (RFC 3659).
+    <item>Several Microsoft FTP server compatibility features.
+    <item>ICAP/eCAP support (at individual FTP command/response level).
+    <item>Optional "current FTP directory" tracking with the assistance of
+	  injected (by Squid) PWD commands (cannot be 100% reliable due to
+	  symbolic links and such, but is helpful in some common use cases).
+    <item>No caching support -- no reliable Request URIs for that (see above).
+</itemize>
+
 <sect1>Receive PROXY protocol, Versions 1 & 2
 <p>More info at <url url="http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt">
 
@@ -268,6 +310,22 @@ This section gives a thorough account of those changes in three categories:
          [channel-ID] url [extras]
 	</verb>
 	<p>The default value for extras is: "%>a/%>A %un %>rm myip=%la myport=%lp"
+
+	<tag>ftp_port</tag>
+
+	<p>New configuration directive to accept and relay native FTP
+	   commands. Typically used for port 21 traffic.  By default, native
+	   FTP commands are not accepted.
+
+	<tag>ftp_client_idle_timeout</tag>
+
+	<p>This new configuration directive controls how long Squid should
+	   wait for an FTP request on a connection to an ftp_port.  Many FTP
+	   clients do not deal with idle connection closures well,
+	   necessitating a longer default timeout (30 minutes) than
+	   client_idle_pconn_timeout used for incoming HTTP requests (2
+	   minutes). The current default may be changed as we get more
+	   experience with FTP relaying.
 
 </descrip>
 
