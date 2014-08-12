@@ -5,8 +5,8 @@
 #ifndef SQUID_SERVERS_FTP_SERVER_H
 #define SQUID_SERVERS_FTP_SERVER_H
 
-#include "client_side.h"
 #include "base/Lock.h"
+#include "client_side.h"
 
 namespace Ftp
 {
