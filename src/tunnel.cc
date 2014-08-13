@@ -1116,7 +1116,7 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     TunnelStateData *tunnelState = NULL;
     const char *url = urlCanonical(request);
 
-    debugs(26, 3, HERE << "'" << request->method << " " << url << " " << request->http_ver << "'");
+    debugs(26, 3, request->method << " " << url << " " << request->http_ver);
     ++statCounter.server.all.requests;
     ++statCounter.server.other.requests;
 
@@ -1158,7 +1158,7 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     tunnelState->request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : NULL;
     comm_add_close_handler(srvConn->fd, tunnelServerClosed, tunnelState);
 
-    debugs(26, 4, HERE << "determine post-connect handling pathway.");
+    debugs(26, 4, "determine post-connect handling pathway.");
     if (srvConn->getPeer()) {
         tunnelState->request->peer_login = srvConn->getPeer()->login;
         tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);

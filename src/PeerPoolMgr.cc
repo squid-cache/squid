@@ -23,7 +23,7 @@ CBDATA_CLASS_INIT(PeerPoolMgr);
 #if USE_OPENSSL
 /// Gives Ssl::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
 class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>,
-            public Ssl::PeerConnector::CbDialer
+        public Ssl::PeerConnector::CbDialer
 {
 public:
     MyAnswerDialer(const JobPointer &aJob, Method aMethod):

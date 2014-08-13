@@ -3611,7 +3611,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     // Require both a match and a positive bump mode to work around exceptional
     // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
     if (answer == ACCESS_ALLOWED && (answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice)) {
-        debugs(33, 2, HERE << "sslBump needed for " << connState->clientConnection << " method " << answer.kind);
+        debugs(33, 2, "sslBump needed for " << connState->clientConnection << " method " << answer.kind);
         connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
         httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
@@ -3720,7 +3720,7 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
                     SSL *ssl = fd_table[clientConnection->fd].ssl;
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
                     if (!ret)
-                        debugs(33, 5, HERE << "Failed to set certificates to ssl object for PeekAndSplice mode");
+                        debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
                 } else {
                     SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
                     getSslContextDone(ctx, true);
@@ -3833,23 +3833,23 @@ ConnStateData::getSslContextStart()
 
         // Disable caching for bumpPeekAndSplice mode
         if (!(sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare))) {
-            debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
+            debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
             Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
             SSL_CTX * dynCtx = NULL;
             Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : NULL;
             if (cachedCtx && (dynCtx = cachedCtx->get())) {
-                debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " have found in cache");
+                debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " found in cache");
                 if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
-                    debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is valid");
+                    debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is valid");
                     getSslContextDone(dynCtx);
                     return;
                 } else {
-                    debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
+                    debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
                     if (ssl_ctx_cache)
                         ssl_ctx_cache->del(sslBumpCertKey.termedBuf());
                 }
             } else {
-                debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
+                debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
             }
         }
 
@@ -3876,7 +3876,7 @@ ConnStateData::getSslContextStart()
             doPeekAndSpliceStep();
             SSL *ssl = fd_table[clientConnection->fd].ssl;
             if (!Ssl::configureSSL(ssl, certProperties, *port))
-                debugs(33, 5, HERE << "Failed to set certificates to ssl object for PeekAndSplice mode");
+                debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
         } else {
             SSL_CTX *dynCtx = Ssl::generateSslContext(certProperties, *port);
             getSslContextDone(dynCtx, true);
@@ -3987,7 +3987,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
     ConnStateData *conn = (ConnStateData *)data;
     SSL *ssl = fd_table[fd].ssl;
 
-    debugs(83, 2, "Start peek and splice on " << fd);
+    debugs(83, 5, "Start peek and splice on " << fd);
 
     if (!Squid_SSL_accept(conn, clientPeekAndSpliceSSL))
         debugs(83, 2, "SSL_accept failed.");
@@ -4002,7 +4002,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
                 conn->serverBump()->clientSni = features.serverName.c_str();
         }
 
-        debugs(83, 2, "I got hello. Start forwarding the request!!! ");
+        debugs(83, 5, "I got hello. Start forwarding the request!!! ");
         Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
         Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
         conn->startPeekAndSpliceDone();
@@ -4042,7 +4042,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
     if (!connState->isOpen())
         return;
 
-    debugs(33, 5, HERE << "Answer: " << answer << " kind:" << answer.kind);
+    debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
     if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice) {
         if (answer.kind == Ssl::bumpTerminate)
             comm_close(connState->clientConnection->fd);
@@ -4076,7 +4076,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
                 ret = connState->clientParseRequests();
 
             if (!ret) {
-                debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl spliced connection: " << connState->clientConnection);
+                debugs(33, 2, "Failed to start fake CONNECT request for ssl spliced connection: " << connState->clientConnection);
                 connState->clientConnection->close();
             }
         } else {
@@ -4116,7 +4116,7 @@ ConnStateData::doPeekAndSpliceStep()
     assert(b);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
 
-    debugs(33, 5, HERE << "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
+    debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
     bio->hold(false);
 
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, clientNegotiateSSL, this, 0);
