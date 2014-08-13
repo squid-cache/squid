@@ -2991,7 +2991,7 @@ ConnStateData::parseProxy1p0()
 
         // skip TCP/IP version number
         static const CharacterSet tcpVersions("TCP-version","46");
-        if(!tok.skip(tcpVersions))
+        if(!tok.skipOne(tcpVersions))
             return proxyProtocolError(tok.atEnd() ? "PROXY/1.0 error: missing TCP version" : NULL);
 
         // skip SP after protocol version
@@ -3534,9 +3534,6 @@ ConnStateData::start()
     BodyProducer::start();
     HttpControlMsgSink::start();
 
-    // ensure a buffer is present for this connection
-    in.maybeMakeSpaceAvailable();
-
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
@@ -3552,11 +3549,7 @@ ConnStateData::start()
         }
 #endif
     }
-}
 
-void
-ConnStateData::start()
-{
     // ensure a buffer is present for this connection
     in.maybeMakeSpaceAvailable();
 
