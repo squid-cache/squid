@@ -42,9 +42,7 @@
 #endif
 
 /// \ingroup MemPoolsAPI
-#define MB ((size_t)1024*1024)
-/// \ingroup MemPoolsAPI
-#define toMB(size) ( ((double) size) / MB )
+#define toMB(size) ( ((double) size) / ((double)(1024*1024)) )
 /// \ingroup MemPoolsAPI
 #define toKB(size) ( (size + 1024 - 1) / 1024 )
 
