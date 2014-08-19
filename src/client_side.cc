@@ -3095,7 +3095,9 @@ ConnStateData::parseProxy2p0()
         return proxyProtocolError("PROXY/2.0 error: invalid protocol type");
 
     const char *clen = in.buf.rawContent() + prefixLen + 2;
-    const uint16_t len = ntohs(*(reinterpret_cast<const uint16_t *>(clen)));
+    uint16_t len;
+    memcpy(&len, clen, sizeof(len));
+    len = ntohs(len);
 
     if (in.buf.length() < prefixLen + 4 + len)
         return false; // need more bytes
@@ -3129,24 +3131,25 @@ ConnStateData::parseProxy2p0()
 #endif
     };
 
-    const pax *ipu = reinterpret_cast<const pax*>(extra.rawContent());
+    pax ipu;
+    memcpy(&ipu, extra.rawContent(), sizeof(pax));
 
     // replace the client connection values
     debugs(33, 5, "PROXY/2.0 protocol on connection " << clientConnection);
     switch (family)
     {
     case 0x1: // IPv4
-        clientConnection->local = ipu->ipv4_addr.dst_addr;
-        clientConnection->local.port(ntohs(ipu->ipv4_addr.dst_port));
-        clientConnection->remote = ipu->ipv4_addr.src_addr;
-        clientConnection->remote.port(ntohs(ipu->ipv4_addr.src_port));
+        clientConnection->local = ipu.ipv4_addr.dst_addr;
+        clientConnection->local.port(ntohs(ipu.ipv4_addr.dst_port));
+        clientConnection->remote = ipu.ipv4_addr.src_addr;
+        clientConnection->remote.port(ntohs(ipu.ipv4_addr.src_port));
         clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
         break;
     case 0x2: // IPv6
-        clientConnection->local = ipu->ipv6_addr.dst_addr;
-        clientConnection->local.port(ntohs(ipu->ipv6_addr.dst_port));
-        clientConnection->remote = ipu->ipv6_addr.src_addr;
-        clientConnection->remote.port(ntohs(ipu->ipv6_addr.src_port));
+        clientConnection->local = ipu.ipv6_addr.dst_addr;
+        clientConnection->local.port(ntohs(ipu.ipv6_addr.dst_port));
+        clientConnection->remote = ipu.ipv6_addr.src_addr;
+        clientConnection->remote.port(ntohs(ipu.ipv6_addr.src_port));
         clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
         break;
     default: // do nothing
