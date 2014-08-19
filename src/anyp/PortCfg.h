@@ -24,13 +24,6 @@ public:
     void configureSslServerContext();
 #endif
 
-    /**
-     * Set this ports transport type from a string representation.
-     * Unknown transport type representations will halt Squid.
-     * Supports: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1.
-     */
-    void setTransport(const char *aProtocol);
-
     PortCfgPointer next;
 
     Ip::Address s;
@@ -46,6 +39,8 @@ public:
     bool ignore_cc;          ///< Ignore request Cache-Control directives
 
     bool connection_auth_disabled; ///< Don't support connection oriented auth
+
+    bool ftp_track_dirs; ///< whether transactions should track FTP directories
 
     int vport;               ///< virtual port support. -1 if dynamic, >0 static
     int disable_pmtu_discovery;
@@ -105,6 +100,9 @@ extern AnyP::PortCfgPointer HttpPortList;
 /// list of Squid https_port configured
 extern AnyP::PortCfgPointer HttpsPortList;
 #endif
+
+/// list of Squid ftp_port configured
+extern AnyP::PortCfgPointer FtpPortList;
 
 #if !defined(MAXTCPLISTENPORTS)
 // Max number of TCP listening ports

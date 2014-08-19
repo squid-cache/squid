@@ -108,6 +108,7 @@ public:
         time_t request;
         time_t clientIdlePconn;
         time_t serverIdlePconn;
+        time_t ftpClientIdle;
         time_t siteSelect;
         time_t deadPeer;
         int icp_query;      /* msec */
@@ -243,7 +244,6 @@ public:
     } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
-    wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
     wordlist *dns_nameservers;
     CachePeer *peers;
