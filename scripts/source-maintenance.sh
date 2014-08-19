@@ -139,7 +139,7 @@ for FILENAME in `ls -1`; do
 
     Makefile.am)
 
-    	perl -i -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
+    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
 	mv ${FILENAME}.styled ${FILENAME}
 	;;
 

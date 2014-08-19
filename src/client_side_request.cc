@@ -945,10 +945,8 @@ ClientRequestContext::clientStoreIdStart()
 static int
 clientHierarchical(ClientHttpRequest * http)
 {
-    const char *url = http->uri;
     HttpRequest *request = http->request;
     HttpRequestMethod method = request->method;
-    const wordlist *p = NULL;
 
     // intercepted requests MUST NOT (yet) be sent to peers unless verified
     if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.interceptTproxy))
@@ -974,11 +972,6 @@ clientHierarchical(ClientHttpRequest * http)
 
     if (method != Http::METHOD_GET)
         return 0;
-
-    /* scan hierarchy_stoplist */
-    for (p = Config.hierarchy_stoplist; p; p = p->next)
-        if (strstr(url, p->key))
-            return 0;
 
     if (request->flags.loopDetected)
         return 0;

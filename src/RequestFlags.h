@@ -127,6 +127,8 @@ public:
     bool done_follow_x_forwarded_for :1;
     /** set for ssl-bumped requests */
     bool sslBumped :1;
+    /// carries a representation of an FTP command [received on ftp_port]
+    bool ftpNative :1;
     bool destinationIpLookedUp:1;
     /** request to reset the TCP stream */
     bool resetTcp:1;

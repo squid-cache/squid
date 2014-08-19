@@ -2,6 +2,7 @@
 #define SQUID_HTTP_REGISTEREDHEADERS_H
 
 /// recognized or "known" header fields; and the RFC which defines them (or not)
+/// http://www.iana.org/assignments/message-headers/message-headers.xhtml
 typedef enum {
     HDR_BAD_HDR = -1,
     HDR_ACCEPT = 0,                     /**< RFC 7231 */
@@ -100,6 +101,11 @@ typedef enum {
     HDR_SURROGATE_CAPABILITY,           /**< Edge Side Includes (ESI) header */
     HDR_SURROGATE_CONTROL,              /**< Edge Side Includes (ESI) header */
     HDR_FRONT_END_HTTPS,                /**< MS Exchange custom header we may have to add */
+    HDR_FTP_COMMAND,                    /**< Internal header for FTP command */
+    HDR_FTP_ARGUMENTS,                  /**< Internal header for FTP command arguments */
+    HDR_FTP_PRE,                        /**< Internal header containing leading FTP control response lines */
+    HDR_FTP_STATUS,                     /**< Internal header for FTP reply status */
+    HDR_FTP_REASON,                     /**< Internal header for FTP reply reason */
     HDR_OTHER,                          /**< internal tag value for "unknown" headers */
     HDR_ENUM_END
 } http_hdr_type;
