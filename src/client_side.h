@@ -209,7 +209,6 @@ public:
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
     bool isOpen() const;
-    void checkHeaderLimits();
 
     // HttpControlMsgSink API
     virtual void sendControlMsg(HttpControlMsg msg);
@@ -407,6 +406,11 @@ public:
     /// remove no longer needed leading bytes from the input buffer
     void consumeInput(const size_t byteCount);
 
+    /* TODO: Make the methods below (at least) non-public when possible. */
+
+    /// stop parsing the request and create context for relaying error info
+    ClientSocketContext *abortRequestParsing(const char *const errUri);
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -417,6 +421,8 @@ protected:
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
     /// parse input buffer prefix into a single transfer protocol request
+    /// return NULL to request more header bytes (after checking any limits)
+    /// use abortRequestParsing() to handle parsing errors w/o creating request
     virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
 
     /// start processing a freshly parsed request
