@@ -141,6 +141,24 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
     /* Now the caller reads to get this */
 }
 
+void
+clientReplyContext::setReplyToReply(HttpReply *futureReply)
+{
+    Must(futureReply);
+    http->al->http.code = futureReply->sline.status();
+
+    HttpRequestMethod method;
+    if (http->request) { // nil on responses to unparsable requests
+        http->request->ignoreRange("responding with a Squid-generated reply");
+        method = http->request->method;
+    }
+
+    createStoreEntry(method, RequestFlags());
+
+    http->storeEntry()->storeErrorResponse(futureReply);
+    /* Now the caller reads to get futureReply */
+}
+
 // Assumes that the entry contains an error response without Content-Range.
 // To use with regular entries, make HTTP Range header removal conditional.
 void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry, const char *reason)

@@ -116,9 +116,6 @@ Http::Server::parseOneRequest(Http::ProtocolVersion &ver)
 void
 Http::Server::processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver)
 {
-    /* We have an initial client stream in place should it be needed */
-    /* setup our private context */
-    context->registerWithConn();
     clientProcessRequest(this, &parser_, context, method_, ver);
 }
 
