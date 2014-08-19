@@ -52,6 +52,7 @@
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
 #include "ident/Config.h"
@@ -3565,6 +3566,27 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
     }
 }
 
+/// parses the protocol= option of the *_port directive, returning parsed value
+/// unsupported option values result in a fatal error message
+/// upper case values required; caller may convert for backward compatibility
+static AnyP::ProtocolVersion
+parsePortProtocol(const SBuf &value)
+{
+    // HTTP/1.0 not supported because we are version 1.1 which contains a superset of 1.0
+    // and RFC 2616 requires us to upgrade 1.0 to 1.1
+    if (value.cmp("HTTP") == 0 || value.cmp("HTTP/1.1") == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_HTTP, 1,1);
+
+    if (value.cmp("HTTPS") == 0 || value.cmp("HTTPS/1.1") == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
+
+    if (value.cmp("FTP") == 0)
+        return Ftp::ProtocolVersion();
+
+    fatalf("%s directive does not support protocol=" SQUIDSBUFPH "\n", cfg_directive, SQUIDSBUFPRINT(value));
+    return AnyP::ProtocolVersion(); // not reached
+}
+
 static void
 parse_port_option(AnyP::PortCfgPointer &s, char *token)
 {
@@ -3572,14 +3594,14 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
 
     if (strcmp(token, "accel") == 0) {
         if (s->flags.isIntercepted()) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.accelSurrogate = true;
         s->vhost = true;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": Intercept mode requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.natIntercept = true;
@@ -3589,7 +3611,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
     } else if (strcmp(token, "tproxy") == 0) {
         if (s->flags.natIntercept || s->flags.accelSurrogate) {
-            debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
+            debugs(3,DBG_CRITICAL, "FATAL: " << cfg_directive << ": TPROXY option requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.tproxyIntercept = true;
@@ -3598,61 +3620,61 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 
         if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": TPROXY support in the system does not work.");
             self_destruct();
         }
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: defaultsite option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": defaultsite option requires Acceleration mode flag.");
             self_destruct();
         }
         safe_free(s->defaultsite);
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
+            debugs(3, DBG_CRITICAL, "WARNING: " << cfg_directive << ": vhost option is deprecated. Use 'accel' mode flag instead.");
         }
         s->flags.accelSurrogate = true;
         s->vhost = true;
     } else if (strcmp(token, "no-vhost") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
+            debugs(3, DBG_IMPORTANT, "ERROR: " << cfg_directive << ": no-vhost option requires Acceleration mode flag.");
         }
         s->vhost = false;
     } else if (strcmp(token, "vport") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = -1;
     } else if (strncmp(token, "vport=", 6) == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = xatos(token + 6);
     } else if (strncmp(token, "protocol=", 9) == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": protocol option requires Acceleration mode flag.");
             self_destruct();
         }
-        s->setTransport(token + 9);
+        s->transport = parsePortProtocol(ToUpper(SBuf(token + 9)));
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
         s->allow_direct = true;
     } else if (strcmp(token, "act-as-origin") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
+            debugs(3, DBG_IMPORTANT, "ERROR: " << cfg_directive << ": act-as-origin option requires Acceleration mode flag.");
         } else
             s->actAsOrigin = true;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": ignore-cc option requires Acceleration mode flag.");
             self_destruct();
         }
 #endif
@@ -3679,7 +3701,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
             self_destruct();
     } else if (strcmp(token, "ipv4") == 0) {
         if ( !s->s.setIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used as IPv4-Only. " << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": IPv6 addresses cannot be used as IPv4-Only. " << s->s );
             self_destruct();
         }
     } else if (strcmp(token, "tcpkeepalive") == 0) {
@@ -3701,7 +3723,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
 #if USE_OPENSSL
     } else if (strcmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
-               "in http_port. Use 'ssl-bump' instead.");
+               "in " << cfg_directive << ". Use 'ssl-bump' instead.");
         s->flags.tunnelSslBumping = true;
     } else if (strcmp(token, "ssl-bump") == 0) {
         s->flags.tunnelSslBumping = true;
@@ -3751,8 +3773,10 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
         parseBytesOptionValue(&s->dynamicCertMemCacheSize, B_BYTES_STR, token + 28);
 #endif
+    } else if (strcmp(token, "ftp-track-dirs") == 0) {
+        s->ftp_track_dirs = true;
     } else {
-        debugs(3, DBG_CRITICAL, "FATAL: Unknown http(s)_port option '" << token << "'.");
+        debugs(3, DBG_CRITICAL, "FATAL: Unknown " << cfg_directive << " option '" << token << "'.");
         self_destruct();
     }
 }
@@ -3761,7 +3785,7 @@ void
 add_http_port(char *portspec)
 {
     AnyP::PortCfgPointer s = new AnyP::PortCfg();
-    s->setTransport("HTTP");
+    s->transport = parsePortProtocol(SBuf("HTTP"));
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
@@ -3772,13 +3796,15 @@ add_http_port(char *portspec)
 static void
 parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 {
-    const char *protocol = NULL;
+    SBuf protoName;
     if (strcmp(optionName, "http_port") == 0 ||
             strcmp(optionName, "ascii_port") == 0)
-        protocol = "http";
+        protoName = "HTTP";
     else if (strcmp(optionName, "https_port") == 0)
-        protocol = "https";
-    if (!protocol) {
+        protoName = "HTTPS";
+    else if (strcmp(optionName, "ftp_port") == 0)
+        protoName = "FTP";
+    if (protoName.isEmpty()) {
         self_destruct();
         return;
     }
@@ -3791,7 +3817,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     AnyP::PortCfgPointer s = new AnyP::PortCfg();
-    s->setTransport(protocol);
+    s->transport = parsePortProtocol(protoName); // default; protocol=... overwrites
     parsePortSpecification(s, token);
 
     /* parse options ... */
@@ -3809,6 +3835,12 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         }
         if (hijacked && !s->flags.tunnelSslBumping) {
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
+            self_destruct();
+        }
+    } else if (protoName.cmp("FTP") == 0) {
+        /* ftp_port does not support ssl-bump */
+        if (s->flags.tunnelSslBumping) {
+            debugs(3, DBG_CRITICAL, "FATAL: ssl-bump is not supported for ftp_port.");
             self_destruct();
         }
     }

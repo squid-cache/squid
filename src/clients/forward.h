@@ -1,0 +1,34 @@
+#ifndef SQUID_CLIENTS_FORWARD_H
+#define SQUID_CLIENTS_FORWARD_H
+
+class FwdState;
+class HttpRequest;
+
+class AsyncJob;
+template <class Cbc> class CbcPointer;
+typedef CbcPointer<AsyncJob> AsyncJobPointer;
+
+namespace Ftp
+{
+
+/// A new FTP Gateway job
+AsyncJobPointer StartGateway(FwdState *const fwdState);
+
+/// A new FTP Relay job
+AsyncJobPointer StartRelay(FwdState *const fwdState);
+
+/** Construct an URI with leading / in PATH portion for use by CWD command
+ *  possibly others. FTP encodes absolute paths as beginning with '/'
+ *  after the initial URI path delimiter, which happens to be / itself.
+ *  This makes FTP absolute URI appear as:  ftp:host:port//root/path
+ *  To encompass older software which compacts multiple // to / in transit
+ *  We use standard URI-encoding on the second / making it
+ *  ftp:host:port/%2froot/path  AKA 'the FTP %2f hack'.
+ *
+ * \todo Should be a URL class API call.
+ */
+const char *UrlWith2f(HttpRequest *);
+
+} // namespace Ftp
+
+#endif /* SQUID_CLIENTS_FORWARD_H */

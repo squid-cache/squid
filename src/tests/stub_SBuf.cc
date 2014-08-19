@@ -55,6 +55,6 @@ SBuf::size_type SBuf::rfind(const SBuf &str, size_type endPos) const STUB_RETVAL
 SBuf::size_type SBuf::findFirstOf(const CharacterSet &set, size_type startPos) const STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const STUB_RETVAL(SBuf::npos)
 int SBuf::scanf(const char *format, ...) STUB_RETVAL(-1)
-SBuf SBuf::toLower() const STUB_RETVAL(*this)
-SBuf SBuf::toUpper() const STUB_RETVAL(*this)
+void SBuf::toLower() STUB
+void SBuf::toUpper() STUB
 String SBuf::toString() const STUB_RETVAL(String(""))

@@ -13,6 +13,7 @@ AnyP::PortCfgPointer HttpPortList;
 #if USE_OPENSSL
 AnyP::PortCfgPointer HttpsPortList;
 #endif
+AnyP::PortCfgPointer FtpPortList;
 
 int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
@@ -29,6 +30,7 @@ AnyP::PortCfg::PortCfg() :
         actAsOrigin(false),
         ignore_cc(false),
         connection_auth_disabled(false),
+        ftp_track_dirs(false),
         vport(0),
         disable_pmtu_discovery(0),
         listenConn()
@@ -77,10 +79,12 @@ AnyP::PortCfg::~PortCfg()
 #if USE_OPENSSL
     safe_free(cert);
     safe_free(key);
-    safe_free(options);
     safe_free(cipher);
+    safe_free(options);
+    safe_free(clientca);
     safe_free(cafile);
     safe_free(capath);
+    safe_free(crlfile);
     safe_free(dhfile);
     safe_free(sslflags);
     safe_free(sslContextSessionId);
@@ -103,6 +107,7 @@ AnyP::PortCfg::clone() const
     b->vhost = vhost;
     b->vport = vport;
     b->connection_auth_disabled = connection_auth_disabled;
+    b->ftp_track_dirs = ftp_track_dirs;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
     b->tcp_keepalive = tcp_keepalive;
 
@@ -183,19 +188,3 @@ AnyP::PortCfg::configureSslServerContext()
     }
 }
 #endif
-
-void
-AnyP::PortCfg::setTransport(const char *aProtocol)
-{
-    // HTTP/1.0 not supported because we are version 1.1 which contains a superset of 1.0
-    // and RFC 2616 requires us to upgrade 1.0 to 1.1
-
-    if (strcasecmp("http", aProtocol) == 0 || strcmp("HTTP/1.1", aProtocol) == 0)
-        transport = AnyP::ProtocolVersion(AnyP::PROTO_HTTP, 1,1);
-
-    else if (strcasecmp("https", aProtocol) == 0 || strcmp("HTTPS/1.1", aProtocol) == 0)
-        transport = AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
-
-    else
-        fatalf("http(s)_port protocol=%s is not supported\n", aProtocol);
-}

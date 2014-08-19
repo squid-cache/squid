@@ -46,6 +46,7 @@ class HttpHdrRange;
 class HttpHdrSc;
 class Packer;
 class StoreEntry;
+class SBuf;
 
 /** possible types for http header fields */
 typedef enum {
@@ -193,6 +194,10 @@ private:
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
+
+/// quotes string using RFC 7230 quoted-string rules
+SBuf httpHeaderQuoteString(const char *raw);
+
 int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);

@@ -182,6 +182,9 @@ public:
      */
     SBuf& append(const SBuf & S);
 
+    /// Append a single character. The character may be NUL (\0).
+    SBuf& append(const char c);
+
     /** Append operation for C-style strings.
      *
      * Append the supplied c-string to the SBuf; extend storage
@@ -543,19 +546,11 @@ public:
      */
     int scanf(const char *format, ...);
 
-    /** Lower-case SBuf
-     *
-     * Returns a lower-cased COPY of the SBuf
-     * \see man tolower(3)
-     */
-    SBuf toLower() const;
+    /// converts all characters to lower case; \see man tolower(3)
+    void toLower();
 
-    /** Upper-case SBuf
-     *
-     * Returns an upper-cased COPY of the SBuf
-     * \see man toupper(3)
-     */
-    SBuf toUpper() const;
+    /// converts all characters to upper case; \see man toupper(3)
+    void toUpper();
 
     /** String export function
      * converts the SBuf to a legacy String, by copy.
@@ -626,6 +621,22 @@ inline std::ostream &
 operator <<(std::ostream& os, const SBuf& S)
 {
     return S.print(os);
+}
+
+/// Returns a lower-cased copy of its parameter.
+inline SBuf
+ToUpper(SBuf buf)
+{
+    buf.toUpper();
+    return buf;
+}
+
+/// Returns an upper-cased copy of its parameter.
+inline SBuf
+ToLower(SBuf buf)
+{
+    buf.toLower();
+    return buf;
 }
 
 #endif /* SQUID_SBUF_H */
