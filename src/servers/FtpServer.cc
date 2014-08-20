@@ -591,7 +591,7 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
         errUri = "error:ftp-malformed-command";
         break;
 
-    // no default so that a compiler can check that we have covered all cases
+        // no default so that a compiler can check that we have covered all cases
     }
 
     ClientSocketContext *context = abortRequestParsing(errUri);
@@ -647,8 +647,8 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
     // Why limit command line and parameters size? Did not we just parse them?
     // XXX: Our good old String cannot handle very long strings.
     const SBuf::size_type tokenMax = min(
-        static_cast<SBuf::size_type>(32*1024), // conservative
-        static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
+                                         static_cast<SBuf::size_type>(32*1024), // conservative
+                                         static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
     if (cmd.length() > tokenMax || params.length() > tokenMax) {
         changeState(fssError, "huge req token");
         quitAfterError(NULL);
