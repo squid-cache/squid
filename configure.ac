@@ -1347,11 +1347,8 @@ AC_SUBST(SSLLIB)
 
 dnl User may specify MIT Kerberos is needed from a non-standard location
 AC_ARG_WITH(mit-krb5,
-  AS_HELP_STRING([--with-mit-krb5=PATH],
-		 [Compile with the MIT Kerberos libraries. The path to
-		  the MIT Kerberos development libraries and headers
-		  installation can be specified if outside of the
-                  system standard directories]), [
+  AS_HELP_STRING([--without-mit-krb5],
+		 [Compile without MIT Kerberos support.]), [
 case "$with_mit_krb5" in
   yes|no)
     : # Nothing special to do here
@@ -1375,11 +1372,8 @@ AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 
 dnl User may specify Heimdal Kerberos is needed from a non-standard location
 AC_ARG_WITH(heimdal-krb5,
-  AS_HELP_STRING([--with-heimdal-krb5=PATH],
-		 [Compile with the Heimdal Kerberos libraries. The path to
-		  the Heimdal Kerberos development libraries and headers
-		  installation can be specified if outside of the
-                  system standard directories]), [
+  AS_HELP_STRING([--without-heimdal-krb5],
+		 [Compile without Heimdal Kerberos support.]), [
 case "$with_heimdal_krb5" in
   yes|no)
     : # Nothing special to do here
@@ -1404,11 +1398,8 @@ AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
 
 dnl User may specify GNU gss is needed from a non-standard location
 AC_ARG_WITH(gnugss,
-  AS_HELP_STRING([--with-gnugss=PATH],
-		 [Compile with the GNU gss libraries. The path to
-		  the GNU gss development libraries and headers
-		  installation can be specified if outside of the
-                  system standard directories]), [
+  AS_HELP_STRING([--without-gnugss],
+		 [Compile without the GNU gss libraries.]), [
 case "$with_gnugss" in
   yes|no)
     : # Nothing special to do here
