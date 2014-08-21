@@ -42,13 +42,22 @@
 #include "base64.h"
 #include "util.h"
 
+#if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif
-
-#if !HAVE_HEIMDAL_KERBEROS
+#elif USE_GNUGSS
+#if HAVE_GSS_H
+#include <gss.h>
+#endif
+#else
+#if HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif
 #if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
 #endif

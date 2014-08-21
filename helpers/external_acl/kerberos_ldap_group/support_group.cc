@@ -26,7 +26,7 @@
 #include "squid.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 
@@ -61,10 +61,9 @@ char *
 utf8dup(struct main_args *margs)
 {
     size_t c = 0;
-    unsigned char s;
     size_t n;
     char *src;
-    unsigned char *p, *dupp;
+    unsigned char *p;
 
     src = margs->glist;
     if (!src)
@@ -73,9 +72,11 @@ utf8dup(struct main_args *margs)
         if ((unsigned char) src[n] > 127)
             ++c;
     if (c != 0) {
+        unsigned char *dupp;
         p = (unsigned char *) xmalloc(strlen(src) + c);
         dupp = p;
         for (n = 0; n < strlen(src); ++n) {
+            unsigned char s;
             s = (unsigned char) src[n];
             if (s > 127 && s < 192) {
                 *p = 194;

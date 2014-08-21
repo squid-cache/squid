@@ -98,6 +98,8 @@ public:
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
+    /// Store a prepared error response. MemObject locks the reply object.
+    void storeErrorResponse(HttpReply *reply);
     void replaceHttpReply(HttpReply *, bool andStartWriting = true);
     void startWriting(); ///< pack and write reply headers and, maybe, body
     /// whether we may start writing to disk (now or in the future)

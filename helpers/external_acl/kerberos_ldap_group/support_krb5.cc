@@ -25,13 +25,12 @@
 #include "squid.h"
 #include "util.h"
 
-#if defined(HAVE_LDAP) && defined(HAVE_KRB5)
+#if HAVE_LDAP && HAVE_KRB5
 
 #include "support.h"
 
 struct kstruct {
     krb5_context context;
-    char *mem_cache_env;
     krb5_ccache cc;
 };
 
@@ -115,12 +114,12 @@ krb5_create_cache(char *domain)
 
         principal_list = (krb5_principal *) xrealloc(principal_list, sizeof(krb5_principal) * (nprinc + 1));
         krb5_copy_principal(kparam.context, entry.principal, &principal_list[nprinc++]);
-#ifdef HAVE_HEIMDAL_KERBEROS
+#if USE_HEIMDAL_KRB5
         debug((char *) "%s| %s: DEBUG: Keytab entry has realm name: %s\n", LogTime(), PROGRAM, entry.principal->realm);
 #else
         debug((char *) "%s| %s: DEBUG: Keytab entry has realm name: %s\n", LogTime(), PROGRAM, krb5_princ_realm(kparam.context, entry.principal)->data);
 #endif
-#ifdef HAVE_HEIMDAL_KERBEROS
+#if USE_HEIMDAL_KRB5
         if (!strcasecmp(domain, entry.principal->realm))
 #else
         if (!strcasecmp(domain, krb5_princ_realm(kparam.context, entry.principal)->data))
@@ -134,7 +133,7 @@ krb5_create_cache(char *domain)
                 found = 1;
             }
         }
-#if defined(HAVE_HEIMDAL_KERBEROS) || ( defined(HAVE_KRB5_KT_FREE_ENTRY) && HAVE_DECL_KRB5_KT_FREE_ENTRY==1)
+#if USE_HEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY )
         code = krb5_kt_free_entry(kparam.context, &entry);
 #else
         code = krb5_free_keytab_entry_contents(kparam.context, &entry);
@@ -162,7 +161,7 @@ krb5_create_cache(char *domain)
     /*
      * prepare memory credential cache
      */
-#if  !defined(HAVE_KRB5_MEMORY_CACHE) || defined(HAVE_SUN_LDAP_SDK)
+#if  !HAVE_KRB5_MEMORY_CACHE || HAVE_SUN_LDAP_SDK
     mem_cache = (char *) xmalloc(strlen("FILE:/tmp/squid_ldap_") + 16);
     snprintf(mem_cache, strlen("FILE:/tmp/squid_ldap_") + 16, "FILE:/tmp/squid_ldap_%d", (int) getpid());
 #else
@@ -226,7 +225,7 @@ krb5_create_cache(char *domain)
             }
             if (creds->server)
                 krb5_free_principal(kparam.context, creds->server);
-#ifdef HAVE_HEIMDAL_KERBEROS
+#if USE_HEIMDAL_KRB5
             service = (char *) xmalloc(strlen("krbtgt") + strlen(domain) + strlen(principal_list[i]->realm) + 3);
             snprintf(service, strlen("krbtgt") + strlen(domain) + strlen(principal_list[i]->realm) + 3, "krbtgt/%s@%s", domain, principal_list[i]->realm);
 #else
@@ -260,7 +259,6 @@ loop_end:
 
         }
 
-        safe_free(principal_name);
         if (creds)
             krb5_free_creds(kparam.context, creds);
         creds = NULL;

@@ -3,13 +3,23 @@
 
 #if HAVE_GSSAPI
 
+
+#if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif /* HAVE_GSSAPI_GSSAPI_H/HAVE_GSSAPI_H */
-
-#if !HAVE_HEIMDAL_KERBEROS
+#elif USE_GNUGSS
+#if HAVE_GSS_H
+#include <gss.h>
+#endif
+#else
+#if HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif /* HAVE_GSSAPI_GSSAPI_H/HAVE_GSSAPI_H */
 #if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
 #endif

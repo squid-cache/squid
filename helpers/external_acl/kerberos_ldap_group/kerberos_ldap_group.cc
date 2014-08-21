@@ -34,7 +34,7 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 #include <cctype>
@@ -165,7 +165,6 @@ main(int argc, char *const argv[])
     char *user, *domain, *group;
     char *up=NULL, *dp=NULL, *np=NULL;
     char *nuser, *nuser8 = NULL, *netbios;
-    char *c;
     int opt;
     struct main_args margs;
 
@@ -296,6 +295,7 @@ main(int argc, char *const argv[])
         exit(1);
     }
     while (1) {
+        char *c;
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
             if (ferror(stdin)) {
                 debug((char *) "%s| %s: FATAL: fgets() failed! dying..... errno=%d (%s)\n", LogTime(), PROGRAM, ferror(stdin),
