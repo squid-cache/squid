@@ -355,7 +355,7 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     char **Rids=NULL;
     int l=0;
 
-    ad_data = (krb5_data *)xmalloc(sizeof(krb5_data));
+    ad_data = (krb5_data *)xcalloc(1,sizeof(krb5_data));
 
 #define KERB_LOGON_INFO 1
     ret = krb5_pac_get_buffer(context, pac, KERB_LOGON_INFO, ad_data);

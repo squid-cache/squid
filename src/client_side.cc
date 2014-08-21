@@ -199,7 +199,6 @@ static IOACB httpAccept;
 static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
-static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -1908,17 +1907,15 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
     }
 }
 
-static ClientSocketContext *
-parseHttpRequestAbort(ConnStateData * csd, const char *uri)
+ClientSocketContext *
+ConnStateData::abortRequestParsing(const char *const uri)
 {
-    ClientHttpRequest *http;
-    ClientSocketContext *context;
-    StoreIOBuffer tempBuffer;
-    http = new ClientHttpRequest(csd);
-    http->req_sz = csd->in.buf.length();
+    ClientHttpRequest *http = new ClientHttpRequest(this);
+    http->req_sz = in.buf.length();
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    context = new ClientSocketContext(csd->clientConnection, http);
+    ClientSocketContext *context = new ClientSocketContext(clientConnection, http);
+    StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
@@ -2072,7 +2069,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
     // reject URI which are not well-formed even after the processing above
     if (url[0] != '/') {
         hp->request_parse_status = Http::scBadRequest;
-        return parseHttpRequestAbort(conn, "error:invalid-request");
+        return conn->abortRequestParsing("error:invalid-request");
     }
 #endif
 
@@ -2189,9 +2186,9 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 
         if (!parsedOk) {
             if (hp->request_parse_status == Http::scHeaderTooLarge)
-                return parseHttpRequestAbort(csd, "error:request-too-large");
+                return csd->abortRequestParsing("error:request-too-large");
 
-            return parseHttpRequestAbort(csd, "error:invalid-request");
+            return csd->abortRequestParsing("error:invalid-request");
         }
     }
 
@@ -2207,13 +2204,13 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->transport.protocol << " Accelerator port " << csd->port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->request_parse_status = Http::scMethodNotAllowed;
-        return parseHttpRequestAbort(csd, "error:method-not-allowed");
+        return csd->abortRequestParsing("error:method-not-allowed");
     }
 
     if (hp->method() == Http::METHOD_NONE) {
         debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->request_parse_status = Http::scMethodNotAllowed;
-        return parseHttpRequestAbort(csd, "error:unsupported-request-method");
+        return csd->abortRequestParsing("error:unsupported-request-method");
     }
 
     // Process headers after request line
@@ -2792,8 +2789,8 @@ ConnStateData::concurrentRequestQueueFilled() const
 
 /**
  * Attempt to parse one or more requests from the input buffer.
- * If a request is successfully parsed, even if the next request
- * is only partially parsed, it will return TRUE.
+ * Returns true after completing parsing of at least one request [header]. That
+ * includes cases where parsing ended with an error (e.g., a huge request).
  */
 bool
 ConnStateData::clientParseRequests()
@@ -2814,14 +2811,14 @@ ConnStateData::clientParseRequests()
         if (concurrentRequestQueueFilled())
             break;
 
-        ClientSocketContext *context = parseOneRequest();
+        if (ClientSocketContext *context = parseOneRequest()) {
+            debugs(33, 5, clientConnection << ": done parsing a request");
 
-        /* status -1 or 1 */
-        if (context) {
-            debugs(33, 5, HERE << clientConnection << ": parsed a request");
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
+
+            context->registerWithConn();
 
             processParsedRequest(context);
 
@@ -2831,6 +2828,11 @@ ConnStateData::clientParseRequests()
                 debugs(33, 3, HERE << "Not parsing new requests, as this request may need the connection");
                 break;
             }
+        } else {
+            debugs(33, 5, clientConnection << ": not enough request data: " <<
+                   in.buf.length() << " < " << Config.maxRequestHeaderSize);
+            Must(in.buf.length() < Config.maxRequestHeaderSize);
+            break;
         }
         else // incomplete parse, wait for more data
             break;

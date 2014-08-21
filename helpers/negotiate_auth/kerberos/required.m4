@@ -1,2 +1,3 @@
-# FIXME: use other kerberos library checks from main configure.ac
-AC_CHECK_HEADERS([gssapi/gssapi.h gssapi.h kerberosV/gssapi.h],[BUILD_HELPER="kerberos"])
+if test "x$with_krb5" == "xyes"; then
+  BUILD_HELPER="kerberos"
+fi
