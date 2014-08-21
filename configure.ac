@@ -1345,6 +1345,684 @@ AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} $
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
+dnl User may specify MIT Kerberos is needed from a non-standard location
+AC_ARG_WITH(mit-krb5,
+  AS_HELP_STRING([--with-mit-krb5=PATH],
+		 [Compile with the MIT Kerberos libraries. The path to
+		  the MIT Kerberos development libraries and headers
+		  installation can be specified if outside of the
+                  system standard directories]), [
+case "$with_mit_krb5" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-mit-krb5 path does not point to a directory])
+    fi
+    if test -d "$with_mit_krb5/lib64" ; then
+      LIB_KRB5_PATH="-L$with_mit_krb5/lib64 -L$with_mit_krb5/lib"
+    else
+      LIB_KRB5_PATH="-L$with_mit_krb5/lib"
+    fi
+    CXXFLAGS="-I$with_mit_krb5/include $CXXFLAGS"
+    krb5confpath="$with_mit_krb5/bin"
+    with_mit_krb5=yes
+esac
+])
+AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
+AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
+
+dnl User may specify Heimdal Kerberos is needed from a non-standard location
+AC_ARG_WITH(heimdal-krb5,
+  AS_HELP_STRING([--with-heimdal-krb5=PATH],
+		 [Compile with the Heimdal Kerberos libraries. The path to
+		  the Heimdal Kerberos development libraries and headers
+		  installation can be specified if outside of the
+                  system standard directories]), [
+case "$with_heimdal_krb5" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-heimdal-krb5 path does not point to a directory])
+    fi
+    if test -d "$with_heimdal_krb5/lib64" ; then
+      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib64 -L$with_heimdal_krb5/lib"
+    else 
+      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib"
+    fi
+    CXXFLAGS="-I$with_heimdal_krb5/include $CXXFLAGS"
+    krb5confpath="$with_heimdal_krb5/bin"
+    with_heimdal_krb5=yes
+esac
+])
+AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
+
+
+
+dnl User may specify GNU gss is needed from a non-standard location
+AC_ARG_WITH(gnugss,
+  AS_HELP_STRING([--with-gnugss=PATH],
+		 [Compile with the GNU gss libraries. The path to
+		  the GNU gss development libraries and headers
+		  installation can be specified if outside of the
+                  system standard directories]), [
+case "$with_gnugss" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-gnugss path does not point to a directory])
+    fi
+    if test ! -d "$with_gnugss/lib64" ; then
+      LIB_KRB5_PATH="-L$with_gnugss/lib64 -L$with_gnugss/lib"
+    else
+      LIB_KRB5_PATH="-L$with_gnugss/lib"
+    fi
+    CXXFLAGS="-I$with_gnugss/include $CXXFLAGS"
+    krb5confpath=
+    with_gnugss=yes
+esac
+])
+AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
+
+# determine krb5 conflicts
+ac_with_krb5_count=0
+if test "x$with_mit_krb5" = "xyes"; then
+ ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
+fi
+if test "x$with_heimdal_krb5" = "xyes"; then
+ ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
+fi
+if test "x$with_gnugss" = "xyes"; then
+ ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
+fi
+
+if test $ac_with_krb5_count -gt 1 ; then
+  AC_MSG_ERROR([Please choose only one Kerberos library.])
+elif test $ac_with_krb5_count -eq 0 ; then
+  # find installed libs via pkg-config or krb5-config
+  PKG_CHECK_EXISTS(gssapi-krb5 krb5, [with_mit_krb5=yes])
+  PKG_CHECK_EXISTS(heimdal-gssapi, [with_heimdal_krb5=yes])
+  PKG_CHECK_EXISTS(gss, [with_gnugss=yes])
+  if test "x$with_mit_krb5" = "xyes"; then
+    ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
+  fi
+  if test "x$with_heimdal_krb5" = "xyes"; then
+    ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
+  fi
+  if test "x$with_gnugss" = "xyes"; then
+    ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
+  fi
+  if test $ac_with_krb5_count -gt 1 ; then
+    AC_MSG_ERROR([pkg-config found multiple Kerberos library. Please select one with --with-<kerberos package>])
+  elif test $ac_with_krb5_count -eq 0 ; then
+    # Look for krb5-config
+    AC_PATH_PROG(krb5_config,krb5-config,no)
+    if test "x$ac_cv_path_krb5_config" != "xno" ; then
+      krb5confpath="`dirname $ac_cv_path_krb5_config`"
+      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
+      ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
+      if test $ac_heimdal -gt 0 ; then
+	with_heimdal_krb5=yes
+        ac_with_krb5_count=1
+      fi
+      if test $ac_solaris -gt 0 ; then
+	with_solaris_krb5=yes
+        ac_with_krb5_count=1
+      fi
+      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 ; then
+	with_mit_krb5=yes
+        ac_with_krb5_count=1
+      fi
+    else
+      AC_MSG_ERROR([Could not find krb5-config in path])
+    fi
+  fi
+fi
+
+if test "x$with_mit_krb5" = "xyes"; then
+  SQUID_STATE_SAVE([squid_krb5_save])
+  LIBS="$LIBS $LIB_KRB5_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIB_KRB5],[gssapi-krb5 krb5],,[
+    # look for krb5-config
+    if test "x$krb5confpath" = "x" ; then
+      AC_PATH_PROG(krb5_config,krb5-config,no)
+      if test "x$ac_cv_path_krb5_config" != "xno" ; then
+        ac_krb5_config="$ac_cv_path_krb5_config"
+      fi
+    else
+      ac_krb5_config="$krb5confpath/krb5-config"
+    fi
+    if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
+      # Get libs, etc
+      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
+      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
+      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
+      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
+      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
+    else
+      ## For some OS pkg-config is broken or unavailable.
+      ## Detect libraries the hard way.
+
+      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
+      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'com_err' is required for MIT Kerberos])
+      ])
+      AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'k5crypto' is required for MIT Kerberos])
+      ])
+      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'krb5' is required for MIT Kerberos])
+      ])
+      AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'gssapi_krb5' is required for MIT Kerberos])
+      ])
+    fi
+
+  ])
+
+  if test "x$LIB_KRB5_LIBS" != "x"; then
+    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
+    KRB5INCS="$LIB_KRB5_CFLAGS"
+    AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
+    KRB5_FLAVOUR="MIT" 
+    
+    # check for other specific broken implementations
+    CXXFLAGS="$CXXFLAGS $KRB5INCS"
+    LIBS="$LIBS $KRB5LIBS"
+
+    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+    AC_CHECK_HEADERS(profile.h)
+
+    if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
+      AC_CHECK_LIB(com_err,error_message,
+        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+          [Define to 1 if you have error_message]),)
+    elif test  "x$ac_com_error_message" = "xyes" ; then
+      AC_CHECK_LIB(krb5,error_message,
+        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+          [Define to 1 if you have error_message]),)
+    fi
+
+    SQUID_CHECK_KRB5_FUNCS
+
+  fi
+  if test "x$KRB5LIBS" = "x"; then
+    AC_MSG_ERROR([Required Kerberos library not found])
+    ac_with_krb5_count=0
+  fi
+
+  SQUID_STATE_ROLLBACK([squid_krb5_save])
+fi
+
+if test "x$with_solaris_krb5" = "xyes"; then
+  SQUID_STATE_SAVE([squid_krb5_save])
+  LIBS="$LIBS $LIB_KRB5_PATH"
+
+  # no pkg-config for solaris native Kerberos
+  # look for krb5-config
+  if test "x$krb5confpath" = "x" ; then
+    AC_PATH_PROG(krb5_config,krb5-config,no)
+    if test "x$ac_cv_path_krb5_config" != "xno" ; then
+      ac_krb5_config="$ac_cv_path_krb5_config"
+    fi
+  else
+    ac_krb5_config="$krb5confpath/krb5-config"
+  fi
+  if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
+    # Get libs, etc
+    AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
+    LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
+    LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
+    LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
+    LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
+  else
+    ## For some OS pkg-config is broken or unavailable.
+    ## Detect libraries the hard way.
+
+    CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
+
+    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
+    AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
+      AC_MSG_ERROR([library 'krb5' is required for Solaris Kerberos])
+    ])
+    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
+      AC_MSG_ERROR([library 'gss' is required for Solaris Kerberos])
+    ])
+  fi
+
+  if test "x$LIB_KRB5_LIBS" != "x"; then
+    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
+    KRB5INCS="$LIB_KRB5_CFLAGS"
+    AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
+    KRB5_FLAVOUR="Solaris" 
+    
+    # check for other specific broken implementations
+    CXXFLAGS="$CXXFLAGS $KRB5INCS"
+    LIBS="$LIBS $KRB5LIBS"
+
+    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
+    AC_CHECK_HEADERS(gssapi/gssapi.h gssapi/gssapi_ext.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h)
+
+    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
+    if test "x$squid_cv_broken_krb5_h" = "xyes"; then
+      AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
+      AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
+      AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
+      AC_MSG_WARN([If you need Kerberos support you will have to patch])
+      AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+    fi
+
+    SQUID_CHECK_KRB5_FUNCS
+
+  fi
+  if test "x$KRB5LIBS" = "x"; then
+    AC_MSG_ERROR([Required Kerberos library not found])
+    ac_with_krb5_count=0
+  fi
+
+  SQUID_STATE_ROLLBACK([squid_krb5_save])
+fi
+
+if test "x$with_heimdal_krb5" = "xyes"; then
+  SQUID_STATE_SAVE([squid_krb5_save])
+  LIBS="$LIBS $LIB_KRB5_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIB_KRB5],[heimdal-gssapi],,[
+    # look for krb5-config
+    if test "x$krb5confpath" = "x" ; then
+      AC_PATH_PROG(krb5_config,krb5-config,no)
+      if test "x$ac_cv_path_krb5_config" != "xno" ; then
+        ac_krb5_config="$ac_cv_path_krb5_config"
+      fi
+    else
+      ac_krb5_config="$krb5confpath/krb5-config"
+    fi
+    if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
+      # Get libs, etc
+      AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
+      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
+      LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
+      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
+      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
+    else
+      ## For some OS pkg-config is broken or unavailable.
+      ## Detect libraries the hard way.
+
+      AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
+      AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'resolv' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'crypt' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'roken' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
+        AC_MSG_WARN([library 'heimbase' may be required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(wind, [main], [LIB_KRB5_LIBS="-lwind $LIB_KRB5_LIBS"],[
+        AC_MSG_WARN([library 'wind' may be required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'crypto' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'com_err' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
+        AC_MSG_WARN([library 'hx509' may be required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'asn1' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'krb5' is required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
+        AC_MSG_WARN([library 'heimntlm' may be required for Heimdal Kerberos])
+      ])
+      AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
+        AC_MSG_ERROR([library 'gssapi' is required for Heimdal Kerberos])
+      ])
+    fi
+
+  ])
+  if test "x$LIB_KRB5_LIBS" != "x"; then
+    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
+    KRB5INCS="$LIB_KRB5_CFLAGS"
+    AC_DEFINE(USE_HEIMDAL_KRB5,1,[Heimdal Kerberos support is available])
+    KRB5_FLAVOUR="Heimdal" 
+    
+    # check for other specific broken implementations
+    CXXFLAGS="$CXXFLAGS $KRB5INCS"
+    LIBS="$LIBS $KRB5LIBS"
+
+    AC_MSG_NOTICE([Try to find Kerberos headers in given path])
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+
+    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+    if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
+      AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
+    fi
+
+    if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
+      AC_CHECK_LIB(com_err,error_message,
+        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+          [Define to 1 if you have error_message]),)
+    elif test  "x$ac_com_error_message" = "xyes" ; then
+      AC_CHECK_LIB(krb5,error_message,
+        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+          [Define to 1 if you have error_message]),)
+    fi
+
+    SQUID_CHECK_KRB5_FUNCS
+
+  fi
+  if test "x$KRB5LIBS" = "x"; then
+    AC_MSG_ERROR([Required Kerberos library not found])
+    ac_with_krb5_count=0
+  fi
+
+  SQUID_STATE_ROLLBACK([squid_krb5_save])
+fi
+
+if test "x$with_gnugss" = "xyes"; then
+  SQUID_STATE_SAVE([squid_krb5_save])
+  LIBS="$LIBS $LIB_KRB5_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIB_KRB5],[gss],,[
+    ## For some OS pkg-config is broken or unavailable.
+    ## Detect libraries the hard way.
+
+    AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
+    AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
+      AC_MSG_ERROR([library 'com_err' is required for GNU Kerberos])
+    ])
+
+  ])
+
+  if test "x$LIB_KRB5_LIBS" != "x"; then
+    KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
+    KRB5INCS="$LIB_KRB5_CFLAGS"
+    AC_DEFINE(USE_GNUGSS,1,[GNU Kerberos support is available])
+    KRB5_FLAVOUR="GNU GSS" 
+
+    # check for other specific broken implementations
+    CXXFLAGS="$CXXFLAGS $KRB5INCS"
+    LIBS="$LIBS $KRB5LIBS"
+
+    AC_MSG_NOTICE([Try to find Kerbeors headers in given path])
+    AC_CHECK_HEADERS(gss.h)
+
+    SQUID_CHECK_WORKING_GSSAPI
+    SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
+
+    SQUID_CHECK_SPNEGO_SUPPORT
+    SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
+
+    SQUID_CHECK_WORKING_KRB5
+    SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
+
+  fi
+  if test "x$KRB5LIBS" = "x"; then
+    AC_MSG_ERROR([Required Kerberos library not found])
+    ac_with_krb5_count=0
+  fi
+
+  SQUID_STATE_ROLLBACK([squid_krb5_save])
+fi
+if test $ac_with_krb5_count -gt 0 ; then
+  with_krb5=yes
+fi
+AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KRB5_PATH} ${LIB_KRB5_LIBS}])
+AC_SUBST(KRB5INCS)
+AC_SUBST(KRB5LIBS)
+AM_CONDITIONAL(HAVE_SPNEGO, test x"$squid_cv_have_spnego" = x"yes" )
+
+dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked 
+dnl only with Windows LDAP libraries using -lwldap32
+case "$squid_host_os" in
+	mingw)
+		LDAPLIB="-lwldap32"
+		LBERLIB=""
+		;;
+	*)
+		AC_CHECK_LIB(ldap, ldap_init, [LDAPLIB="-lldap"])
+		dnl LDAP helpers need to know if -llber is needed or not
+		AC_CHECK_LIB(lber, ber_init, [LBERLIB="-llber"])
+		dnl if no ldap lib found check for mozilla version
+		if test "x$ac_cv_lib_ldap_ldap_init" != x""yes; then
+		        oLIBS=$LIBS
+		        LIBS="$LIBPTHREADS"
+			AC_CHECK_LIB(ldap60, ldap_init, [LDAPLIB="-lldap60"])
+		        LIBS="$LDAPLIB $LIBPTHREADS"
+			AC_CHECK_LIB(prldap60, prldap_init, [LDAPLIB="-lprldap60 $LDAPLIB"])
+		        LIBS="$LDAPLIB $LIBPTHREADS"
+			AC_CHECK_LIB(ssldap60, ldapssl_init, [LDAPLIB="-lssldap60 $LDAPLIB"])
+		        LIBS=$oLIBS
+		fi
+
+		AC_CHECK_HEADERS(ldap.h lber.h)
+		AC_CHECK_HEADERS(mozldap/ldap.h)
+
+		dnl
+		dnl Check for LDAP_OPT_DEBUG_LEVEL
+		dnl
+		AC_MSG_CHECKING([for LDAP_OPT_DEBUG_LEVEL])
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   include <ldap.h>
+		]],[[
+                    int i=LDAP_OPT_DEBUG_LEVEL
+		]])],
+		[ AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for working ldap
+		dnl
+		oLIBS=$LIBS
+		LIBS="$LDAPLIB $LBERLIB $LIBPTHREADS"
+		AC_MSG_CHECKING([for working ldap])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   define  LDAP_DEPRECATED 1
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                    int
+                    main(void)
+                    {
+                        char host[]="";
+                        int port;
+
+                        ldap_init((const char *)&host, port);
+
+                        return 0;
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_LDAP, 1, [LDAP support]) 
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
+		LIBS=$oLIBS
+
+		dnl
+		dnl Check for ldap vendor
+		dnl
+		AC_MSG_CHECKING([for OpenLDAP])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   endif
+#                   include <string.h>
+                    int
+                    main(void)
+                    {
+                        return strcmp(LDAP_VENDOR_NAME,"OpenLDAP");
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support]) 
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
+
+		AC_MSG_CHECKING([for Sun LDAP SDK])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   endif
+#                   include <string.h>
+                    int
+                    main(void)
+                    {
+                        return strcmp(LDAP_VENDOR_NAME,"Sun Microsystems Inc.");
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_SUN_LDAP_SDK, 1, [Sun LDAP SDK support])
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
+
+		AC_MSG_CHECKING([for Mozilla LDAP SDK])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+#                   include <string.h>
+                    int
+                    main(void)
+                    {
+                        return strcmp(LDAP_VENDOR_NAME,"mozilla.org");
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_MOZILLA_LDAP_SDK, 1, [Mozilla LDAP SDK support])
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no)],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
+
+		dnl
+		dnl Check for LDAP_REBINDPROC_CALLBACK
+		dnl
+                AC_MSG_CHECKING([for LDAP_REBINDPROC_CALLBACK])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    LDAP_REBINDPROC_CALLBACK ldap_rebind;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_REBINDPROC_CALLBACK,1,[Define to 1 if you have LDAP_REBINDPROC_CALLBACK])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for LDAP_REBIND_PROC
+		dnl
+                AC_MSG_CHECKING([for LDAP_REBIND_PROC])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    LDAP_REBIND_PROC ldap_rebind;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_REBIND_PROC,1,[Define to 1 if you have LDAP_REBIND_PROC])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for LDAP_REBIND_FUNCTION
+		dnl
+                AC_MSG_CHECKING([for LDAP_REBIND_FUNCTION])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   define LDAP_REFERRALS
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    LDAP_REBIND_FUNCTION ldap_rebind;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_REBIND_FUNCTION,1,[Define to 1 if you have LDAP_REBIND_FUNCTION])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for LDAP_SCOPE_DEFAULT
+		dnl
+                AC_MSG_CHECKING([for LDAP_SCOPE_DEFAULT])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    int i=LDAP_SCOPE_DEFAULT;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_SCOPE_DEFAULT,1,[Define to 1 if you have LDAP_SCOPE_DEFAULT])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for ldap_url_desc.lud_scheme
+		dnl
+		AC_CHECK_MEMBER(struct ldap_url_desc.lud_scheme,
+		  AC_DEFINE(HAVE_LDAP_URL_LUD_SCHEME,1,
+		    [Define to 1 if you have LDAPURLDesc.lud_scheme]),,[#include <ldap.h>])
+
+		dnl
+		dnl Check for ldapssl_client_init
+		dnl
+		AC_CHECK_LIB(ldap,ldapssl_client_init,
+		  AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init]),)
+
+		dnl
+		dnl Check for ldap_url_desc2str
+		dnl
+		AC_CHECK_LIB(ldap,ldap_url_desc2str,
+		  AC_DEFINE(HAVE_LDAP_URL_DESC2STR,1,[Define to 1 if you have ldap_url_desc2str]),)
+
+		dnl
+		dnl Check for ldap_url_parse
+		dnl
+		AC_CHECK_LIB(ldap,ldap_url_parse,
+		  AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse]),)
+
+		dnl
+		dnl Check for ldap_start_tls_s
+		dnl
+		AC_CHECK_LIB(ldap,ldap_start_tls_s,
+		  AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s]),)
+		;;
+esac
+
+AC_SUBST(LDAPLIB)
+AC_SUBST(LBERLIB)
+
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
   SQUID_YESNO([$enableval],[unrecognized argument to --enable-forw-via-db: $enableval])
@@ -1839,172 +2517,6 @@ AC_ARG_ENABLE(log-daemon-helpers,
 #nothing to do, really
 ])
 m4_include([helpers/log_daemon/modules.m4])
-
-dnl
-dnl Check Kerberos/GSSAPI/SPNEGO
-dnl
-SQUID_STATE_SAVE([krbsave])
-
-AC_ARG_WITH(krb5-config,
-  AS_HELP_STRING([--with-krb5-config=PATH],
-                 [specify path to krb5-config (default=detect)]), [
-case "$withval" in
-  yes) unset krb5confpath ;;
-  no)  krb5confpath=no ;;
-  *)   krb5confpath=$withval ;;
-esac
-])
-if test x"$krb5confpath" != "xno"; then
-    if test "x$krb5confpath" != "x"; then
-        if ! test -x "$krb5confpath"; then
-            AC_MSG_WARN([krb5-config '$krb5confpath' not executable, ignoring])
-            AC_CHECK_PROG(ac_krb5_config, krb5-config, yes, no)
-            krb5confpath=krb5-config
-        fi
-        krb5_config_path=`dirname $krb5confpath`
-        AC_CHECK_PROG(ac_krb5_config, krb5-config, yes, no, $krb5_config_path)
-    else
-    AC_CHECK_PROG(ac_krb5_config,krb5-config,yes,no)
-        krb5confpath=krb5-config
-    fi
-fi
-if test "x$ac_krb5_config" = "xyes" ; then
-  ac_heimdal="`$krb5confpath --version 2>/dev/null | grep -i heimdal`"
-  ac_solaris="`$krb5confpath --version 2>/dev/null | grep -i solaris`"
-  if test "x$ac_heimdal" != "x" ; then
-    AC_DEFINE(HAVE_HEIMDAL_KERBEROS,1,[Define to 1 if you have Heimdal Kerberos])
-  else
-    AC_DEFINE(HAVE_MIT_KERBEROS,1,[Define to 1 if you have MIT Kerberos])
-  fi
-  if test "x$ac_solaris" != "x" ; then
-    KRB5INCS="`$krb5confpath --cflags krb5 2>/dev/null`"
-    KRB5LIBS="`$krb5confpath --libs krb5 2>/dev/null`"
-    KRB5INCS="-I/usr/include/gssapi $KRB5INCS"
-    KRB5LIBS="-L/usr/lib -R/usr/lib -lgss -lresolv -lsocket -lnsl $KRB5LIBS"
-  else
-    KRB5INCS="`$krb5confpath --cflags krb5 2>/dev/null`"
-    KRB5LIBS="`$krb5confpath --libs krb5 2>/dev/null`"
-    KRB5INCS="`$krb5confpath --cflags gssapi 2>/dev/null` $KRB5INCS"
-    KRB5LIBS="`$krb5confpath --libs gssapi 2>/dev/null` $KRB5LIBS"
-  fi
-  CPPFLAGS="$CPPFLAGS $KRB5INCS"
-  LIBS="$LIBS $KRB5LIBS"
-  AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
-  if test "x$ac_heimdal" = "x" ; then
-    AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
-    AC_CHECK_HEADERS(profile.h)
-  fi
-
-  SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-  if test "x$squid_cv_broken_krb5_h" = "xyes"; then
-    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
-    AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-    AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-    AC_MSG_WARN([If you need Kerberos support you'll have to patch])
-    AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
-  fi
-  SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-  if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
-    AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-  fi
-  AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-
-  ac_com_error_message=no
-  if test "x$ac_cv_header_com_err_h" = "xyes" ; then
-      AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)
-  elif test "x$ac_cv_header_et_com_err_h" = "xyes" ; then
-      AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
-  fi
-
-  SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT
-  if test "x$squid_cv_max_skew_context" = "xyes"; then
-    AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT, 1, [Define to 1 if max_skew in struct krb5_context])
-  fi
-
-  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
-    AC_CHECK_LIB(com_err,error_message,
-      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-        [Define to 1 if you have error_message]),)
-  elif test  "x$ac_com_error_message" = "xyes" ; then
-    AC_CHECK_LIB(krb5,error_message,
-      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-        [Define to 1 if you have error_message]),)
-  fi
-  AC_CHECK_LIB(krb5,krb5_get_err_text,
-    AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,
-      [Define to 1 if you have krb5_get_err_text]),)
-  AC_CHECK_LIB(krb5,krb5_get_error_message,
-    AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
-      [Define to 1 if you have krb5_get_error_message]),)
-  AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
-  AC_CHECK_TYPE(krb5_pac,
-    AC_DEFINE(HAVE_KRB5_PAC,1,
-      [Define to 1 if you have krb5_pac]),,
-      [#include <krb5.h>])
-  AC_CHECK_LIB(krb5,krb5_kt_free_entry,
-    AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
-      [Define to 1 if you have krb5_kt_free_entry]),)
-  AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
-    AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,
-      [Define to 1 if you have krb5_get_init_creds_keytab]),)
-  AC_CHECK_LIB(krb5,krb5_get_max_time_skew,
-    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,
-      [Define to 1 if you have krb5_get_max_time_skew]),)
-  AC_CHECK_LIB(krb5,krb5_get_profile,
-    AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,
-      [Define to 1 if you have krb5_get_profile]),)
-  AC_CHECK_LIB(krb5,profile_get_integer,
-    AC_DEFINE(HAVE_PROFILE_GET_INTEGER,1,
-      [Define to 1 if you have profile_get_integer]),)
-  AC_CHECK_LIB(krb5,profile_release,
-    AC_DEFINE(HAVE_PROFILE_RELEASE,1,
-      [Define to 1 if you have profile_release]),)
-  AC_CHECK_LIB(krb5,krb5_get_renewed_creds,
-    AC_DEFINE(HAVE_KRB5_GET_RENEWED_CREDS,1,
-      [Define to 1 if you have krb5_get_renewed_creds]),)
-  AC_CHECK_LIB(krb5,krb5_principal_get_realm,
-    AC_DEFINE(HAVE_KRB5_PRINCIPAL_GET_REALM,1,
-      [Define to 1 if you have krb5_principal_get_realm]),)
-  AC_CHECK_LIB(krb5, krb5_get_init_creds_opt_alloc,
-    AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
-      [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
-  AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-	#include <krb5.h>
-    ]],[[krb5_context context;
-	 krb5_get_init_creds_opt *options;
-	 krb5_get_init_creds_opt_free(context, options)]])],[
-	AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,
-		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
-	AC_MSG_RESULT(yes)
-    ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
-
-
-  AC_CHECK_FUNCS(gss_map_name_to_any,
-    AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
-      [Define to 1 if you have gss_map_name_to_any]),)
-  AC_CHECK_FUNCS(gsskrb5_extract_authz_data_from_sec_context,
-    AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
-      [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
-
-  SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
-  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
-       [Define if kerberos has MEMORY: cache support])
-
-  SQUID_CHECK_WORKING_GSSAPI
-  SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
-
-  SQUID_CHECK_SPNEGO_SUPPORT
-  SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
-
-  SQUID_CHECK_WORKING_KRB5
-  SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-
-  AC_SUBST(KRB5INCS)
-  AC_SUBST(KRB5LIBS)
-fi
-SQUID_STATE_ROLLBACK([krbsave])
-AM_CONDITIONAL(HAVE_SPNEGO, test x"$squid_cv_have_spnego" = x"yes" )
 
 AC_ARG_ENABLE(external-acl-helpers,
   AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
@@ -2633,235 +3145,6 @@ case "$host" in
 		AC_CHECK_LIB(intl, strftime)
 		;;
 esac
-
-dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked 
-dnl only with Windows LDAP libraries using -lwldap32
-case "$squid_host_os" in
-	mingw)
-		LDAPLIB="-lwldap32"
-		LBERLIB=""
-		;;
-	*)
-		AC_CHECK_LIB(ldap, ldap_init, [LDAPLIB="-lldap"])
-		dnl LDAP helpers need to know if -llber is needed or not
-		AC_CHECK_LIB(lber, ber_init, [LBERLIB="-llber"])
-		dnl if no ldap lib found check for mozilla version
-		if test "x$ac_cv_lib_ldap_ldap_init" != x""yes; then
-		        oLIBS=$LIBS
-		        LIBS="$LIBPTHREADS"
-			AC_CHECK_LIB(ldap60, ldap_init, [LDAPLIB="-lldap60"])
-		        LIBS="$LDAPLIB $LIBPTHREADS"
-			AC_CHECK_LIB(prldap60, prldap_init, [LDAPLIB="-lprldap60 $LDAPLIB"])
-		        LIBS="$LDAPLIB $LIBPTHREADS"
-			AC_CHECK_LIB(ssldap60, ldapssl_init, [LDAPLIB="-lssldap60 $LDAPLIB"])
-		        LIBS=$oLIBS
-		fi
-
-		AC_CHECK_HEADERS(ldap.h lber.h)
-		AC_CHECK_HEADERS(mozldap/ldap.h)
-
-		dnl
-		dnl Check for LDAP_OPT_DEBUG_LEVEL
-		dnl
-		AC_MSG_CHECKING([for LDAP_OPT_DEBUG_LEVEL])
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#                   include <ldap.h>
-		]],[[
-                    int i=LDAP_OPT_DEBUG_LEVEL
-		]])],
-		[ AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ])
-
-		dnl
-		dnl Check for working ldap
-		dnl
-		oLIBS=$LIBS
-		LIBS="$LDAPLIB $LBERLIB $LIBPTHREADS"
-		AC_MSG_CHECKING([for working ldap])
-		AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#                   define  LDAP_DEPRECATED 1
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   elif HAVE_MOZLDAP_LDAP_H
-#                   include <mozldap/ldap.h>
-#                   endif
-                    int
-                    main(void)
-                    {
-                        char host[]="";
-                        int port;
-
-                        ldap_init((const char *)&host, port);
-
-                        return 0;
-                    }
-		]])], 
-		[ AC_DEFINE(HAVE_LDAP, 1, [LDAP support]) 
-		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ],
-		[ AC_MSG_RESULT(cross-compiler cant tell) ])
-		LIBS=$oLIBS
-
-		dnl
-		dnl Check for ldap vendor
-		dnl
-		AC_MSG_CHECKING([for OpenLDAP])
-		AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   endif
-#                   include <string.h>
-                    int
-                    main(void)
-                    {
-                        return strcmp(LDAP_VENDOR_NAME,"OpenLDAP");
-                    }
-		]])], 
-		[ AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support]) 
-		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ],
-		[ AC_MSG_RESULT(cross-compiler cant tell) ])
-
-		AC_MSG_CHECKING([for Sun LDAP SDK])
-		AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   endif
-#                   include <string.h>
-                    int
-                    main(void)
-                    {
-                        return strcmp(LDAP_VENDOR_NAME,"Sun Microsystems Inc.");
-                    }
-		]])], 
-		[ AC_DEFINE(HAVE_SUN_LDAP_SDK, 1, [Sun LDAP SDK support])
-		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ],
-		[ AC_MSG_RESULT(cross-compiler cant tell) ])
-
-		AC_MSG_CHECKING([for Mozilla LDAP SDK])
-		AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   elif HAVE_MOZLDAP_LDAP_H
-#                   include <mozldap/ldap.h>
-#                   endif
-#                   include <string.h>
-                    int
-                    main(void)
-                    {
-                        return strcmp(LDAP_VENDOR_NAME,"mozilla.org");
-                    }
-		]])], 
-		[ AC_DEFINE(HAVE_MOZILLA_LDAP_SDK, 1, [Mozilla LDAP SDK support])
-		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no)],
-		[ AC_MSG_RESULT(cross-compiler cant tell) ])
-
-		dnl
-		dnl Check for LDAP_REBINDPROC_CALLBACK
-		dnl
-                AC_MSG_CHECKING([for LDAP_REBINDPROC_CALLBACK])
-                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   elif HAVE_MOZLDAP_LDAP_H
-#                   include <mozldap/ldap.h>
-#                   endif
-                ]],[[
-                    LDAP_REBINDPROC_CALLBACK ldap_rebind;
-                ]])],
-                [ AC_DEFINE(HAVE_LDAP_REBINDPROC_CALLBACK,1,[Define to 1 if you have LDAP_REBINDPROC_CALLBACK])
-                  AC_MSG_RESULT(yes) ],
-                [ AC_MSG_RESULT(no) ])
-
-		dnl
-		dnl Check for LDAP_REBIND_PROC
-		dnl
-                AC_MSG_CHECKING([for LDAP_REBIND_PROC])
-                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   elif HAVE_MOZLDAP_LDAP_H
-#                   include <mozldap/ldap.h>
-#                   endif
-                ]],[[
-                    LDAP_REBIND_PROC ldap_rebind;
-                ]])],
-                [ AC_DEFINE(HAVE_LDAP_REBIND_PROC,1,[Define to 1 if you have LDAP_REBIND_PROC])
-                  AC_MSG_RESULT(yes) ],
-                [ AC_MSG_RESULT(no) ])
-
-		dnl
-		dnl Check for LDAP_REBIND_FUNCTION
-		dnl
-                AC_MSG_CHECKING([for LDAP_REBIND_FUNCTION])
-                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#                   define LDAP_REFERRALS
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   elif HAVE_MOZLDAP_LDAP_H
-#                   include <mozldap/ldap.h>
-#                   endif
-                ]],[[
-                    LDAP_REBIND_FUNCTION ldap_rebind;
-                ]])],
-                [ AC_DEFINE(HAVE_LDAP_REBIND_FUNCTION,1,[Define to 1 if you have LDAP_REBIND_FUNCTION])
-                  AC_MSG_RESULT(yes) ],
-                [ AC_MSG_RESULT(no) ])
-
-		dnl
-		dnl Check for LDAP_SCOPE_DEFAULT
-		dnl
-                AC_MSG_CHECKING([for LDAP_SCOPE_DEFAULT])
-                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#                   if HAVE_LDAP_H
-#                   include <ldap.h>
-#                   elif HAVE_MOZLDAP_LDAP_H
-#                   include <mozldap/ldap.h>
-#                   endif
-                ]],[[
-                    int i=LDAP_SCOPE_DEFAULT;
-                ]])],
-                [ AC_DEFINE(HAVE_LDAP_SCOPE_DEFAULT,1,[Define to 1 if you have LDAP_SCOPE_DEFAULT])
-                  AC_MSG_RESULT(yes) ],
-                [ AC_MSG_RESULT(no) ])
-
-		dnl
-		dnl Check for ldap_url_desc.lud_scheme
-		dnl
-		AC_CHECK_MEMBER(struct ldap_url_desc.lud_scheme,
-		  AC_DEFINE(HAVE_LDAP_URL_LUD_SCHEME,1,
-		    [Define to 1 if you have LDAPURLDesc.lud_scheme]),,[#include <ldap.h>])
-
-		dnl
-		dnl Check for ldapssl_client_init
-		dnl
-		AC_CHECK_LIB(ldap,ldapssl_client_init,
-		  AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init]),)
-
-		dnl
-		dnl Check for ldap_url_desc2str
-		dnl
-		AC_CHECK_LIB(ldap,ldap_url_desc2str,
-		  AC_DEFINE(HAVE_LDAP_URL_DESC2STR,1,[Define to 1 if you have ldap_url_desc2str]),)
-
-		dnl
-		dnl Check for ldap_url_parse
-		dnl
-		AC_CHECK_LIB(ldap,ldap_url_parse,
-		  AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse]),)
-
-		dnl
-		dnl Check for ldap_start_tls_s
-		dnl
-		AC_CHECK_LIB(ldap,ldap_start_tls_s,
-		  AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s]),)
-		;;
-esac
-
-AC_SUBST(LDAPLIB)
-AC_SUBST(LBERLIB)
 
 dnl Check for libdb
 dnl this is not fully functional if db.h is for a differend db version

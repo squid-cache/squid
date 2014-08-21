@@ -61,6 +61,7 @@ extern "C" {
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif				/* HAVE_GSSAPI_H */
+#if !USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
 #endif				/* HAVE_GSSAPI_GSSAPI_EXT_H */
@@ -70,15 +71,16 @@ extern "C" {
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
 #endif				/* HAVE_GSSAPI_GSSAPI_GENERIC_H */
+#endif				/* !USE_HEIMDAL_KRB5 */
 
 #ifndef gss_nt_service_name
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif
 
-#if !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERR_TEXT
-#define error_message(code) krb5_get_err_text(kparam.context,code)
-#elif  !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERROR_MESSAGE
+#if !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERR_MESSAGE
 #define error_message(code) krb5_get_error_message(kparam.context,code)
+#elif !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERROR_TEXT
+#define error_message(code) krb5_get_err_text(kparam.context,code)
 #elif !HAVE_ERROR_MESSAGE
     static char err_code[17];
     const char *KRB5_CALLCONV
@@ -94,7 +96,7 @@ extern "C" {
     gss_OID gss_mech_spnego = &_gss_mech_spnego;
 #endif
 
-#if HAVE_NAS_KERBEROS
+#if USE_IBM_KERBEROS
 #include <ibm_svc/krb5_svc.h>
     const char *KRB5_CALLCONV error_message(long code) {
         char *msg = NULL;
@@ -210,7 +212,7 @@ extern "C" {
         static krb5_keytab_entry entry;
         static krb5_kt_cursor cursor;
         static krb5_creds *creds = NULL;
-#if HAVE_HEIMDAL_KERBEROS && !HAVE_KRB5_GET_RENEWED_CREDS
+#if USE_HEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
         static krb5_creds creds2;
 #endif
         static krb5_principal principal = NULL;
@@ -226,7 +228,7 @@ extern "C" {
 #if HAVE_PROFILE_H && HAVE_KRB5_GET_PROFILE && HAVE_PROFILE_GET_INTEGER && HAVE_PROFILE_RELEASE
         profile_t profile;
 #endif
-#if HAVE_HEIMDAL_KERBEROS && !HAVE_KRB5_GET_RENEWED_CREDS
+#if USE_HEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
         krb5_kdc_flags flags;
 #if HAVE_KRB5_PRINCIPAL_GET_REALM
         const char *client_realm;
@@ -329,9 +331,9 @@ restart:
                        error_message(code));
                 return (1);
             }
-#elif HAVE_KRB5_GET_MAX_TIME_SKEW && HAVE_HEIMDAL_KERBEROS
+#elif USE_HEIMDAL_KRB5 && HAVE_KRB5_GET_MAX_TIME_SKEW 
             skew = krb5_get_max_time_skew(kparam.context);
-#elif HAVE_MAX_SKEW_IN_KRB5_CONTEXT && HAVE_HEIMDAL_KERBEROS
+#elif USE_HEIMDAL_KRB5 && HAVE_MAX_SKEW_IN_KRB5_CONTEXT
             skew = kparam.context->max_skew;
 #else
             skew = DEFAULT_SKEW;
@@ -384,7 +386,7 @@ restart:
                            error_message(code));
                     return (1);
                 }
-#if HAVE_HEIMDAL_KERBEROS || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY)
+#if USE_HEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY)
                 code = krb5_kt_free_entry(kparam.context, &entry);
 #else
                 code = krb5_free_keytab_entry_contents(kparam.context, &entry);
