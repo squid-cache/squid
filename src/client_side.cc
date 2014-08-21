@@ -2018,7 +2018,7 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
 }
 
 static void
-prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::RequestParser &hp)
+prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
@@ -2029,11 +2029,11 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
     static const SBuf cache_object("cache_object://");
-    if (hp.requestUri().startsWith(cache_object))
+    if (hp->requestUri().startsWith(cache_object))
         return; /* already in good shape */
 
     // XXX: re-use proper URL parser for this
-    SBuf url = hp.requestUri(); // use full provided URI if we abort
+    SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
         ::Parser::Tokenizer tok(url);
         if (tok.remaining()[0] == '/')
@@ -2043,18 +2043,16 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
             return; /* already in good shape */
 
         // skip the URI scheme
-        static const CharacterSet uriScheme = CharacterSet::ALPHA + CharacterSet::DIGIT + CharacterSet(NULL,"+-.");
+        static const CharacterSet uriScheme = CharacterSet("URI-scheme","+-.") + CharacterSet::ALPHA + CharacterSet::DIGIT;
         static const SBuf uriSchemeEnd("://");
-        if (!tok.skip(uriScheme))
-            break;
-        if (!tok.skip(uriSchemeEnd))
+        if (!tok.skipAll(uriScheme) || !tok.skip(uriSchemeEnd))
             break;
 
         // skip the authority segment
         // RFC 3986 complex nested ABNF for "authority" boils down to this:
         static const CharacterSet authority = CharacterSet("authority","-._~%:@[]!$&'()*+,;=") +
              CharacterSet::HEXDIG + CharacterSet::ALPHA + CharacterSet::DIGIT;
-        if (!tok.skip(authority))
+        if (!tok.skipAll(authority))
             break;
 
         static const SBuf slashUri("/");
@@ -2073,7 +2071,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
 #if SHOULD_REJECT_UNKNOWN_URLS
     // reject URI which are not well-formed even after the processing above
     if (url[0] != '/') {
-        hp.request_parse_status = Http::scBadRequest;
+        hp->request_parse_status = Http::scBadRequest;
         return parseHttpRequestAbort(conn, "error:invalid-request");
     }
 #endif
@@ -2084,7 +2082,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
     char *host = NULL;
-    if (tryHostHeader && (host = hp.getHeaderField("Host"))) {
+    if (tryHostHeader && (host = hp->getHeaderField("Host"))) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
@@ -2099,7 +2097,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
                 host = thost;
             }
         } // else nothing to alter port-wise.
-        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen + strlen(host);
+        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen + strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
         const char *protocol = switchedToHttps ?
                                "https" : AnyP::UriScheme(conn->port->transport.protocol).c_str();
@@ -2107,7 +2105,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
         debugs(33, 5, "ACCEL VHOST REWRITE: " << http->uri);
     } else if (conn->port->defaultsite /* && !vhost */) {
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
-        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen +
+        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
                      strlen(conn->port->defaultsite);
         http->uri = (char *)xcalloc(url_sz, 1);
         char vportStr[32];
@@ -2121,7 +2119,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
         debugs(33, 5, "ACCEL VPORT REWRITE: *_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
-        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen;
+        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d" SQUIDSBUFPH,
@@ -2132,31 +2130,31 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
 }
 
 static void
-prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http1::RequestParser &hp)
+prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
 {
     static char ipbuf[MAX_IPSTRLEN];
 
     // TODO Must() on URI !empty when the parser supports throw. For now avoid assert().
-    if (!hp.requestUri().isEmpty() && hp.requestUri()[0] != '/')
+    if (!hp->requestUri().isEmpty() && hp->requestUri()[0] != '/')
         return; /* already in good shape */
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    if (const char *host = hp.getHeaderField("Host")) {
-        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen +
+    if (const char *host = hp->getHeaderField("Host")) {
+        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s" SQUIDSBUFPH,
-             AnyP::UriScheme(conn->port->transport.protocol).c_str(), host, SQUIDSBUFPRINT(hp.requestUri()));
+             AnyP::UriScheme(conn->port->transport.protocol).c_str(), host, SQUIDSBUFPRINT(hp->requestUri()));
         debugs(33, 5, "TRANSPARENT HOST REWRITE: " << http->uri);
     } else {
         /* Put the local socket IP address as the hostname.  */
-        const int url_sz = hp.requestUri().length() + 32 + Config.appendDomainLen;
+        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d" SQUIDSBUFPH,
                  AnyP::UriScheme(http->getConn()->port->transport.protocol).c_str(),
-                 ipbuf, http->getConn()->clientConnection->local.port(), SQUIDSBUFPRINT(hp.requestUri()));
+                 ipbuf, http->getConn()->clientConnection->local.port(), SQUIDSBUFPRINT(hp->requestUri()));
         debugs(33, 5, "TRANSPARENT REWRITE: " << http->uri);
     }
 }
@@ -2175,22 +2173,22 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, Http1::Requ
  *          a ClientSocketContext structure on success or failure.
  */
 ClientSocketContext *
-parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
+parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 {
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
-        const bool parsedOk = hp.parse(csd->in.buf);
+        const bool parsedOk = hp->parse(csd->in.buf);
 
         // sync the buffers after parsing.
-        csd->in.buf = hp.remaining();
+        csd->in.buf = hp->remaining();
 
-        if (hp.needsMoreData()) {
+        if (hp->needsMoreData()) {
             debugs(33, 5, "Incomplete request, waiting for end of request line");
             return NULL;
         }
 
         if (!parsedOk) {
-            if (hp.request_parse_status == Http::scHeaderTooLarge)
+            if (hp->request_parse_status == Http::scHeaderTooLarge)
                 return parseHttpRequestAbort(csd, "error:request-too-large");
 
             return parseHttpRequestAbort(csd, "error:invalid-request");
@@ -2200,35 +2198,35 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     /* We know the whole request is in parser now */
     debugs(11, 2, "HTTP Client " << csd->clientConnection);
     debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
-           hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol() << "\n" <<
-           hp.mimeHeader() <<
+           hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol() << "\n" <<
+           hp->mimeHeader() <<
            "\n----------");
 
     /* deny CONNECT via accelerated ports */
-    if (hp.method() == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
+    if (hp->method() == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->transport.protocol << " Accelerator port " << csd->port->s.port());
-        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol());
-        hp.request_parse_status = Http::scMethodNotAllowed;
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
+        hp->request_parse_status = Http::scMethodNotAllowed;
         return parseHttpRequestAbort(csd, "error:method-not-allowed");
     }
 
-    if (hp.method() == Http::METHOD_NONE) {
-        debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp.method() << " " << hp.requestUri() << " " << hp.messageProtocol());
-        hp.request_parse_status = Http::scMethodNotAllowed;
+    if (hp->method() == Http::METHOD_NONE) {
+        debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
+        hp->request_parse_status = Http::scMethodNotAllowed;
         return parseHttpRequestAbort(csd, "error:unsupported-request-method");
     }
 
     // Process headers after request line
     debugs(33, 3, "complete request received. " <<
-           "prefix_sz = " << hp.messageHeaderSize() <<
-           ", request-line-size=" << hp.firstLineSize() <<
-           ", mime-header-size=" << hp.headerBlockSize() <<
-           ", mime header block:\n" << hp.mimeHeader() << "\n----------");
+           "prefix_sz = " << hp->messageHeaderSize() <<
+           ", request-line-size=" << hp->firstLineSize() <<
+           ", mime-header-size=" << hp->headerBlockSize() <<
+           ", mime header block:\n" << hp->mimeHeader() << "\n----------");
 
     /* Ok, all headers are received */
     ClientHttpRequest *http = new ClientHttpRequest(csd);
 
-    http->req_sz = hp.messageHeaderSize();
+    http->req_sz = hp->messageHeaderSize();
     ClientSocketContext *result = new ClientSocketContext(csd->clientConnection, http);
 
     StoreIOBuffer tempBuffer;
@@ -2244,7 +2242,7 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     /* set url */
     // XXX: c_str() does re-allocate but here replaces explicit malloc/free.
     // when internalCheck() accepts SBuf removing this will be a net gain for performance.
-    const char *url = SBuf(hp.requestUri()).c_str();
+    const char *url = SBuf(hp->requestUri()).c_str();
 
     debugs(33,5, HERE << "repare absolute URL from " <<
            (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
@@ -2279,7 +2277,7 @@ parseHttpRequest(ConnStateData *csd, Http1::RequestParser &hp)
     if (!http->uri) {
         /* No special rewrites have been applied above, use the
          * requested url. may be rewritten later, so make extra room */
-        int url_sz = hp.requestUri().length() + Config.appendDomainLen + 5;
+        int url_sz = hp->requestUri().length() + Config.appendDomainLen + 5;
         http->uri = (char *)xcalloc(url_sz, 1);
         strcpy(http->uri, url);
     }
@@ -2479,8 +2477,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 }
 #endif // USE_OPENSSL
 
-static void
-clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocketContext *context)
+void
+clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, ClientSocketContext *context)
 {
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request;
@@ -2488,22 +2486,18 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
     bool mustReplyToOptions = false;
     bool unsupportedTe = false;
     bool expectBody = false;
-    const AnyP::ProtocolVersion &http_ver = hp.messageProtocol();
-    const HttpRequestMethod &method = hp.method();
 
     // temporary hack to avoid splitting this huge function with sensitive code
-    const bool isFtp = !hp;
+    const bool isFtp = (hp == NULL);
+    const HttpRequestMethod &method = !isFtp ? hp->method() : Http::METHOD_NONE; // XXX: or should this be GET ?
     if (isFtp) {
         // In FTP, case, we already have the request parsed and checked, so we
         // only need to go through the final body/conn setup to doCallouts().
         assert(http->request);
         request = http->request;
-        notedUseOfBuffer = true;
-        goto doFtpAndHttp;
-    }
+    } else {
 
     if (context->flags.parsed_ok == 0) {
-        assert(hp);
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 2, "Invalid Request");
         conn->quitAfterError(NULL);
@@ -2511,21 +2505,21 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        switch (hp.request_parse_status) {
+        switch (hp->request_parse_status) {
         case Http::scHeaderTooLarge:
-            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri,
+            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, hp->method(), http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         case Http::scMethodNotAllowed:
-            repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
+            repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, hp->method(), http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         case Http::scHttpVersionNotSupported:
-            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
+            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, hp->method(), http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         default:
-            repContext->setReplyToError(ERR_INVALID_REQ, hp.request_parse_status, method, http->uri,
+            repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, hp->method(), http->uri,
                                         conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
         }
         assert(context->http->out.offset == 0);
@@ -2533,7 +2527,7 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         goto finish;
     }
 
-    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
+    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, hp->method())) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
         conn->quitAfterError(request.getRaw());
@@ -2541,28 +2535,29 @@ clientProcessRequest(ConnStateData *conn, Http1::RequestParser &hp, ClientSocket
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, hp->method(), http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
     }
 
     /* compile headers */
-    if (http_ver.major >= 1 && !request->parseHeader(hp)) {
+    if (hp->messageProtocol().major >= 1 && !request->parseHeader(*hp)) {
         clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Failed to parse request headers:\n" << hp.mimeHeader());
+        debugs(33, 5, "Failed to parse request headers:\n" << hp->mimeHeader());
         conn->quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, hp->method(), http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         goto finish;
     }
 
-doFtpAndHttp:
+    }
+
     // Some blobs below are still HTTP-specific, but we would have to rewrite
     // this entire function to remove them from the FTP code path. Connection
     // setup and body_pipe preparation blobs are needed for FTP.
@@ -2629,11 +2624,15 @@ doFtpAndHttp:
 #endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->clientConnection->local;
     request->myportname = conn->port->name;
-    // XXX: for non-HTTP messages instantiate a different HttpMsg child type
-    // for now Squid only supports HTTP requests
-    assert(request->http_ver.protocol == http_ver.protocol);
-    request->http_ver.major = http_ver.major;
-    request->http_ver.minor = http_ver.minor;
+
+    if (!isFtp) {
+        // XXX: for non-HTTP messages instantiate a different HttpMsg child type
+        // for now Squid only supports HTTP requests
+        const AnyP::ProtocolVersion &http_ver = hp->messageProtocol();
+        assert(request->http_ver.protocol == http_ver.protocol);
+        request->http_ver.major = http_ver.major;
+        request->http_ver.minor = http_ver.minor;
+    }
 
     // Link this HttpRequest to ConnStateData relatively early so the following complex handling can use it
     // TODO: this effectively obsoletes a lot of conn->FOO copying. That needs cleaning up later.
@@ -2712,12 +2711,6 @@ doFtpAndHttp:
     if (!context->mayUseConnection() && expectBody) {
         request->body_pipe = conn->expectRequestBody(
                                  chunked ? -1 : request->content_length);
-
-        if (!isFtp) {
-            // consume header early so that body pipe gets just the body
-            connNoteUseOfBuffer(conn, http->req_sz);
-            notedUseOfBuffer = true;
-        }
 
         /* Is it too large? */
         if (!chunked && // if chunked, we will check as we accumulate
@@ -2821,8 +2814,7 @@ ConnStateData::clientParseRequests()
         if (concurrentRequestQueueFilled())
             break;
 
-        Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseOneRequest(http_ver);
+        ClientSocketContext *context = parseOneRequest();
 
         /* status -1 or 1 */
         if (context) {
@@ -2831,7 +2823,7 @@ ConnStateData::clientParseRequests()
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            processParsedRequest(context, *parser_);
+            processParsedRequest(context);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
