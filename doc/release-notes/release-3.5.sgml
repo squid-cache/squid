@@ -410,6 +410,21 @@ This section gives an account of those changes in three categories:
 	   Use of this library is auto-enabled if v3.1.5 or later is available.
 	<p>It is currently only used by the squidclient tool.
 
+	<tag>--without-mit-krb5</tag>
+	<p>New option to explicitly disable use of MIT Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-heimdal-krb5</tag>
+	<p>New option to explicitly disable use of Hiemdal Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-gnugss</tag>
+	<p>New option to explicitly disable use of GNU GSSAPI library for Kerberos.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -436,6 +451,11 @@ This section gives an account of those changes in three categories:
 	<tag>--with-coss-membuf-size</tag>
 	<p>The COSS cache type has been removed.
 	   It has been replaced by <em>rock</em> cache type.
+
+	<tag>--with-krb5-config</tag>
+	<p>Removed. The Kerberos library is auto-detected now.
+	<p>Use <em>--with/--without-mit-krb5</em>, <em>--with/--without-heimdal-krb5</em>, or
+	   <em>--with/--without-gnugss</em> options for specific library selection if necesary.
 
 </descrip>
 
