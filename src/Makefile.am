@@ -617,6 +617,9 @@ squid_LDADD = \
 	$(AUTH_LIBS) \
 	$(DISK_LIBS) \
 	acl/libapi.la \
+	clients/libclients.la \
+	servers/libservers.la \
+	ftp/libftp.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	base/libbase.la \
@@ -632,9 +635,6 @@ squid_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	format/libformat.la \
-	clients/libclients.la \
-	servers/libservers.la \
-	ftp/libftp.la \
 	$(XTRA_OBJS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
@@ -1603,14 +1603,13 @@ nodist_tests_testCacheManager_SOURCES = \
 tests_testCacheManager_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
-	http/libsquid-http.la \
 	ftp/libftp.la \
+	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2037,14 +2036,13 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
-	http/libsquid-http.la \
 	ftp/libftp.la \
+	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2287,14 +2285,13 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
-	http/libsquid-http.la \
 	ftp/libftp.la \
+	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -2530,14 +2527,13 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
-	http/libsquid-http.la \
 	ftp/libftp.la \
+	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2825,6 +2821,7 @@ tests_testHttpRequest_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
 	ftp/libftp.la \
+	http/libsquid-http.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2834,7 +2831,6 @@ tests_testHttpRequest_LDADD = \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
-	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	base/libbase.la \
 	mgr/libmgr.la \
@@ -3673,7 +3669,6 @@ tests_testURL_LDADD = \
 	eui/libeui.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
