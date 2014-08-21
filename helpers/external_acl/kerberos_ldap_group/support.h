@@ -47,7 +47,7 @@ extern "C" {
 
 #if HAVE_COM_ERR_H
 #include <com_err.h>
-#elif HAVE_HEIMDAL_KERBEROS
+#elif USE_HEIMDAL_KRB5
 #define error_message(code) krb5_get_err_text(kparam.context,code)
 #endif /* HAVE_COM_ERR_H */
 
@@ -162,7 +162,7 @@ size_t get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, s
 size_t get_hostname_list(struct hstruct **hlist, size_t nhosts, char *name);
 size_t free_hostname_list(struct hstruct **hlist, size_t nhosts);
 
-#if defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H) || defined(HAVE_SASL_DARWIN)
+#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
 int tool_sasl_bind(LDAP * ld, char *binddn, char *ssl);
 #endif
 

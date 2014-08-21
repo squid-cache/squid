@@ -149,7 +149,7 @@ main(int argc, char *const argv[])
     krb5_context context = NULL;
     krb5_error_code ret;
     krb5_pac pac;
-#if HAVE_HEIMDAL_KERBEROS
+#if USE_HEIMDAL_KRB5
     gss_buffer_desc data_set = GSS_C_EMPTY_BUFFER;
 #else
     gss_buffer_desc type_id = GSS_C_EMPTY_BUFFER;
@@ -396,7 +396,7 @@ main(int argc, char *const argv[])
 #if HAVE_PAC_SUPPORT
             ret = krb5_init_context(&context);
             if (!check_k5_err(context, "krb5_init_context", ret)) {
-#if HAVE_HEIMDAL_KERBEROS
+#if USE_HEIMDAL_KRB5
 #define ADWIN2KPAC 128
                 major_status = gsskrb5_extract_authz_data_from_sec_context(&minor_status,
                                gss_context, ADWIN2KPAC, &data_set);
