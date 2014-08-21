@@ -58,13 +58,25 @@ extern "C" {
 #endif
 #endif /* HAVE_KRB5_H */
 
+#if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif
-
-#if !HAVE_HEIMDAL_KERBEROS
+#if HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif
+#elif USE_GNUGSS
+#if HAVE_GSS_H
+#include <gss.h>
+#endif
+#else
+#if HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif
 #if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
 #endif
@@ -73,10 +85,6 @@ extern "C" {
 #endif
 #if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
-#endif
-#else
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
 #endif
 #endif
 
@@ -119,7 +127,7 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
 
 char *gethost_name(void);
 
-#if (defined(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT) || defined(HAVE_GSS_MAP_NAME_TO_ANY)) && HAVE_KRB5_PAC
+#if (HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT || HAVE_GSS_MAP_NAME_TO_ANY) && HAVE_KRB5_PAC
 #define HAVE_PAC_SUPPORT 1
 #define MAX_PAC_GROUP_SIZE 200*60
 typedef struct {
