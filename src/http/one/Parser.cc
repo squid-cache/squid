@@ -38,7 +38,7 @@ Http::One::Parser::getHeaderField(const char *name)
     static const SBuf crlf("\r\n");
 
     while (tok.prefix(p, iso8859Line)) {
-        tok.skip(CharacterSet::LF); // move tokenizer past the LF
+        tok.skipOne(CharacterSet::LF); // move tokenizer past the LF
 
         // header lines must start with the name (case insensitive)
         if (p.substr(0, namelen).caseCmp(name, namelen))
@@ -56,7 +56,7 @@ Http::One::Parser::getHeaderField(const char *name)
 
         // TODO: optimize SBuf::trim to take CharacterSet directly
         ::Parser::Tokenizer t(p);
-        t.skip(CharacterSet::WSP);
+        t.skipAll(CharacterSet::WSP);
         p = t.remaining();
 
         // prevent buffer overrun on char header[];

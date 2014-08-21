@@ -416,10 +416,10 @@ protected:
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 
     /// parse input buffer prefix into a single transfer protocol request
-    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
+    virtual ClientSocketContext *parseOneRequest() = 0;
 
     /// start processing a freshly parsed request
-    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver) = 0;
+    virtual void processParsedRequest(ClientSocketContext *context) = 0;
 
     /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
     virtual int pipelinePrefetchMax() const;
@@ -490,8 +490,8 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 /* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
-ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
-void clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver);
-void clientPostHttpsAccept(ConnStateData *connState);
+ClientSocketContext *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
+void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, ClientSocketContext *);
+void clientPostHttpsAccept(ConnStateData *);
 
 #endif /* SQUID_CLIENTSIDE_H */
