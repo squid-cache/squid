@@ -331,7 +331,7 @@ restart:
                        error_message(code));
                 return (1);
             }
-#elif USE_HEIMDAL_KRB5 && HAVE_KRB5_GET_MAX_TIME_SKEW 
+#elif USE_HEIMDAL_KRB5 && HAVE_KRB5_GET_MAX_TIME_SKEW
             skew = krb5_get_max_time_skew(kparam.context);
 #elif USE_HEIMDAL_KRB5 && HAVE_MAX_SKEW_IN_KRB5_CONTEXT
             skew = kparam.context->max_skew;

@@ -3,7 +3,6 @@
 
 #if HAVE_GSSAPI
 
-
 #if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
