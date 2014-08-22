@@ -1450,8 +1450,8 @@ elif test $ac_with_krb5_count -eq 0 ; then
   fi
   if test $ac_with_krb5_count -gt 1 ; then
     AC_MSG_ERROR([pkg-config found multiple Kerberos library. Please select one with --with-<kerberos package>])
-  elif test $ac_with_krb5_count -eq 0 ; then
-    # Look for krb5-config
+  elif test $ac_with_krb5_count -eq 0 -a "$cross_compiling" = "no"; then
+    # Look for krb5-config (unless cross-compiling)
     AC_PATH_PROG(krb5_config,krb5-config,no)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
@@ -1481,14 +1481,16 @@ if test "x$with_mit_krb5" = "xyes"; then
 
   # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIB_KRB5],[gssapi-krb5 krb5],,[
-    # look for krb5-config
-    if test "x$krb5confpath" = "x" ; then
-      AC_PATH_PROG(krb5_config,krb5-config,no)
-      if test "x$ac_cv_path_krb5_config" != "xno" ; then
-        ac_krb5_config="$ac_cv_path_krb5_config"
+    # look for krb5-config (unless cross-compiling)
+    if test "$cross_compiling" = "no"; then
+      if test "x$krb5confpath" = "x" ; then
+        AC_PATH_PROG(krb5_config,krb5-config,no)
+        if test "x$ac_cv_path_krb5_config" != "xno" ; then
+          ac_krb5_config="$ac_cv_path_krb5_config"
+        fi
+      else
+        ac_krb5_config="$krb5confpath/krb5-config"
       fi
-    else
-      ac_krb5_config="$krb5confpath/krb5-config"
     fi
     if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
       # Get libs, etc
@@ -1560,14 +1562,16 @@ if test "x$with_solaris_krb5" = "xyes"; then
   LIBS="$LIBS $LIB_KRB5_PATH"
 
   # no pkg-config for solaris native Kerberos
-  # look for krb5-config
-  if test "x$krb5confpath" = "x" ; then
-    AC_PATH_PROG(krb5_config,krb5-config,no)
-    if test "x$ac_cv_path_krb5_config" != "xno" ; then
-      ac_krb5_config="$ac_cv_path_krb5_config"
+  # look for krb5-config (unless cross-compiling)
+  if test "$cross_compiling" = "no"; then
+    if test "x$krb5confpath" = "x" ; then
+      AC_PATH_PROG(krb5_config,krb5-config,no)
+      if test "x$ac_cv_path_krb5_config" != "xno" ; then
+        ac_krb5_config="$ac_cv_path_krb5_config"
+      fi
+    else
+      ac_krb5_config="$krb5confpath/krb5-config"
     fi
-  else
-    ac_krb5_config="$krb5confpath/krb5-config"
   fi
   if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
     # Get libs, etc
@@ -1631,14 +1635,16 @@ if test "x$with_heimdal_krb5" = "xyes"; then
 
   # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIB_KRB5],[heimdal-gssapi],,[
-    # look for krb5-config
-    if test "x$krb5confpath" = "x" ; then
-      AC_PATH_PROG(krb5_config,krb5-config,no)
-      if test "x$ac_cv_path_krb5_config" != "xno" ; then
-        ac_krb5_config="$ac_cv_path_krb5_config"
+    # look for krb5-config (unless cross-compiling)
+    if test "$cross_compiling" = "no"; then
+      if test "x$krb5confpath" = "x" ; then
+        AC_PATH_PROG(krb5_config,krb5-config,no)
+        if test "x$ac_cv_path_krb5_config" != "xno" ; then
+          ac_krb5_config="$ac_cv_path_krb5_config"
+        fi
+      else
+        ac_krb5_config="$krb5confpath/krb5-config"
       fi
-    else
-      ac_krb5_config="$krb5confpath/krb5-config"
     fi
     if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
       # Get libs, etc
