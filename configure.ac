@@ -1470,7 +1470,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
         ac_with_krb5_count=1
       fi
     else
-      AC_MSG_ERROR([Could not find krb5-config in path])
+      AC_MSG_WARN([Could not find krb5-config in path])
     fi
   fi
 fi
