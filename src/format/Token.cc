@@ -51,6 +51,7 @@ static TokenTableEntry TokenTable2C[] = {
     {"tu", LFT_TIME_SUBSECOND},
     {"tl", LFT_TIME_LOCALTIME},
     {"tg", LFT_TIME_GMT},
+    {"tS", LFT_TIME_START},
     {"tr", LFT_TIME_TO_HANDLE_REQUEST},
 
     {"<pt", LFT_PEER_RESPONSE_TIME},
@@ -80,6 +81,9 @@ static TokenTableEntry TokenTable2C[] = {
 
     {">rm", LFT_CLIENT_REQ_METHOD},
     {">ru", LFT_CLIENT_REQ_URI},
+    {">rs", LFT_CLIENT_REQ_URLSCHEME},
+    {">rd", LFT_CLIENT_REQ_URLDOMAIN},
+    {">rP", LFT_CLIENT_REQ_URLPORT},
     {">rp", LFT_CLIENT_REQ_URLPATH},
     /*{">rq", LFT_CLIENT_REQ_QUERY},*/
     {">rv", LFT_CLIENT_REQ_VERSION},
@@ -89,29 +93,33 @@ static TokenTableEntry TokenTable2C[] = {
     {"rp", LFT_REQUEST_URLPATH_OLD_31},
     /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
     {"rv", LFT_REQUEST_VERSION},
+    {"rG", LFT_REQUEST_URLGROUP_OLD_2X},
 
     {"<rm", LFT_SERVER_REQ_METHOD},
     {"<ru", LFT_SERVER_REQ_URI},
+    {"<rs", LFT_SERVER_REQ_URLSCHEME},
+    {"<rd", LFT_SERVER_REQ_URLDOMAIN},
+    {"<rP", LFT_SERVER_REQ_URLPORT},
     {"<rp", LFT_SERVER_REQ_URLPATH},
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
 
-    {">st", LFT_REQUEST_SIZE_TOTAL },
-    /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
-    {">sh", LFT_REQUEST_SIZE_HEADERS },
+    {">st", LFT_CLIENT_REQUEST_SIZE_TOTAL },
+    {">sh", LFT_CLIENT_REQUEST_SIZE_HEADERS },
     /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
     /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
-    {"<st", LFT_REPLY_SIZE_TOTAL},
+    {"<st", LFT_ADAPTED_REPLY_SIZE_TOTAL}, // XXX: adapted should be code: <sta
     {"<sH", LFT_REPLY_HIGHOFFSET},
     {"<sS", LFT_REPLY_OBJECTSIZE},
-    /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
-    {"<sh", LFT_REPLY_SIZE_HEADERS },
+    {"<sh", LFT_ADAPTED_REPLY_SIZE_HEADERS }, // XXX: adapted should be code: <sha
     /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
     /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
+    {"st", LFT_CLIENT_IO_SIZE_TOTAL}, // XXX: total from client should be stC ??
+    /*{"stP", LFT_SERVER_IO_SIZE_TOTAL},*/
+
     {"et", LFT_TAG},
-    {"st", LFT_IO_SIZE_TOTAL},
     {"ea", LFT_EXT_LOG},
     {"sn", LFT_SEQUENCE_NUMBER},
 
@@ -128,6 +136,7 @@ static TokenTableEntry TokenTableMisc[] = {
     {"err_code", LFT_SQUID_ERROR },
     {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {"note", LFT_NOTE },
+    {"credentials", LFT_CREDENTIALS},
     {NULL, LFT_NONE}		/* this must be last */
 };
 
@@ -166,7 +175,7 @@ static TokenTableEntry TokenTableIcap[] = {
 };
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
 // SSL (ssl::) tokens
 static TokenTableEntry TokenTableSsl[] = {
     {"bump_mode", LFT_SSL_BUMP_MODE},
@@ -190,7 +199,7 @@ Format::Token::Init()
 #if ICAP_CLIENT
     TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
 #endif
 }
@@ -404,6 +413,8 @@ done:
 
     case LFT_REPLY_HEADER:
 
+    case LFT_NOTE:
+
         if (data.string) {
             char *header = data.string;
             char *cp = strchr(header, ':');
@@ -490,18 +501,18 @@ done:
         Config.onoff.log_fqdn = 1;
         break;
 
+    case LFT_TIME_START:
     case LFT_TIME_SUBSECOND:
         divisor = 1000;
 
         if (widthMax > 0) {
-            int i;
             divisor = 1000000;
 
-            for (i = widthMax; i > 1; --i)
+            for (int i = widthMax; i > 0; --i)
                 divisor /= 10;
 
             if (!divisor)
-                divisor = 0;
+                divisor = 1;
         }
         break;
 
@@ -531,11 +542,34 @@ done:
         break;
 #endif
 
+    case LFT_REQUEST_URLGROUP_OLD_2X:
+        debugs(46, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: The \"rG\" formatting code is deprecated. Use \"note{urlgroup}\" instead.");
+        type = LFT_NOTE;
+        data.header.header = xstrdup("urlgroup");
+        break;
+
     default:
         break;
     }
 
     return (cur - def);
+}
+
+Format::Token::Token() : type(LFT_NONE),
+        label(NULL),
+        widthMin(-1),
+        widthMax(-1),
+        quote(LOG_QUOTE_NONE),
+        left(false),
+        space(false),
+        zero(false),
+        divisor(1),
+        next(NULL)
+{
+    data.string = NULL;
+    data.header.header = NULL;
+    data.header.element = NULL;
+    data.header.separator = ',';
 }
 
 Format::Token::~Token()

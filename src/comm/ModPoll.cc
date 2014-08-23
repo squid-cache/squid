@@ -45,11 +45,9 @@
 #include "StatCounters.h"
 #include "Store.h"
 
+#include <cerrno>
 #if HAVE_POLL_H
 #include <poll.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 /* Needed for poll() on Linux at least */
@@ -198,7 +196,7 @@ fdIsDns(int fd)
 static int
 fdIsTcpListen(int fd)
 {
-    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL && s->listenConn->fd == fd)
             return 1;
     }
@@ -350,7 +348,7 @@ comm_poll_tcp_incoming(void)
 }
 
 /* poll all sockets; call handlers for those that are ready. */
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     struct pollfd pfds[SQUID_MAXFD];
@@ -425,9 +423,9 @@ Comm::DoSelect(int msec)
          */
         if (nfds == 0 && npending == 0) {
             if (shutting_down)
-                return COMM_SHUTDOWN;
+                return Comm::SHUTDOWN;
             else
-                return COMM_IDLE;
+                return Comm::IDLE;
         }
 
         for (;;) {
@@ -447,7 +445,7 @@ Comm::DoSelect(int msec)
 
             assert(errno != EINVAL);
 
-            return COMM_ERROR;
+            return Comm::COMM_ERROR;
 
             /* NOTREACHED */
         }
@@ -582,12 +580,12 @@ Comm::DoSelect(int msec)
 
         statCounter.select_time += (current_dtime - start);
 
-        return COMM_OK;
+        return Comm::OK;
     } while (timeout > current_dtime);
 
     debugs(5, 8, "comm_poll: time out: " << squid_curtime << ".");
 
-    return COMM_TIMEOUT;
+    return Comm::TIMEOUT;
 }
 
 static void

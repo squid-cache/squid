@@ -38,9 +38,7 @@
 #include "CacheDigest.h"
 #include "store_key_md5.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 typedef struct {
     int query_count;
@@ -101,18 +99,6 @@ struct _FileIterator {
 
 /* globals */
 static time_t cur_time = -1;	/* timestamp of the current log entry */
-
-/* copied from url.c */
-const char *RequestMethodStr[] = {
-    "NONE",
-    "GET",
-    "POST",
-    "PUT",
-    "HEAD",
-    "CONNECT",
-    "TRACE",
-    "PURGE"
-};
 
 /* copied from url.c */
 static HttpRequestMethod

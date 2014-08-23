@@ -233,6 +233,7 @@ private: /* internal methods */
     AsyncState *state_;
     Breadcrumb matchLoc_; ///< location of the node running matches() now
     Breadcrumb asyncLoc_; ///< currentNode_ that called goAsync()
+    unsigned asyncLoopDepth_; ///< how many times the current async state has resumed
 
     bool callerGone();
 

@@ -43,6 +43,9 @@ static cache_key null_key[SQUID_MD5_DIGEST_LENGTH];
 const char *
 storeKeyText(const cache_key *key)
 {
+    if (!key)
+        return "[null_store_key]";
+
     static char buf[SQUID_MD5_DIGEST_LENGTH * 2+1];
     int i;
 

@@ -33,9 +33,9 @@
 
 #ifndef SQUID_ACLSTRINGDATA_H
 #define SQUID_ACLSTRINGDATA_H
-#include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "splay.h"
 
 class ACLStringData : public ACLData<char const *>
 {
@@ -48,8 +48,8 @@ public:
     ACLStringData &operator= (ACLStringData const &);
     virtual ~ACLStringData();
     bool match(char const *);
-    wordlist *dump();
-    void parse();
+    virtual SBufList dump() const;
+    virtual void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;
     /// Insert a string data value

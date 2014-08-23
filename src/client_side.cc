@@ -86,14 +86,15 @@
 #include "CachePeer.h"
 #include "ChunkedCodingParser.h"
 #include "client_db.h"
+#include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
-#include "client_side.h"
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
@@ -120,6 +121,7 @@
 #include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "rfc1738.h"
+#include "servers/forward.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -135,28 +137,22 @@
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
-#if USE_SSL
-#include "ssl/ProxyCerts.h"
+#if USE_OPENSSL
 #include "ssl/context_storage.h"
+#include "ssl/gadgets.h"
 #include "ssl/helper.h"
+#include "ssl/ProxyCerts.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
-#include "ssl/gadgets.h"
 #endif
 #if USE_SSL_CRTD
-#include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
+#include "ssl/crtd_message.h"
 #endif
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-#if HAVE_MATH_H
-#include <math.h>
-#endif
-#if HAVE_LIMITS
+#include <climits>
+#include <cmath>
 #include <limits>
-#endif
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -166,13 +162,13 @@
 class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)(AnyP::PortCfg *portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
-    ListeningStartedDialer(Handler aHandler, AnyP::PortCfg *aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
+    typedef void (*Handler)(AnyP::PortCfgPointer &portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
+    ListeningStartedDialer(Handler aHandler, AnyP::PortCfgPointer &aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
             handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     virtual void print(std::ostream &os) const {
         startPrint(os) <<
-        ", " << FdNote(portTypeNote) << " port=" << (void*)portCfg << ')';
+        ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
@@ -182,36 +178,28 @@ public:
     Handler handler;
 
 private:
-    AnyP::PortCfg *portCfg;   ///< from Config.Sockaddr.http
+    AnyP::PortCfgPointer portCfg;   ///< from HttpPortList
     Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened
     Subscription::Pointer sub; ///< The handler to be subscribed for this connetion listener
 };
 
-static void clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
+static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 /* our socket-related context */
 
 CBDATA_CLASS_INIT(ClientSocketContext);
 
 /* Local functions */
-/* ClientSocketContext */
-static ClientSocketContext *ClientSocketContextNew(const Comm::ConnectionPointer &clientConn, ClientHttpRequest *);
-/* other */
 static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
 static IOACB httpAccept;
-#if USE_SSL
+#if USE_OPENSSL
 static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
-static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
-static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
-static CSCB clientSocketRecipient;
-static CSD clientSocketDetach;
-static void clientSetKeepaliveFlag(ClientHttpRequest *);
 static int clientIsContentLengthValid(HttpRequest * r);
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
@@ -223,7 +211,6 @@ void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 #ifndef PURIFY
 static bool connIsUsable(ConnStateData * conn);
 #endif
-static int responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const &receivedData);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn);
 static void clientUpdateSocketStats(LogTags logType, size_t size);
 
@@ -245,9 +232,15 @@ ClientSocketContext::getClientReplyContext() const
     return (clientStreamNode *)http->client_stream.tail->prev->data;
 }
 
+ConnStateData *
+ClientSocketContext::getConn() const
+{
+    return http->getConn();
+}
+
 /**
- * This routine should be called to grow the inbuf and then
- * call comm_read().
+ * This routine should be called to grow the in.buf and then
+ * call Comm::Read().
  */
 void
 ConnStateData::readSomeData()
@@ -257,12 +250,12 @@ ConnStateData::readSomeData()
 
     debugs(33, 4, HERE << clientConnection << ": reading request...");
 
-    if (!maybeMakeSpaceAvailable())
+    if (!in.maybeMakeSpaceAvailable())
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     reader = JobCallback(33, 5, Dialer, this, ConnStateData::clientReadRequest);
-    comm_read(clientConnection, in.addressToReadInto(), getAvailableBufferLength(), reader);
+    Comm::Read(clientConnection, reader);
 }
 
 void
@@ -337,11 +330,16 @@ ClientSocketContext::connIsFinished()
     clientStreamDetach(getTail(), http);
 }
 
-ClientSocketContext::ClientSocketContext() : http(NULL), reply(NULL), next(NULL),
+ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
+        clientConnection(aConn),
+        http(aReq),
+        reply(NULL),
+        next(NULL),
         writtenToSocket(0),
         mayUseConnection_ (false),
         connRegistered_ (false)
 {
+    assert(http != NULL);
     memset (reqbuf, '\0', sizeof (reqbuf));
     flags.deferred = 0;
     flags.parsed_ok = 0;
@@ -349,52 +347,29 @@ ClientSocketContext::ClientSocketContext() : http(NULL), reply(NULL), next(NULL)
     deferredparams.rep = NULL;
 }
 
-ClientSocketContext *
-ClientSocketContextNew(const Comm::ConnectionPointer &client, ClientHttpRequest * http)
-{
-    ClientSocketContext *newContext;
-    assert(http != NULL);
-    newContext = new ClientSocketContext;
-    newContext->http = http;
-    newContext->clientConnection = client;
-    return newContext;
-}
-
 void
 ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
 {
-    const HttpReply::Pointer rep(msg.reply);
+    HttpReply::Pointer rep(msg.reply);
     Must(rep != NULL);
-
-    // apply selected clientReplyContext::buildReplyHeader() mods
-    // it is not clear what headers are required for control messages
-    rep->header.removeHopByHopEntries();
-    rep->header.putStr(HDR_CONNECTION, "keep-alive");
-    httpHdrMangleList(&rep->header, http->request, ROR_REPLY);
 
     // remember the callback
     cbControlMsgSent = msg.cbSuccess;
 
-    MemBuf *mb = rep->pack();
-
-    debugs(11, 2, "HTTP Client " << clientConnection);
-    debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
-
     AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
                                          CommIoCbPtrFun(&WroteControlMsg, this));
-    Comm::Write(clientConnection, mb, call);
 
-    delete mb;
+    getConn()->writeControlMsgAndCall(this, rep.getRaw(), call);
 }
 
 /// called when we wrote the 1xx response
 void
-ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *, size_t, comm_err_t errflag, int xerrno)
+ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag errflag, int xerrno)
 {
-    if (errflag == COMM_ERR_CLOSING)
+    if (errflag == Comm::ERR_CLOSING)
         return;
 
-    if (errflag == COMM_OK) {
+    if (errflag == Comm::OK) {
         ScheduleCallHere(cbControlMsgSent);
         return;
     }
@@ -406,11 +381,14 @@ ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *
     // close on 1xx errors to be conservative and to simplify the code
     // (if we do not close, we must notify the source of a failure!)
     conn->close();
+
+    // XXX: writeControlMsgAndCall() should handle writer-specific writing
+    // results, including errors and then call us with success/failure outcome.
 }
 
 /// wroteControlMsg() wrapper: ClientSocketContext is not an AsyncJob
 void
-ClientSocketContext::WroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+ClientSocketContext::WroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = static_cast<ClientSocketContext*>(data);
     context->wroteControlMsg(conn, bufnotused, size, errflag, xerrno);
@@ -543,7 +521,7 @@ ClientHttpRequest::updateCounters()
         ++ statCounter.client_http.errors;
 
     clientUpdateStatHistCounters(logType,
-                                 tvSubMsec(start_time, current_time));
+                                 tvSubMsec(al->cache.start_time, current_time));
 
     clientUpdateHierCounters(&request->hier);
 }
@@ -597,7 +575,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
     if (request->content_length > 0) // negative when no body or unknown length
-        aLogEntry->cache.requestSize += request->content_length;
+        aLogEntry->http.clientRequestSz.payloadData += request->content_length; // XXX: actually adaptedRequest payload size ??
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
     // Adapted request, if any, inherits and then collects all the stats, but
@@ -630,27 +608,19 @@ ClientHttpRequest::logRequest()
 
     debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
 
-    if (loggingEntry() && loggingEntry()->mem_obj)
-        al->cache.objectSize = loggingEntry()->contentLen();
+    if (loggingEntry() && loggingEntry()->mem_obj && loggingEntry()->objectLen() >= 0)
+        al->cache.objectSize = loggingEntry()->contentLen(); // payload duplicate ?? with or without TE ?
 
-    al->cache.caddr.setNoAddr();
-
-    if (getConn() != NULL) {
-        al->cache.caddr = getConn()->log_addr;
-        al->cache.port =  cbdataReference(getConn()->port);
-    }
-
-    al->cache.requestSize = req_sz;
-    al->cache.requestHeadersSize = req_sz;
-
-    al->cache.replySize = out.size;
-    al->cache.replyHeadersSize = out.headers_sz;
+    al->http.clientRequestSz.header = req_sz;
+    al->http.clientReplySz.header = out.headers_sz;
+    // XXX: calculate without payload encoding or headers !!
+    al->http.clientReplySz.payloadData = out.size - out.headers_sz; // pretend its all un-encoded data for now.
 
     al->cache.highOffset = out.offset;
 
     al->cache.code = logType;
 
-    al->cache.msec = tvSubMsec(start_time, current_time);
+    al->cache.msec = tvSubMsec(al->cache.start_time, current_time);
 
     if (request)
         prepareLogWithRequestDetails(request, al);
@@ -658,7 +628,7 @@ ClientHttpRequest::logRequest()
     if (getConn() != NULL && getConn()->clientConnection != NULL && getConn()->clientConnection->rfc931[0])
         al->cache.rfc931 = getConn()->clientConnection->rfc931;
 
-#if USE_SSL && 0
+#if USE_OPENSSL && 0
 
     /* This is broken. Fails if the connection has been closed. Needs
      * to snarf the ssl details some place earlier..
@@ -670,11 +640,10 @@ ClientHttpRequest::logRequest()
 
     /*Add notes*/
     // The al->notes and request->notes must point to the same object.
-    // Enable the following assertion to check for possible bugs.
-    // assert(request->notes == al->notes);
+    (void)SyncNotes(*al, *request);
     typedef Notes::iterator ACAMLI;
     for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-        if (const char *value = (*i)->match(request, al->reply)) {
+        if (const char *value = (*i)->match(request, al->reply, NULL)) {
             NotePairs &notes = SyncNotes(*al, *request);
             notes.add((*i)->key.termedBuf(), value);
             debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
@@ -868,7 +837,7 @@ ConnStateData::swanSong()
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
-    unpinConnection();
+    unpinConnection(true);
 
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
@@ -901,12 +870,10 @@ ConnStateData::~ConnStateData()
     if (!flags.swanSang)
         debugs(33, DBG_IMPORTANT, "BUG: ConnStateData was not destroyed properly; " << clientConnection);
 
-    cbdataReferenceDone(port);
-
     if (bodyPipe != NULL)
         stopProducingFor(bodyPipe, false);
 
-#if USE_SSL
+#if USE_OPENSSL
     delete sslServerBump;
 #endif
 }
@@ -917,15 +884,13 @@ ConnStateData::~ConnStateData()
  * to set this relatively early in the request processing
  * to handle hacks for broken servers and clients.
  */
-static void
+void
 clientSetKeepaliveFlag(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
 
-    debugs(33, 3, "clientSetKeepaliveFlag: http_ver = " <<
-           request->http_ver.major << "." << request->http_ver.minor);
-    debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
-           RequestMethodStr(request->method));
+    debugs(33, 3, "http_ver = " << request->http_ver);
+    debugs(33, 3, "method = " << request->method);
 
     // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
     request->flags.proxyKeepalive = request->persistent();
@@ -990,15 +955,6 @@ ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply *
     deferredparams.rep = rep;
     deferredparams.queuedBuffer = receivedData;
     return;
-}
-
-int
-responseFinishedOrFailed(HttpReply * rep, StoreIOBuffer const & receivedData)
-{
-    if (rep == NULL && receivedData.data == NULL && receivedData.length == 0)
-        return 1;
-
-    return 0;
 }
 
 bool
@@ -1086,7 +1042,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
                                              CommIoCbPtrFun(clientWriteComplete, this));
         Comm::Write(clientConnection, &mb, call);
     }  else
-        writeComplete(clientConnection, NULL, 0, COMM_OK);
+        writeComplete(clientConnection, NULL, 0, Comm::OK);
 }
 
 /**
@@ -1367,9 +1323,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
          * offset data, but we won't be requesting it.
          * So, we can either re-request, or generate an error
          */
-        debugs(33, 3, "clientBuildRangeHeader: will not do ranges: " << range_err << ".");
-        delete http->request->range;
-        http->request->range = NULL;
+        http->request->ignoreRange(range_err);
     } else {
         /* XXX: TODO: Review, this unconditional set may be wrong. */
         rep->sline.set(rep->sline.version, Http::scPartialContent);
@@ -1379,7 +1333,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         bool replyMatchRequest = rep->content_range != NULL ?
                                  request->range->contains(rep->content_range->spec) :
                                  true;
-        const int spec_count = http->request->range->specs.count;
+        const int spec_count = http->request->range->specs.size();
         int64_t actual_clen = -1;
 
         debugs(33, 3, "clientBuildRangeHeader: range spec count: " <<
@@ -1499,7 +1453,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
  *   data context is not NULL
  *   There are no more entries in the stream chain.
  */
-static void
+void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
@@ -1519,30 +1473,10 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     /* TODO: check offset is what we asked for */
 
-    if (context != http->getConn()->getCurrentContext()) {
+    if (context != http->getConn()->getCurrentContext())
         context->deferRecipientForLater(node, rep, receivedData);
-        PROF_stop(clientSocketRecipient);
-        return;
-    }
-
-    // After sending Transfer-Encoding: chunked (at least), always send
-    // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
-    const bool mustSendLastChunk = http->request->flags.chunkedReply &&
-                                   !http->request->flags.streamError && !context->startOfOutput();
-    if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
-        context->writeComplete(context->clientConnection, NULL, 0, COMM_OK);
-        PROF_stop(clientSocketRecipient);
-        return;
-    }
-
-    if (!context->startOfOutput())
-        context->sendBody(rep, receivedData);
-    else {
-        assert(rep);
-        http->al->reply = rep;
-        HTTPMSGLOCK(http->al->reply);
-        context->sendStartOfMessage(rep, receivedData);
-    }
+    else
+        http->getConn()->handleReply(rep, receivedData);
 
     PROF_stop(clientSocketRecipient);
 }
@@ -1574,7 +1508,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 }
 
 static void
-clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
+clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     debugs(33,7, HERE << "clientWriteBodyComplete schedules clientWriteComplete");
     clientWriteComplete(conn, NULL, size, errflag, xerrno, data);
@@ -1587,12 +1521,12 @@ ConnStateData::readNextRequest()
 
     fd_note(clientConnection->fd, "Idle client: Waiting for next request");
     /**
-     * Set the timeout BEFORE calling clientReadRequest().
+     * Set the timeout BEFORE calling readSomeData().
      */
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.clientIdlePconn, timeoutCall);
+    commSetConnTimeout(clientConnection, idleTimeout(), timeoutCall);
 
     readSomeData();
     /** Please don't do anything with the FD past here! */
@@ -1731,7 +1665,7 @@ ClientSocketContext::canPackMoreRanges() const
     if (!http->range_iter.debt()) {
         debugs(33, 5, HERE << "At end of current range spec for " << clientConnection);
 
-        if (http->range_iter.pos.incrementable())
+        if (http->range_iter.pos != http->range_iter.end)
             ++http->range_iter.pos;
 
         http->range_iter.updateSpec();
@@ -1748,9 +1682,16 @@ ClientSocketContext::canPackMoreRanges() const
 int64_t
 ClientSocketContext::getNextRangeOffset() const
 {
+    debugs (33, 5, "range: " << http->request->range <<
+            "; http offset " << http->out.offset <<
+            "; reply " << reply);
+
+    // XXX: This method is called from many places, including pullData() which
+    // may be called before prepareReply() [on some Squid-generated errors].
+    // Hence, we may not even know yet whether we should honor/do ranges.
+
     if (http->request->range) {
         /* offset in range specs does not count the prefix of an http msg */
-        debugs (33, 5, "ClientSocketContext::getNextRangeOffset: http offset " << http->out.offset);
         /* check: reply was parsed and range iterator was initialized */
         assert(http->range_iter.valid);
         /* filter out data according to range specs */
@@ -1787,7 +1728,7 @@ ClientSocketContext::getNextRangeOffset() const
 void
 ClientSocketContext::pullData()
 {
-    debugs(33, 5, HERE << clientConnection << " attempting to pull upstream data");
+    debugs(33, 5, reply << " written " << http->out.size << " into " << clientConnection);
 
     /* More data will be coming from the stream. */
     StoreIOBuffer readBuffer;
@@ -1800,6 +1741,9 @@ ClientSocketContext::pullData()
     clientStreamRead(getTail(), http, readBuffer);
 }
 
+/** Adapt stream status to account for Range cases
+ *
+ */
 clientStream_status_t
 ClientSocketContext::socketState()
 {
@@ -1816,11 +1760,8 @@ ClientSocketContext::socketState()
             if (!canPackMoreRanges()) {
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
                        "range sequence on " << clientConnection);
-
-                if (http->request->flags.proxyKeepalive)
-                    return STREAM_COMPLETE;
-                else
-                    return STREAM_UNPLANNED_COMPLETE;
+                // we got everything we wanted from the store
+                return STREAM_COMPLETE;
             }
         } else if (reply && reply->content_range) {
             /* reply has content-range, but Squid is not managing ranges */
@@ -1833,24 +1774,11 @@ ClientSocketContext::socketState()
 
             // did we get at least what we expected, based on range specs?
 
-            if (bytesSent == bytesExpected) { // got everything
-                if (http->request->flags.proxyKeepalive)
-                    return STREAM_COMPLETE;
-                else
-                    return STREAM_UNPLANNED_COMPLETE;
-            }
+            if (bytesSent == bytesExpected) // got everything
+                return STREAM_COMPLETE;
 
-            // The logic below is not clear: If we got more than we
-            // expected why would persistency matter? Should not this
-            // always be an error?
-            if (bytesSent > bytesExpected) { // got extra
-                if (http->request->flags.proxyKeepalive)
-                    return STREAM_COMPLETE;
-                else
-                    return STREAM_UNPLANNED_COMPLETE;
-            }
-
-            // did not get enough yet, expecting more
+            if (bytesSent > bytesExpected) // Error: Sent more than expected
+                return STREAM_UNPLANNED_COMPLETE;
         }
 
         return STREAM_NONE;
@@ -1874,7 +1802,7 @@ ClientSocketContext::socketState()
  * no more data to send.
  */
 void
-clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = (ClientSocketContext *)data;
     context->writeComplete(conn, bufnotused, size, errflag);
@@ -1921,7 +1849,7 @@ ConnStateData::stopSending(const char *error)
     if (!stoppedReceiving()) {
         if (const int64_t expecting = mayNeedToReadMoreBody()) {
             debugs(33, 5, HERE << "must still read " << expecting <<
-                   " request body bytes with " << in.notYetUsed << " unused");
+                   " request body bytes with " << in.buf.length() << " unused");
             return; // wait for the request receiver to finish reading
         }
     }
@@ -1930,7 +1858,7 @@ ConnStateData::stopSending(const char *error)
 }
 
 void
-ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag)
+ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag)
 {
     const StoreEntry *entry = http->storeEntry();
     http->out.size += size;
@@ -1939,9 +1867,9 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
            (entry ? entry->objectLen() : 0));
     clientUpdateSocketStats(http->logType, size);
 
-    /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
+    /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
 
-    if (errflag == COMM_ERR_CLOSING || !Comm::IsConnOpen(conn))
+    if (errflag == Comm::ERR_CLOSING || !Comm::IsConnOpen(conn))
         return;
 
     if (errflag || clientHttpRequestStatus(conn->fd, http)) {
@@ -1957,8 +1885,11 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
         break;
 
     case STREAM_COMPLETE:
-        debugs(33, 5, HERE << conn << " Keeping Alive");
-        keepaliveNextRequest();
+        debugs(33, 5, conn << "Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
+        if (http->request->flags.proxyKeepalive)
+            keepaliveNextRequest();
+        else
+            initiateClose("STREAM_COMPLETE NOKEEPALIVE");
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
@@ -1974,21 +1905,15 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
     }
 }
 
-SQUIDCEXTERN CSR clientGetMoreData;
-SQUIDCEXTERN CSS clientReplyStatus;
-SQUIDCEXTERN CSD clientReplyDetach;
-
-static ClientSocketContext *
-parseHttpRequestAbort(ConnStateData * csd, const char *uri)
+ClientSocketContext *
+ConnStateData::abortRequestParsing(const char *const uri)
 {
-    ClientHttpRequest *http;
-    ClientSocketContext *context;
-    StoreIOBuffer tempBuffer;
-    http = new ClientHttpRequest(csd);
-    http->req_sz = csd->in.notYetUsed;
+    ClientHttpRequest *http = new ClientHttpRequest(this);
+    http->req_sz = in.buf.length();
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    context = ClientSocketContextNew(csd->clientConnection, http);
+    ClientSocketContext *context = new ClientSocketContext(clientConnection, http);
+    StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
@@ -2113,7 +2038,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
         if (!url) {
             hp->request_parse_status = Http::scBadRequest;
-            return parseHttpRequestAbort(conn, "error:invalid-request");
+            return conn->abortRequestParsing("error:invalid-request");
         }
 #endif
 
@@ -2148,7 +2073,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
         const char *protocol = switchedToHttps ?
-                               "https" : URLScheme(conn->port->transport.protocol).const_str();
+                               "https" : AnyP::UriScheme(conn->port->transport.protocol).c_str();
         snprintf(http->uri, url_sz, "%s://%s%s", protocol, host, url);
         debugs(33, 5, "ACCEL VHOST REWRITE: '" << http->uri << "'");
     } else if (conn->port->defaultsite /* && !vhost */) {
@@ -2162,16 +2087,16 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
             snprintf(vportStr, sizeof(vportStr),":%d",vport);
         }
         snprintf(http->uri, url_sz, "%s://%s%s%s",
-                 URLScheme(conn->port->transport.protocol).const_str(), conn->port->defaultsite, vportStr, url);
+                 AnyP::UriScheme(conn->port->transport.protocol).c_str(), conn->port->defaultsite, vportStr, url);
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: '" << http->uri <<"'");
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
-        debugs(33, 5, "ACCEL VPORT REWRITE: http_port IP + vport=" << vport);
+        debugs(33, 5, "ACCEL VPORT REWRITE: *_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 URLScheme(conn->port->transport.protocol).const_str(),
+                 AnyP::UriScheme(conn->port->transport.protocol).c_str(),
                  ipbuf, vport, url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     }
@@ -2192,7 +2117,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s", URLScheme(conn->port->transport.protocol).const_str(), host, url);
+        snprintf(http->uri, url_sz, "%s://%s%s", AnyP::UriScheme(conn->port->transport.protocol).c_str(), host, url);
         debugs(33, 5, "TRANSPARENT HOST REWRITE: '" << http->uri <<"'");
     } else {
         /* Put the local socket IP address as the hostname.  */
@@ -2200,7 +2125,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 URLScheme(http->getConn()->port->transport.protocol).const_str(),
+                 AnyP::UriScheme(http->getConn()->port->transport.protocol).c_str(),
                  ipbuf, http->getConn()->clientConnection->local.port(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
@@ -2219,7 +2144,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *  \return NULL on incomplete requests,
  *          a ClientSocketContext structure on success or failure.
  */
-static ClientSocketContext *
+ClientSocketContext *
 parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_p, Http::ProtocolVersion *http_ver)
 {
     char *req_hdr = NULL;
@@ -2241,7 +2166,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     } else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         hp->request_parse_status = Http::scHeaderTooLarge;
-        return parseHttpRequestAbort(csd, "error:request-too-large");
+        return csd->abortRequestParsing("error:request-too-large");
     }
 
     /* Attempt to parse the first line; this'll define the method, url, version and header begin */
@@ -2253,7 +2178,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     }
 
     if (r == -1) {
-        return parseHttpRequestAbort(csd, "error:invalid-request");
+        return csd->abortRequestParsing("error:invalid-request");
     }
 
     /* Request line is valid here .. */
@@ -2286,26 +2211,26 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     if (req_sz >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         hp->request_parse_status = Http::scHeaderTooLarge;
-        return parseHttpRequestAbort(csd, "error:request-too-large");
+        return csd->abortRequestParsing("error:request-too-large");
     }
 
     /* Set method_p */
     *method_p = HttpRequestMethod(&hp->buf[hp->req.m_start], &hp->buf[hp->req.m_end]+1);
 
     /* deny CONNECT via accelerated ports */
-    if (*method_p == Http::METHOD_CONNECT && csd->port && csd->port->flags.accelSurrogate) {
+    if (*method_p == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->transport.protocol << " Accelerator port " << csd->port->s.port());
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = Http::scMethodNotAllowed;
-        return parseHttpRequestAbort(csd, "error:method-not-allowed");
+        return csd->abortRequestParsing("error:method-not-allowed");
     }
 
     if (*method_p == Http::METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
         hp->request_parse_status = Http::scMethodNotAllowed;
-        return parseHttpRequestAbort(csd, "error:unsupported-request-method");
+        return csd->abortRequestParsing("error:unsupported-request-method");
     }
 
     /*
@@ -2329,7 +2254,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     http = new ClientHttpRequest(csd);
 
     http->req_sz = HttpParserRequestLen(hp);
-    result = ClientSocketContextNew(csd->clientConnection, http);
+    result = new ClientSocketContext(csd->clientConnection, http);
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
@@ -2408,32 +2333,26 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     return result;
 }
 
-int
-ConnStateData::getAvailableBufferLength() const
-{
-    assert (in.allocatedSize > in.notYetUsed); // allocated more than used
-    const size_t result = in.allocatedSize - in.notYetUsed - 1;
-    // huge request_header_max_size may lead to more than INT_MAX unused space
-    assert (static_cast<ssize_t>(result) <= INT_MAX);
-    return result;
-}
-
 bool
-ConnStateData::maybeMakeSpaceAvailable()
+ConnStateData::In::maybeMakeSpaceAvailable()
 {
-    if (getAvailableBufferLength() < 2) {
-        size_t newSize;
-        if (in.allocatedSize >= Config.maxRequestBufferSize) {
+    if (buf.spaceSize() < 2) {
+        const SBuf::size_type haveCapacity = buf.length() + buf.spaceSize();
+        if (haveCapacity >= Config.maxRequestBufferSize) {
             debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
             return false;
         }
-        if ((newSize=in.allocatedSize * 2) > Config.maxRequestBufferSize) {
-            newSize=Config.maxRequestBufferSize;
+        if (haveCapacity == 0) {
+            // haveCapacity is based on the SBuf visible window of the MemBlob buffer, which may fill up.
+            // at which point bump the buffer back to default. This allocates a new MemBlob with any un-parsed bytes.
+            buf.reserveCapacity(CLIENT_REQ_BUF_SZ);
+        } else {
+            const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
+            buf.reserveCapacity(wantCapacity);
         }
-        in.buf = (char *)memReallocBuf(in.buf, newSize, &in.allocatedSize);
-        debugs(33, 2, "growing request buffer: notYetUsed=" << in.notYetUsed << " size=" << in.allocatedSize);
+        debugs(33, 2, "growing request buffer: available=" << buf.spaceSize() << " used=" << buf.length());
     }
-    return true;
+    return (buf.spaceSize() >= 2);
 }
 
 void
@@ -2460,30 +2379,10 @@ ConnStateData::getConcurrentRequestCount() const
 }
 
 int
-ConnStateData::connReadWasError(comm_err_t flag, int size, int xerrno)
-{
-    if (flag != COMM_OK) {
-        debugs(33, 2, "connReadWasError: FD " << clientConnection << ": got flag " << flag);
-        return 1;
-    }
-
-    if (size < 0) {
-        if (!ignoreErrno(xerrno)) {
-            debugs(33, 2, "connReadWasError: FD " << clientConnection << ": " << xstrerr(xerrno));
-            return 1;
-        } else if (in.notYetUsed == 0) {
-            debugs(33, 2, "connReadWasError: FD " << clientConnection << ": no data to process (" << xstrerr(xerrno) << ")");
-        }
-    }
-
-    return 0;
-}
-
-int
 ConnStateData::connFinishedWithConn(int size)
 {
     if (size == 0) {
-        if (getConcurrentRequestCount() == 0 && in.notYetUsed == 0) {
+        if (getConcurrentRequestCount() == 0 && in.buf.isEmpty()) {
             /* no current or pending requests */
             debugs(33, 4, HERE << clientConnection << " closed");
             return 1;
@@ -2499,39 +2398,18 @@ ConnStateData::connFinishedWithConn(int size)
 }
 
 void
-connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
+ConnStateData::consumeInput(const size_t byteCount)
 {
-    assert(byteCount > 0 && byteCount <= conn->in.notYetUsed);
-    conn->in.notYetUsed -= byteCount;
-    debugs(33, 5, HERE << "conn->in.notYetUsed = " << conn->in.notYetUsed);
-    /*
-     * If there is still data that will be used,
-     * move it to the beginning.
-     */
-
-    if (conn->in.notYetUsed > 0)
-        memmove(conn->in.buf, conn->in.buf + byteCount, conn->in.notYetUsed);
+    assert(byteCount > 0 && byteCount <= in.buf.length());
+    in.buf.consume(byteCount);
+    debugs(33, 5, "in.buf has " << in.buf.length() << " unused bytes");
 }
 
-/// respond with ERR_TOO_BIG if request header exceeds request_header_max_size
+// TODO: Remove when renaming ConnStateData
 void
-ConnStateData::checkHeaderLimits()
+connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
 {
-    if (in.notYetUsed < Config.maxRequestHeaderSize)
-        return; // can accumulte more header data
-
-    debugs(33, 3, "Request header is too large (" << in.notYetUsed << " > " <<
-           Config.maxRequestHeaderSize << " bytes)");
-
-    ClientSocketContext *context = parseHttpRequestAbort(this, "error:request-too-large");
-    clientStreamNode *node = context->getClientReplyContext();
-    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-    assert (repContext);
-    repContext->setReplyToError(ERR_TOO_BIG,
-                                Http::scBadRequest, Http::METHOD_NONE, NULL,
-                                clientConnection->remote, NULL, NULL, NULL);
-    context->registerWithConn();
-    context->pullData();
+    conn->consumeInput(byteCount);
 }
 
 void
@@ -2560,7 +2438,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     debugs(33,4, HERE << "Will close after error: " << clientConnection);
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 {
     ClientHttpRequest *http = context->http;
@@ -2579,7 +2457,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert(repContext);
         debugs(33, 5, "Responding with delated error for " << http->uri);
-        repContext->setReplyToStoreEntry(sslServerBump->entry);
+        repContext->setReplyToStoreEntry(sslServerBump->entry, "delayed SslBump error");
 
         // save the original request for logging purposes
         if (!context->http->al->request) {
@@ -2644,9 +2522,9 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 
     return false;
 }
-#endif // USE_SSL
+#endif // USE_OPENSSL
 
-static void
+void
 clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver)
 {
     ClientHttpRequest *http = context->http;
@@ -2657,11 +2535,19 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     bool unsupportedTe = false;
     bool expectBody = false;
 
-    /* We have an initial client stream in place should it be needed */
-    /* setup our private context */
-    context->registerWithConn();
+    // temporary hack to avoid splitting this huge function with sensitive code
+    const bool isFtp = !hp;
+    if (isFtp) {
+        // In FTP, case, we already have the request parsed and checked, so we
+        // only need to go through the final body/conn setup to doCallouts().
+        assert(http->request);
+        request = http->request;
+        notedUseOfBuffer = true;
+        goto doFtpAndHttp;
+    }
 
     if (context->flags.parsed_ok == 0) {
+        assert(hp);
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 2, "clientProcessRequest: Invalid Request");
         conn->quitAfterError(NULL);
@@ -2671,15 +2557,15 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         assert (repContext);
         switch (hp->request_parse_status) {
         case Http::scHeaderTooLarge:
-            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         case Http::scMethodNotAllowed:
             repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
-                                        conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             break;
         default:
             repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri,
-                                        conn->clientConnection->remote, NULL, conn->in.buf, NULL);
+                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
         }
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -2702,6 +2588,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
     /* We currently only support 0.9, 1.0, 1.1 properly */
+    /* TODO: move HTTP-specific processing into servers/HttpServer and such */
     if ( (http_ver.major == 0 && http_ver.minor != 9) ||
             (http_ver.major > 1) ) {
 
@@ -2735,6 +2622,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         context->pullData();
         goto finish;
     }
+
+doFtpAndHttp:
+    // Some blobs below are still HTTP-specific, but we would have to rewrite
+    // this entire function to remove them from the FTP code path. Connection
+    // setup and body_pipe preparation blobs are needed for FTP.
 
     request->clientConnectionManager = conn;
 
@@ -2770,20 +2662,23 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
-        if (internalHostnameIs(request->GetHost()) &&
-                request->port == getMyPort()) {
+        if (internalHostnameIs(request->GetHost()) && request->port == getMyPort()) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port);
             http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port << " (global_internal_static on)");
             request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = true;
-        }
+        } else
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
+                   ':' << request->port << " (not this proxy)");
     }
 
-    if (http->flags.internal) {
-        request->protocol = AnyP::PROTO_HTTP;
+    if (http->flags.internal)
         request->login[0] = '\0';
-    }
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
@@ -2852,17 +2747,23 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         }
     }
 
-    http->request = request.getRaw();
-    HTTPMSGLOCK(http->request);
-    clientSetKeepaliveFlag(http);
+    if (!isFtp) {
+        http->request = request.getRaw();
+        HTTPMSGLOCK(http->request);
+    }
 
+    clientSetKeepaliveFlag(http);
     // Let tunneling code be fully responsible for CONNECT requests
     if (http->request->method == Http::METHOD_CONNECT) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
+
+        // consume header early so that tunnel gets just the body
+        connNoteUseOfBuffer(conn, http->req_sz);
+        notedUseOfBuffer = true;
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if (conn->switchedToHttps() && conn->serveDelayedError(context))
         goto finish;
 #endif
@@ -2873,9 +2774,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->body_pipe = conn->expectRequestBody(
                                  chunked ? -1 : request->content_length);
 
-        // consume header early so that body pipe gets just the body
-        connNoteUseOfBuffer(conn, http->req_sz);
-        notedUseOfBuffer = true;
+        if (!isFtp) {
+            // consume header early so that body pipe gets just the body
+            connNoteUseOfBuffer(conn, http->req_sz);
+            notedUseOfBuffer = true;
+        }
 
         /* Is it too large? */
         if (!chunked && // if chunked, we will check as we accumulate
@@ -2885,22 +2788,24 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             assert (repContext);
             conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_TOO_BIG,
-                                        Http::scRequestEntityTooLarge, Http::METHOD_NONE, NULL,
+                                        Http::scPayloadTooLarge, Http::METHOD_NONE, NULL,
                                         conn->clientConnection->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;
         }
 
-        // We may stop producing, comm_close, and/or call setReplyToError()
-        // below, so quit on errors to avoid http->doCallouts()
-        if (!conn->handleRequestBodyData())
-            goto finish;
+        if (!isFtp) {
+            // We may stop producing, comm_close, and/or call setReplyToError()
+            // below, so quit on errors to avoid http->doCallouts()
+            if (!conn->handleRequestBodyData())
+                goto finish;
 
-        if (!request->body_pipe->productionEnded()) {
-            debugs(33, 5, HERE << "need more request body");
-            context->mayUseConnection(true);
-            assert(conn->flags.readMore);
+            if (!request->body_pipe->productionEnded()) {
+                debugs(33, 5, "need more request body");
+                context->mayUseConnection(true);
+                assert(conn->flags.readMore);
+            }
         }
     }
 
@@ -2929,10 +2834,16 @@ finish:
 static void
 connStripBufferWhitespace (ConnStateData * conn)
 {
-    while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
-        memmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
-        -- conn->in.notYetUsed;
+    // XXX: kill this whole function.
+    while (!conn->in.buf.isEmpty() && xisspace(conn->in.buf.at(0))) {
+        conn->in.buf.consume(1);
     }
+}
+
+int
+ConnStateData::pipelinePrefetchMax() const
+{
+    return Config.pipeline_max_prefetch;
 }
 
 /**
@@ -2947,7 +2858,7 @@ ConnStateData::concurrentRequestQueueFilled() const
 
     // default to the configured pipeline size.
     // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
-    const int concurrentRequestLimit = Config.pipeline_max_prefetch + 1;
+    const int concurrentRequestLimit = pipelinePrefetchMax() + 1;
 
     // when queue filled already we cant add more.
     if (existingRequestCount >= concurrentRequestLimit) {
@@ -2961,59 +2872,39 @@ ConnStateData::concurrentRequestQueueFilled() const
 
 /**
  * Attempt to parse one or more requests from the input buffer.
- * If a request is successfully parsed, even if the next request
- * is only partially parsed, it will return TRUE.
+ * Returns true after completing parsing of at least one request [header]. That
+ * includes cases where parsing ended with an error (e.g., a huge request).
  */
 bool
 ConnStateData::clientParseRequests()
 {
-    HttpRequestMethod method;
     bool parsed_req = false;
 
     debugs(33, 5, HERE << clientConnection << ": attempting to parse");
 
     // Loop while we have read bytes that are not needed for producing the body
     // On errors, bodyPipe may become nil, but readMore will be cleared
-    while (in.notYetUsed > 0 && !bodyPipe && flags.readMore) {
+    while (!in.buf.isEmpty() && !bodyPipe && flags.readMore) {
         connStripBufferWhitespace(this);
 
         /* Don't try to parse if the buffer is empty */
-        if (in.notYetUsed == 0)
+        if (in.buf.isEmpty())
             break;
 
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
 
-        /* Should not be needed anymore */
-        /* Terminate the string */
-        in.buf[in.notYetUsed] = '\0';
-
-        /* Begin the parsing */
-        PROF_start(parseHttpRequest);
-        HttpParserInit(&parser_, in.buf, in.notYetUsed);
-
-        /* Process request */
         Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseHttpRequest(this, &parser_, &method, &http_ver);
-        PROF_stop(parseHttpRequest);
-
-        /* partial or incomplete request */
-        if (!context) {
-            // TODO: why parseHttpRequest can just return parseHttpRequestAbort
-            // (which becomes context) but checkHeaderLimits cannot?
-            checkHeaderLimits();
-            break;
-        }
-
-        /* status -1 or 1 */
-        if (context) {
-            debugs(33, 5, HERE << clientConnection << ": parsed a request");
+        if (ClientSocketContext *context = parseOneRequest(http_ver)) {
+            debugs(33, 5, clientConnection << ": done parsing a request");
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
-            clientProcessRequest(this, &parser_, context, method, http_ver);
+            context->registerWithConn();
+
+            processParsedRequest(context, http_ver);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
@@ -3021,6 +2912,11 @@ ConnStateData::clientParseRequests()
                 debugs(33, 3, HERE << "Not parsing new requests, as this request may need the connection");
                 break;
             }
+        } else {
+            debugs(33, 5, clientConnection << ": not enough request data: " <<
+                   in.buf.length() << " < " << Config.maxRequestHeaderSize);
+            Must(in.buf.length() < Config.maxRequestHeaderSize);
+            break;
         }
     }
 
@@ -3031,14 +2927,13 @@ ConnStateData::clientParseRequests()
 void
 ConnStateData::clientReadRequest(const CommIoCbParams &io)
 {
-    debugs(33,5,HERE << io.conn << " size " << io.size);
+    debugs(33,5, io.conn);
     Must(reading());
     reader = NULL;
 
-    /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
-
-    if (io.flag == COMM_ERR_CLOSING) {
-        debugs(33,5, HERE << io.conn << " closing Bailout.");
+    /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
+    if (io.flag == Comm::ERR_CLOSING) {
+        debugs(33,5, io.conn << " closing Bailout.");
         return;
     }
 
@@ -3046,47 +2941,57 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     assert(io.conn->fd == clientConnection->fd);
 
     /*
-     * Don't reset the timeout value here.  The timeout value will be
-     * set to Config.Timeout.request by httpAccept() and
-     * clientWriteComplete(), and should apply to the request as a
-     * whole, not individual read() calls.  Plus, it breaks our
-     * lame half-close detection
+     * Don't reset the timeout value here. The value should be
+     * counting Config.Timeout.request and applies to the request
+     * as a whole, not individual read() calls.
+     * Plus, it breaks our lame *HalfClosed() detection
      */
-    if (connReadWasError(io.flag, io.size, io.xerrno)) {
-        notifyAllContexts(io.xerrno);
+
+    CommIoCbParams rd(this); // will be expanded with ReadNow results
+    rd.conn = io.conn;
+    switch (Comm::ReadNow(rd, in.buf)) {
+    case Comm::INPROGRESS:
+        if (in.buf.isEmpty())
+            debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        readSomeData();
+        return;
+
+    case Comm::OK:
+        kb_incr(&(statCounter.client_http.kbytes_in), rd.size);
+        // may comm_close or setReplyToError
+        if (!handleReadData())
+            return;
+
+        /* Continue to process previously read data */
+        break;
+
+    case Comm::ENDFILE: // close detected by 0-byte read
+        debugs(33, 5, io.conn << " closed?");
+
+        if (connFinishedWithConn(rd.size)) {
+            clientConnection->close();
+            return;
+        }
+
+        /* It might be half-closed, we can't tell */
+        fd_table[io.conn->fd].flags.socket_eof = true;
+        commMarkHalfClosed(io.conn->fd);
+        fd_note(io.conn->fd, "half-closed");
+
+        /* There is one more close check at the end, to detect aborted
+         * (partial) requests. At this point we can't tell if the request
+         * is partial.
+         */
+
+        /* Continue to process previously read data */
+        break;
+
+        // case Comm::COMM_ERROR:
+    default: // no other flags should ever occur
+        debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
+        notifyAllContexts(rd.xerrno);
         io.conn->close();
         return;
-    }
-
-    if (io.flag == COMM_OK) {
-        if (io.size > 0) {
-            kb_incr(&(statCounter.client_http.kbytes_in), io.size);
-
-            // may comm_close or setReplyToError
-            if (!handleReadData(io.buf, io.size))
-                return;
-
-        } else if (io.size == 0) {
-            debugs(33, 5, HERE << io.conn << " closed?");
-
-            if (connFinishedWithConn(io.size)) {
-                clientConnection->close();
-                return;
-            }
-
-            /* It might be half-closed, we can't tell */
-            fd_table[io.conn->fd].flags.socket_eof = true;
-
-            commMarkHalfClosed(io.conn->fd);
-
-            fd_note(io.conn->fd, "half-closed");
-
-            /* There is one more close check at the end, to detect aborted
-             * (partial) requests. At this point we can't tell if the request
-             * is partial.
-             */
-            /* Continue to process previously read data */
-        }
     }
 
     /* Process next request */
@@ -3124,17 +3029,8 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
  * \retval true  we did not call comm_close or setReplyToError
  */
 bool
-ConnStateData::handleReadData(char *buf, size_t size)
+ConnStateData::handleReadData()
 {
-    char *current_buf = in.addressToReadInto();
-
-    if (buf != current_buf)
-        memmove(current_buf, buf, size);
-
-    in.notYetUsed += size;
-
-    in.buf[in.notYetUsed] = '\0'; /* Terminate the string */
-
     // if we are reading a body, stuff data into the body pipe
     if (bodyPipe != NULL)
         return handleRequestBodyData();
@@ -3162,7 +3058,7 @@ ConnStateData::handleRequestBodyData()
         }
     } else { // identity encoding
         debugs(33,5, HERE << "handling plain request body for " << clientConnection);
-        putSize = bodyPipe->putMoreData(in.buf, in.notYetUsed);
+        putSize = bodyPipe->putMoreData(in.buf.c_str(), in.buf.length());
         if (!bodyPipe->mayNeedMoreData()) {
             // BodyPipe will clear us automagically when we produced everything
             bodyPipe = NULL;
@@ -3192,17 +3088,17 @@ ConnStateData::handleRequestBodyData()
 err_type
 ConnStateData::handleChunkedRequestBody(size_t &putSize)
 {
-    debugs(33,7, HERE << "chunked from " << clientConnection << ": " << in.notYetUsed);
+    debugs(33, 7, "chunked from " << clientConnection << ": " << in.buf.length());
 
     try { // the parser will throw on errors
 
-        if (!in.notYetUsed) // nothing to do (MemBuf::init requires this check)
+        if (in.buf.isEmpty()) // nothing to do
             return ERR_NONE;
 
         MemBuf raw; // ChunkedCodingParser only works with MemBufs
         // add one because MemBuf will assert if it cannot 0-terminate
-        raw.init(in.notYetUsed, in.notYetUsed+1);
-        raw.append(in.buf, in.notYetUsed);
+        raw.init(in.buf.length(), in.buf.length()+1);
+        raw.append(in.buf.c_str(), in.buf.length());
 
         const mb_size_t wasContentSize = raw.contentSize();
         BodyPipeCheckout bpc(*bodyPipe);
@@ -3250,7 +3146,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
         assert(repContext);
         const Http::StatusCode scode = (error == ERR_TOO_BIG) ?
-                                       Http::scRequestEntityTooLarge : HTTP_BAD_REQUEST;
+                                       Http::scPayloadTooLarge : HTTP_BAD_REQUEST;
         repContext->setReplyToError(error, scode,
                                     repContext->http->request->method,
                                     repContext->http->uri,
@@ -3270,26 +3166,13 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
 }
 
 void
-ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
-{
-    if (!handleRequestBodyData())
-        return;
-
-    // too late to read more body
-    if (!isOpen() || stoppedReceiving())
-        return;
-
-    readSomeData();
-}
-
-void
 ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
 {
     // request reader may get stuck waiting for space if nobody consumes body
     if (bodyPipe != NULL)
         bodyPipe->enableAutoConsumption();
 
-    stopReceiving("virgin request body consumer aborted"); // closes ASAP
+    // kids extend
 }
 
 /** general lifetime handler for HTTP requests */
@@ -3320,8 +3203,8 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
 }
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
-        AsyncJob("ConnStateData"),
-#if USE_SSL
+        AsyncJob("ConnStateData"), // kids overwrite
+#if USE_OPENSSL
         sslBumpMode(Ssl::bumpEnd),
         switchedToHttps_(false),
         sslServerBump(NULL),
@@ -3338,11 +3221,21 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 
     // store the details required for creating more MasterXaction objects as new requests come in
     clientConnection = xact->tcpClient;
-    port = cbdataReference(xact->squidPort.get());
+    port = xact->squidPort;
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
-    in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &in.allocatedSize);
+    flags.readMore = true; // kids may overwrite
+}
+
+void
+ConnStateData::start()
+{
+    BodyProducer::start();
+    HttpControlMsgSink::start();
+
+    // ensure a buffer is present for this connection
+    in.maybeMakeSpaceAvailable();
 
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
@@ -3370,58 +3263,17 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = xact->tcpClient->remote;
-        identChecklist.my_addr = xact->tcpClient->local;
+        identChecklist.src_addr = clientConnection->remote;
+        identChecklist.my_addr = clientConnection->local;
         if (identChecklist.fastCheck() == ACCESS_ALLOWED)
-            Ident::Start(xact->tcpClient, clientIdentDone, this);
+            Ident::Start(clientConnection, clientIdentDone, this);
     }
 #endif
 
     clientdbEstablished(clientConnection->remote, 1);
 
-    flags.readMore = true;
-}
-
-/** Handle a new connection on HTTP socket. */
-void
-httpAccept(const CommAcceptCbParams &params)
-{
-    MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
-
-    if (!s.valid()) {
-        // it is possible the call or accept() was still queued when the port was reconfigured
-        debugs(33, 2, "HTTP accept failure: port reconfigured.");
-        return;
-    }
-
-    if (params.flag != COMM_OK) {
-        // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "httpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
-        return;
-    }
-
-    debugs(33, 4, HERE << params.conn << ": accepted");
-    fd_note(params.conn->fd, "client http connect");
-
-    if (s->tcp_keepalive.enabled) {
-        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-    }
-
-    ++ incoming_sockets_accepted;
-
-    // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = new ConnStateData(xact);
-
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(params.conn, Config.Timeout.request, timeoutCall);
-
-    connState->readSomeData();
-
 #if USE_DELAY_POOLS
-    fd_table[params.conn->fd].clientInfo = NULL;
+    fd_table[clientConnection->fd].clientInfo = NULL;
 
     if (Config.onoff.client_db) {
         /* it was said several times that client write limiter does not work if client_db is disabled */
@@ -3432,8 +3284,8 @@ httpAccept(const CommAcceptCbParams &params)
         // TODO: we check early to limit error response bandwith but we
         // should recheck when we can honor delay_pool_uses_indirect
         // TODO: we should also pass the port details for myportname here.
-        ch.src_addr = params.conn->remote;
-        ch.my_addr = params.conn->local;
+        ch.src_addr = clientConnection->remote;
+        ch.my_addr = clientConnection->local;
 
         for (unsigned int pool = 0; pool < pools.size(); ++pool) {
 
@@ -3445,11 +3297,11 @@ httpAccept(const CommAcceptCbParams &params)
 
                     /*  request client information from db after we did all checks
                         this will save hash lookup if client failed checks */
-                    ClientInfo * cli = clientdbGetInfo(params.conn->remote);
+                    ClientInfo * cli = clientdbGetInfo(clientConnection->remote);
                     assert(cli);
 
                     /* put client info in FDE */
-                    fd_table[params.conn->fd].clientInfo = cli;
+                    fd_table[clientConnection->fd].clientInfo = cli;
 
                     /* setup write limiter for this request */
                     const double burst = floor(0.5 +
@@ -3463,9 +3315,39 @@ httpAccept(const CommAcceptCbParams &params)
         }
     }
 #endif
+
+    // kids must extend to actually start doing something (e.g., reading)
 }
 
-#if USE_SSL
+/** Handle a new connection on an HTTP socket. */
+void
+httpAccept(const CommAcceptCbParams &params)
+{
+    MasterXaction::Pointer xact = params.xaction;
+    AnyP::PortCfgPointer s = xact->squidPort;
+
+    // NP: it is possible the port was reconfigured when the call or accept() was queued.
+
+    if (params.flag != Comm::OK) {
+        // Its possible the call was still queued when the client disconnected
+        debugs(33, 2, s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        return;
+    }
+
+    debugs(33, 4, params.conn << ": accepted");
+    fd_note(params.conn->fd, "client http connect");
+
+    if (s->tcp_keepalive.enabled)
+        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+
+    ++incoming_sockets_accepted;
+
+    // Socket is ready, setup the connection manager to start using it
+    ConnStateData *connState = Http::NewServer(xact);
+    AsyncJob::Start(connState); // usually async-calls readSomeData()
+}
+
+#if USE_OPENSSL
 
 /** Create SSL connection structure and update fd_table */
 static SSL *
@@ -3684,10 +3566,12 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
 
         // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
-        static char reqStr[MAX_IPSTRLEN + 80];
         connState->clientConnection->local.toUrl(ip, sizeof(ip));
-        snprintf(reqStr, sizeof(reqStr), "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", ip, ip);
-        bool ret = connState->handleReadData(reqStr, strlen(reqStr));
+        // Pre-pend this fake request to the TLS bits already in the buffer
+        SBuf retStr;
+        retStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+        connState->in.buf = retStr.append(connState->in.buf);
+        bool ret = connState->handleReadData();
         if (ret)
             ret = connState->clientParseRequests();
 
@@ -3705,13 +3589,9 @@ httpsAccept(const CommAcceptCbParams &params)
     MasterXaction::Pointer xact = params.xaction;
     const AnyP::PortCfgPointer s = xact->squidPort;
 
-    if (!s.valid()) {
-        // it is possible the call or accept() was still queued when the port was reconfigured
-        debugs(33, 2, "HTTPS accept failure: port reconfigured.");
-        return;
-    }
+    // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
         debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
@@ -3727,13 +3607,18 @@ httpsAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = new ConnStateData(xact);
+    ConnStateData *connState = Https::NewServer(xact);
+    AsyncJob::Start(connState); // usually async-calls postHttpsAccept()
+}
 
-    if (s->flags.tunnelSslBumping) {
-        debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
+void
+ConnStateData::postHttpsAccept()
+{
+    if (port->flags.tunnelSslBumping) {
+        debugs(33, 5, "accept transparent connection: " << clientConnection);
 
         if (!Config.accessList.ssl_bump) {
-            httpsSslBumpAccessCheckDone(ACCESS_DENIED, connState);
+            httpsSslBumpAccessCheckDone(ACCESS_DENIED, this);
             return;
         }
 
@@ -3741,19 +3626,19 @@ httpsAccept(const CommAcceptCbParams &params)
         // using tproxy/intercept provided destination IP and port.
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
-        assert(params.conn->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
-        request->SetHost(params.conn->local.toStr(ip, sizeof(ip)));
-        request->port = params.conn->local.port();
-        request->myportname = s->name;
+        assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
+        request->SetHost(clientConnection->local.toStr(ip, sizeof(ip)));
+        request->port = clientConnection->local.port();
+        request->myportname = port->name;
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
-        acl_checklist->src_addr = params.conn->remote;
-        acl_checklist->my_addr = s->s;
-        acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, connState);
+        acl_checklist->src_addr = clientConnection->remote;
+        acl_checklist->my_addr = port->s;
+        acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
         return;
     } else {
-        SSL_CTX *sslContext = s->staticSslContext.get();
-        httpsEstablish(connState, sslContext, Ssl::bumpNone);
+        SSL_CTX *sslContext = port->staticSslContext.get();
+        httpsEstablish(this, sslContext, Ssl::bumpNone);
     }
 }
 
@@ -3791,7 +3676,7 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    certProperties.commonName =  sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
+    certProperties.commonName =  sslCommonName.size() > 0 ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 
     // fake certificate adaptation requires bump-server-first mode
     if (!sslServerBump) {
@@ -3886,12 +3771,12 @@ ConnStateData::getSslContextStart()
         Ssl::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
         sslBumpCertKey = certProperties.dbKey().c_str();
-        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+        assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
 
         debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
-        Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
+        Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
         SSL_CTX * dynCtx = NULL;
-        Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache.get(sslBumpCertKey.termedBuf());
+        Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : NULL;
         if (cachedCtx && (dynCtx = cachedCtx->get())) {
             debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " have found in cache");
             if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
@@ -3900,7 +3785,8 @@ ConnStateData::getSslContextStart()
                 return;
             } else {
                 debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
-                ssl_ctx_cache.del(sslBumpCertKey.termedBuf());
+                if (ssl_ctx_cache)
+                    ssl_ctx_cache->del(sslBumpCertKey.termedBuf());
             }
         } else {
             debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
@@ -3952,10 +3838,10 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
         }
         //else it is self-signed or untrusted do not attrach any certificate
 
-        Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
-        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+        Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
+        assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
         if (sslContext) {
-            if (!ssl_ctx_cache.add(sslBumpCertKey.termedBuf(), new Ssl::SSL_CTX_Pointer(sslContext))) {
+            if (!ssl_ctx_cache || !ssl_ctx_cache->add(sslBumpCertKey.termedBuf(), new Ssl::SSL_CTX_Pointer(sslContext))) {
                 // If it is not in storage delete after using. Else storage deleted it.
                 fd_table[clientConnection->fd].dynamicSslContext = sslContext;
             }
@@ -3979,7 +3865,13 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     if (!httpsCreate(clientConnection, sslContext))
         return;
 
-    // commSetConnTimeout() was called for this request before we switched.
+    // bumped intercepted conns should already have Config.Timeout.request set
+    // but forwarded connections may only have Config.Timeout.lifetime. [Re]set
+    // to make sure the connection does not get stuck on non-SSL clients.
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
+                                     this, ConnStateData::requestTimeout);
+    commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
 
     // Disable the client read handler until CachePeer selection is complete
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -4054,7 +3946,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
     getSslContextStart();
 }
 
-#endif /* USE_SSL */
+#endif /* USE_OPENSSL */
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
 static bool
@@ -4088,18 +3980,16 @@ AddOpenedHttpSocket(const Comm::ConnectionPointer &conn)
 static void
 clientHttpConnectionsOpen(void)
 {
-    AnyP::PortCfg *s = NULL;
-
-    for (s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (MAXTCPLISTENPORTS == NHttpSockets) {
             debugs(1, DBG_IMPORTANT, "WARNING: You have too many 'http_port' lines.");
             debugs(1, DBG_IMPORTANT, "         The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
             continue;
         }
 
-#if USE_SSL
+#if USE_OPENSSL
         if (s->flags.tunnelSslBumping && !Config.accessList.ssl_bump) {
-            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << URLScheme(s->transport.protocol) << "_port " << s->s);
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s);
             s->flags.tunnelSslBumping = false;
         }
 
@@ -4123,7 +4013,7 @@ clientHttpConnectionsOpen(void)
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-        RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, s));
+        RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(NULL)));
         Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
         AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
@@ -4135,13 +4025,11 @@ clientHttpConnectionsOpen(void)
     }
 }
 
-#if USE_SSL
+#if USE_OPENSSL
 static void
 clientHttpsConnectionsOpen(void)
 {
-    AnyP::PortCfg *s;
-
-    for (s = Config.Sockaddr.https; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         if (MAXTCPLISTENPORTS == NHttpSockets) {
             debugs(1, DBG_IMPORTANT, "Ignoring 'https_port' lines exceeding the limit.");
             debugs(1, DBG_IMPORTANT, "The limit is " << MAXTCPLISTENPORTS << " HTTPS ports.");
@@ -4156,7 +4044,7 @@ clientHttpsConnectionsOpen(void)
 
         // TODO: merge with similar code in clientHttpConnectionsOpen()
         if (s->flags.tunnelSslBumping && !Config.accessList.ssl_bump) {
-            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << URLScheme(s->transport.protocol) << "_port " << s->s);
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s);
             s->flags.tunnelSslBumping = false;
         }
 
@@ -4178,7 +4066,7 @@ clientHttpsConnectionsOpen(void)
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-        RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, s));
+        RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, CommAcceptCbParams(NULL)));
         Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
         AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
@@ -4191,18 +4079,44 @@ clientHttpsConnectionsOpen(void)
 }
 #endif
 
+void
+clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrCallT<CommAcceptCbPtrFun> > &subCall, const Ipc::FdNoteId fdNote)
+{
+    // Fill out a Comm::Connection which IPC will open as a listener for us
+    port->listenConn = new Comm::Connection;
+    port->listenConn->local = port->s;
+    port->listenConn->flags =
+        COMM_NONBLOCKING |
+        (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
+        (port->flags.natIntercept ? COMM_INTERCEPTION : 0);
+
+    // route new connections to subCall
+    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+    Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+    AsyncCall::Pointer listenCall =
+        asyncCall(33, 2, "clientListenerConnectionOpened",
+                  ListeningStartedDialer(&clientListenerConnectionOpened,
+                                         port, fdNote, sub));
+    Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, listenCall);
+
+    assert(NHttpSockets < MAXTCPLISTENPORTS);
+    HttpSockets[NHttpSockets] = -1;
+    ++NHttpSockets;
+}
+
 /// process clientHttpConnectionsOpen result
 static void
-clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub)
+clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub)
 {
+    Must(s != NULL);
+
     if (!OpenedHttpSocket(s->listenConn, portTypeNote))
         return;
 
-    Must(s);
     Must(Comm::IsConnOpen(s->listenConn));
 
     // TCP: setup a job to handle accept() with subscribed handler
-    AsyncJob::Start(new Comm::TcpAcceptor(s->listenConn, FdNote(portTypeNote), sub));
+    AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
 
     debugs(1, DBG_IMPORTANT, "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
@@ -4219,18 +4133,19 @@ void
 clientOpenListenSockets(void)
 {
     clientHttpConnectionsOpen();
-#if USE_SSL
+#if USE_OPENSSL
     clientHttpsConnectionsOpen();
 #endif
+    Ftp::StartListening();
 
     if (NHttpSockets < 1)
-        fatal("No HTTP or HTTPS ports configured");
+        fatal("No HTTP, HTTPS, or FTP ports configured");
 }
 
 void
-clientHttpConnectionsClose(void)
+clientConnectionsClose()
 {
-    for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL) {
             debugs(1, DBG_IMPORTANT, "Closing HTTP port " << s->listenConn->local);
             s->listenConn->close();
@@ -4238,8 +4153,8 @@ clientHttpConnectionsClose(void)
         }
     }
 
-#if USE_SSL
-    for (AnyP::PortCfg *s = Config.Sockaddr.https; s; s = s->next) {
+#if USE_OPENSSL
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL) {
             debugs(1, DBG_IMPORTANT, "Closing HTTPS port " << s->listenConn->local);
             s->listenConn->close();
@@ -4247,6 +4162,8 @@ clientHttpConnectionsClose(void)
         }
     }
 #endif
+
+    Ftp::StopListening();
 
     // TODO see if we can drop HttpSockets array entirely */
     for (int i = 0; i < NHttpSockets; ++i) {
@@ -4271,7 +4188,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         if (vary) {
             /* Oops... something odd is going on here.. */
             debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary object on second attempt, '" <<
-                   entry->mem_obj->url << "' '" << vary << "'");
+                   entry->mem_obj->urlXXX() << "' '" << vary << "'");
             safe_free(request->vary_headers);
             return VARY_CANCEL;
         }
@@ -4313,7 +4230,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
              * found the requested variant. Bail out
              */
             debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary match on second attempt, '" <<
-                   entry->mem_obj->url << "' '" << vary << "'");
+                   entry->mem_obj->urlXXX() << "' '" << vary << "'");
             return VARY_CANCEL;
         }
     }
@@ -4325,7 +4242,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
     ConnStateData * conn = http->getConn();
     ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
             cbdataReferenceValid(conn) && conn != NULL && conn->clientConnection != NULL ? conn->clientConnection->rfc931 : dash_str);
-
+    ch->al = http->al;
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store
      * the ident result on persistent connections...
@@ -4333,8 +4250,6 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
     /* connection oriented auth also needs these two lines for it's operation. */
     return ch;
 }
-
-CBDATA_CLASS_INIT(ConnStateData);
 
 bool
 ConnStateData::transparent() const
@@ -4352,7 +4267,7 @@ void
 ConnStateData::stopReading()
 {
     if (reading()) {
-        comm_read_cancel(clientConnection->fd, reader);
+        Comm::ReadCancel(clientConnection->fd, reader);
         reader = NULL;
     }
 }
@@ -4378,7 +4293,7 @@ ConnStateData::mayNeedToReadMoreBody() const
         return -1; // probably need to read more, but we cannot be sure
 
     const int64_t needToProduce = bodyPipe->unproducedSize();
-    const int64_t haveAvailable = static_cast<int64_t>(in.notYetUsed);
+    const int64_t haveAvailable = static_cast<int64_t>(in.buf.length());
 
     if (needToProduce <= haveAvailable)
         return 0; // we have read what we need (but are waiting for pipe space)
@@ -4448,20 +4363,13 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
     in.bodyParser = NULL;
 }
 
-char *
-ConnStateData::In::addressToReadInto() const
-{
-    return buf + notYetUsed;
-}
-
-ConnStateData::In::In() : bodyParser(NULL),
-        buf (NULL), notYetUsed (0), allocatedSize (0)
+ConnStateData::In::In() :
+        bodyParser(NULL),
+        buf()
 {}
 
 ConnStateData::In::~In()
 {
-    if (allocatedSize)
-        memFreeBuf(allocatedSize, buf);
     delete bodyParser; // TODO: pool
 }
 
@@ -4492,30 +4400,36 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
     assert(pinning.serverConnection == io.conn);
     pinning.closeHandler = NULL; // Comm unregisters handlers before calling
     const bool sawZeroReply = pinning.zeroReply; // reset when unpinning
-    unpinConnection();
+    unpinConnection(false);
+
     if (sawZeroReply && clientConnection != NULL) {
         debugs(33, 3, "Closing client connection on pinned zero reply.");
         clientConnection->close();
     }
+
 }
 
 void
-ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
+ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth, bool monitor)
 {
-    char desc[FD_DESC_SZ];
+    if (!Comm::IsConnOpen(pinning.serverConnection) ||
+            pinning.serverConnection->fd != pinServer->fd)
+        pinNewConnection(pinServer, request, aPeer, auth);
 
-    if (Comm::IsConnOpen(pinning.serverConnection)) {
-        if (pinning.serverConnection->fd == pinServer->fd) {
-            startPinnedConnectionMonitoring();
-            return;
-        }
-    }
+    if (monitor)
+        startPinnedConnectionMonitoring();
+}
 
-    unpinConnection(); // closes pinned connection, if any, and resets fields
+void
+ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
+{
+    unpinConnection(true); // closes pinned connection, if any, and resets fields
 
     pinning.serverConnection = pinServer;
 
     debugs(33, 3, HERE << pinning.serverConnection);
+
+    Must(pinning.serverConnection != NULL);
 
     // when pinning an SSL bumped connection, the request may be NULL
     const char *pinnedHost = "[unknown]";
@@ -4531,6 +4445,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
     char stmp[MAX_IPSTRLEN];
+    char desc[FD_DESC_SZ];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
              (auth || !aPeer) ? pinnedHost : aPeer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
@@ -4545,11 +4460,10 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     Params &params = GetCommParams<Params>(pinning.closeHandler);
     params.conn = pinning.serverConnection;
     comm_add_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
-
-    startPinnedConnectionMonitoring();
 }
 
-/// Assign a read handler to an idle pinned connection so that we can detect connection closures.
+/// [re]start monitoring pinned connection for peer closures so that we can
+/// propagate them to an _idle_ client pinned to that peer
 void
 ConnStateData::startPinnedConnectionMonitoring()
 {
@@ -4559,15 +4473,14 @@ ConnStateData::startPinnedConnectionMonitoring()
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     pinning.readHandler = JobCallback(33, 3,
                                       Dialer, this, ConnStateData::clientPinnedConnectionRead);
-    static char unusedBuf[8];
-    comm_read(pinning.serverConnection, unusedBuf, sizeof(unusedBuf), pinning.readHandler);
+    Comm::Read(pinning.serverConnection, pinning.readHandler);
 }
 
 void
 ConnStateData::stopPinnedConnectionMonitoring()
 {
     if (pinning.readHandler != NULL) {
-        comm_read_cancel(pinning.serverConnection->fd, pinning.readHandler);
+        Comm::ReadCancel(pinning.serverConnection->fd, pinning.readHandler);
         pinning.readHandler = NULL;
     }
 }
@@ -4579,7 +4492,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
 {
     pinning.readHandler = NULL; // Comm unregisters handlers before calling
 
-    if (io.flag == COMM_ERR_CLOSING)
+    if (io.flag == Comm::ERR_CLOSING)
         return; // close handler will clean up
 
     // We could use getConcurrentRequestCount(), but this may be faster.
@@ -4617,14 +4530,24 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
 
     if (!valid) {
         /* The pinning info is not safe, remove any pinning info */
-        unpinConnection();
+        unpinConnection(true);
     }
 
     return pinning.serverConnection;
 }
 
+Comm::ConnectionPointer
+ConnStateData::borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer)
+{
+    debugs(33, 7, pinning.serverConnection);
+    if (validatePinnedConnection(request, aPeer) != NULL)
+        stopPinnedConnectionMonitoring();
+
+    return pinning.serverConnection; // closed if validation failed
+}
+
 void
-ConnStateData::unpinConnection()
+ConnStateData::unpinConnection(const bool andClose)
 {
     debugs(33, 3, HERE << pinning.serverConnection);
 
@@ -4636,9 +4559,13 @@ ConnStateData::unpinConnection()
             comm_remove_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
             pinning.closeHandler = NULL;
         }
-        /// also close the server side socket, we should not use it for any future requests...
-        // TODO: do not close if called from our close handler?
-        pinning.serverConnection->close();
+
+        stopPinnedConnectionMonitoring();
+
+        // close the server side socket if requested
+        if (andClose)
+            pinning.serverConnection->close();
+        pinning.serverConnection = NULL;
     }
 
     safe_free(pinning.host);

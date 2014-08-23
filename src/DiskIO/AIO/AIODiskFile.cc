@@ -47,15 +47,13 @@
 #include "squid.h"
 #include "AIODiskFile.h"
 #include "AIODiskIOStrategy.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
 #include "globals.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 CBDATA_CLASS_INIT(AIODiskFile);
 

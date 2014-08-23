@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "StoreMetaVary.h"
-#include "Store.h"
 #include "MemObject.h"
+#include "Store.h"
+#include "StoreMetaVary.h"
 
 bool
 StoreMetaVary::checkConsistency(StoreEntry *e) const

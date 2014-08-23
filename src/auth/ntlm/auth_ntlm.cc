@@ -42,14 +42,14 @@
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cache_cf.h"
-#include "mgr/Registration.h"
-#include "Store.h"
 #include "client_side.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "wordlist.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "wordlist.h"
 
 /* NTLM Scheme */
 static AUTHSSTATS authenticateNTLMStats;
@@ -80,6 +80,8 @@ Auth::Ntlm::Config::rotateHelpers()
 void
 Auth::Ntlm::Config::done()
 {
+    Auth::Config::done();
+
     authntlm_initialised = 0;
 
     if (ntlmauthenticators) {
@@ -98,21 +100,14 @@ Auth::Ntlm::Config::done()
     debugs(29, DBG_IMPORTANT, "Reconfigure: NTLM authentication configuration cleared.");
 }
 
-void
-Auth::Ntlm::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
+bool
+Auth::Ntlm::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme) const
 {
-    wordlist *list = authenticateProgram;
-    storeAppendPrintf(entry, "%s %s", name, "ntlm");
+    if (!Auth::Config::dump(entry, name, scheme))
+        return false;
 
-    while (list != NULL) {
-        storeAppendPrintf(entry, " %s", list->key);
-        list = list->next;
-    }
-
-    storeAppendPrintf(entry, "\n%s ntlm children %d startup=%d idle=%d concurrency=%d\n",
-                      name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
-    storeAppendPrintf(entry, "%s %s keep_alive %s\n", name, "ntlm", keep_alive ? "on" : "off");
-
+    storeAppendPrintf(entry, "%s ntlm keep_alive %s\n", name, keep_alive ? "on" : "off");
+    return true;
 }
 
 Auth::Ntlm::Config::Config() : keep_alive(1)
@@ -128,13 +123,10 @@ Auth::Ntlm::Config::parse(Auth::Config * scheme, int n_configured, char *param_s
         parse_wordlist(&authenticateProgram);
 
         requirePathnameExists("auth_param ntlm program", authenticateProgram->key);
-    } else if (strcmp(param_str, "children") == 0) {
-        authenticateChildren.parseConfig();
     } else if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
-    } else {
-        debugs(29, DBG_CRITICAL, "ERROR unrecognised NTLM auth scheme parameter '" << param_str << "'");
-    }
+    } else
+        Auth::Config::parse(scheme, n_configured, param_str);
 }
 
 const char *
@@ -267,9 +259,9 @@ authenticateNTLMStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Ntlm::Config::decode(char const *proxy_auth)
+Auth::Ntlm::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 {
-    Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
+    Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::Config::Find("ntlm"), aRequestRealm);
     Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();
     assert(auth_user_request->user() == NULL);
 

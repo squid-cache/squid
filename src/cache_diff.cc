@@ -37,10 +37,7 @@
  */
 
 #include "squid.h"
-
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 typedef struct {
     const char *name;
@@ -58,18 +55,6 @@ typedef struct _CacheEntry {
     /* StoreSwapLogData s; */
     unsigned char key_arr[SQUID_MD5_DIGEST_LENGTH];
 } CacheEntry;
-
-/* copied from url.c */
-const char *RequestMethodStr[] = {
-    "NONE",
-    "GET",
-    "POST",
-    "PUT",
-    "HEAD",
-    "CONNECT",
-    "TRACE",
-    "PURGE"
-};
 
 static int cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file);
 

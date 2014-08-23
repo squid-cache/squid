@@ -12,10 +12,13 @@
 MemStore::MemStore() STUB
 MemStore::~MemStore() STUB
 bool MemStore::keepInLocalMemory(const StoreEntry &) const STUB_RETVAL(false)
-void MemStore::considerKeeping(StoreEntry &) STUB
+void MemStore::write(StoreEntry &e) STUB
+void MemStore::completeWriting(StoreEntry &e) STUB
+void MemStore::unlink(StoreEntry &e) STUB
+void MemStore::disconnect(StoreEntry &e) STUB
 void MemStore::reference(StoreEntry &) STUB
 void MemStore::maintain() STUB
-void MemStore::cleanReadable(const sfileno) STUB
+void MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId) STUB
 void MemStore::get(String const, STOREGETCLIENT, void *) STUB
 void MemStore::init() STUB
 void MemStore::getStats(StoreInfoStats&) const STUB
@@ -29,3 +32,6 @@ uint64_t MemStore::currentCount() const STUB_RETVAL(0)
 int64_t MemStore::maxObjectSize() const STUB_RETVAL(0)
 StoreSearch *MemStore::search(String const, HttpRequest *) STUB_RETVAL(NULL)
 bool MemStore::dereference(StoreEntry &, bool) STUB_RETVAL(false)
+void MemStore::markForUnlink(StoreEntry&) STUB
+bool MemStore::anchorCollapsed(StoreEntry&, bool&) STUB_RETVAL(false)
+bool MemStore::updateCollapsed(StoreEntry&) STUB_RETVAL(false)

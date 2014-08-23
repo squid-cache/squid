@@ -32,9 +32,9 @@
 #ifndef SQUID_ICAPLAUNCHER_H
 #define SQUID_ICAPLAUNCHER_H
 
-#include "adaptation/Initiator.h"
-#include "adaptation/Initiate.h"
 #include "adaptation/icap/ServiceRep.h"
+#include "adaptation/Initiate.h"
+#include "adaptation/Initiator.h"
 
 /*
  * The ICAP Launcher starts an ICAP transaction. If the transaction fails

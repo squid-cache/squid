@@ -34,12 +34,13 @@
 #define SQUID_HELPER_H
 
 #include "base/AsyncCall.h"
+#include "base/InstanceId.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "dlink.h"
-#include "ip/Address.h"
 #include "HelperChildConfig.h"
 #include "HelperReply.h"
+#include "ip/Address.h"
 
 class helper_request;
 
@@ -115,7 +116,9 @@ public:
     void closeWritePipeSafely();
 
 public:
-    int index;
+    /// Helper program identifier; does not change when contents do,
+    ///   including during assignment
+    const InstanceId<HelperServerBase> index;
     int pid;
     Ip::Address addr;
     Comm::ConnectionPointer readPipe;

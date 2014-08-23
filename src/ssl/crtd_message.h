@@ -1,12 +1,8 @@
 #ifndef SQUID_SSL_CRTD_MESSAGE_H
 #define SQUID_SSL_CRTD_MESSAGE_H
 
-#if HAVE_STRING
-#include <string>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
+#include <string>
 
 namespace Ssl
 {
@@ -15,7 +11,7 @@ class CertificateProperties;
 /**
  * This class is responsible for composing and parsing messages destined to, or comming
  * from an ssl_crtd server. Format of these mesages is:
- *   <response/request code> <whitespace> <body length> <whitespace> <body>
+ *   response/request-code SP body length SP body
  */
 class CrtdMessage
 {
@@ -98,4 +94,5 @@ protected:
 };
 
 } //namespace Ssl
+
 #endif // SQUID_SSL_CRTD_MESSAGE_H

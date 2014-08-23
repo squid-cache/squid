@@ -1,9 +1,7 @@
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+#include <cassert>
 
 #include "testRFC1738.h"
 

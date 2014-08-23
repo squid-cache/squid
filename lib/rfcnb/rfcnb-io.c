@@ -25,10 +25,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "rfcnb/std-includes.h"
+#include "rfcnb/rfcnb-io.h"
 #include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-util.h"
-#include "rfcnb/rfcnb-io.h"
+#include "rfcnb/std-includes.h"
 #include <sys/uio.h>
 #include <sys/signal.h>
 
@@ -382,7 +382,7 @@ RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
         offset = RFCNB_Pkt_Hdr_Len;     /* Otherwise skip the header       */
     }
 
-    frag_len = pkt_frag->len;
+    frag_len = (pkt_frag ? pkt_frag->len : 0);
 
     if (more <= frag_len)       /* If len left to get less than frag space */
         this_len = more;        /* Get the rest ...                        */

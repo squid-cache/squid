@@ -20,6 +20,7 @@ TRANSLATE_LANGUAGES= \
     id.lang \
     it.lang \
     ja.lang \
+    ka.lang \
     ko.lang \
     lt.lang \
     lv.lang \
@@ -41,5 +42,5 @@ TRANSLATE_LANGUAGES= \
     uk.lang \
     uz.lang \
     vi.lang \
-    zh-cn.lang \
-    zh-tw.lang 
+    zh-hans.lang \
+    zh-hant.lang 

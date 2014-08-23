@@ -34,9 +34,9 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "ConfigParser.h"
-#include "Parsing.h"
-#include "globals.h"
 #include "Debug.h"
+#include "globals.h"
+#include "Parsing.h"
 
 /*
  * These functions is the same as atoi/l/f, except that they check for errors

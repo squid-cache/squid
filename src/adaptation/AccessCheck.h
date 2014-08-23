@@ -1,12 +1,13 @@
 #ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
 #define SQUID_ADAPTATION__ACCESS_CHECK_H
 
+#include "AccessLogEntry.h"
 #include "acl/Acl.h"
-#include "base/AsyncJob.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/ServiceFilter.h"
+#include "base/AsyncJob.h"
 
 class HttpRequest;
 class HttpReply;
@@ -25,7 +26,7 @@ public:
 
     // use this to start async ACL checks; returns true if started
     static bool Start(Method method, VectPoint vp, HttpRequest *req,
-                      HttpReply *rep, Adaptation::Initiator *initiator);
+                      HttpReply *rep, AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator);
 
 protected:
     // use Start to start adaptation checks
@@ -38,7 +39,7 @@ private:
     ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
-    typedef Vector<Candidate> Candidates;
+    typedef std::vector<Candidate> Candidates;
     Candidates candidates;
     Candidate topCandidate() const { return *candidates.begin(); }
     ServiceGroupPointer topGroup() const; // may return nil

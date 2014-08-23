@@ -1,7 +1,7 @@
 #ifndef SQUID_ACLSSL_ERROR_H
 #define SQUID_ACLSSL_ERROR_H
-#include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "acl/Strategy.h"
 #include "ssl/support.h"
 
 class ACLSslErrorStrategy : public ACLStrategy<const Ssl::CertErrors *>

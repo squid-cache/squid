@@ -33,29 +33,29 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
+#include "acl/RegexData.h"
+#include "acl/UserData.h"
+#include "auth/Acl.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/Gadgets.h"
-#include "acl/FilledChecklist.h"
-#include "acl/UserData.h"
-#include "acl/RegexData.h"
-#include "client_side.h"
-#include "HttpRequest.h"
-#include "auth/Acl.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
+#include "client_side.h"
+#include "HttpRequest.h"
 
 ACLProxyAuth::~ACLProxyAuth()
 {
     delete data;
 }
 
-ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data (newData), type_(theType) {}
+ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) : data(newData), type_(theType) {}
 
-ACLProxyAuth::ACLProxyAuth (ACLProxyAuth const &old) : data (old.data->clone()), type_(old.type_)
+ACLProxyAuth::ACLProxyAuth(ACLProxyAuth const &old) : data(old.data->clone()), type_(old.type_)
 {}
 
 ACLProxyAuth &
-ACLProxyAuth::operator= (ACLProxyAuth const &rhs)
+ACLProxyAuth::operator=(ACLProxyAuth const &rhs)
 {
     data = rhs.data->clone();
     type_ = rhs.type_;
@@ -99,20 +99,20 @@ ACLProxyAuth::match(ACLChecklist *checklist)
     }
 }
 
-wordlist *
+SBufList
 ACLProxyAuth::dump() const
 {
     return data->dump();
 }
 
 bool
-ACLProxyAuth::empty () const
+ACLProxyAuth::empty() const
 {
     return data->empty();
 }
 
 bool
-ACLProxyAuth::valid () const
+ACLProxyAuth::valid() const
 {
     if (authenticateSchemeCount() == 0) {
         debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes were compiled.");
@@ -145,7 +145,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != NULL);
     assert(checklist->auth_user_request->valid());
-    checklist->auth_user_request->start(LookupDone, checklist);
+    checklist->auth_user_request->start(checklist->request, checklist->al, LookupDone, checklist);
 }
 
 void
@@ -189,6 +189,8 @@ int
 ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
+    if (checklist->request->flags.sslBumped)
+        return 1; // AuthenticateAcl() already handled this bumped request
     if (!authenticateUserAuthenticated(Filled(checklist)->auth_user_request)) {
         return 0;
     }

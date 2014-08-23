@@ -9,9 +9,8 @@
 #include "ipc/TypedMsgHdr.h"
 #include "snmp/Var.h"
 #include "tools.h"
-#if HAVE_ALGORITHM
+
 #include <algorithm>
-#endif
 
 Snmp::Var::Var()
 {

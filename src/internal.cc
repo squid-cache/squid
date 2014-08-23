@@ -35,13 +35,13 @@
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
-#include "icmp/net_db.h"
-#include "Store.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
+#include "icmp/net_db.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "tools.h"
 #include "URL.h"
 #include "wordlist.h"
@@ -73,6 +73,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
     } else if (0 == strncmp(upath, "/squid-internal-mgr/", 20)) {
+        debugs(17, 2, "calling CacheManager due to URL-path /squid-internal-mgr/");
         CacheManager::GetInstance()->Start(clientConn, request, entry);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",

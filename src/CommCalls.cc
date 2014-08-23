@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
 #include "fde.h"
@@ -7,7 +8,7 @@
 /* CommCommonCbParams */
 
 CommCommonCbParams::CommCommonCbParams(void *aData):
-        data(cbdataReference(aData)), conn(), flag(COMM_OK), xerrno(0), fd(-1)
+        data(cbdataReference(aData)), conn(), flag(Comm::OK), xerrno(0), fd(-1)
 {
 }
 
@@ -31,7 +32,7 @@ CommCommonCbParams::print(std::ostream &os) const
 
     if (xerrno)
         os << ", errno=" << xerrno;
-    if (flag != COMM_OK)
+    if (flag != Comm::OK)
         os << ", flag=" << flag;
     if (data)
         os << ", data=" << data;
@@ -84,9 +85,9 @@ CommIoCbParams::syncWithComm()
 {
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
-    if ((conn->fd < 0 || fd_table[conn->fd].closing()) && flag != COMM_ERR_CLOSING) {
-        debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: " << conn);
-        flag = COMM_ERR_CLOSING;
+    if ((conn->fd < 0 || fd_table[conn->fd].closing()) && flag != Comm::ERR_CLOSING) {
+        debugs(5, 3, HERE << "converting late call to Comm::ERR_CLOSING: " << conn);
+        flag = Comm::ERR_CLOSING;
     }
     return true; // now we are in sync and can handle the call
 }

@@ -6,9 +6,9 @@
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
 
+#include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "auth/Config.h"
 #include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
@@ -23,13 +23,12 @@ class Config : public Auth::Config
 {
 public:
     Config();
-    ~Config();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth);
+    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, Auth::Config *);
+    virtual bool dump(StoreEntry *, const char *, Auth::Config *) const;
     virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(Auth::Config *);
     virtual void parse(Auth::Config *, int, char *);
@@ -38,7 +37,6 @@ public:
     virtual const char * type() const;
 
 public:
-    char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
     int utf8;

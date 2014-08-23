@@ -4,6 +4,11 @@
 #define STUB_API "store.cc"
 #include "tests/STUB.h"
 
+const char *storeStatusStr[] = { };
+const char *pingStatusStr[] = { };
+const char *memStatusStr[] = { };
+const char *swapStatusStr[] = { };
+
 /* and code defined in the wrong .cc file */
 #include "SwapDir.h"
 void StoreController::maintain() STUB
@@ -16,7 +21,6 @@ StoreIoStats store_io_stats;
 bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
 StoreEntry::StoreEntry() STUB
-StoreEntry::StoreEntry(const char *, const char *) STUB
 StoreEntry::~StoreEntry() STUB
 HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
@@ -38,18 +42,17 @@ void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest() STUB
 void StoreEntry::negativeCache() STUB
 void StoreEntry::cacheNegatively() STUB
-void StoreEntry::invokeHandlers() STUB
 void StoreEntry::purgeMem() STUB
 void StoreEntry::swapOut() STUB
 void StoreEntry::swapOutFileClose(int how) STUB
 const char *StoreEntry::url() const STUB_RETVAL(NULL)
-int StoreEntry::checkCachable() STUB_RETVAL(0)
+bool StoreEntry::checkCachable() STUB_RETVAL(false)
 int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
 int StoreEntry::locked() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
-bool StoreEntry::memoryCachable() const STUB_RETVAL(false)
-void StoreEntry::createMemObject(const char *, const char *) STUB
-void StoreEntry::hideMemObject() STUB
+bool StoreEntry::memoryCachable() STUB_RETVAL(false)
+MemObject *StoreEntry::makeMemObject() STUB_RETVAL(NULL)
+void StoreEntry::createMemObject(const char *, const char *, const HttpRequestMethod &aMethod) STUB
 void StoreEntry::dump(int debug_lvl) const STUB
 void StoreEntry::hashDelete() STUB
 void StoreEntry::hashInsert(const cache_key *) STUB
@@ -83,10 +86,11 @@ void StoreEntry::setReleaseFlag() STUB
 void StoreEntry::append(char const *, int len) STUB
 void StoreEntry::buffer() STUB
 void StoreEntry::flush() STUB
-int StoreEntry::unlock() STUB_RETVAL(0)
+int StoreEntry::unlock(const char *) STUB_RETVAL(0)
 int64_t StoreEntry::objectLen() const STUB_RETVAL(0)
 int64_t StoreEntry::contentLen() const STUB_RETVAL(0)
-void StoreEntry::lock() STUB
+void StoreEntry::lock(const char *) STUB
+void StoreEntry::touch() STUB
 void StoreEntry::release() STUB
 
 NullStoreEntry *NullStoreEntry::getInstance() STUB_RETVAL(NULL)
@@ -111,12 +115,12 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 }
 
 size_t storeEntryInUse() STUB_RETVAL(0)
-const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)
 void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequest(HttpRequest * request) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
+StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 void storeInit(void) STUB
 void storeConfigure(void) STUB
 void storeFreeMemory(void) STUB
@@ -132,7 +136,3 @@ void storeReplAdd(const char *, REMOVALPOLICYCREATE *) STUB
 void destroyStoreEntry(void *) STUB
 // in Packer.cc !? void packerToStoreInit(Packer * p, StoreEntry * e) STUB
 void storeGetMemSpace(int size) STUB
-
-#if !_USE_INLINE_
-#include "Store.cci"
-#endif

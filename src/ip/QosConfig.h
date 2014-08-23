@@ -8,14 +8,10 @@
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
 #endif
-
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_TCP_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
 #endif
-
-#if HAVE_LIMITS
 #include <limits>
-#endif
 
 class fde;
 
@@ -127,11 +123,27 @@ int doNfmarkLocalHit(const Comm::ConnectionPointer &conn);
 _SQUID_INLINE_ int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
 
 /**
+* The low level variant of setSockTos function to set TOS value of packets.
+* Avoid if you can use the Connection-based setSockTos().
+* @param fd Descriptor of socket to set the TOS for
+* @param type The socket family, AF_INET or AF_INET6
+*/
+_SQUID_INLINE_ int setSockTos(const int fd, tos_t tos, int type);
+
+/**
 * Function to set the netfilter mark value of packets. Sets the value on the
 * socket which then gets copied to the packets. Called from Ip::Qos::doNfmarkLocalMiss
 * @param conn Descriptor of socket to set the mark for
 */
 _SQUID_INLINE_ int setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark);
+
+/**
+* The low level variant of setSockNfmark function to set the netfilter mark
+* value of packets.
+* Avoid if you can use the Connection-based setSockNfmark().
+* @param fd Descriptor of socket to set the mark for
+*/
+_SQUID_INLINE_ int setSockNfmark(const int fd, nfmark_t mark);
 
 /**
  * QOS configuration class. Contains all the parameters for QOS functions as well
@@ -142,7 +154,7 @@ class Config
 public:
 
     Config();
-    ~Config() {};
+    ~Config() {}
 
     void parseConfigLine();
 

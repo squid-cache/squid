@@ -32,7 +32,6 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "mgr/ActionPasswordList.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "Debug.h"
@@ -40,8 +39,9 @@
 #include "fde.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "mgr/ActionCreator.h"
 #include "mgr/Action.h"
+#include "mgr/ActionCreator.h"
+#include "mgr/ActionPasswordList.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/BasicActions.h"
 #include "mgr/Command.h"
@@ -49,10 +49,10 @@
 #include "mgr/FunAction.h"
 #include "mgr/QueryParams.h"
 #include "protos.h"
-#include "tools.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 #include "wordlist.h"
 
 #include <algorithm>
@@ -82,7 +82,7 @@ void
 CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
 {
     Must(profile != NULL);
-    if (std::find(menu_.begin(), menu_.end(), profile) == menu_.end()) {
+    if (!CacheManager::findAction(profile->name)) {
         menu_.push_back(profile);
         debugs(16, 3, HERE << "registered profile: " << *profile);
     } else {

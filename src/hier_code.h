@@ -26,6 +26,7 @@ typedef enum {
     SOURCEHASH_PARENT,
     PINNED,
     ORIGINAL_DST,
+    STANDBY_POOL,
     HIER_MAX
 } hier_code;
 

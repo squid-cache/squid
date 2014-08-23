@@ -45,9 +45,9 @@ private:
 
 /* partial specialisation */
 
+#include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/ReplyHeaderStrategy.h"
-#include "acl/Checklist.h"
 
 template <>
 inline int

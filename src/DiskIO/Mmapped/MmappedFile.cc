@@ -4,21 +4,19 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
 #include "globals.h"
 
+#include <cerrno>
 #if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 // Some systems such as Hurd provide mmap() API but do not support MAP_NORESERVE

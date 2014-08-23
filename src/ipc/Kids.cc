@@ -6,8 +6,8 @@
 #include "base/TextException.h"
 #include "globals.h"
 #include "ipc/Kids.h"
-#include "tools.h"
 #include "SquidConfig.h"
+#include "tools.h"
 
 Kids TheKids;
 KidName TheKidName;
@@ -19,8 +19,7 @@ Kids::Kids()
 /// maintain n kids
 void Kids::init()
 {
-    if (storage.size() > 0)
-        storage.clean();
+    storage.clear();
 
     storage.reserve(NumberOfKids());
 

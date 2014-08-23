@@ -11,14 +11,13 @@
 #include "squid.h"
 #include "util.h"
 
-#include <stdio.h>
-#include <string.h>
+#include <cctype>
+#include <cerrno>
+#include <cstring>
+#include <ctime>
 #include <syslog.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <errno.h>
-#include <time.h>
-#include <ctype.h>
 #include <sys/param.h>
 #include <fcntl.h>
 

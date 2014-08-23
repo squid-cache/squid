@@ -32,13 +32,14 @@
 
 #if USE_AUTH
 
+#include "AccessLogEntry.h"
 #include "auth/AuthAclState.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "dlink.h"
-#include "ip/Address.h"
 #include "helper.h"
 #include "HttpHeader.h"
+#include "ip/Address.h"
 
 class ConnStateData;
 class HttpReply;
@@ -157,15 +158,6 @@ public:
 
     virtual void releaseAuthServer();
 
-    /**
-     * Called when squid is ready to put the request on hold and wait for a callback from the auth module
-     * when the auth module has performed it's external activities.
-     *
-     * \param handler	Handler to process the callback when its run
-     * \param data	CBDATA for handler
-     */
-    virtual void module_start(AUTHCB *handler, void *data) = 0;
-
     // User credentials object this UserRequest is managing
     virtual User::Pointer user() {return _auth_user;}
     virtual const User::Pointer user() const {return _auth_user;}
@@ -189,12 +181,23 @@ public:
      *
      * \return Some AUTH_ACL_* state
      */
-    static AuthAclState tryToAuthenticateAndSetAuthUser(UserRequest::Pointer *aUR, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
+    static AuthAclState tryToAuthenticateAndSetAuthUser(UserRequest::Pointer *aUR, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &);
 
     /// Add the appropriate [Proxy-]Authenticate header to the given reply
     static void addReplyAuthHeader(HttpReply * rep, UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
-    void start(AUTHCB *handler, void *data);
+    /** Start an asynchronous helper lookup to verify the user credentials
+     *
+     * Uses startHelperLookup() for scheme-specific actions.
+     *
+     * The given callback will be called when the auth module has performed
+     * it's external activities.
+     *
+     * \param handler	Handler to process the callback when its run
+     * \param data	CBDATA for handler
+     */
+    void start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data);
+
     char const * denyMessage(char const * const default_message = NULL);
 
     /** Possibly overrideable in future */
@@ -217,9 +220,24 @@ public:
 
     virtual const char * connLastHeader();
 
+    /**
+     * The string representation of the credentials send by client
+     */
+    virtual const char *credentialsStr() = 0;
+
+    const char *helperRequestKeyExtras(HttpRequest *, AccessLogEntry::Pointer &al);
+
+protected:
+    /**
+     * The scheme-specific actions to be performed when sending helper lookup.
+     *
+     * \see void start(HttpRequest *, AccessLogEntry::Pointer &, AUTHCB *, void *);
+     */
+    virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data) = 0;
+
 private:
 
-    static AuthAclState authenticate(UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr);
+    static AuthAclState authenticate(UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr, AccessLogEntry::Pointer &al);
 
     /** return a message on the 407 error pages */
     char *message;

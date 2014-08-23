@@ -3,9 +3,7 @@
 
 #include "anyp/ProtocolType.h"
 
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 namespace AnyP
 {

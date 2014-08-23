@@ -31,7 +31,7 @@
 #ifndef SQUID_STOREFILESYSTEM_H
 #define SQUID_STOREFILESYSTEM_H
 
-#include "base/Vector.h"
+#include <vector>
 
 /* ****** DOCUMENTATION ***** */
 
@@ -70,7 +70,7 @@
  * configure will take a list of storage types through the
  * --enable-store-io parameter. This parameter takes a list of
  * space seperated storage types. For example,
- * --enable-store-io="ufs coss" .
+ * --enable-store-io="ufs aufs" .
  *
  \par
  * Each storage type must create an archive file
@@ -116,9 +116,9 @@ public:
     static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
     static void FreeAllFs();
-    static Vector<StoreFileSystem*> const &FileSystems();
-    typedef Vector<StoreFileSystem*>::iterator iterator;
-    typedef Vector<StoreFileSystem*>::const_iterator const_iterator;
+    static std::vector<StoreFileSystem*> const &FileSystems();
+    typedef std::vector<StoreFileSystem*>::iterator iterator;
+    typedef std::vector<StoreFileSystem*>::const_iterator const_iterator;
     StoreFileSystem() : initialised(false) {}
 
     virtual ~StoreFileSystem() {}
@@ -136,8 +136,8 @@ protected:
     virtual void registerWithCacheManager(void);
 
 private:
-    static Vector<StoreFileSystem*> &GetFileSystems();
-    static Vector<StoreFileSystem*> *_FileSystems;
+    static std::vector<StoreFileSystem*> &GetFileSystems();
+    static std::vector<StoreFileSystem*> *_FileSystems;
     static void RegisterAllFsWithCacheManager(void);
 };
 

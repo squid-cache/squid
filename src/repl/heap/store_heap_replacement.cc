@@ -41,14 +41,12 @@
 
 #include "squid.h"
 #include "heap.h"
-#include "store_heap_replacement.h"
-#include "Store.h"
 #include "MemObject.h"
 #include "SquidTime.h"
+#include "Store.h"
+#include "store_heap_replacement.h"
 
-#if HAVE_MATH_H
-#include <math.h>
-#endif
+#include <cmath>
 
 /*
  * Key generation function to implement the LFU-DA policy (Least
@@ -90,8 +88,8 @@ HeapKeyGen_StoreEntry_LFUDA(void *entry, double heap_age)
            " refcnt=" << e->refcount << " lastref=" << e->lastref <<
            " heap_age=" << heap_age << " tie=" << tie << " -> " << key);
 
-    if (e->mem_obj && e->mem_obj->url)
-        debugs(81, 3, "HeapKeyGen_StoreEntry_LFUDA: url=" << e->mem_obj->url);
+    if (e->mem_obj)
+        debugs(81, 3, "storeId=" << e->mem_obj->storeId());
 
     return (double) key;
 }
@@ -128,8 +126,8 @@ HeapKeyGen_StoreEntry_GDSF(void *entry, double heap_age)
            e->lastref << " heap_age=" << heap_age << " tie=" << tie <<
            " -> " << key);
 
-    if (e->mem_obj && e->mem_obj->url)
-        debugs(81, 3, "HeapKeyGen_StoreEntry_GDSF: url=" << e->mem_obj->url);
+    if (e->mem_obj)
+        debugs(81, 3, "storeId=" << e->mem_obj->storeId());
 
     return key;
 }
@@ -149,8 +147,8 @@ HeapKeyGen_StoreEntry_LRU(void *entry, double heap_age)
            e->getMD5Text() << " heap_age=" << heap_age <<
            " lastref=" << (double) e->lastref  );
 
-    if (e->mem_obj && e->mem_obj->url)
-        debugs(81, 3, "HeapKeyGen_StoreEntry_LRU: url=" << e->mem_obj->url);
+    if (e->mem_obj)
+        debugs(81, 3, "storeId=" << e->mem_obj->storeId());
 
     return (heap_key) e->lastref;
 }

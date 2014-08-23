@@ -32,10 +32,10 @@
 #ifndef SQUID_ACLASN_H
 #define SQUID_ACLASN_H
 
-#include "acl/Data.h"
-#include "CbDataList.h"
-#include "acl/Strategised.h"
 #include "acl/Checklist.h"
+#include "acl/Data.h"
+#include "acl/Strategised.h"
+#include "CbDataList.h"
 #include "ip/Address.h"
 
 int asnMatchIp(CbDataList<int> *, Ip::Address &);
@@ -56,7 +56,7 @@ public:
     virtual ~ACLASN();
 
     virtual bool match(Ip::Address);
-    virtual wordlist *dump();
+    virtual SBufList dump() const;
     virtual void parse();
     bool empty() const;
     virtual ACLData<Ip::Address> *clone() const;

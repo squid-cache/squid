@@ -28,8 +28,8 @@
 
 /* Error responses */
 
-#include "rfcnb/rfcnb-error.h"
 #include "rfcnb/rfcnb-common.h"
+#include "rfcnb/rfcnb-error.h"
 
 #ifdef __cplusplus
 extern "C" {

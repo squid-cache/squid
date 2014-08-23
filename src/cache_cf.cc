@@ -40,18 +40,19 @@
 #include "acl/MethodData.h"
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
+#include "anyp/UriScheme.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
-#include "mgr/ActionPasswordList.h"
+#include "cache_cf.h"
 #include "CachePeer.h"
 #include "CachePeerDomainList.h"
-#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequestMethod.h"
@@ -64,22 +65,25 @@
 #include "log/CustomLog.h"
 #include "Mem.h"
 #include "MemBuf.h"
+#include "mgr/ActionPasswordList.h"
 #include "mgr/Registration.h"
+#include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "Parsing.h"
+#include "pconn.h"
 #include "PeerDigest.h"
+#include "PeerPoolMgr.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
+#include "SBufList.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
-#include "wordlist.h"
-#include "neighbors.h"
 #include "tools.h"
-#include "URLScheme.h"
+#include "wordlist.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"
 #if USE_ADAPTATION
@@ -91,9 +95,9 @@
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
 #endif
-#if USE_SSL
-#include "ssl/support.h"
+#if USE_OPENSSL
 #include "ssl/Config.h"
+#include "ssl/support.h"
 #endif
 #if USE_AUTH
 #include "auth/Config.h"
@@ -109,12 +113,8 @@
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
-#if HAVE_LIMITS_H
 #include <limits>
-#endif
-#if HAVE_LIST
 #include <list>
-#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
@@ -125,7 +125,7 @@
 #include <sys/stat.h>
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
 
@@ -181,7 +181,6 @@ static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * de
 static void free_access_log(CustomLog ** definitions);
 static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMissing);
 
-static void update_maxobjsize(void);
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
@@ -194,12 +193,10 @@ static void defaults_postscriptum(void);
 static int parse_line(char *);
 static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
-#if USE_SSL
+#if USE_OPENSSL
 static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
 #endif
-#if !USE_DNSHELPER
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
-#endif
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
@@ -232,12 +229,12 @@ static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
-static void parsePortCfg(AnyP::PortCfg **, const char *protocol);
+static void parsePortCfg(AnyP::PortCfgPointer *, const char *protocol);
 #define parse_PortCfg(l) parsePortCfg((l), token)
-static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfg *);
-static void free_PortCfg(AnyP::PortCfg **);
+static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfgPointer &);
+#define free_PortCfg(h)  *(h)=NULL
 
-#if USE_SSL
+#if USE_OPENSSL
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign);
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign);
@@ -247,12 +244,16 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt);
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump);
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump);
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump);
-#endif /* USE_SSL */
+#endif /* USE_OPENSSL */
+
+static void parse_ftp_epsv(acl_access **ftp_epsv);
+static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv);
+static void free_ftp_epsv(acl_access **ftp_epsv);
 
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
-static bool parseNamedIntList(const char *data, const String &name, Vector<int> &list);
+static bool parseNamedIntList(const char *data, const String &name, std::vector<int> &list);
 
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
@@ -276,29 +277,6 @@ void
 self_destruct(void)
 {
     LegacyParser.destruct();
-}
-
-static void
-update_maxobjsize(void)
-{
-    int64_t ms = -1;
-
-    // determine the maximum size object that can be stored to disk
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        assert (Config.cacheSwap.swapDirs[i].getRaw());
-
-        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
-        if (ms < storeMax)
-            ms = storeMax;
-    }
-
-    // Ensure that we do not discard objects which could be stored only in memory.
-    // It is governed by maximum_object_size_in_memory (for now)
-    // TODO: update this to check each in-memory location (SMP and local memory limits differ)
-    if (ms < static_cast<int64_t>(Config.Store.maxInMemObjSize))
-        ms = Config.Store.maxInMemObjSize;
-
-    store_maxobjsize = ms;
 }
 
 static void
@@ -381,6 +359,7 @@ SubstituteMacro(char*& line, int& len, const char* macroName, const char* substS
 static void
 ProcessMacros(char*& line, int& len)
 {
+    SubstituteMacro(line, len, "${service_name}", service_name.c_str());
     SubstituteMacro(line, len, "${process_name}", TheKidName);
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
@@ -491,7 +470,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
     config_lineno = 0;
 
-    Vector<bool> if_states;
+    std::vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
         ++config_lineno;
 
@@ -691,11 +670,6 @@ configDoConfigure(void)
     else
         visible_appname_string = (char const *)APP_FULLNAME;
 
-#if USE_DNSHELPER
-    if (Config.dnsChildren.n_max < 1)
-        fatal("No DNS helpers allocated");
-#endif
-
     if (Config.Program.redirect) {
         if (Config.redirectChildren.n_max < 1) {
             Config.redirectChildren.n_max = 0;
@@ -761,9 +735,6 @@ configDoConfigure(void)
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
-#if USE_DNSHELPER
-    requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
-#endif
 #if USE_UNLINKD
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
@@ -897,16 +868,18 @@ configDoConfigure(void)
             Config2.effectiveGroupID = pwd->pw_gid;
 
 #if HAVE_PUTENV
-
             if (pwd->pw_dir && *pwd->pw_dir) {
-                int len;
-                char *env_str = (char *)xcalloc((len = strlen(pwd->pw_dir) + 6), 1);
-                snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
-                putenv(env_str);
+                // putenv() leaks by design; avoid leaks when nothing changes
+                static SBuf lastDir;
+                if (lastDir.isEmpty() || !lastDir.cmp(pwd->pw_dir)) {
+                    lastDir = pwd->pw_dir;
+                    int len = strlen(pwd->pw_dir) + 6;
+                    char *env_str = (char *)xcalloc(len, 1);
+                    snprintf(env_str, len, "HOME=%s", pwd->pw_dir);
+                    putenv(env_str);
+                }
             }
-
 #endif
-
         }
     } else {
         Config2.effectiveUserID = geteuid();
@@ -926,7 +899,7 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-#if USE_SSL
+#if USE_OPENSSL
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
@@ -939,7 +912,7 @@ configDoConfigure(void)
         }
     }
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->flags.tunnelSslBumping)
             continue;
 
@@ -947,7 +920,7 @@ configDoConfigure(void)
         s->configureSslServerContext();
     }
 
-    for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
         debugs(3, DBG_IMPORTANT, "Initializing https_port " << s->s << " SSL context");
         s->configureSslServerContext();
     }
@@ -1013,6 +986,14 @@ parse_obsolete(const char *name)
 
     if (!strcmp(name, "log_icap"))
         self_destruct();
+
+    if (!strcmp(name, "ignore_ims_on_miss")) {
+        // the replacement directive cache_revalidate_on_miss has opposite meanings for ON/OFF value
+        // than the 2.7 directive. We need to parse and invert the configured value.
+        int temp = 0;
+        parse_onoff(&temp);
+        Config.onoff.cache_miss_revalidate = !temp;
+    }
 }
 
 /* Parse a time specification from the config file.  Store the
@@ -1185,7 +1166,6 @@ parseBytesLine(size_t * bptr, const char *units)
     }
 }
 
-#if !USE_DNSHELPER
 static void
 parseBytesLineSigned(ssize_t * bptr, const char *units)
 {
@@ -1232,7 +1212,6 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
         self_destruct();
     }
 }
-#endif
 
 /**
  * Parse bytes from a string.
@@ -1290,15 +1269,13 @@ parseBytesUnits(const char *unit)
     return 0;
 }
 
-/*****************************************************************************
- * Max
- *****************************************************************************/
-
 static void
-dump_wordlist(StoreEntry * entry, wordlist *words)
+dump_SBufList(StoreEntry * entry, const SBufList &words)
 {
-    for (wordlist *word = words; word; word = word->next)
-        storeAppendPrintf(entry, "%s ", word->key);
+    for (SBufList::const_iterator i = words.begin(); i != words.end(); ++i) {
+        entry->append(i->rawContent(), i->length());
+        entry->append(" ",1);
+    }
 }
 
 static void
@@ -1311,11 +1288,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
                           ae->name,
                           ae->typeString(),
                           ae->flags.flagsStr());
-        wordlist *w = ae->dump();
-        dump_wordlist(entry, w);
-
-        storeAppendPrintf(entry, "\n");
-        wordlistDestroy(&w);
+        dump_SBufList(entry, ae->dump());
         ae = ae->next;
     }
 }
@@ -1335,19 +1308,14 @@ free_acl(ACL ** ae)
 void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
-    wordlist *values = head->dump();
-    dump_wordlist(entry, values);
-    wordlistDestroy(&values);
+    dump_SBufList(entry, head->dump());
 }
 
 void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
-    if (head) {
-        wordlist *lines = head->treeDump(name, NULL);
-        dump_wordlist(entry, lines);
-        wordlistDestroy(&lines);
-    }
+    if (head)
+        dump_SBufList(entry, head->treeDump(name,NULL));
 }
 
 static void
@@ -1494,6 +1462,12 @@ parse_acl_tos(acl_tos ** head)
     if (!xstrtoui(token, NULL, &tos, 0, std::numeric_limits<tos_t>::max())) {
         self_destruct();
         return;
+    }
+
+    const unsigned int chTos = tos & 0xFC;
+    if (chTos != tos) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Tos value '" << tos << "' adjusted to '" << chTos << "'");
+        tos = chTos;
     }
 
     CBDATA_INIT_TYPE_FREECB(acl_tos, freed_acl_tos);
@@ -1652,8 +1626,8 @@ free_acl_b_size_t(AclSizeLimit ** head)
 
 #if USE_DELAY_POOLS
 
-#include "DelayPools.h"
 #include "DelayConfig.h"
+#include "DelayPools.h"
 /* do nothing - free_delay_pool_count is the magic free function.
  * this is why delay_pool_count isn't just marked TYPE: u_short
  */
@@ -1874,12 +1848,7 @@ static void
 free_authparam(Auth::ConfigVector * cfg)
 {
     /* Wipe the Auth globals and Detach/Destruct component config + state. */
-    cfg->clean();
-
-    /* remove our pointers to the probably-dead sub-configs */
-    while (cfg->size()) {
-        cfg->pop_back();
-    }
+    cfg->clear();
 
     /* on reconfigure initialize new auth schemes for the new config. */
     if (reconfiguring) {
@@ -1900,7 +1869,7 @@ static int
 find_fstype(char *type)
 {
     for (size_t i = 0; i < StoreFileSystem::FileSystems().size(); ++i)
-        if (strcasecmp(type, StoreFileSystem::FileSystems().items[i]->type()) == 0)
+        if (strcasecmp(type, StoreFileSystem::FileSystems().at(i)->type()) == 0)
             return (int)i;
 
     return (-1);
@@ -1943,16 +1912,13 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
             sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
 
-            if (strcmp(sd->type(), StoreFileSystem::FileSystems().items[fs]->type()) != 0) {
+            if (strcmp(sd->type(), StoreFileSystem::FileSystems().at(fs)->type()) != 0) {
                 debugs(3, DBG_CRITICAL, "ERROR: Can't change type of existing cache_dir " <<
                        sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
                 return;
             }
 
             sd->reconfigure();
-
-            update_maxobjsize();
-
             return;
         }
     }
@@ -1968,7 +1934,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
     allocate_new_swapdir(swap);
 
-    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().items[fs]->createSwapDir();
+    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().at(fs)->createSwapDir();
 
     sd = dynamic_cast<SwapDir *>(swap->swapDirs[swap->n_configured].getRaw());
 
@@ -1976,9 +1942,6 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     sd->parse(swap->n_configured, path_str);
 
     ++swap->n_configured;
-
-    /* Update the max object size */
-    update_maxobjsize();
 }
 
 static const char *
@@ -2284,6 +2247,8 @@ parse_peer(CachePeer ** head)
             p->options.allow_miss = true;
         } else if (!strncmp(token, "max-conn=", 9)) {
             p->max_conn = xatoi(token + 9);
+        } else if (!strncmp(token, "standby=", 8)) {
+            p->standby.limit = xatoi(token + 8);
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
@@ -2297,7 +2262,7 @@ parse_peer(CachePeer ** head)
             if (token[13])
                 p->domain = xstrdup(token + 13);
 
-#if USE_SSL
+#if USE_OPENSSL
 
         } else if (strcmp(token, "ssl") == 0) {
             p->use_ssl = 1;
@@ -2357,6 +2322,9 @@ parse_peer(CachePeer ** head)
     if (peerFindByName(p->name))
         fatalf("ERROR: cache_peer %s specified twice\n", p->name);
 
+    if (p->max_conn > 0 && p->max_conn < p->standby.limit)
+        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+
     if (p->weight < 1)
         p->weight = 1;
 
@@ -2401,6 +2369,9 @@ free_peer(CachePeer ** P)
         cbdataReferenceDone(p->digest);
 #endif
 
+        // the mgr job will notice that its owner is gone and stop
+        PeerPoolMgr::Checkpoint(p->standby.mgr, "peer gone");
+        delete p->standby.pool;
         cbdataFree(p);
     }
 
@@ -3045,6 +3016,21 @@ parse_eol(char *volatile *var)
 #define free_eol free_string
 
 static void
+parse_TokenOrQuotedString(char **var)
+{
+    char *token = ConfigParser::NextQuotedToken();
+    safe_free(*var);
+
+    if (token == NULL)
+        self_destruct();
+
+    *var = xstrdup(token);
+}
+
+#define dump_TokenOrQuotedString dump_string
+#define free_TokenOrQuotedString free_string
+
+static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
     storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
@@ -3064,7 +3050,6 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
-#if !USE_DNSHELPER
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
@@ -3085,7 +3070,6 @@ free_time_msec(time_msec_t * var)
 {
     *var = 0;
 }
-#endif
 
 #if UNUSED_CODE
 static void
@@ -3101,13 +3085,11 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
-#if !USE_DNSHELPER
 static void
 dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
-#endif
 
 #if UNUSED_CODE
 static void
@@ -3145,13 +3127,11 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
-#if !USE_DNSHELPER
 static void
 parse_b_ssize_t(ssize_t * var)
 {
     parseBytesLineSigned(var, B_BYTES_STR);
 }
-#endif
 
 #if UNUSED_CODE
 static void
@@ -3179,13 +3159,11 @@ free_size_t(size_t * var)
     *var = 0;
 }
 
-#if !USE_DNSHELPER
 static void
 free_ssize_t(ssize_t * var)
 {
     *var = 0;
 }
-#endif
 
 static void
 free_b_int64_t(int64_t * var)
@@ -3513,7 +3491,7 @@ check_null_IpAddress_list(const Ip::Address_list * s)
 #endif /* USE_WCCPv2 */
 
 static void
-parsePortSpecification(AnyP::PortCfg * s, char *token)
+parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
 {
     char *host = NULL;
     unsigned short port = 0;
@@ -3524,7 +3502,7 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
-    const char *portType = URLScheme(s->transport.protocol).const_str();
+    const char *portType = AnyP::UriScheme(s->transport.protocol).c_str();
 
     if (*token == '[') {
         /* [ipv6]:port */
@@ -3589,21 +3567,42 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
     }
 }
 
+/// parses the protocol= option of the *_port directive, returning parsed value
+/// unsupported option values result in a fatal error message
+/// upper case values required; caller may convert for backward compatibility
+static AnyP::ProtocolVersion
+parsePortProtocol(const SBuf &value)
+{
+    // HTTP/1.0 not supported because we are version 1.1 which contains a superset of 1.0
+    // and RFC 2616 requires us to upgrade 1.0 to 1.1
+    if (value.cmp("HTTP") == 0 || value.cmp("HTTP/1.1") == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_HTTP, 1,1);
+
+    if (value.cmp("HTTPS") == 0 || value.cmp("HTTPS/1.1") == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
+
+    if (value.cmp("FTP") == 0)
+        return Ftp::ProtocolVersion();
+
+    fatalf("%s directive does not support protocol=" SQUIDSBUFPH "\n", cfg_directive, SQUIDSBUFPRINT(value));
+    return AnyP::ProtocolVersion(); // not reached
+}
+
 static void
-parse_port_option(AnyP::PortCfg * s, char *token)
+parse_port_option(AnyP::PortCfgPointer &s, char *token)
 {
     /* modes first */
 
     if (strcmp(token, "accel") == 0) {
         if (s->flags.isIntercepted()) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.accelSurrogate = true;
         s->vhost = true;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         if (s->flags.accelSurrogate || s->flags.tproxyIntercept) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": Intercept mode requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.natIntercept = true;
@@ -3613,7 +3612,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
     } else if (strcmp(token, "tproxy") == 0) {
         if (s->flags.natIntercept || s->flags.accelSurrogate) {
-            debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
+            debugs(3,DBG_CRITICAL, "FATAL: " << cfg_directive << ": TPROXY option requires its own interception port. It cannot be shared with other modes.");
             self_destruct();
         }
         s->flags.tproxyIntercept = true;
@@ -3622,61 +3621,61 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 
         if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": TPROXY support in the system does not work.");
             self_destruct();
         }
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: defaultsite option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": defaultsite option requires Acceleration mode flag.");
             self_destruct();
         }
         safe_free(s->defaultsite);
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
+            debugs(3, DBG_CRITICAL, "WARNING: " << cfg_directive << ": vhost option is deprecated. Use 'accel' mode flag instead.");
         }
         s->flags.accelSurrogate = true;
         s->vhost = true;
     } else if (strcmp(token, "no-vhost") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
+            debugs(3, DBG_IMPORTANT, "ERROR: " << cfg_directive << ": no-vhost option requires Acceleration mode flag.");
         }
         s->vhost = false;
     } else if (strcmp(token, "vport") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = -1;
     } else if (strncmp(token, "vport=", 6) == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": vport option requires Acceleration mode flag.");
             self_destruct();
         }
         s->vport = xatos(token + 6);
     } else if (strncmp(token, "protocol=", 9) == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": protocol option requires Acceleration mode flag.");
             self_destruct();
         }
-        s->setTransport(token + 9);
+        s->transport = parsePortProtocol(ToUpper(SBuf(token + 9)));
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
         s->allow_direct = true;
     } else if (strcmp(token, "act-as-origin") == 0) {
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
+            debugs(3, DBG_IMPORTANT, "ERROR: " << cfg_directive << ": act-as-origin option requires Acceleration mode flag.");
         } else
             s->actAsOrigin = true;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->flags.accelSurrogate) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": ignore-cc option requires Acceleration mode flag.");
             self_destruct();
         }
 #endif
@@ -3703,7 +3702,7 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             self_destruct();
     } else if (strcmp(token, "ipv4") == 0) {
         if ( !s->s.setIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used as IPv4-Only. " << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": IPv6 addresses cannot be used as IPv4-Only. " << s->s );
             self_destruct();
         }
     } else if (strcmp(token, "tcpkeepalive") == 0) {
@@ -3722,10 +3721,10 @@ parse_port_option(AnyP::PortCfg * s, char *token)
             ++t;
             s->tcp_keepalive.timeout = xatoui(t);
         }
-#if USE_SSL
+#if USE_OPENSSL
     } else if (strcmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
-               "in http_port. Use 'ssl-bump' instead.");
+               "in " << cfg_directive << ". Use 'ssl-bump' instead.");
         s->flags.tunnelSslBumping = true;
     } else if (strcmp(token, "ssl-bump") == 0) {
         s->flags.tunnelSslBumping = true;
@@ -3775,8 +3774,10 @@ parse_port_option(AnyP::PortCfg * s, char *token)
     } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
         parseBytesOptionValue(&s->dynamicCertMemCacheSize, B_BYTES_STR, token + 28);
 #endif
+    } else if (strcmp(token, "ftp-track-dirs") == 0) {
+        s->ftp_track_dirs = true;
     } else {
-        debugs(3, DBG_CRITICAL, "FATAL: Unknown http(s)_port option '" << token << "'.");
+        debugs(3, DBG_CRITICAL, "FATAL: Unknown " << cfg_directive << " option '" << token << "'.");
         self_destruct();
     }
 }
@@ -3784,26 +3785,27 @@ parse_port_option(AnyP::PortCfg * s, char *token)
 void
 add_http_port(char *portspec)
 {
-    AnyP::PortCfg *s = new AnyP::PortCfg();
-    s->setTransport("HTTP");
+    AnyP::PortCfgPointer s = new AnyP::PortCfg();
+    s->transport = parsePortProtocol(SBuf("HTTP"));
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
-    s->next = cbdataReference(Config.Sockaddr.http);
-    cbdataReferenceDone(Config.Sockaddr.http);
-    Config.Sockaddr.http = cbdataReference(s);
+    s->next = HttpPortList;
+    HttpPortList = s;
 }
 
 static void
-parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
+parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 {
-    const char *protocol = NULL;
+    SBuf protoName;
     if (strcmp(optionName, "http_port") == 0 ||
             strcmp(optionName, "ascii_port") == 0)
-        protocol = "http";
+        protoName = "HTTP";
     else if (strcmp(optionName, "https_port") == 0)
-        protocol = "https";
-    if (!protocol) {
+        protoName = "HTTPS";
+    else if (strcmp(optionName, "ftp_port") == 0)
+        protoName = "FTP";
+    if (protoName.isEmpty()) {
         self_destruct();
         return;
     }
@@ -3815,8 +3817,8 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         return;
     }
 
-    AnyP::PortCfg *s = new AnyP::PortCfg();
-    s->setTransport(protocol);
+    AnyP::PortCfgPointer s = new AnyP::PortCfg();
+    s->transport = parsePortProtocol(protoName); // default; protocol=... overwrites
     parsePortSpecification(s, token);
 
     /* parse options ... */
@@ -3824,7 +3826,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
         parse_port_option(s, token);
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
@@ -3836,24 +3838,30 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
             self_destruct();
         }
+    } else if (protoName.cmp("FTP") == 0) {
+        /* ftp_port does not support ssl-bump */
+        if (s->flags.tunnelSslBumping) {
+            debugs(3, DBG_CRITICAL, "FATAL: ssl-bump is not supported for ftp_port.");
+            self_destruct();
+        }
     }
 #endif
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
-        s->next = cbdataReference(s->clone());
+        s->next = s->clone();
         s->next->s.setIPv4();
-        debugs(3, 3, URLScheme(s->transport.protocol) << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).c_str() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
-    while (*head)
-        head = &(*head)->next;
+    while (*head != NULL)
+        head = &((*head)->next);
 
-    *head = cbdataReference(s);
+    *head = s;
 }
 
 static void
-dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
+dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
     char buf[MAX_IPSTRLEN];
 
@@ -3884,7 +3892,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 
         // TODO: compare against prefix of 'n' instead of assuming http_port
         if (s->transport.protocol != AnyP::PROTO_HTTP)
-            storeAppendPrintf(e, " protocol=%s", URLScheme(s->transport.protocol).const_str());
+            storeAppendPrintf(e, " protocol=%s", AnyP::UriScheme(s->transport.protocol).c_str());
 
         if (s->allow_direct)
             storeAppendPrintf(e, " allow-direct");
@@ -3931,7 +3939,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
         }
     }
 
-#if USE_SSL
+#if USE_OPENSSL
     if (s->flags.tunnelSslBumping)
         storeAppendPrintf(e, " ssl-bump");
 
@@ -3977,23 +3985,11 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 }
 
 static void
-dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
+dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
-    while (s) {
-        dump_generic_port(e, n, s);
+    for (AnyP::PortCfgPointer p = s; p != NULL; p = p->next) {
+        dump_generic_port(e, n, p);
         storeAppendPrintf(e, "\n");
-        s = s->next;
-    }
-}
-
-static void
-free_PortCfg(AnyP::PortCfg ** head)
-{
-    AnyP::PortCfg *s;
-
-    while ((s = *head) != NULL) {
-        *head = s->next;
-        cbdataReferenceDone(s);
     }
 }
 
@@ -4001,7 +3997,7 @@ void
 configFreeMemory(void)
 {
     free_all();
-#if USE_SSL
+#if USE_OPENSSL
     SSL_CTX_free(Config.ssl_client.sslContext);
 #endif
 }
@@ -4277,7 +4273,7 @@ free_access_log(CustomLog ** definitions)
 
 /// parses list of integers form name=N1,N2,N3,...
 static bool
-parseNamedIntList(const char *data, const String &name, Vector<int> &list)
+parseNamedIntList(const char *data, const String &name, std::vector<int> &list)
 {
     if (data && (strncmp(data, name.rawBuf(), name.size()) == 0)) {
         data += name.size();
@@ -4310,7 +4306,7 @@ parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 
     const char *const pToken = ConfigParser::NextToken();
     const char *const cToken = ConfigParser::NextToken();
-    Vector<int> processes, cores;
+    std::vector<int> processes, cores;
     if (!parseNamedIntList(pToken, "process_numbers", processes)) {
         debugs(3, DBG_CRITICAL, "FATAL: bad 'process_numbers' parameter " <<
                "in 'cpu_affinity_map'");
@@ -4484,7 +4480,7 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 }
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
     char *al;
@@ -4510,10 +4506,10 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
-        ca->param = strdup("on");
+        ca->param = xstrdup("on");
     } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidBefore]) == 0) {
         ca->alg = Ssl::algSetValidBefore;
-        ca->param = strdup("on");
+        ca->param = xstrdup("on");
     } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
         ca->alg = Ssl::algSetCommonName;
         if (param) {
@@ -4522,7 +4518,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
                 self_destruct();
                 return;
             }
-            ca->param = strdup(param);
+            ca->param = xstrdup(param);
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
@@ -4622,14 +4618,15 @@ class sslBumpCfgRr: public ::RegisteredRunner
 public:
     static Ssl::BumpMode lastDeprecatedRule;
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &);
+    virtual void finalizeConfig();
 };
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(rrFinalizeConfig, sslBumpCfgRr);
+RunnerRegistrationEntry(sslBumpCfgRr);
 
-void sslBumpCfgRr::run(const RunnerRegistry &r)
+void
+sslBumpCfgRr::finalizeConfig()
 {
     if (lastDeprecatedRule != Ssl::bumpEnd) {
         assert( lastDeprecatedRule == Ssl::bumpClientFirst || lastDeprecatedRule == Ssl::bumpNone);
@@ -4727,11 +4724,8 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
-    if (ssl_bump) {
-        wordlist *lines = ssl_bump->treeDump(name, Ssl::BumpModeStr);
-        dump_wordlist(entry, lines);
-        wordlistDestroy(&lines);
-    }
+    if (ssl_bump)
+        dump_SBufList(entry, ssl_bump->treeDump(name, Ssl::BumpModeStr));
 }
 
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump)
@@ -4821,6 +4815,73 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static bool FtpEspvDeprecated = false;
+static void parse_ftp_epsv(acl_access **ftp_epsv)
+{
+    allow_t ftpEpsvDeprecatedAction;
+    bool ftpEpsvIsDeprecatedRule = false;
+
+    char *t = ConfigParser::PeekAtToken();
+    if (!t) {
+        self_destruct();
+        return;
+    }
+
+    if (!strcmp(t, "off")) {
+        (void)ConfigParser::NextToken();
+        ftpEpsvIsDeprecatedRule = true;
+        ftpEpsvDeprecatedAction = allow_t(ACCESS_DENIED);
+    } else if (!strcmp(t, "on")) {
+        (void)ConfigParser::NextToken();
+        ftpEpsvIsDeprecatedRule = true;
+        ftpEpsvDeprecatedAction = allow_t(ACCESS_ALLOWED);
+    }
+
+    // Check for mixing "ftp_epsv on|off" and "ftp_epsv allow|deny .." rules:
+    //   1) if this line is "ftp_epsv allow|deny ..." and already exist rules of "ftp_epsv on|off"
+    //   2) if this line is "ftp_epsv on|off" and already exist rules of "ftp_epsv allow|deny ..."
+    // then abort
+    if ((!ftpEpsvIsDeprecatedRule && FtpEspvDeprecated) ||
+            (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != NULL)) {
+        debugs(3, DBG_CRITICAL, "FATAL: do not mix \"ftp_epsv on|off\" cfg lines with \"ftp_epsv allow|deny ...\" cfg lines. Update your ftp_epsv rules.");
+        self_destruct();
+    }
+
+    if (ftpEpsvIsDeprecatedRule) {
+        // overwrite previous ftp_epsv lines
+        delete *ftp_epsv;
+        if (ftpEpsvDeprecatedAction == allow_t(ACCESS_DENIED)) {
+            Acl::AndNode *ftpEpsvRule = new Acl::AndNode;
+            ftpEpsvRule->context("(ftp_epsv rule)", config_input_line);
+            ACL *a = ACL::FindByName("all");
+            if (!a) {
+                self_destruct();
+                return;
+            }
+            ftpEpsvRule->add(a);
+            *ftp_epsv = new Acl::Tree;
+            (*ftp_epsv)->context("(ftp_epsv rules)", config_input_line);
+            (*ftp_epsv)->add(ftpEpsvRule, ftpEpsvDeprecatedAction);
+        } else
+            *ftp_epsv = NULL;
+        FtpEspvDeprecated = true;
+    } else {
+        aclParseAccessLine(cfg_directive, LegacyParser, ftp_epsv);
+    }
+}
+
+static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv)
+{
+    if (ftp_epsv)
+        dump_SBufList(entry, ftp_epsv->treeDump(name, NULL));
+}
+
+static void free_ftp_epsv(acl_access **ftp_epsv)
+{
+    free_acl_access(ftp_epsv);
+    FtpEspvDeprecated = false;
 }
 
 static void

@@ -95,7 +95,7 @@ private:
 
 /* implementation follows */
 
-/** \cond AUTODOCS-IGNORE */
+/** \cond AUTODOCS_IGNORE */
 template <class C>
 cbdata_type CbDataList<C>::CBDATA_CbDataList = CBDATA_UNKNOWN;
 /** \endcond */

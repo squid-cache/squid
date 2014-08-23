@@ -34,28 +34,26 @@
 #include "BlockingFile.h"
 #include "Debug.h"
 #include "defines.h"
-#include "globals.h"
+#include "disk.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "disk.h"
+#include "globals.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
 
 CBDATA_CLASS_INIT(BlockingFile);
 
-BlockingFile::BlockingFile(char const *aPath) : fd (-1), closed (true), error_(false)
+BlockingFile::BlockingFile(char const *aPath) : fd(-1), closed(true), error_(false)
 {
     assert(aPath);
     debugs(79, 3, "BlockingFile::BlockingFile: " << aPath);
-    path_ = xstrdup (aPath);
+    path_ = xstrdup(aPath);
 }
 
 BlockingFile::~BlockingFile()
 {
-    safe_free (path_);
+    safe_free(path_);
     doClose();
 }
 

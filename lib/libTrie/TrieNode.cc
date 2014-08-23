@@ -18,8 +18,8 @@
  */
 
 #include "squid.h"
-#include "TrieNode.h"
 #include "TrieCharTransform.h"
+#include "TrieNode.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -60,7 +60,3 @@ TrieNode::add(char const *aString, size_t theLength, void *privatedata, TrieChar
         return true;
     }
 }
-
-#if !_USE_INLINE_
-#include "TrieNode.cci"
-#endif

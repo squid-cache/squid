@@ -33,13 +33,13 @@
 #ifndef   SQUID_PEERSELECTSTATE_H
 #define   SQUID_PEERSELECTSTATE_H
 
+#include "AccessLogEntry.h"
 #include "acl/Checklist.h"
-#include "base/Vector.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "hier_code.h"
-#include "PingData.h"
 #include "ip/Address.h"
+#include "PingData.h"
 
 class HttpRequest;
 class StoreEntry;
@@ -47,7 +47,7 @@ class ErrorState;
 
 typedef void PSC(Comm::ConnectionList *, ErrorState *, void *);
 
-void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
+void peerSelect(Comm::ConnectionList *, HttpRequest *, AccessLogEntry::Pointer const&, StoreEntry *, PSC *, void *data);
 void peerSelectInit(void);
 
 /**
@@ -79,6 +79,7 @@ public:
     const char * url() const;
 
     HttpRequest *request;
+    AccessLogEntry::Pointer al; ///< info for the future access.log entry
     StoreEntry *entry;
     allow_t always_direct;
     allow_t never_direct;

@@ -6,13 +6,12 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
-#include "snmp_core.h"
 #include "snmp/Pdu.h"
 #include "snmp/Var.h"
+#include "snmp_core.h"
 #include "tools.h"
-#if HAVE_ALGORITHM
+
 #include <algorithm>
-#endif
 
 Snmp::Pdu::Pdu()
 {

@@ -6,6 +6,7 @@
 #include "squid.h"
 
 #include "base/TextException.h"
+#include "Debug.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 
@@ -56,6 +57,7 @@ Ipc::Mem::PageStack::pop(PageId &page)
             theFirstWritable = idx; // may lie
             page.pool = thePoolId;
             page.number = value;
+            debugs(54, 9, page << " at " << idx << " size: " << theSize);
             return true;
         }
         // TODO: report suspiciously long loops
@@ -68,6 +70,8 @@ Ipc::Mem::PageStack::pop(PageId &page)
 void
 Ipc::Mem::PageStack::push(PageId &page)
 {
+    debugs(54, 9, page);
+
     if (!page)
         return;
 
@@ -87,6 +91,7 @@ Ipc::Mem::PageStack::push(PageId &page)
             // the enqueued value may already by gone, but that is OK
             theLastReadable = idx; // may lie
             ++theSize;
+            debugs(54, 9, page << " at " << idx << " size: " << theSize);
             page = PageId();
             return;
         }

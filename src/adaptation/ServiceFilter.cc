@@ -1,13 +1,15 @@
 #include "squid.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
+#include "AccessLogEntry.h"
 #include "adaptation/ServiceFilter.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 
-Adaptation::ServiceFilter::ServiceFilter(Method aMethod, VectPoint aPoint, HttpRequest *aReq, HttpReply *aRep):
+Adaptation::ServiceFilter::ServiceFilter(Method aMethod, VectPoint aPoint, HttpRequest *aReq, HttpReply *aRep, AccessLogEntry::Pointer const &alp):
         method(aMethod),
         point(aPoint),
         request(aReq),
-        reply(aRep)
+        reply(aRep),
+        al(alp)
 {
     if (reply)
         HTTPMSGLOCK(reply);
@@ -21,7 +23,8 @@ Adaptation::ServiceFilter::ServiceFilter(const ServiceFilter &f):
         method(f.method),
         point(f.point),
         request(f.request),
-        reply(f.reply)
+        reply(f.reply),
+        al(f.al)
 {
     if (request)
         HTTPMSGLOCK(request);

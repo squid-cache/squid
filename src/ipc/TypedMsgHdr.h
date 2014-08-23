@@ -59,7 +59,8 @@ public:
 
     /* access to a "file" descriptor that can be passed between processes */
     void putFd(int aFd); ///< stores descriptor
-    int getFd() const; ///< returns descriptor
+    int getFd() const; ///< returns stored descriptor
+    bool hasFd() const; ///< whether the message has a descriptor stored
 
     /* raw, type-independent access for I/O */
     void prepForReading(); ///< reset and provide all buffers

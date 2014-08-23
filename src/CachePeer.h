@@ -30,6 +30,7 @@
  */
 
 #include "acl/forward.h"
+#include "base/CbcPointer.h"
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
@@ -37,13 +38,15 @@
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
 
-#if USE_SSL
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
 
 class CachePeerDomainList;
 class NeighborTypeDomainList;
+class PconnPool;
 class PeerDigest;
+class PeerPoolMgr;
 
 // currently a POD
 class CachePeer
@@ -186,8 +189,14 @@ public:
     time_t connect_timeout;
     int connect_fail_limit;
     int max_conn;
+    struct {
+        PconnPool *pool; ///< idle connection pool for this peer
+        CbcPointer<PeerPoolMgr> mgr; ///< pool manager
+        int limit; ///< the limit itself
+        bool waitingForClose; ///< a conn must close before we open a standby conn
+    } standby; ///< optional "cache_peer standby=limit" feature
     char *domain;       /* Forced domain */
-#if USE_SSL
+#if USE_OPENSSL
 
     int use_ssl;
     char *sslcert;

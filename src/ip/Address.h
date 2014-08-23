@@ -1,11 +1,11 @@
 /*
  * DEBUG: section 14    IP Storage and Handling
- * AUTHOR: Amos Jeffries
- * COPYRIGHT: GPL version 2, (C)2007-2013 Treehouse Networks Ltd.
  */
 #ifndef _SQUID_SRC_IP_ADDRESS_H
 #define _SQUID_SRC_IP_ADDRESS_H
 
+#include <iosfwd>
+#include <ostream>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -20,13 +20,6 @@
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
-#endif
-
-#if HAVE_IOSFWD
-#include <iosfwd>
-#endif
-#if HAVE_OSTREAM
-#include <ostream>
 #endif
 
 namespace Ip

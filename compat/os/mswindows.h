@@ -114,7 +114,6 @@ typedef unsigned long ino_t;
 #define snprintf _snprintf
 #define stat _stati64
 #define strcasecmp _stricmp
-#define strdup _strdup
 #define strlwr _strlwr
 #define strncasecmp _strnicmp
 #define tempnam _tempnam
@@ -149,33 +148,76 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define umask _umask
 #define unlink _unlink
 
+#ifndef O_RDONLY
 #define O_RDONLY        _O_RDONLY
+#endif
+#ifndef O_WRONLY
 #define O_WRONLY        _O_WRONLY
+#endif
+#ifndef O_RDWR
 #define O_RDWR          _O_RDWR
+#endif
+#ifndef O_APPEND
 #define O_APPEND        _O_APPEND
-
+#endif
+#ifndef O_CREAT
 #define O_CREAT         _O_CREAT
+#endif
+#ifndef O_TRUNC
 #define O_TRUNC         _O_TRUNC
+#endif
+#ifndef O_EXCL
 #define O_EXCL          _O_EXCL
-
+#endif
+#ifndef O_TEXT
 #define O_TEXT          _O_TEXT
+#endif
+#ifndef O_BINARY
 #define O_BINARY        _O_BINARY
+#endif
+#ifndef O_RAW
 #define O_RAW           _O_BINARY
+#endif
+#ifndef O_TEMPORARY
 #define O_TEMPORARY     _O_TEMPORARY
+#endif
+#ifndef O_NOINHERIT
 #define O_NOINHERIT     _O_NOINHERIT
+#endif
+#ifndef O_SEQUENTIAL
 #define O_SEQUENTIAL    _O_SEQUENTIAL
+#endif
+#ifndef O_RANDOM
 #define O_RANDOM        _O_RANDOM
+#endif
+#ifndef O_NDELAY
 #define O_NDELAY	0
+#endif
 
+#ifndef S_IFMT
 #define S_IFMT   _S_IFMT
+#endif
+#ifndef S_IFDIR
 #define S_IFDIR  _S_IFDIR
+#endif
+#ifndef S_IFCHR
 #define S_IFCHR  _S_IFCHR
+#endif
+#ifndef S_IFREG
 #define S_IFREG  _S_IFREG
+#endif
+#ifndef S_IREAD
 #define S_IREAD  _S_IREAD
+#endif
+#ifndef S_IWRITE
 #define S_IWRITE _S_IWRITE
+#endif
+#ifndef S_IEXEC
 #define S_IEXEC  _S_IEXEC
-
+#endif
+#ifndef S_IRWXO
 #define S_IRWXO 007
+#endif
 
 #if defined(_MSC_VER)
 #define	S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
@@ -802,6 +844,11 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define open       _open /* Needed in win32lib.c */
 #endif /* #ifdef __cplusplus */
 
+/* provide missing definitions from resoruce.h */
+/* NP: sys/resource.h and sys/time.h are apparently order-dependant. */
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #else
@@ -956,8 +1003,6 @@ void syslog(int priority, const char *fmt, ...);
 
 /* prototypes */
 void WIN32_maperror(unsigned long WIN32_oserrno);
-
-#include "compat/strsep.h"
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWINDOWS_H */

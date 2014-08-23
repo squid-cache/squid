@@ -7,15 +7,11 @@
 #include "fde.h"
 #include "globals.h"
 #include "hier_code.h"
-#include "ip/tools.h"
 #include "ip/QosConfig.h"
+#include "ip/tools.h"
 #include "Parsing.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-
-/* Qos namespace */
+#include <cerrno>
 
 void
 Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)

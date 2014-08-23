@@ -30,8 +30,6 @@
 #ifndef SQUID_FS_UFS_UFSSWAPLOGPARSER_H
 #define SQUID_FS_UFS_UFSSWAPLOGPARSER_H
 
-#include <stdio.h>
-
 class StoreSwapLogData;
 
 namespace Fs

@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "acl/LocalPort.h"
-#include "acl/IntRange.h"
 #include "acl/Checklist.h"
+#include "acl/IntRange.h"
+#include "acl/LocalPort.h"
 
 int
 ACLLocalPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)

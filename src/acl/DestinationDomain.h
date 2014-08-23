@@ -34,8 +34,8 @@
 #define SQUID_ACLDESTINATIONDOMAIN_H
 
 #include "acl/Acl.h"
-#include "acl/Data.h"
 #include "acl/Checklist.h"
+#include "acl/Data.h"
 #include "acl/Strategised.h"
 
 /// \ingroup ACLAPI

@@ -2,16 +2,16 @@
  * DEBUG: section 93    eCAP Interface
  */
 #include "squid.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
 #include "BodyPipe.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
 #include <libecap/common/named_values.h>
+#include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
-#include "adaptation/ecap/Host.h" /* for protocol constants */
 #include "base/TextException.h"
 #include "URL.h"
 
@@ -39,7 +39,7 @@ Adaptation::Ecap::HeaderRep::value(const Name &name) const
     const String value = squidId == HDR_OTHER ?
                          theHeader.getByName(name.image().c_str()) :
                          theHeader.getStrOrList(squidId);
-    return value.defined() ?
+    return value.size() > 0 ?
            Value::FromTempString(value.termedBuf()) : Value();
 }
 
@@ -135,7 +135,7 @@ libecap::Name
 Adaptation::Ecap::FirstLineRep::protocol() const
 {
     // TODO: optimize?
-    switch (theMessage.protocol) {
+    switch (theMessage.http_ver.protocol) {
     case AnyP::PROTO_HTTP:
         return libecap::protocolHttp;
     case AnyP::PROTO_HTTPS:
@@ -158,8 +158,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
 #endif
     case AnyP::PROTO_CACHE_OBJECT:
         return protocolCacheObj;
-    case AnyP::PROTO_INTERNAL:
-        return protocolInternal;
     case AnyP::PROTO_ICY:
         return protocolIcy;
     case AnyP::PROTO_COAP:
@@ -181,7 +179,7 @@ void
 Adaptation::Ecap::FirstLineRep::protocol(const Name &p)
 {
     // TODO: what happens if we fail to translate some protocol?
-    theMessage.protocol = TranslateProtocolId(p);
+    theMessage.http_ver.protocol = TranslateProtocolId(p);
 }
 
 AnyP::ProtocolType
@@ -254,7 +252,7 @@ Adaptation::Ecap::RequestLineRep::method() const
     case Http::METHOD_TRACE:
         return libecap::methodTrace;
     default:
-        return Name(theMessage.method.image());
+        return Name(theMessage.method.image().toStdString());
     }
 }
 

@@ -21,6 +21,9 @@ class Tree;
 
 } // namespace Acl
 
+class allow_t;
+typedef void ACLCB(allow_t, void *);
+
 #define ACL_NAME_SZ 64
 
 // TODO: Consider renaming all users and removing. Cons: hides the difference

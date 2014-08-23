@@ -1,5 +1,5 @@
 #ifndef SQUID_OS_HPUX_H
-#define SQUID_OS_PHUX_H
+#define SQUID_OS_HPUX_H
 
 #if _SQUID_HPUX_
 

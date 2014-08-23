@@ -4,9 +4,7 @@
 #include "base/AsyncJob.h"
 #include "ip/Address.h"
 
-#if HAVE_LIST
 #include <list>
-#endif
 
 class MemBlob;
 typedef RefCount<MemBlob> MemBlobPointer;
@@ -66,7 +64,7 @@ private:
     void appendChunk(const char *chunk, const size_t len);
     void writeIfNeeded();
     void writeIfPossible();
-    void connect();
+    void doConnect();
     void disconnect();
 
     /* comm callbacks */

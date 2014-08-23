@@ -33,9 +33,9 @@
 
 #if USE_DISKIO_AIO
 
-#include "DiskIO/DiskFile.h"
 #include "async_io.h"
 #include "cbdata.h"
+#include "DiskIO/DiskFile.h"
 #include "SquidString.h"
 
 class AIODiskIOStrategy;
